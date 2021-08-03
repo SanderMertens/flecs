@@ -50,19 +50,77 @@ bool path_append(
 }
 
 static
-ecs_entity_t find_as_alias(
+ecs_string_t get_string_key(
     const char *name,
-    ecs_vector_t *alias_vector)
+    ecs_size_t length,
+    uint64_t hash)
 {
-    int32_t i, count = ecs_vector_count(alias_vector);
-    ecs_alias_t *aliases = ecs_vector_first(alias_vector, ecs_alias_t);
-    for (i = 0; i < count; i ++) {
-        if (!strcmp(aliases[i].name, name)) {
-            return aliases[i].entity;
+    ecs_assert(!length || length == ecs_os_strlen(name), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (!length) {
+        length = ecs_os_strlen(name);
+    }
+
+    ecs_assert(!hash || hash == flecs_hash(name, length),
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (!hash) {
+        hash = flecs_hash(name, length);
+    }
+
+    return  (ecs_string_t) {
+        .value = (char*)name,
+        .length = length,
+        .hash = hash
+    };
+}
+
+static
+ecs_entity_t find_by_name(
+    const ecs_hashmap_t *map,
+    const char *name,
+    ecs_size_t length,
+    uint64_t hash)
+{
+    ecs_string_t key = get_string_key(name, length, hash);
+
+    ecs_entity_t *e = flecs_hashmap_get(*map, &key, ecs_entity_t);
+
+    if (!e) {
+        return 0;
+    }
+
+    return *e;
+}
+
+static
+void register_by_name(
+    ecs_hashmap_t *map,
+    ecs_entity_t entity,
+    const char *name,
+    ecs_size_t length,
+    uint64_t hash)
+{
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_string_t key = get_string_key(name, length, hash);
+    
+    ecs_entity_t existing = find_by_name(map, name, key.length, key.hash);
+    if (existing) {
+        if (existing != entity) {
+            ecs_abort(ECS_ALREADY_DEFINED, 
+                "conflicting entity registered with name '%s'", name);
         }
     }
 
-    return 0;
+    key.value = ecs_os_strdup(key.value);
+
+    flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
+        *map, &key, ecs_entity_t);
+
+    *((ecs_entity_t*)hmr.value) = entity;
 }
 
 static
@@ -232,6 +290,61 @@ ecs_entity_t get_parent_from_path(
     return parent;
 }
 
+static
+void on_set_symbol(ecs_iter_t *it) {
+    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        register_by_name(
+            &world->symbols, e, n[i].value, n[i].length, n[i].hash);
+    }
+}
+
+static
+uint64_t string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    ecs_assert(str->hash != 0, ECS_INVALID_PARAMETER, NULL);
+    return str->hash;
+}
+
+static
+int string_compare(
+    const void *ptr1, 
+    const void *ptr2)
+{
+    const ecs_string_t *str1 = ptr1;
+    const ecs_string_t *str2 = ptr2;
+    ecs_size_t len1 = str1->length;
+    ecs_size_t len2 = str2->length;
+    if (len1 != len2) {
+        return (len1 > len2) - (len1 < len2);
+    }
+
+    return ecs_os_memcmp(str1->value, str2->value, len1);
+}
+
+ecs_hashmap_t flecs_string_hashmap_new(void) {
+    return flecs_hashmap_new(ecs_string_t, ecs_entity_t, 
+        string_hash, 
+        string_compare);
+}
+
+void flecs_bootstrap_hierarchy(ecs_world_t *world) {
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
+        .callback = on_set_symbol,
+        .events = {EcsOnSet}
+    });
+}
+
+
+/* Public functions */
+
 char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
@@ -302,7 +415,7 @@ ecs_entity_t ecs_lookup(
         return name_to_id(name);
     }
 
-    e = find_as_alias(name, world->aliases);
+    e = find_by_name(&world->aliases, name, 0, 0);
     if (e) {
         return e;
     }    
@@ -322,7 +435,7 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    ecs_entity_t e = find_as_alias(name, world->symbols);
+    ecs_entity_t e = find_by_name(&world->symbols, name, 0, 0);
     if (e) {
         return e;
     }
@@ -358,7 +471,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return e;
     }
 
-    e = find_as_alias(path, world->aliases);
+    e = find_by_name(&world->aliases, path, 0, 0);
     if (e) {
         return e;
     }      
@@ -486,7 +599,8 @@ ecs_iter_t ecs_scope_iter_w_filter(
         .world = iter_world
     };
 
-    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
+    ecs_id_record_t *r = flecs_get_id_record(
+        world, ecs_pair(EcsChildOf, parent));
     if (r && r->table_index) {
         it.iter.parent.tables = ecs_map_iter(r->table_index);
         it.table_count = ecs_map_count(r->table_index);
@@ -497,6 +611,7 @@ ecs_iter_t ecs_scope_iter_w_filter(
 
     return it;
 }
+
 
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *iter_world,
@@ -681,27 +796,10 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-void flecs_use_intern(
-    ecs_entity_t entity,
-    const char *name,
-    ecs_vector_t **alias_vector)
-{
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_entity_t existing = find_as_alias(name, *alias_vector);
-    ecs_assert(!existing || existing == entity, ECS_ALREADY_DEFINED, name);
-    (void)existing;
-    
-    ecs_alias_t *al = ecs_vector_add(alias_vector, ecs_alias_t);
-    al->name = ecs_os_strdup(name);
-    al->entity = entity;
-}
-
 void ecs_use(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name)
 {
-    flecs_use_intern(entity, name, &world->aliases);
+    register_by_name(&world->aliases, entity, name, 0, 0);
 }

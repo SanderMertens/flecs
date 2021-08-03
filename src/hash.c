@@ -4,6 +4,14 @@
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
+/* See explanation below. The hashing function may read beyond the memory passed
+ * into the hashing function, but only at word boundaries. This should be safe,
+ * but trips up address sanitizers and valgrind.
+ * This ensures clean valgrind logs in debug mode & the best perf in release */
+#ifndef NDEBUG
+#define VALGRIND
+#endif
+
 /*
 -------------------------------------------------------------------------------
 lookup3.c, by Bob Jenkins, May 2006, Public Domain.
@@ -42,10 +50,8 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 /*
 -------------------------------------------------------------------------------
 mix -- mix 3 32-bit values reversibly.
-
 This is reversible, so any information in (a,b,c) before mix() is
 still in (a,b,c) after mix().
-
 If four pairs of (a,b,c) inputs are run through mix(), or through
 mix() in reverse, there are at least 32 bits of the output that
 are sometimes the same for one pair and different for another pair.
@@ -59,7 +65,6 @@ This was tested for:
   difference.
 * the base values were pseudorandom, all zero but one bit set, or 
   all zero plus a counter that starts at zero.
-
 Some k values for my "a-=c; a^=rot(c,k); c+=b;" arrangement that
 satisfy this are
     4  6  8 16 19  4
@@ -69,12 +74,10 @@ Well, "9 15 3 18 27 15" didn't quite get 32 bits diffing
 for "differ" defined as + with a one-bit base and a two-bit delta.  I
 used http://burtleburtle.net/bob/hash/avalanche.html to choose 
 the operations, constants, and arrangements of the variables.
-
 This does not achieve avalanche.  There are input bits of (a,b,c)
 that fail to affect some output bits of (a,b,c), especially of a.  The
 most thoroughly mixed value is c, but it doesn't really even achieve
 avalanche in c.
-
 This allows some parallelism.  Read-after-writes are good at doubling
 the number of bits affected, so the goal of mixing pulls in the opposite
 direction as the goal of parallelism.  I did what I could.  Rotates
@@ -96,7 +99,6 @@ rotates.
 /*
 -------------------------------------------------------------------------------
 final -- final mixing of 3 32-bit values (a,b,c) into c
-
 Pairs of (a,b,c) values differing in only a few bits will usually
 produce values of c that look totally different.  This was tested for
 * pairs that differed by one bit, by two bits, in any combination
@@ -108,7 +110,6 @@ produce values of c that look totally different.  This was tested for
   difference.
 * the base values were pseudorandom, all zero but one bit set, or 
   all zero plus a counter that starts at zero.
-
 These constants passed:
  14 11 25 16 4 14 24
  12 14 25 16 4 14 24
@@ -157,7 +158,7 @@ void hashlittle2(
   u.ptr = key;
   if (HASH_LITTLE_ENDIAN && ((u.i & 0x3) == 0)) {
     const uint32_t *k = (const uint32_t *)key;         /* read 32-bit chunks */
-    const uint8_t  *k8 = NULL;
+    const uint8_t  *k8;
     (void)k8;
 
     /*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
@@ -316,10 +317,9 @@ void hashlittle2(
   *pc=c; *pb=b;
 }
 
-void flecs_hash(
+uint64_t flecs_hash(
     const void *data,
-    ecs_size_t length,
-    uint64_t *result)
+    ecs_size_t length)
 {
     uint32_t h_1 = 0;
     uint32_t h_2 = 0;
@@ -330,5 +330,5 @@ void flecs_hash(
         &h_1,
         &h_2);
 
-    *result = h_1 | ((uint64_t)h_2 << 32);
+    return h_1 | ((uint64_t)h_2 << 32);
 }

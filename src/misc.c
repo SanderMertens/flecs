@@ -134,13 +134,8 @@ uint64_t flecs_string_hash(
     const void *ptr)
 {
     const ecs_string_t *str = ptr;
-    if (str->hash) {
-        return str->hash;
-    } else {
-        uint64_t hash = 0;
-        flecs_hash(str->value, str->length, &hash);
-        return hash;
-    }
+    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
+    return str->hash;
 }
 
 /*

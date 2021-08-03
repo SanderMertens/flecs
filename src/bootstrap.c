@@ -12,27 +12,39 @@ ecs_type_t ecs_type(EcsPrefab);
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
+    ptr->hash = 0;
+    ptr->length = 0;
 })
 
 static ECS_DTOR(EcsIdentifier, ptr, {
-    ecs_os_strset(&ptr->value, NULL);
+    ecs_os_strset(&ptr->value, NULL);    
 })
 
 static ECS_COPY(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, src->value);
+    dst->hash = src->hash;
+    dst->length = src->length;
 })
 
 static ECS_MOVE(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, NULL);
     dst->value = src->value;
+    dst->hash = src->hash;
+    dst->length = src->length;
+
     src->value = NULL;
+    src->hash = 0;
+    src->length = 0;
+
 })
 
 static ECS_ON_SET(EcsIdentifier, ptr, {
     if (ptr->value) {
         ptr->length = ecs_os_strlen(ptr->value);
+        ptr->hash = flecs_hash(ptr->value, ptr->length);
     } else {
         ptr->length = 0;
+        ptr->hash = 0;
     }
 })
 
@@ -122,21 +134,6 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
     }
 }
 
-static
-void on_set_symbol( ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
-    ecs_world_t *world = it->world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        const char *symbol = n[i].value;
-        if (symbol) {
-            flecs_use_intern(e, symbol, &world->symbols);
-        }
-    }
-}
-
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -148,7 +145,7 @@ void _bootstrap_component(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
-    const char *id,
+    const char *symbol,
     ecs_size_t size,
     ecs_size_t alignment)
 {
@@ -160,23 +157,29 @@ void _bootstrap_component(
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Create record in entity index */
     ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
-    /* Insert row into table to store EcsComponent itself */
     int32_t index = flecs_table_append(world, table, data, entity, record, false);
     record->row = index + 1;
 
-    /* Set size and id */
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsIdentifier *name = ecs_vector_first(columns[1].data, EcsIdentifier);
-    EcsIdentifier *symbol = ecs_vector_first(columns[2].data, EcsIdentifier);
-    
     component[index].size = size;
     component[index].alignment = alignment;
-    name[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
-    symbol[index].value = ecs_os_strdup(id);    
+
+    const char *name = &symbol[3]; /* Strip 'Ecs' */
+    ecs_size_t symbol_length = ecs_os_strlen(symbol);
+    ecs_size_t name_length = symbol_length - 3;
+
+    EcsIdentifier *name_col = ecs_vector_first(columns[1].data, EcsIdentifier);
+    name_col[index].value = ecs_os_strdup(name);
+    name_col[index].length = name_length;
+    name_col[index].hash = flecs_hash(name, name_length);
+
+    EcsIdentifier *symbol_col = ecs_vector_first(columns[2].data, EcsIdentifier);
+    symbol_col[index].value = ecs_os_strdup(symbol);
+    symbol_col[index].length = symbol_length;
+    symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
 }
 
 /** Create type for component */
@@ -411,17 +414,13 @@ void flecs_bootstrap(
         .term = {.id = ecs_id(EcsComponentLifecycle)},
         .callback = on_set_component_lifecycle,
         .events = {EcsOnSet}
-    });
-
-    /* Define trigger for when name is set */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
-        .callback = on_set_symbol,
-        .events = {EcsOnSet}
-    });    
+    });  
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  
+
+    /* Run bootstrap functions for other parts of the code */
+    flecs_bootstrap_hierarchy(world);
 
     ecs_set_scope(world, 0);
 

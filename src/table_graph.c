@@ -5,8 +5,7 @@ uint64_t ids_hash(const void *ptr) {
     const ecs_ids_t *type = ptr;
     ecs_id_t *ids = type->array;
     int32_t count = type->count;
-    uint64_t hash = 0;
-    flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
+    uint64_t hash = flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t));
     return hash;
 }
 

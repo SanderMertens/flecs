@@ -1204,8 +1204,8 @@ struct ecs_world_t {
 
     /* -- Aliasses -- */
 
-    ecs_vector_t *aliases;
-    ecs_vector_t *symbols;
+    ecs_hashmap_t aliases;
+    ecs_hashmap_t symbols;
 
 
     /* -- Staging -- */
@@ -1316,6 +1316,9 @@ ecs_type_t flecs_bootstrap_type(
     ecs_set_symbol(world, name, #name);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
+
+/* Bootstrap functions for other parts in the code */
+void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
@@ -1791,8 +1794,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-ecs_hashmap_t flecs_table_hashmap_new(void);
-
 ecs_column_t *ecs_table_column_for_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -1851,10 +1852,9 @@ void flecs_increase_timer_resolution(
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
-void flecs_hash(
+uint64_t flecs_hash(
     const void *data,
-    ecs_size_t length,
-    uint64_t *result);
+    ecs_size_t length);
 
 /* Convert 64 bit signed integer to 16 bit */
 int8_t flflecs_to_i8(
@@ -1922,6 +1922,9 @@ int flecs_entity_compare_qsort(
 
 uint64_t flecs_string_hash(
     const void *ptr);
+
+ecs_hashmap_t flecs_table_hashmap_new(void);
+ecs_hashmap_t flecs_string_hashmap_new(void);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(
@@ -11246,6 +11249,8 @@ int ecs_plecs_from_str(
             return -1;
         }
 
+        ecs_term_fini(&term);
+
         if (ptr[0] == TOK_NEWLINE) {
             ptr ++;
             expr = ptr;
@@ -14599,6 +14604,9 @@ ecs_world_t *ecs_mini(void) {
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
+    world->aliases = flecs_string_hashmap_new();
+    world->symbols = flecs_string_hashmap_new();
+
     monitors_init(&world->monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
@@ -15115,30 +15123,15 @@ void fini_id_triggers(
 /* Cleanup aliases & symbols */
 static
 void fini_aliases(
-    ecs_world_t *world)
+    ecs_hashmap_t *map)
 {
-    int32_t i, count = ecs_vector_count(world->aliases);
-    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(aliases[i].name);
+    flecs_hashmap_iter_t it = flecs_hashmap_iter(*map);
+    ecs_string_t *key;
+    while (flecs_hashmap_next_w_key(&it, ecs_string_t, &key, ecs_entity_t)) {
+        ecs_os_free(key->value);
     }
-
-    ecs_vector_free(world->aliases);
-}
-
-static
-void fini_symbols(
-    ecs_world_t *world)
-{
-    int32_t i, count = ecs_vector_count(world->symbols);
-    ecs_alias_t *symbols = ecs_vector_first(world->symbols, ecs_alias_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(symbols[i].name);
-    }
-
-    ecs_vector_free(world->symbols);
+    
+    flecs_hashmap_free(*map);
 }
 
 /* Cleanup misc structures */
@@ -15205,10 +15198,10 @@ int ecs_fini(
 
     fini_id_triggers(world);
 
-    fini_aliases(world);
+    fini_aliases(&world->aliases);
     
-    fini_symbols(world);
-
+    fini_aliases(&world->symbols);
+    
     fini_misc(world);
 
     /* In case the application tries to use the memory of the freed world, this
@@ -16198,6 +16191,14 @@ int32_t flecs_switch_next(
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
+/* See explanation below. The hashing function may read beyond the memory passed
+ * into the hashing function, but only at word boundaries. This should be safe,
+ * but trips up address sanitizers and valgrind.
+ * This ensures clean valgrind logs in debug mode & the best perf in release */
+#ifndef NDEBUG
+#define VALGRIND
+#endif
+
 /*
 -------------------------------------------------------------------------------
 lookup3.c, by Bob Jenkins, May 2006, Public Domain.
@@ -16236,10 +16237,8 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 /*
 -------------------------------------------------------------------------------
 mix -- mix 3 32-bit values reversibly.
-
 This is reversible, so any information in (a,b,c) before mix() is
 still in (a,b,c) after mix().
-
 If four pairs of (a,b,c) inputs are run through mix(), or through
 mix() in reverse, there are at least 32 bits of the output that
 are sometimes the same for one pair and different for another pair.
@@ -16253,7 +16252,6 @@ This was tested for:
   difference.
 * the base values were pseudorandom, all zero but one bit set, or 
   all zero plus a counter that starts at zero.
-
 Some k values for my "a-=c; a^=rot(c,k); c+=b;" arrangement that
 satisfy this are
     4  6  8 16 19  4
@@ -16263,12 +16261,10 @@ Well, "9 15 3 18 27 15" didn't quite get 32 bits diffing
 for "differ" defined as + with a one-bit base and a two-bit delta.  I
 used http://burtleburtle.net/bob/hash/avalanche.html to choose 
 the operations, constants, and arrangements of the variables.
-
 This does not achieve avalanche.  There are input bits of (a,b,c)
 that fail to affect some output bits of (a,b,c), especially of a.  The
 most thoroughly mixed value is c, but it doesn't really even achieve
 avalanche in c.
-
 This allows some parallelism.  Read-after-writes are good at doubling
 the number of bits affected, so the goal of mixing pulls in the opposite
 direction as the goal of parallelism.  I did what I could.  Rotates
@@ -16290,7 +16286,6 @@ rotates.
 /*
 -------------------------------------------------------------------------------
 final -- final mixing of 3 32-bit values (a,b,c) into c
-
 Pairs of (a,b,c) values differing in only a few bits will usually
 produce values of c that look totally different.  This was tested for
 * pairs that differed by one bit, by two bits, in any combination
@@ -16302,7 +16297,6 @@ produce values of c that look totally different.  This was tested for
   difference.
 * the base values were pseudorandom, all zero but one bit set, or 
   all zero plus a counter that starts at zero.
-
 These constants passed:
  14 11 25 16 4 14 24
  12 14 25 16 4 14 24
@@ -16351,7 +16345,7 @@ void hashlittle2(
   u.ptr = key;
   if (HASH_LITTLE_ENDIAN && ((u.i & 0x3) == 0)) {
     const uint32_t *k = (const uint32_t *)key;         /* read 32-bit chunks */
-    const uint8_t  *k8 = NULL;
+    const uint8_t  *k8;
     (void)k8;
 
     /*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */
@@ -16510,10 +16504,9 @@ void hashlittle2(
   *pc=c; *pb=b;
 }
 
-void flecs_hash(
+uint64_t flecs_hash(
     const void *data,
-    ecs_size_t length,
-    uint64_t *result)
+    ecs_size_t length)
 {
     uint32_t h_1 = 0;
     uint32_t h_2 = 0;
@@ -16524,7 +16517,7 @@ void flecs_hash(
         &h_1,
         &h_2);
 
-    *result = h_1 | ((uint64_t)h_2 << 32);
+    return h_1 | ((uint64_t)h_2 << 32);
 }
 
 
@@ -21937,8 +21930,7 @@ uint64_t ids_hash(const void *ptr) {
     const ecs_ids_t *type = ptr;
     ecs_id_t *ids = type->array;
     int32_t count = type->count;
-    uint64_t hash = 0;
-    flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t), &hash);
+    uint64_t hash = flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t));
     return hash;
 }
 
@@ -24304,13 +24296,8 @@ uint64_t flecs_string_hash(
     const void *ptr)
 {
     const ecs_string_t *str = ptr;
-    if (str->hash) {
-        return str->hash;
-    } else {
-        uint64_t hash = 0;
-        flecs_hash(str->value, str->length, &hash);
-        return hash;
-    }
+    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
+    return str->hash;
 }
 
 /*
@@ -27033,27 +27020,39 @@ ecs_type_t ecs_type(EcsPrefab);
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
+    ptr->hash = 0;
+    ptr->length = 0;
 })
 
 static ECS_DTOR(EcsIdentifier, ptr, {
-    ecs_os_strset(&ptr->value, NULL);
+    ecs_os_strset(&ptr->value, NULL);    
 })
 
 static ECS_COPY(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, src->value);
+    dst->hash = src->hash;
+    dst->length = src->length;
 })
 
 static ECS_MOVE(EcsIdentifier, dst, src, {
     ecs_os_strset(&dst->value, NULL);
     dst->value = src->value;
+    dst->hash = src->hash;
+    dst->length = src->length;
+
     src->value = NULL;
+    src->hash = 0;
+    src->length = 0;
+
 })
 
 static ECS_ON_SET(EcsIdentifier, ptr, {
     if (ptr->value) {
         ptr->length = ecs_os_strlen(ptr->value);
+        ptr->hash = flecs_hash(ptr->value, ptr->length);
     } else {
         ptr->length = 0;
+        ptr->hash = 0;
     }
 })
 
@@ -27143,21 +27142,6 @@ void on_set_component_lifecycle( ecs_iter_t *it) {
     }
 }
 
-static
-void on_set_symbol( ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
-    ecs_world_t *world = it->world;
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        const char *symbol = n[i].value;
-        if (symbol) {
-            flecs_use_intern(e, symbol, &world->symbols);
-        }
-    }
-}
-
 /* -- Bootstrapping -- */
 
 #define bootstrap_component(world, table, name)\
@@ -27169,7 +27153,7 @@ void _bootstrap_component(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
-    const char *id,
+    const char *symbol,
     ecs_size_t size,
     ecs_size_t alignment)
 {
@@ -27181,23 +27165,29 @@ void _bootstrap_component(
     ecs_column_t *columns = data->columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Create record in entity index */
     ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
-    /* Insert row into table to store EcsComponent itself */
     int32_t index = flecs_table_append(world, table, data, entity, record, false);
     record->row = index + 1;
 
-    /* Set size and id */
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
-    EcsIdentifier *name = ecs_vector_first(columns[1].data, EcsIdentifier);
-    EcsIdentifier *symbol = ecs_vector_first(columns[2].data, EcsIdentifier);
-    
     component[index].size = size;
     component[index].alignment = alignment;
-    name[index].value = ecs_os_strdup(&id[ecs_os_strlen("Ecs")]); /* Skip prefix */
-    symbol[index].value = ecs_os_strdup(id);    
+
+    const char *name = &symbol[3]; /* Strip 'Ecs' */
+    ecs_size_t symbol_length = ecs_os_strlen(symbol);
+    ecs_size_t name_length = symbol_length - 3;
+
+    EcsIdentifier *name_col = ecs_vector_first(columns[1].data, EcsIdentifier);
+    name_col[index].value = ecs_os_strdup(name);
+    name_col[index].length = name_length;
+    name_col[index].hash = flecs_hash(name, name_length);
+
+    EcsIdentifier *symbol_col = ecs_vector_first(columns[2].data, EcsIdentifier);
+    symbol_col[index].value = ecs_os_strdup(symbol);
+    symbol_col[index].length = symbol_length;
+    symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
 }
 
 /** Create type for component */
@@ -27432,17 +27422,13 @@ void flecs_bootstrap(
         .term = {.id = ecs_id(EcsComponentLifecycle)},
         .callback = on_set_component_lifecycle,
         .events = {EcsOnSet}
-    });
-
-    /* Define trigger for when name is set */
-    ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
-        .callback = on_set_symbol,
-        .events = {EcsOnSet}
-    });    
+    });  
 
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  
+
+    /* Run bootstrap functions for other parts of the code */
+    flecs_bootstrap_hierarchy(world);
 
     ecs_set_scope(world, 0);
 
@@ -27499,19 +27485,77 @@ bool path_append(
 }
 
 static
-ecs_entity_t find_as_alias(
+ecs_string_t get_string_key(
     const char *name,
-    ecs_vector_t *alias_vector)
+    ecs_size_t length,
+    uint64_t hash)
 {
-    int32_t i, count = ecs_vector_count(alias_vector);
-    ecs_alias_t *aliases = ecs_vector_first(alias_vector, ecs_alias_t);
-    for (i = 0; i < count; i ++) {
-        if (!strcmp(aliases[i].name, name)) {
-            return aliases[i].entity;
+    ecs_assert(!length || length == ecs_os_strlen(name), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (!length) {
+        length = ecs_os_strlen(name);
+    }
+
+    ecs_assert(!hash || hash == flecs_hash(name, length),
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (!hash) {
+        hash = flecs_hash(name, length);
+    }
+
+    return  (ecs_string_t) {
+        .value = (char*)name,
+        .length = length,
+        .hash = hash
+    };
+}
+
+static
+ecs_entity_t find_by_name(
+    const ecs_hashmap_t *map,
+    const char *name,
+    ecs_size_t length,
+    uint64_t hash)
+{
+    ecs_string_t key = get_string_key(name, length, hash);
+
+    ecs_entity_t *e = flecs_hashmap_get(*map, &key, ecs_entity_t);
+
+    if (!e) {
+        return 0;
+    }
+
+    return *e;
+}
+
+static
+void register_by_name(
+    ecs_hashmap_t *map,
+    ecs_entity_t entity,
+    const char *name,
+    ecs_size_t length,
+    uint64_t hash)
+{
+    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_string_t key = get_string_key(name, length, hash);
+    
+    ecs_entity_t existing = find_by_name(map, name, key.length, key.hash);
+    if (existing) {
+        if (existing != entity) {
+            ecs_abort(ECS_ALREADY_DEFINED, 
+                "conflicting entity registered with name '%s'", name);
         }
     }
 
-    return 0;
+    key.value = ecs_os_strdup(key.value);
+
+    flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
+        *map, &key, ecs_entity_t);
+
+    *((ecs_entity_t*)hmr.value) = entity;
 }
 
 static
@@ -27681,6 +27725,61 @@ ecs_entity_t get_parent_from_path(
     return parent;
 }
 
+static
+void on_set_symbol(ecs_iter_t *it) {
+    EcsIdentifier *n = ecs_term(it, EcsIdentifier, 1);
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        register_by_name(
+            &world->symbols, e, n[i].value, n[i].length, n[i].hash);
+    }
+}
+
+static
+uint64_t string_hash(
+    const void *ptr)
+{
+    const ecs_string_t *str = ptr;
+    ecs_assert(str->hash != 0, ECS_INVALID_PARAMETER, NULL);
+    return str->hash;
+}
+
+static
+int string_compare(
+    const void *ptr1, 
+    const void *ptr2)
+{
+    const ecs_string_t *str1 = ptr1;
+    const ecs_string_t *str2 = ptr2;
+    ecs_size_t len1 = str1->length;
+    ecs_size_t len2 = str2->length;
+    if (len1 != len2) {
+        return (len1 > len2) - (len1 < len2);
+    }
+
+    return ecs_os_memcmp(str1->value, str2->value, len1);
+}
+
+ecs_hashmap_t flecs_string_hashmap_new(void) {
+    return flecs_hashmap_new(ecs_string_t, ecs_entity_t, 
+        string_hash, 
+        string_compare);
+}
+
+void flecs_bootstrap_hierarchy(ecs_world_t *world) {
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
+        .callback = on_set_symbol,
+        .events = {EcsOnSet}
+    });
+}
+
+
+/* Public functions */
+
 char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
@@ -27751,7 +27850,7 @@ ecs_entity_t ecs_lookup(
         return name_to_id(name);
     }
 
-    e = find_as_alias(name, world->aliases);
+    e = find_by_name(&world->aliases, name, 0, 0);
     if (e) {
         return e;
     }    
@@ -27771,7 +27870,7 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    ecs_entity_t e = find_as_alias(name, world->symbols);
+    ecs_entity_t e = find_by_name(&world->symbols, name, 0, 0);
     if (e) {
         return e;
     }
@@ -27807,7 +27906,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return e;
     }
 
-    e = find_as_alias(path, world->aliases);
+    e = find_by_name(&world->aliases, path, 0, 0);
     if (e) {
         return e;
     }      
@@ -27935,7 +28034,8 @@ ecs_iter_t ecs_scope_iter_w_filter(
         .world = iter_world
     };
 
-    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
+    ecs_id_record_t *r = flecs_get_id_record(
+        world, ecs_pair(EcsChildOf, parent));
     if (r && r->table_index) {
         it.iter.parent.tables = ecs_map_iter(r->table_index);
         it.table_count = ecs_map_count(r->table_index);
@@ -27946,6 +28046,7 @@ ecs_iter_t ecs_scope_iter_w_filter(
 
     return it;
 }
+
 
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *iter_world,
@@ -28130,27 +28231,10 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-void flecs_use_intern(
-    ecs_entity_t entity,
-    const char *name,
-    ecs_vector_t **alias_vector)
-{
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_entity_t existing = find_as_alias(name, *alias_vector);
-    ecs_assert(!existing || existing == entity, ECS_ALREADY_DEFINED, name);
-    (void)existing;
-    
-    ecs_alias_t *al = ecs_vector_add(alias_vector, ecs_alias_t);
-    al->name = ecs_os_strdup(name);
-    al->entity = entity;
-}
-
 void ecs_use(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name)
 {
-    flecs_use_intern(entity, name, &world->aliases);
+    register_by_name(&world->aliases, entity, name, 0, 0);
 }

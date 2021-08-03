@@ -1036,3 +1036,20 @@ void World_system_time_scale() {
 
     ecs_fini(world);
 }
+
+void World_ensure_empty_root() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query_new(world, "!(ChildOf, *)");
+    ecs_iter_t it = ecs_query_iter(q);
+
+    /* Make sure that the only entity in the root is the flecs module */
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_assert(it.entities[0] == EcsFlecs);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

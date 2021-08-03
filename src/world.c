@@ -338,6 +338,9 @@ ecs_world_t *ecs_mini(void) {
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->name_prefix = NULL;
 
+    world->aliases = flecs_string_hashmap_new();
+    world->symbols = flecs_string_hashmap_new();
+
     monitors_init(&world->monitors);
 
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
@@ -854,30 +857,15 @@ void fini_id_triggers(
 /* Cleanup aliases & symbols */
 static
 void fini_aliases(
-    ecs_world_t *world)
+    ecs_hashmap_t *map)
 {
-    int32_t i, count = ecs_vector_count(world->aliases);
-    ecs_alias_t *aliases = ecs_vector_first(world->aliases, ecs_alias_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(aliases[i].name);
+    flecs_hashmap_iter_t it = flecs_hashmap_iter(*map);
+    ecs_string_t *key;
+    while (flecs_hashmap_next_w_key(&it, ecs_string_t, &key, ecs_entity_t)) {
+        ecs_os_free(key->value);
     }
-
-    ecs_vector_free(world->aliases);
-}
-
-static
-void fini_symbols(
-    ecs_world_t *world)
-{
-    int32_t i, count = ecs_vector_count(world->symbols);
-    ecs_alias_t *symbols = ecs_vector_first(world->symbols, ecs_alias_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_os_free(symbols[i].name);
-    }
-
-    ecs_vector_free(world->symbols);
+    
+    flecs_hashmap_free(*map);
 }
 
 /* Cleanup misc structures */
@@ -944,10 +932,10 @@ int ecs_fini(
 
     fini_id_triggers(world);
 
-    fini_aliases(world);
+    fini_aliases(&world->aliases);
     
-    fini_symbols(world);
-
+    fini_aliases(&world->symbols);
+    
     fini_misc(world);
 
     /* In case the application tries to use the memory of the freed world, this

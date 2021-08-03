@@ -1672,7 +1672,8 @@
                 "no_threading",
                 "no_time",
                 "is_entity_enabled",
-                "get_stats"
+                "get_stats",
+                "ensure_empty_root"
             ]
         }, {
             "id": "Type",

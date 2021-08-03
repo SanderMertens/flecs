@@ -545,8 +545,8 @@ struct ecs_world_t {
 
     /* -- Aliasses -- */
 
-    ecs_vector_t *aliases;
-    ecs_vector_t *symbols;
+    ecs_hashmap_t aliases;
+    ecs_hashmap_t symbols;
 
 
     /* -- Staging -- */

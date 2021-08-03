@@ -39,6 +39,9 @@ ecs_type_t flecs_bootstrap_type(
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
 
 
+/* Bootstrap functions for other parts in the code */
+void flecs_bootstrap_hierarchy(ecs_world_t *world);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity API
 ////////////////////////////////////////////////////////////////////////////////
@@ -513,8 +516,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-ecs_hashmap_t flecs_table_hashmap_new(void);
-
 ecs_column_t *ecs_table_column_for_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -573,10 +574,9 @@ void flecs_increase_timer_resolution(
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
-void flecs_hash(
+uint64_t flecs_hash(
     const void *data,
-    ecs_size_t length,
-    uint64_t *result);
+    ecs_size_t length);
 
 /* Convert 64 bit signed integer to 16 bit */
 int8_t flflecs_to_i8(
@@ -644,6 +644,9 @@ int flecs_entity_compare_qsort(
 
 uint64_t flecs_string_hash(
     const void *ptr);
+
+ecs_hashmap_t flecs_table_hashmap_new(void);
+ecs_hashmap_t flecs_string_hashmap_new(void);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

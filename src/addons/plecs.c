@@ -76,6 +76,8 @@ int ecs_plecs_from_str(
             return -1;
         }
 
+        ecs_term_fini(&term);
+
         if (ptr[0] == TOK_NEWLINE) {
             ptr ++;
             expr = ptr;

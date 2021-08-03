@@ -2571,4 +2571,6 @@ void ComponentLifecycle_on_set_after_new_w_data() {
     vel = ecs_get(world, e3, Velocity);
     test_int(vel->x, 6);
     test_int(vel->y, 8);
+
+    ecs_fini(world);
 }

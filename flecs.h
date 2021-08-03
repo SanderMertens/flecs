@@ -3063,7 +3063,7 @@ typedef struct ecs_observer_desc_t {
 typedef struct EcsIdentifier {
     char *value;
     ecs_size_t length;
-    // uint64_t hash;    
+    uint64_t hash;    
 } EcsIdentifier;
 
 /** Component information. */

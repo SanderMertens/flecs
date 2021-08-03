@@ -1564,6 +1564,7 @@ void World_no_threading(void);
 void World_no_time(void);
 void World_is_entity_enabled(void);
 void World_get_stats(void);
+void World_ensure_empty_root(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -7915,6 +7916,10 @@ bake_test_case World_testcases[] = {
     {
         "get_stats",
         World_get_stats
+    },
+    {
+        "ensure_empty_root",
+        World_ensure_empty_root
     }
 };
 
@@ -9954,7 +9959,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        33,
+        34,
         World_testcases
     },
     {
