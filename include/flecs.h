@@ -4113,8 +4113,8 @@ bool ecs_commit(
     ecs_entity_t entity,
     ecs_record_t *record,
     ecs_table_t *table,
-    ecs_entities_t *added,
-    ecs_entities_t *removed);
+    ecs_ids_t *added,
+    ecs_ids_t *removed);
 
 /** @} */
 

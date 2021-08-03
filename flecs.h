@@ -7206,8 +7206,8 @@ bool ecs_commit(
     ecs_entity_t entity,
     ecs_record_t *record,
     ecs_table_t *table,
-    ecs_entities_t *added,
-    ecs_entities_t *removed);
+    ecs_ids_t *added,
+    ecs_ids_t *removed);
 
 /** @} */
 
@@ -13546,12 +13546,12 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
-        ecs_get_ref_w_entity(
+        ecs_get_ref_w_id(
             m_world, &m_ref, m_entity, comp_id);
     }
 
     const T* operator->() {
-        const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
+        const T* result = static_cast<const T*>(ecs_get_ref_w_id(
             m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -13561,7 +13561,7 @@ public:
 
     const T* get() {
         if (m_entity) {
-            ecs_get_ref_w_entity(
+            ecs_get_ref_w_id(
                 m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
         }
 
@@ -15044,7 +15044,7 @@ public:
 
             // If table is different, move entity straight to it
             if (table != next) {
-                ecs_entities_t ids;
+                ecs_ids_t ids;
                 ids.array = added.ptr();
                 ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);

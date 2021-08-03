@@ -390,7 +390,7 @@ int32_t get_component_index(
                         table_type, ecs_entity_t, result);
                     *component_out = *pair;
 
-                    char buf[256]; ecs_entity_str(world, *pair, buf, 256);
+                    char buf[256]; ecs_id_str(world, *pair, buf, 256);
 
                     /* Check if the pair is a tag or whether it has data */
                     if (ecs_get(world, rel, EcsComponent) == NULL) {
@@ -2132,6 +2132,49 @@ void flecs_query_notify(
     }
 }
 
+void ecs_query_order_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t order_by_component,
+    ecs_order_by_action_t order_by)
+{
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+
+    query->order_by_component = order_by_component;
+    query->order_by = order_by;
+
+    ecs_vector_free(query->table_slices);
+    query->table_slices = NULL;
+
+    sort_tables(world, query);    
+
+    if (!query->table_slices) {
+        build_sorted_tables(query);
+    }
+}
+
+void ecs_query_group_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t sort_component,
+    ecs_group_by_action_t group_by)
+{
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+
+    query->group_by_id = sort_component;
+    query->group_by = group_by;
+
+    group_tables(world, query);
+
+    order_grouped_tables(world, query);
+
+    build_sorted_tables(query);
+}
+
 
 /* -- Public API -- */
 
@@ -2944,49 +2987,6 @@ bool ecs_query_next_worker(
     it->frame_offset += first;
 
     return true;
-}
-
-void ecs_query_order_by(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_entity_t order_by_component,
-    ecs_order_by_action_t order_by)
-{
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
-
-    query->order_by_component = order_by_component;
-    query->order_by = order_by;
-
-    ecs_vector_free(query->table_slices);
-    query->table_slices = NULL;
-
-    sort_tables(world, query);    
-
-    if (!query->table_slices) {
-        build_sorted_tables(query);
-    }
-}
-
-void ecs_query_group_by(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_entity_t sort_component,
-    ecs_group_by_action_t group_by)
-{
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
-
-    query->group_by_id = sort_component;
-    query->group_by = group_by;
-
-    group_tables(world, query);
-
-    order_grouped_tables(world, query);
-
-    build_sorted_tables(query);
 }
 
 bool ecs_query_changed(

@@ -1138,12 +1138,12 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
-        ecs_get_ref_w_entity(
+        ecs_get_ref_w_id(
             m_world, &m_ref, m_entity, comp_id);
     }
 
     const T* operator->() {
-        const T* result = static_cast<const T*>(ecs_get_ref_w_entity(
+        const T* result = static_cast<const T*>(ecs_get_ref_w_id(
             m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1153,7 +1153,7 @@ public:
 
     const T* get() {
         if (m_entity) {
-            ecs_get_ref_w_entity(
+            ecs_get_ref_w_id(
                 m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
         }
 

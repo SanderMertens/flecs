@@ -30,7 +30,7 @@ void set_random(
     int32_t size)
 {
     if (rand() % 2) {
-        ecs_set_ptr_w_entity(world, entity, component, size, ptr);
+        ecs_set_id(world, entity, component, size, ptr);
     }  
 }
 

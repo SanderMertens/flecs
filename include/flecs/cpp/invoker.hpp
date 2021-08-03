@@ -516,7 +516,7 @@ public:
 
             // If table is different, move entity straight to it
             if (table != next) {
-                ecs_entities_t ids;
+                ecs_ids_t ids;
                 ids.array = added.ptr();
                 ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);

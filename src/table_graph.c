@@ -998,7 +998,7 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return flecs_table_traverse_add(world, table, &arr, NULL);
 }
 
@@ -1007,6 +1007,6 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return flecs_table_traverse_remove(world, table, &arr, NULL);
 }

@@ -394,7 +394,7 @@ ecs_set(world, e, Position, {10, 20});
 Translates into:
 
 ```c
-ecs_set_ptr_w_entity
+ecs_set_id
     (world, e, ecs_typeid(Position), sizeof(Position), 
     &(Position){10, 20});
 ```

@@ -6212,8 +6212,8 @@ bool ecs_commit(
     ecs_entity_t entity,
     ecs_record_t *record,
     ecs_table_t *table,
-    ecs_entities_t *added,
-    ecs_entities_t *removed)
+    ecs_ids_t *added,
+    ecs_ids_t *removed)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -6345,7 +6345,7 @@ ecs_entity_t ecs_new_w_type(
     new(world, entity, &to_add);
 
     ecs_id_t ids[2];
-    to_add = (ecs_entities_t){ .array = ids, .count = 0 };
+    to_add = (ecs_ids_t){ .array = ids, .count = 0 };
 
     if (with) {
         ids[to_add.count ++] = with;
@@ -6374,7 +6374,7 @@ ecs_entity_t ecs_new_w_id(
     ecs_entity_t entity = ecs_new_id(world);
 
     ecs_id_t ids[3];
-    ecs_entities_t to_add = { .array = ids, .count = 0 };
+    ecs_ids_t to_add = { .array = ids, .count = 0 };
 
     if (id) {
         ids[to_add.count ++] = id;
@@ -6600,13 +6600,13 @@ void traverse_add_remove(
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_entity_t id = ecs_pair(EcsChildOf, scope);
-            ecs_entities_t arr = { .array = &id, .count = 1 };
+            ecs_ids_t arr = { .array = &id, .count = 1 };
             table = flecs_table_traverse_add(world, table, &arr, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
         }
 
         if (with) {
-            ecs_entities_t arr = { .array = &with, .count = 1 };
+            ecs_ids_t arr = { .array = &with, .count = 1 };
             table = flecs_table_traverse_add(world, table, &arr, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
         }
@@ -6634,7 +6634,7 @@ void traverse_add_remove(
     i = 0;
     ids = desc->remove;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_entities_t arr = { .array = &id, .count = 1 };
+        ecs_ids_t arr = { .array = &id, .count = 1 };
         table = flecs_table_traverse_remove(world, table, &arr, &removed);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
@@ -7105,7 +7105,7 @@ void ecs_clear(
         ecs_type_t type = table->type;
 
         /* Remove all components */
-        ecs_entities_t to_remove = flecs_type_to_ids(type);
+        ecs_ids_t to_remove = flecs_type_to_ids(type);
         remove_ids_w_info(world, entity, &info, &to_remove);
     }    
 
@@ -7123,7 +7123,7 @@ void throw_invalid_delete(
     ecs_id_t id)
 {
     char buff[256];
-    ecs_entity_str(world, id, buff, 256);
+    ecs_id_str(world, id, buff, 256);
     ecs_abort(ECS_INVALID_DELETE, buff);    
 }
 
@@ -7438,7 +7438,7 @@ void ecs_add_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = flecs_type_to_ids(type);
+    ecs_ids_t components = flecs_type_to_ids(type);
     add_ids(world, entity, &components);
 }
 
@@ -7451,7 +7451,7 @@ void ecs_add_id(
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = { .array = &id, .count = 1 };
+    ecs_ids_t components = { .array = &id, .count = 1 };
     add_ids(world, entity, &components);
 }
 
@@ -7463,7 +7463,7 @@ void ecs_remove_type(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = flecs_type_to_ids(type);
+    ecs_ids_t components = flecs_type_to_ids(type);
     remove_ids(world, entity, &components);
 }
 
@@ -7475,7 +7475,7 @@ void ecs_remove_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_entities_t components = { .array = &id, .count = 1 };
+    ecs_ids_t components = { .array = &id, .count = 1 };
     remove_ids(world, entity, &components);
 }
 
@@ -19311,7 +19311,7 @@ int32_t get_component_index(
                         table_type, ecs_entity_t, result);
                     *component_out = *pair;
 
-                    char buf[256]; ecs_entity_str(world, *pair, buf, 256);
+                    char buf[256]; ecs_id_str(world, *pair, buf, 256);
 
                     /* Check if the pair is a tag or whether it has data */
                     if (ecs_get(world, rel, EcsComponent) == NULL) {
@@ -21053,6 +21053,49 @@ void flecs_query_notify(
     }
 }
 
+void ecs_query_order_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t order_by_component,
+    ecs_order_by_action_t order_by)
+{
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+
+    query->order_by_component = order_by_component;
+    query->order_by = order_by;
+
+    ecs_vector_free(query->table_slices);
+    query->table_slices = NULL;
+
+    sort_tables(world, query);    
+
+    if (!query->table_slices) {
+        build_sorted_tables(query);
+    }
+}
+
+void ecs_query_group_by(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t sort_component,
+    ecs_group_by_action_t group_by)
+{
+    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+
+    query->group_by_id = sort_component;
+    query->group_by = group_by;
+
+    group_tables(world, query);
+
+    order_grouped_tables(world, query);
+
+    build_sorted_tables(query);
+}
+
 
 /* -- Public API -- */
 
@@ -21865,49 +21908,6 @@ bool ecs_query_next_worker(
     it->frame_offset += first;
 
     return true;
-}
-
-void ecs_query_order_by(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_entity_t order_by_component,
-    ecs_order_by_action_t order_by)
-{
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
-
-    query->order_by_component = order_by_component;
-    query->order_by = order_by;
-
-    ecs_vector_free(query->table_slices);
-    query->table_slices = NULL;
-
-    sort_tables(world, query);    
-
-    if (!query->table_slices) {
-        build_sorted_tables(query);
-    }
-}
-
-void ecs_query_group_by(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_entity_t sort_component,
-    ecs_group_by_action_t group_by)
-{
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
-
-    query->group_by_id = sort_component;
-    query->group_by = group_by;
-
-    group_tables(world, query);
-
-    order_grouped_tables(world, query);
-
-    build_sorted_tables(query);
 }
 
 bool ecs_query_changed(
@@ -22923,7 +22923,7 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return flecs_table_traverse_add(world, table, &arr, NULL);
 }
 
@@ -22932,7 +22932,7 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_entities_t arr = { .array = &id, .count = 1 };
+    ecs_ids_t arr = { .array = &id, .count = 1 };
     return flecs_table_traverse_remove(world, table, &arr, NULL);
 }
 
@@ -26356,7 +26356,7 @@ void ecs_colsystem_dtor(
         }  
 
         if (system->query) {
-            ecs_query_free(system->query);
+            ecs_query_fini(system->query);
         }
     }
 }

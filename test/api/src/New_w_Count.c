@@ -238,7 +238,7 @@ void AddPosition(ecs_iter_t *it) {
 
     int i;
     for (i = it->count - 1; i >= 0; i --) {
-        ecs_set_ptr_w_entity(
+        ecs_set_id(
             it->world, it->entities[i], velocity, 
             sizeof(Velocity), &(Velocity){2, 3});
     }
