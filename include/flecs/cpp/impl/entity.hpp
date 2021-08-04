@@ -208,12 +208,12 @@ inline void entity_view::each(const Func& func) const {
 
     for (int i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
-        flecs::entity ent(m_world, id);
+        flecs::id ent(m_world, id);
         func(ent); 
 
         // Case is not stored in type, so handle separately
         if ((id & ECS_ROLE_MASK) == flecs::Switch) {
-            ent = flecs::entity(
+            ent = flecs::id(
                 m_world, flecs::Case | ecs_get_case(
                         m_world, m_id, ent.object().id()));
             func(ent);
@@ -233,7 +233,7 @@ inline void entity_view::match(id_t pattern, const Func& func) const {
     int32_t cur = 0;
 
     while (-1 != (cur = ecs_type_match(type, cur, pattern))) {
-        flecs::entity ent(m_world, ids[cur]);
+        flecs::id ent(m_world, ids[cur]);
         func(ent);
         cur ++;
     }

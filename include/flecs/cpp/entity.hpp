@@ -121,26 +121,64 @@ public:
      */
     flecs::type to_type() const;
 
-    /** Iterate contents (type) of an entity.
+    /** Iterate (component) ids of an entity.
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::id id)
+     *
+     * @param func The function invoked for each id.
      */
     template <typename Func>
     void each(const Func& func) const;
 
-    /** Iterate contents (type) of an entity for a specific relationship.
+    /** Iterate objects for a given relationship.
+     * This operation will return the object for all ids that match with the
+     * (rel, *) pattern.
+     *
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::entity object)
+     *
+     * @param rel The relationship for which to iterate the objects.
+     * @param func The function invoked for each object.
      */
     template <typename Func>
     void each(const flecs::entity_view& rel, const Func& func) const;
 
-    /** Iterate contents (type) of an entity for a specific relationship.
+    /** Iterate objects for a given relationship.
+     * This operation will return the object for all ids that match with the
+     * (Rel, *) pattern.
+     *
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::entity object)
+     *
+     * @tparam Rel The relationship for which to iterate the objects.
+     * @param func The function invoked for each object.     
      */
     template <typename Rel, typename Func>
     void each(const Func& func) const { 
         return each(_::cpp_type<Rel>::id(m_world), func);
     }
 
-    /** Find all contents of an entity matching a pattern. */
+    /** Find all (component) ids contained by an entity matching a pattern.
+     * This operation will return all ids that match the provided pattern. The
+     * pattern may contain wildcards by using the flecs::Wildcard constant:
+     *
+     * match(flecs::Wildcard, ...)
+     *   Matches with all non-pair ids.
+     *
+     * match(world.pair(rel, flecs::Wildcard))
+     *   Matches all pair ids with relationship rel
+     *
+     * match(world.pair(flecs::Wildcard, obj))
+     *   Matches all pair ids with object obj
+     *
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::id id)
+     *
+     * @param pattern The pattern to use for matching.
+     * @param func The function invoked for each matching id.
+     */
     template <typename Func>
-    void match(id_t pattern, const Func& func) const;
+    void match(flecs::id_t pattern, const Func& func) const;
 
     /** Get component value.
      * 

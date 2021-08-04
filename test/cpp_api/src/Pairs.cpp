@@ -554,7 +554,7 @@ void Pairs_each() {
 
     int32_t count = 0;
 
-    e.each([&](flecs::entity e) {
+    e.each([&](flecs::id e) {
         if (count == 0) {
             test_assert(e == p_1);
         } else if (count == 1) {

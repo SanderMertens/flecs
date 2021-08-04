@@ -47,7 +47,7 @@ string indent(std::uint32_t lvl) {
 // Visit all components
 void visit_components(const entity& e, std::uint32_t lvl = 0) {
     // Iterate all components of entity
-    e.each([&](entity& id) {
+    e.each([&](flecs::id& id) {
         // Skip IsA relations
         if (id.has_relation(IsA)) {
             return;
