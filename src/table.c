@@ -1964,10 +1964,6 @@ void merge_table_data(
         int16_t size = new_columns[i_new].size;
         int16_t alignment = new_columns[i_new].alignment;
 
-        if (!size) {
-            continue;
-        }
-
         if (new_component == old_component) {
             merge_column(world, new_table, new_data, i_new, 
                 old_columns[i_old].data);
@@ -2009,9 +2005,9 @@ void merge_table_data(
                 /* Old column does not occur in new table, remove */
                 ecs_vector_free(column->data);
                 column->data = NULL;
-
-                i_old ++;
             }
+
+            i_old ++;
         }
     }
 

@@ -420,3 +420,31 @@ void Remove_bulk_remove_entity_on_remove() {
 
     ecs_fini(world);
 }
+
+void Remove_bulk_bulk_remove_w_low_tag_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t low_id = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .use_low_id = true
+    });
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, low_id);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_add(world, e2, Velocity);
+
+    ecs_bulk_remove(world, Position, &(ecs_filter_t){
+        .include = ecs_type(Position)
+    });
+
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e1, Velocity));
+    test_assert(ecs_has_id(world, e1, low_id));
+
+    ecs_fini(world);
+}

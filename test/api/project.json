@@ -523,7 +523,8 @@
                 "on_remove",
                 "remove_entity_comp",
                 "remove_entity_tag",
-                "remove_entity_on_remove"
+                "remove_entity_on_remove",
+                "bulk_remove_w_low_tag_id"
             ]
         }, {
             "id": "Add_remove_bulk",

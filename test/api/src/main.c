@@ -493,6 +493,7 @@ void Remove_bulk_on_remove(void);
 void Remove_bulk_remove_entity_comp(void);
 void Remove_bulk_remove_entity_tag(void);
 void Remove_bulk_remove_entity_on_remove(void);
+void Remove_bulk_bulk_remove_w_low_tag_id(void);
 
 // Testsuite 'Add_remove_bulk'
 void Add_remove_bulk_add_remove_add_only(void);
@@ -3875,6 +3876,10 @@ bake_test_case Remove_bulk_testcases[] = {
     {
         "remove_entity_on_remove",
         Remove_bulk_remove_entity_on_remove
+    },
+    {
+        "bulk_remove_w_low_tag_id",
+        Remove_bulk_bulk_remove_w_low_tag_id
     }
 };
 
@@ -9686,7 +9691,7 @@ static bake_test_suite suites[] = {
         "Remove_bulk",
         NULL,
         NULL,
-        12,
+        13,
         Remove_bulk_testcases
     },
     {
