@@ -12057,6 +12057,9 @@ public:
         return (m_id & ECS_ROLE_MASK) == flecs::Case;
     }
 
+    /* Return id as entity (only allowed when id is valid entity) */
+    flecs::entity entity() const;
+
     /* Return id with role added */
     flecs::entity add_role(flecs::id_t role) const;
 
@@ -12714,7 +12717,7 @@ public:
      * @param relation The relation for which to retrieve the object.
      * @param index The index (0 for the first instance of the relation).
      */
-    entity get_object(flecs::entity_t relation, int32_t index = 0) const;
+    flecs::entity get_object(flecs::entity_t relation, int32_t index = 0) const;
 
     /** Get parent from an entity.
      * This operation retrieves the parent entity that has the specified 
@@ -17367,6 +17370,71 @@ inline void ctor_world_entity_impl(
 namespace flecs 
 {
 
+inline flecs::entity id::entity() const {
+    ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!role(), ECS_INVALID_OPERATION, NULL);
+    return flecs::entity(m_world, m_id);
+}
+
+inline flecs::entity id::role() const {
+    return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
+}
+
+inline flecs::entity id::relation() const {
+    ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
+
+    flecs::entity_t e = ECS_PAIR_RELATION(m_id);
+    if (m_world) {
+        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    } else {
+        return flecs::entity(e);
+    }
+}
+
+inline flecs::entity id::object() const {
+    flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
+    if (m_world) {
+        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    } else {
+        return flecs::entity(m_world, e);
+    }
+}
+
+inline flecs::entity id::add_role(flecs::id_t role) const {
+    return flecs::entity(m_world, m_id | role);
+}
+
+inline flecs::entity id::remove_role(flecs::id_t role) const {
+    (void)role;
+    ecs_assert((m_id & ECS_ROLE_MASK) == role, ECS_INVALID_PARAMETER, NULL);
+    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+}
+
+inline flecs::entity id::remove_role() const {
+    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+}
+
+inline flecs::entity id::remove_generation() const {
+    return flecs::entity(m_world, static_cast<uint32_t>(m_id));
+}
+
+inline entity id::lo() const {
+    return flecs::entity(m_world, ecs_entity_t_lo(m_id));
+}
+
+inline entity id::hi() const {
+    return flecs::entity(m_world, ecs_entity_t_hi(m_id));
+}
+
+inline entity id::comb(entity_view lo, entity_view hi) {
+    return flecs::entity(lo.world(), 
+        ecs_entity_t_comb(lo.id(), hi.id()));
+}
+
+}
+namespace flecs 
+{
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity range, allows for operating on a range of consecutive entities
 ////////////////////////////////////////////////////////////////////////////////
@@ -17453,61 +17521,6 @@ inline flecs::entity entity_view::get_object(
         ecs_get_object(m_world, m_id, relation, index));
 }
 
-inline flecs::entity id::role() const {
-    return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
-}
-
-inline flecs::entity id::relation() const {
-    ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
-
-    flecs::entity_t e = ECS_PAIR_RELATION(m_id);
-    if (m_world) {
-        return flecs::entity(m_world, ecs_get_alive(m_world, e));
-    } else {
-        return flecs::entity(e);
-    }
-}
-
-inline flecs::entity id::object() const {
-    flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
-    if (m_world) {
-        return flecs::entity(m_world, ecs_get_alive(m_world, e));
-    } else {
-        return flecs::entity(m_world, e);
-    }
-}
-
-inline flecs::entity id::add_role(flecs::id_t role) const {
-    return flecs::entity(m_world, m_id | role);
-}
-
-inline flecs::entity id::remove_role(flecs::id_t role) const {
-    (void)role;
-    ecs_assert((m_id & ECS_ROLE_MASK) == role, ECS_INVALID_PARAMETER, NULL);
-    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
-}
-
-inline flecs::entity id::remove_role() const {
-    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
-}
-
-inline flecs::entity id::remove_generation() const {
-    return flecs::entity(m_world, static_cast<uint32_t>(m_id));
-}
-
-inline entity id::lo() const {
-    return entity(m_world, ecs_entity_t_lo(m_id));
-}
-
-inline entity id::hi() const {
-    return entity(m_world, ecs_entity_t_hi(m_id));
-}
-
-inline entity id::comb(entity_view lo, entity_view hi) {
-    return entity(lo.world(), 
-        ecs_entity_t_comb(lo.id(), hi.id()));
-}
-
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
     ecs_assert(!stage.is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use readonly world/stage to create mutable handle");
@@ -17576,7 +17589,7 @@ inline void entity_view::each(const Func& func) const {
         flecs::id ent(m_world, id);
         func(ent); 
 
-        // Case is not stored in type, so handle separately
+        // Case is not stored in type, so handle separatelyx
         if ((id & ECS_ROLE_MASK) == flecs::Switch) {
             ent = flecs::id(
                 m_world, flecs::Case | ecs_get_case(

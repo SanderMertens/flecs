@@ -166,7 +166,9 @@
                 "is_a",
                 "is_a_w_type",
                 "child_of",
-                "child_of_w_type"
+                "child_of_w_type",
+                "id_get_entity",
+                "id_get_invalid_entity"
             ]
         }, {
             "id": "Pairs",

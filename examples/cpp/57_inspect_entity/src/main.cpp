@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
     // SpaceShip state machine
-    auto ShipStateType = ecs.type("ShipState")
+    auto ShipStateType = ecs.type().component<ShipState>()
         .add<ShipState::Idle>()
         .add<ShipState::Flying>()
         .add<ShipState::Fighting>();

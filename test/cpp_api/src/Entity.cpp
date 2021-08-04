@@ -2847,3 +2847,28 @@ void Entity_child_of_w_type() {
     test_assert(e.has(flecs::ChildOf, base));
     test_assert(e.has_w_object<Parent>(flecs::ChildOf));
 }
+
+void Entity_id_get_entity() {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    auto id = world.id(e);
+
+    test_assert(id.entity() == e);
+}
+
+void Entity_id_get_invalid_entity() {
+    install_test_abort();
+    
+    flecs::world world;
+
+    auto r = world.entity();
+    auto o = world.entity();
+
+    auto id = world.id(r, o);
+
+    test_expect_abort();
+    
+    id.entity();
+}

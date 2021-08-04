@@ -306,7 +306,7 @@ public:
      * @param relation The relation for which to retrieve the object.
      * @param index The index (0 for the first instance of the relation).
      */
-    entity get_object(flecs::entity_t relation, int32_t index = 0) const;
+    flecs::entity get_object(flecs::entity_t relation, int32_t index = 0) const;
 
     /** Get parent from an entity.
      * This operation retrieves the parent entity that has the specified 

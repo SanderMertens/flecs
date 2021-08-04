@@ -47,6 +47,9 @@ public:
         return (m_id & ECS_ROLE_MASK) == flecs::Case;
     }
 
+    /* Return id as entity (only allowed when id is valid entity) */
+    flecs::entity entity() const;
+
     /* Return id with role added */
     flecs::entity add_role(flecs::id_t role) const;
 
