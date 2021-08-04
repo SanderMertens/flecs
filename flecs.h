@@ -13559,7 +13559,7 @@ public:
 
     /* Set the entity name.
      */
-    const Base& set_name(const char *name) {
+    const Base& set_name(const char *name) const {
         ecs_set_name(this->base_world(), this->base_id(), name);
         return *this;
     }    
@@ -17432,6 +17432,7 @@ inline entity id::comb(entity_view lo, entity_view hi) {
 }
 
 }
+
 namespace flecs 
 {
 
@@ -17589,7 +17590,7 @@ inline void entity_view::each(const Func& func) const {
         flecs::id ent(m_world, id);
         func(ent); 
 
-        // Case is not stored in type, so handle separatelyx
+        // Case is not stored in type, so handle separately
         if ((id & ECS_ROLE_MASK) == flecs::Switch) {
             ent = flecs::id(
                 m_world, flecs::Case | ecs_get_case(

@@ -1148,7 +1148,7 @@ public:
 
     /* Set the entity name.
      */
-    const Base& set_name(const char *name) {
+    const Base& set_name(const char *name) const {
         ecs_set_name(this->base_world(), this->base_id(), name);
         return *this;
     }    
