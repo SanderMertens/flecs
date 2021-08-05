@@ -612,7 +612,6 @@ ecs_iter_t ecs_scope_iter_w_filter(
     return it;
 }
 
-
 ecs_iter_t ecs_scope_iter(
     ecs_world_t *iter_world,
     ecs_entity_t parent)
