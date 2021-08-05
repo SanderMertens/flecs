@@ -354,7 +354,7 @@ ecs_entity_t ecs_typeid(Position) = ecs_component_init(world, &(ecs_component_de
     .size = sizeof(Position),
     .alignment = ECS_ALIGNOF(Position)
 });
-ecs_type_t ecs_type(Position) = ecs_type_from_entity(world, ecs_typeid(Position));
+ecs_type_t ecs_type(Position) = ecs_type_from_id(world, ecs_typeid(Position));
 ```
 
 The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_typeid(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:

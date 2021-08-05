@@ -2469,6 +2469,15 @@ typedef struct ecs_scope_iter_t {
     ecs_iter_table_t table;
 } ecs_scope_iter_t;
 
+/** Term-iterator specific data */
+typedef struct ecs_term_iter_t {
+    ecs_term_t term;
+    ecs_map_iter_t iter;
+    ecs_iter_table_t table;
+    ecs_type_t type;
+    int32_t column;
+} ecs_term_iter_t;
+
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
@@ -2484,7 +2493,7 @@ typedef struct ecs_query_iter_t {
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
-} ecs_query_iter_t;  
+} ecs_query_iter_t;
 
 /** Query-iterator specific data */
 typedef struct ecs_snapshot_iter_t {
@@ -2539,6 +2548,7 @@ struct ecs_iter_t {
 
     union {
         ecs_scope_iter_t parent;
+        ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
         ecs_snapshot_iter_t snapshot;
@@ -5976,11 +5986,42 @@ const char* ecs_set_name_prefix(
  * @{
  */
 
+/** Iterator for a single (component) id.
+ * A term iterator returns all entities (tables) that match a single (component)
+ * id. The search for the matching set of entities (tables) is performed in 
+ * constant time.
+ *
+ * Currently only trivial terms are supported (see ecs_term_is_trivial). Only
+ * the id field of the term needs to be initialized.
+ *
+ * @param world The world.
+ * @param term The term.
+ * @return The iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_term_iter(
+    ecs_world_t *world,
+    const ecs_term_t *term); 
+
+/** Progress the term iterator.
+ * This operation progresses the term iterator to the next table. The 
+ * iterator must have been initialized with `ecs_term_iter`. This operation 
+ * must be invoked at least once before interpreting the contents of the 
+ * iterator.
+ *
+ * @param iter The iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_API
+bool ecs_term_next(
+    ecs_iter_t *it);
+
 /** Test whether term id is set.
  *
  * @param id The term id.
  * @return True when set, false when not set.
  */
+FLECS_API 
 bool ecs_term_id_is_set(
     const ecs_term_id_t *id);
 
@@ -6024,7 +6065,7 @@ bool ecs_term_is_set(
  */
 FLECS_API
 bool ecs_term_is_trivial(
-    ecs_term_t *term);
+    const ecs_term_t *term);
 
 /** Finalize term.
  * Ensure that all fields of a term are consistent and filled out. This 
@@ -9247,6 +9288,9 @@ namespace _
 {
 template <typename T, typename U = int>
 class cpp_type;
+
+template <typename Func, typename ... Components>
+class each_invoker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11897,6 +11941,16 @@ public:
         ecs_defer_end(m_world);
     }
 
+    /** Iterate over all entities with provided component.
+     */
+    template <typename T, typename Func>
+    void each(Func&& func) const;
+
+    /** Iterate over all entities with provided (component) id.
+     */
+    template <typename Func>
+    void each(flecs::id_t term_id, Func&& func) const;
+
     /** Create a prefab.
      */
     template <typename... Args>
@@ -14327,7 +14381,7 @@ public:
 
         // Create a type from the component id.
         if (!s_type) {
-            s_type = ecs_type_from_entity(world, s_id);
+            s_type = ecs_type_from_id(world, s_id);
         }
 
         ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
@@ -17565,7 +17619,7 @@ inline flecs::type entity_view::type() const {
 }
 
 inline flecs::type entity_view::to_type() const {
-    ecs_type_t type = ecs_type_from_entity(m_world, m_id);
+    ecs_type_t type = ecs_type_from_id(m_world, m_id);
     return flecs::type(m_world, type);
 }
 
@@ -18028,6 +18082,28 @@ inline flecs::entity world::relocatable_component(Args &&... args) const {
 template <typename... Args>
 inline flecs::snapshot world::snapshot(Args &&... args) const {
     return flecs::snapshot(*this, std::forward<Args>(args)...);
+}
+
+template <typename T, typename Func>
+inline void world::each(Func&& func) const {
+    ecs_term_t term = {};
+    term.id = _::cpp_type<T>::id();
+    ecs_iter_t it = ecs_term_iter(m_world, &term);
+
+    while (ecs_term_next(&it)) {
+        _::each_invoker<Func, T>(func).invoke(&it);
+    }        
+}
+
+template <typename Func>
+inline void world::each(flecs::id_t term_id, Func&& func) const {
+    ecs_term_t term = {};
+    term.id = term_id;
+    ecs_iter_t it = ecs_term_iter(m_world, &term);
+
+    while (ecs_term_next(&it)) {
+        _::each_invoker<Func>(func).invoke(&it);
+    }
 }
 
 } // namespace flecs

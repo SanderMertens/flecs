@@ -435,7 +435,7 @@ public:
 
         // Create a type from the component id.
         if (!s_type) {
-            s_type = ecs_type_from_entity(world, s_id);
+            s_type = ecs_type_from_id(world, s_id);
         }
 
         ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);

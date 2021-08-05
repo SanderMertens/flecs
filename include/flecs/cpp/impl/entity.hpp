@@ -131,7 +131,7 @@ inline flecs::type entity_view::type() const {
 }
 
 inline flecs::type entity_view::to_type() const {
-    ecs_type_t type = ecs_type_from_entity(m_world, m_id);
+    ecs_type_t type = ecs_type_from_id(m_world, m_id);
     return flecs::type(m_world, type);
 }
 

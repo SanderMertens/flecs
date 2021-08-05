@@ -976,6 +976,11 @@ void Filter_term_w_pred_obj(void);
 void Filter_term_w_pair_finalize_twice(void);
 void Filter_term_w_role(void);
 void Filter_term_w_pred_role(void);
+void Filter_term_iter_component(void);
+void Filter_term_iter_tag(void);
+void Filter_term_iter_pair(void);
+void Filter_term_iter_pair_w_rel_wildcard(void);
+void Filter_term_iter_pair_w_obj_wildcard(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -5695,6 +5700,26 @@ bake_test_case Filter_testcases[] = {
     {
         "term_w_pred_role",
         Filter_term_w_pred_role
+    },
+    {
+        "term_iter_component",
+        Filter_term_iter_component
+    },
+    {
+        "term_iter_tag",
+        Filter_term_iter_tag
+    },
+    {
+        "term_iter_pair",
+        Filter_term_iter_pair
+    },
+    {
+        "term_iter_pair_w_rel_wildcard",
+        Filter_term_iter_pair_w_rel_wildcard
+    },
+    {
+        "term_iter_pair_w_obj_wildcard",
+        Filter_term_iter_pair_w_obj_wildcard
     }
 };
 
@@ -9810,7 +9835,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        13,
+        18,
         Filter_testcases
     },
     {

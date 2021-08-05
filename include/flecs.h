@@ -2883,11 +2883,42 @@ const char* ecs_set_name_prefix(
  * @{
  */
 
+/** Iterator for a single (component) id.
+ * A term iterator returns all entities (tables) that match a single (component)
+ * id. The search for the matching set of entities (tables) is performed in 
+ * constant time.
+ *
+ * Currently only trivial terms are supported (see ecs_term_is_trivial). Only
+ * the id field of the term needs to be initialized.
+ *
+ * @param world The world.
+ * @param term The term.
+ * @return The iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_term_iter(
+    ecs_world_t *world,
+    const ecs_term_t *term); 
+
+/** Progress the term iterator.
+ * This operation progresses the term iterator to the next table. The 
+ * iterator must have been initialized with `ecs_term_iter`. This operation 
+ * must be invoked at least once before interpreting the contents of the 
+ * iterator.
+ *
+ * @param iter The iterator.
+ * @returns True if more data is available, false if not.
+ */
+FLECS_API
+bool ecs_term_next(
+    ecs_iter_t *it);
+
 /** Test whether term id is set.
  *
  * @param id The term id.
  * @return True when set, false when not set.
  */
+FLECS_API 
 bool ecs_term_id_is_set(
     const ecs_term_id_t *id);
 
@@ -2931,7 +2962,7 @@ bool ecs_term_is_set(
  */
 FLECS_API
 bool ecs_term_is_trivial(
-    ecs_term_t *term);
+    const ecs_term_t *term);
 
 /** Finalize term.
  * Ensure that all fields of a term are consistent and filled out. This 

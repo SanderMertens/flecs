@@ -41,8 +41,8 @@ void Type_type_of_2_tostr() {
 void Type_type_of_2_tostr_no_id() {
     ecs_world_t *world = ecs_init();
 
-    ecs_type_t t_1 = ecs_type_from_entity(world, 100);
-    ecs_type_t t_2 = ecs_type_from_entity(world, 200);
+    ecs_type_t t_1 = ecs_type_from_id(world, 100);
+    ecs_type_t t_2 = ecs_type_from_id(world, 200);
     ecs_type_t t = 0;
     t = ecs_type_merge(world, t, t_1, 0);
     t = ecs_type_merge(world, t, t_2, 0);
@@ -724,7 +724,7 @@ void Type_type_from_empty_entity() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_type_t t = ecs_type_from_entity(world, e);
+    ecs_type_t t = ecs_type_from_id(world, e);
     test_assert(t != NULL);
 
     test_int(ecs_vector_count(t), 1);
@@ -821,7 +821,7 @@ void Type_type_from_entity() {
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Entity, Position);
 
-    ecs_type_t t = ecs_type_from_entity(world, Entity);
+    ecs_type_t t = ecs_type_from_id(world, Entity);
     test_assert(t != NULL);
     test_int(ecs_vector_count(t), 1);
 
@@ -836,7 +836,7 @@ void Type_type_from_empty() {
 
     ECS_ENTITY(world, Entity, 0);
 
-    ecs_type_t t = ecs_type_from_entity(world, Entity);
+    ecs_type_t t = ecs_type_from_id(world, Entity);
     test_assert(t != NULL);
     test_int(ecs_vector_count(t), 1);
 
@@ -852,7 +852,7 @@ void Type_type_from_0() {
     ecs_world_t *world = ecs_init();
 
     test_expect_abort();
-    ecs_type_from_entity(world, 0);
+    ecs_type_from_id(world, 0);
 }
 
 void Type_type_remove() {

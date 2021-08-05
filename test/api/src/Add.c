@@ -467,13 +467,13 @@ void Add_add_remove() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_type_t ecs_type(Tag_1) = ecs_type_from_entity(world, Tag_1);
+    ecs_type_t ecs_type(Tag_1) = ecs_type_from_id(world, Tag_1);
     ecs_add_remove(world, e, Tag_1, Type);
     test_assert(ecs_has_entity(world, e, Tag_1));
     test_assert(!ecs_has_entity(world, e, Tag_2));
     test_assert(!ecs_has_entity(world, e, Tag_3));
 
-    ecs_type_t ecs_type(Tag_2) = ecs_type_from_entity(world, Tag_2);
+    ecs_type_t ecs_type(Tag_2) = ecs_type_from_id(world, Tag_2);
     ecs_add_remove(world, e, Tag_2, Type);
     test_assert(!ecs_has_entity(world, e, Tag_1));
     test_assert(ecs_has_entity(world, e, Tag_2));
@@ -490,7 +490,7 @@ void Add_add_remove_same() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    ecs_type_t ecs_type(Tag_1) = ecs_type_from_entity(world, Tag_1);
+    ecs_type_t ecs_type(Tag_1) = ecs_type_from_id(world, Tag_1);
     ecs_add_remove(world, e, Tag_1, Tag_1);
     test_assert(ecs_has_entity(world, e, Tag_1));
 

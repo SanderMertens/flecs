@@ -873,6 +873,16 @@ public:
         ecs_defer_end(m_world);
     }
 
+    /** Iterate over all entities with provided component.
+     */
+    template <typename T, typename Func>
+    void each(Func&& func) const;
+
+    /** Iterate over all entities with provided (component) id.
+     */
+    template <typename Func>
+    void each(flecs::id_t term_id, Func&& func) const;
+
     /** Create a prefab.
      */
     template <typename... Args>

@@ -94,6 +94,9 @@ namespace _
 {
 template <typename T, typename U = int>
 class cpp_type;
+
+template <typename Func, typename ... Components>
+class each_invoker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -177,7 +177,7 @@ bool ecs_term_is_set(
 }
 
 bool ecs_term_is_trivial(
-    ecs_term_t *term)
+    const ecs_term_t *term)
 {
     if (term->inout != EcsInOutDefault) {
         return false;
@@ -648,6 +648,79 @@ bool ecs_filter_match_entity(
     }
 }
 
+ecs_iter_t ecs_term_iter(
+    ecs_world_t *world,
+    const ecs_term_t *term)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term->id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term->oper == EcsAnd, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_record_t *idr = flecs_get_id_record(world, term->id);
+
+    ecs_term_iter_t iter = {
+        .term = *term,
+        .iter = ecs_map_iter(idr->table_index)
+    };
+
+    return (ecs_iter_t){
+        .world = world,
+        .iter.term = iter,
+        .column_count = 1
+    };
+}
+
+bool ecs_term_next(
+    ecs_iter_t *it)
+{
+    ecs_term_iter_t *iter = &it->iter.term;
+    ecs_table_record_t *tr;
+    ecs_world_t *world = it->world;
+
+    do {
+        tr = ecs_map_next(&iter->iter, ecs_table_record_t, NULL);
+    } while (tr && !ecs_table_count(tr->table));
+
+    if (!tr) {
+        it->is_valid = false;
+        return false;
+    }
+
+    ecs_table_t *table = tr->table;
+    ecs_data_t *data = flecs_table_get_data(tr->table);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    int32_t column = tr->column;
+    
+    iter->column = column + 1;
+
+    /* If there is no data, ensure that iterator won't try to get it */
+    if (table->column_count <= column) {
+        iter->column = 0;
+    } else {
+        ecs_column_t *c = &data->columns[column];
+        if (!c->size) {
+            iter->column = 0;
+        }
+    }
+
+    iter->type = ecs_type_from_id(world, ids[column]);
+    
+    iter->table.table = table;
+    iter->table.data = data;
+    iter->table.columns = &iter->column;
+    iter->table.components = &ids[column];
+    iter->table.types = &iter->type;
+
+    it->table = &iter->table;
+    it->table_columns = data->columns;
+    it->count = ecs_table_count(table);
+    it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+    it->is_valid = true;
+
+    return true;
+}
+
 ecs_iter_t ecs_filter_iter(
     ecs_world_t *world,
     const ecs_filter_t *filter)
@@ -692,7 +765,6 @@ bool ecs_filter_next(
         it->table_columns = data->columns;
         it->count = ecs_table_count(table);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        it->is_valid = true;
 
         goto yield;
     }

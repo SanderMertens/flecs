@@ -436,6 +436,15 @@ void Observer_2_terms_on_set(void);
 void Observer_2_terms_un_set(void);
 void Observer_observer_w_self(void);
 
+// Testsuite 'Filter'
+void Filter_term_each_component(void);
+void Filter_term_each_tag(void);
+void Filter_term_each_id(void);
+void Filter_term_each_pair_type(void);
+void Filter_term_each_pair_id(void);
+void Filter_term_each_pair_relation_wildcard(void);
+void Filter_term_each_pair_object_wildcard(void);
+
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -2275,6 +2284,37 @@ bake_test_case Observer_testcases[] = {
     }
 };
 
+bake_test_case Filter_testcases[] = {
+    {
+        "term_each_component",
+        Filter_term_each_component
+    },
+    {
+        "term_each_tag",
+        Filter_term_each_tag
+    },
+    {
+        "term_each_id",
+        Filter_term_each_id
+    },
+    {
+        "term_each_pair_type",
+        Filter_term_each_pair_type
+    },
+    {
+        "term_each_pair_id",
+        Filter_term_each_pair_id
+    },
+    {
+        "term_each_pair_relation_wildcard",
+        Filter_term_each_pair_relation_wildcard
+    },
+    {
+        "term_each_pair_object_wildcard",
+        Filter_term_each_pair_object_wildcard
+    }
+};
+
 bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add",
@@ -3033,6 +3073,13 @@ static bake_test_suite suites[] = {
         Observer_testcases
     },
     {
+        "Filter",
+        NULL,
+        NULL,
+        7,
+        Filter_testcases
+    },
+    {
         "ComponentLifecycle",
         NULL,
         NULL,
@@ -3099,5 +3146,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 20);
+    return bake_test_run("cpp_api", argc, argv, suites, 21);
 }

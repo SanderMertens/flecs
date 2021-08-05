@@ -311,4 +311,26 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
     return flecs::snapshot(*this, std::forward<Args>(args)...);
 }
 
+template <typename T, typename Func>
+inline void world::each(Func&& func) const {
+    ecs_term_t term = {};
+    term.id = _::cpp_type<T>::id();
+    ecs_iter_t it = ecs_term_iter(m_world, &term);
+
+    while (ecs_term_next(&it)) {
+        _::each_invoker<Func, T>(func).invoke(&it);
+    }        
+}
+
+template <typename Func>
+inline void world::each(flecs::id_t term_id, Func&& func) const {
+    ecs_term_t term = {};
+    term.id = term_id;
+    ecs_iter_t it = ecs_term_iter(m_world, &term);
+
+    while (ecs_term_next(&it)) {
+        _::each_invoker<Func>(func).invoke(&it);
+    }
+}
+
 } // namespace flecs

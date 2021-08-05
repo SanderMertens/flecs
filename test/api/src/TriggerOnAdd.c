@@ -664,7 +664,7 @@ void SystemA(ecs_iter_t *it) {
             ecs_add_type(
                 it->world, 
                 it->entities[i], 
-                ecs_type_from_entity(it->world, tag));
+                ecs_type_from_id(it->world, tag));
         }
     }
 }

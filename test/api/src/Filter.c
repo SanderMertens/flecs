@@ -324,3 +324,167 @@ void Filter_term_w_pred_role() {
 
     ecs_fini(world);
 }
+
+void Filter_term_iter_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {3, 4});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {5, 6});
+
+    ecs_add(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        ecs_id(Position)
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+
+    Position *p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p[0].x, 1);
+    test_int(p[0].y, 2);
+
+    test_int(p[1].x, 3);
+    test_int(p[1].y, 4);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p[0].x, 5);
+    test_int(p[0].y, 6);
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag1);
+    ECS_TAG(world, Tag2);
+
+    ecs_entity_t e_1 = ecs_new(world, Tag1);
+    ecs_entity_t e_2 = ecs_new(world, Tag1);
+    ecs_entity_t e_3 = ecs_new(world, Tag1);
+
+    ecs_add(world, e_3, Tag2);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { Tag1 });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), Tag1);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), Tag1);
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, Obj);
+
+    ecs_add(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { ecs_pair(Rel, Obj) });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_pair_w_rel_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel_1);
+    ECS_TAG(world, Rel_2);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel_1, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel_1, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel_2, Obj);
+
+    ecs_add(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
+        ecs_pair(EcsWildcard, Obj) 
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj));
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_2, Obj));
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_pair_w_obj_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj_1);
+    ECS_TAG(world, Obj_2);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, Obj_1);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, Obj_2);
+
+    ecs_add(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
+        ecs_pair(Rel, EcsWildcard) 
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_1));
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
+
+    ecs_fini(world);
+}

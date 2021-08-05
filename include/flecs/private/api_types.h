@@ -97,6 +97,15 @@ typedef struct ecs_scope_iter_t {
     ecs_iter_table_t table;
 } ecs_scope_iter_t;
 
+/** Term-iterator specific data */
+typedef struct ecs_term_iter_t {
+    ecs_term_t term;
+    ecs_map_iter_t iter;
+    ecs_iter_table_t table;
+    ecs_type_t type;
+    int32_t column;
+} ecs_term_iter_t;
+
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
@@ -112,7 +121,7 @@ typedef struct ecs_query_iter_t {
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
-} ecs_query_iter_t;  
+} ecs_query_iter_t;
 
 /** Query-iterator specific data */
 typedef struct ecs_snapshot_iter_t {
@@ -167,6 +176,7 @@ struct ecs_iter_t {
 
     union {
         ecs_scope_iter_t parent;
+        ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
         ecs_snapshot_iter_t snapshot;

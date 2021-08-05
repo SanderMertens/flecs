@@ -2729,7 +2729,7 @@ void SingleThreadStaging_new_type_from_entity() {
 
     /* Type is guaranteed not to exist, should trigger assert because table
      * creation is not allowed while in progress */
-    ecs_type_from_entity(world, e);
+    ecs_type_from_id(world, e);
 }
 
 void SingleThreadStaging_existing_type_from_entity() {
@@ -2739,14 +2739,14 @@ void SingleThreadStaging_existing_type_from_entity() {
     test_assert(e != 0);
     
     /* Precreate type so that it can be looked up while in progress */
-    ecs_type_t t = ecs_type_from_entity(world, e);
+    ecs_type_t t = ecs_type_from_id(world, e);
     test_assert(t != NULL);
 
     ecs_frame_begin(world, 1);
 
     ecs_staging_begin(world);
 
-    ecs_type_from_entity(world, e);
+    ecs_type_from_id(world, e);
 
     ecs_staging_end(world);
 

@@ -1068,7 +1068,7 @@ void Run_run_w_container_filter() {
     ecs_add_pair(world, e7, EcsChildOf, parent);
 
     /* Get type from parent to use as filter */
-    ecs_type_t ecs_type(Parent) = ecs_type_from_entity(world, ecs_pair(EcsChildOf, parent));
+    ecs_type_t ecs_type(Parent) = ecs_type_from_id(world, ecs_pair(EcsChildOf, parent));
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
