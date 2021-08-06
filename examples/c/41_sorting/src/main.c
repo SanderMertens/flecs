@@ -60,13 +60,13 @@ int main(void) {
     ecs_query_t *q_system = ecs_get_system_query(world, PrintSystem);
 
     /* We can now invoke the order_by operation on the query */
-    ecs_query_order_by(world, q_system, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q_system, ecs_id(Position), compare_position);
 
     /* Create a query for component Position */
     ecs_query_t *q = ecs_query_new(world, "Position");
 
     /* Order by Position component */
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     /* Iterate query, print values of Position */
     printf("-- First iteration\n");

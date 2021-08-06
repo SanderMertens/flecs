@@ -73,7 +73,7 @@ Thanks to the new Flecs sponsors ❤️ :
 - unused table_offset member is removed from iterator
 
 ## Deprecated features
-- ecs_entity() macro is now deprecated, use ecs_typeid()
+- ecs_entity() macro is now deprecated, use ecs_id()
 
 ## Features
 - Direct access addon, which provides fast access to underlying storage

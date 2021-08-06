@@ -119,8 +119,8 @@ void FilterIter_iter_two_comps() {
 
         ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        test_assert(array[0] == ecs_typeid(Position));
-        test_assert(array[1] == ecs_typeid(Velocity));
+        test_assert(array[0] == ecs_id(Position));
+        test_assert(array[1] == ecs_id(Velocity));
         
         Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
@@ -178,7 +178,7 @@ void FilterIter_iter_snapshot_one_table() {
 
         ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        test_assert(array[0] == ecs_typeid(Position));
+        test_assert(array[0] == ecs_id(Position));
         
         Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);    
@@ -242,7 +242,7 @@ void FilterIter_iter_snapshot_two_tables() {
 
         ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        test_assert(array[0] == ecs_typeid(Position));
+        test_assert(array[0] == ecs_id(Position));
         
         Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);     
@@ -300,8 +300,8 @@ void FilterIter_iter_snapshot_two_comps() {
 
         ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        test_assert(array[0] == ecs_typeid(Position));      
-        test_assert(array[1] == ecs_typeid(Velocity));        
+        test_assert(array[0] == ecs_id(Position));      
+        test_assert(array[1] == ecs_id(Velocity));        
         
         Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
@@ -375,7 +375,7 @@ void FilterIter_iter_snapshot_filtered_table() {
 
         ecs_type_t table_type = ecs_iter_type(&it);
         ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        test_assert(array[0] == ecs_typeid(Position));        
+        test_assert(array[0] == ecs_id(Position));        
         
         Position *p_row = ecs_table_column(&it, 0);
         test_assert(p_row != NULL);
@@ -411,7 +411,7 @@ void FilterIter_iter_get_component_index() {
     while (ecs_filter_next(&it)) {
         table_count ++;
         entity_count += it.count;
-        test_int(ecs_table_component_index(&it, ecs_typeid(Position)), 0);
+        test_int(ecs_table_component_index(&it, ecs_id(Position)), 0);
     }
 
     test_int(table_count, 1);

@@ -45,7 +45,7 @@ void SystemUnSet_unset_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ctx = (Probe){ 0 };
@@ -88,9 +88,9 @@ void SystemUnSet_unset_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);    
 
     ctx = (Probe){ 0 };
@@ -144,11 +144,11 @@ void SystemUnSet_unset_1_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);  
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);        
 
     ctx = (Probe){ 0 };
@@ -204,7 +204,7 @@ void SystemUnSet_unset_on_delete_1() {
 
     test_int(ctx.e[0], e);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
 
     ecs_fini(world);
@@ -242,9 +242,9 @@ void SystemUnSet_unset_on_delete_2() {
 
     test_int(ctx.e[0], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);  
 
     ecs_fini(world);   
@@ -286,11 +286,11 @@ void SystemUnSet_unset_on_delete_3() {
 
     test_int(ctx.e[0], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0); 
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);  
     
     ecs_fini(world);
@@ -330,7 +330,7 @@ void SystemUnSet_unset_on_fini_1() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);      
 }
 
@@ -374,9 +374,9 @@ void SystemUnSet_unset_on_fini_2() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);  
 }
 
@@ -427,11 +427,11 @@ void SystemUnSet_unset_on_fini_3() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0); 
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);         
 }
 
@@ -463,9 +463,9 @@ void SystemUnSet_overlapping_unset_systems() {
 
     test_int(ctx.e[0], e);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);   
 
     ecs_fini(world);
@@ -524,7 +524,7 @@ void SystemUnSet_unset_move_to_nonempty_table() {
 
     test_int(ctx.e[0], e);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     /* Prevent system from getting called by fini */
@@ -582,10 +582,10 @@ void SystemUnSet_write_in_unset() {
 
     test_int(ctx.e[0], e);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);    
 
     /* Prevent system from getting called by fini */

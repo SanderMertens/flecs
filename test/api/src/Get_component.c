@@ -23,7 +23,7 @@ void Get_component_get_1_from_1() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_typeid(Position));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
     
     ecs_fini(world);
 }
@@ -38,7 +38,7 @@ void Get_component_get_1_from_2() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_typeid(Position));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
     
     ecs_fini(world);
 }
@@ -53,7 +53,7 @@ void Get_component_get_2_from_2() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_typeid(Velocity));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
     
     ecs_fini(world);
 }
@@ -69,7 +69,7 @@ void Get_component_get_2_from_3() {
     ecs_entity_t e = ecs_new(world, Type);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_typeid(Velocity));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
     
     ecs_fini(world);
 }
@@ -80,7 +80,7 @@ void Test_main_stage(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_typeid(Position));
+        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));
     }
 }
 
@@ -128,7 +128,7 @@ void Get_component_get_1_from_2_add_in_progress() {
 
     ecs_progress(world, 1);
     test_assert( ecs_has(world, e, Velocity));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_typeid(Velocity));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
 
     ecs_fini(world);
 }
@@ -140,7 +140,7 @@ void Add_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_typeid(Position));
+        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));
         ecs_add(it->world, e, Velocity);
     }
 }
@@ -159,8 +159,8 @@ void Get_component_get_both_from_2_add_in_progress() {
     ecs_progress(world, 1);
     
     test_assert( ecs_has(world, e, Velocity));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_typeid(Position));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_typeid(Velocity));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
 
     ecs_fini(world);
 }
@@ -172,7 +172,7 @@ void Add_remove_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_typeid(Position));        
+        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));        
         ecs_add(it->world, e, Velocity);
         ecs_remove(it->world, e, Position);
     }
@@ -194,7 +194,7 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
     test_assert( !ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_typeid(Velocity));
+    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Velocity));
     test_assert(ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == 0);
 
     ecs_fini(world);
@@ -207,9 +207,9 @@ void Get_component_get_childof_component() {
 
     ECS_COMPONENT(world, Position);
 
-    const EcsComponent *ptr = ecs_get(world, ecs_typeid(Position), EcsComponent);
+    const EcsComponent *ptr = ecs_get(world, ecs_id(Position), EcsComponent);
     test_assert(ptr != NULL);
 
     test_expect_abort();
-    ecs_get(world, ECS_CHILDOF | ecs_typeid(Position), EcsComponent);
+    ecs_get(world, ECS_CHILDOF | ecs_id(Position), EcsComponent);
 }

@@ -23,8 +23,8 @@ int main(void) {
     /* Find the table for Position, Velocity components, and find the columns
      * for the Position and Velocity components. */
     ecs_table_t *table = ecs_table_from_type(world, ecs_type(PV));
-    int32_t pos_column = ecs_table_find_column(table, ecs_typeid(Position));
-    int32_t vel_column = ecs_table_find_column(table, ecs_typeid(Velocity));
+    int32_t pos_column = ecs_table_find_column(table, ecs_id(Position));
+    int32_t vel_column = ecs_table_find_column(table, ecs_id(Velocity));
 
     /* Create a new entity id */
     ecs_entity_t e1 = ecs_new_id(world);

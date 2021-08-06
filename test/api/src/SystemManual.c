@@ -61,7 +61,7 @@ void SystemManual_1_type_1_component() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);

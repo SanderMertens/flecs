@@ -56,8 +56,8 @@ int main(void) {
 
     /* -- Step 2: Obtain the table from the source world */
     ecs_table_t *src_table = ecs_table_from_str(src, "Position, Velocity");
-    int32_t src_pos_column = ecs_table_find_column(src_table, ecs_typeid(Position));
-    int32_t src_vel_column = ecs_table_find_column(src_table, ecs_typeid(Velocity));
+    int32_t src_pos_column = ecs_table_find_column(src_table, ecs_id(Position));
+    int32_t src_vel_column = ecs_table_find_column(src_table, ecs_id(Velocity));
 
 
     /* -- Step 3: find or create the table in the destination world. 
@@ -65,9 +65,9 @@ int main(void) {
      * flexibility of the API, the data will be moved to a table that does not
      * have the same number of columns as the source table. */    
     ecs_table_t *dst_table = ecs_table_from_str(dst, "Position, Velocity, Mass");
-    int32_t dst_pos_column = ecs_table_find_column(dst_table, ecs_typeid(Position));
-    int32_t dst_vel_column = ecs_table_find_column(dst_table, ecs_typeid(Velocity));
-    int32_t dst_mass_column = ecs_table_find_column(dst_table, ecs_typeid(Mass));
+    int32_t dst_pos_column = ecs_table_find_column(dst_table, ecs_id(Position));
+    int32_t dst_vel_column = ecs_table_find_column(dst_table, ecs_id(Velocity));
+    int32_t dst_mass_column = ecs_table_find_column(dst_table, ecs_id(Mass));
     
 
     /* -- Step 4: In addition to data columns, a table also has a column with

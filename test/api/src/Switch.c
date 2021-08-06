@@ -964,7 +964,7 @@ void Switch_add_pair_to_entity_w_switch() {
     test_assert( ecs_has_entity(world, e, ECS_CASE | Walking));
     test_int(ecs_get_case(world, e, Type), Walking);
 
-    ecs_entity_t pair_id = ecs_pair(ecs_typeid(Position), Pair);
+    ecs_entity_t pair_id = ecs_pair(ecs_id(Position), Pair);
     ecs_add_id(world, e, pair_id);
     test_assert(ecs_has_entity(world, e, pair_id));
     test_assert( ecs_has_entity(world, e, ECS_CASE | Walking));
@@ -1007,7 +1007,7 @@ void Switch_sort() {
     ecs_add_id(world, e4, ECS_CASE | Sitting);
     
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));

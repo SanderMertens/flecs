@@ -151,7 +151,7 @@ void Modules_import_module_from_system() {
     ECS_IMPORT(world, SimpleModule);
     ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, simple.module.Position, simple.module:simple.module);
 
-    const void *module_ptr = ecs_get(world, ecs_typeid(SimpleModule), SimpleModule);
+    const void *module_ptr = ecs_get(world, ecs_id(SimpleModule), SimpleModule);
     test_assert(module_ptr != NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
@@ -167,7 +167,7 @@ void Modules_import_module_from_system() {
 
 ecs_entity_t import_module(ecs_world_t *world) {
     ECS_IMPORT(world, SimpleModule);
-    return ecs_typeid(SimpleModule);
+    return ecs_id(SimpleModule);
 }
 
 void Modules_import_again() {
@@ -175,8 +175,8 @@ void Modules_import_again() {
 
     ECS_IMPORT(world, SimpleModule);
 
-    test_assert(ecs_typeid(SimpleModule) != 0);
-    test_assert(ecs_typeid(SimpleModule) == import_module(world));
+    test_assert(ecs_id(SimpleModule) != 0);
+    test_assert(ecs_id(SimpleModule) == import_module(world));
     
     ecs_fini(world);
 }
@@ -188,7 +188,7 @@ void Modules_scoped_component() {
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.Position");
     test_assert(e != 0);
-    test_assert(e == ecs_typeid(Position));
+    test_assert(e == ecs_id(Position));
     
     ecs_fini(world);
 }
@@ -236,7 +236,7 @@ void Modules_name_prefix_component() {
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooComponent");
     test_assert(e != 0);
-    test_assert(e == ecs_typeid(SimpleFooComponent));
+    test_assert(e == ecs_id(SimpleFooComponent));
     
     ecs_fini(world);
 }
@@ -344,11 +344,11 @@ void Modules_lookup_by_symbol() {
 
     ecs_entity_t e = ecs_lookup_symbol(world, "Position", true);
     test_assert(e != 0);
-    test_assert(e == ecs_typeid(Position));
+    test_assert(e == ecs_id(Position));
 
     e = ecs_lookup_symbol(world, "SimpleFooComponent", true);
     test_assert(e != 0);
-    test_assert(e == ecs_typeid(SimpleFooComponent));
+    test_assert(e == ecs_id(SimpleFooComponent));
     
     e = ecs_lookup_symbol(world, "Simple_underscore", true);
     test_assert(e != 0);
@@ -366,8 +366,8 @@ void Modules_import_type() {
     test_assert(type != NULL);
 
     test_int(ecs_vector_count(type), 2);
-    test_assert(ecs_type_has_entity(world, type, ecs_typeid(Position)));
-    test_assert(ecs_type_has_entity(world, type, ecs_typeid(Velocity)));
+    test_assert(ecs_type_has_entity(world, type, ecs_id(Position)));
+    test_assert(ecs_type_has_entity(world, type, ecs_id(Velocity)));
 
     ecs_fini(world);
 }

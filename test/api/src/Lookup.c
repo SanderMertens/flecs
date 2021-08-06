@@ -38,7 +38,7 @@ void Lookup_lookup_component() {
 
     ecs_entity_t lookup = ecs_lookup(world, "Position");
     test_assert(lookup != 0);
-    test_assert(lookup == ecs_typeid(Position));
+    test_assert(lookup == ecs_id(Position));
 
     ecs_fini(world);
 }

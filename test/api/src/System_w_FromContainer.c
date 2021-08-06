@@ -79,9 +79,9 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -135,11 +135,11 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Velocity));
+    test_int(ctx.c[0][2], ecs_id(Velocity));
     test_int(ctx.s[0][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -256,11 +256,11 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e4);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Rotation));
+    test_int(ctx.c[0][1], ecs_id(Rotation));
     test_int(ctx.s[0][1], parent);
-    test_int(ctx.c[0][2], ecs_typeid(Position));
+    test_int(ctx.c[0][2], ecs_id(Position));
     test_int(ctx.s[0][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -327,11 +327,11 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent_1);
-    test_int(ctx.c[0][1], ecs_typeid(Rotation));
+    test_int(ctx.c[0][1], ecs_id(Rotation));
     test_int(ctx.s[0][1], parent_2);
-    test_int(ctx.c[0][2], ecs_typeid(Position));
+    test_int(ctx.c[0][2], ecs_id(Position));
     test_int(ctx.s[0][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -390,13 +390,13 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.e[1], e1);
     test_int(ctx.e[2], e2);
     test_int(ctx.e[3], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Mass));
+    test_int(ctx.c[1][0], ecs_id(Mass));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Position));
+    test_int(ctx.c[1][1], ecs_id(Position));
     test_int(ctx.s[1][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -463,11 +463,11 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Rotation));
+    test_int(ctx.c[0][1], ecs_id(Rotation));
     test_int(ctx.s[0][1], parent_2);
-    test_int(ctx.c[0][2], ecs_typeid(Position));
+    test_int(ctx.c[0][2], ecs_id(Position));
     test_int(ctx.s[0][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -520,9 +520,9 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -583,21 +583,21 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
     test_int(ctx.e[3], e5);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent_1);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Rotation));
+    test_int(ctx.c[1][0], ecs_id(Rotation));
     test_int(ctx.s[1][0], parent_2);
-    test_int(ctx.c[1][1], ecs_typeid(Position));
+    test_int(ctx.c[1][1], ecs_id(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Mass));
+    test_int(ctx.c[2][0], ecs_id(Mass));
     test_int(ctx.s[2][0], parent_3);
-    test_int(ctx.c[2][1], ecs_typeid(Position));
+    test_int(ctx.c[2][1], ecs_id(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[3][0], ecs_typeid(Mass));
+    test_int(ctx.c[3][0], ecs_id(Mass));
     test_int(ctx.s[3][0], parent_3);
-    test_int(ctx.c[3][1], ecs_typeid(Position));
+    test_int(ctx.c[3][1], ecs_id(Position));
     test_int(ctx.s[3][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -676,9 +676,9 @@ void System_w_FromContainer_add_component_after_match() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -733,9 +733,9 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -788,9 +788,9 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], Parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -853,9 +853,9 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], Parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -901,9 +901,9 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e3, Position);
@@ -945,9 +945,9 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -997,9 +997,9 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e1);
     test_int(ctx.e[3], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1018,7 +1018,7 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
 static
 void AddMass(ecs_iter_t *it) {
     test_assert(it->ctx != NULL);
-    ecs_entity_t ecs_typeid(Mass) = *(ecs_entity_t*)it->ctx;
+    ecs_entity_t ecs_id(Mass) = *(ecs_entity_t*)it->ctx;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1042,7 +1042,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .entity = {AddMass}, .ctx = &ecs_typeid(Mass)
+        .entity = {AddMass}, .ctx = &ecs_id(Mass)
     });
 
     ecs_entity_t parent = ecs_new(world, 0);
@@ -1064,9 +1064,9 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1113,9 +1113,9 @@ void System_w_FromContainer_adopt_after_match() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1160,9 +1160,9 @@ void System_w_FromContainer_new_child_after_match() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1229,9 +1229,9 @@ void System_w_FromContainer_select_same_from_container() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1277,9 +1277,9 @@ void System_w_FromContainer_realloc_after_match() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1309,9 +1309,9 @@ void System_w_FromContainer_realloc_after_match() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
-    test_int(ctx.c[0][0], ecs_typeid(Mass));
+    test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent);
-    test_int(ctx.c[0][1], ecs_typeid(Position));
+    test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], 0);
 
     p = ecs_get(world, e1, Position);

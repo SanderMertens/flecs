@@ -279,7 +279,7 @@ void Hierarchies_path_for_component_0() {
 
     ECS_ENTITY(world, Parent, 0);
 
-    char *path = ecs_get_path_w_sep(world, 0, Parent, ecs_typeid(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, Parent, ecs_id(Position), ".", NULL);
     test_str(path, "Parent");
     free(path);
 
@@ -295,7 +295,7 @@ void Hierarchies_path_for_component_1() {
     ECS_ENTITY(world, Parent2, Position);
     ECS_ENTITY(world, Child, CHILDOF | Parent, CHILDOF | Parent2);
 
-    char *path = ecs_get_path_w_sep(world, 0, Child, ecs_typeid(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, Child, ecs_id(Position), ".", NULL);
     test_str(path, "Parent2.Child");
     free(path);
 
@@ -313,7 +313,7 @@ void Hierarchies_path_for_component_2() {
     ECS_ENTITY(world, Child2, Position, CHILDOF | Parent2);
     ECS_ENTITY(world, GrandChild, CHILDOF | Parent.Child1, CHILDOF | Parent2.Child2);
 
-    char *path = ecs_get_path_w_sep(world, 0, GrandChild, ecs_typeid(Position), ".", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, GrandChild, ecs_id(Position), ".", NULL);
     test_str(path, "Parent2.Child2.GrandChild");
     free(path);
 
@@ -727,7 +727,7 @@ void Hierarchies_fullpath_for_core() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, CHILDOF | Parent);
 
-    char *path = ecs_get_fullpath(world, ecs_typeid(EcsComponent));
+    char *path = ecs_get_fullpath(world, ecs_id(EcsComponent));
     test_str(path, "Component");
     free(path);
 

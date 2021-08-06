@@ -307,7 +307,7 @@ void Remove_bulk_on_remove() {
         test_int(ctx.e[i], ids[i]);
     }
 
-    test_int(ctx.c[0][0], ecs_typeid(Velocity));
+    test_int(ctx.c[0][0], ecs_id(Velocity));
 
     ecs_fini(world);
 }
@@ -329,7 +329,7 @@ void Remove_bulk_remove_entity_comp() {
         ecs_set(world, ids[i], Position, {i, i * 2});
     }
 
-    ecs_bulk_remove_entity(world, ecs_typeid(Velocity), &(ecs_filter_t){
+    ecs_bulk_remove_entity(world, ecs_id(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -401,7 +401,7 @@ void Remove_bulk_remove_entity_on_remove() {
     const ecs_entity_t *ids = ecs_bulk_new(world, Type, 10);
     test_assert(ids != NULL);
 
-    ecs_bulk_remove_entity(world, ecs_typeid(Velocity), &(ecs_filter_t){
+    ecs_bulk_remove_entity(world, ecs_id(Velocity), &(ecs_filter_t){
         .include = ecs_type(Position)
     });
 
@@ -416,7 +416,7 @@ void Remove_bulk_remove_entity_on_remove() {
         test_int(ctx.e[i], ids[i]);
     }
 
-    test_int(ctx.c[0][0], ecs_typeid(Velocity));
+    test_int(ctx.c[0][0], ecs_id(Velocity));
 
     ecs_fini(world);
 }

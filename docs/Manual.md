@@ -349,15 +349,15 @@ From a readability perspective this code looks fine as we can easily tell what i
 Let's first remove the `ECS_COMPONENT` macro and replace it with equivalent code (details are omitted for brevity):
 
 ```c
-ecs_entity_t ecs_typeid(Position) = ecs_component_init(world, &(ecs_component_desc_t){
+ecs_entity_t ecs_id(Position) = ecs_component_init(world, &(ecs_component_desc_t){
     .entity.name = "Position", 
     .size = sizeof(Position),
     .alignment = ECS_ALIGNOF(Position)
 });
-ecs_type_t ecs_type(Position) = ecs_type_from_id(world, ecs_typeid(Position));
+ecs_type_t ecs_type(Position) = ecs_type_from_id(world, ecs_id(Position));
 ```
 
-The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_typeid(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
+The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_id(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
 
 ```c
 FLECS__EPosition
@@ -380,7 +380,7 @@ Position *p = ecs_get(world, e, Position);
 Translates into:
 
 ```c
-Position *p = (Position*)ecs_get_id(world, e, ecs_typeid(Position));
+Position *p = (Position*)ecs_get_id(world, e, ecs_id(Position));
 ```
 
 As you can see, the `ecs_get` macro casts the result of the function to the correct type, so a compiler will throw a warning when an application tries to assign the result of the operation to a variable of the wrong type.
@@ -395,7 +395,7 @@ Translates into:
 
 ```c
 ecs_set_id
-    (world, e, ecs_typeid(Position), sizeof(Position), 
+    (world, e, ecs_id(Position), sizeof(Position), 
     &(Position){10, 20});
 ```
 
@@ -842,14 +842,14 @@ int main() {
 }
 ```
 
-There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_typeid(ComponentName)`. The following example shows how to pass an entity handle to another function:
+There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_id(ComponentName)`. The following example shows how to pass an entity handle to another function:
 
 ```c
 typedef struct Position {
     float x, y;
 } Position;
 
-void set_position(ecs_world_t *t, ecs_entity_t ecs_typeid(Position)) {
+void set_position(ecs_world_t *t, ecs_entity_t ecs_id(Position)) {
     ecs_entity_t e = ecs_new(world, 0);
     ecs_set(world, e, Position, {10, 20});
 }
@@ -859,7 +859,7 @@ int main() {
 
     ECS_COMPONENT(world, Position);
 
-    set_position(world, ecs_typeid(Position));
+    set_position(world, ecs_id(Position));
 
     ecs_fini(world);
 }
@@ -883,7 +883,7 @@ int main() {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    Position *p = get_position(world, e, ecs_typeid(Position));
+    Position *p = get_position(world, e, ecs_id(Position));
 
     ecs_fini(world);
 }
@@ -1334,7 +1334,7 @@ ecs_singleton_set(world, Game, { .max_speed = 100 });
 Alternatively the regular API can also be used:
 
 ```c
-ecs_set(world, ecs_typeid(Game), Game, { .max_speed = 100 });
+ecs_set(world, ecs_id(Game), Game, { .max_speed = 100 });
 ```
 
 Singleton components can be retrieved from queries like this:
@@ -1466,7 +1466,7 @@ Applications are able to access entities in order, by using sorted queries. Sort
 
 ```c
 ecs_query_t q = ecs_query_new(world, "Position");
-ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 ```
 
 This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
@@ -1570,7 +1570,7 @@ while (ecs_filter_next(&it)) {
     ecs_type_t table_type = ecs_iter_type(&it);
 
     /* First Retrieve the column index for Position */
-    int32_t p_index = ecs_type_index_of(table_type, ecs_typeid(Position));
+    int32_t p_index = ecs_type_index_of(table_type, ecs_id(Position));
 
     /* Now use the column index to get the Position array from the table */
     Position *p = ecs_table_column(&it, p_index);
@@ -2166,7 +2166,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 
 // Mark as OWNED. This ensures that when base is derived from, Position is overridden
-ecs_add_id(world, world, Base, ECS_OWNED | ecs_typeid(Position));
+ecs_add_id(world, world, Base, ECS_OWNED | ecs_id(Position));
 
 // Create entity from BaseType. This adds the IsA relationship in addition 
 // to overriding Position, effectively initializing the Position component for the entity.
@@ -2310,7 +2310,7 @@ With the following implementation for `SetVelocity`:
 
 ```c
 void SetVelocity(ecs_iter_t *it) {
-    ecs_entity_t ecs_typeid(Velocity) = ecs_term_id(it, 2);
+    ecs_entity_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_set(world, it->entities[i], Velocity, {1, 2});

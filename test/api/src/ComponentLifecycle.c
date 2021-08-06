@@ -2523,8 +2523,8 @@ void ComponentLifecycle_on_set_after_new_w_data() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position),
-                ecs_typeid(Velocity)
+                ecs_id(Position),
+                ecs_id(Velocity)
             }, 
             .count = 2
         },

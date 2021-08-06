@@ -15,8 +15,8 @@ void DirectAccess_get_table_from_str() {
     test_assert(type != NULL);
 
     test_int(ecs_vector_count(type), 2);
-    test_assert(ecs_type_owns_entity(world, type, ecs_typeid(Position), true));
-    test_assert(ecs_type_owns_entity(world, type, ecs_typeid(Velocity), true));
+    test_assert(ecs_type_owns_entity(world, type, ecs_id(Position), true));
+    test_assert(ecs_type_owns_entity(world, type, ecs_id(Velocity), true));
 
     ecs_fini(world);
 }
@@ -131,8 +131,8 @@ void DirectAccess_find_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_fini(world);
 }
@@ -159,8 +159,8 @@ void DirectAccess_get_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_vector_t *v_p = ecs_table_get_column(t, 0);
     test_assert(v_p != NULL);
@@ -202,8 +202,8 @@ void DirectAccess_get_empty_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     test_assert(ecs_table_get_column(t, 0) == NULL);
     test_assert(ecs_table_get_column(t, 1) == NULL);
@@ -220,7 +220,7 @@ void DirectAccess_set_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
 
     ecs_vector_t *v_e = ecs_vector_new(ecs_entity_t, 3);
     ecs_vector_add(&v_e, ecs_entity_t)[0] = 0;
@@ -269,8 +269,8 @@ void DirectAccess_delete_column() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_vector_t *v_p = ecs_table_get_column(t, 0);
     test_assert(v_p != NULL);
@@ -305,8 +305,8 @@ void DirectAccess_delete_column_explicit() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_vector_t *v_p = ecs_table_get_column(t, 0);
     test_assert(v_p != NULL);
@@ -363,8 +363,8 @@ void DirectAccess_delete_column_w_dtor() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_vector_t *v_p = ecs_table_get_column(t, 0);
     test_assert(v_p != NULL);
@@ -405,8 +405,8 @@ void DirectAccess_copy_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -444,8 +444,8 @@ void DirectAccess_copy_pod_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -487,8 +487,8 @@ void DirectAccess_move_to() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -526,8 +526,8 @@ void DirectAccess_copy_to_no_copy() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);
@@ -554,8 +554,8 @@ void DirectAccess_move_to_no_move() {
     ecs_table_t *t = ecs_table_from_str(world, "Position, Velocity");
     test_assert(t != NULL);
 
-    test_int(ecs_table_find_column(t, ecs_typeid(Position)), 0);
-    test_int(ecs_table_find_column(t, ecs_typeid(Velocity)), 1);
+    test_int(ecs_table_find_column(t, ecs_id(Position)), 0);
+    test_int(ecs_table_find_column(t, ecs_id(Velocity)), 1);
 
     ecs_record_t r = ecs_table_insert(world, t, 0, NULL);
     test_assert(r.table == t);

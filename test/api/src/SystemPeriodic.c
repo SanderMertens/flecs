@@ -57,7 +57,7 @@ void SystemPeriodic_1_type_1_component() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -105,11 +105,11 @@ void SystemPeriodic_1_type_3_component() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -186,11 +186,11 @@ void SystemPeriodic_3_type_1_component() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Position));
+    test_int(ctx.c[2][0], ecs_id(Position));
     test_int(ctx.s[2][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -239,17 +239,17 @@ void SystemPeriodic_2_type_3_component() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[1][2], ecs_typeid(Mass));
+    test_int(ctx.c[1][2], ecs_id(Mass));
     test_int(ctx.s[1][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -325,7 +325,7 @@ void SystemPeriodic_1_type_1_component_1_tag() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
@@ -373,7 +373,7 @@ void SystemPeriodic_2_type_1_component_1_tag() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], Tag);
     test_int(ctx.s[0][1], 0);
@@ -417,9 +417,9 @@ void SystemPeriodic_2_type_1_and_1_not() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -461,11 +461,11 @@ void SystemPeriodic_2_type_2_and_1_not() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
     
     const Position *p = ecs_get(world, e1, Position);
@@ -517,13 +517,13 @@ void SystemPeriodic_2_type_2_and_2_not() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
-    test_int(ctx.c[0][3], ecs_typeid(Rotation));
+    test_int(ctx.c[0][3], ecs_id(Rotation));
     test_int(ctx.s[0][3], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -574,17 +574,17 @@ void SystemPeriodic_4_type_1_and_1_or() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position_1));
+    test_int(ctx.c[1][0], ecs_id(Position_1));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Position));
+    test_int(ctx.c[2][0], ecs_id(Position));
     test_int(ctx.s[2][0], 0);
-    test_int(ctx.c[2][1], ecs_typeid(Velocity));
+    test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -663,17 +663,17 @@ void SystemPeriodic_4_type_1_and_1_or_of_3() {
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position_2));
+    test_int(ctx.c[1][0], ecs_id(Position_2));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[2][0], ecs_typeid(Position_1));
+    test_int(ctx.c[2][0], ecs_id(Position_1));
     test_int(ctx.s[2][0], 0);
-    test_int(ctx.c[2][1], ecs_typeid(Velocity));
+    test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -744,9 +744,9 @@ void SystemPeriodic_1_type_1_and_1_or() {
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     /* Now repeat test, with entities that have Position_1 */
@@ -768,9 +768,9 @@ void SystemPeriodic_1_type_1_and_1_or() {
 
     test_int(ctx.e[0], e3);
     test_int(ctx.e[1], e4);
-    test_int(ctx.c[0][0], ecs_typeid(Position_1));
+    test_int(ctx.c[0][0], ecs_id(Position_1));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -802,13 +802,13 @@ void SystemPeriodic_2_type_1_and_1_optional() {
     test_int(ctx.e[0], e3);
     test_int(ctx.e[1], e1);
     test_int(ctx.e[2], e2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -867,17 +867,17 @@ void SystemPeriodic_2_type_2_and_1_optional() {
     probe_has_entity(&ctx, e2);
     probe_has_entity(&ctx, e3);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[1][2], ecs_typeid(Mass));
+    test_int(ctx.c[1][2], ecs_id(Mass));
     test_int(ctx.s[1][2], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -949,29 +949,29 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     probe_has_entity(&ctx, e3);
     probe_has_entity(&ctx, e4);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[1][2], ecs_typeid(Mass));
+    test_int(ctx.c[1][2], ecs_id(Mass));
     test_int(ctx.s[1][2], 0);    
-    test_int(ctx.c[2][0], ecs_typeid(Position));
+    test_int(ctx.c[2][0], ecs_id(Position));
     test_int(ctx.s[2][0], 0);
-    test_int(ctx.c[2][1], ecs_typeid(Velocity));
+    test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[2][2], ecs_typeid(Mass));
+    test_int(ctx.c[2][2], ecs_id(Mass));
     test_int(ctx.s[2][2], 0);   
-    test_int(ctx.c[3][0], ecs_typeid(Position));
+    test_int(ctx.c[3][0], ecs_id(Position));
     test_int(ctx.s[3][0], 0);
-    test_int(ctx.c[3][1], ecs_typeid(Velocity));
+    test_int(ctx.c[3][1], ecs_id(Velocity));
     test_int(ctx.s[3][1], 0);
-    test_int(ctx.c[3][2], ecs_typeid(Mass));
+    test_int(ctx.c[3][2], ecs_id(Mass));
     test_int(ctx.s[3][2], 0);   
 
     const Position *p = ecs_get(world, e1, Position);
@@ -1096,7 +1096,7 @@ void SystemPeriodic_match_2_systems_w_populated_table() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.column_count, 1);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     test_int(ctx.e[0], e);
@@ -1156,9 +1156,9 @@ void SystemPeriodic_ensure_optional_is_unset_column() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     test_int(ctx.e[0], e);
@@ -1184,9 +1184,9 @@ void SystemPeriodic_ensure_optional_is_null_shared() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     test_int(ctx.e[0], e);
@@ -1212,9 +1212,9 @@ void SystemPeriodic_ensure_optional_is_null_field_owned() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     test_int(ctx.e[0], e);
@@ -1240,9 +1240,9 @@ void SystemPeriodic_ensure_optional_is_null_field_shared() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     test_int(ctx.e[0], e);
@@ -1475,13 +1475,13 @@ void SystemPeriodic_two_refs() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 4);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], e);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], e);
     test_int(ctx.c[0][2], e);
     test_int(ctx.s[0][2], 0);
-    test_int(ctx.c[0][3], ecs_typeid(Mass));
+    test_int(ctx.c[0][3], ecs_id(Mass));
     test_int(ctx.s[0][3], 0);
 
     test_int(ctx.e[0], E2);
@@ -1508,7 +1508,7 @@ void SystemPeriodic_filter_disabled() {
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 1);
     test_int(ctx.e[0], Entity1);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -1533,7 +1533,7 @@ void SystemPeriodic_match_disabled() {
     test_int(ctx.invoked, 1);
     test_int(ctx.e[0], Entity2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EcsDisabled);
     test_int(ctx.s[0][1], 0);
@@ -1561,7 +1561,7 @@ void SystemPeriodic_match_disabled_and_enabled() {
     test_int(ctx.e[0], Entity1);
     test_int(ctx.e[1], Entity2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EcsDisabled);
     test_int(ctx.s[0][1], 0);
@@ -1588,7 +1588,7 @@ void SystemPeriodic_match_prefab() {
     test_int(ctx.invoked, 1);
     test_int(ctx.e[0], Entity2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EcsPrefab);
     test_int(ctx.s[0][1], 0);
@@ -1616,7 +1616,7 @@ void SystemPeriodic_match_prefab_and_normal() {
     test_int(ctx.e[0], Entity1);
     test_int(ctx.e[1], Entity2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], EcsPrefab);
     test_int(ctx.s[0][1], 0);
@@ -1668,9 +1668,9 @@ void SystemPeriodic_owned_column() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e1);
 
@@ -1697,9 +1697,9 @@ void SystemPeriodic_owned_not_column() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e2);
 
@@ -1732,14 +1732,14 @@ void SystemPeriodic_owned_or_column() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e1);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Mass));
+    test_int(ctx.c[1][1], ecs_id(Mass));
     test_int(ctx.s[1][1], 0);
     test_int(ctx.e[1], e2);
 
@@ -1767,9 +1767,9 @@ void SystemPeriodic_shared_column() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], base);
     test_int(ctx.e[0], e2);
 
@@ -1796,9 +1796,9 @@ void SystemPeriodic_shared_not_column() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
     test_int(ctx.e[0], e1);
 
@@ -1833,14 +1833,14 @@ void SystemPeriodic_shared_or_column() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], base1);
     test_int(ctx.e[0], e3);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Mass));
+    test_int(ctx.c[1][1], ecs_id(Mass));
     test_int(ctx.s[1][1], base2);
     test_int(ctx.e[1], e4);
 
@@ -1867,9 +1867,9 @@ void SystemPeriodic_container_dont_match_inheritance() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], base);
     test_int(ctx.e[0], e2);
 
@@ -1896,13 +1896,13 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_typeid(Position));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
-    test_int(ctx.c[1][1], ecs_typeid(Velocity));
+    test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], base);    
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);

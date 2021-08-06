@@ -82,7 +82,7 @@ void SystemOnSet_set_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ctx = (Probe){ 0 };
@@ -104,7 +104,7 @@ void SystemOnSet_set_1_of_1() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -143,9 +143,9 @@ void SystemOnSet_set_1_of_2() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ctx = (Probe){ 0 };
@@ -158,9 +158,9 @@ void SystemOnSet_set_1_of_2() {
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -203,11 +203,11 @@ void SystemOnSet_set_1_of_3() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ctx = (Probe){ 0 };
@@ -220,11 +220,11 @@ void SystemOnSet_set_1_of_3() {
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ctx = (Probe){ 0 };
@@ -237,11 +237,11 @@ void SystemOnSet_set_1_of_3() {
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ecs_fini(world);
@@ -259,7 +259,7 @@ void SystemOnSet_bulk_new_1() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position)}, 
+            .array = (ecs_entity_t[]){ecs_id(Position)}, 
             .count = 1
         },
         (void*[]){
@@ -279,7 +279,7 @@ void SystemOnSet_bulk_new_1() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -299,8 +299,8 @@ void SystemOnSet_bulk_new_2() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position),
-                ecs_typeid(Velocity)
+                ecs_id(Position),
+                ecs_id(Velocity)
             }, 
             .count = 2
         },
@@ -326,9 +326,9 @@ void SystemOnSet_bulk_new_2() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -348,8 +348,8 @@ void SystemOnSet_bulk_new_2_of_1() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position),
-                ecs_typeid(Velocity)
+                ecs_id(Position),
+                ecs_id(Velocity)
             }, 
             .count = 2
         },
@@ -375,7 +375,7 @@ void SystemOnSet_bulk_new_2_of_1() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -396,9 +396,9 @@ void SystemOnSet_bulk_new_3() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position),
-                ecs_typeid(Velocity),
-                ecs_typeid(Mass)
+                ecs_id(Position),
+                ecs_id(Velocity),
+                ecs_id(Mass)
             }, 
             .count = 3
         },
@@ -429,11 +429,11 @@ void SystemOnSet_bulk_new_3() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ecs_fini(world);
@@ -454,9 +454,9 @@ void SystemOnSet_bulk_new_3_of_2() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position),
-                ecs_typeid(Velocity),
-                ecs_typeid(Mass)
+                ecs_id(Position),
+                ecs_id(Velocity),
+                ecs_id(Mass)
             }, 
             .count = 3
         },
@@ -487,9 +487,9 @@ void SystemOnSet_bulk_new_3_of_2() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -511,8 +511,8 @@ void SystemOnSet_bulk_new_1_from_base() {
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3,
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Velocity),
-                ecs_typeid(Mass),
+                ecs_id(Velocity),
+                ecs_id(Mass),
                 ecs_pair(EcsIsA, Base)
             }, 
             .count = 3
@@ -539,11 +539,11 @@ void SystemOnSet_bulk_new_1_from_base() {
     test_int(ctx.e[0], ids[0]);
     test_int(ctx.e[1], ids[1]);
     test_int(ctx.e[2], ids[2]);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ecs_fini(world);
@@ -577,9 +577,9 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -617,11 +617,11 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ctx = (Probe){ 0 };
@@ -634,11 +634,11 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[0][2], ecs_typeid(Mass));
+    test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
     ecs_fini(world);
@@ -666,9 +666,9 @@ void SystemOnSet_add_base() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -736,7 +736,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
 
     ctx = (Probe){ 0 };
@@ -775,7 +775,7 @@ void SystemOnSet_on_set_after_remove_override() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
@@ -851,7 +851,7 @@ void SystemOnSet_add_to_current_in_on_set() {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
 
-    IterData ctx = {.component = ecs_typeid(Velocity)};
+    IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
@@ -890,7 +890,7 @@ void SystemOnSet_remove_from_current_in_on_set() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
-    IterData ctx = {.component = ecs_typeid(Velocity)};
+    IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
@@ -933,7 +933,7 @@ void SystemOnSet_remove_set_component_in_on_set() {
     ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
-    IterData ctx = {.component = ecs_typeid(Position)};
+    IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
@@ -966,7 +966,7 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
-    IterData add_ctx = {.component = ecs_typeid(Velocity)};
+    IterData add_ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &add_ctx);
 
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
@@ -984,9 +984,9 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     test_int(pv_probe.e[0], e1);
     test_int(pv_probe.e[1], e2);
     test_int(pv_probe.e[2], e3);
-    test_int(pv_probe.c[0][0], ecs_typeid(Position));
+    test_int(pv_probe.c[0][0], ecs_id(Position));
     test_int(pv_probe.s[0][0], 0);
-    test_int(pv_probe.c[0][1], ecs_typeid(Velocity));
+    test_int(pv_probe.c[0][1], ecs_id(Velocity));
     test_int(pv_probe.s[0][1], 0);
 
     ecs_fini(world);
@@ -1013,7 +1013,7 @@ void SystemOnSet_set_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ctx = (Probe){ 0 };
@@ -1026,9 +1026,9 @@ void SystemOnSet_set_optional() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);    
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ecs_fini(world);
@@ -1052,9 +1052,9 @@ void SystemOnSet_set_from_nothing() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_typeid(Velocity));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
     ctx = (Probe){ 0 };
@@ -1092,7 +1092,7 @@ void SystemOnSet_add_null_type_in_on_set() {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     test_assert( ecs_has(world, e, Position));

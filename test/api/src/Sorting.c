@@ -32,7 +32,7 @@ void Sorting_sort_by_component() {
     ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -62,7 +62,7 @@ void Sorting_sort_by_component_same_value_1() {
     ecs_entity_t e5 = ecs_set(world, 0, Position, {1, 0});
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -94,7 +94,7 @@ void Sorting_sort_by_component_same_value_2() {
     ecs_entity_t e6 = ecs_set(world, 0, Position, {1, 0});
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -130,7 +130,7 @@ void Sorting_sort_by_component_2_tables() {
     ecs_add(world, e5, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -176,7 +176,7 @@ void Sorting_sort_by_component_3_tables() {
     ecs_add(world, e7, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -271,7 +271,7 @@ void Sorting_sort_after_add() {
     ecs_add(world, e3, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -350,7 +350,7 @@ void Sorting_sort_after_remove() {
     ecs_add(world, e3, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -447,7 +447,7 @@ void Sorting_sort_after_delete() {
     ecs_add(world, e3, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -528,7 +528,7 @@ void Sorting_sort_after_set() {
     ecs_add(world, e3, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -612,7 +612,7 @@ void Sorting_sort_after_system() {
     ecs_add(world, e3, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position, [in] Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -707,7 +707,7 @@ void Sorting_sort_after_query() {
 
     ecs_query_t *flip_q = ecs_query_new(world, "Position");
     ecs_query_t *q = ecs_query_new(world, "Position, [in] Velocity");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -794,7 +794,7 @@ void Sorting_sort_by_component_move_pivot() {
     ecs_entity_t e4 = ecs_set(world, 0, Position, {1, 0});
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
 
@@ -817,7 +817,7 @@ void Sorting_sort_1000_entities() {
     ECS_COMPONENT(world, Position);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
@@ -848,7 +848,7 @@ void Sorting_sort_1000_entities_w_duplicates() {
     ECS_COMPONENT(world, Position);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);    
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);    
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
@@ -880,7 +880,7 @@ void Sorting_sort_1000_entities_again() {
     ECS_COMPONENT(world, Position);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_entity_t start = ecs_new(world, 0);
 
@@ -933,7 +933,7 @@ void Sorting_sort_1000_entities_2_types() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
@@ -968,7 +968,7 @@ void Sorting_sort_1000_entities_2_types_again() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_entity_t start = ecs_new(world, 0);
 
@@ -1023,7 +1023,7 @@ void Sorting_sort_1000_entities_add_type_after_sort() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_entity_t start = ecs_new(world, 0);
 
@@ -1086,7 +1086,7 @@ void Sorting_sort_1500_entities_3_types() {
     ECS_COMPONENT(world, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     for (int i = 0; i < 500; i ++) {
         ecs_set(world, 0, Position, {rand()});
@@ -1124,7 +1124,7 @@ void Sorting_sort_2000_entities_4_types() {
     ECS_COMPONENT(world, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     for (int i = 0; i < 500; i ++) {
         ecs_set(world, 0, Position, {rand()});
@@ -1179,7 +1179,7 @@ void Sorting_sort_shared_component() {
     ecs_entity_t e9 = ecs_new_w_pair(world, EcsIsA, base_1);
 
     ecs_query_t *q = ecs_query_new(world, "ANY:Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));
@@ -1224,7 +1224,7 @@ void Sorting_sort_2_entities_2_types() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_set(world, 0, Position, {rand()});
 
@@ -1258,7 +1258,7 @@ void Sorting_sort_3_entities_3_types() {
     ECS_COMPONENT(world, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_set(world, 0, Position, {rand()});
 
@@ -1331,7 +1331,7 @@ void Sorting_sort_4_entities_4_types() {
     ECS_COMPONENT(world, Mass);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_typeid(Position), compare_position);
+    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
 
     ecs_set(world, 0, Position, {rand()});
 

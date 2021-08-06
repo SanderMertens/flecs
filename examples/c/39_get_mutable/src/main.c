@@ -20,7 +20,7 @@ void PrintCounterSet(ecs_iter_t *it) {
     }
 }
 
-void inc(ecs_world_t *world, ecs_entity_t e, ecs_entity_t ecs_typeid(Counter)) {
+void inc(ecs_world_t *world, ecs_entity_t e, ecs_entity_t ecs_id(Counter)) {
     bool is_added = false;
     
     Counter *c = ecs_get_mut(world, e, Counter, &is_added);
@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
 
     ECS_ENTITY(world, MyEntity, 0);
 
-    inc(world, MyEntity, ecs_typeid(Counter));
-    inc(world, MyEntity, ecs_typeid(Counter));
+    inc(world, MyEntity, ecs_id(Counter));
+    inc(world, MyEntity, ecs_id(Counter));
 
     /* Cleanup */
     return ecs_fini(world);

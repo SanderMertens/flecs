@@ -264,7 +264,7 @@ void New_w_Count_new_w_data_1_comp() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position)},
+            .array = (ecs_entity_t[]){ecs_id(Position)},
             .count = 1
         },
         (void*[]){
@@ -303,7 +303,7 @@ void New_w_Count_new_w_data_2_comp() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
+            .array = (ecs_entity_t[]){ecs_id(Position), ecs_id(Velocity)},
             .count = 2
         },
         (void*[]){
@@ -386,7 +386,7 @@ void New_w_Count_new_w_data_w_comp_and_tag() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), Tag},
+            .array = (ecs_entity_t[]){ecs_id(Position), Tag},
             .count = 2
         },
         (void*[]){
@@ -428,7 +428,7 @@ void New_w_Count_new_w_data_pair() {
     ECS_TAG(world, Pair);
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_id(Position));
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
@@ -505,7 +505,7 @@ void New_w_Count_new_w_data_2_comp_1_not_set() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
+            .array = (ecs_entity_t[]){ecs_id(Position), ecs_id(Velocity)},
             .count = 2
         },
         (void*[]){
@@ -573,16 +573,16 @@ void New_w_Count_new_w_on_add_on_set_monitor() {
     ECS_SYSTEM(world, OnMovable, EcsMonitor, Position, Velocity);
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .entity = {AddPosition}, .ctx = &ecs_typeid(Velocity)
+        .entity = {AddPosition}, .ctx = &ecs_id(Velocity)
     });
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {SetPosition}, .ctx = &ecs_typeid(Rotation)
+        .entity = {SetPosition}, .ctx = &ecs_id(Rotation)
     });
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
             .array = (ecs_entity_t[]){
-                ecs_typeid(Position)
+                ecs_id(Position)
             }, 
             .count = 1
         },    
@@ -629,7 +629,7 @@ void New_w_Count_new_w_data_override_set_comp() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
+            .array = (ecs_entity_t[]){ecs_id(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){
@@ -671,7 +671,7 @@ void New_w_Count_new_w_data_override_set_pair() {
     ECS_TAG(world, Pair);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_id(Position));
 
     ecs_entity_t base = ecs_new(world, 0);
     Position *ptr = ecs_get_mut_w_entity(world, base, pair_id, NULL);
@@ -681,7 +681,7 @@ void New_w_Count_new_w_data_override_set_pair() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_pair(EcsIsA, base)},
+            .array = (ecs_entity_t[]){ecs_id(Position), ecs_pair(EcsIsA, base)},
             .count = 2
         },
         (void*[]){

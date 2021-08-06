@@ -84,7 +84,7 @@ void DeferredActions_defer_bulk_new_w_data() {
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position)},
+            .array = (ecs_entity_t[]){ecs_id(Position)},
             .count = 1
         },
         (void*[]){
@@ -148,7 +148,7 @@ void DeferredActions_defer_bulk_new_w_data_pair() {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t pair_id = ecs_pair(Pair, ecs_typeid(Position));
+    ecs_entity_t pair_id = ecs_pair(Pair, ecs_id(Position));
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
@@ -276,7 +276,7 @@ void DeferredActions_defer_bulk_new_w_data_two() {
     
     const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
         &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_typeid(Position), ecs_typeid(Velocity)},
+            .array = (ecs_entity_t[]){ecs_id(Position), ecs_id(Velocity)},
             .count = 2
         },
         (void*[]){
@@ -799,11 +799,11 @@ void DeferredActions_defer_set_pair() {
 
     ecs_defer_begin(world);
 
-    ecs_set_pair(world, e, Velocity, ecs_typeid(Position), {1, 2});
+    ecs_set_pair(world, e, Velocity, ecs_id(Position), {1, 2});
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has_pair(world, e, ecs_typeid(Velocity), ecs_typeid(Position)));
+    test_assert(ecs_has_pair(world, e, ecs_id(Velocity), ecs_id(Position)));
 
     ecs_fini(world);    
 }

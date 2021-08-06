@@ -478,8 +478,8 @@ void TableColumns(ecs_iter_t *it) {
     test_int(2, ecs_vector_count(type));
 
     ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
-    test_int(components[0], ecs_typeid(Position));
-    test_int(components[1], ecs_typeid(Velocity));
+    test_int(components[0], ecs_id(Position));
+    test_int(components[1], ecs_id(Velocity));
 
     void *column_0 = ecs_table_column(it, 0);
     test_assert(column_0 == p);
@@ -1201,7 +1201,7 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_typeid(Position));
+    test_assert(term->id == ecs_id(Position));
     test_str(term->name, "pos");
 
     term = &f.terms[1];
@@ -1209,7 +1209,7 @@ void SystemMisc_one_named_column_of_two() {
     test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_typeid(Velocity));
+    test_assert(term->id == ecs_id(Velocity));
     test_str(term->name, NULL);
 
     ecs_filter_fini(&f);
@@ -1238,7 +1238,7 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_typeid(Position));
+    test_assert(term->id == ecs_id(Position));
     test_str(term->name, "pos");
 
     term = &f.terms[1];
@@ -1246,7 +1246,7 @@ void SystemMisc_two_named_columns_of_two() {
     test_assert(term->args[0].set.mask == EcsDefaultSet);
     test_assert(term->args[0].entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_typeid(Velocity));
+    test_assert(term->id == ecs_id(Velocity));
     test_str(term->name, "vel");
 
     ecs_filter_fini(&f);

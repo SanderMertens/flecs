@@ -57,7 +57,7 @@ void SystemCascade_cascade_depth_1() {
     probe_has_entity(&ctx, e3);
     probe_has_entity(&ctx, e4);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -124,7 +124,7 @@ void SystemCascade_cascade_depth_2() {
     test_assert((ctx.e[2] == e3 && ctx.e[3] == e4) || (ctx.e[2] == e4 && ctx.e[3] == e3));
     test_assert((ctx.e[4] == e5 && ctx.e[5] == e6) || (ctx.e[4] == e6 && ctx.e[5] == e5));
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -201,7 +201,7 @@ void SystemCascade_cascade_depth_2_new_syntax() {
     test_assert((ctx.e[2] == e3 && ctx.e[3] == e4) || (ctx.e[2] == e4 && ctx.e[3] == e3));
     test_assert((ctx.e[4] == e5 && ctx.e[5] == e6) || (ctx.e[4] == e6 && ctx.e[5] == e5));
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -302,7 +302,7 @@ void SystemCascade_add_after_match() {
     test_assert(ctx.e[3] == e3 || ctx.e[4] == e3);
     test_assert(ctx.e[3] == e4 || ctx.e[4] == e4);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -369,7 +369,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e3);
     test_int(ctx.e[4], e4);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -503,7 +503,7 @@ void SystemCascade_custom_relation_cascade_depth_1() {
     probe_has_entity(&ctx, e3);
     probe_has_entity(&ctx, e4);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -571,7 +571,7 @@ void SystemCascade_custom_relation_cascade_depth_2() {
     test_assert((ctx.e[2] == e3 && ctx.e[3] == e4) || (ctx.e[2] == e4 && ctx.e[3] == e3));
     test_assert((ctx.e[4] == e5 && ctx.e[5] == e6) || (ctx.e[4] == e6 && ctx.e[5] == e5));
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -655,7 +655,7 @@ void SystemCascade_custom_relation_add_after_match() {
     test_assert(ctx.e[3] == e3 || ctx.e[4] == e3);
     test_assert(ctx.e[3] == e4 || ctx.e[4] == e4);
 
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
@@ -723,7 +723,7 @@ void SystemCascade_custom_relation_adopt_after_match() {
     test_int(ctx.e[2], parent);
     test_int(ctx.e[3], e3);
     test_int(ctx.e[4], e4);
-    test_int(ctx.c[0][0], ecs_typeid(Position));
+    test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     const Position *p = ecs_get(world, e1, Position);
