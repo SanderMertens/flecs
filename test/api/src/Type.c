@@ -214,58 +214,6 @@ void Type_type_has_pair_exact() {
     ecs_fini(world);
 }
 
-void Type_type_has_pair_0() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position);
-    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
-
-    test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, 0)));
-
-    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0)));
-
-    ecs_fini(world);
-}
-
-void Type_type_has_pair_0_multiple() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity, Velocity);
-    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
-
-    test_assert( ecs_type_has_entity(world, ecs_type(TypeMatch),
-        ecs_pair(Pair, 0)));
-
-    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0)));
-
-    ecs_fini(world);
-}
-
-void Type_type_has_pair_0_no_pair() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeNoMatch, Position);
-
-    test_assert( !ecs_type_has_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0)));
-
-    ecs_fini(world);
-}
-
 void Type_type_owns_pair() {
     ecs_world_t *world = ecs_init();
 
@@ -294,58 +242,6 @@ void Type_type_owns_pair_exact() {
     ecs_type_t t = ecs_type_find(world, entities, 1);
     test_assert(t == ecs_type(Type));
     test_assert( ecs_type_owns_entity(world, t, ecs_pair(Pair, ecs_id(Position)), true));
-
-    ecs_fini(world);
-}
-
-void Type_type_owns_pair_0() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position);
-    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position);
-
-    test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, 0), true));
-
-    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0), true));
-
-    ecs_fini(world);
-}
-
-void Type_type_owns_pair_0_multiple() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity, Velocity);
-    ECS_TYPE(world, TypeNoMatch, PAIR | Pair > Position, Position, PAIR | Pair > Velocity);
-
-    test_assert( ecs_type_owns_entity(world, ecs_type(TypeMatch), 
-        ecs_pair(Pair, 0), true));
-
-    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0), true));
-
-    ecs_fini(world);
-}
-
-void Type_type_owns_pair_0_no_pair() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Pair);
-
-    ECS_TYPE(world, TypeNoMatch, Position);
-
-    test_assert( !ecs_type_owns_entity(world, ecs_type(TypeNoMatch), 
-        ecs_pair(Pair, 0), true));
 
     ecs_fini(world);
 }
