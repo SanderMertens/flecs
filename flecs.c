@@ -13421,12 +13421,6 @@ const char* parse_term(
             }
 
             goto parse_singleton;
-        
-        /* Deprecated, but still supported: singleton entity */
-        } else if (ptr[0] == TOK_COLON) {
-            ecs_os_strcpy(token, "$");
-            ptr ++;
-            goto parse_source;
 
         } else {
             ecs_parser_error(name, expr, (ptr - expr), 
@@ -16512,24 +16506,10 @@ int term_resolve_ids(
         return -1;
     }
 
-    /* An explicitly set PAIR role indicates legacy behavior. In the legacy
-     * query language a wildcard object means that the entity should have the
-     * matched object by itself. This is incompatible with the new query parser.
-     * For now, this behavior is mapped to a pair with a 0 object, but in the
-     * future this behavior will be replaced with variables. */
-    if (term->role == ECS_PAIR) {
-        if (term->args[1].entity == EcsWildcard) {
-            term->args[1].entity = 0;
-            if (term->move) {
-                ecs_os_free(term->args[1].name);
-            }
-            term->args[1].name = NULL;
-        } else if (!term->args[1].entity) {
-            term->args[1].entity = EcsWildcard;
-        }
-    }
-
     if (term->args[1].entity || term->role == ECS_PAIR) {
+        /* Both the relation and object must be set */
+        ecs_assert(term->pred.entity != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[1].entity != 0, ECS_INVALID_PARAMETER, NULL);
         term->id = ecs_pair(term->pred.entity, term->args[1].entity);
     } else {
         term->id = term->pred.entity;
@@ -16556,11 +16536,17 @@ bool ecs_id_match(
         ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
         ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
 
+        ecs_assert(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
+
+        ecs_assert(pattern_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(pattern_obj != 0, ECS_INVALID_PARAMETER, NULL);
+        
         if (pattern_rel == EcsWildcard) {
-            if (pattern_obj == EcsWildcard || !pattern_obj || pattern_obj == id_obj) {
+            if (pattern_obj == EcsWildcard || pattern_obj == id_obj) {
                 return true;
             }
-        } else if (!pattern_obj || pattern_obj == EcsWildcard) {
+        } else if (pattern_obj == EcsWildcard) {
             if (pattern_rel == id_rel) {
                 return true;
             }
@@ -18245,7 +18231,6 @@ bool has_case(
 static
 bool match_id(
     const ecs_world_t *world,
-    ecs_type_t type,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
@@ -18282,17 +18267,16 @@ bool search_type(
 
     ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
-    bool matched = false;
 
     if (id && depth >= min_depth) {
         for (i = 0; i < count; i ++) {
-            if (match_id(world, type, ids[i], id)) {
+            if (match_id(world, ids[i], id)) {
                 return true;
             }
         }
     }
 
-    if (!matched && rel && id != EcsPrefab && id != EcsDisabled && 
+    if (rel && id != EcsPrefab && id != EcsDisabled && 
         id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) 
     {
         for (i = 0; i < count; i ++) {
@@ -18331,7 +18315,7 @@ bool search_type(
         }
     }
 
-    return matched != false;
+    return false;
 }
 
 bool ecs_type_has_id(
@@ -19209,13 +19193,12 @@ int32_t get_component_index(
             result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
-            /* If only the lo part of the pair identifier is set, interpret it
-             * as the pair to match. This will match any instance of the pair
-             * on the entity and in a signature looks like "PAIR | MyTrait". */
             ecs_entity_t rel = ECS_PAIR_RELATION(component);
             ecs_entity_t obj = ECS_PAIR_OBJECT(component);
 
-            ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+            /* Both the relationship and the object of the pair must be set */
+            ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(obj != 0, ECS_INVALID_PARAMETER, NULL);
 
             if (rel == EcsWildcard || obj == EcsWildcard) {
                 ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -19245,36 +19228,6 @@ int32_t get_component_index(
                     }
                 }
             } else {
-                /* If pair does have the hi part of the identifier set, this is
-                 * a fully qualified pair identifier. In a signature this looks
-                 * like "PAIR | MyTrait > Comp". */
-                if (!obj) {
-                    ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    /* If the low part of the identifier is 0,
-                     * this column is requesting the component to which the 
-                     * pair is applied. First, find the component identifier 
-                     *
-                     * This behavior will be replaced by query variables. */
-                    result = get_pair_index(table_type, component, 
-                        column_index, pair_offsets, count);
-
-                    /* Type must have the pair, otherwise table would not have
-                     * matched */
-                    ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
-
-                    /* Get component id at returned index */
-                    ecs_entity_t *pair = ecs_vector_get(
-                        table_type, ecs_entity_t, result);
-                    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    /* Get the lower part of the pair id. This is the component
-                     * we're looking for. */
-                    component = ECS_PAIR_OBJECT(*pair);
-                    *component_out = component;
-
-                    /* Now lookup the component as usual */
-                }
 
                 /* If the low part is a regular entity (component), then
                  * this query exactly matches a single pair instance. In
@@ -19346,29 +19299,6 @@ ecs_vector_t* add_ref(
 }
 
 static
-bool is_column_wildcard_pair(
-    ecs_term_t *term)
-{
-    ecs_entity_t c = term->id;
-
-    if (ECS_HAS_ROLE(c, PAIR)) {
-        ecs_assert(ECS_PAIR_RELATION(c) != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t rel = ECS_PAIR_RELATION(c);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(c);
-        if (!obj || obj == EcsWildcard) {
-            return true;
-        }
-        if (rel == EcsWildcard) {
-            return true;
-        }
-    } else {
-        return false;
-    }
-
-    return false;
-}
-
-static
 int32_t get_pair_count(
     ecs_type_t type,
     ecs_entity_t pair)
@@ -19395,7 +19325,7 @@ int32_t count_pairs(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        if (is_column_wildcard_pair(term)) {
+        if (ecs_id_is_wildcard(term->id)) {
             pair_count = get_pair_count(type, term->id);
             if (!first_count) {
                 first_count = pair_count;
@@ -20267,7 +20197,7 @@ bool has_pairs(
     int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
-        if (is_column_wildcard_pair(&terms[i])) {
+        if (ecs_id_is_wildcard(terms[i].id)) {
             return true;
         }
     }

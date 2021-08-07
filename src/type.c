@@ -206,7 +206,6 @@ bool has_case(
 static
 bool match_id(
     const ecs_world_t *world,
-    ecs_type_t type,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
@@ -243,17 +242,16 @@ bool search_type(
 
     ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
-    bool matched = false;
 
     if (id && depth >= min_depth) {
         for (i = 0; i < count; i ++) {
-            if (match_id(world, type, ids[i], id)) {
+            if (match_id(world, ids[i], id)) {
                 return true;
             }
         }
     }
 
-    if (!matched && rel && id != EcsPrefab && id != EcsDisabled && 
+    if (rel && id != EcsPrefab && id != EcsDisabled && 
         id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) 
     {
         for (i = 0; i < count; i ++) {
@@ -292,7 +290,7 @@ bool search_type(
         }
     }
 
-    return matched != false;
+    return false;
 }
 
 bool ecs_type_has_id(

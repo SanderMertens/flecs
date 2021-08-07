@@ -294,10 +294,10 @@ e.set<ExpiryTimer, StaminaBuff>({ 5 });
 Now we need to write a system to increase the timer and execute the remove logic. The system definition looks almost like a regular system:
 
 ```c
-ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, PAIR | ExpiryTimer);
+ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, (ExpiryTimer, *));
 ```
 ```cpp
-world.system<>("ExpireComponents", "PAIR | ExpiryTimer").iter(ExpiryTimer);
+world.system<>("ExpireComponents", "(ExpiryTimer, *)").iter(ExpiryTimer);
 ```
 
 Note that the `ExpiryTimer` has the `PAIR` role. This lets the system know it should match this component as a trait, not as a regular component. Now lets look at the implementation of this system:

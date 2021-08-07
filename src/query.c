@@ -366,13 +366,12 @@ int32_t get_component_index(
             result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
-            /* If only the lo part of the pair identifier is set, interpret it
-             * as the pair to match. This will match any instance of the pair
-             * on the entity and in a signature looks like "PAIR | MyTrait". */
             ecs_entity_t rel = ECS_PAIR_RELATION(component);
             ecs_entity_t obj = ECS_PAIR_OBJECT(component);
 
-            ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+            /* Both the relationship and the object of the pair must be set */
+            ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(obj != 0, ECS_INVALID_PARAMETER, NULL);
 
             if (rel == EcsWildcard || obj == EcsWildcard) {
                 ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -402,36 +401,6 @@ int32_t get_component_index(
                     }
                 }
             } else {
-                /* If pair does have the hi part of the identifier set, this is
-                 * a fully qualified pair identifier. In a signature this looks
-                 * like "PAIR | MyTrait > Comp". */
-                if (!obj) {
-                    ecs_assert(pair_offsets != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    /* If the low part of the identifier is 0,
-                     * this column is requesting the component to which the 
-                     * pair is applied. First, find the component identifier 
-                     *
-                     * This behavior will be replaced by query variables. */
-                    result = get_pair_index(table_type, component, 
-                        column_index, pair_offsets, count);
-
-                    /* Type must have the pair, otherwise table would not have
-                     * matched */
-                    ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
-
-                    /* Get component id at returned index */
-                    ecs_entity_t *pair = ecs_vector_get(
-                        table_type, ecs_entity_t, result);
-                    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    /* Get the lower part of the pair id. This is the component
-                     * we're looking for. */
-                    component = ECS_PAIR_OBJECT(*pair);
-                    *component_out = component;
-
-                    /* Now lookup the component as usual */
-                }
 
                 /* If the low part is a regular entity (component), then
                  * this query exactly matches a single pair instance. In
@@ -503,29 +472,6 @@ ecs_vector_t* add_ref(
 }
 
 static
-bool is_column_wildcard_pair(
-    ecs_term_t *term)
-{
-    ecs_entity_t c = term->id;
-
-    if (ECS_HAS_ROLE(c, PAIR)) {
-        ecs_assert(ECS_PAIR_RELATION(c) != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t rel = ECS_PAIR_RELATION(c);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(c);
-        if (!obj || obj == EcsWildcard) {
-            return true;
-        }
-        if (rel == EcsWildcard) {
-            return true;
-        }
-    } else {
-        return false;
-    }
-
-    return false;
-}
-
-static
 int32_t get_pair_count(
     ecs_type_t type,
     ecs_entity_t pair)
@@ -552,7 +498,7 @@ int32_t count_pairs(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        if (is_column_wildcard_pair(term)) {
+        if (ecs_id_is_wildcard(term->id)) {
             pair_count = get_pair_count(type, term->id);
             if (!first_count) {
                 first_count = pair_count;
@@ -1424,7 +1370,7 @@ bool has_pairs(
     int32_t i, count = query->filter.term_count;
 
     for (i = 0; i < count; i ++) {
-        if (is_column_wildcard_pair(&terms[i])) {
+        if (ecs_id_is_wildcard(terms[i].id)) {
             return true;
         }
     }

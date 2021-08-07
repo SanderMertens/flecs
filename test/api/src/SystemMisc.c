@@ -1812,7 +1812,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pair);
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PAIR | Pair);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, (Pair, *));
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);

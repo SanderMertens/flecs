@@ -82,24 +82,10 @@ int term_resolve_ids(
         return -1;
     }
 
-    /* An explicitly set PAIR role indicates legacy behavior. In the legacy
-     * query language a wildcard object means that the entity should have the
-     * matched object by itself. This is incompatible with the new query parser.
-     * For now, this behavior is mapped to a pair with a 0 object, but in the
-     * future this behavior will be replaced with variables. */
-    if (term->role == ECS_PAIR) {
-        if (term->args[1].entity == EcsWildcard) {
-            term->args[1].entity = 0;
-            if (term->move) {
-                ecs_os_free(term->args[1].name);
-            }
-            term->args[1].name = NULL;
-        } else if (!term->args[1].entity) {
-            term->args[1].entity = EcsWildcard;
-        }
-    }
-
     if (term->args[1].entity || term->role == ECS_PAIR) {
+        /* Both the relation and object must be set */
+        ecs_assert(term->pred.entity != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term->args[1].entity != 0, ECS_INVALID_PARAMETER, NULL);
         term->id = ecs_pair(term->pred.entity, term->args[1].entity);
     } else {
         term->id = term->pred.entity;
@@ -126,11 +112,17 @@ bool ecs_id_match(
         ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
         ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
 
+        ecs_assert(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
+
+        ecs_assert(pattern_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(pattern_obj != 0, ECS_INVALID_PARAMETER, NULL);
+        
         if (pattern_rel == EcsWildcard) {
-            if (pattern_obj == EcsWildcard || !pattern_obj || pattern_obj == id_obj) {
+            if (pattern_obj == EcsWildcard || pattern_obj == id_obj) {
                 return true;
             }
-        } else if (!pattern_obj || pattern_obj == EcsWildcard) {
+        } else if (pattern_obj == EcsWildcard) {
             if (pattern_rel == id_rel) {
                 return true;
             }

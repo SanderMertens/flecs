@@ -845,7 +845,7 @@ void Type_type_to_expr_pair() {
     test_expect_abort();
 
     /* Cannot create a type that just sets the hi id */
-    ECS_TYPE(world, Type, PAIR | Position);
+    ECS_TYPE(world, Type, (Position, *));
 }
 
 void Type_type_to_expr_pair_w_comp() {
@@ -953,7 +953,7 @@ void Type_type_from_expr_pair() {
     ECS_TAG(world, Pair);
 
     /* Legacy notation, translates to (Pair, *) */
-    ecs_type_t type = ecs_type_from_str(world, "PAIR | Pair");
+    ecs_type_t type = ecs_type_from_str(world, "(Pair, *)");
 
     test_int(ecs_vector_count(type), 1);
     test_assert(ecs_type_has_entity(world, type, ecs_pair(Pair, EcsWildcard)));
