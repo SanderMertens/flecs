@@ -778,13 +778,6 @@ bool ecs_term_next(
 
     iter->column = column + 1;
 
-    if (source) {
-        /* Flip sign so iterator knows the component is not from This */
-        iter->column *= -1;
-        ecs_get_ref_w_id(world, &iter->ref, source, term->id);
-        iter->table.references = &iter->ref;
-    }
-
     /* If there is no data, ensure that iterator won't try to get it */
     if (table->column_count <= column) {
         iter->column = 0;
@@ -793,6 +786,19 @@ bool ecs_term_next(
         if (!c->size) {
             iter->column = 0;
         }
+    }
+
+    if (source) {
+        if (iter->column) {
+            /* Flip sign so iterator knows the component is not from This */
+            ecs_get_ref_w_id(world, &iter->ref, source, term->id);
+        } else {
+            iter->ref.entity = source;
+            iter->ref.component = term->id;
+        }
+
+        iter->column = (column + 1) * -1;
+        iter->table.references = &iter->ref;
     }
 
     iter->type = ecs_type_from_id(world, ids[column]);

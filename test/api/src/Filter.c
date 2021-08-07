@@ -691,3 +691,122 @@ void Filter_term_iter_w_superset_self_childof() {
 
     ecs_fini(world);
 }
+
+void Filter_term_iter_w_superset_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add_id(world, e_3, TagB);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = TagA,
+        .args[0].set = {
+            .mask = EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_source(&it, 1), base);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_source(&it, 1), base);
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_w_superset_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_pair(Rel, Obj),
+        .args[0].set = {
+            .mask = EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), base);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), base);
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_w_superset_pair_obj_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj_1);
+    ECS_TAG(world, Obj_2);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base_1 = ecs_new_w_pair(world, Rel, Obj_1);
+    ecs_entity_t base_2 = ecs_new_w_pair(world, Rel, Obj_2);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, base_1);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, base_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, base_2);
+    ecs_entity_t e_4 = ecs_new_w_pair(world, EcsIsA, base_2);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_pair(Rel, EcsWildcard),
+        .args[0].set = {
+            .mask = EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
+    test_int(ecs_term_source(&it, 1), base_2);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_1));
+    test_int(ecs_term_source(&it, 1), base_1);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_4);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
+    test_int(ecs_term_source(&it, 1), base_2);
+
+    ecs_fini(world);
+}

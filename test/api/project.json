@@ -1037,7 +1037,10 @@
                 "term_iter_w_superset",
                 "term_iter_w_superset_childof",
                 "term_iter_w_superset_self",
-                "term_iter_w_superset_self_childof"
+                "term_iter_w_superset_self_childof",
+                "term_iter_w_superset_tag",
+                "term_iter_w_superset_pair",
+                "term_iter_w_superset_pair_obj_wildcard"
             ]
         }, {
             "id": "Query",

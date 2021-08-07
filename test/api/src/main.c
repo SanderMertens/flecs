@@ -973,6 +973,9 @@ void Filter_term_iter_w_superset(void);
 void Filter_term_iter_w_superset_childof(void);
 void Filter_term_iter_w_superset_self(void);
 void Filter_term_iter_w_superset_self_childof(void);
+void Filter_term_iter_w_superset_tag(void);
+void Filter_term_iter_w_superset_pair(void);
+void Filter_term_iter_w_superset_pair_obj_wildcard(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -5652,6 +5655,18 @@ bake_test_case Filter_testcases[] = {
     {
         "term_iter_w_superset_self_childof",
         Filter_term_iter_w_superset_self_childof
+    },
+    {
+        "term_iter_w_superset_tag",
+        Filter_term_iter_w_superset_tag
+    },
+    {
+        "term_iter_w_superset_pair",
+        Filter_term_iter_w_superset_pair
+    },
+    {
+        "term_iter_w_superset_pair_obj_wildcard",
+        Filter_term_iter_w_superset_pair_obj_wildcard
     }
 };
 
@@ -9660,7 +9675,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        22,
+        25,
         Filter_testcases
     },
     {

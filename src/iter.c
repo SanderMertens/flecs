@@ -173,6 +173,7 @@ ecs_entity_t ecs_term_source(
 
     ecs_iter_table_t *table = it->table;
     int32_t table_column = table->columns[index - 1];
+
     if (table_column >= 0) {
         return 0;
     }
