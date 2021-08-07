@@ -34,10 +34,10 @@ void populate_columns(
             /* If current term is the one that triggered the event, use its
              * id to populate the iterator */
             id = event_id;
-            index = ecs_type_match(type, 0, id);
+            index = ecs_type_index_of(type, 0, id);
 
         } else {
-            index = ecs_type_match(type, 0, id);
+            index = ecs_type_index_of(type, 0, id);
 
             /* If id was not found, this must be an Or/Not expression */
             if (index == -1) {

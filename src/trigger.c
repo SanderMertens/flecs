@@ -189,7 +189,7 @@ void notify_trigger_set(
         ECS_INTERNAL_ERROR, NULL);
     entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
-    int32_t index = ecs_type_index_of(table->type, id);
+    int32_t index = ecs_type_index_of(table->type, 0, id);
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
     index ++;
 

@@ -101,7 +101,7 @@ public:
      *         has no name.
      */
     flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
-        char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, sep, init_sep);
+        char *path = ecs_get_path_w_sep(m_world, 0, m_id, sep, init_sep);
         return flecs::string(path);
     }   
 

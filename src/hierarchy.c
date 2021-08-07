@@ -8,7 +8,6 @@ bool path_append(
     const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
-    ecs_entity_t component,
     const char *sep,
     const char *prefix,
     ecs_strbuf_t *buf)
@@ -21,13 +20,10 @@ bool path_append(
     const char *name;
 
     if (ecs_is_valid(world, child)) {
-        ecs_type_t type = ecs_get_type(world, child);
-        ecs_type_find_id(world, type, component, EcsChildOf, 1, 0, &cur);
-        
+        cur = ecs_get_object(world, child, EcsChildOf, 0);
         if (cur) {
-            cur = ecs_get_alive(world, cur);
             if (cur != parent && cur != EcsFlecsCore) {
-                path_append(world, parent, cur, component, sep, prefix, buf);
+                path_append(world, parent, cur, sep, prefix, buf);
                 ecs_strbuf_appendstr(buf, sep);
             }
         } else if (prefix) {
@@ -173,7 +169,7 @@ ecs_entity_t find_child_in_table(
     const char *name)
 {
     /* If table doesn't have names, then don't bother */
-    int32_t name_index = ecs_type_index_of(table->type, 
+    int32_t name_index = ecs_type_index_of(table->type, 0,
         ecs_pair(ecs_id(EcsIdentifier), EcsName));
     if (name_index == -1) {
         return 0;
@@ -349,7 +345,6 @@ char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
-    ecs_entity_t component,
     const char *sep,
     const char *prefix)
 {
@@ -363,7 +358,7 @@ char* ecs_get_path_w_sep(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
     if (parent != child) {
-        path_append(world, parent, child, component, sep, prefix, &buf);
+        path_append(world, parent, child, sep, prefix, &buf);
     } else {
         ecs_strbuf_appendstr(&buf, "");
     }

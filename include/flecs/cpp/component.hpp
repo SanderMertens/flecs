@@ -256,7 +256,7 @@ public:
             return name;
         }
 
-        char *path = ecs_get_path_w_sep(world, 0, scope, 0, "::", nullptr);
+        char *path = ecs_get_path_w_sep(world, 0, scope, "::", nullptr);
         if (path) {
             const char *ptr = strrchr(name, ':');
             ecs_assert(ptr != name, ECS_INTERNAL_ERROR, NULL);
@@ -540,7 +540,7 @@ flecs::entity pod_component(
         if (ecs_get_type(world, id) != nullptr) {
             if (!implicit_name && id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_path_w_sep(
-                    world, 0, id, 0, "::", nullptr);
+                    world, 0, id, "::", nullptr);
                 ecs_assert(!strcmp(path, n), 
                     ECS_INCONSISTENT_NAME, name);
                 ecs_os_free(path);

@@ -2769,12 +2769,6 @@ ecs_type_t ecs_type_from_str(
     const char *expr);    
 
 FLECS_API
-ecs_type_t ecs_type_find(
-    ecs_world_t *world,
-    ecs_entity_t *array,
-    int32_t count);
-
-FLECS_API
 ecs_type_t ecs_type_merge(
     ecs_world_t *world,
     ecs_type_t type,
@@ -2785,32 +2779,44 @@ FLECS_API
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t entity);
+    ecs_id_t id);
 
 FLECS_API
 ecs_type_t ecs_type_remove(
     ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t entity);
+    ecs_id_t id);
+
+FLECS_API
+int32_t ecs_type_index_of(
+    ecs_type_t type,
+    int32_t offset,
+    ecs_id_t id);
 
 FLECS_API
 bool ecs_type_has_id(
     const ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t entity);
+    ecs_id_t id,
+    bool owned);
+
+FLECS_API
+int32_t ecs_type_match(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *out);
 
 FLECS_API
 bool ecs_type_has_type(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_type_t has);
-
-FLECS_API
-bool ecs_type_owns_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity,
-    bool owned);
 
 FLECS_API
 bool ecs_type_owns_type(
@@ -2820,31 +2826,10 @@ bool ecs_type_owns_type(
     bool owned);
 
 FLECS_API
-bool ecs_type_find_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t id,
-    ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
-    ecs_entity_t *out);
-
-FLECS_API
 ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t xor_tag);
-
-FLECS_API
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    ecs_entity_t component);
-
-FLECS_API
-int32_t ecs_type_match(
-    ecs_type_t type, 
-    int32_t start_index, 
-    ecs_entity_t pair);
 
 #ifdef __cplusplus
 }
@@ -3361,7 +3346,7 @@ extern "C" {
     ecs_set_id(world, entity, size, ptr)
 
 #define ecs_owns_entity(world, entity, id, owned)\
-    ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
+    ecs_type_has_id(world, ecs_get_type(world, entity), id, owned)
 
 typedef ecs_ids_t ecs_entities_t;
 
@@ -3598,7 +3583,7 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity);
 
-ECS_DEPRECATED("use ecs_type_owns_id")
+ECS_DEPRECATED("use ecs_type_has_id")
 FLECS_API
 bool ecs_type_owns_entity(
     const ecs_world_t *world,
@@ -5296,7 +5281,7 @@ bool ecs_has_id(
  */
 #ifndef ecs_owns
 #define ecs_owns(world, entity, has, owned)\
-    ecs_type_owns_id(world, ecs_get_type(world, entity), has, owned)
+    ecs_type_has_id(world, ecs_get_type(world, entity), has, owned)
 #endif
 
 /** @} */
@@ -5412,6 +5397,17 @@ bool ecs_exists(
  */
 FLECS_API
 ecs_type_t ecs_get_type(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get the table of an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The table of the entity, NULL if the entity has no components.
+ */
+FLECS_API
+ecs_table_t* ecs_get_table(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -5712,7 +5708,6 @@ void ecs_use(
  * @param world The world.
  * @param parent The entity from which to create the path.
  * @param child The entity to which to create the path.
- * @param component The component of the parent.
  * @return The relative entity path.
  */
 FLECS_API
@@ -5720,7 +5715,6 @@ char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
-    ecs_entity_t component,
     const char *sep,
     const char *prefix);
 
@@ -5735,7 +5729,7 @@ char* ecs_get_path_w_sep(
  * @return The relative entity path.
  */
 #define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+    ecs_get_path_w_sep(world, parent, child, ".", NULL)
 
 /** Get a full path for an entity.
  * Same as ecs_get_path, but with default values for the separator and
@@ -5747,7 +5741,7 @@ char* ecs_get_path_w_sep(
  * @return The entity path.
  */
 #define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+    ecs_get_path_w_sep(world, 0, child, ".", NULL)
 
 /** Find or create entity from path.
  * This operation will find or create an entity from a path, and will create any
@@ -9985,7 +9979,7 @@ namespace _
 inline void ecs_ctor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot default construct %s, add %s::%s() or use emplace<T>", 
         path, path, ecs_get_name(w, id));
@@ -9995,7 +9989,7 @@ inline void ecs_ctor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, "cannnot destruct %s, add ~%s::%s()", 
         path, path, ecs_get_name(w, id));
     ecs_os_free(path);
@@ -10004,7 +9998,7 @@ inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     const ecs_entity_t*, void *, const void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy assign %s, add %s& %s::operator =(const %s&)", path, 
         ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -10014,7 +10008,7 @@ inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     const ecs_entity_t*, void *, void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move assign %s, add %s& %s::operator =(%s&&)", path, 
         ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -10025,7 +10019,7 @@ inline void ecs_copy_ctor_illegal(ecs_world_t* w, ecs_entity_t id,
     const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
     void *, const void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy construct %s, add %s::%s(const %s&)",
         path, path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -10036,7 +10030,7 @@ inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id,
     const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
     void *, void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move construct %s, add %s::%s(%s&&)",
         path, path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -12513,7 +12507,7 @@ public:
      *         has no name.
      */
     flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
-        char *path = ecs_get_path_w_sep(m_world, 0, m_id, 0, sep, init_sep);
+        char *path = ecs_get_path_w_sep(m_world, 0, m_id, sep, init_sep);
         return flecs::string(path);
     }   
 
@@ -14149,7 +14143,7 @@ public:
             return name;
         }
 
-        char *path = ecs_get_path_w_sep(world, 0, scope, 0, "::", nullptr);
+        char *path = ecs_get_path_w_sep(world, 0, scope, "::", nullptr);
         if (path) {
             const char *ptr = strrchr(name, ':');
             ecs_assert(ptr != name, ECS_INTERNAL_ERROR, NULL);
@@ -14433,7 +14427,7 @@ flecs::entity pod_component(
         if (ecs_get_type(world, id) != nullptr) {
             if (!implicit_name && id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_path_w_sep(
-                    world, 0, id, 0, "::", nullptr);
+                    world, 0, id, "::", nullptr);
                 ecs_assert(!strcmp(path, n), 
                     ECS_INCONSISTENT_NAME, name);
                 ecs_os_free(path);
@@ -14987,7 +14981,7 @@ public:
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, w.id<Args>())...
+            ecs_type_index_of(type, 0, w.id<Args>())...
         });
 
         /* Get pointers for columns for entity */
@@ -16250,12 +16244,12 @@ public:
     }
 
     bool has(id_t id) {
-        return ecs_type_has_id(world(), m_normalized, id);
+        return ecs_type_has_id(world(), m_normalized, id, false);
     }
 
     bool has(id_t relation, id_t object) {
         return ecs_type_has_id(world(), m_normalized, 
-            ecs_pair(relation, object));
+            ecs_pair(relation, object), false);
     }    
 
     template <typename T>
@@ -17602,7 +17596,7 @@ inline void entity_view::match(id_t pattern, const Func& func) const {
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     int32_t cur = 0;
 
-    while (-1 != (cur = ecs_type_match(type, cur, pattern))) {
+    while (-1 != (cur = ecs_type_index_of(type, cur, pattern))) {
         flecs::id ent(m_world, ids[cur]);
         func(ent);
         cur ++;

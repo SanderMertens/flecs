@@ -186,7 +186,7 @@ void ecs_add_module_tag(
     do {
         ecs_add_id(world, e, EcsModule);
         ecs_type_t type = ecs_get_type(world, e);
-        int32_t index = ecs_type_match(type, 0, 
+        int32_t index = ecs_type_index_of(type, 0, 
             ecs_pair(EcsChildOf, EcsWildcard));
         if (index == -1) {
             return;

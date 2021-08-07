@@ -609,8 +609,8 @@ bool ecs_filter_match_type(
             match_type = ecs_get_type(world, subj_entity);
         }
 
-        bool result = ecs_type_find_id(world, match_type, term->id, 
-            subj->set.relation, subj->set.min_depth, subj->set.max_depth, NULL);
+        int32_t result = ecs_type_match(world, NULL, match_type, 0, term->id,
+            subj->set.relation, subj->set.min_depth, subj->set.max_depth, NULL) != -1;
         if (oper == EcsNot) {
             result = !result;
         }

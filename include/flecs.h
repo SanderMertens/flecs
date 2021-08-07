@@ -2209,7 +2209,7 @@ bool ecs_has_id(
  */
 #ifndef ecs_owns
 #define ecs_owns(world, entity, has, owned)\
-    ecs_type_owns_id(world, ecs_get_type(world, entity), has, owned)
+    ecs_type_has_id(world, ecs_get_type(world, entity), has, owned)
 #endif
 
 /** @} */
@@ -2325,6 +2325,17 @@ bool ecs_exists(
  */
 FLECS_API
 ecs_type_t ecs_get_type(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get the table of an entity.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The table of the entity, NULL if the entity has no components.
+ */
+FLECS_API
+ecs_table_t* ecs_get_table(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -2625,7 +2636,6 @@ void ecs_use(
  * @param world The world.
  * @param parent The entity from which to create the path.
  * @param child The entity to which to create the path.
- * @param component The component of the parent.
  * @return The relative entity path.
  */
 FLECS_API
@@ -2633,7 +2643,6 @@ char* ecs_get_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
-    ecs_entity_t component,
     const char *sep,
     const char *prefix);
 
@@ -2648,7 +2657,7 @@ char* ecs_get_path_w_sep(
  * @return The relative entity path.
  */
 #define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, 0, ".", NULL)
+    ecs_get_path_w_sep(world, parent, child, ".", NULL)
 
 /** Get a full path for an entity.
  * Same as ecs_get_path, but with default values for the separator and
@@ -2660,7 +2669,7 @@ char* ecs_get_path_w_sep(
  * @return The entity path.
  */
 #define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, 0, ".", NULL)
+    ecs_get_path_w_sep(world, 0, child, ".", NULL)
 
 /** Find or create entity from path.
  * This operation will find or create an entity from a path, and will create any

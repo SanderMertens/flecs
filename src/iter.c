@@ -236,7 +236,7 @@ int32_t ecs_iter_find_column(
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_index_of(it->table->table->type, component);
+    return ecs_type_index_of(it->table->table->type, 0, component);
 }
 
 void* ecs_iter_column_w_size(

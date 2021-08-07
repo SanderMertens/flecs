@@ -1,45 +1,5 @@
 #include "private_api.h"
 
-ecs_entity_t flecs_find_entity_in_prefabs(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t type,
-    ecs_entity_t component,
-    ecs_entity_t previous)
-{
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-
-    /* Walk from back to front, as prefabs are always located
-     * at the end of the type. */
-    for (i = count - 1; i >= 0; i --) {
-        ecs_entity_t e = array[i];
-
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            ecs_entity_t prefab = ecs_pair_object(world, e);
-            ecs_type_t prefab_type = ecs_get_type(world, prefab);
-
-            if (prefab == previous) {
-                continue;
-            }
-
-            if (ecs_type_owns_id(
-                world, prefab_type, component, true)) 
-            {
-                return prefab;
-            } else {
-                prefab = flecs_find_entity_in_prefabs(
-                    world, prefab, prefab_type, component, entity);
-                if (prefab) {
-                    return prefab;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
 /* -- Private functions -- */
 
 /* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
@@ -61,6 +21,11 @@ ecs_entity_t flecs_type_contains(
 
     if (type_1 == type_2) {
         return *(ecs_vector_first(type_1, ecs_entity_t));
+    }
+
+    if (ecs_vector_count(type_2) == 1) {
+        return ecs_type_has_id(world, type_1, 
+            ecs_vector_first(type_2, ecs_id_t)[0], !match_prefab);
     }
 
     int32_t i_2, i_1 = 0;
@@ -94,15 +59,6 @@ ecs_entity_t flecs_type_contains(
         }
 
         if (e1 != e2) {
-            if (match_prefab && 
-                e2 != ecs_pair(ecs_id(EcsIdentifier), EcsName) &&
-                e2 != EcsPrefab && e2 != EcsDisabled) 
-            {
-                if (flecs_find_entity_in_prefabs(world, 0, type_1, e2, 0)) {
-                    e1 = e2;
-                }
-            }
-
             if (e1 != e2) {
                 if (match_all) return 0;
             } else if (!match_all) {
@@ -125,19 +81,6 @@ ecs_entity_t flecs_type_contains(
 }
 
 /* -- Public API -- */
-
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    ecs_entity_t entity)
-{
-    ecs_vector_each(type, ecs_entity_t, c_ptr, {
-        if (*c_ptr == entity) {
-            return c_ptr_i; 
-        }
-    });
-
-    return -1;
-}
 
 ecs_type_t ecs_type_merge(
     ecs_world_t *world,
@@ -169,29 +112,6 @@ ecs_type_t ecs_type_merge(
     }
 }
 
-ecs_type_t ecs_type_find(
-    ecs_world_t *world,
-    ecs_entity_t *array,
-    int32_t count)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    
-    /* This function is allowed while staged, as long as the type already
-     * exists. If the type does not exist yet and traversing the table graph
-     * results in the creation of a table, an assert will trigger. */    
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-
-    ecs_ids_t entities = {
-        .array = array,
-        .count = count
-    };
-
-    ecs_table_t *table = flecs_table_find_or_create(unsafe_world, &entities);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
 static
 bool has_case(
     const ecs_world_t *world,
@@ -200,7 +120,7 @@ bool has_case(
 {
     const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_has_id(world, type_ptr->normalized, sw_case);
+    return ecs_type_has_id(world, type_ptr->normalized, sw_case, false);
 }
 
 static
@@ -222,31 +142,44 @@ bool match_id(
 }
 
 static
-bool search_type(
+int32_t search_type(
     const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_type_t type,
-    ecs_entity_t id,
+    int32_t offset,
+    ecs_id_t id,
     ecs_entity_t rel,
     int32_t min_depth,
     int32_t max_depth,
     int32_t depth,
     ecs_entity_t *out)
 {
+    if (!id) {
+        return -1;
+    }
+
     if (!type) {
-        return false;
+        return -1;
     }
 
     if (max_depth && depth > max_depth) {
-        return false;
+        return -1;
     }
 
-    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
 
-    if (id && depth >= min_depth) {
-        for (i = 0; i < count; i ++) {
-            if (match_id(world, ids[i], id)) {
-                return true;
+    if (depth >= min_depth) {
+        if (table && !offset && !(ECS_HAS_ROLE(id, CASE))) {
+            ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+            if (tr) {
+                return tr->column;
+            }
+        } else {
+            for (i = offset; i < count; i ++) {
+                if (match_id(world, ids[i], id)) {
+                    return i;
+                }
             }
         }
     }
@@ -260,60 +193,63 @@ bool search_type(
                 continue;
             }
 
-            ecs_entity_t base = ecs_pair_object(world, e);
-            if (!ecs_is_valid(world, base)) {
-                /* This indicates that an entity has a relationship
-                 * to an invalid base. That's no good, and will be handled with
-                 * future features (e.g. automatically removing the relation) */
+            ecs_entity_t obj = ecs_pair_object(world, e);
+            ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_table_t *obj_table = ecs_get_table(world, obj);
+            if (!obj_table) {
                 continue;
             }
 
-            ecs_type_t base_type = ecs_get_type(world, base);
-            if (!id || search_type(world, base_type, id, rel, 
-                min_depth, max_depth, depth + 1, out)) 
+            if ((search_type(world, obj_table, obj_table->type, 0, id, 
+                rel, min_depth, max_depth, depth + 1, out) != -1))
             {
                 if (out && !*out) {
-                    *out = base;
+                    *out = obj;
                 }
-                return true;
+                return i;
 
-            /* If the id could not be found on the base and the relationship is
-             * not IsA, try substituting the base with IsA */
+            /* If the id could not be found on the object and the relationship
+             * is not IsA, try substituting the object type with IsA */
             } else if (rel != EcsIsA) {
-                if (search_type(world, base_type, id, EcsIsA, 1, 0, 0, out)) {
+                if (search_type(world, obj_table, obj_table->type, 0, 
+                    id, EcsIsA, 1, 0, 0, out) != -1) 
+                {
                     if (out && !*out) {
-                        *out = base;
+                        *out = obj;
                     }
-                    return true;
+                    return i;
                 }
             }
         }
     }
 
-    return false;
+    return -1;
 }
 
 bool ecs_type_has_id(
     const ecs_world_t *world,
     ecs_type_t type,
-    ecs_entity_t entity)
-{
-    return search_type(world, type, entity, EcsIsA, 0, 0, 0, NULL);
-}
-
-bool ecs_type_owns_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t entity,
+    ecs_id_t id,
     bool owned)
 {
-    return search_type(world, type, entity, owned ? 0 : EcsIsA, 0, 0, 0, NULL);
+    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL) != -1;
 }
 
-bool ecs_type_find_id(
+int32_t ecs_type_index_of(
+    ecs_type_t type, 
+    int32_t offset, 
+    ecs_id_t id)
+{
+    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL);
+}
+
+int32_t ecs_type_match(
     const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_type_t type,
-    ecs_entity_t id,
+    int32_t offset,
+    ecs_id_t id,
     ecs_entity_t rel,
     int32_t min_depth,
     int32_t max_depth,
@@ -322,7 +258,7 @@ bool ecs_type_find_id(
     if (out) {
         *out = 0;
     }
-    return search_type(world, type, id, rel, min_depth, max_depth, 0, out);
+    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, out);
 }
 
 bool ecs_type_has_type(
@@ -440,7 +376,7 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     ecs_entity_t xor)
 {
     ecs_assert(
-        ecs_type_owns_id(world, type, ECS_XOR | xor, true),
+        ecs_type_has_id(world, type, ECS_XOR | xor, true),
         ECS_INVALID_PARAMETER, NULL);
 
     const EcsType *type_ptr = ecs_get(world, xor, EcsType);
@@ -452,28 +388,10 @@ ecs_entity_t ecs_type_get_entity_for_xor(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     for (i = 0; i < count; i ++) {
-        if (ecs_type_owns_id(world, xor_type, array[i], true)) {
+        if (ecs_type_has_id(world, xor_type, array[i], true)) {
             return array[i];
         }
     }
 
     return 0;
-}
-
-int32_t ecs_type_match(
-    ecs_type_t type, 
-    int32_t start_index, 
-    ecs_entity_t pattern)
-{
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-
-    for (i = start_index; i < count; i ++) {
-        ecs_entity_t e = array[i];
-        if (ecs_id_match(e, pattern)) {
-            return i;
-        }
-    }
-
-    return -1;
 }

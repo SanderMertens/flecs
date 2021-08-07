@@ -476,13 +476,13 @@ ecs_entity_t find_xor_replace(
                 const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
                 ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                if (ecs_type_owns_id(
+                if (ecs_type_has_id(
                     world, type_ptr->normalized, add, true)) 
                 {
                     xor_type = type_ptr->normalized;
                 }
             } else if (xor_type) {
-                if (ecs_type_owns_id(world, xor_type, e, true)) {
+                if (ecs_type_has_id(world, xor_type, e, true)) {
                     return e;
                 }
             }
@@ -512,7 +512,7 @@ int32_t flecs_table_switch_from_case(
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
             ecs_type_t sw_type = sw_columns[i].type;
-            if (ecs_type_owns_id(world, sw_type, add, true)) {
+            if (ecs_type_has_id(world, sw_type, add, true)) {
                 return i;
             }
         }
@@ -527,7 +527,7 @@ int32_t flecs_table_switch_from_case(
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_type_owns_id(
+            if (ecs_type_has_id(
                 world, type_ptr->normalized, add, true)) 
             {
                 return i;
@@ -751,7 +751,7 @@ ecs_table_t* flecs_table_traverse_add(
 
 static
 bool ecs_entity_array_is_ordered(
-    ecs_ids_t *entities)
+    const ecs_ids_t *entities)
 {
     ecs_entity_t prev = 0;
     ecs_entity_t *array = entities->array;
@@ -814,7 +814,7 @@ int32_t count_occurrences(
             break;
         }
 
-        if (ecs_type_has_id(world, type, e)) {
+        if (ecs_type_has_id(world, type, e, false)) {
             count ++;
         }
     }
@@ -860,7 +860,7 @@ void verify_constraints(
 static
 ecs_table_t* find_or_create(
     ecs_world_t *world,
-    ecs_ids_t *ids)
+    const ecs_ids_t *ids)
 {    
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
@@ -916,7 +916,7 @@ ecs_table_t* find_or_create(
 
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t * world,
-    ecs_ids_t * components)
+    const ecs_ids_t * components)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   

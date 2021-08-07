@@ -177,7 +177,7 @@ inline void entity_view::match(id_t pattern, const Func& func) const {
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     int32_t cur = 0;
 
-    while (-1 != (cur = ecs_type_match(type, cur, pattern))) {
+    while (-1 != (cur = ecs_type_index_of(type, cur, pattern))) {
         flecs::id ent(m_world, ids[cur]);
         func(ent);
         cur ++;

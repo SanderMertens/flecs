@@ -294,14 +294,6 @@ ecs_entity_t flecs_type_contains(
     bool match_all,
     bool match_prefab);
 
-/* Find entity in prefabs of type */
-ecs_entity_t flecs_find_entity_in_prefabs(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_type_t type,
-    ecs_entity_t component,
-    ecs_entity_t previous);
-
 void flecs_run_add_actions(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -338,7 +330,7 @@ void flecs_run_set_systems(
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
-    ecs_ids_t *type);   
+    const ecs_ids_t *type);   
 
 /* Get table data */
 ecs_data_t *flecs_table_get_data(

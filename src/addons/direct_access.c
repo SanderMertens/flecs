@@ -99,7 +99,7 @@ int32_t ecs_table_find_column(
 {
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    return ecs_type_index_of(table->type, component);
+    return ecs_type_index_of(table->type, 0, component);
 }
 
 ecs_vector_t* ecs_table_get_column(

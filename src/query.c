@@ -207,7 +207,7 @@ int get_comp_and_src(
     ecs_world_t *world,
     ecs_query_t *query,
     int32_t t,
-    ecs_type_t table_type,
+    ecs_table_t *table_arg,
     ecs_entity_t *component_out,
     ecs_entity_t *entity_out)
 {
@@ -226,9 +226,9 @@ int get_comp_and_src(
     if (!subj->entity) {
         component = term->id;
     } else {
-        ecs_type_t type = table_type;
+        ecs_table_t *table = table_arg;
         if (subj->entity != EcsThis) {
-            type = ecs_get_type(world, subj->entity);
+            table = ecs_get_table(world, subj->entity);
         }
 
         if (op == EcsOr) {
@@ -243,12 +243,12 @@ int get_comp_and_src(
 
                 if (!component) {
                     ecs_entity_t source = 0;
-                    bool result = ecs_type_find_id(world, type, term->id, 
+                    int32_t result = ecs_type_match(world, table, table->type, 0, term->id, 
                         subj->set.relation, subj->set.min_depth, 
                         subj->set.max_depth, 
                         &source);
 
-                    if (result) {
+                    if (result != -1) {
                         component = term->id;
                     }
 
@@ -261,9 +261,9 @@ int get_comp_and_src(
             component = term->id;
 
             ecs_entity_t source = 0;
-            bool result = ecs_type_find_id(world, type, component, 
+            bool result = ecs_type_match(world, table, table->type, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
-                &source);
+                &source) != -1;
 
             if (op == EcsNot) {
                 result = !result;
@@ -280,7 +280,7 @@ int get_comp_and_src(
 
             /* Table has already been matched, so unless column is optional
              * any components matched from the table must be available. */
-            if (type == table_type) {
+            if (table == table_arg) {
                 ecs_assert(result == true, ECS_INTERNAL_ERROR, NULL);
             }
 
@@ -332,7 +332,7 @@ int32_t get_pair_index(
     } else {
         /* First time for this iteration that the pair index is resolved, look
          * it up in the type. */
-        result = ecs_type_match(table_type, 
+        result = ecs_type_index_of(table_type, 
             pair_offsets[column_index].index, pair);
         pair_offsets[column_index].index = result + 1;
         pair_offsets[column_index].count = count;
@@ -406,11 +406,11 @@ int32_t get_component_index(
                  * this query exactly matches a single pair instance. In
                  * this case we can simply do a lookup of the pair 
                  * identifier in the table type. */
-                result = ecs_type_index_of(table_type, component);
+                result = ecs_type_index_of(table_type, 0, component);
             }
         } else {
             /* Get column index for component */
-            result = ecs_type_index_of(table_type, component);
+            result = ecs_type_index_of(table_type, 0, component);
         }
 
         /* If column is found, add one to the index, as column zero in
@@ -428,7 +428,7 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (!ecs_type_has_id(world, table_type, component)) {
+        if (!ecs_type_has_id(world, table_type, component, false)) {
             result = 0;
         }
     }  
@@ -477,7 +477,7 @@ int32_t get_pair_count(
     ecs_entity_t pair)
 {
     int32_t i = -1, result = 0;
-    while (-1 != (i = ecs_type_match(type, i + 1, pair))) {
+    while (-1 != (i = ecs_type_index_of(type, i + 1, pair))) {
         result ++;
     }
 
@@ -612,7 +612,7 @@ add_pair:
         table_data.iter_data.columns[c] = 0;
 
         /* Get actual component and component source for current column */
-        t = get_comp_and_src(world, query, t, table_type, &component, &entity);
+        t = get_comp_and_src(world, query, t, table, &component, &entity);
 
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
@@ -649,7 +649,7 @@ add_pair:
             if (index && (table && table->flags & EcsTableHasDisabled)) {
                 ecs_entity_t bs_id = 
                     (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
-                int32_t bs_index = ecs_type_index_of(table->type, bs_id);
+                int32_t bs_index = ecs_type_index_of(table->type, 0, bs_id);
                 if (bs_index != -1) {
                     flecs_bitset_column_t *elem = ecs_vector_add(
                         &table_data.bitset_columns, flecs_bitset_column_t);
@@ -769,7 +769,7 @@ add_pair:
 static
 bool match_term(
     const ecs_world_t *world,
-    ecs_type_t type,
+    const ecs_table_t *table,
     ecs_term_t *term,
     ecs_match_failure_t *failure_info)
 {
@@ -783,12 +783,12 @@ bool match_term(
     }
 
     if (term->args[0].entity != EcsThis) {
-        type = ecs_get_type(world, subj->entity);
+        table = ecs_get_table(world, subj->entity);
     }
 
-    return ecs_type_find_id(
-        world, type, term->id, subj->set.relation, 
-        subj->set.min_depth, subj->set.max_depth, NULL);
+    return ecs_type_match(
+        world, table, table->type, 0, term->id, subj->set.relation, 
+        subj->set.min_depth, subj->set.max_depth, NULL) != -1;
 }
 
 /* Match table with query */
@@ -815,7 +815,7 @@ bool flecs_query_match(
     ecs_type_t table_type = table->type;
 
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_owns_id(
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_has_id(
         world, table_type, EcsDisabled, true))
     {
         failure_info->reason = EcsMatchEntityIsDisabled;
@@ -823,7 +823,7 @@ bool flecs_query_match(
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_owns_id(
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_has_id(
         world, table_type, EcsPrefab, true))
     {
         failure_info->reason = EcsMatchEntityIsPrefab;
@@ -845,12 +845,12 @@ bool flecs_query_match(
         failure_info->column = i + 1;
 
         if (oper == EcsAnd) {
-            if (!match_term(world, table_type, term, failure_info)) {
+            if (!match_term(world, table, term, failure_info)) {
                 return false;
             }
 
         } else if (oper == EcsNot) {
-            if (match_term(world, table_type, term, failure_info)) {
+            if (match_term(world, table, term, failure_info)) {
                 return false;
             }
 
@@ -865,7 +865,7 @@ bool flecs_query_match(
                 }
 
                 if (!match && match_term(
-                    world, table_type, term, failure_info))
+                    world, table, term, failure_info))
                 {
                     match = true;
                 }
@@ -886,7 +886,7 @@ bool flecs_query_match(
                 tmp_term.id = ids[j];
                 tmp_term.pred.entity = ids[j];
 
-                if (match_term(world, table_type, &tmp_term, failure_info)) {
+                if (match_term(world, table, &tmp_term, failure_info)) {
                     match_count ++;
                 }
             }
@@ -1091,7 +1091,7 @@ void build_sorted_table_range(
             continue;
         }
 
-        int32_t index = ecs_type_index_of(table->type, component);
+        int32_t index = ecs_type_index_of(table->type, 0, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
             int16_t size = column->size;
@@ -1101,9 +1101,10 @@ void build_sorted_table_range(
             helper[to_sort].shared = false;
         } else if (component) {
             /* Find component in prefab */
-            ecs_entity_t base = flecs_find_entity_in_prefabs(
-                world, 0, table->type, component, 0);
-            
+            ecs_entity_t base;
+            ecs_type_match(world, table, table->type, 0, component, 
+                EcsIsA, 1, 0, &base);
+
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
             ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
@@ -1310,7 +1311,7 @@ void sort_tables(
         if (order_by_component) {
             /* Get index of sorted component. We only care if the component we're
             * sorting on has changed or if entities have been added / re(moved) */
-            index = ecs_type_index_of(table->type, order_by_component);
+            index = ecs_type_index_of(table->type, 0, order_by_component);
             if (index != -1) {
                 ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
                 is_dirty = is_dirty || (dirty_state[index + 1] != table_data->monitor[index + 1]);
@@ -1787,6 +1788,7 @@ void resolve_cascade_subject(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_indices_t *ti,
+    const ecs_table_t *table,
     ecs_type_t table_type)
 {
     int32_t term_index = query->cascade_by - 1;
@@ -1819,7 +1821,7 @@ void resolve_cascade_subject(
 
         /* Find source for component */
         ecs_entity_t subject;
-        ecs_type_find_id(world, table_type, term->id, 
+        ecs_type_match(world, table, table_type, 0, term->id, 
             term->args[0].set.relation, 1, 0, &subject);
 
         /* If container was found, update the reference */
@@ -1907,7 +1909,7 @@ void rematch_table(
          * sources of references. This may have changed in case 
          * components were added/removed to container entities */ 
         } else if (query->cascade_by) {
-            resolve_cascade_subject(world, query, match, table->type);
+            resolve_cascade_subject(world, query, match, table, table->type);
 
         /* If query has optional columns, it is possible that a column that
          * previously had data no longer has data, or vice versa. Do a full
@@ -1955,7 +1957,7 @@ bool satisfy_constraints(
 
         if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
             ecs_type_t type = ecs_get_type(world, subj->entity);
-            if (ecs_type_has_id(world, type, term->id)) {
+            if (ecs_type_has_id(world, type, term->id, false)) {
                 if (oper == EcsNot) {
                     return false;
                 }

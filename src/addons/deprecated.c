@@ -210,7 +210,7 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity)
 {
-    return ecs_type_has_id(world, type, entity);
+    return ecs_type_has_id(world, type, entity, false);
 }
 
 bool ecs_type_owns_entity(
@@ -219,7 +219,7 @@ bool ecs_type_owns_entity(
     ecs_entity_t entity,
     bool owned)
 {
-    return ecs_type_owns_id(world, type, entity, owned);
+    return ecs_type_has_id(world, type, entity, owned);
 }
 
 ecs_type_t ecs_column_type(

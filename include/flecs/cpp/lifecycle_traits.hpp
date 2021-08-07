@@ -7,7 +7,7 @@ namespace _
 inline void ecs_ctor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot default construct %s, add %s::%s() or use emplace<T>", 
         path, path, ecs_get_name(w, id));
@@ -17,7 +17,7 @@ inline void ecs_ctor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, "cannnot destruct %s, add ~%s::%s()", 
         path, path, ecs_get_name(w, id));
     ecs_os_free(path);
@@ -26,7 +26,7 @@ inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     const ecs_entity_t*, void *, const void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy assign %s, add %s& %s::operator =(const %s&)", path, 
         ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -36,7 +36,7 @@ inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t
 inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
     const ecs_entity_t*, void *, void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move assign %s, add %s& %s::operator =(%s&&)", path, 
         ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -47,7 +47,7 @@ inline void ecs_copy_ctor_illegal(ecs_world_t* w, ecs_entity_t id,
     const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
     void *, const void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy construct %s, add %s::%s(const %s&)",
         path, path, ecs_get_name(w, id), ecs_get_name(w, id));
@@ -58,7 +58,7 @@ inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id,
     const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
     void *, void *, size_t, int32_t, void*)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move construct %s, add %s::%s(%s&&)",
         path, path, ecs_get_name(w, id), ecs_get_name(w, id));

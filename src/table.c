@@ -367,7 +367,7 @@ void register_on_set(
             }
 
             ecs_entity_t comp = matched_table->iter_data.components[i];
-            int32_t index = ecs_type_index_of(table->type, comp);
+            int32_t index = ecs_type_index_of(table->type, 0, comp);
             if (index == -1) {
                 continue;
             }
@@ -882,7 +882,7 @@ void flecs_table_mark_dirty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (table->dirty_state) {
-        int32_t index = ecs_type_index_of(table->type, component);
+        int32_t index = ecs_type_index_of(table->type, 0, component);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
         table->dirty_state[index] ++;
     }

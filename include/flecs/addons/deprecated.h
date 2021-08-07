@@ -199,7 +199,7 @@ extern "C" {
     ecs_set_id(world, entity, size, ptr)
 
 #define ecs_owns_entity(world, entity, id, owned)\
-    ecs_type_owns_id(world, ecs_get_type(world, entity), id, owned)
+    ecs_type_has_id(world, ecs_get_type(world, entity), id, owned)
 
 typedef ecs_ids_t ecs_entities_t;
 
@@ -436,7 +436,7 @@ bool ecs_type_has_entity(
     ecs_type_t type,
     ecs_entity_t entity);
 
-ECS_DEPRECATED("use ecs_type_owns_id")
+ECS_DEPRECATED("use ecs_type_has_id")
 FLECS_API
 bool ecs_type_owns_entity(
     const ecs_world_t *world,

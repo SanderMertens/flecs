@@ -1570,7 +1570,7 @@ while (ecs_filter_next(&it)) {
     ecs_type_t table_type = ecs_iter_type(&it);
 
     /* First Retrieve the column index for Position */
-    int32_t p_index = ecs_type_index_of(table_type, ecs_id(Position));
+    int32_t p_index = ecs_type_index_of(table_type, 0, ecs_id(Position));
 
     /* Now use the column index to get the Position array from the table */
     Position *p = ecs_table_column(&it, p_index);

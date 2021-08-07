@@ -82,12 +82,12 @@ public:
     }
 
     bool has(id_t id) {
-        return ecs_type_has_id(world(), m_normalized, id);
+        return ecs_type_has_id(world(), m_normalized, id, false);
     }
 
     bool has(id_t relation, id_t object) {
         return ecs_type_has_id(world(), m_normalized, 
-            ecs_pair(relation, object));
+            ecs_pair(relation, object), false);
     }    
 
     template <typename T>

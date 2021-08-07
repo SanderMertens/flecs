@@ -417,7 +417,7 @@ public:
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, w.id<Args>())...
+            ecs_type_index_of(type, 0, w.id<Args>())...
         });
 
         /* Get pointers for columns for entity */

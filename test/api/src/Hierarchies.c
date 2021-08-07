@@ -272,61 +272,13 @@ void Hierarchies_rel_path_no_match() {
     ecs_fini(world);
 }
 
-void Hierarchies_path_for_component_0() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, Parent, 0);
-
-    char *path = ecs_get_path_w_sep(world, 0, Parent, ecs_id(Position), ".", NULL);
-    test_str(path, "Parent");
-    free(path);
-
-    ecs_fini(world);
-}
-
-void Hierarchies_path_for_component_1() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, Parent, 0);
-    ECS_ENTITY(world, Parent2, Position);
-    ECS_ENTITY(world, Child, (ChildOf, Parent), (ChildOf, Parent2));
-
-    char *path = ecs_get_path_w_sep(world, 0, Child, ecs_id(Position), ".", NULL);
-    test_str(path, "Parent2.Child");
-    free(path);
-
-    ecs_fini(world);
-}
-
-void Hierarchies_path_for_component_2() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, Parent, 0);
-    ECS_ENTITY(world, Parent2, Position);
-    ECS_ENTITY(world, Child1, (ChildOf, Parent));
-    ECS_ENTITY(world, Child2, Position, (ChildOf, Parent2));
-    ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child1), (ChildOf, Parent2.Child2));
-
-    char *path = ecs_get_path_w_sep(world, 0, GrandChild, ecs_id(Position), ".", NULL);
-    test_str(path, "Parent2.Child2.GrandChild");
-    free(path);
-
-    ecs_fini(world);
-}
-
 void Hierarchies_path_custom_sep() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_path_w_sep(world, 0, Child, 0, "::", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, Child, "::", NULL);
     test_str(path, "Parent::Child");
     free(path);
 
@@ -339,7 +291,7 @@ void Hierarchies_path_custom_prefix() {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_path_w_sep(world, 0, Child, 0,  "::", "::");
+    char *path = ecs_get_path_w_sep(world, 0, Child,  "::", "::");
     test_str(path, "::Parent::Child");
     free(path);
 
@@ -353,7 +305,7 @@ void Hierarchies_path_prefix_rel_match() {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    char *path = ecs_get_path_w_sep(world, Parent, GrandChild, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(world, Parent, GrandChild, "::", "::");
     test_str(path, "Child::GrandChild");
     free(path);
 
@@ -368,7 +320,7 @@ void Hierarchies_path_prefix_rel_no_match() {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    char *path = ecs_get_path_w_sep(world, Parent2, GrandChild, 0, "::", "::");
+    char *path = ecs_get_path_w_sep(world, Parent2, GrandChild, "::", "::");
     test_str(path, "::Parent::Child::GrandChild");
     free(path);
 

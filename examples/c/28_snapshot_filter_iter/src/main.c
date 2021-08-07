@@ -54,14 +54,14 @@ int main(int argc, char *argv[]) {
 
         /* Retrieve the column indices for both the Position and Velocity
          * columns by finding their position in the table type */
-        int32_t p_index = ecs_type_index_of(table_type, ecs_id(Position));
-        int32_t v_index = ecs_type_index_of(table_type, ecs_id(Velocity));
+        int32_t p_index = ecs_type_index_of(table_type, 0, ecs_id(Position));
+        int32_t v_index = ecs_type_index_of(table_type, 0, ecs_id(Velocity));
 
         /* If we want to display the name of the entities we can't use the
          * ecs_get_name function, since it tries to get the id from the world, and
          * we just deleted the entities from the world. Therefore, we should get
          * the name from the snapshot directly */
-        int32_t id_index = ecs_type_index_of(table_type,
+        int32_t id_index = ecs_type_index_of(table_type, 0,
             ecs_pair(ecs_id(EcsIdentifier), EcsName));
 
         /* Get pointers to the Position and Velocity columns with the obtained

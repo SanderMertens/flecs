@@ -396,9 +396,6 @@ void Hierarchies_rel_path_from_self(void);
 void Hierarchies_rel_path_depth_1(void);
 void Hierarchies_rel_path_depth_2(void);
 void Hierarchies_rel_path_no_match(void);
-void Hierarchies_path_for_component_0(void);
-void Hierarchies_path_for_component_1(void);
-void Hierarchies_path_for_component_2(void);
 void Hierarchies_path_custom_sep(void);
 void Hierarchies_path_custom_prefix(void);
 void Hierarchies_path_prefix_rel_match(void);
@@ -1563,22 +1560,12 @@ void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
 void Type_type_redefine(void);
-void Type_type_from_array(void);
-void Type_type_from_array_unsorted(void);
 void Type_type_has(void);
 void Type_type_has_not(void);
 void Type_zero_type_has_not(void);
-void Type_type_has_prefab(void);
-void Type_type_has_parent(void);
-void Type_type_has_pair(void);
-void Type_type_has_pair_exact(void);
-void Type_type_owns_pair(void);
-void Type_type_owns_pair_exact(void);
 void Type_type_merge(void);
 void Type_type_merge_overlap(void);
 void Type_type_merge_overlap_one(void);
-void Type_type_merge_overlap_w_flag(void);
-void Type_type_merge_overlap_w_flags_from_both(void);
 void Type_type_add(void);
 void Type_type_add_empty(void);
 void Type_type_add_entity_again(void);
@@ -3476,18 +3463,6 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "rel_path_no_match",
         Hierarchies_rel_path_no_match
-    },
-    {
-        "path_for_component_0",
-        Hierarchies_path_for_component_0
-    },
-    {
-        "path_for_component_1",
-        Hierarchies_path_for_component_1
-    },
-    {
-        "path_for_component_2",
-        Hierarchies_path_for_component_2
     },
     {
         "path_custom_sep",
@@ -7884,14 +7859,6 @@ bake_test_case Type_testcases[] = {
         Type_type_redefine
     },
     {
-        "type_from_array",
-        Type_type_from_array
-    },
-    {
-        "type_from_array_unsorted",
-        Type_type_from_array_unsorted
-    },
-    {
         "type_has",
         Type_type_has
     },
@@ -7904,30 +7871,6 @@ bake_test_case Type_testcases[] = {
         Type_zero_type_has_not
     },
     {
-        "type_has_prefab",
-        Type_type_has_prefab
-    },
-    {
-        "type_has_parent",
-        Type_type_has_parent
-    },
-    {
-        "type_has_pair",
-        Type_type_has_pair
-    },
-    {
-        "type_has_pair_exact",
-        Type_type_has_pair_exact
-    },
-    {
-        "type_owns_pair",
-        Type_type_owns_pair
-    },
-    {
-        "type_owns_pair_exact",
-        Type_type_owns_pair_exact
-    },
-    {
         "type_merge",
         Type_type_merge
     },
@@ -7938,14 +7881,6 @@ bake_test_case Type_testcases[] = {
     {
         "type_merge_overlap_one",
         Type_type_merge_overlap_one
-    },
-    {
-        "type_merge_overlap_w_flag",
-        Type_type_merge_overlap_w_flag
-    },
-    {
-        "type_merge_overlap_w_flags_from_both",
-        Type_type_merge_overlap_w_flags_from_both
     },
     {
         "type_add",
@@ -9572,7 +9507,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        85,
+        82,
         Hierarchies_testcases
     },
     {
@@ -9866,7 +9801,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        82,
+        72,
         Type_testcases
     },
     {
