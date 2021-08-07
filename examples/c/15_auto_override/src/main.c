@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
      * entity with this type is created, which will initialize the private
      * values with the values of the Base entity. This is a common approach to
      * creating entities with an initialized set of components. */
-    ECS_TYPE(world, Movable, INSTANCEOF | Base, Position, Velocity);
+    ECS_TYPE(world, Movable, (IsA, Base), Position, Velocity);
 
     /* Create new entity with type */
     ecs_entity_t e = ecs_new(world, Movable);

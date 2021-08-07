@@ -118,10 +118,7 @@ bool ecs_id_match(
 
     if (ECS_HAS_ROLE(pattern, PAIR)) {
         if (!ECS_HAS_ROLE(id, PAIR)) {
-            /* legacy roles that are now relations */
-            if (!ECS_HAS_ROLE(id, INSTANCEOF) && !ECS_HAS_ROLE(id, CHILDOF)) {
-                return false;
-            }
+            return false;
         }
 
         ecs_entity_t id_rel = ECS_PAIR_RELATION(id);

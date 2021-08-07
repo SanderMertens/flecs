@@ -204,34 +204,12 @@ bool has_case(
 }
 
 static
-int match_id(
+bool match_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
-    if (ECS_HAS_ROLE(match_with, PAIR)) {
-        if (!ECS_HAS_ROLE(id, PAIR) && 
-            !ECS_HAS_ROLE(id, CHILDOF) && !ECS_HAS_ROLE(id, INSTANCEOF)) 
-        {
-            return 0;
-        }
-
-        ecs_entity_t rel = ECS_PAIR_RELATION(match_with);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(match_with);
-
-        ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
-
-        if (obj == EcsWildcard) {
-            if (rel == EcsWildcard || ECS_PAIR_RELATION(id) == rel) {
-                return 1;
-            }
-        } else if (rel == EcsWildcard) {
-            if (ECS_PAIR_OBJECT(id) == obj) {
-                return 1;
-            }
-        }
-    } else 
     if (ECS_HAS_ROLE(match_with, CASE)) {
         ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
         if (ECS_HAS_ROLE(id, SWITCH) && has_case(world, sw_case, id)) {
@@ -240,16 +218,8 @@ int match_id(
             return 0;
         }
     } else {
-        if (match_with == EcsWildcard) {
-            return true;
-        }
+        return ecs_id_match(id, match_with);
     }
-
-    if (ECS_HAS(id, match_with)) {
-        return 1;
-    }
-
-    return 0;
 }
 
 static
@@ -273,17 +243,12 @@ bool search_type(
 
     ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
-    int matched = 0;
+    bool matched = false;
 
     if (id && depth >= min_depth) {
         for (i = 0; i < count; i ++) {
-            int ret = match_id(world, type, ids[i], id);
-            switch(ret) {
-            case 0: break; /* no match, but keep looking */
-            case 1: return true; /* match found */
-            case -1: return false; /* no match found, stop looking */
-            case 2: matched ++; break; /* match found, but need to keep looking */
-            default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            if (match_id(world, type, ids[i], id)) {
+                return true;
             }
         }
     }
@@ -327,7 +292,7 @@ bool search_type(
         }
     }
 
-    return matched != 0;
+    return matched != false;
 }
 
 bool ecs_type_has_id(

@@ -668,7 +668,7 @@ typedef struct ecs_world_info_t {
  * Type flags can also be used in type expressions, without the ECS prefix:
  *
  * ECS_ENTITY(world, Base, Position);
- * ECS_TYPE(world, InstanceOfBase, INSTANCEOF | Base);
+ * ECS_TYPE(world, InstanceOfBase, (IsA, Base));
  */
 
 /** Role bit added to roles to differentiate between roles and generations */
@@ -2200,7 +2200,7 @@ bool ecs_has_id(
 /** Test if an entity owns an entity.
  * This operation is similar to ecs_has, but will return false if the entity
  * does not own the entity, which is the case if the entity is defined on
- * a base entity with an INSTANCEOF role.
+ * a base entity with an IsA pair.
  *
  * @param world The world.
  * @param entity The entity.

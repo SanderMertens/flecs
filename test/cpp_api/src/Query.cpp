@@ -512,7 +512,7 @@ void Query_query_single_pair() {
     flecs::entity(world).add<Pair, Position>();
     auto e2 = flecs::entity(world).add<Pair, Velocity>();
     
-    flecs::query<> q(world, "PAIR | Pair > Velocity");
+    flecs::query<> q(world, "(Pair, Velocity)");
 
     int32_t table_count = 0;
     int32_t entity_count = 0;

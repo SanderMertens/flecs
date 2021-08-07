@@ -27,18 +27,18 @@ int main(int argc, char *argv[]) {
          * Position component. When RootPrefab is instantiated, it will have a
          * child with the exact same type as Child, meaning that it will
          * automatically override Position. */
-        ECS_PREFAB(world, Child, CHILDOF | RootPrefab, INSTANCEOF | ChildPrefab, Position);
+        ECS_PREFAB(world, Child, (ChildOf, RootPrefab), (IsA, ChildPrefab), Position);
 
     /* Create type that automatically overrides Position from RootPrefab */
-    ECS_TYPE(world, Root, INSTANCEOF | RootPrefab, Position);
+    ECS_TYPE(world, Root, (IsA, RootPrefab), Position);
 
     /* Create new entity from Root. Don't use EcsIsA, as we're using a
-     * regular type which already has the INSTANCEOF relationship. */
+     * regular type which already has the IsA relationship. */
     ecs_entity_t e = ecs_new(world, Root);
 
     /* Lookup child in the instance we just created. This child will have e in
-     * its type with a CHILDOF mask, and the prefab ChildPrefab in its type with
-     * an INSTANCEOF mask. Note how the identifier is Child, not ChildPrefab. */
+     * its type with a ChildOf pair, and the prefab ChildPrefab in its type with
+     * an IsA pair. Note how the identifier is Child, not ChildPrefab. */
     ecs_entity_t child = ecs_lookup_child(world, e, "Child");
     printf("Child type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child)));
 

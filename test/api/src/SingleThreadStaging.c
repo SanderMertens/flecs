@@ -2339,7 +2339,7 @@ void SingleThreadStaging_override_after_remove_in_progress() {
 
     ECS_ENTITY(world, base, Position, Disabled);
 
-    ECS_ENTITY(world, e, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e, Position, (IsA, base));
 
     ECS_SYSTEM(world, OverrideAfterRemove, EcsOnUpdate, Position);
 

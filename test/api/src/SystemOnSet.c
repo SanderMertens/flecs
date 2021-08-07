@@ -502,7 +502,7 @@ void SystemOnSet_bulk_new_1_from_base() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Base, Position);
-    ECS_TYPE(world, Type, INSTANCEOF | Base, Velocity, Mass);
+    ECS_TYPE(world, Type, (IsA, Base), Velocity, Mass);
     ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity, Mass);
 
     Probe ctx = { 0 };

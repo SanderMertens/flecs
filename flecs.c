@@ -8456,12 +8456,6 @@ size_t append_to_str(
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
-    if (ECS_HAS_ROLE(entity, CHILDOF)) {
-        return "CHILDOF";
-    } else
-    if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
-        return "INSTANCEOF";
-    } else
     if (ECS_HAS_ROLE(entity, PAIR)) {
         return "PAIR";
     } else
@@ -12833,8 +12827,6 @@ void ecs_bulk_remove_entity(
 #define TOK_NOT '!'
 #define TOK_OPTIONAL '?'
 #define TOK_BITWISE_OR '|'
-#define TOK_TRAIT '>'
-#define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
@@ -12857,9 +12849,6 @@ void ecs_bulk_remove_entity(
 #define TOK_PARENT "PARENT"
 #define TOK_CASCADE "CASCADE"
 
-#define TOK_ROLE_CHILDOF "CHILDOF"
-#define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "TRAIT"
 #define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
@@ -13054,12 +13043,7 @@ ecs_entity_t parse_role(
     int64_t column,
     const char *token)
 {
-    if        (!ecs_os_strcmp(token, TOK_ROLE_CHILDOF)) {
-        return ECS_CHILDOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
-        return ECS_INSTANCEOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT) || 
-               !ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
+    if        (!ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
     {
         return ECS_PAIR;            
     } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
@@ -13415,13 +13399,6 @@ const char* parse_term(
             goto parse_role;
         }
 
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }
-
         /* Is token a predicate? */
         if (ptr[0] == TOK_PAREN_OPEN) {
             goto parse_predicate;    
@@ -13526,14 +13503,7 @@ parse_source:
         if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
             ptr++;
             goto parse_role;
-        }
-
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }        
+        }      
 
         /* If not, it's a predicate */
         goto parse_predicate;
@@ -13556,12 +13526,6 @@ parse_role:
         ptr = parse_token(name, expr, (ptr - expr), ptr, token);
         if (!ptr) {
             return NULL;
-        }
-
-        /* Is token a trait? */
-        if (ptr[0] == TOK_TRAIT) {
-            ptr ++;
-            goto parse_trait;
         }
 
         /* If not, it's a predicate */
@@ -13659,50 +13623,6 @@ parse_pair_object:
 
     ptr = skip_space(ptr);
     goto parse_done; 
-
-parse_trait:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be an object */
-        goto parse_trait_target;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after trait");
-        return NULL;
-    }
-
-parse_trait_target:
-    parse_identifier(".", &term.args[0]);
-    if (parse_identifier(token, &term.args[1])) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be a name */
-        goto parse_name;
-    } else {
-        /* If nothing else, parsing of this element is done */
-        goto parse_done;
-    }
 
 parse_singleton:
     if (parse_identifier(token, &term.pred)) {
@@ -15713,14 +15633,8 @@ void do_register_each_id(
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
 
-        /* This check ensures that legacy INSTANCEOF works */
-        if (ECS_HAS_RELATION(id, EcsIsA)) {
-            id = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(id));
-        }
-
         /* This check ensures that legacy CHILDOF works */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            id = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(id));
             has_childof = true;
         } 
 
@@ -16634,10 +16548,7 @@ bool ecs_id_match(
 
     if (ECS_HAS_ROLE(pattern, PAIR)) {
         if (!ECS_HAS_ROLE(id, PAIR)) {
-            /* legacy roles that are now relations */
-            if (!ECS_HAS_ROLE(id, INSTANCEOF) && !ECS_HAS_ROLE(id, CHILDOF)) {
-                return false;
-            }
+            return false;
         }
 
         ecs_entity_t id_rel = ECS_PAIR_RELATION(id);
@@ -18332,56 +18243,12 @@ bool has_case(
 }
 
 static
-int match_id(
+bool match_id(
     const ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
-    if (ECS_HAS_ROLE(match_with, PAIR)) {
-        if (!ECS_HAS_ROLE(id, PAIR) && 
-            !ECS_HAS_ROLE(id, CHILDOF) && !ECS_HAS_ROLE(id, INSTANCEOF)) 
-        {
-            return 0;
-        }
-
-        ecs_entity_t rel = ECS_PAIR_RELATION(match_with);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(match_with);
-
-        ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
-
-        if (!obj) {
-            if (rel != EcsWildcard && ECS_PAIR_RELATION(id) != rel) {
-                return 0;
-            }
-
-            ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
-            int32_t i, count = ecs_vector_count(type);
-
-            /* A pair with a (rel, 0) requires the component that is the target
-             * of the relation to also be present in the type. This must be
-             * verified for each relation in the type, which is why the result
-             * is a preliminary OK. If after a match a relation is found with an
-             * object that doesn't match, the type doesn't match.
-             *
-             * This is legacy behavior. */
-            ecs_entity_t comp = ECS_PAIR_OBJECT(id);
-            for (i = 0; i < count; i ++) {
-                if (comp == ids[i]) {
-                    return 2;
-                }
-            }
-            return -1;
-        } else if (obj == EcsWildcard) {
-            if (rel == EcsWildcard || ECS_PAIR_RELATION(id) == rel) {
-                return 1;
-            }
-        } else if (rel == EcsWildcard) {
-            if (ECS_PAIR_OBJECT(id) == obj) {
-                return 1;
-            }
-        }
-    } else 
     if (ECS_HAS_ROLE(match_with, CASE)) {
         ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
         if (ECS_HAS_ROLE(id, SWITCH) && has_case(world, sw_case, id)) {
@@ -18390,16 +18257,8 @@ int match_id(
             return 0;
         }
     } else {
-        if (match_with == EcsWildcard) {
-            return true;
-        }
+        return ecs_id_match(id, match_with);
     }
-
-    if (ECS_HAS(id, match_with)) {
-        return 1;
-    }
-
-    return 0;
 }
 
 static
@@ -18423,17 +18282,12 @@ bool search_type(
 
     ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
-    int matched = 0;
+    bool matched = false;
 
     if (id && depth >= min_depth) {
         for (i = 0; i < count; i ++) {
-            int ret = match_id(world, type, ids[i], id);
-            switch(ret) {
-            case 0: break; /* no match, but keep looking */
-            case 1: return true; /* match found */
-            case -1: return false; /* no match found, stop looking */
-            case 2: matched ++; break; /* match found, but need to keep looking */
-            default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            if (match_id(world, type, ids[i], id)) {
+                return true;
             }
         }
     }
@@ -18477,7 +18331,7 @@ bool search_type(
         }
     }
 
-    return matched != 0;
+    return matched != false;
 }
 
 bool ecs_type_has_id(

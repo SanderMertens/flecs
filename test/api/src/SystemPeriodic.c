@@ -1656,7 +1656,7 @@ void SystemPeriodic_owned_column() {
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, (IsA, base));
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED:Velocity);
 
@@ -1685,7 +1685,7 @@ void SystemPeriodic_owned_not_column() {
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, (IsA, base));
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED:Velocity);
 
@@ -1720,7 +1720,7 @@ void SystemPeriodic_owned_or_column() {
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, Mass);
-    ECS_ENTITY(world, e3, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e3, Position, (IsA, base));
 
     ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, OWNED:Velocity || OWNED:Mass);
 
@@ -1754,7 +1754,7 @@ void SystemPeriodic_shared_column() {
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, (IsA, base));
     ECS_ENTITY(world, e3, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED:Velocity);
@@ -1784,7 +1784,7 @@ void SystemPeriodic_shared_not_column() {
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, INSTANCEOF | base);
+    ECS_ENTITY(world, e2, Position, (IsA, base));
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED:Velocity);
 
@@ -1820,8 +1820,8 @@ void SystemPeriodic_shared_or_column() {
     ECS_ENTITY(world, base2, Mass);
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, Mass);
-    ECS_ENTITY(world, e3, Position, INSTANCEOF | base1);
-    ECS_ENTITY(world, e4, Position, INSTANCEOF | base2);
+    ECS_ENTITY(world, e3, Position, (IsA, base1));
+    ECS_ENTITY(world, e4, Position, (IsA, base2));
 
     ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, SHARED:Velocity || SHARED:Mass);
 
@@ -1854,8 +1854,8 @@ void SystemPeriodic_container_dont_match_inheritance() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
-    ECS_ENTITY(world, e2, Position, CHILDOF | base);
+    ECS_ENTITY(world, e1, Position, (IsA, base));
+    ECS_ENTITY(world, e2, Position, (ChildOf, base));
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT:Velocity);
 
@@ -1883,8 +1883,8 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_ENTITY(world, base, Velocity);
-    ECS_ENTITY(world, e1, Position, INSTANCEOF | base);
-    ECS_ENTITY(world, e2, Position, CHILDOF | base);
+    ECS_ENTITY(world, e1, Position, (IsA, base));
+    ECS_ENTITY(world, e2, Position, (ChildOf, base));
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Velocity);
 

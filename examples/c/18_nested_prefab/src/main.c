@@ -21,15 +21,15 @@ int main(int argc, char *argv[]) {
         /* The child needs to explicitly set the parent in the EcsPrefab
          * component. This is needed for Flecs to register the child with the
          * parent prefab. */
-        ECS_PREFAB(world, Child, CHILDOF | RootPrefab, Position);
+        ECS_PREFAB(world, Child, (ChildOf, RootPrefab), Position);
             ecs_set(world, Child, Position, {30, 40});
 
     /* Create instance of root */
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, RootPrefab);
 
     /* Lookup child in the instance we just created. This child will have e in
-     * its type with a CHILDOF mask, and the prefab Child in its type with an
-     * INSTANCEOF mask. */
+     * its type with a ChildOf pair, and the prefab Child in its type with an
+     * IsA pair. */
     ecs_entity_t child = ecs_lookup_child(world, e, "Child");
     printf("Child type = [%s]\n", ecs_type_str(world, ecs_get_type(world, child)));
 

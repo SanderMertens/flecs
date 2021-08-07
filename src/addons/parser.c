@@ -15,8 +15,6 @@
 #define TOK_NOT '!'
 #define TOK_OPTIONAL '?'
 #define TOK_BITWISE_OR '|'
-#define TOK_TRAIT '>'
-#define TOK_FOR "FOR"
 #define TOK_NAME_SEP '.'
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
@@ -39,9 +37,6 @@
 #define TOK_PARENT "PARENT"
 #define TOK_CASCADE "CASCADE"
 
-#define TOK_ROLE_CHILDOF "CHILDOF"
-#define TOK_ROLE_INSTANCEOF "INSTANCEOF"
-#define TOK_ROLE_TRAIT "TRAIT"
 #define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
 #define TOK_ROLE_OR "OR"
@@ -236,12 +231,7 @@ ecs_entity_t parse_role(
     int64_t column,
     const char *token)
 {
-    if        (!ecs_os_strcmp(token, TOK_ROLE_CHILDOF)) {
-        return ECS_CHILDOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_INSTANCEOF)) {
-        return ECS_INSTANCEOF;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_TRAIT) || 
-               !ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
+    if        (!ecs_os_strcmp(token, TOK_ROLE_PAIR)) 
     {
         return ECS_PAIR;            
     } else if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
@@ -597,13 +587,6 @@ const char* parse_term(
             goto parse_role;
         }
 
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }
-
         /* Is token a predicate? */
         if (ptr[0] == TOK_PAREN_OPEN) {
             goto parse_predicate;    
@@ -708,14 +691,7 @@ parse_source:
         if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
             ptr++;
             goto parse_role;
-        }
-
-        /* Is token a trait? (using shorthand notation) */
-        if (!ecs_os_strncmp(ptr, TOK_FOR, 3)) {
-            term.pred.entity = ECS_PAIR;
-            ptr += 3;
-            goto parse_trait;
-        }        
+        }      
 
         /* If not, it's a predicate */
         goto parse_predicate;
@@ -738,12 +714,6 @@ parse_role:
         ptr = parse_token(name, expr, (ptr - expr), ptr, token);
         if (!ptr) {
             return NULL;
-        }
-
-        /* Is token a trait? */
-        if (ptr[0] == TOK_TRAIT) {
-            ptr ++;
-            goto parse_trait;
         }
 
         /* If not, it's a predicate */
@@ -841,50 +811,6 @@ parse_pair_object:
 
     ptr = skip_space(ptr);
     goto parse_done; 
-
-parse_trait:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be an object */
-        goto parse_trait_target;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after trait");
-        return NULL;
-    }
-
-parse_trait_target:
-    parse_identifier(".", &term.args[0]);
-    if (parse_identifier(token, &term.args[1])) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        return NULL;        
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Can only be a name */
-        goto parse_name;
-    } else {
-        /* If nothing else, parsing of this element is done */
-        goto parse_done;
-    }
 
 parse_singleton:
     if (parse_identifier(token, &term.pred)) {

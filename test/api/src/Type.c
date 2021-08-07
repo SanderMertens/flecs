@@ -188,7 +188,7 @@ void Type_type_has_pair() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, PAIR | Pair > Position);
+    ECS_TYPE(world, Type, (Pair, Position));
 
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_id(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
@@ -204,7 +204,7 @@ void Type_type_has_pair_exact() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, PAIR | Pair > Position);
+    ECS_TYPE(world, Type, (Pair, Position));
 
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_id(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
@@ -220,7 +220,7 @@ void Type_type_owns_pair() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, PAIR | Pair > Position);
+    ECS_TYPE(world, Type, (Pair, Position));
 
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_id(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
@@ -236,7 +236,7 @@ void Type_type_owns_pair_exact() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ECS_TYPE(world, Type, PAIR | Pair > Position);
+    ECS_TYPE(world, Type, (Pair, Position));
 
     ecs_entity_t entities[2] = {ecs_pair(Pair, ecs_id(Position))};
     ecs_type_t t = ecs_type_find(world, entities, 1);
@@ -829,10 +829,10 @@ void Type_type_to_expr_instanceof() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, INSTANCEOF | Position);
+    ECS_TYPE(world, Type, (IsA, Position));
 
     char *expr = ecs_type_str(world, ecs_type(Type));
-    test_str(expr, "INSTANCEOF|Position");
+    test_str(expr, "(IsA,Position)");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -843,10 +843,10 @@ void Type_type_to_expr_childof() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, CHILDOF | Position);
+    ECS_TYPE(world, Type, (ChildOf, Position));
 
     char *expr = ecs_type_str(world, ecs_type(Type));
-    test_str(expr, "CHILDOF|Position");
+    test_str(expr, "(ChildOf,Position)");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -868,7 +868,7 @@ void Type_type_to_expr_pair_w_comp() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, PAIR | Position > Velocity);
+    ECS_TYPE(world, Type, (Position, Velocity));
 
     char *expr = ecs_type_str(world, ecs_type(Type));
     test_str(expr, "(Position,Velocity)");
@@ -943,7 +943,7 @@ void Type_type_from_expr_instanceof() {
     
     ECS_ENTITY(world, Base, 0);
 
-    ecs_type_t type = ecs_type_from_str(world, "INSTANCEOF | Base");
+    ecs_type_t type = ecs_type_from_str(world, "(IsA, Base)");
     test_int(ecs_vector_count(type), 1);
     test_assert(ecs_type_has_entity(world, type, ecs_pair(EcsIsA, Base)));
 
@@ -955,7 +955,7 @@ void Type_type_from_expr_childof() {
     
     ECS_ENTITY(world, Parent, 0);
 
-    ecs_type_t type = ecs_type_from_str(world, "CHILDOF | Parent");
+    ecs_type_t type = ecs_type_from_str(world, "(ChildOf, Parent)");
     test_int(ecs_vector_count(type), 1);
     test_assert(ecs_type_has_entity(world, type, ecs_pair(EcsChildOf, Parent)));
 
@@ -982,7 +982,7 @@ void Type_type_from_expr_pair_w_comp() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ecs_type_t type = ecs_type_from_str(world, "PAIR | Pair > Position");
+    ecs_type_t type = ecs_type_from_str(world, "(Pair, Position)");
     test_int(ecs_vector_count(type), 1);
     test_assert(ecs_type_has_entity(world, type, ecs_pair(Pair, ecs_id(Position))));
 
@@ -1006,7 +1006,7 @@ void Type_entity_path_str() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, parent, 0);
-    ECS_ENTITY(world, e, CHILDOF | parent);
+    ECS_ENTITY(world, e, (ChildOf, parent));
 
     char buffer[256];
     size_t result = ecs_id_str(world, e, buffer, 256);
@@ -1166,16 +1166,6 @@ void Type_entity_str_small_buffer() {
     test_int(strlen("(ChildOf,Foo)"), result);
 
     ecs_fini(world);
-}
-
-void Type_role_childof_str() {
-    ecs_entity_t e = ECS_CHILDOF;
-    test_str(ecs_role_str(e), "CHILDOF");
-}
-
-void Type_role_instanceof_str() {
-    ecs_entity_t e = ECS_INSTANCEOF;
-    test_str(ecs_role_str(e), "INSTANCEOF");
 }
 
 void Type_role_pair_str() {

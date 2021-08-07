@@ -763,8 +763,8 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, 0);
-    ECS_ENTITY(world, e1, Position, CHILDOF | Parent);
-    ECS_ENTITY(world, e2, Position, CHILDOF | Parent);
+    ECS_ENTITY(world, e1, Position, (ChildOf, Parent));
+    ECS_ENTITY(world, e2, Position, (ChildOf, Parent));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -830,8 +830,8 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, Parent, Velocity);
-    ECS_ENTITY(world, e1, Position, CHILDOF | Parent);
-    ECS_ENTITY(world, e2, Position, CHILDOF | Parent);  
+    ECS_ENTITY(world, e1, Position, (ChildOf, Parent));
+    ECS_ENTITY(world, e2, Position, (ChildOf, Parent));  
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1142,8 +1142,8 @@ void System_w_FromContainer_new_child_after_match() {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, PARENT:Mass, Position);
 
     ECS_ENTITY(world, parent, Mass);
-    ECS_ENTITY(world, e1, CHILDOF | parent, Position);
-    ECS_ENTITY(world, e2, CHILDOF | parent, Position);
+    ECS_ENTITY(world, e1, (ChildOf, parent), Position);
+    ECS_ENTITY(world, e2, (ChildOf, parent), Position);
 
     ecs_set(world, parent, Mass, {2});
 

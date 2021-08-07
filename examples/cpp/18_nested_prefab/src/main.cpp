@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 
     /* Lookup child in the instance we just created. This child will have e in
      * its type with a CHILDOF mask, and the prefab Child in its type with an
-     * INSTANCEOF mask. */
+     * IsA pair. */
     auto child = e.lookup("Child");
     std::cout << "Child type = [" << child.type().str() << "]" << std::endl;
 

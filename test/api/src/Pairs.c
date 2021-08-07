@@ -831,64 +831,6 @@ void Pairs_on_remove_pair_tag_on_delete() {
     ecs_fini(world);
 }
 
-void Pairs_pair_from_shared() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Rel);
-
-    ecs_entity_t base = ecs_new(world, 0);
-    ecs_add_pair(world, base, ecs_id(Rel), ecs_id(Position));
-
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_pair(world, e, EcsIsA, base);
-
-    ecs_query_t *q = ecs_query_new(world, "SHARED:PAIR|Rel>Position"); // ew
-    
-    int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
-    while (ecs_query_next(&it)) {
-        Rel *t = ecs_term(&it, Rel, 1);
-        test_assert(t != NULL);
-
-        int i;
-        for (i = 0; i < it.count; i ++) {
-            test_assert(it.entities[i] == e);
-        }
-        count += it.count;
-    }
-
-    test_assert(count == 1);
-
-    ecs_fini(world);
-}
-
-void Pairs_simple_pair_syntax() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Rel);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
-
-    ecs_query_t *q = ecs_query_new(world, "Rel FOR Position"); // not ew
-    
-    int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
-    while (ecs_query_next(&it)) {
-        int i;
-        for (i = 0; i < it.count; i ++) {
-            test_assert(it.entities[i] == e);
-        }
-        count += it.count;
-    }
-
-    test_assert(count == 1);
-
-    ecs_fini(world);
-}
-
 void Pairs_pair_w_component_query() {
     ecs_world_t *world = ecs_init();
 
@@ -898,7 +840,7 @@ void Pairs_pair_w_component_query() {
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "PAIR | Rel > Position");
+    ecs_query_t *q = ecs_query_new(world, "(Rel, Position)");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -928,7 +870,7 @@ void Pairs_query_pair_or_component() {
     ecs_add_pair(world, e1, Rel, ecs_id(Position));
     ecs_entity_t e2 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "PAIR | Rel > Position || Position");
+    ecs_query_t *q = ecs_query_new(world, "(Rel, Position) || Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -960,7 +902,7 @@ void Pairs_query_pair_or_pair() {
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add_pair(world, e2, RelB, ecs_id(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "PAIR | RelA > Position || PAIR | RelB > Position");
+    ecs_query_t *q = ecs_query_new(world, "(RelA, Position) || (RelB, Position)");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -990,7 +932,7 @@ void Pairs_query_not_pair() {
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add_pair(world, e2, Rel, ecs_id(Position));
 
-    ecs_query_t *q = ecs_query_new(world, "!PAIR | Rel > Position, Position");
+    ecs_query_t *q = ecs_query_new(world, "!(Rel, Position), Position");
     
     int32_t count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -1290,6 +1232,7 @@ void Pairs_dsl_pair_w_both_wildcard() {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
+
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
 
     test_bool(ecs_query_next(&it), true);

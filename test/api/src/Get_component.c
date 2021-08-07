@@ -211,5 +211,5 @@ void Get_component_get_childof_component() {
     test_assert(ptr != NULL);
 
     test_expect_abort();
-    ecs_get(world, ECS_CHILDOF | ecs_id(Position), EcsComponent);
+    ecs_get(world, ecs_pair(EcsChildOf, ecs_id(Position)), EcsComponent);
 }

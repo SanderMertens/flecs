@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     /* Use the same technique as used in the auto_override example to create a
      * type that causes components to be automatically overriden from the base.
      * Note that prefabs use inheritance. */
-    ECS_TYPE(world, Base, INSTANCEOF | BasePrefab, Position, Velocity);
+    ECS_TYPE(world, Base, (IsA, BasePrefab), Position, Velocity);
 
     /* Create new entity with type */
     ecs_entity_t e = ecs_new(world, Base);

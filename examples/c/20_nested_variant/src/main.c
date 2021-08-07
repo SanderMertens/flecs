@@ -23,10 +23,10 @@ int main(int argc, char *argv[]) {
         ecs_set(world, RootPrefab, Position, {10, 20});
 
         /* Create two child prefabs that inherit from BasePrefab */
-        ECS_PREFAB(world, Child1, CHILDOF | RootPrefab, INSTANCEOF | BasePrefab, Velocity);
+        ECS_PREFAB(world, Child1, (ChildOf, RootPrefab), (IsA, BasePrefab), Velocity);
             ecs_set(world, Child1, Velocity, {30, 40});
 
-        ECS_PREFAB(world, Child2, CHILDOF | RootPrefab, INSTANCEOF | BasePrefab, Velocity);
+        ECS_PREFAB(world, Child2, (ChildOf, RootPrefab), (IsA, BasePrefab), Velocity);
             ecs_set(world, Child2, Velocity, {50, 60});
 
     /* Create instance of RootPrefab */

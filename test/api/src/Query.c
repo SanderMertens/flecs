@@ -606,16 +606,16 @@ void Query_query_single_pairs() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Pair);
+    ECS_TAG(world, Rel);
 
-    ECS_ENTITY(world, e1, PAIR|Pair>Position);
-    ECS_ENTITY(world, e2, PAIR|Pair>Velocity);
+    ECS_ENTITY(world, e1, (Rel, Position));
+    ECS_ENTITY(world, e2, (Rel, Velocity));
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Velocity);
 
     int32_t table_count = 0, entity_count = 0;
 
-    ecs_query_t *q = ecs_query_new(world, "PAIR | Pair > Velocity");
+    ecs_query_t *q = ecs_query_new(world, "(Rel, Velocity)");
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
         table_count ++;
@@ -638,12 +638,12 @@ void Query_query_single_instanceof() {
 
     ECS_ENTITY(world, BaseA, 0);
     ECS_ENTITY(world, BaseB, 0);
-    ECS_ENTITY(world, e1, INSTANCEOF | BaseB);
-    ECS_ENTITY(world, e2, INSTANCEOF | BaseA);
+    ECS_ENTITY(world, e1, (IsA, BaseB));
+    ECS_ENTITY(world, e2, (IsA, BaseA));
 
     int32_t table_count = 0, entity_count = 0;
 
-    ecs_query_t *q = ecs_query_new(world, "INSTANCEOF | BaseA");
+    ecs_query_t *q = ecs_query_new(world, "(IsA, BaseA)");
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
         table_count ++;
@@ -666,12 +666,12 @@ void Query_query_single_childof() {
 
     ECS_ENTITY(world, BaseA, 0);
     ECS_ENTITY(world, BaseB, 0);
-    ECS_ENTITY(world, e1, CHILDOF | BaseB);
-    ECS_ENTITY(world, e2, CHILDOF | BaseA);
+    ECS_ENTITY(world, e1, (ChildOf, BaseB));
+    ECS_ENTITY(world, e2, (ChildOf, BaseA));
 
     int32_t table_count = 0, entity_count = 0;
 
-    ecs_query_t *q = ecs_query_new(world, "CHILDOF | BaseA");
+    ecs_query_t *q = ecs_query_new(world, "(ChildOf, BaseA)");
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
         table_count ++;

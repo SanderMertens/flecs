@@ -3795,12 +3795,6 @@ size_t append_to_str(
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
-    if (ECS_HAS_ROLE(entity, CHILDOF)) {
-        return "CHILDOF";
-    } else
-    if (ECS_HAS_ROLE(entity, INSTANCEOF)) {
-        return "INSTANCEOF";
-    } else
     if (ECS_HAS_ROLE(entity, PAIR)) {
         return "PAIR";
     } else

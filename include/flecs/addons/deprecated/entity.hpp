@@ -105,30 +105,6 @@ public:
         return *this;
     }
 
-    ECS_DEPRECATED("use child_of(parent)")
-    const Base& add_childof(const Base& parent) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
-        return *this;          
-    }
-    
-    ECS_DEPRECATED("use remove(flecs::ChildOf, parent)")
-    const Base& remove_childof(const Base& parent) const {
-        ecs_remove_id(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
-        return *this;
-    }
-
-    ECS_DEPRECATED("use add(flecs::IsA, base)")
-    const Base& add_instanceof(const Base& base_entity) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
-        return *this;        
-    }
-
-    ECS_DEPRECATED("use remove(flecs::IsA, base)")
-    const Base& remove_instanceof(const Base& base_entity) const {
-        ecs_remove_id(this->base_world(), this->base_id(), ECS_INSTANCEOF | base_entity.id());
-        return *this;
-    }
-
     ECS_DEPRECATED("use set(Func func)")
     template <typename T, typename Func>
     const Base& patch(const Func& func) const {
@@ -222,16 +198,6 @@ public:
             ecs_get_mut_w_entity(
                 this->base_world(), this->base_id(), ecs_trait(comp_id, t.id()), is_added));
     }
-
-    ECS_DEPRECATED("use has(flecs::ChildOf, parent)")
-    bool has_childof(const Base& parent) const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ECS_CHILDOF | parent.id());
-    }  
-
-    ECS_DEPRECATED("use has(flecs::IsA, base)")
-    bool has_instanceof(const Base& base) const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ECS_INSTANCEOF | base.id());
-    }   
 
     template<typename T, typename C>
     ECS_DEPRECATED("use has<Relation, Object>")

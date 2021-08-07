@@ -798,7 +798,7 @@ void SystemMisc_dont_enable_after_rematch() {
      * to and/or from watched entities, a rematch is triggered. */
     ECS_PREFAB(world, Prefab, Position);
 
-    ECS_ENTITY(world, Entity, INSTANCEOF | Prefab);
+    ECS_ENTITY(world, Entity, (IsA, Prefab));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1840,7 +1840,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs() {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, PAIR | Pair > TagA, PAIR | Pair > TagB);
+    ECS_TYPE(world, Type, (Pair, TagA), (Pair, TagB));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);    

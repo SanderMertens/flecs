@@ -1451,14 +1451,8 @@ void do_register_each_id(
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
 
-        /* This check ensures that legacy INSTANCEOF works */
-        if (ECS_HAS_RELATION(id, EcsIsA)) {
-            id = ecs_pair(EcsIsA, ECS_PAIR_OBJECT(id));
-        }
-
         /* This check ensures that legacy CHILDOF works */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            id = ecs_pair(EcsChildOf, ECS_PAIR_OBJECT(id));
             has_childof = true;
         } 
 

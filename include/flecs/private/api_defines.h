@@ -149,18 +149,9 @@ typedef int32_t ecs_size_t;
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((0xFFFF & (ECS_GENERATION(e) + 1)) << 32))
 #define ECS_COMPONENT_MASK    (~ECS_ROLE_MASK)
 #define ECS_HAS_ROLE(e, role) ((e & ECS_ROLE_MASK) == ECS_##role)
-#define ECS_PAIR_RELATION(e)  (ECS_HAS_ROLE(e, PAIR) ? ecs_entity_t_hi(e & ECS_COMPONENT_MASK) :\
-    (((e & ECS_ROLE_MASK) == ECS_CHILDOF) ? EcsChildOf :\
-        ((e & ECS_ROLE_MASK) == ECS_INSTANCEOF) ? EcsIsA : (e & ECS_ROLE_MASK)))
+#define ECS_PAIR_RELATION(e)  (ecs_entity_t_hi(e & ECS_COMPONENT_MASK))
 #define ECS_PAIR_OBJECT(e)    (ecs_entity_t_lo(e))
-#define ECS_HAS_PAIR(e, rel)  (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_RELATION(e) == rel))
-
-#define ECS_HAS_RELATION(e, rel) (\
-    (((rel == ECS_CHILDOF) || (rel == EcsChildOf)) &&\
-        (ECS_HAS_ROLE(e, CHILDOF) || ECS_HAS_PAIR(e, EcsChildOf))) ||\
-    (((rel == ECS_INSTANCEOF) || (rel == EcsIsA)) &&\
-        (ECS_HAS_ROLE(e, INSTANCEOF) || ECS_HAS_PAIR(e, EcsIsA))) ||\
-    ECS_HAS_PAIR(e, rel))
+#define ECS_HAS_RELATION(e, rel)  (ECS_HAS_ROLE(e, PAIR) && (ECS_PAIR_RELATION(e) == rel))
 
 #define ECS_HAS_PAIR_OBJECT(e, rel, obj)\
     (ECS_HAS_RELATION(e, rel) && ECS_PAIR_OBJECT(e) == obj)
@@ -389,13 +380,10 @@ typedef int32_t ecs_size_t;
 
 /* These constants should no longer be used, but are required by the core to
  * guarantee backwards compatibility */
-#define ECS_INSTANCEOF (ECS_ROLE | (0x7Eull << 56))
-#define ECS_CHILDOF    (ECS_ROLE | (0x7Dull << 56))
 #define ECS_AND (ECS_ROLE | (0x79ull << 56))
 #define ECS_OR (ECS_ROLE | (0x78ull << 56))
 #define ECS_XOR (ECS_ROLE | (0x77ull << 56))
 #define ECS_NOT (ECS_ROLE | (0x76ull << 56))
-#define ECS_TRAIT ECS_PAIR
 
 #define EcsSingleton   (ECS_HI_COMPONENT_ID + 37)
 

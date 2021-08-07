@@ -1045,8 +1045,6 @@ void Pairs_on_remove_pair(void);
 void Pairs_on_remove_pair_tag(void);
 void Pairs_on_remove_pair_on_delete(void);
 void Pairs_on_remove_pair_tag_on_delete(void);
-void Pairs_pair_from_shared(void);
-void Pairs_simple_pair_syntax(void);
 void Pairs_get_typeid_w_recycled_rel(void);
 void Pairs_get_typeid_w_recycled_obj(void);
 void Pairs_id_str_w_recycled_rel(void);
@@ -1643,8 +1641,6 @@ void Type_entity_or_str(void);
 void Type_entity_xor_str(void);
 void Type_entity_not_str(void);
 void Type_entity_str_small_buffer(void);
-void Type_role_childof_str(void);
-void Type_role_instanceof_str(void);
 void Type_role_pair_str(void);
 void Type_role_switch_str(void);
 void Type_role_case_str(void);
@@ -2004,9 +2000,6 @@ void Error_log_dbg(void);
 void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
-
-// Testsuite 'Deprecated'
-void Deprecated_trait_type_str(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -5959,14 +5952,6 @@ bake_test_case Pairs_testcases[] = {
         Pairs_on_remove_pair_tag_on_delete
     },
     {
-        "pair_from_shared",
-        Pairs_pair_from_shared
-    },
-    {
-        "simple_pair_syntax",
-        Pairs_simple_pair_syntax
-    },
-    {
         "get_typeid_w_recycled_rel",
         Pairs_get_typeid_w_recycled_rel
     },
@@ -8222,14 +8207,6 @@ bake_test_case Type_testcases[] = {
         Type_entity_str_small_buffer
     },
     {
-        "role_childof_str",
-        Type_role_childof_str
-    },
-    {
-        "role_instanceof_str",
-        Type_role_instanceof_str
-    },
-    {
         "role_pair_str",
         Type_role_pair_str
     },
@@ -9575,13 +9552,6 @@ bake_test_case Error_testcases[] = {
     }
 };
 
-bake_test_case Deprecated_testcases[] = {
-    {
-        "trait_type_str",
-        Deprecated_trait_type_str
-    }
-};
-
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -9804,7 +9774,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        59,
+        57,
         Pairs_testcases
     },
     {
@@ -9951,7 +9921,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        85,
+        83,
         Type_testcases
     },
     {
@@ -10037,17 +10007,10 @@ static bake_test_suite suites[] = {
         NULL,
         11,
         Error_testcases
-    },
-    {
-        "Deprecated",
-        NULL,
-        NULL,
-        1,
-        Deprecated_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 66);
+    return bake_test_run("api", argc, argv, suites, 65);
 }

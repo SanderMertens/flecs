@@ -36,16 +36,6 @@ public:
         return *base();
     }
 
-    ECS_DEPRECATED("use add(flecs::IsA, base)")
-    type& add_instanceof(const entity& e) {
-        return static_cast<Base*>(this)->add(ECS_INSTANCEOF | e.id());
-    }
-
-    ECS_DEPRECATED("use child_of(parent)")
-    type& add_childof(const entity& e) {
-        return static_cast<Base*>(this)->add(ECS_CHILDOF | e.id());
-    }  
-
 private:
     Base* base() { return static_cast<Base*>(this); }
     flecs::world_t* world() { return base()->world().c_ptr(); }

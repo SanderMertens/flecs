@@ -65,19 +65,19 @@ int main(int argc, char *argv[]) {
     ecs_set(world, Instance0, Mass, {2});
 
     /* Create instances which share the Mass component from a base */
-    ECS_ENTITY(world, Instance1, Position, Force, INSTANCEOF | LightEntity);
+    ECS_ENTITY(world, Instance1, Position, Force, (IsA, LightEntity));
     ecs_set(world, Instance1, Position, {0, 0});
     ecs_set(world, Instance1, Force, {10, 10});
 
-    ECS_ENTITY(world, Instance2, Position, Force, INSTANCEOF | LightEntity);
+    ECS_ENTITY(world, Instance2, Position, Force, (IsA, LightEntity));
     ecs_set(world, Instance2, Position, {0, 0});
     ecs_set(world, Instance2, Force, {10, 10});
 
-    ECS_ENTITY(world, Instance3, Position, Force, INSTANCEOF | HeavyEntity);
+    ECS_ENTITY(world, Instance3, Position, Force, (IsA, HeavyEntity));
     ecs_set(world, Instance3, Position, {0, 0});
     ecs_set(world, Instance3, Force, {10, 10});
 
-    ECS_ENTITY(world, Instance4, Position, Force, INSTANCEOF | HeavyEntity);
+    ECS_ENTITY(world, Instance4, Position, Force, (IsA, HeavyEntity));
     ecs_set(world, Instance4, Position, {0, 0});
     ecs_set(world, Instance4, Force, {10, 10});
 

@@ -16,8 +16,6 @@ extern "C" {
 
 #define ecs_entity(T) ecs_typeid(T)
 
-#define ecs_trait(comp, trait) (ECS_TRAIT | ecs_entity_t_comb(comp, trait))
-
 #define ecs_add_trait(world, entity, component, trait)\
     ecs_add_entity(world, entity, ecs_trait(component, trait))
 

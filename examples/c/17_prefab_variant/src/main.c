@@ -20,18 +20,18 @@ int main(int argc, char *argv[]) {
 
     /* Create two prefab specializations. This uses the same inheritance
      * mechanism as is used with regular entities. */
-    ECS_PREFAB(world, SubPrefab1, INSTANCEOF | BasePrefab, Velocity);
+    ECS_PREFAB(world, SubPrefab1, (IsA, BasePrefab), Velocity);
     ecs_set(world, SubPrefab1, Velocity, {30, 40});
 
-    ECS_PREFAB(world, SubPrefab2, INSTANCEOF | BasePrefab, Velocity);
+    ECS_PREFAB(world, SubPrefab2, (IsA, BasePrefab), Velocity);
     ecs_set(world, SubPrefab2, Velocity, {50, 60});
 
     /* Create two types for SubPrefab1 and SubPrefab2 which automatically
      * override the component values. The Position component will be overridden
      * from the BasePrefab, while Velocity will be overridden from SubPrefab1
      * and SubPrefab2 respectively. */
-    ECS_TYPE(world, Sub1, INSTANCEOF | SubPrefab1, Position, Velocity);
-    ECS_TYPE(world, Sub2, INSTANCEOF | SubPrefab2, Position, Velocity);
+    ECS_TYPE(world, Sub1, (IsA, SubPrefab1), Position, Velocity);
+    ECS_TYPE(world, Sub2, (IsA, SubPrefab2), Position, Velocity);
 
     /* Create new entities from Sub1 and Sub2 */
     ecs_entity_t e1 = ecs_new(world, Sub1);
