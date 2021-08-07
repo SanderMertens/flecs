@@ -346,7 +346,6 @@ void flecs_bootstrap(
 
     /* Initialize builtin entities */
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
-    bootstrap_entity(world, EcsSingleton, "$", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);

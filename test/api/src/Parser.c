@@ -79,16 +79,6 @@ void Parser_resolve_wildcard() {
     ecs_fini(world);
 }
 
-void Parser_resolve_singleton() {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t e = ecs_lookup_fullpath(world, "$");
-    test_assert(e != 0);
-    test_assert(e == EcsSingleton);
-
-    ecs_fini(world);
-}
-
 void Parser_resolve_is_a() {
     ecs_world_t *world = ecs_init();
 

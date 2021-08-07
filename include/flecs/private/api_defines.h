@@ -385,8 +385,6 @@ typedef int32_t ecs_size_t;
 #define ECS_XOR (ECS_ROLE | (0x77ull << 56))
 #define ECS_NOT (ECS_ROLE | (0x76ull << 56))
 
-#define EcsSingleton   (ECS_HI_COMPONENT_ID + 37)
-
 #ifdef __cplusplus
 }
 #endif

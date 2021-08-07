@@ -717,13 +717,6 @@ void Lookup_lookup_path_this_from_scope(void);
 void Lookup_lookup_path_wildcard_from_scope(void);
 
 // Testsuite 'Singleton'
-void Singleton_set(void);
-void Singleton_set_ptr(void);
-void Singleton_system_w_singleton(void);
-void Singleton_system_w_singleton_no_match(void);
-void Singleton_system_w_not_singleton(void);
-void Singleton_lookup_singleton(void);
-void Singleton_get_singleton_id(void);
 void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
 void Singleton_singleton_system(void);
@@ -846,7 +839,6 @@ void SystemMisc_invalid_container_without_id(void);
 void SystemMisc_invalid_cascade_without_id(void);
 void SystemMisc_invalid_entity_without_id(void);
 void SystemMisc_invalid_empty_without_id(void);
-void SystemMisc_invalid_singleton_without_id(void);
 void SystemMisc_invalid_empty_element(void);
 void SystemMisc_invalid_empty_element_w_space(void);
 void SystemMisc_invalid_empty_or(void);
@@ -859,7 +851,6 @@ void SystemMisc_invalid_0_w_from_container(void);
 void SystemMisc_invalid_0_w_from_cascade(void);
 void SystemMisc_invalid_0_w_from_entity(void);
 void SystemMisc_invalid_0_w_from_empty(void);
-void SystemMisc_invalid_0_w_from_singleton(void);
 void SystemMisc_invalid_or_w_empty(void);
 void SystemMisc_invalid_component_id(void);
 void SystemMisc_invalid_entity_id(void);
@@ -1317,7 +1308,6 @@ void SystemPeriodic_shared_not_column(void);
 void SystemPeriodic_shared_or_column(void);
 void SystemPeriodic_container_dont_match_inheritance(void);
 void SystemPeriodic_cascade_dont_match_inheritance(void);
-void SystemPeriodic_not_from_singleton(void);
 void SystemPeriodic_not_from_entity(void);
 void SystemPeriodic_sys_context(void);
 void SystemPeriodic_get_sys_context_from_param(void);
@@ -1602,7 +1592,6 @@ void Type_type_remove_non_existing(void);
 void Type_type_of_2_add(void);
 void Type_type_of_3_add_entity_again(void);
 void Type_invalid_entity_type_expression(void);
-void Type_invalid_singleton_type_expression(void);
 void Type_invalid_container_type_expression(void);
 void Type_invalid_system_type_expression(void);
 void Type_type_from_empty_entity(void);
@@ -4692,34 +4681,6 @@ bake_test_case Lookup_testcases[] = {
 
 bake_test_case Singleton_testcases[] = {
     {
-        "set",
-        Singleton_set
-    },
-    {
-        "set_ptr",
-        Singleton_set_ptr
-    },
-    {
-        "system_w_singleton",
-        Singleton_system_w_singleton
-    },
-    {
-        "system_w_singleton_no_match",
-        Singleton_system_w_singleton_no_match
-    },
-    {
-        "system_w_not_singleton",
-        Singleton_system_w_not_singleton
-    },
-    {
-        "lookup_singleton",
-        Singleton_lookup_singleton
-    },
-    {
-        "get_singleton_id",
-        Singleton_get_singleton_id
-    },
-    {
         "set_get_singleton",
         Singleton_set_get_singleton
     },
@@ -5176,10 +5137,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_invalid_empty_without_id
     },
     {
-        "invalid_singleton_without_id",
-        SystemMisc_invalid_singleton_without_id
-    },
-    {
         "invalid_empty_element",
         SystemMisc_invalid_empty_element
     },
@@ -5226,10 +5183,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_0_w_from_empty",
         SystemMisc_invalid_0_w_from_empty
-    },
-    {
-        "invalid_0_w_from_singleton",
-        SystemMisc_invalid_0_w_from_singleton
     },
     {
         "invalid_or_w_empty",
@@ -6991,10 +6944,6 @@ bake_test_case SystemPeriodic_testcases[] = {
         SystemPeriodic_cascade_dont_match_inheritance
     },
     {
-        "not_from_singleton",
-        SystemPeriodic_not_from_singleton
-    },
-    {
         "not_from_entity",
         SystemPeriodic_not_from_entity
     },
@@ -8049,10 +7998,6 @@ bake_test_case Type_testcases[] = {
     {
         "invalid_entity_type_expression",
         Type_invalid_entity_type_expression
-    },
-    {
-        "invalid_singleton_type_expression",
-        Type_invalid_singleton_type_expression
     },
     {
         "invalid_container_type_expression",
@@ -9718,7 +9663,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        10,
+        3,
         Singleton_testcases
     },
     {
@@ -9746,7 +9691,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        90,
+        88,
         SystemMisc_testcases
     },
     {
@@ -9837,7 +9782,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        53,
+        52,
         SystemPeriodic_testcases
     },
     {
@@ -9921,7 +9866,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        83,
+        82,
         Type_testcases
     },
     {

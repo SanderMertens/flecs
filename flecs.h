@@ -481,8 +481,6 @@ typedef int32_t ecs_size_t;
 #define ECS_XOR (ECS_ROLE | (0x77ull << 56))
 #define ECS_NOT (ECS_ROLE | (0x76ull << 56))
 
-#define EcsSingleton   (ECS_HI_COMPONENT_ID + 37)
-
 #ifdef __cplusplus
 }
 #endif
@@ -7359,9 +7357,7 @@ ecs_entity_t ecs_module_init(
  * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
  * 
  * This macro will define entity and type handles for the component associated
- * with the module. An application can retrieve the module component like this:
- * 
- * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
+ * with the module. The module component will be created as a singleton. 
  * 
  * The contents of a module component are module specific, although they
  * typically contain handles to the content of the module.
@@ -18130,13 +18126,7 @@ inline observer<Components ...> observer_builder<Components...>::each(Func&& fun
 }
 
 #ifdef FLECS_DEPRECATED
-
-namespace flecs
-{  
-
-static const ecs_entity_t Singleton = EcsSingleton;
-
-}
+#include <flecs/addons/deprecated/flecs.hpp>
 #endif
 #endif
 #endif

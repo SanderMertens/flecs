@@ -97,18 +97,6 @@ void SystemMisc_invalid_empty_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_singleton_without_id() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $:);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_empty_element() {
     install_test_abort();
 
@@ -267,18 +255,6 @@ void SystemMisc_invalid_0_w_from_empty() {
     test_expect_abort();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, :0);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_0_w_from_singleton() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $:0);
 
     ecs_fini(world);
 }

@@ -584,21 +584,6 @@ void Type_invalid_entity_type_expression() {
     ecs_fini(world);
 }
 
-void Type_invalid_singleton_type_expression() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Position);
-
-    test_expect_abort();
-
-    ECS_TYPE(world, Type, $:Position, Velocity);
-
-    ecs_fini(world);
-}
-
 void Type_invalid_system_type_expression() {
     install_test_abort();
 

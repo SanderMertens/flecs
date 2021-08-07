@@ -156,7 +156,6 @@ static const flecs::entity_t OnStore = EcsOnStore;
 static const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** Builtin roles */
-static const flecs::entity_t Trait = ECS_PAIR;
 static const flecs::entity_t Pair = ECS_PAIR;
 static const flecs::entity_t Switch = ECS_SWITCH;
 static const flecs::entity_t Case = ECS_CASE;
@@ -211,7 +210,3 @@ static const flecs::entity_t Throw = EcsThrow;
 #include <flecs/cpp/system.hpp>
 #include <flecs/cpp/observer.hpp>
 #include <flecs/cpp/impl.hpp>
-
-#ifdef FLECS_DEPRECATED
-#include <flecs/addons/deprecated/flecs.hpp>
-#endif

@@ -609,12 +609,6 @@ const char* parse_term(
             }
 
             goto parse_singleton;
-        
-        /* Deprecated, but still supported: singleton entity */
-        } else if (ptr[0] == TOK_COLON) {
-            ecs_os_strcpy(token, "$");
-            ptr ++;
-            goto parse_source;
 
         } else {
             ecs_parser_error(name, expr, (ptr - expr), 

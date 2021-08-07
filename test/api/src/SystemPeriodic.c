@@ -1910,32 +1910,6 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_not_from_singleton() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_ENTITY(world, e, Position);
-
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !$:Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 1);
-
-    ecs_add(world, EcsSingleton, Velocity);
-
-    ecs_progress(world, 1);
-    
-    test_int(ctx.count, 1);
-
-    ecs_fini(world);
-}
-
 void SystemPeriodic_not_from_entity() {
     ecs_world_t *world = ecs_init();
 

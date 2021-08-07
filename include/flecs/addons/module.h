@@ -102,9 +102,7 @@ ecs_entity_t ecs_module_init(
  * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
  * 
  * This macro will define entity and type handles for the component associated
- * with the module. An application can retrieve the module component like this:
- * 
- * FlecsSystemsPhysics m = ecs_get(world, EcsSingleton, FlecsSystemsPhysics);
+ * with the module. The module component will be created as a singleton. 
  * 
  * The contents of a module component are module specific, although they
  * typically contain handles to the content of the module.
