@@ -76,6 +76,12 @@ void * _ecs_map_get_ptr(
 #define ecs_map_get_ptr(map, T, key)\
     (T)_ecs_map_get_ptr(map, key)
 
+/** Test if map has key */
+FLECS_API
+bool ecs_map_has(
+    const ecs_map_t *map,
+    ecs_map_key_t key);
+
 /** Get or create element for key. */
 FLECS_API
 void * _ecs_map_ensure(

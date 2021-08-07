@@ -1033,7 +1033,11 @@
                 "term_iter_tag",
                 "term_iter_pair",
                 "term_iter_pair_w_rel_wildcard",
-                "term_iter_pair_w_obj_wildcard"
+                "term_iter_pair_w_obj_wildcard",
+                "term_iter_w_superset",
+                "term_iter_w_superset_childof",
+                "term_iter_w_superset_self",
+                "term_iter_w_superset_self_childof"
             ]
         }, {
             "id": "Query",

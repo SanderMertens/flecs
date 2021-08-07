@@ -969,6 +969,10 @@ void Filter_term_iter_tag(void);
 void Filter_term_iter_pair(void);
 void Filter_term_iter_pair_w_rel_wildcard(void);
 void Filter_term_iter_pair_w_obj_wildcard(void);
+void Filter_term_iter_w_superset(void);
+void Filter_term_iter_w_superset_childof(void);
+void Filter_term_iter_w_superset_self(void);
+void Filter_term_iter_w_superset_self_childof(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -5632,6 +5636,22 @@ bake_test_case Filter_testcases[] = {
     {
         "term_iter_pair_w_obj_wildcard",
         Filter_term_iter_pair_w_obj_wildcard
+    },
+    {
+        "term_iter_w_superset",
+        Filter_term_iter_w_superset
+    },
+    {
+        "term_iter_w_superset_childof",
+        Filter_term_iter_w_superset_childof
+    },
+    {
+        "term_iter_w_superset_self",
+        Filter_term_iter_w_superset_self
+    },
+    {
+        "term_iter_w_superset_self_childof",
+        Filter_term_iter_w_superset_self_childof
     }
 };
 
@@ -9640,7 +9660,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        18,
+        22,
         Filter_testcases
     },
     {

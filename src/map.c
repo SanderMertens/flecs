@@ -297,6 +297,22 @@ void* _ecs_map_get_ptr(
     }
 }
 
+bool ecs_map_has(
+    const ecs_map_t *map,
+    ecs_map_key_t key)
+{
+    if (!map) {
+        return NULL;
+    }
+
+    ecs_bucket_t * bucket = get_bucket(map, key);
+    if (!bucket) {
+        return NULL;
+    }
+
+    return get_from_bucket(bucket, key, 0) != NULL;
+}
+
 void * _ecs_map_ensure(
     ecs_map_t *map,
     ecs_size_t elem_size,

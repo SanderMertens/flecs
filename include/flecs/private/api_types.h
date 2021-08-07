@@ -42,6 +42,9 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
 
+/* Internal structure to lookup tables for a (component) id */
+typedef struct ecs_id_record_t ecs_id_record_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,9 +102,16 @@ typedef struct ecs_scope_iter_t {
 
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
-    ecs_term_t term;
+    ecs_term_t *term;
+    ecs_id_record_t *self_index;
+    ecs_id_record_t *set_index;
+    
     ecs_map_iter_t iter;
+    bool iter_set;
+
+    /* Storage */
     ecs_iter_table_t table;
+    ecs_ref_t ref;
     ecs_type_t type;
     int32_t column;
 } ecs_term_iter_t;

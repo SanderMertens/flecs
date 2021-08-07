@@ -271,8 +271,10 @@ typedef enum ecs_match_kind_t {
 struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
-
     int32_t term_count_actual; /* Processed count, which folds OR terms */
+
+    bool match_this;             /* Has terms that match EcsThis */
+    bool match_only_this;        /* Has only terms that match EcsThis */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -2907,7 +2909,7 @@ const char* ecs_set_name_prefix(
 FLECS_API
 ecs_iter_t ecs_term_iter(
     ecs_world_t *world,
-    const ecs_term_t *term); 
+    ecs_term_t *term);
 
 /** Progress the term iterator.
  * This operation progresses the term iterator to the next table. The 

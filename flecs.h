@@ -1280,6 +1280,12 @@ void * _ecs_map_get_ptr(
 #define ecs_map_get_ptr(map, T, key)\
     (T)_ecs_map_get_ptr(map, key)
 
+/** Test if map has key */
+FLECS_API
+bool ecs_map_has(
+    const ecs_map_t *map,
+    ecs_map_key_t key);
+
 /** Get or create element for key. */
 FLECS_API
 void * _ecs_map_ensure(
@@ -2292,8 +2298,10 @@ typedef enum ecs_match_kind_t {
 struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
-
     int32_t term_count_actual; /* Processed count, which folds OR terms */
+
+    bool match_this;             /* Has terms that match EcsThis */
+    bool match_only_this;        /* Has only terms that match EcsThis */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -2400,6 +2408,9 @@ typedef struct ecs_sparse_t ecs_sparse_t;
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
 
+/* Internal structure to lookup tables for a (component) id */
+typedef struct ecs_id_record_t ecs_id_record_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -2457,9 +2468,16 @@ typedef struct ecs_scope_iter_t {
 
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
-    ecs_term_t term;
+    ecs_term_t *term;
+    ecs_id_record_t *self_index;
+    ecs_id_record_t *set_index;
+    
     ecs_map_iter_t iter;
+    bool iter_set;
+
+    /* Storage */
     ecs_iter_table_t table;
+    ecs_ref_t ref;
     ecs_type_t type;
     int32_t column;
 } ecs_term_iter_t;
@@ -5979,7 +5997,7 @@ const char* ecs_set_name_prefix(
 FLECS_API
 ecs_iter_t ecs_term_iter(
     ecs_world_t *world,
-    const ecs_term_t *term); 
+    ecs_term_t *term);
 
 /** Progress the term iterator.
  * This operation progresses the term iterator to the next table. The 

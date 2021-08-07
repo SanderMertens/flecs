@@ -488,3 +488,206 @@ void Filter_term_iter_pair_w_obj_wildcard() {
 
     ecs_fini(world);
 }
+
+void Filter_term_iter_w_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_id(Position),
+        .args[0].set = {
+            .mask = EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), base);
+
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), base);
+
+    test_assert(ptr == ecs_term(&it, Position, 1));
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_w_superset_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_id(Position),
+        .args[0].set = {
+            .relation = EcsChildOf,
+            .mask = EcsSuperSet
+        }
+    });
+
+    {
+        test_assert(ecs_term_next(&it));
+        test_int(it.count, 2);
+        test_int(it.entities[0], e_1);
+        test_int(it.entities[1], e_2);
+        test_int(ecs_term_id(&it, 1), ecs_id(Position));
+        test_int(ecs_term_source(&it, 1), parent);
+
+        Position *ptr = ecs_term(&it, Position, 1);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    
+    {
+        test_assert(ecs_term_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_term_id(&it, 1), ecs_id(Position));
+        test_int(ecs_term_source(&it, 1), parent);
+
+        Position *ptr = ecs_term(&it, Position, 1);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_w_superset_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {11, 22});
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_id(Position),
+        .args[0].set = {
+            .mask = EcsSelf | EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], base);
+    test_int(it.entities[1], e_0);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_int(ptr[0].x, 10);
+    test_int(ptr[0].y, 20);
+    test_int(ptr[1].x, 11);
+    test_int(ptr[1].y, 22);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), base);
+
+    ptr = ecs_term(&it, Position, 1);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), base);
+
+    test_assert(ptr == ecs_term(&it, Position, 1));
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_w_superset_self_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {11, 22});
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsIsA, parent);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsIsA, parent);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsIsA, parent);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = ecs_id(Position),
+        .args[0].set = {
+            .mask = EcsSelf | EcsSuperSet
+        }
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], parent);
+    test_int(it.entities[1], e_0);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_int(ptr[0].x, 10);
+    test_int(ptr[0].y, 20);
+    test_int(ptr[1].x, 11);
+    test_int(ptr[1].y, 22);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), parent);
+
+    ptr = ecs_term(&it, Position, 1);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+    test_int(ecs_term_source(&it, 1), parent);
+
+    test_assert(ptr == ecs_term(&it, Position, 1));
+
+    ecs_fini(world);
+}
