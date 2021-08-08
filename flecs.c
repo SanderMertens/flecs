@@ -23121,12 +23121,12 @@ bool ecs_map_has(
     ecs_map_key_t key)
 {
     if (!map) {
-        return NULL;
+        return false;
     }
 
     ecs_bucket_t * bucket = get_bucket(map, key);
     if (!bucket) {
-        return NULL;
+        return false;
     }
 
     return get_from_bucket(bucket, key, 0) != NULL;
