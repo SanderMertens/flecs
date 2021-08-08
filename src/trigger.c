@@ -195,6 +195,7 @@ void notify_trigger_set(
 
     ecs_entity_t ids[1] = { id };
     int32_t columns[1] = { index };
+    ecs_size_t sizes[1] = { 0 };
 
     /* If there is no data, ensure that system won't try to get it */
     if (table->column_count < index) {
@@ -206,20 +207,26 @@ void notify_trigger_set(
         }
     }
 
-    ecs_type_t types[1] = { ecs_type_from_id(world, id) };
+    void *ptr = NULL;
 
-    ecs_iter_table_t table_data = {
-        .table = table,
-        .columns = columns,
-        .components = ids,
-        .types = types
-    };
+    if (columns[0] && data && data->columns) {
+        ecs_column_t *col = &data->columns[index - 1];
+        ptr = ecs_vector_get_t(col->data, col->size, col->alignment, row);
+        sizes[0] = col->size;
+    }
+
+    ecs_type_t types[1] = { ecs_type_from_id(world, id) };
 
     ecs_iter_t it = {
         .world = world,
         .event = event,
         .event_id = id,
-        .table = &table_data,
+        .table = table,
+        .columns = columns,
+        .ids = ids,
+        .types = types,
+        .sizes = sizes,
+        .ptrs = &ptr,
         .table_count = 1,
         .inactive_table_count = 0,
         .column_count = 1,

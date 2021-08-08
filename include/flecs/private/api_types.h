@@ -97,7 +97,6 @@ typedef struct ecs_scope_iter_t {
     ecs_filter_t filter;
     ecs_map_iter_t tables;
     int32_t index;
-    ecs_iter_table_t table;
 } ecs_scope_iter_t;
 
 /** Term-iterator specific data */
@@ -110,18 +109,27 @@ typedef struct ecs_term_iter_t {
     bool iter_set;
 
     /* Storage */
-    ecs_iter_table_t table;
-    ecs_ref_t ref;
-    ecs_type_t type;
+    ecs_id_t id;
     int32_t column;
+    ecs_type_t type;
+    ecs_entity_t subject;
+    ecs_size_t size;
+    void *ptr;
 } ecs_term_iter_t;
+
+typedef enum ecs_filter_iter_kind_t {
+    EcsFilterIterEvalIndex,
+    EcsFilterIterEvalNone
+} ecs_filter_iter_kind_t;
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
-    ecs_sparse_t *tables;
-    int32_t index;
-    ecs_iter_table_t table;
+    ecs_filter_iter_kind_t kind;
+
+    /* For EcsFilterIterEvalIndex */ 
+    ecs_term_iter_t term_iter;
+    int32_t min_term_index;
 } ecs_filter_iter_t;
 
 /** Query-iterator specific data */
@@ -138,8 +146,24 @@ typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
-    ecs_iter_table_t table;
 } ecs_snapshot_iter_t;  
+
+/* Inline arrays for queries with small number of components */
+typedef struct ecs_iter_cache_t {
+    ecs_id_t ids[ECS_TERM_CACHE_SIZE];
+    ecs_type_t types[ECS_TERM_CACHE_SIZE];
+    int32_t columns[ECS_TERM_CACHE_SIZE];
+    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
+    ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
+    void *ptrs[ECS_TERM_CACHE_SIZE];
+
+    bool ids_alloc;
+    bool types_alloc;
+    bool columns_alloc;
+    bool subjects_alloc;
+    bool sizes_alloc;
+    bool ptrs_alloc;
+} ecs_iter_cache_t;
 
 /** The ecs_iter_t struct allows applications to iterate tables.
  * Queries and filters, among others, allow an application to iterate entities
@@ -155,7 +179,17 @@ struct ecs_iter_t {
     ecs_id_t event_id;            /**< The (component) id for the event */
     ecs_entity_t self;            /**< Self entity (if set) */
 
-    ecs_iter_table_t *table;      /**< Table related data */
+    ecs_table_t *table;           /**< Current table */
+    ecs_data_t *data;
+    ecs_id_t *ids;
+    ecs_type_t *types;
+    int32_t *columns;
+    ecs_entity_t *subjects;
+    ecs_size_t *sizes;
+    void **ptrs;
+
+    ecs_ref_t *references;
+
     ecs_query_t *query;           /**< Current query being evaluated */
     int32_t table_count;          /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
@@ -181,7 +215,7 @@ struct ecs_iter_t {
 
     bool is_valid;                /**< Set to true after first next() */
 
-    ecs_ids_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_ids_t *triggered_by;      /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -191,6 +225,8 @@ struct ecs_iter_t {
         ecs_query_iter_t query;
         ecs_snapshot_iter_t snapshot;
     } iter;                       /**< Iterator specific data */
+
+    ecs_iter_cache_t cache;       /**< Inline arrays to reduce allocations */
 };
 
 typedef enum EcsMatchFailureReason {
@@ -300,3 +336,4 @@ typedef void (*ecs_on_set_t)(
 #endif
 
 #endif
+

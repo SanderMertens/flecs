@@ -212,7 +212,15 @@ typedef struct flecs_bitset_column_t {
 
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
-    ecs_iter_table_t iter_data;    /**< Precomputed data for iterators */
+    int32_t *columns;         /**< Mapping from query terms to table columns */
+    ecs_table_t *table;       /**< The current table. */
+    ecs_data_t *data;         /**< Table component data */
+    ecs_id_t *ids;            /**< Resolved (component) ids for current table */
+    ecs_entity_t *subjects;   /**< Subjects (sources) of ids */
+    ecs_type_t *types;        /**< Types for ids for current table */
+    ecs_size_t *sizes;        /**< Sizes for ids for current table */
+    ecs_ref_t *references;    /**< Cached components for non-this terms */
+
     ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /**< Column ids with disabled flags */
     int32_t *monitor;              /**< Used to monitor table for changes */

@@ -19,12 +19,8 @@ void probe_system_w_ctx(
 
     int i;
     for (i = 0; i < ctx->column_count; i ++) {
-        ctx->c[ctx->invoked][i] = it->table->components[i];
+        ctx->c[ctx->invoked][i] = it->ids[i];
         ctx->s[ctx->invoked][i] = ecs_term_source(it, i + 1);
-
-        /* Make sure ecs_term functions work */
-        ecs_type_t t = ecs_column_type(it, i + 1);
-        test_assert(t != 0);
 
         ecs_id_t e = ecs_term_id(it, i + 1);
         test_assert(e != 0);
@@ -39,12 +35,6 @@ void probe_system_w_ctx(
             
             for (i = 0; i < it->count; i ++) {
                 ctx->e[i + ctx->count] = e[i];
-
-                /* Make sure ecs_element works for all columns */
-                int c;
-                for (c = 0; c < ctx->column_count; c ++) {
-                    ecs_element_w_size(it, 0, c, i);
-                }
             }
             ctx->count += it->count;
         }

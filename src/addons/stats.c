@@ -213,8 +213,8 @@ void ecs_get_query_stats(
         query->tables, ecs_matched_table_t);
     for (i = 0; i < count; i ++) {
         ecs_matched_table_t *matched = &matched_tables[i];
-        if (matched->iter_data.table) {
-            entity_count += ecs_table_count(matched->iter_data.table);
+        if (matched->table) {
+            entity_count += ecs_table_count(matched->table);
         }
     }
 

@@ -117,8 +117,8 @@ typedef struct ecs_ref_t ecs_ref_t;
 /* Maximum number of components to add/remove in a single operation */
 #define ECS_MAX_ADD_REMOVE (32)
 
-/* Maximum number of terms to set in static array of filter descriptor */
-#define ECS_FILTER_DESC_TERM_ARRAY_MAX (16)
+/* Maximum number of terms cached in static arrays */
+#define ECS_TERM_CACHE_SIZE (8)
 
 /* Maximum number of events to set in static array of trigger descriptor */
 #define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
@@ -259,7 +259,7 @@ typedef struct ecs_term_t {
                                  * into the destination term. */
 } ecs_term_t;
 
-/* Deprecated */
+/* Deprecated -- do not use! */
 typedef enum ecs_match_kind_t {
     EcsMatchDefault = 0,
     EcsMatchAll,
@@ -273,13 +273,15 @@ struct ecs_filter_t {
     int32_t term_count;        /* Number of elements in terms array */
     int32_t term_count_actual; /* Processed count, which folds OR terms */
 
-    bool match_this;             /* Has terms that match EcsThis */
-    bool match_only_this;        /* Has only terms that match EcsThis */
+    ecs_term_t term_cache[ECS_TERM_CACHE_SIZE]; /* Cache for small filters */
+
+    bool match_this;           /* Has terms that match EcsThis */
+    bool match_only_this;      /* Has only terms that match EcsThis */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
 
-    /* Deprecated fields */
+    /* Deprecated fields -- do not use! */
     ecs_type_t include;
     ecs_type_t exclude;
     ecs_match_kind_t include_kind;
@@ -407,8 +409,8 @@ typedef struct ecs_type_desc_t {
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
     /* Terms of the filter. If a filter has more terms than 
-     * ECS_FILTER_DESC_TERM_ARRAY_MAX use terms_buffer */
-    ecs_term_t terms[ECS_FILTER_DESC_TERM_ARRAY_MAX];
+     * ECS_TERM_CACHE_SIZE use terms_buffer */
+    ecs_term_t terms[ECS_TERM_CACHE_SIZE];
 
     /* For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
@@ -3128,39 +3130,6 @@ FLECS_API
 char* ecs_filter_str(
     const ecs_world_t *world,
     const ecs_filter_t *filter); 
-
-/** Match entity with filter.
- * Test if entity matches filter terms. The function will substitute terms with
- * a "This" subject with the provided entity. 
- *
- * Terms with other subjects are also matched. Even if the specified entity 
- * matches all This terms, if the filter contains a term for another entity 
- * which does not match the term, the operation will evaluate false.
- *
- * If 0 is provided for the specified entity, only non-This terms are matched
- *
- * @param world The world.
- * @param filter The filter to evaluate.
- * @param entity The entity to match.
- * @return True if the filter matches, false if it doesn't match.
- */
-FLECS_API
-bool ecs_filter_match_entity(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter,
-    ecs_entity_t e);
-
-/** Same as ecs_filter_match_entity, but for a type.
- * 
- * @param world The world.
- * @param filter The filter to evaluate.
- * @param type The type to match.
- * @return True if the filter matches, false if it doesn't match.
- */ 
-bool ecs_filter_match_type(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter,
-    ecs_type_t type);
 
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
