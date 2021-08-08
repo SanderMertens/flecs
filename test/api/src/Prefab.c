@@ -698,58 +698,6 @@ void Prefab_get_ptr_prefab() {
 }
 
 static
-void Prefab_w_field(ecs_iter_t *it) {
-    probe_system(it);
-
-    for (int i = 0; i < it->count; i ++) {
-        Position *p = ecs_element(it, Position, 1, i);
-        Velocity *v = ecs_element(it, Velocity, 2, i);
-        p->x += v->x;
-        p->y += v->y;
-    }
-}
-
-void Prefab_iterate_w_prefab_field() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_PREFAB(world, Prefab, Velocity);
-    ECS_TYPE(world, Type, (IsA, Prefab), Position);
-    ECS_SYSTEM(world, Prefab_w_field, EcsOnUpdate, Position, ANY:Velocity);
-
-    ecs_set(world, Prefab, Velocity, {1, 2});
-
-    ecs_entity_t e1 = ecs_new(world, Type);
-    test_assert(e1 != 0);
-    ecs_set(world, e1, Position, {0, 0});
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, Prefab_w_field);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e1);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_id(Velocity));
-    test_int(ctx.s[0][1], Prefab);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 1);
-    test_int(p->y, 2);    
-
-    ecs_fini(world);
-}
-
-static
 void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
     if (it->column_count >= 2) {
@@ -766,8 +714,10 @@ void Prefab_w_shared(ecs_iter_t *it) {
 
     probe_system(it);
 
+    Position *pos = ecs_term(it, Position, 1);
+
     for (int i = 0; i < it->count; i ++) {
-        Position *p = ecs_element(it, Position, 1, i);
+        Position *p = &pos[i];
         p->x += v->x;
         p->y += v->y;
 
@@ -3267,4 +3217,8 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_assert(ecs_term_source(&it, 2) == base);
 
     ecs_fini(world);
+}
+
+void Prefab_iterate_w_prefab_field() {
+    // Implement testcase
 }

@@ -519,17 +519,7 @@ private:
 
         return flecs::unsafe_column(
             ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
-    }       
-
-    /* Get single field, check if correct type is used */
-    template <typename T, typename A = actual_type_t<T>>
-    A& get_element(int32_t index, int32_t row) const {
-        ecs_assert(
-            ecs_term_id(m_iter, index) == _::cpp_type<T>::id(m_iter->world),
-                ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<A*>(
-            ecs_element_w_size(m_iter, sizeof(A), index, row));
-    }       
+    }     
 
     const flecs::iter_t *m_iter;
     std::size_t m_begin;

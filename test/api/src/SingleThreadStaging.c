@@ -2816,7 +2816,7 @@ void SingleThreadStaging_lock_table() {
 
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        ecs_table_t *table = it.table->table;
+        ecs_table_t *table = it.table;
         test_assert(table != NULL);
         
         ecs_table_lock(world, table);
@@ -2843,7 +2843,7 @@ void SingleThreadStaging_recursive_lock_table() {
 
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {
-        ecs_table_t *table = it.table->table;
+        ecs_table_t *table = it.table;
         test_assert(table != NULL);
         
         ecs_table_lock(world, table);
@@ -2872,7 +2872,7 @@ void SingleThreadStaging_modify_after_lock() {
 
     ecs_iter_t it = ecs_query_iter(q);
     while (ecs_query_next(&it)) {    
-        ecs_table_t *table = it.table->table;
+        ecs_table_t *table = it.table;
         test_assert(table != NULL);
                     
         ecs_table_lock(world, table);

@@ -323,11 +323,11 @@ int32_t iter_reset(
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    ecs_iter_t it = ecs_query_iter(pq->query);
-    while (ecs_query_next(&it)) {
+    *iter_out = ecs_query_iter(pq->query);
+    while (ecs_query_next(iter_out)) {
         int32_t i;
-        for(i = 0; i < it.count; i ++) {
-            ecs_entity_t e = it.entities[i];
+        for(i = 0; i < iter_out->count; i ++) {
+            ecs_entity_t e = iter_out->entities[i];
 
             ran_since_merge ++;
             if (ran_since_merge == op->count) {
@@ -336,7 +336,6 @@ int32_t iter_reset(
             }
 
             if (e == move_to) {
-                *iter_out = it;
                 *op_out = op;
                 return i;
             }

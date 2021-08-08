@@ -6,10 +6,11 @@ void MultiThread_setup() {
 }
 
 void Progress(ecs_iter_t *it) {
+    Position *pos = ecs_term(it, Position, 1);
     int row;
     for (row = 0; row < it->count; row ++) {
-        Position *foo = ecs_element(it, Position, 1, row);
-        foo->x ++;
+        Position *p = &pos[row];
+        p->x ++;
     }
 }
 
@@ -663,10 +664,45 @@ void test_combs_100_entity(int THREADS) {
 
     for (i = 0; i < ENTITIES; i ++) {
         const Position *p = ecs_get(world, ids[i], Position);
-        test_int(p->x, 100 - i);
+        test_int(p->x, ENTITIES - i);
     }
 
     ecs_fini(world);    
+}
+
+void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_SYSTEM(world, TestSubset, 0, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, :TestSubset");
+
+    int i, ENTITIES = 4;
+
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, ids[i], Position, {1, 2});
+    }
+
+    ecs_iter_t it = ecs_query_iter(q);
+    while (ecs_query_next_worker(&it, 0, 2)) {
+        TestAll(&it);
+    }
+
+    it = ecs_query_iter(q);
+    while (ecs_query_next_worker(&it, 1, 2)) {
+        TestAll(&it);
+    }
+
+    for (i = 0; i < ENTITIES; i ++) {
+        const Position *p = ecs_get(world, ids[i], Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world); 
 }
 
 void MultiThread_2_thread_test_combs_100_entity() {
@@ -884,3 +920,4 @@ void MultiThread_fini_after_set_threads() {
     // Make sure code doesn't crash
     test_assert(true);
 }
+

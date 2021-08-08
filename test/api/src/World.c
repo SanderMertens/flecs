@@ -6,12 +6,14 @@ void World_setup() {
 
 static
 void Move(ecs_iter_t *it) {
+    Position *pos = ecs_term(it, Position, 1);
+    Velocity *vel = ecs_term(it, Velocity, 2);
     probe_system(it);
 
     int row;
     for (row = 0; row < it->count; row ++) {
-        Position *p = ecs_element(it, Position, 1, row);
-        Velocity *v = ecs_element(it, Velocity, 2, row);
+        Position *p = &pos[row];
+        Velocity *v = &vel[row];
         p->x += v->x * it->delta_time;
         p->y += v->y * it->delta_time;
     }

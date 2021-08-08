@@ -376,7 +376,7 @@ public:
     }
 
     Base& term() {
-        ecs_assert(m_term_index < ECS_FILTER_DESC_TERM_ARRAY_MAX, 
+        ecs_assert(m_term_index < ECS_TERM_CACHE_SIZE, 
             ECS_INVALID_PARAMETER, NULL);
         this->set_term(&m_desc->terms[m_term_index]);
         m_term_index ++;

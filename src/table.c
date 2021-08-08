@@ -366,7 +366,7 @@ void register_on_set(
                 continue;
             }
 
-            ecs_entity_t comp = matched_table->iter_data.components[i];
+            ecs_entity_t comp = matched_table->ids[i];
             int32_t index = ecs_type_index_of(table->type, 0, comp);
             if (index == -1) {
                 continue;

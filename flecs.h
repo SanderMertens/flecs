@@ -2144,8 +2144,8 @@ typedef struct ecs_ref_t ecs_ref_t;
 /* Maximum number of components to add/remove in a single operation */
 #define ECS_MAX_ADD_REMOVE (32)
 
-/* Maximum number of terms to set in static array of filter descriptor */
-#define ECS_FILTER_DESC_TERM_ARRAY_MAX (16)
+/* Maximum number of terms cached in static arrays */
+#define ECS_TERM_CACHE_SIZE (8)
 
 /* Maximum number of events to set in static array of trigger descriptor */
 #define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
@@ -2286,7 +2286,7 @@ typedef struct ecs_term_t {
                                  * into the destination term. */
 } ecs_term_t;
 
-/* Deprecated */
+/* Deprecated -- do not use! */
 typedef enum ecs_match_kind_t {
     EcsMatchDefault = 0,
     EcsMatchAll,
@@ -2300,13 +2300,15 @@ struct ecs_filter_t {
     int32_t term_count;        /* Number of elements in terms array */
     int32_t term_count_actual; /* Processed count, which folds OR terms */
 
-    bool match_this;             /* Has terms that match EcsThis */
-    bool match_only_this;        /* Has only terms that match EcsThis */
+    ecs_term_t term_cache[ECS_TERM_CACHE_SIZE]; /* Cache for small filters */
+
+    bool match_this;           /* Has terms that match EcsThis */
+    bool match_only_this;      /* Has only terms that match EcsThis */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
 
-    /* Deprecated fields */
+    /* Deprecated fields -- do not use! */
     ecs_type_t include;
     ecs_type_t exclude;
     ecs_match_kind_t include_kind;
@@ -2463,7 +2465,6 @@ typedef struct ecs_scope_iter_t {
     ecs_filter_t filter;
     ecs_map_iter_t tables;
     int32_t index;
-    ecs_iter_table_t table;
 } ecs_scope_iter_t;
 
 /** Term-iterator specific data */
@@ -2476,18 +2477,27 @@ typedef struct ecs_term_iter_t {
     bool iter_set;
 
     /* Storage */
-    ecs_iter_table_t table;
-    ecs_ref_t ref;
-    ecs_type_t type;
+    ecs_id_t id;
     int32_t column;
+    ecs_type_t type;
+    ecs_entity_t subject;
+    ecs_size_t size;
+    void *ptr;
 } ecs_term_iter_t;
+
+typedef enum ecs_filter_iter_kind_t {
+    EcsFilterIterEvalIndex,
+    EcsFilterIterEvalNone
+} ecs_filter_iter_kind_t;
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
-    ecs_sparse_t *tables;
-    int32_t index;
-    ecs_iter_table_t table;
+    ecs_filter_iter_kind_t kind;
+
+    /* For EcsFilterIterEvalIndex */ 
+    ecs_term_iter_t term_iter;
+    int32_t min_term_index;
 } ecs_filter_iter_t;
 
 /** Query-iterator specific data */
@@ -2504,8 +2514,24 @@ typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
-    ecs_iter_table_t table;
 } ecs_snapshot_iter_t;  
+
+/* Inline arrays for queries with small number of components */
+typedef struct ecs_iter_cache_t {
+    ecs_id_t ids[ECS_TERM_CACHE_SIZE];
+    ecs_type_t types[ECS_TERM_CACHE_SIZE];
+    int32_t columns[ECS_TERM_CACHE_SIZE];
+    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
+    ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
+    void *ptrs[ECS_TERM_CACHE_SIZE];
+
+    bool ids_alloc;
+    bool types_alloc;
+    bool columns_alloc;
+    bool subjects_alloc;
+    bool sizes_alloc;
+    bool ptrs_alloc;
+} ecs_iter_cache_t;
 
 /** The ecs_iter_t struct allows applications to iterate tables.
  * Queries and filters, among others, allow an application to iterate entities
@@ -2521,7 +2547,17 @@ struct ecs_iter_t {
     ecs_id_t event_id;            /**< The (component) id for the event */
     ecs_entity_t self;            /**< Self entity (if set) */
 
-    ecs_iter_table_t *table;      /**< Table related data */
+    ecs_table_t *table;           /**< Current table */
+    ecs_data_t *data;
+    ecs_id_t *ids;
+    ecs_type_t *types;
+    int32_t *columns;
+    ecs_entity_t *subjects;
+    ecs_size_t *sizes;
+    void **ptrs;
+
+    ecs_ref_t *references;
+
     ecs_query_t *query;           /**< Current query being evaluated */
     int32_t table_count;          /**< Active table count for query */
     int32_t inactive_table_count; /**< Inactive table count for query */
@@ -2547,7 +2583,7 @@ struct ecs_iter_t {
 
     bool is_valid;                /**< Set to true after first next() */
 
-    ecs_ids_t *triggered_by; /**< Component(s) that triggered the system */
+    ecs_ids_t *triggered_by;      /**< Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
@@ -2557,6 +2593,8 @@ struct ecs_iter_t {
         ecs_query_iter_t query;
         ecs_snapshot_iter_t snapshot;
     } iter;                       /**< Iterator specific data */
+
+    ecs_iter_cache_t cache;       /**< Inline arrays to reduce allocations */
 };
 
 typedef enum EcsMatchFailureReason {
@@ -2666,6 +2704,7 @@ typedef void (*ecs_on_set_t)(
 #endif
 
 #endif
+
 /**
  * @file api_support.h
  * @brief Support functions and constants.
@@ -2920,8 +2959,8 @@ typedef struct ecs_type_desc_t {
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
     /* Terms of the filter. If a filter has more terms than 
-     * ECS_FILTER_DESC_TERM_ARRAY_MAX use terms_buffer */
-    ecs_term_t terms[ECS_FILTER_DESC_TERM_ARRAY_MAX];
+     * ECS_TERM_CACHE_SIZE use terms_buffer */
+    ecs_term_t terms[ECS_TERM_CACHE_SIZE];
 
     /* For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
@@ -3624,17 +3663,6 @@ FLECS_API
 int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name);
-
-ECS_DEPRECATED("no replacement")
-FLECS_API
-void *ecs_element_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t column,
-    int32_t row);
-
-#define ecs_element(it, type, column, row)\
-    ((type*)ecs_element_w_size(it, sizeof(type), column, row))
 
 ECS_DEPRECATED("use ecs_term_source")
 FLECS_API
@@ -6216,39 +6244,6 @@ FLECS_API
 char* ecs_filter_str(
     const ecs_world_t *world,
     const ecs_filter_t *filter); 
-
-/** Match entity with filter.
- * Test if entity matches filter terms. The function will substitute terms with
- * a "This" subject with the provided entity. 
- *
- * Terms with other subjects are also matched. Even if the specified entity 
- * matches all This terms, if the filter contains a term for another entity 
- * which does not match the term, the operation will evaluate false.
- *
- * If 0 is provided for the specified entity, only non-This terms are matched
- *
- * @param world The world.
- * @param filter The filter to evaluate.
- * @param entity The entity to match.
- * @return True if the filter matches, false if it doesn't match.
- */
-FLECS_API
-bool ecs_filter_match_entity(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter,
-    ecs_entity_t e);
-
-/** Same as ecs_filter_match_entity, but for a type.
- * 
- * @param world The world.
- * @param filter The filter to evaluate.
- * @param type The type to match.
- * @return True if the filter matches, false if it doesn't match.
- */ 
-bool ecs_filter_match_type(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter,
-    ecs_type_t type);
 
 /** Return a filter iterator.
  * A filter iterator lets an application iterate over entities that match the
@@ -11041,17 +11036,7 @@ private:
 
         return flecs::unsafe_column(
             ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
-    }       
-
-    /* Get single field, check if correct type is used */
-    template <typename T, typename A = actual_type_t<T>>
-    A& get_element(int32_t index, int32_t row) const {
-        ecs_assert(
-            ecs_term_id(m_iter, index) == _::cpp_type<T>::id(m_iter->world),
-                ECS_COLUMN_TYPE_MISMATCH, NULL);
-        return *static_cast<A*>(
-            ecs_element_w_size(m_iter, sizeof(A), index, row));
-    }       
+    }     
 
     const flecs::iter_t *m_iter;
     std::size_t m_begin;
@@ -14585,12 +14570,11 @@ flecs::entity_t type_id() {
 //// Utility class to invoke a system each
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace flecs 
+namespace flecs
 {
 
 namespace _ 
 {
-
 
 // Utility to convert template argument pack to array of term ptrs
 struct term_ptr {
@@ -14603,51 +14587,27 @@ class term_ptrs {
 public:
     using array = flecs::array<_::term_ptr, sizeof...(Components)>;
 
-    void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<
+    bool populate(const ecs_iter_t *iter) {
+        return populate(iter, 0, static_cast<
             remove_reference_t<
                 remove_pointer_t<Components>>
                     *>(nullptr)...);
-    }
-
-    bool populate_w_refs(const ecs_iter_t *iter) {
-        if (iter->table->references) {
-            populate_w_refs(iter, 0, static_cast<
-                remove_reference_t<
-                    remove_pointer_t<Components>>
-                        *>(nullptr)...);
-            return true;
-        } else {
-            this->populate(iter);
-            return false;
-        }
     }
 
     array m_terms;
 
 private:
     /* Populate terms array without checking for references */
-    void populate(const ecs_iter_t*, size_t) { }
+    bool populate(const ecs_iter_t*, size_t) { return false; }
 
     template <typename T, typename... Targs>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
-        m_terms[index].ptr = ptr;
-        populate(iter, index + 1, comps ...);
-    }
-
-    /* Populate terms array, check for references */
-    void populate_w_refs(const ecs_iter_t*, size_t) { }
-
-    template <typename T, typename... Targs>
-    void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
-        m_terms[index].ptr = ptr;
-        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
-        populate_w_refs(iter, index + 1, comps ...);
-    }   
+    bool populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        m_terms[index].ptr = iter->ptrs[index];
+        bool is_ref = iter->subjects && iter->subjects[index] != 0;
+        m_terms[index].is_ref = is_ref;
+        is_ref |= populate(iter, index + 1, comps ...);
+        return is_ref;
+    }  
 };    
 
 class invoker { };
@@ -14758,7 +14718,7 @@ public:
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
 
-        if (terms.populate_w_refs(iter)) {
+        if (terms.populate(iter)) {
             invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
         } else {
             invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
@@ -14782,12 +14742,9 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
 #ifndef NDEBUG
-        ecs_table_t *table = nullptr;
-        if (iter->table) {
-            table = iter->table->table;
-            if (table) {
-                ecs_table_lock(iter->world, table);
-            }
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
         }
 #endif
 
@@ -14882,12 +14839,9 @@ private:
         flecs::iter it(iter);
 
 #ifndef NDEBUG
-        ecs_table_t *table = nullptr;
-        if (iter->table) {
-            table = iter->table->table;
-            if (table) {
-                ecs_table_lock(iter->world, table);
-            }
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
         }
 #endif
 
@@ -14933,7 +14887,7 @@ public:
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
-        terms.populate_w_refs(iter);
+        terms.populate(iter);
         invoke_callback(iter, m_func, 0, terms.m_terms);
     }
 
@@ -15537,7 +15491,7 @@ public:
     }
 
     Base& term() {
-        ecs_assert(m_term_index < ECS_FILTER_DESC_TERM_ARRAY_MAX, 
+        ecs_assert(m_term_index < ECS_TERM_CACHE_SIZE, 
             ECS_INVALID_PARAMETER, NULL);
         this->set_term(&m_desc->terms[m_term_index]);
         m_term_index ++;

@@ -7,11 +7,15 @@ void Iter(ecs_iter_t *it) {
     Mass *m = NULL;
 
     if (it->column_count >= 2) {
-        v = ecs_term(it, Velocity, 2);
+        if (ecs_term_size(it, 2) == sizeof(Velocity)) {
+            v = ecs_term(it, Velocity, 2);
+        }
     }
 
     if (it->column_count >= 3) {
-        m = ecs_term(it, Mass, 3);
+        if (ecs_term_size(it, 3) == sizeof(Mass)) {
+            m = ecs_term(it, Mass, 3);
+        }
     }
 
     probe_system(it);
@@ -1015,66 +1019,6 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     ecs_fini(world);
 }
 
-void Use_field(ecs_iter_t *it) {
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        Position *p = ecs_element(it, Position, 1, i);
-        Velocity *v = ecs_element(it, Velocity, 2, i);
-
-        p->x += v->x;
-        p->y += v->y;
-    }
-}
-
-void SystemPeriodic_use_fields_2_owned() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_ENTITY(world, e1, Position, Velocity);
-
-    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, Velocity);
-
-    ecs_set(world, e1, Position, {1, 2});
-    ecs_set(world, e1, Velocity, {10, 20});
-
-    ecs_progress(world, 1);
-
-    const Position *p = ecs_get(world, e1, Position);
-    const Velocity *v = ecs_get(world, e1, Velocity);
-    test_int(p->x, 11);
-    test_int(p->y, 22);
-    test_int(v->x, 10);
-    test_int(v->y, 20);
-
-    ecs_fini(world);
-}
-
-void SystemPeriodic_use_fields_1_owned_1_shared() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, Use_field, EcsOnUpdate, Position, PARENT:Velocity);
-
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t parent = ecs_set(world, 0, Velocity, {10, 20});
-    ecs_add_pair(world, e1, EcsChildOf, parent);
-
-    ecs_progress(world, 1);
-
-    const Position *p = ecs_get(world, e1, Position);
-    const Velocity *v = ecs_get(world, parent, Velocity);
-    test_int(p->x, 11);
-    test_int(p->y, 22);
-    test_int(v->x, 10);
-    test_int(v->y, 20);
-
-    ecs_fini(world);
-}
-
 static void Dummy_1(ecs_iter_t *it) { probe_system(it); }
 static void Dummy_2(ecs_iter_t *it) { probe_system(it); }
 
@@ -1125,19 +1069,6 @@ void TestOptional_w_shared(ecs_iter_t *it) {
     probe_system(it);
 }
 
-void TestOptional_w_field(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-
-    test_assert(p != NULL);
-
-    probe_system(it);
-
-    for (int i = 0; i < it->count; i ++) {
-        Velocity *v = ecs_element(it, Velocity, 2, i);
-        test_assert(v == NULL);
-    }
-}
-
 void SystemPeriodic_ensure_optional_is_unset_column() {
     ecs_world_t *world = ecs_init();
 
@@ -1175,62 +1106,6 @@ void SystemPeriodic_ensure_optional_is_null_shared() {
     ECS_ENTITY(world, e, Position);
 
     ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT:Velocity);
-    
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_id(Velocity));
-    test_int(ctx.s[0][1], 0);
-
-    test_int(ctx.e[0], e);
-
-    ecs_fini(world);
-}
-
-void SystemPeriodic_ensure_optional_is_null_field_owned() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_ENTITY(world, e, Position);
-
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?Velocity);
-    
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.column_count, 2);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][1], ecs_id(Velocity));
-    test_int(ctx.s[0][1], 0);
-
-    test_int(ctx.e[0], e);
-
-    ecs_fini(world);
-}
-
-void SystemPeriodic_ensure_optional_is_null_field_shared() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_ENTITY(world, e, Position);
-
-    ECS_SYSTEM(world, TestOptional_w_field, EcsOnUpdate, Position, ?PARENT:Velocity);
     
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1985,30 +1860,6 @@ void SystemPeriodic_get_sys_context_from_param() {
     ecs_fini(world);
 }
 
-static bool Test_feld_w_zero_size_invoked = false;
-
-static
-void Test_feld_w_zero_size(ecs_iter_t *it) {
-    test_assert(ecs_element_w_size(it, 0, 1, 0) != ecs_element_w_size(it, 0, 1, 1));
-    Test_feld_w_zero_size_invoked = true;
-}
-
-void SystemPeriodic_use_field_w_0_size() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-
-    ECS_SYSTEM(world, Test_feld_w_zero_size, EcsOnUpdate, Position);
-
-    ecs_progress(world, 1);
-
-    test_assert(Test_feld_w_zero_size_invoked == true);
-
-    ecs_fini(world);
-}
-
 static ecs_entity_t dummy_invoked = 0;
 
 static void Dummy(ecs_iter_t *it) {
@@ -2154,4 +2005,20 @@ void SystemPeriodic_or_type() {
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
+}
+
+void SystemPeriodic_ensure_optional_is_null_field_owned() {
+    // Implement testcase
+}
+
+void SystemPeriodic_ensure_optional_is_null_field_shared() {
+    // Implement testcase
+}
+
+void SystemPeriodic_use_fields_2_owned() {
+    // Implement testcase
+}
+
+void SystemPeriodic_use_fields_1_owned_1_shared() {
+    // Implement testcase
 }

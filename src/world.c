@@ -1457,6 +1457,7 @@ void do_register_each_id(
         } 
 
         do_register_id(world, table, id, i, unregister);
+        do_register_id(world, table, EcsWildcard, i, unregister);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
@@ -1475,9 +1476,7 @@ void do_register_each_id(
                 flecs_set_watch(world, ecs_pair_object(world, id));
             }
         } else {
-            if (!(id & ECS_ROLE_MASK)) {
-                do_register_id(world, table, EcsWildcard, i, unregister);
-            } else {
+            if (id & ECS_ROLE_MASK) {
                 id &= ECS_COMPONENT_MASK;
                 do_register_id(world, table, ecs_pair(id, EcsWildcard), 
                     i, unregister);
