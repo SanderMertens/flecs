@@ -1277,7 +1277,9 @@
                 "delete_watched",
                 "valid_entity_after_delete",
                 "remove_after_delete_trigger",
-                "remove_after_delete_wildcard_id_trigger"
+                "remove_after_delete_wildcard_id_trigger",
+                "has_removed_tag_trigger_1_tag",
+                "has_removed_tag_trigger_2_tags"
             ]
         }, {
             "id": "TriggerOnSet",

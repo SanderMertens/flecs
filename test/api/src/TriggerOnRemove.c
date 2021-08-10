@@ -398,3 +398,81 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger() {
 
     ecs_fini(world);
 }
+
+typedef struct on_remove_has_tag_t {
+    ecs_entity_t ent;
+    ecs_entity_t tag;
+} on_remove_has_tag_t;
+
+static
+void OnRemoveHasTag(ecs_iter_t *it) {
+    on_remove_has_tag_t *ctx = it->ctx;
+    test_assert(ctx != NULL);
+
+    test_int(it->count, 1);
+    test_assert(it->entities[0] == ctx->ent);
+    test_assert(ecs_term_id(it, 1) == ctx->tag);
+    test_bool(ecs_has_id(it->world, ctx->ent, ctx->tag), true);
+
+    dummy_called = true;
+}
+
+void TriggerOnRemove_has_removed_tag_trigger_1_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+
+    on_remove_has_tag_t ctx = {
+        .ent = e,
+        .tag = Tag
+    };
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = OnRemoveHasTag,
+        .ctx = &ctx
+    });
+
+    ecs_remove(world, e, Tag);
+
+    test_int(dummy_called, 1);
+
+    ecs_fini(world);
+}
+
+void TriggerOnRemove_has_removed_tag_trigger_2_tags() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, TagA));
+
+    ecs_add(world, e, TagB);
+    test_assert(ecs_has(world, e, TagB));
+
+    on_remove_has_tag_t ctx = {
+        .ent = e,
+        .tag = TagA
+    };
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnRemove},
+        .callback = OnRemoveHasTag,
+        .ctx = &ctx
+    });
+
+    ecs_remove(world, e, TagA);
+
+    test_int(dummy_called, 1);
+
+    ecs_fini(world);
+}

@@ -1201,6 +1201,8 @@ void TriggerOnRemove_delete_watched(void);
 void TriggerOnRemove_valid_entity_after_delete(void);
 void TriggerOnRemove_remove_after_delete_trigger(void);
 void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void);
+void TriggerOnRemove_has_removed_tag_trigger_1_tag(void);
+void TriggerOnRemove_has_removed_tag_trigger_2_tags(void);
 
 // Testsuite 'TriggerOnSet'
 void TriggerOnSet_set(void);
@@ -6533,6 +6535,14 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "remove_after_delete_wildcard_id_trigger",
         TriggerOnRemove_remove_after_delete_wildcard_id_trigger
+    },
+    {
+        "has_removed_tag_trigger_1_tag",
+        TriggerOnRemove_has_removed_tag_trigger_1_tag
+    },
+    {
+        "has_removed_tag_trigger_2_tags",
+        TriggerOnRemove_has_removed_tag_trigger_2_tags
     }
 };
 
@@ -9717,7 +9727,7 @@ static bake_test_suite suites[] = {
         "TriggerOnRemove",
         NULL,
         NULL,
-        11,
+        13,
         TriggerOnRemove_testcases
     },
     {
