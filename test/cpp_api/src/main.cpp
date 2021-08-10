@@ -225,6 +225,7 @@ void Switch_system_w_switch(void);
 void Switch_add_case_w_type(void);
 void Switch_add_switch_w_type(void);
 void Switch_add_switch_w_type_component_first(void);
+void Switch_add_remove_switch_w_type(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -1481,6 +1482,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_switch_w_type_component_first",
         Switch_add_switch_w_type_component_first
+    },
+    {
+        "add_remove_switch_w_type",
+        Switch_add_remove_switch_w_type
     }
 };
 
@@ -3013,7 +3018,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        7,
+        8,
         Switch_testcases
     },
     {

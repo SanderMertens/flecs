@@ -235,7 +235,8 @@
                 "system_w_switch",
                 "add_case_w_type",
                 "add_switch_w_type",
-                "add_switch_w_type_component_first"
+                "add_switch_w_type_component_first",
+                "add_remove_switch_w_type"
             ]
         }, {
             "id": "Paths",

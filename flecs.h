@@ -12914,14 +12914,24 @@ public:
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity get_case(const flecs::type& sw) const;
+    flecs::entity get_case(flecs::id_t sw) const;
 
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
      * @return True if the entity has the provided case, false otherwise.
      */
-    flecs::entity get_case(flecs::id_t sw) const;
+    template<typename T> 
+    flecs::entity get_case() const {
+        return get_case(_::cpp_type<T>::id(m_world));
+    }
+
+    /** Get case for switch.
+     *
+     * @param sw The switch for which to obtain the case.
+     * @return True if the entity has the provided case, false otherwise.
+     */
+    flecs::entity get_case(const flecs::type& sw) const;
 
     /** Test if component is enabled.
      *
@@ -13246,11 +13256,10 @@ public:
         return *this;  
     }
 
-    /** Add a switch to an entity by id.
-     * The switch entity must be a type, that is it must have the EcsType
-     * component. Entities created with flecs::type are valid here.
+    /** Add a switch to an entity by C++ type.
+     * The C++ type must be associated with a switch type.
      *
-     * @param sw The switch entity id to add.
+     * @param sw The switch to add.
      */ 
     template <typename T>
     const Base& add_switch() const {
@@ -13275,6 +13284,18 @@ public:
         return *this;  
     }
     
+    /** Add a switch to an entity by C++ type.
+     * The C++ type must be associated with a switch type.
+     *
+     * @param sw The switch to add.
+     */ 
+    template <typename T>
+    const Base& remove_switch() const {
+        ecs_remove_id(this->base_world(), this->base_id(), 
+            ECS_SWITCH | _::cpp_type<T>::id());
+        return *this;  
+    }
+
     /** Remove a switch from an entity.
      * Any instance of flecs::type can be used as a switch.
      *
