@@ -12922,9 +12922,7 @@ public:
      * @return True if the entity has the provided case, false otherwise.
      */
     template<typename T> 
-    flecs::entity get_case() const {
-        return get_case(_::cpp_type<T>::id(m_world));
-    }
+    flecs::entity get_case() const;
 
     /** Get case for switch.
      *
@@ -14211,6 +14209,7 @@ public:
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);            
             s_allow_tag = allow_tag;
         } else {
+            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
             ecs_assert(s_allow_tag == allow_tag, ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -17536,6 +17535,11 @@ inline flecs::entity entity_view::get_case(const flecs::type& sw) const {
 
 inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
+}
+
+template <typename T>
+inline flecs::entity entity_view::get_case() const {
+    return get_case(_::cpp_type<T>::id(m_world));
 }
 
 inline flecs::entity entity_view::get_object(
