@@ -19534,6 +19534,15 @@ int32_t count_pairs(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+
+        if (!ECS_HAS_ROLE(term->id, PAIR)) {
+            continue;
+        }
+
+        if (term->args[0].entity != EcsThis) {
+            continue;
+        }
+
         if (ecs_id_is_wildcard(term->id)) {
             pair_count = get_pair_count(type, term->id);
             if (!first_count) {
