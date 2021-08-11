@@ -228,9 +228,8 @@ ecs_type_t ecs_column_type(
 {
     ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->table->types != NULL, ECS_INTERNAL_ERROR, NULL);
-    return it->table->types[index - 1];
+    ecs_assert(it->types != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->types[index - 1];
 }
 
 int32_t ecs_column_index_from_name(

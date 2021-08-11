@@ -741,9 +741,6 @@ int32_t move_entity(
     int32_t dst_row = flecs_table_append(world, dst_table, dst_data, entity, 
         record, false);
 
-    record->table = dst_table;
-    record->row = flecs_row_to_record(dst_row, info->is_watched);
-
     ecs_assert(ecs_vector_count(src_data->entities) > src_row, 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -763,7 +760,11 @@ int32_t move_entity(
         flecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
             src_table, src_data, src_row, construct);                
     }
-    
+
+    /* Update entity index & delete old data after running remove actions */
+    record->table = dst_table;
+    record->row = flecs_row_to_record(dst_row, info->is_watched);
+
     flecs_table_delete(world, src_table, src_data, src_row, false);
 
     /* If components were added, invoke add actions */
@@ -1596,7 +1597,7 @@ ecs_entity_t ecs_new_id(
     }
 
     ecs_assert(!unsafe_world->stats.max_id || 
-        entity <= unsafe_world->stats.max_id, 
+        ecs_entity_t_lo(entity) <= unsafe_world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -1765,7 +1766,7 @@ ecs_table_t *traverse_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
@@ -1851,7 +1852,7 @@ void defer_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 

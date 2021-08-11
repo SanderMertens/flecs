@@ -1,88 +1,114 @@
-
 namespace flecs 
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// A filter is used to match subsets of tables
+//// Ad hoc queries (filters)
 ////////////////////////////////////////////////////////////////////////////////
- 
-enum match_kind {
-    MatchAll = EcsMatchAll,
-    MatchAny = EcsMatchAny,
-    MatchExact = EcsMatchExact
-};
 
-class filter {
+class filter_base {
 public:
-    filter() 
-        : m_world( nullptr )
-        , m_filter{ } {}
+    filter_base()
+        : m_world(nullptr)
+        , m_filter({}) { }   
+    
+    filter_base(world_t *world, ecs_filter_t *filter = NULL)
+        : m_world(world) {
+            ecs_filter_move(&m_filter, filter);
+        }
 
-    explicit filter(const world& world) 
-        : m_world( world.c_ptr() )
-        , m_filter{ } { }
-
-    filter& include(type type) {
-        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& include(entity entity) {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, _::cpp_type<T>::id(m_world));
-        return *this;
-    }
-
-    filter& include_kind(match_kind kind) {
-        m_filter.include_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type include() {
-        return type(m_world, m_filter.include);
-    }
-
-    filter& exclude(type type) {
-        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& exclude(entity entity) {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::cpp_type<T>::id(m_world));
-        return *this;
-    }
- 
-    filter& exclude_kind(match_kind kind) {
-        m_filter.exclude_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type exclude() {
-        return type(m_world, m_filter.exclude);
-    }  
-
+    /** Get pointer to C filter object.
+     */
     const filter_t* c_ptr() const {
-        if (m_world) {
+        if (m_filter.term_count) {
             return &m_filter;
         } else {
-            return nullptr;
+            return NULL;
         }
     }
 
-private:
+    /** Free the filter.
+     */
+    ~filter_base() {
+        ecs_filter_fini(&m_filter);
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
+        while (ecs_filter_next(&it)) {
+            _::iter_invoker<Func>(func).invoke(&it);
+        }
+    }  
+
+    template <typename Func>
+    void each_term(const Func& func) {
+        for (int i = 0; i < m_filter.term_count; i ++) {
+            flecs::term t(m_world, m_filter.terms[i]);
+            func(t);
+        }
+    }
+
+    flecs::term term(int32_t index) {
+        return flecs::term(m_world, m_filter.terms[index]);
+    }
+
+    int32_t term_count() {
+        return m_filter.term_count;
+    }
+
+    flecs::string str() {
+        char *result = ecs_filter_str(m_world, &m_filter);
+        return flecs::string(result);
+    }
+
+protected:
     world_t *m_world;
     filter_t m_filter;
 };
 
-} // namespace flecs
+
+template<typename ... Components>
+class filter : public filter_base {
+    using Terms = typename _::term_ptrs<Components...>::array;
+
+public:
+    filter() { }
+
+    filter(world_t *world, filter_t *f)
+        : filter_base(world, f) { }
+
+    explicit filter(const world& world, const char *expr = nullptr) 
+        : filter_base(world.c_ptr())
+    {
+        auto qb = world.filter_builder<Components ...>()
+            .expr(expr);
+
+        if (!expr) {
+            qb.substitute_default();
+        }
+
+        flecs::filter_t f = qb;
+        ecs_filter_move(&m_filter, &f);
+    }
+
+    template <typename Func>
+    void each(Func&& func) const {
+        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
+    } 
+
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
+    }
+
+private:
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
+        }
+    }
+};
+
+}

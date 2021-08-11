@@ -460,17 +460,6 @@ int32_t ecs_column_index_from_name(
     const ecs_iter_t *it,
     const char *name);
 
-ECS_DEPRECATED("no replacement")
-FLECS_API
-void *ecs_element_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t column,
-    int32_t row);
-
-#define ecs_element(it, type, column, row)\
-    ((type*)ecs_element_w_size(it, sizeof(type), column, row))
-
 ECS_DEPRECATED("use ecs_term_source")
 FLECS_API
 ecs_entity_t ecs_column_source(

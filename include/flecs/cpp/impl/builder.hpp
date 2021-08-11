@@ -10,6 +10,24 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type) {
 }      
 
 template <typename ... Components>
+inline filter_builder_base<Components...>::operator filter<Components ...>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter_builder<Components ...>::operator filter<>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<>(this->m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter<Components ...> filter_builder_base<Components...>::build() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
+
+template <typename ... Components>
 inline query_builder_base<Components...>::operator query<Components ...>() const {
     ecs_query_t *query = *this;
     return flecs::query<Components...>(m_world, query);

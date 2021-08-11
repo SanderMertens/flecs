@@ -1040,7 +1040,16 @@
                 "term_iter_w_superset_self_childof",
                 "term_iter_w_superset_tag",
                 "term_iter_w_superset_pair",
-                "term_iter_w_superset_pair_obj_wildcard"
+                "term_iter_w_superset_pair_obj_wildcard",
+                "filter_iter_1_tag",
+                "filter_iter_2_tags",
+                "filter_iter_2_tags_1_not",
+                "filter_iter_3_tags_2_or",
+                "filter_iter_1_component",
+                "filter_iter_2_components",
+                "filter_iter_null",
+                "filter_iter_1_not_tag",
+                "filter_iter_2_tags_1_optional"
             ]
         }, {
             "id": "Query",
@@ -1084,7 +1093,9 @@
                 "get_filter",
                 "group_by",
                 "group_by_w_ctx",
-                "iter_valid"
+                "iter_valid",
+                "query_optional_tag",
+                "query_optional_shared_tag"
             ]
         }, {
             "id": "Pairs",
@@ -1277,7 +1288,9 @@
                 "delete_watched",
                 "valid_entity_after_delete",
                 "remove_after_delete_trigger",
-                "remove_after_delete_wildcard_id_trigger"
+                "remove_after_delete_wildcard_id_trigger",
+                "has_removed_tag_trigger_1_tag",
+                "has_removed_tag_trigger_2_tags"
             ]
         }, {
             "id": "TriggerOnSet",
@@ -1374,10 +1387,6 @@
                 "6_type_1_and_2_optional",
                 "ensure_optional_is_unset_column",
                 "ensure_optional_is_null_shared",
-                "ensure_optional_is_null_field_owned",
-                "ensure_optional_is_null_field_shared",
-                "use_fields_2_owned",
-                "use_fields_1_owned_1_shared",
                 "match_2_systems_w_populated_table",
                 "on_period",
                 "on_period_long_delta",
@@ -1402,7 +1411,6 @@
                 "not_from_entity",
                 "sys_context",
                 "get_sys_context_from_param",
-                "use_field_w_0_size",
                 "owned_only",
                 "shared_only",
                 "is_in_readonly",
@@ -1513,7 +1521,6 @@
                 "add_type_w_1_overrides",
                 "add_type_w_2_overrides",
                 "get_ptr_prefab",
-                "iterate_w_prefab_field",
                 "iterate_w_prefab_shared",
                 "match_entity_prefab_w_system_optional",
                 "prefab_in_system_expr",
@@ -1645,6 +1652,7 @@
                 "entity_range_add_in_range_in_progress",
                 "entity_range_add_out_of_range_in_progress",
                 "entity_range_out_of_range_check_disabled",
+                "entity_range_check_after_delete",
                 "dim",
                 "dim_dim_type",
                 "phases",
@@ -1800,6 +1808,7 @@
                 "6_thread_2_entity",
                 "6_thread_5_entity",
                 "6_thread_10_entity",
+                "2_thread_test_combs_100_entity_w_next_worker",
                 "2_thread_test_combs_100_entity",
                 "3_thread_test_combs_100_entity",
                 "4_thread_test_combs_100_entity",
@@ -2007,10 +2016,9 @@
                 "snapshot_free_empty",
                 "snapshot_free",
                 "snapshot_free_filtered",
+                "snapshot_free_filtered_w_dtor",
                 "snapshot_activate_table_w_filter",
                 "snapshot_copy",
-                "snapshot_copy_filtered",
-                "snapshot_copy_w_filter",
                 "snapshot_get_ref_after_restore",
                 "new_after_snapshot",
                 "new_empty_after_snapshot",
@@ -2020,22 +2028,6 @@
                 "restore_recycled",
                 "snapshot_w_new_in_onset",
                 "snapshot_w_new_in_onset_in_snapshot_table"
-            ]
-        }, {
-            "id": "FilterIter",
-            "testcases": [
-                "iter_one_table",
-                "iter_two_tables",
-                "iter_two_comps",
-                "iter_snapshot_one_table",
-                "iter_snapshot_two_tables",
-                "iter_snapshot_two_comps",
-                "iter_snapshot_filtered_table",
-                "iter_get_component_index",
-                "iter_get_component_size",
-                "iter_get_tag_index",
-                "iter_get_tag_size",
-                "iter_get_tag_column"
             ]
         }, {
             "id": "Modules",

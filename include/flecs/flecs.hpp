@@ -65,12 +65,14 @@ class type;
 class pipeline;
 class iter;
 class term;
-class filter;
 class filter_iterator;
 class child_iterator;
 class world_filter;
 class snapshot_filter;
 class query_base;
+
+template<typename ... Components>
+class filter;
 
 template<typename ... Components>
 class query;
@@ -80,6 +82,9 @@ class system;
 
 template<typename ... Components>
 class observer;
+
+template <typename ... Components>
+class filter_builder;
 
 template <typename ... Components>
 class query_builder;

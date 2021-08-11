@@ -976,6 +976,15 @@ void Filter_term_iter_w_superset_self_childof(void);
 void Filter_term_iter_w_superset_tag(void);
 void Filter_term_iter_w_superset_pair(void);
 void Filter_term_iter_w_superset_pair_obj_wildcard(void);
+void Filter_filter_iter_1_tag(void);
+void Filter_filter_iter_2_tags(void);
+void Filter_filter_iter_2_tags_1_not(void);
+void Filter_filter_iter_3_tags_2_or(void);
+void Filter_filter_iter_1_component(void);
+void Filter_filter_iter_2_components(void);
+void Filter_filter_iter_null(void);
+void Filter_filter_iter_1_not_tag(void);
+void Filter_filter_iter_2_tags_1_optional(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1018,6 +1027,8 @@ void Query_get_filter(void);
 void Query_group_by(void);
 void Query_group_by_w_ctx(void);
 void Query_iter_valid(void);
+void Query_query_optional_tag(void);
+void Query_query_optional_shared_tag(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1201,6 +1212,8 @@ void TriggerOnRemove_delete_watched(void);
 void TriggerOnRemove_valid_entity_after_delete(void);
 void TriggerOnRemove_remove_after_delete_trigger(void);
 void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void);
+void TriggerOnRemove_has_removed_tag_trigger_1_tag(void);
+void TriggerOnRemove_has_removed_tag_trigger_2_tags(void);
 
 // Testsuite 'TriggerOnSet'
 void TriggerOnSet_set(void);
@@ -1287,10 +1300,6 @@ void SystemPeriodic_2_type_2_and_1_optional(void);
 void SystemPeriodic_6_type_1_and_2_optional(void);
 void SystemPeriodic_ensure_optional_is_unset_column(void);
 void SystemPeriodic_ensure_optional_is_null_shared(void);
-void SystemPeriodic_ensure_optional_is_null_field_owned(void);
-void SystemPeriodic_ensure_optional_is_null_field_shared(void);
-void SystemPeriodic_use_fields_2_owned(void);
-void SystemPeriodic_use_fields_1_owned_1_shared(void);
 void SystemPeriodic_match_2_systems_w_populated_table(void);
 void SystemPeriodic_on_period(void);
 void SystemPeriodic_on_period_long_delta(void);
@@ -1315,7 +1324,6 @@ void SystemPeriodic_cascade_dont_match_inheritance(void);
 void SystemPeriodic_not_from_entity(void);
 void SystemPeriodic_sys_context(void);
 void SystemPeriodic_get_sys_context_from_param(void);
-void SystemPeriodic_use_field_w_0_size(void);
 void SystemPeriodic_owned_only(void);
 void SystemPeriodic_shared_only(void);
 void SystemPeriodic_is_in_readonly(void);
@@ -1414,7 +1422,6 @@ void Prefab_new_type_w_2_overrides(void);
 void Prefab_add_type_w_1_overrides(void);
 void Prefab_add_type_w_2_overrides(void);
 void Prefab_get_ptr_prefab(void);
-void Prefab_iterate_w_prefab_field(void);
 void Prefab_iterate_w_prefab_shared(void);
 void Prefab_match_entity_prefab_w_system_optional(void);
 void Prefab_prefab_in_system_expr(void);
@@ -1536,6 +1543,7 @@ void World_entity_range_add_existing_in_progress(void);
 void World_entity_range_add_in_range_in_progress(void);
 void World_entity_range_add_out_of_range_in_progress(void);
 void World_entity_range_out_of_range_check_disabled(void);
+void World_entity_range_check_after_delete(void);
 void World_dim(void);
 void World_dim_dim_type(void);
 void World_phases(void);
@@ -1685,6 +1693,7 @@ void MultiThread_6_thread_1_entity(void);
 void MultiThread_6_thread_2_entity(void);
 void MultiThread_6_thread_5_entity(void);
 void MultiThread_6_thread_10_entity(void);
+void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void);
 void MultiThread_2_thread_test_combs_100_entity(void);
 void MultiThread_3_thread_test_combs_100_entity(void);
 void MultiThread_4_thread_test_combs_100_entity(void);
@@ -1882,10 +1891,9 @@ void Snapshot_snapshot_w_filter_after_delete(void);
 void Snapshot_snapshot_free_empty(void);
 void Snapshot_snapshot_free(void);
 void Snapshot_snapshot_free_filtered(void);
+void Snapshot_snapshot_free_filtered_w_dtor(void);
 void Snapshot_snapshot_activate_table_w_filter(void);
 void Snapshot_snapshot_copy(void);
-void Snapshot_snapshot_copy_filtered(void);
-void Snapshot_snapshot_copy_w_filter(void);
 void Snapshot_snapshot_get_ref_after_restore(void);
 void Snapshot_new_after_snapshot(void);
 void Snapshot_new_empty_after_snapshot(void);
@@ -1895,20 +1903,6 @@ void Snapshot_set_after_snapshot(void);
 void Snapshot_restore_recycled(void);
 void Snapshot_snapshot_w_new_in_onset(void);
 void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
-
-// Testsuite 'FilterIter'
-void FilterIter_iter_one_table(void);
-void FilterIter_iter_two_tables(void);
-void FilterIter_iter_two_comps(void);
-void FilterIter_iter_snapshot_one_table(void);
-void FilterIter_iter_snapshot_two_tables(void);
-void FilterIter_iter_snapshot_two_comps(void);
-void FilterIter_iter_snapshot_filtered_table(void);
-void FilterIter_iter_get_component_index(void);
-void FilterIter_iter_get_component_size(void);
-void FilterIter_iter_get_tag_index(void);
-void FilterIter_iter_get_tag_size(void);
-void FilterIter_iter_get_tag_column(void);
 
 // Testsuite 'Modules'
 void Modules_setup(void);
@@ -5667,6 +5661,42 @@ bake_test_case Filter_testcases[] = {
     {
         "term_iter_w_superset_pair_obj_wildcard",
         Filter_term_iter_w_superset_pair_obj_wildcard
+    },
+    {
+        "filter_iter_1_tag",
+        Filter_filter_iter_1_tag
+    },
+    {
+        "filter_iter_2_tags",
+        Filter_filter_iter_2_tags
+    },
+    {
+        "filter_iter_2_tags_1_not",
+        Filter_filter_iter_2_tags_1_not
+    },
+    {
+        "filter_iter_3_tags_2_or",
+        Filter_filter_iter_3_tags_2_or
+    },
+    {
+        "filter_iter_1_component",
+        Filter_filter_iter_1_component
+    },
+    {
+        "filter_iter_2_components",
+        Filter_filter_iter_2_components
+    },
+    {
+        "filter_iter_null",
+        Filter_filter_iter_null
+    },
+    {
+        "filter_iter_1_not_tag",
+        Filter_filter_iter_1_not_tag
+    },
+    {
+        "filter_iter_2_tags_1_optional",
+        Filter_filter_iter_2_tags_1_optional
     }
 };
 
@@ -5830,6 +5860,14 @@ bake_test_case Query_testcases[] = {
     {
         "iter_valid",
         Query_iter_valid
+    },
+    {
+        "query_optional_tag",
+        Query_query_optional_tag
+    },
+    {
+        "query_optional_shared_tag",
+        Query_query_optional_shared_tag
     }
 };
 
@@ -6533,6 +6571,14 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "remove_after_delete_wildcard_id_trigger",
         TriggerOnRemove_remove_after_delete_wildcard_id_trigger
+    },
+    {
+        "has_removed_tag_trigger_1_tag",
+        TriggerOnRemove_has_removed_tag_trigger_1_tag
+    },
+    {
+        "has_removed_tag_trigger_2_tags",
+        TriggerOnRemove_has_removed_tag_trigger_2_tags
     }
 };
 
@@ -6854,22 +6900,6 @@ bake_test_case SystemPeriodic_testcases[] = {
         SystemPeriodic_ensure_optional_is_null_shared
     },
     {
-        "ensure_optional_is_null_field_owned",
-        SystemPeriodic_ensure_optional_is_null_field_owned
-    },
-    {
-        "ensure_optional_is_null_field_shared",
-        SystemPeriodic_ensure_optional_is_null_field_shared
-    },
-    {
-        "use_fields_2_owned",
-        SystemPeriodic_use_fields_2_owned
-    },
-    {
-        "use_fields_1_owned_1_shared",
-        SystemPeriodic_use_fields_1_owned_1_shared
-    },
-    {
         "match_2_systems_w_populated_table",
         SystemPeriodic_match_2_systems_w_populated_table
     },
@@ -6964,10 +6994,6 @@ bake_test_case SystemPeriodic_testcases[] = {
     {
         "get_sys_context_from_param",
         SystemPeriodic_get_sys_context_from_param
-    },
-    {
-        "use_field_w_0_size",
-        SystemPeriodic_use_field_w_0_size
     },
     {
         "owned_only",
@@ -7322,10 +7348,6 @@ bake_test_case Prefab_testcases[] = {
     {
         "get_ptr_prefab",
         Prefab_get_ptr_prefab
-    },
-    {
-        "iterate_w_prefab_field",
-        Prefab_iterate_w_prefab_field
     },
     {
         "iterate_w_prefab_shared",
@@ -7777,6 +7799,10 @@ bake_test_case World_testcases[] = {
     {
         "entity_range_out_of_range_check_disabled",
         World_entity_range_out_of_range_check_disabled
+    },
+    {
+        "entity_range_check_after_delete",
+        World_entity_range_check_after_delete
     },
     {
         "dim",
@@ -8346,6 +8372,10 @@ bake_test_case MultiThread_testcases[] = {
     {
         "6_thread_10_entity",
         MultiThread_6_thread_10_entity
+    },
+    {
+        "2_thread_test_combs_100_entity_w_next_worker",
+        MultiThread_2_thread_test_combs_100_entity_w_next_worker
     },
     {
         "2_thread_test_combs_100_entity",
@@ -9099,20 +9129,16 @@ bake_test_case Snapshot_testcases[] = {
         Snapshot_snapshot_free_filtered
     },
     {
+        "snapshot_free_filtered_w_dtor",
+        Snapshot_snapshot_free_filtered_w_dtor
+    },
+    {
         "snapshot_activate_table_w_filter",
         Snapshot_snapshot_activate_table_w_filter
     },
     {
         "snapshot_copy",
         Snapshot_snapshot_copy
-    },
-    {
-        "snapshot_copy_filtered",
-        Snapshot_snapshot_copy_filtered
-    },
-    {
-        "snapshot_copy_w_filter",
-        Snapshot_snapshot_copy_w_filter
     },
     {
         "snapshot_get_ref_after_restore",
@@ -9149,57 +9175,6 @@ bake_test_case Snapshot_testcases[] = {
     {
         "snapshot_w_new_in_onset_in_snapshot_table",
         Snapshot_snapshot_w_new_in_onset_in_snapshot_table
-    }
-};
-
-bake_test_case FilterIter_testcases[] = {
-    {
-        "iter_one_table",
-        FilterIter_iter_one_table
-    },
-    {
-        "iter_two_tables",
-        FilterIter_iter_two_tables
-    },
-    {
-        "iter_two_comps",
-        FilterIter_iter_two_comps
-    },
-    {
-        "iter_snapshot_one_table",
-        FilterIter_iter_snapshot_one_table
-    },
-    {
-        "iter_snapshot_two_tables",
-        FilterIter_iter_snapshot_two_tables
-    },
-    {
-        "iter_snapshot_two_comps",
-        FilterIter_iter_snapshot_two_comps
-    },
-    {
-        "iter_snapshot_filtered_table",
-        FilterIter_iter_snapshot_filtered_table
-    },
-    {
-        "iter_get_component_index",
-        FilterIter_iter_get_component_index
-    },
-    {
-        "iter_get_component_size",
-        FilterIter_iter_get_component_size
-    },
-    {
-        "iter_get_tag_index",
-        FilterIter_iter_get_tag_index
-    },
-    {
-        "iter_get_tag_size",
-        FilterIter_iter_get_tag_size
-    },
-    {
-        "iter_get_tag_column",
-        FilterIter_iter_get_tag_column
     }
 };
 
@@ -9675,14 +9650,14 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        25,
+        34,
         Filter_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        40,
+        42,
         Query_testcases
     },
     {
@@ -9717,7 +9692,7 @@ static bake_test_suite suites[] = {
         "TriggerOnRemove",
         NULL,
         NULL,
-        11,
+        13,
         TriggerOnRemove_testcases
     },
     {
@@ -9752,7 +9727,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        52,
+        47,
         SystemPeriodic_testcases
     },
     {
@@ -9794,7 +9769,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        86,
+        85,
         Prefab_testcases
     },
     {
@@ -9829,7 +9804,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        34,
+        35,
         World_testcases
     },
     {
@@ -9850,7 +9825,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        35,
+        36,
         MultiThread_testcases
     },
     {
@@ -9885,15 +9860,8 @@ static bake_test_suite suites[] = {
         "Snapshot",
         NULL,
         NULL,
-        26,
+        25,
         Snapshot_testcases
-    },
-    {
-        "FilterIter",
-        NULL,
-        NULL,
-        12,
-        FilterIter_testcases
     },
     {
         "Modules",
@@ -9927,5 +9895,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 65);
+    return bake_test_run("api", argc, argv, suites, 64);
 }

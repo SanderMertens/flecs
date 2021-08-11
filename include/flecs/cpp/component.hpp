@@ -285,6 +285,7 @@ public:
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);            
             s_allow_tag = allow_tag;
         } else {
+            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
             ecs_assert(s_allow_tag == allow_tag, ECS_INVALID_PARAMETER, NULL);
         }
 

@@ -337,7 +337,7 @@ public:
     }
 
     bool is_set() {
-        return ecs_term_is_set(&value);
+        return ecs_term_is_initialized(&value);
     }
 
     bool is_trivial() {
@@ -376,7 +376,7 @@ public:
     }
 
     Base& term() {
-        ecs_assert(m_term_index < ECS_FILTER_DESC_TERM_ARRAY_MAX, 
+        ecs_assert(m_term_index < ECS_TERM_CACHE_SIZE, 
             ECS_INVALID_PARAMETER, NULL);
         this->set_term(&m_desc->terms[m_term_index]);
         m_term_index ++;
@@ -387,7 +387,7 @@ public:
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         m_term_index = term_index - 1;
         this->term();
-        ecs_assert(ecs_term_is_set(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
         return *this;
     }    
 
@@ -781,6 +781,66 @@ private:
     int32_t m_event_count;
 };
 
+// Filter builder
+template<typename ... Components>
+class filter_builder_base
+    : public filter_builder_i<filter_builder_base<Components...>, Components ...>
+{
+public:
+    filter_builder_base(flecs::world_t *world) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+    { 
+        this->populate_filter_from_pack();
+    }
+
+    filter_builder_base(const filter_builder_base& obj) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    {
+        m_world = obj.m_world;
+        m_desc = obj.m_desc;
+    }
+
+    filter_builder_base(filter_builder_base&& obj) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    {
+        m_world = obj.m_world;
+        m_desc = obj.m_desc;
+    }
+
+    operator filter<Components ...>() const;
+
+    operator ecs_filter_t() const {
+        ecs_filter_t f;
+
+        int res = ecs_filter_init(this->m_world, &f, &this->m_desc);
+        if (res != 0) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        return f;
+    }    
+
+    filter<Components ...> build() const;
+
+    ecs_filter_desc_t m_desc;
+
+    flecs::world_t* world() override { return m_world; }
+
+protected:
+    flecs::world_t *m_world;
+};
+
+template<typename ... Components>
+class filter_builder final : public filter_builder_base<Components...> {
+public:
+    filter_builder(flecs::world_t *world)
+        : filter_builder_base<Components ...>(world) { }
+
+    operator filter<>() const;
+};
+
 // Query builder
 template<typename ... Components>
 class query_builder_base
@@ -890,7 +950,7 @@ private:
         if (is_trigger) {
             ecs_trigger_desc_t desc = {};
             ecs_term_t term = m_desc.query.filter.terms[0];
-            if (ecs_term_is_set(&term)) {
+            if (ecs_term_is_initialized(&term)) {
                 desc.term = term;
             } else {
                 desc.expr = m_desc.query.filter.expr;

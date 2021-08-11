@@ -68,7 +68,7 @@ int ecs_plecs_from_str(
     }
 
     while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-        if (!ecs_term_is_set(&term)) {
+        if (!ecs_term_is_initialized(&term)) {
             break;
         }
         

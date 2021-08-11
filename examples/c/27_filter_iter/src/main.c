@@ -15,8 +15,6 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_TYPE(world, Movable, Position, Velocity);
-
     ecs_entity_t e1 = ecs_set_name(world, 0, "e1");
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 1});
@@ -28,34 +26,20 @@ int main(int argc, char *argv[]) {
     /* Create a filter for the Movable type, which includes Position and 
     * Velocity. Make sure to only match tables that include both Position and
     * Velocity. */
-    ecs_iter_t it = ecs_filter_iter(world, &(ecs_filter_t){
-        .include = ecs_type(Movable),
-        .include_kind = EcsMatchAll
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity) }
+        }
     });
 
+    /* Iteration of filter is the same as a query */
+    ecs_iter_t it = ecs_filter_iter(world, &f);
     while (ecs_filter_next(&it)) {
-        /* Even though we have a it ptr, we can't use it as we normally would
-         * in a system with ecs_term. This is because a filter has no well
-         * defined indices for the components being matched with. To obtain the
-         * component data when using a filter, we have to retrieve the component
-         * arrays directly from the table. */
-        
-        /* Get type of table we're currently iterating over. The order in which
-         * components appear in the type is the same as the order in which the
-         * components are stored on the table. */
-        ecs_type_t table_type = ecs_iter_type(&it);
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
 
-        /* Retrieve the column indices for both the Position and Velocity
-         * columns by finding their position in the table type */
-        int32_t p_index = ecs_type_index_of(table_type, 0, ecs_id(Position));
-        int32_t v_index = ecs_type_index_of(table_type, 0, ecs_id(Velocity));
-
-        /* Get pointers to the Position and Velocity columns with the obtained
-         * column indices */
-        Position *p = ecs_table_column(&it, p_index);
-        Velocity *v = ecs_table_column(&it, v_index);
-
-        /* Now we can iterate the component data as usual */
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;

@@ -39,10 +39,7 @@ ecs_data_t* duplicate_data(
         ecs_entity_t component = components[i];
         ecs_column_t *column = &result->columns[i];
 
-        if (component > ECS_HI_COMPONENT_ID) {
-            column->data = NULL;
-            continue;
-        }
+        component = ecs_get_typeid(world, component);
 
         const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
         int16_t size = column->size;
@@ -111,7 +108,7 @@ ecs_snapshot_t* snapshot_create(
 
     /* Iterate tables in iterator */
     while (next(iter)) {
-        ecs_table_t *t = iter->table->table;
+        ecs_table_t *t = iter->table;
 
         if (t->flags & EcsTableHasBuiltins) {
             continue;
@@ -123,7 +120,6 @@ ecs_snapshot_t* snapshot_create(
         }
 
         ecs_table_leaf_t *l = ecs_vector_add(&result->tables, ecs_table_leaf_t);
-
         l->table = t;
         l->type = t->type;
         l->data = duplicate_data(world, t, data);
@@ -320,8 +316,7 @@ bool ecs_snapshot_next(
             continue;
         }
 
-        iter->table.table = table;
-        it->table = &iter->table;
+        it->table = table;
         it->table_columns = data->columns;
         it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);

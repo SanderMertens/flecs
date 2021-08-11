@@ -207,13 +207,6 @@ public:
     } 
 
     template <typename Func>
-    void each(const flecs::filter& filter, Func&& func) const {
-        const filter_t* filter_ptr = filter.c_ptr();
-        iterate<_::each_invoker>(std::forward<Func>(func), 
-            ecs_query_next_w_filter, filter_ptr);
-    }
-
-    template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
@@ -222,13 +215,6 @@ public:
     template <typename Func>
     void iter(Func&& func) const { 
         iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
-    template <typename Func>
-    void iter(const flecs::filter& filter, Func&& func) const {
-        const filter_t* filter_ptr = filter.c_ptr();
-        iterate<_::iter_invoker>(std::forward<Func>(func), 
-            ecs_query_next_w_filter, filter_ptr);
     }
 
     template <typename Func>

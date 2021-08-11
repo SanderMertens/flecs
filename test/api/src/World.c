@@ -6,12 +6,14 @@ void World_setup() {
 
 static
 void Move(ecs_iter_t *it) {
+    Position *pos = ecs_term(it, Position, 1);
+    Velocity *vel = ecs_term(it, Velocity, 2);
     probe_system(it);
 
     int row;
     for (row = 0; row < it->count; row ++) {
-        Position *p = ecs_element(it, Position, 1, row);
-        Velocity *v = ecs_element(it, Velocity, 2, row);
+        Position *p = &pos[row];
+        Velocity *v = &vel[row];
         p->x += v->x * it->delta_time;
         p->y += v->y * it->delta_time;
     }
@@ -162,6 +164,28 @@ void World_entity_range_out_of_range_check_disabled() {
 
     ecs_fini(world);
 }
+
+void World_entity_range_check_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_enable_range_check(world, true);
+    ecs_set_entity_range(world, 5000, 10000);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(e == 5000);
+
+    ecs_delete(world, e);
+
+    e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert((uint32_t)e == 5000);
+
+    ecs_fini(world);
+}
+
 
 void AddToExisting(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Velocity, 2);

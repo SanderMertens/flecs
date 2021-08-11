@@ -3,12 +3,11 @@
 //// Utility class to invoke a system each
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace flecs 
+namespace flecs
 {
 
 namespace _ 
 {
-
 
 // Utility to convert template argument pack to array of term ptrs
 struct term_ptr {
@@ -21,51 +20,27 @@ class term_ptrs {
 public:
     using array = flecs::array<_::term_ptr, sizeof...(Components)>;
 
-    void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<
+    bool populate(const ecs_iter_t *iter) {
+        return populate(iter, 0, static_cast<
             remove_reference_t<
                 remove_pointer_t<Components>>
                     *>(nullptr)...);
-    }
-
-    bool populate_w_refs(const ecs_iter_t *iter) {
-        if (iter->table->references) {
-            populate_w_refs(iter, 0, static_cast<
-                remove_reference_t<
-                    remove_pointer_t<Components>>
-                        *>(nullptr)...);
-            return true;
-        } else {
-            this->populate(iter);
-            return false;
-        }
     }
 
     array m_terms;
 
 private:
     /* Populate terms array without checking for references */
-    void populate(const ecs_iter_t*, size_t) { }
+    bool populate(const ecs_iter_t*, size_t) { return false; }
 
     template <typename T, typename... Targs>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
-        m_terms[index].ptr = ptr;
-        populate(iter, index + 1, comps ...);
-    }
-
-    /* Populate terms array, check for references */
-    void populate_w_refs(const ecs_iter_t*, size_t) { }
-
-    template <typename T, typename... Targs>
-    void populate_w_refs(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        int32_t term = static_cast<int32_t>(index + 1);
-        void *ptr = ecs_term_w_size(iter, sizeof(actual_type_t<remove_pointer_t<T>>), term);
-        m_terms[index].ptr = ptr;
-        m_terms[index].is_ref = !ecs_term_is_owned(iter, term) && ptr != nullptr;
-        populate_w_refs(iter, index + 1, comps ...);
-    }   
+    bool populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
+        m_terms[index].ptr = iter->ptrs[index];
+        bool is_ref = iter->subjects && iter->subjects[index] != 0;
+        m_terms[index].is_ref = is_ref;
+        is_ref |= populate(iter, index + 1, comps ...);
+        return is_ref;
+    }  
 };    
 
 class invoker { };
@@ -176,7 +151,7 @@ public:
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
 
-        if (terms.populate_w_refs(iter)) {
+        if (terms.populate(iter)) {
             invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
         } else {
             invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
@@ -200,12 +175,9 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
 #ifndef NDEBUG
-        ecs_table_t *table = nullptr;
-        if (iter->table) {
-            table = iter->table->table;
-            if (table) {
-                ecs_table_lock(iter->world, table);
-            }
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
         }
 #endif
 
@@ -300,12 +272,9 @@ private:
         flecs::iter it(iter);
 
 #ifndef NDEBUG
-        ecs_table_t *table = nullptr;
-        if (iter->table) {
-            table = iter->table->table;
-            if (table) {
-                ecs_table_lock(iter->world, table);
-            }
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
         }
 #endif
 
@@ -351,7 +320,7 @@ public:
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
-        terms.populate_w_refs(iter);
+        terms.populate(iter);
         invoke_callback(iter, m_func, 0, terms.m_terms);
     }
 

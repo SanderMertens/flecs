@@ -80,6 +80,11 @@ inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
     return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
 }
 
+template <typename T>
+inline flecs::entity entity_view::get_case() const {
+    return get_case(_::cpp_type<T>::id(m_world));
+}
+
 inline flecs::entity entity_view::get_object(
     flecs::entity_t relation, 
     int32_t index) const 

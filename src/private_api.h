@@ -423,6 +423,18 @@ bool flecs_table_match_filter(
     const ecs_table_t *table,
     const ecs_filter_t *filter);
 
+bool flecs_filter_match_table(
+    ecs_world_t *world,
+    const ecs_filter_t *filter,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    ecs_id_t *ids,
+    int32_t *columns,
+    ecs_type_t *types,
+    ecs_entity_t *subjects,
+    ecs_size_t *sizes,
+    void **ptrs);
+
 /* Get dirty state for table columns */
 int32_t* flecs_table_get_dirty_state(
     ecs_table_t *table);
@@ -544,6 +556,11 @@ void flecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
+void ecs_iter_init(
+    ecs_iter_t *it);
+
+void ecs_iter_fini(
+    ecs_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API

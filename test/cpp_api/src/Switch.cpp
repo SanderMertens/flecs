@@ -184,3 +184,31 @@ void Switch_add_switch_w_type_component_first() {
     test_assert(e.has_case<Movement::Walking>());
     test_assert(!e.has_case<Movement::Standing>());
 }
+
+void Switch_add_remove_switch_w_type() {
+    flecs::world world;
+
+    world.type().component<Movement>()
+        .add<Movement::Standing>()
+        .add<Movement::Walking>();
+
+    auto e = world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Standing>();
+
+    test_assert(e.has_switch<Movement>());
+    test_assert(e.has_case<Movement::Standing>());
+
+    e.add_case<Movement::Walking>();
+
+    test_assert(e.has_case<Movement::Walking>());
+    test_assert(!e.has_case<Movement::Standing>());
+
+    auto c = e.get_case<Movement>();
+    test_assert(c != 0);
+    test_assert(c == world.id<Movement::Walking>());
+
+    e.remove_switch<Movement>();
+    test_assert(!e.has_switch<Movement>());
+    test_assert(!e.has_case<Movement::Walking>());
+}

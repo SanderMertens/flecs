@@ -756,10 +756,16 @@ void Query_query_optional_owned() {
 
         if (it.entities[0] == e1) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
         } else if (it.entities[0] == e2) {
             test_assert(v != NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true); 
         } else if (it.entities[0] == e3) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false);
         }
 
         count ++;
@@ -801,10 +807,16 @@ void Query_query_optional_shared() {
         
         if (it.entities[0] == e1) {
             test_assert(v != NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true);
         } else if (it.entities[0] == e2) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false);            
         } else if (it.entities[0] == e3) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
         }
 
         count ++;
@@ -1397,6 +1409,86 @@ void Query_iter_valid() {
 
     test_bool(ecs_query_next(&it), false);
     test_bool(it.is_valid, false);
+
+    ecs_fini(world);
+}
+
+void Query_query_optional_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_id(world, e2, TagB);
+
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {    
+        test_assert(ecs_term_id(&it, 1) == TagA);
+        test_assert(ecs_term_id(&it, 2) == TagB);
+        test_int(it.count, 1);
+
+        if (it.entities[0] == e1) {
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
+        } else if (it.entities[0] == e2) {
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true); 
+        }
+
+        count ++;
+    }
+
+    test_int(count, 2);
+
+    ecs_fini(world);
+}
+
+void Query_query_optional_shared_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_id(world, e2, TagB);
+    
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add_pair(world, e3, EcsIsA, e2);
+
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|superset)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    int32_t count = 0;
+    
+    while (ecs_query_next(&it)) {    
+        test_assert(ecs_term_id(&it, 1) == TagA);
+        test_assert(ecs_term_id(&it, 2) == TagB);
+        test_int(it.count, 1);
+
+        if (it.entities[0] == e1) {
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
+        } else if (it.entities[0] == e2) {
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true); 
+        } else if (it.entities[0] == e3) {
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true);
+        }
+
+        count ++;
+    }
+
+    test_int(count, 3);
 
     ecs_fini(world);
 }
