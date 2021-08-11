@@ -1027,6 +1027,8 @@ void Query_get_filter(void);
 void Query_group_by(void);
 void Query_group_by_w_ctx(void);
 void Query_iter_valid(void);
+void Query_query_optional_tag(void);
+void Query_query_optional_shared_tag(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -5858,6 +5860,14 @@ bake_test_case Query_testcases[] = {
     {
         "iter_valid",
         Query_iter_valid
+    },
+    {
+        "query_optional_tag",
+        Query_query_optional_tag
+    },
+    {
+        "query_optional_shared_tag",
+        Query_query_optional_shared_tag
     }
 };
 
@@ -9647,7 +9657,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        40,
+        42,
         Query_testcases
     },
     {

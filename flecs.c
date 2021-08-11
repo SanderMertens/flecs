@@ -19734,8 +19734,6 @@ add_pair:
                 references = add_ref(world, query, references, term,
                     component, entity);
                 table_data.columns[c] = -ecs_vector_count(references);
-            } else {
-                table_data.columns[c] = 0;
             }
 
             table_data.subjects[c] = entity;
@@ -19746,9 +19744,7 @@ add_pair:
             const EcsComponent *cptr = ecs_get(world, type_id, EcsComponent);
             if (!cptr || !cptr->size) {
                 int32_t column = table_data.columns[c];
-                if (column > 0) {
-                    table_data.columns[c] = 0;
-                } else if (column) {
+                if (column < 0) {
                     ecs_ref_t *r = ecs_vector_get(
                         references, ecs_ref_t, -column - 1);
                     r->component = 0;
@@ -21894,11 +21890,12 @@ void mark_columns_dirty(
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
             ecs_term_id_t *subj = &term->args[0];
+
             if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
                 (subj->entity == EcsThis && subj->set.mask == EcsSelf)))
             {
                 int32_t table_column = table_data->columns[c];
-                if (table_column > 0) {
+                if (table_column > 0 && table_column < table->column_count) {
                     table->dirty_state[table_column] ++;
                 }
             }
@@ -23770,6 +23767,11 @@ bool ecs_term_is_set(
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!term) {
+        return true;
+    }
+
     return it->columns[term - 1] != 0;
 }
 

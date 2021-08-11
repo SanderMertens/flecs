@@ -10852,14 +10852,14 @@ public:
      */
     bool is_owned(int32_t index) const {
         return ecs_term_is_owned(m_iter, index);
-    }    
+    }
 
     /** Returns whether term is set.
      * 
      * @param index The term index.
      */
     bool is_set(int32_t index) const {
-        return ecs_term_w_size(m_iter, 0, index) != NULL;
+        return ecs_term_is_set(m_iter, index);
     }
 
     /** Returns whether term is readonly.
@@ -11778,6 +11778,9 @@ public:
     int count() const {
         return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
+
+    flecs::filter_iterator begin() const;
+    flecs::filter_iterator end() const;
 
     /** Enable locking.
      * 
@@ -17110,8 +17113,8 @@ public:
         , m_stage_count(stage_count) { }
 
     template <typename F>
-    system_runner_fluent& filter(const F& filter) {
-        m_filter = filter;
+    system_runner_fluent& filter(const F& f) {
+        m_filter = f;
         return *this;
     }
 
@@ -17759,6 +17762,14 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
         m_world,
         ecs_pair(r, o));
 }    
+
+inline filter_iterator world::begin() const {
+    return filter_iterator(*this, ecs_filter_next);
+}
+
+inline filter_iterator world::end() const {
+    return filter_iterator(ecs_filter_next);
+}
 
 /** All entities created in function are created in scope. All operations
     * called in function (such as lookup) are relative to scope.

@@ -121,6 +121,11 @@ bool ecs_term_is_set(
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!term) {
+        return true;
+    }
+
     return it->columns[term - 1] != 0;
 }
 

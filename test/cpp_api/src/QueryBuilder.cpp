@@ -1274,3 +1274,37 @@ void QueryBuilder_2_subsequent_args() {
 
     test_int(count, 1);
 }
+
+void QueryBuilder_optional_tag_is_set() {
+    flecs::world ecs;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto q = ecs.query_builder()
+        .term<TagA>()
+        .term<TagB>().oper(flecs::Optional)
+        .build();
+
+    auto e_1 = ecs.entity().add<TagA>().add<TagB>();
+    auto e_2 = ecs.entity().add<TagA>();
+
+    int count = 0;
+
+    q.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+
+        count += it.count();
+        
+        if (it.entity(0) == e_1) {
+            test_bool(it.is_set(1), true);
+            test_bool(it.is_set(2), true);
+        } else {
+            test_assert(it.entity(0) == e_2);
+            test_bool(it.is_set(1), true);
+            test_bool(it.is_set(2), false);
+        }
+    });
+
+    test_int(count, 2);
+}

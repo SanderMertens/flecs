@@ -432,7 +432,8 @@
                 "explicit_term_w_id",
                 "explicit_term_w_pair_id",
                 "1_term_to_empty",
-                "2_subsequent_args"
+                "2_subsequent_args",
+                "optional_tag_is_set"
             ]         
         }, {
             "id": "FilterBuilder",

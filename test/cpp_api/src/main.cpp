@@ -410,6 +410,7 @@ void QueryBuilder_explicit_term_w_id(void);
 void QueryBuilder_explicit_term_w_pair_id(void);
 void QueryBuilder_1_term_to_empty(void);
 void QueryBuilder_2_subsequent_args(void);
+void QueryBuilder_optional_tag_is_set(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -2244,6 +2245,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "2_subsequent_args",
         QueryBuilder_2_subsequent_args
+    },
+    {
+        "optional_tag_is_set",
+        QueryBuilder_optional_tag_is_set
     }
 };
 
@@ -3315,7 +3320,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        52,
+        53,
         QueryBuilder_testcases
     },
     {

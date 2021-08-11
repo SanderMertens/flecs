@@ -1093,7 +1093,9 @@
                 "get_filter",
                 "group_by",
                 "group_by_w_ctx",
-                "iter_valid"
+                "iter_valid",
+                "query_optional_tag",
+                "query_optional_shared_tag"
             ]
         }, {
             "id": "Pairs",

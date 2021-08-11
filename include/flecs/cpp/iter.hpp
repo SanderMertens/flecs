@@ -309,14 +309,14 @@ public:
      */
     bool is_owned(int32_t index) const {
         return ecs_term_is_owned(m_iter, index);
-    }    
+    }
 
     /** Returns whether term is set.
      * 
      * @param index The term index.
      */
     bool is_set(int32_t index) const {
-        return ecs_term_w_size(m_iter, 0, index) != NULL;
+        return ecs_term_is_set(m_iter, index);
     }
 
     /** Returns whether term is readonly.
