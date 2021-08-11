@@ -1597,7 +1597,7 @@ ecs_entity_t ecs_new_id(
     }
 
     ecs_assert(!unsafe_world->stats.max_id || 
-        entity <= unsafe_world->stats.max_id, 
+        ecs_entity_t_lo(entity) <= unsafe_world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;

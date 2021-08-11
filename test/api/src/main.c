@@ -1540,6 +1540,7 @@ void World_entity_range_add_existing_in_progress(void);
 void World_entity_range_add_in_range_in_progress(void);
 void World_entity_range_add_out_of_range_in_progress(void);
 void World_entity_range_out_of_range_check_disabled(void);
+void World_entity_range_check_after_delete(void);
 void World_dim(void);
 void World_dim_dim_type(void);
 void World_phases(void);
@@ -7784,6 +7785,10 @@ bake_test_case World_testcases[] = {
         World_entity_range_out_of_range_check_disabled
     },
     {
+        "entity_range_check_after_delete",
+        World_entity_range_check_after_delete
+    },
+    {
         "dim",
         World_dim
     },
@@ -9779,7 +9784,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        34,
+        35,
         World_testcases
     },
     {

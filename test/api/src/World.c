@@ -165,6 +165,28 @@ void World_entity_range_out_of_range_check_disabled() {
     ecs_fini(world);
 }
 
+void World_entity_range_check_after_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_enable_range_check(world, true);
+    ecs_set_entity_range(world, 5000, 10000);
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert(e == 5000);
+
+    ecs_delete(world, e);
+
+    e = ecs_new(world, 0);
+    test_assert(e != 0);
+    test_assert((uint32_t)e == 5000);
+
+    ecs_fini(world);
+}
+
+
 void AddToExisting(ecs_iter_t *it) {
     ECS_COLUMN_COMPONENT(it, Velocity, 2);
 
