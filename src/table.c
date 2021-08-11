@@ -573,8 +573,9 @@ void dtor_component(
     if (cdata && (dtor = cdata->lifecycle.dtor)) {
         void *ctx = cdata->lifecycle.ctx;
         int16_t size = column->size;
-        int16_t alignment = column->alignment;    
+        int16_t alignment = column->alignment;
 
+        ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2174,6 +2175,9 @@ bool flecs_table_match_filter(
     const ecs_table_t *table,
     const ecs_filter_t * filter)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!filter) {
         return true;
     }

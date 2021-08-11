@@ -24,10 +24,7 @@ int main(int argc, char *argv[]) {
         .set<Velocity>({1, 1});
 
     /* Create filter that matches all entities with [Position, Velocity] */
-    auto f = flecs::filter(ecs)
-        .include<Position>()
-        .include<Velocity>()
-        .include_kind(flecs::MatchAll);    
+    auto f = ecs.filter<Position, Velocity>();  
 
     /* Take a filtered snapshot of the current state */
     auto s = ecs.snapshot();

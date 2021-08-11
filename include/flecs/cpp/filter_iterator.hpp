@@ -15,17 +15,17 @@ public:
         , m_iter{ } 
         , m_action(action) { }
 
-    filter_iterator(const world& world, const filter& filter, ecs_iter_next_action_t action)
+    filter_iterator(const world& world, ecs_iter_next_action_t action)
         : m_world( world.c_ptr() )
-        , m_iter( ecs_filter_iter(m_world, filter.c_ptr()) ) 
+        , m_iter( ecs_filter_iter(m_world, NULL) ) 
         , m_action(action)
     { 
         m_has_next = m_action(&m_iter);
     }
 
-    filter_iterator(const world& world, const snapshot& snapshot, const filter& filter, ecs_iter_next_action_t action) 
+    filter_iterator(const world& world, const snapshot& snapshot, ecs_iter_next_action_t action) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), filter.c_ptr()) )
+        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), NULL) )
         , m_action(action)
     {
         m_has_next = m_action(&m_iter);
@@ -87,18 +87,18 @@ private:
     ecs_iter_t m_iter;
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility for creating a world-based filter iterator
 ////////////////////////////////////////////////////////////////////////////////
 
 class world_filter {
 public:
-    world_filter(const world& world, const filter& filter) 
-        : m_world( world )
-        , m_filter( filter ) { }
+    world_filter(const world& world) 
+        : m_world( world ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_filter, ecs_filter_next);
+        return filter_iterator(m_world, ecs_filter_next);
     }
 
     inline filter_iterator end() const {
@@ -107,7 +107,6 @@ public:
 
 private:
     const world& m_world;
-    const filter& m_filter;
 };
 
 
@@ -117,13 +116,12 @@ private:
 
 class snapshot_filter {
 public:
-    snapshot_filter(const world& world, const snapshot& snapshot, const filter& filter) 
+    snapshot_filter(const world& world, const snapshot& snapshot) 
         : m_world( world )
-        , m_snapshot( snapshot )
-        , m_filter( filter ) { }
+        , m_snapshot( snapshot ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_snapshot, m_filter, ecs_snapshot_next);
+        return filter_iterator(m_world, m_snapshot, ecs_snapshot_next);
     }
 
     inline filter_iterator end() const {
@@ -133,7 +131,6 @@ public:
 private:
     const world& m_world;
     const snapshot& m_snapshot;
-    const filter& m_filter;
 };
 
 
@@ -165,12 +162,8 @@ private:
 //// Filter fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline snapshot_filter snapshot::filter(const flecs::filter& filter) {
-    return snapshot_filter(m_world, *this, filter);
-}
-
 inline filter_iterator snapshot::begin() {
-    return filter_iterator(m_world, *this, flecs::filter(m_world), ecs_snapshot_next);
+    return filter_iterator(m_world, *this, ecs_snapshot_next);
 }
 
 inline filter_iterator snapshot::end() {

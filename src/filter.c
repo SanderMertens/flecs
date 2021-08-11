@@ -159,7 +159,7 @@ bool ecs_term_id_is_set(
     return id->entity != 0 || id->name != NULL;
 }
 
-bool ecs_term_is_set(
+bool ecs_term_is_initialized(
     const ecs_term_t *term)
 {
     return term->id != 0 || ecs_term_id_is_set(&term->pred);
@@ -358,7 +358,7 @@ int ecs_filter_init(
     } else {
         terms = (ecs_term_t*)desc->terms;
         for (i = 0; i < ECS_TERM_CACHE_SIZE; i ++) {
-            if (!ecs_term_is_set(&terms[i])) {
+            if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
 
@@ -387,7 +387,7 @@ int ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
             
@@ -462,6 +462,21 @@ error:
     ecs_filter_fini(&f);
 
     return -1;
+}
+
+void ecs_filter_move(
+    ecs_filter_t *dst,
+    ecs_filter_t *src)   
+{
+    if (src) {
+        *dst = *src;
+
+        if (src->terms == src->term_cache) {
+            dst->terms = dst->term_cache;
+        }
+    } else {
+        ecs_os_memset_t(dst, 0, ecs_filter_t);
+    }
 }
 
 void ecs_filter_fini(
@@ -734,6 +749,10 @@ bool flecs_filter_match_table(
             result = !result;
         }
 
+        if (oper == EcsOptional) {
+            result = true;
+        }
+
         if (is_or) {
             or_result |= result;
         } else if (!result) {
@@ -754,16 +773,14 @@ bool flecs_filter_match_table(
             int32_t t_i = term->index;
 
             void **ptr = ptrs ? &ptrs[t_i] : NULL;
-            bool has_data = populate_from_column(world, table, term->id, column, 
+            populate_from_column(world, table, term->id, column, 
                 source, &ids[t_i], &types[t_i], &subjects[t_i], &sizes[t_i], 
                 ptr);
 
-            if (!source) {
-                if (has_data) {
-                    columns[t_i] = column + 1;
-                } else {
-                    columns[t_i] = 0;
-                }
+            if (column != -1) {
+                columns[t_i] = column + 1;
+            } else {
+                columns[t_i] = 0;
             }
         }
     }

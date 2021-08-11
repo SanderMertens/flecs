@@ -1766,7 +1766,7 @@ ecs_table_t *traverse_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
@@ -1852,7 +1852,7 @@ void defer_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 

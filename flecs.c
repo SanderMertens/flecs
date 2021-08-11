@@ -2948,8 +2948,9 @@ void dtor_component(
     if (cdata && (dtor = cdata->lifecycle.dtor)) {
         void *ctx = cdata->lifecycle.ctx;
         int16_t size = column->size;
-        int16_t alignment = column->alignment;    
+        int16_t alignment = column->alignment;
 
+        ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -4549,6 +4550,9 @@ bool flecs_table_match_filter(
     const ecs_table_t *table,
     const ecs_filter_t * filter)
 {
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!filter) {
         return true;
     }
@@ -6275,7 +6279,7 @@ ecs_entity_t ecs_new_id(
     }
 
     ecs_assert(!unsafe_world->stats.max_id || 
-        entity <= unsafe_world->stats.max_id, 
+        ecs_entity_t_lo(entity) <= unsafe_world->stats.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -6444,7 +6448,7 @@ ecs_table_t *traverse_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
@@ -6530,7 +6534,7 @@ void defer_from_expr(
     if (ptr) {
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
@@ -11270,7 +11274,7 @@ int ecs_plecs_from_str(
     }
 
     while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-        if (!ecs_term_is_set(&term)) {
+        if (!ecs_term_is_initialized(&term)) {
             break;
         }
         
@@ -12203,10 +12207,7 @@ ecs_data_t* duplicate_data(
         ecs_entity_t component = components[i];
         ecs_column_t *column = &result->columns[i];
 
-        if (component > ECS_HI_COMPONENT_ID) {
-            column->data = NULL;
-            continue;
-        }
+        component = ecs_get_typeid(world, component);
 
         const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
         int16_t size = column->size;
@@ -12287,7 +12288,6 @@ ecs_snapshot_t* snapshot_create(
         }
 
         ecs_table_leaf_t *l = ecs_vector_add(&result->tables, ecs_table_leaf_t);
-
         l->table = t;
         l->type = t->type;
         l->data = duplicate_data(world, t, data);
@@ -16620,7 +16620,7 @@ bool ecs_term_id_is_set(
     return id->entity != 0 || id->name != NULL;
 }
 
-bool ecs_term_is_set(
+bool ecs_term_is_initialized(
     const ecs_term_t *term)
 {
     return term->id != 0 || ecs_term_id_is_set(&term->pred);
@@ -16819,7 +16819,7 @@ int ecs_filter_init(
     } else {
         terms = (ecs_term_t*)desc->terms;
         for (i = 0; i < ECS_TERM_CACHE_SIZE; i ++) {
-            if (!ecs_term_is_set(&terms[i])) {
+            if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
 
@@ -16848,7 +16848,7 @@ int ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 break;
             }
             
@@ -16923,6 +16923,21 @@ error:
     ecs_filter_fini(&f);
 
     return -1;
+}
+
+void ecs_filter_move(
+    ecs_filter_t *dst,
+    ecs_filter_t *src)   
+{
+    if (src) {
+        *dst = *src;
+
+        if (src->terms == src->term_cache) {
+            dst->terms = dst->term_cache;
+        }
+    } else {
+        ecs_os_memset_t(dst, 0, ecs_filter_t);
+    }
 }
 
 void ecs_filter_fini(
@@ -17195,6 +17210,10 @@ bool flecs_filter_match_table(
             result = !result;
         }
 
+        if (oper == EcsOptional) {
+            result = true;
+        }
+
         if (is_or) {
             or_result |= result;
         } else if (!result) {
@@ -17215,16 +17234,14 @@ bool flecs_filter_match_table(
             int32_t t_i = term->index;
 
             void **ptr = ptrs ? &ptrs[t_i] : NULL;
-            bool has_data = populate_from_column(world, table, term->id, column, 
+            populate_from_column(world, table, term->id, column, 
                 source, &ids[t_i], &types[t_i], &subjects[t_i], &sizes[t_i], 
                 ptr);
 
-            if (!source) {
-                if (has_data) {
-                    columns[t_i] = column + 1;
-                } else {
-                    columns[t_i] = 0;
-                }
+            if (column != -1) {
+                columns[t_i] = column + 1;
+            } else {
+                columns[t_i] = 0;
             }
         }
     }
@@ -23743,8 +23760,17 @@ bool ecs_term_is_readonly(
             }
         }
     }
-    
+
     return false;
+}
+
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t term)
+{
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->columns[term - 1] != 0;
 }
 
 ecs_entity_t ecs_term_source(
@@ -24179,7 +24205,7 @@ ecs_entity_t ecs_trigger_init(
                 goto error;
             }
 
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 ecs_parser_error(
                     name, expr, 0, "invalid empty trigger expression");
                 goto error;

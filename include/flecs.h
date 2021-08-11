@@ -2947,7 +2947,7 @@ bool ecs_term_id_is_set(
  * @return True when set, false when not set.
  */
 FLECS_API
-bool ecs_term_is_set(
+bool ecs_term_is_initialized(
     const ecs_term_t *term);
 
 /** Test whether a term is a trivial term.
@@ -3157,6 +3157,12 @@ ecs_iter_t ecs_filter_iter(
 FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *iter);
+
+/** Move resources of one filter to another. */
+FLECS_API
+void ecs_filter_move(
+    ecs_filter_t *dst,
+    ecs_filter_t *src);
 
 /** @} */
 
@@ -3558,6 +3564,20 @@ FLECS_API
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
+
+/** Test whether term is set.
+ * This function returns false for terms with the Not operator and for terms
+ * with the Optional operator if the matched entities (table) do not have the
+ * (component) id of the term. 
+ *
+ * @param it The iterator.
+ * @param term The term.
+ * @return True if term is set, false if it is not set.
+ */
+FLECS_API
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t term);
 
 /** Test whether the term is owned
  * This operation returns whether the term is owned by the currently iterated

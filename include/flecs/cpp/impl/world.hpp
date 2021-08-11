@@ -45,68 +45,12 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
         ecs_pair(r, o));
 }    
 
-inline void world::delete_entities(flecs::filter filter) const {
-    ecs_bulk_delete(m_world, filter.c_ptr());
-}
-
-template <typename T>
-inline void world::add(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(
-        m_world, _::cpp_type<T>::type(m_world), nullptr, filter.c_ptr());
-}
-
-inline void world::add(flecs::type t) const {
-    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, nullptr);
-}
-
-inline void world::add(flecs::type t, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, filter.c_ptr());
-}
-
-inline void world::add(class flecs::entity e) const {
-    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, nullptr);
-}
-
-inline void world::add(class flecs::entity e, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, filter.c_ptr());
-}
-
-template <typename T>
-inline void world::remove(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(
-        m_world, nullptr, _::cpp_type<T>::type(m_world), filter.c_ptr());
-}
-
-inline void world::remove(flecs::type t) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), nullptr);
-}
-
-inline void world::remove(flecs::type t, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), filter.c_ptr());
-}
-
-inline void world::remove(class entity e) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), nullptr);
-}
-
-inline void world::remove(class entity e, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), filter.c_ptr());
-}
-
-inline flecs::world_filter world::filter(const flecs::filter& filter) const {
-    return flecs::world_filter(*this, filter);
-}
-
 inline filter_iterator world::begin() const {
-    return filter_iterator(*this, flecs::filter(*this), ecs_filter_next);
+    return filter_iterator(*this, ecs_filter_next);
 }
 
 inline filter_iterator world::end() const {
     return filter_iterator(ecs_filter_next);
-}
-
-inline int world::count(flecs::filter filter) const {
-    return ecs_count_w_filter(m_world, filter.c_ptr());
 }
 
 /** All entities created in function are created in scope. All operations
@@ -254,6 +198,16 @@ inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
 template <typename... Comps, typename... Args>
 inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const {
     return flecs::observer_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::filter<Comps...> world::filter(Args &&... args) const {
+    return flecs::filter<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>

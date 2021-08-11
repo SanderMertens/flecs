@@ -698,89 +698,6 @@ public:
      */
     void use(flecs::entity entity, const char *alias = nullptr);   
 
-    /** Delete all entities matching a filter.
-     *
-     * @param filter The filter to use for matching.
-     */
-    void delete_entities(flecs::filter filter) const;
-
-    /** Add component to all entities matching a filter.
-     *
-     * @tparam T The component to add.
-     * @param filter The filter to use for matching.
-     */
-    template <typename T>
-    void add(flecs::filter filter) const;
-
-    /** Add type to all entities.
-     *
-     * @param type The type to add.
-     */
-    void add(flecs::type type) const;
-
-    /** Add type to all entities matching a filter.
-     *
-     * @param type The type to add.
-     * @param filter The filter to use for matching.
-     */    
-    void add(flecs::type type, flecs::filter filter) const;
-
-    /** Add entity to all entities.
-     *
-     * @param entity The entity to add.
-     */
-    void add(flecs::entity entity) const;
-
-    /** Add entity to all entities matching a filter.
-     *
-     * @param entity The entity to add.
-     * @param filter The filter to use for matching.
-     */    
-    void add(flecs::entity entity, flecs::filter filter) const;
-
-    /** Remove component from all entities matching a filter.
-     *
-     * @tparam T The component to remove.
-     * @param filter The filter to use for matching.
-     */    
-    template <typename T>
-    void remove(flecs::filter filter) const;
-
-    /** Remove type from all entities.
-     *
-     * @param type The component to remove.
-     */ 
-    void remove(flecs::type type) const;
-
-    /** Remove type from all entities matching a filter.
-     *
-     * @tparam T The component to remove.
-     * @param filter The filter to use for matching.
-     */     
-    void remove(flecs::type type, flecs::filter filter) const;
-
-    /** Remove entity from all entities.
-     *
-     * @param entity The entity to remove.
-     */ 
-    void remove(flecs::entity entity) const;
-
-    /** Remove entity from all entities matching a filter.
-     *
-     * @param entity The entity to remove.
-     * @param filter The filter to use for matching.
-     */     
-    void remove(flecs::entity entity, flecs::filter filter) const;
-
-    /** Create iterable filter for entities in world.
-     *
-     * @param filter The filter to create.
-     */ 
-    world_filter filter(const flecs::filter& filter) const;
-
-    flecs::filter_iterator begin() const;
-    flecs::filter_iterator end() const;
-
     /** Count entities matching a component.
      *
      * @tparam T The component to use for matching.
@@ -790,11 +707,8 @@ public:
         return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
 
-    /** Count entities matching a filter.
-     *
-     * @param filter The filter to use for matching.
-     */
-    int count(flecs::filter filter) const;
+    flecs::filter_iterator begin() const;
+    flecs::filter_iterator end() const;
 
     /** Enable locking.
      * 
@@ -926,6 +840,16 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::observer_builder<Comps...> observer(Args &&... args) const;
+
+    /** Create a filter.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter<Comps...> filter(Args &&... args) const;
+
+    /** Create a filter builder.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
 
     /** Create a query.
      */

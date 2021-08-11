@@ -756,10 +756,16 @@ void Query_query_optional_owned() {
 
         if (it.entities[0] == e1) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
         } else if (it.entities[0] == e2) {
             test_assert(v != NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true); 
         } else if (it.entities[0] == e3) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false);
         }
 
         count ++;
@@ -801,10 +807,16 @@ void Query_query_optional_shared() {
         
         if (it.entities[0] == e1) {
             test_assert(v != NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), true);
         } else if (it.entities[0] == e2) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false);            
         } else if (it.entities[0] == e3) {
             test_assert(v == NULL);
+            test_bool(ecs_term_is_set(&it, 1), true);
+            test_bool(ecs_term_is_set(&it, 2), false); 
         }
 
         count ++;

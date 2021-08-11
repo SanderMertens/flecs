@@ -2549,6 +2549,7 @@ struct ecs_iter_t {
 
     ecs_table_t *table;           /**< Current table */
     ecs_data_t *data;
+    
     ecs_id_t *ids;
     ecs_type_t *types;
     int32_t *columns;
@@ -6061,7 +6062,7 @@ bool ecs_term_id_is_set(
  * @return True when set, false when not set.
  */
 FLECS_API
-bool ecs_term_is_set(
+bool ecs_term_is_initialized(
     const ecs_term_t *term);
 
 /** Test whether a term is a trivial term.
@@ -6271,6 +6272,12 @@ ecs_iter_t ecs_filter_iter(
 FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *iter);
+
+/** Move resources of one filter to another. */
+FLECS_API
+void ecs_filter_move(
+    ecs_filter_t *dst,
+    ecs_filter_t *src);
 
 /** @} */
 
@@ -6672,6 +6679,20 @@ FLECS_API
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
+
+/** Test whether term is set.
+ * This function returns false for terms with the Not operator and for terms
+ * with the Optional operator if the matched entities (table) do not have the
+ * (component) id of the term. 
+ *
+ * @param it The iterator.
+ * @param term The term.
+ * @return True if term is set, false if it is not set.
+ */
+FLECS_API
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t term);
 
 /** Test whether the term is owned
  * This operation returns whether the term is owned by the currently iterated
@@ -9248,12 +9269,14 @@ class type;
 class pipeline;
 class iter;
 class term;
-class filter;
 class filter_iterator;
 class child_iterator;
 class world_filter;
 class snapshot_filter;
 class query_base;
+
+template<typename ... Components>
+class filter;
 
 template<typename ... Components>
 class query;
@@ -9263,6 +9286,9 @@ class system;
 
 template<typename ... Components>
 class observer;
+
+template <typename ... Components>
+class filter_builder;
 
 template <typename ... Components>
 class query_builder;
@@ -11744,89 +11770,6 @@ public:
      */
     void use(flecs::entity entity, const char *alias = nullptr);   
 
-    /** Delete all entities matching a filter.
-     *
-     * @param filter The filter to use for matching.
-     */
-    void delete_entities(flecs::filter filter) const;
-
-    /** Add component to all entities matching a filter.
-     *
-     * @tparam T The component to add.
-     * @param filter The filter to use for matching.
-     */
-    template <typename T>
-    void add(flecs::filter filter) const;
-
-    /** Add type to all entities.
-     *
-     * @param type The type to add.
-     */
-    void add(flecs::type type) const;
-
-    /** Add type to all entities matching a filter.
-     *
-     * @param type The type to add.
-     * @param filter The filter to use for matching.
-     */    
-    void add(flecs::type type, flecs::filter filter) const;
-
-    /** Add entity to all entities.
-     *
-     * @param entity The entity to add.
-     */
-    void add(flecs::entity entity) const;
-
-    /** Add entity to all entities matching a filter.
-     *
-     * @param entity The entity to add.
-     * @param filter The filter to use for matching.
-     */    
-    void add(flecs::entity entity, flecs::filter filter) const;
-
-    /** Remove component from all entities matching a filter.
-     *
-     * @tparam T The component to remove.
-     * @param filter The filter to use for matching.
-     */    
-    template <typename T>
-    void remove(flecs::filter filter) const;
-
-    /** Remove type from all entities.
-     *
-     * @param type The component to remove.
-     */ 
-    void remove(flecs::type type) const;
-
-    /** Remove type from all entities matching a filter.
-     *
-     * @tparam T The component to remove.
-     * @param filter The filter to use for matching.
-     */     
-    void remove(flecs::type type, flecs::filter filter) const;
-
-    /** Remove entity from all entities.
-     *
-     * @param entity The entity to remove.
-     */ 
-    void remove(flecs::entity entity) const;
-
-    /** Remove entity from all entities matching a filter.
-     *
-     * @param entity The entity to remove.
-     * @param filter The filter to use for matching.
-     */     
-    void remove(flecs::entity entity, flecs::filter filter) const;
-
-    /** Create iterable filter for entities in world.
-     *
-     * @param filter The filter to create.
-     */ 
-    world_filter filter(const flecs::filter& filter) const;
-
-    flecs::filter_iterator begin() const;
-    flecs::filter_iterator end() const;
-
     /** Count entities matching a component.
      *
      * @tparam T The component to use for matching.
@@ -11835,12 +11778,6 @@ public:
     int count() const {
         return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
-
-    /** Count entities matching a filter.
-     *
-     * @param filter The filter to use for matching.
-     */
-    int count(flecs::filter filter) const;
 
     /** Enable locking.
      * 
@@ -11972,6 +11909,16 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::observer_builder<Comps...> observer(Args &&... args) const;
+
+    /** Create a filter.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter<Comps...> filter(Args &&... args) const;
+
+    /** Create a filter builder.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
 
     /** Create a query.
      */
@@ -15472,7 +15419,7 @@ public:
     }
 
     bool is_set() {
-        return ecs_term_is_set(&value);
+        return ecs_term_is_initialized(&value);
     }
 
     bool is_trivial() {
@@ -15522,7 +15469,7 @@ public:
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
         m_term_index = term_index - 1;
         this->term();
-        ecs_assert(ecs_term_is_set(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
         return *this;
     }    
 
@@ -15916,6 +15863,66 @@ private:
     int32_t m_event_count;
 };
 
+// Filter builder
+template<typename ... Components>
+class filter_builder_base
+    : public filter_builder_i<filter_builder_base<Components...>, Components ...>
+{
+public:
+    filter_builder_base(flecs::world_t *world) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+    { 
+        this->populate_filter_from_pack();
+    }
+
+    filter_builder_base(const filter_builder_base& obj) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    {
+        m_world = obj.m_world;
+        m_desc = obj.m_desc;
+    }
+
+    filter_builder_base(filter_builder_base&& obj) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    {
+        m_world = obj.m_world;
+        m_desc = obj.m_desc;
+    }
+
+    operator filter<Components ...>() const;
+
+    operator ecs_filter_t() const {
+        ecs_filter_t f;
+
+        int res = ecs_filter_init(this->m_world, &f, &this->m_desc);
+        if (res != 0) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        return f;
+    }    
+
+    filter<Components ...> build() const;
+
+    ecs_filter_desc_t m_desc;
+
+    flecs::world_t* world() override { return m_world; }
+
+protected:
+    flecs::world_t *m_world;
+};
+
+template<typename ... Components>
+class filter_builder final : public filter_builder_base<Components...> {
+public:
+    filter_builder(flecs::world_t *world)
+        : filter_builder_base<Components ...>(world) { }
+
+    operator filter<>() const;
+};
+
 // Query builder
 template<typename ... Components>
 class query_builder_base
@@ -16025,7 +16032,7 @@ private:
         if (is_trigger) {
             ecs_trigger_desc_t desc = {};
             ecs_term_t term = m_desc.query.filter.terms[0];
-            if (ecs_term_is_set(&term)) {
+            if (ecs_term_is_initialized(&term)) {
                 desc.term = term;
             } else {
                 desc.expr = m_desc.query.filter.expr;
@@ -16458,94 +16465,120 @@ flecs::entity import(world& world) {
 }
 
 } // namespace flecs
-
 namespace flecs 
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// A filter is used to match subsets of tables
+//// Ad hoc queries (filters)
 ////////////////////////////////////////////////////////////////////////////////
- 
-enum match_kind {
-    MatchAll = EcsMatchAll,
-    MatchAny = EcsMatchAny,
-    MatchExact = EcsMatchExact
-};
 
-class filter {
+class filter_base {
 public:
-    filter() 
-        : m_world( nullptr )
-        , m_filter{ } {}
+    filter_base()
+        : m_world(nullptr)
+        , m_filter({}) { }   
+    
+    filter_base(world_t *world, ecs_filter_t *filter = NULL)
+        : m_world(world) {
+            ecs_filter_move(&m_filter, filter);
+        }
 
-    explicit filter(const world& world) 
-        : m_world( world.c_ptr() )
-        , m_filter{ } { }
-
-    filter& include(type type) {
-        m_filter.include = ecs_type_merge(m_world, m_filter.include, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& include(entity entity) {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& include() {
-        m_filter.include = ecs_type_add(m_world, m_filter.include, _::cpp_type<T>::id(m_world));
-        return *this;
-    }
-
-    filter& include_kind(match_kind kind) {
-        m_filter.include_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type include() {
-        return type(m_world, m_filter.include);
-    }
-
-    filter& exclude(type type) {
-        m_filter.exclude = ecs_type_merge(m_world, m_filter.exclude, type.c_ptr(), nullptr);
-        return *this;
-    }
-
-    filter& exclude(entity entity) {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, entity.id());
-        return *this;
-    }
-
-    template <typename T>
-    filter& exclude() {
-        m_filter.exclude = ecs_type_add(m_world, m_filter.exclude, _::cpp_type<T>::id(m_world));
-        return *this;
-    }
- 
-    filter& exclude_kind(match_kind kind) {
-        m_filter.exclude_kind = static_cast<ecs_match_kind_t>(kind);
-        return *this;
-    }
-
-    type exclude() {
-        return type(m_world, m_filter.exclude);
-    }  
-
+    /** Get pointer to C filter object.
+     */
     const filter_t* c_ptr() const {
-        if (m_world) {
+        if (m_filter.term_count) {
             return &m_filter;
         } else {
-            return nullptr;
+            return NULL;
         }
     }
 
-private:
+    /** Free the filter.
+     */
+    ~filter_base() {
+        ecs_filter_fini(&m_filter);
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
+        while (ecs_filter_next(&it)) {
+            _::iter_invoker<Func>(func).invoke(&it);
+        }
+    }  
+
+    template <typename Func>
+    void each_term(const Func& func) {
+        for (int i = 0; i < m_filter.term_count; i ++) {
+            flecs::term t(m_world, m_filter.terms[i]);
+            func(t);
+        }
+    }
+
+    flecs::term term(int32_t index) {
+        return flecs::term(m_world, m_filter.terms[index]);
+    }
+
+    int32_t term_count() {
+        return m_filter.term_count;
+    }
+
+    flecs::string str() {
+        char *result = ecs_filter_str(m_world, &m_filter);
+        return flecs::string(result);
+    }
+
+protected:
     world_t *m_world;
     filter_t m_filter;
 };
 
-} // namespace flecs
+
+template<typename ... Components>
+class filter : public filter_base {
+    using Terms = typename _::term_ptrs<Components...>::array;
+
+public:
+    filter() { }
+
+    filter(world_t *world, filter_t *f)
+        : filter_base(world, f) { }
+
+    explicit filter(const world& world, const char *expr = nullptr) 
+        : filter_base(world.c_ptr())
+    {
+        auto qb = world.filter_builder<Components ...>()
+            .expr(expr);
+
+        if (!expr) {
+            qb.substitute_default();
+        }
+
+        flecs::filter_t f = qb;
+        ecs_filter_move(&m_filter, &f);
+    }
+
+    template <typename Func>
+    void each(Func&& func) const {
+        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
+    } 
+
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
+    }
+
+private:
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
+        }
+    }
+};
+
+}
 
 namespace flecs 
 {
@@ -16596,15 +16629,17 @@ public:
         m_snapshot = ecs_snapshot_take(m_world.c_ptr());
     }
 
-    void take(flecs::filter filter) {
+    template <typename F>
+    void take(const F& f) {
         if (m_snapshot) {
             ecs_snapshot_free(m_snapshot);
         }
 
-        ecs_iter_t it = ecs_filter_iter(m_world.c_ptr(), filter.c_ptr());
-        m_snapshot = ecs_snapshot_take_w_iter(
-            &it, ecs_filter_next);
-    }
+        ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
+
+        printf("filter = %s\n", ecs_filter_str(m_world, f.c_ptr()));
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    }    
 
     void restore() {
         if (m_snapshot) {
@@ -16622,8 +16657,6 @@ public:
     snapshot_t* c_ptr() const {
         return m_snapshot;
     }
-
-    snapshot_filter filter(const filter& filter);
 
     filter_iterator begin();
 
@@ -16651,17 +16684,17 @@ public:
         , m_iter{ } 
         , m_action(action) { }
 
-    filter_iterator(const world& world, const filter& filter, ecs_iter_next_action_t action)
+    filter_iterator(const world& world, ecs_iter_next_action_t action)
         : m_world( world.c_ptr() )
-        , m_iter( ecs_filter_iter(m_world, filter.c_ptr()) ) 
+        , m_iter( ecs_filter_iter(m_world, NULL) ) 
         , m_action(action)
     { 
         m_has_next = m_action(&m_iter);
     }
 
-    filter_iterator(const world& world, const snapshot& snapshot, const filter& filter, ecs_iter_next_action_t action) 
+    filter_iterator(const world& world, const snapshot& snapshot, ecs_iter_next_action_t action) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), filter.c_ptr()) )
+        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), NULL) )
         , m_action(action)
     {
         m_has_next = m_action(&m_iter);
@@ -16723,18 +16756,18 @@ private:
     ecs_iter_t m_iter;
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility for creating a world-based filter iterator
 ////////////////////////////////////////////////////////////////////////////////
 
 class world_filter {
 public:
-    world_filter(const world& world, const filter& filter) 
-        : m_world( world )
-        , m_filter( filter ) { }
+    world_filter(const world& world) 
+        : m_world( world ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_filter, ecs_filter_next);
+        return filter_iterator(m_world, ecs_filter_next);
     }
 
     inline filter_iterator end() const {
@@ -16743,7 +16776,6 @@ public:
 
 private:
     const world& m_world;
-    const filter& m_filter;
 };
 
 
@@ -16753,13 +16785,12 @@ private:
 
 class snapshot_filter {
 public:
-    snapshot_filter(const world& world, const snapshot& snapshot, const filter& filter) 
+    snapshot_filter(const world& world, const snapshot& snapshot) 
         : m_world( world )
-        , m_snapshot( snapshot )
-        , m_filter( filter ) { }
+        , m_snapshot( snapshot ) { }
 
     inline filter_iterator begin() const {
-        return filter_iterator(m_world, m_snapshot, m_filter, ecs_snapshot_next);
+        return filter_iterator(m_world, m_snapshot, ecs_snapshot_next);
     }
 
     inline filter_iterator end() const {
@@ -16769,7 +16800,6 @@ public:
 private:
     const world& m_world;
     const snapshot& m_snapshot;
-    const filter& m_filter;
 };
 
 
@@ -16801,12 +16831,8 @@ private:
 //// Filter fwd declared functions
 ////////////////////////////////////////////////////////////////////////////////
 
-inline snapshot_filter snapshot::filter(const flecs::filter& filter) {
-    return snapshot_filter(m_world, *this, filter);
-}
-
 inline filter_iterator snapshot::begin() {
-    return filter_iterator(m_world, *this, flecs::filter(m_world), ecs_snapshot_next);
+    return filter_iterator(m_world, *this, ecs_snapshot_next);
 }
 
 inline filter_iterator snapshot::end() {
@@ -17023,13 +17049,6 @@ public:
     } 
 
     template <typename Func>
-    void each(const flecs::filter& filter, Func&& func) const {
-        const filter_t* filter_ptr = filter.c_ptr();
-        iterate<_::each_invoker>(std::forward<Func>(func), 
-            ecs_query_next_w_filter, filter_ptr);
-    }
-
-    template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
@@ -17038,13 +17057,6 @@ public:
     template <typename Func>
     void iter(Func&& func) const { 
         iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
-    template <typename Func>
-    void iter(const flecs::filter& filter, Func&& func) const {
-        const filter_t* filter_ptr = filter.c_ptr();
-        iterate<_::iter_invoker>(std::forward<Func>(func), 
-            ecs_query_next_w_filter, filter_ptr);
     }
 
     template <typename Func>
@@ -17097,7 +17109,8 @@ public:
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
 
-    system_runner_fluent& filter(filter filter) {
+    template <typename F>
+    system_runner_fluent& filter(const F& filter) {
         m_filter = filter;
         return *this;
     }
@@ -17128,12 +17141,13 @@ public:
                 m_filter.c_ptr(), m_param);
         }
     }
+
 private:
     world_t *m_stage;
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
-    flecs::filter m_filter;
+    flecs::filter<> m_filter;
     int32_t m_offset;
     int32_t m_limit;
     int32_t m_stage_current;
@@ -17746,70 +17760,6 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
         ecs_pair(r, o));
 }    
 
-inline void world::delete_entities(flecs::filter filter) const {
-    ecs_bulk_delete(m_world, filter.c_ptr());
-}
-
-template <typename T>
-inline void world::add(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(
-        m_world, _::cpp_type<T>::type(m_world), nullptr, filter.c_ptr());
-}
-
-inline void world::add(flecs::type t) const {
-    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, nullptr);
-}
-
-inline void world::add(flecs::type t, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, t.c_ptr(), nullptr, filter.c_ptr());
-}
-
-inline void world::add(class flecs::entity e) const {
-    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, nullptr);
-}
-
-inline void world::add(class flecs::entity e, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, e.to_type().c_ptr(), nullptr, filter.c_ptr());
-}
-
-template <typename T>
-inline void world::remove(flecs::filter filter) const {
-    ecs_bulk_add_remove_type(
-        m_world, nullptr, _::cpp_type<T>::type(m_world), filter.c_ptr());
-}
-
-inline void world::remove(flecs::type t) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), nullptr);
-}
-
-inline void world::remove(flecs::type t, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, t.c_ptr(), filter.c_ptr());
-}
-
-inline void world::remove(class entity e) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), nullptr);
-}
-
-inline void world::remove(class entity e, flecs::filter filter) const {
-    ecs_bulk_add_remove_type(m_world, nullptr, e.to_type().c_ptr(), filter.c_ptr());
-}
-
-inline flecs::world_filter world::filter(const flecs::filter& filter) const {
-    return flecs::world_filter(*this, filter);
-}
-
-inline filter_iterator world::begin() const {
-    return filter_iterator(*this, flecs::filter(*this), ecs_filter_next);
-}
-
-inline filter_iterator world::end() const {
-    return filter_iterator(ecs_filter_next);
-}
-
-inline int world::count(flecs::filter filter) const {
-    return ecs_count_w_filter(m_world, filter.c_ptr());
-}
-
 /** All entities created in function are created in scope. All operations
     * called in function (such as lookup) are relative to scope.
     */
@@ -17958,6 +17908,16 @@ inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const 
 }
 
 template <typename... Comps, typename... Args>
+inline flecs::filter<Comps...> world::filter(Args &&... args) const {
+    return flecs::filter<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
 }
@@ -18045,6 +18005,24 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type) {
     m_term->pred.entity = type.id();
     return *this;
 }      
+
+template <typename ... Components>
+inline filter_builder_base<Components...>::operator filter<Components ...>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter_builder<Components ...>::operator filter<>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<>(this->m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter<Components ...> filter_builder_base<Components...>::build() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
 
 template <typename ... Components>
 inline query_builder_base<Components...>::operator query<Components ...>() const {

@@ -111,8 +111,17 @@ bool ecs_term_is_readonly(
             }
         }
     }
-    
+
     return false;
+}
+
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t term)
+{
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    return it->columns[term - 1] != 0;
 }
 
 ecs_entity_t ecs_term_source(

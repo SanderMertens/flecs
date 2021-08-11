@@ -316,7 +316,7 @@ ecs_entity_t ecs_trigger_init(
                 goto error;
             }
 
-            if (!ecs_term_is_set(&term)) {
+            if (!ecs_term_is_initialized(&term)) {
                 ecs_parser_error(
                     name, expr, 0, "invalid empty trigger expression");
                 goto error;

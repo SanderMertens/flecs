@@ -984,6 +984,7 @@ void Filter_filter_iter_1_component(void);
 void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_null(void);
 void Filter_filter_iter_1_not_tag(void);
+void Filter_filter_iter_2_tags_1_optional(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1888,6 +1889,7 @@ void Snapshot_snapshot_w_filter_after_delete(void);
 void Snapshot_snapshot_free_empty(void);
 void Snapshot_snapshot_free(void);
 void Snapshot_snapshot_free_filtered(void);
+void Snapshot_snapshot_free_filtered_w_dtor(void);
 void Snapshot_snapshot_activate_table_w_filter(void);
 void Snapshot_snapshot_copy(void);
 void Snapshot_snapshot_get_ref_after_restore(void);
@@ -5689,6 +5691,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_1_not_tag",
         Filter_filter_iter_1_not_tag
+    },
+    {
+        "filter_iter_2_tags_1_optional",
+        Filter_filter_iter_2_tags_1_optional
     }
 };
 
@@ -9113,6 +9119,10 @@ bake_test_case Snapshot_testcases[] = {
         Snapshot_snapshot_free_filtered
     },
     {
+        "snapshot_free_filtered_w_dtor",
+        Snapshot_snapshot_free_filtered_w_dtor
+    },
+    {
         "snapshot_activate_table_w_filter",
         Snapshot_snapshot_activate_table_w_filter
     },
@@ -9630,7 +9640,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        33,
+        34,
         Filter_testcases
     },
     {
@@ -9840,7 +9850,7 @@ static bake_test_suite suites[] = {
         "Snapshot",
         NULL,
         NULL,
-        24,
+        25,
         Snapshot_testcases
     },
     {

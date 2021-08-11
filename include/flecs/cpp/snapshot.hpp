@@ -48,15 +48,17 @@ public:
         m_snapshot = ecs_snapshot_take(m_world.c_ptr());
     }
 
-    void take(flecs::filter filter) {
+    template <typename F>
+    void take(const F& f) {
         if (m_snapshot) {
             ecs_snapshot_free(m_snapshot);
         }
 
-        ecs_iter_t it = ecs_filter_iter(m_world.c_ptr(), filter.c_ptr());
-        m_snapshot = ecs_snapshot_take_w_iter(
-            &it, ecs_filter_next);
-    }
+        ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
+
+        printf("filter = %s\n", ecs_filter_str(m_world, f.c_ptr()));
+        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    }    
 
     void restore() {
         if (m_snapshot) {
@@ -74,8 +76,6 @@ public:
     snapshot_t* c_ptr() const {
         return m_snapshot;
     }
-
-    snapshot_filter filter(const filter& filter);
 
     filter_iterator begin();
 

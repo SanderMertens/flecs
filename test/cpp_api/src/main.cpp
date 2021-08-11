@@ -225,6 +225,7 @@ void Switch_system_w_switch(void);
 void Switch_add_case_w_type(void);
 void Switch_add_switch_w_type(void);
 void Switch_add_switch_w_type_component_first(void);
+void Switch_add_remove_switch_w_type(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -388,10 +389,10 @@ void QueryBuilder_isa_superset_shortcut(void);
 void QueryBuilder_isa_superset_shortcut_w_self(void);
 void QueryBuilder_childof_superset_shortcut(void);
 void QueryBuilder_childof_superset_shortcut_w_self(void);
-void QueryBuilder_isa_supetset_max_depth_1(void);
-void QueryBuilder_isa_supetset_max_depth_2(void);
-void QueryBuilder_isa_supetset_min_depth_2(void);
-void QueryBuilder_isa_supetset_min_depth_2_max_depth_3(void);
+void QueryBuilder_isa_superset_max_depth_1(void);
+void QueryBuilder_isa_superset_max_depth_2(void);
+void QueryBuilder_isa_superset_min_depth_2(void);
+void QueryBuilder_isa_superset_min_depth_2_max_depth_3(void);
 void QueryBuilder_role(void);
 void QueryBuilder_relation(void);
 void QueryBuilder_relation_w_object_wildcard(void);
@@ -409,6 +410,59 @@ void QueryBuilder_explicit_term_w_id(void);
 void QueryBuilder_explicit_term_w_pair_id(void);
 void QueryBuilder_1_term_to_empty(void);
 void QueryBuilder_2_subsequent_args(void);
+
+// Testsuite 'FilterBuilder'
+void FilterBuilder_builder_assign_same_type(void);
+void FilterBuilder_builder_assign_from_empty(void);
+void FilterBuilder_builder_assign_to_empty(void);
+void FilterBuilder_builder_build(void);
+void FilterBuilder_builder_build_to_auto(void);
+void FilterBuilder_builder_build_n_statements(void);
+void FilterBuilder_1_type(void);
+void FilterBuilder_add_1_type(void);
+void FilterBuilder_add_2_types(void);
+void FilterBuilder_add_1_type_w_1_type(void);
+void FilterBuilder_add_2_types_w_1_type(void);
+void FilterBuilder_add_pair(void);
+void FilterBuilder_add_not(void);
+void FilterBuilder_add_or(void);
+void FilterBuilder_add_optional(void);
+void FilterBuilder_ptr_type(void);
+void FilterBuilder_const_type(void);
+void FilterBuilder_string_term(void);
+void FilterBuilder_singleton_term(void);
+void FilterBuilder_isa_superset_term(void);
+void FilterBuilder_isa_self_superset_term(void);
+void FilterBuilder_childof_superset_term(void);
+void FilterBuilder_childof_self_superset_term(void);
+void FilterBuilder_isa_superset_term_w_each(void);
+void FilterBuilder_isa_self_superset_term_w_each(void);
+void FilterBuilder_childof_superset_term_w_each(void);
+void FilterBuilder_childof_self_superset_term_w_each(void);
+void FilterBuilder_isa_superset_shortcut(void);
+void FilterBuilder_isa_superset_shortcut_w_self(void);
+void FilterBuilder_childof_superset_shortcut(void);
+void FilterBuilder_childof_superset_shortcut_w_self(void);
+void FilterBuilder_isa_superset_max_depth_1(void);
+void FilterBuilder_isa_superset_max_depth_2(void);
+void FilterBuilder_isa_superset_min_depth_2(void);
+void FilterBuilder_isa_superset_min_depth_2_max_depth_3(void);
+void FilterBuilder_relation(void);
+void FilterBuilder_relation_w_object_wildcard(void);
+void FilterBuilder_relation_w_predicate_wildcard(void);
+void FilterBuilder_add_pair_w_rel_type(void);
+void FilterBuilder_template_term(void);
+void FilterBuilder_explicit_subject_w_id(void);
+void FilterBuilder_explicit_subject_w_type(void);
+void FilterBuilder_explicit_object_w_id(void);
+void FilterBuilder_explicit_object_w_type(void);
+void FilterBuilder_explicit_term(void);
+void FilterBuilder_explicit_term_w_type(void);
+void FilterBuilder_explicit_term_w_pair_type(void);
+void FilterBuilder_explicit_term_w_id(void);
+void FilterBuilder_explicit_term_w_pair_id(void);
+void FilterBuilder_1_term_to_empty(void);
+void FilterBuilder_2_subsequent_args(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -536,7 +590,6 @@ void ImplicitComponents_implicit_const_ref(void);
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
 void Snapshot_snapshot_iter(void);
-void Snapshot_snapshot_iter_w_filter(void);
 
 // Testsuite 'WorldFactory'
 void WorldFactory_entity(void);
@@ -1481,6 +1534,10 @@ bake_test_case Switch_testcases[] = {
     {
         "add_switch_w_type_component_first",
         Switch_add_switch_w_type_component_first
+    },
+    {
+        "add_remove_switch_w_type",
+        Switch_add_remove_switch_w_type
     }
 };
 
@@ -2105,20 +2162,20 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_childof_superset_shortcut_w_self
     },
     {
-        "isa_supetset_max_depth_1",
-        QueryBuilder_isa_supetset_max_depth_1
+        "isa_superset_max_depth_1",
+        QueryBuilder_isa_superset_max_depth_1
     },
     {
-        "isa_supetset_max_depth_2",
-        QueryBuilder_isa_supetset_max_depth_2
+        "isa_superset_max_depth_2",
+        QueryBuilder_isa_superset_max_depth_2
     },
     {
-        "isa_supetset_min_depth_2",
-        QueryBuilder_isa_supetset_min_depth_2
+        "isa_superset_min_depth_2",
+        QueryBuilder_isa_superset_min_depth_2
     },
     {
-        "isa_supetset_min_depth_2_max_depth_3",
-        QueryBuilder_isa_supetset_min_depth_2_max_depth_3
+        "isa_superset_min_depth_2_max_depth_3",
+        QueryBuilder_isa_superset_min_depth_2_max_depth_3
     },
     {
         "role",
@@ -2187,6 +2244,213 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "2_subsequent_args",
         QueryBuilder_2_subsequent_args
+    }
+};
+
+bake_test_case FilterBuilder_testcases[] = {
+    {
+        "builder_assign_same_type",
+        FilterBuilder_builder_assign_same_type
+    },
+    {
+        "builder_assign_from_empty",
+        FilterBuilder_builder_assign_from_empty
+    },
+    {
+        "builder_assign_to_empty",
+        FilterBuilder_builder_assign_to_empty
+    },
+    {
+        "builder_build",
+        FilterBuilder_builder_build
+    },
+    {
+        "builder_build_to_auto",
+        FilterBuilder_builder_build_to_auto
+    },
+    {
+        "builder_build_n_statements",
+        FilterBuilder_builder_build_n_statements
+    },
+    {
+        "1_type",
+        FilterBuilder_1_type
+    },
+    {
+        "add_1_type",
+        FilterBuilder_add_1_type
+    },
+    {
+        "add_2_types",
+        FilterBuilder_add_2_types
+    },
+    {
+        "add_1_type_w_1_type",
+        FilterBuilder_add_1_type_w_1_type
+    },
+    {
+        "add_2_types_w_1_type",
+        FilterBuilder_add_2_types_w_1_type
+    },
+    {
+        "add_pair",
+        FilterBuilder_add_pair
+    },
+    {
+        "add_not",
+        FilterBuilder_add_not
+    },
+    {
+        "add_or",
+        FilterBuilder_add_or
+    },
+    {
+        "add_optional",
+        FilterBuilder_add_optional
+    },
+    {
+        "ptr_type",
+        FilterBuilder_ptr_type
+    },
+    {
+        "const_type",
+        FilterBuilder_const_type
+    },
+    {
+        "string_term",
+        FilterBuilder_string_term
+    },
+    {
+        "singleton_term",
+        FilterBuilder_singleton_term
+    },
+    {
+        "isa_superset_term",
+        FilterBuilder_isa_superset_term
+    },
+    {
+        "isa_self_superset_term",
+        FilterBuilder_isa_self_superset_term
+    },
+    {
+        "childof_superset_term",
+        FilterBuilder_childof_superset_term
+    },
+    {
+        "childof_self_superset_term",
+        FilterBuilder_childof_self_superset_term
+    },
+    {
+        "isa_superset_term_w_each",
+        FilterBuilder_isa_superset_term_w_each
+    },
+    {
+        "isa_self_superset_term_w_each",
+        FilterBuilder_isa_self_superset_term_w_each
+    },
+    {
+        "childof_superset_term_w_each",
+        FilterBuilder_childof_superset_term_w_each
+    },
+    {
+        "childof_self_superset_term_w_each",
+        FilterBuilder_childof_self_superset_term_w_each
+    },
+    {
+        "isa_superset_shortcut",
+        FilterBuilder_isa_superset_shortcut
+    },
+    {
+        "isa_superset_shortcut_w_self",
+        FilterBuilder_isa_superset_shortcut_w_self
+    },
+    {
+        "childof_superset_shortcut",
+        FilterBuilder_childof_superset_shortcut
+    },
+    {
+        "childof_superset_shortcut_w_self",
+        FilterBuilder_childof_superset_shortcut_w_self
+    },
+    {
+        "isa_superset_max_depth_1",
+        FilterBuilder_isa_superset_max_depth_1
+    },
+    {
+        "isa_superset_max_depth_2",
+        FilterBuilder_isa_superset_max_depth_2
+    },
+    {
+        "isa_superset_min_depth_2",
+        FilterBuilder_isa_superset_min_depth_2
+    },
+    {
+        "isa_superset_min_depth_2_max_depth_3",
+        FilterBuilder_isa_superset_min_depth_2_max_depth_3
+    },
+    {
+        "relation",
+        FilterBuilder_relation
+    },
+    {
+        "relation_w_object_wildcard",
+        FilterBuilder_relation_w_object_wildcard
+    },
+    {
+        "relation_w_predicate_wildcard",
+        FilterBuilder_relation_w_predicate_wildcard
+    },
+    {
+        "add_pair_w_rel_type",
+        FilterBuilder_add_pair_w_rel_type
+    },
+    {
+        "template_term",
+        FilterBuilder_template_term
+    },
+    {
+        "explicit_subject_w_id",
+        FilterBuilder_explicit_subject_w_id
+    },
+    {
+        "explicit_subject_w_type",
+        FilterBuilder_explicit_subject_w_type
+    },
+    {
+        "explicit_object_w_id",
+        FilterBuilder_explicit_object_w_id
+    },
+    {
+        "explicit_object_w_type",
+        FilterBuilder_explicit_object_w_type
+    },
+    {
+        "explicit_term",
+        FilterBuilder_explicit_term
+    },
+    {
+        "explicit_term_w_type",
+        FilterBuilder_explicit_term_w_type
+    },
+    {
+        "explicit_term_w_pair_type",
+        FilterBuilder_explicit_term_w_pair_type
+    },
+    {
+        "explicit_term_w_id",
+        FilterBuilder_explicit_term_w_id
+    },
+    {
+        "explicit_term_w_pair_id",
+        FilterBuilder_explicit_term_w_pair_id
+    },
+    {
+        "1_term_to_empty",
+        FilterBuilder_1_term_to_empty
+    },
+    {
+        "2_subsequent_args",
+        FilterBuilder_2_subsequent_args
     }
 };
 
@@ -2655,10 +2919,6 @@ bake_test_case Snapshot_testcases[] = {
     {
         "snapshot_iter",
         Snapshot_snapshot_iter
-    },
-    {
-        "snapshot_iter_w_filter",
-        Snapshot_snapshot_iter_w_filter
     }
 };
 
@@ -3013,7 +3273,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        7,
+        8,
         Switch_testcases
     },
     {
@@ -3057,6 +3317,13 @@ static bake_test_suite suites[] = {
         NULL,
         52,
         QueryBuilder_testcases
+    },
+    {
+        "FilterBuilder",
+        NULL,
+        NULL,
+        51,
+        FilterBuilder_testcases
     },
     {
         "SystemBuilder",
@@ -3111,7 +3378,7 @@ static bake_test_suite suites[] = {
         "Snapshot",
         NULL,
         NULL,
-        3,
+        2,
         Snapshot_testcases
     },
     {
@@ -3146,6 +3413,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 21);
+    return bake_test_run("cpp_api", argc, argv, suites, 22);
 }
-                                                                                                                                     

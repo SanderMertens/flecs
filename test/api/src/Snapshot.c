@@ -470,6 +470,49 @@ void Snapshot_snapshot_free_filtered() {
     ecs_fini(world);
 }
 
+void Snapshot_snapshot_free_filtered_w_dtor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "e1"
+    });
+
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "e2"
+    });
+
+    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "e3"
+    });
+
+    ecs_add(world, e1, Position);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e3, Position);
+
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e3, Velocity);
+
+    ecs_add(world, e3, Mass);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    test_assert(s != NULL);
+
+    ecs_snapshot_free(s);
+
+    ecs_fini(world);
+}
+
 static bool invoked = false;
 
 static
@@ -776,3 +819,4 @@ void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
 
     ecs_fini(world);
 }
+

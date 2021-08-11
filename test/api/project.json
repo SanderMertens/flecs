@@ -1048,7 +1048,8 @@
                 "filter_iter_1_component",
                 "filter_iter_2_components",
                 "filter_iter_null",
-                "filter_iter_1_not_tag"
+                "filter_iter_1_not_tag",
+                "filter_iter_2_tags_1_optional"
             ]
         }, {
             "id": "Query",
@@ -2013,6 +2014,7 @@
                 "snapshot_free_empty",
                 "snapshot_free",
                 "snapshot_free_filtered",
+                "snapshot_free_filtered_w_dtor",
                 "snapshot_activate_table_w_filter",
                 "snapshot_copy",
                 "snapshot_get_ref_after_restore",

@@ -25,8 +25,9 @@ public:
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
 
-    system_runner_fluent& filter(filter filter) {
-        m_filter = filter;
+    template <typename F>
+    system_runner_fluent& filter(const F& f) {
+        m_filter = f;
         return *this;
     }
 
@@ -56,12 +57,13 @@ public:
                 m_filter.c_ptr(), m_param);
         }
     }
+
 private:
     world_t *m_stage;
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
-    flecs::filter m_filter;
+    flecs::filter<> m_filter;
     int32_t m_offset;
     int32_t m_limit;
     int32_t m_stage_current;

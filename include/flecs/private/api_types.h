@@ -181,6 +181,7 @@ struct ecs_iter_t {
 
     ecs_table_t *table;           /**< Current table */
     ecs_data_t *data;
+    
     ecs_id_t *ids;
     ecs_type_t *types;
     int32_t *columns;
