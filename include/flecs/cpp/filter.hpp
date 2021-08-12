@@ -26,6 +26,29 @@ public:
         }
     }
 
+    filter_base(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+    filter_base(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_move(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_move(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+
     /** Free the filter.
      */
     ~filter_base() {
@@ -91,6 +114,20 @@ public:
         ecs_filter_move(&m_filter, &f);
     }
 
+    filter(const filter& obj) : filter_base(obj) { }
+
+    filter& operator=(const filter& obj) {
+        *this = obj;
+        return *this;
+    }
+
+    filter(filter&& obj) : filter_base(std::move(obj)) { }
+
+    filter& operator=(filter&& obj) {
+        filter_base(std::move(obj));
+        return *this;
+    }
+
     template <typename Func>
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
@@ -106,7 +143,7 @@ private:
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
         while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
+            Invoker<Func, Components...>(std::move(func)).invoke(&it);
         }
     }
 };

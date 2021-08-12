@@ -464,6 +464,14 @@ void FilterBuilder_explicit_term_w_id(void);
 void FilterBuilder_explicit_term_w_pair_id(void);
 void FilterBuilder_1_term_to_empty(void);
 void FilterBuilder_2_subsequent_args(void);
+void FilterBuilder_filter_as_arg(void);
+void FilterBuilder_filter_as_move_arg(void);
+void FilterBuilder_filter_as_return(void);
+void FilterBuilder_filter_copy(void);
+void FilterBuilder_world_each_filter_1_component(void);
+void FilterBuilder_world_each_filter_2_components(void);
+void FilterBuilder_world_each_filter_1_component_no_entity(void);
+void FilterBuilder_world_each_filter_2_components_no_entity(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -2456,6 +2464,38 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "2_subsequent_args",
         FilterBuilder_2_subsequent_args
+    },
+    {
+        "filter_as_arg",
+        FilterBuilder_filter_as_arg
+    },
+    {
+        "filter_as_move_arg",
+        FilterBuilder_filter_as_move_arg
+    },
+    {
+        "filter_as_return",
+        FilterBuilder_filter_as_return
+    },
+    {
+        "filter_copy",
+        FilterBuilder_filter_copy
+    },
+    {
+        "world_each_filter_1_component",
+        FilterBuilder_world_each_filter_1_component
+    },
+    {
+        "world_each_filter_2_components",
+        FilterBuilder_world_each_filter_2_components
+    },
+    {
+        "world_each_filter_1_component_no_entity",
+        FilterBuilder_world_each_filter_1_component_no_entity
+    },
+    {
+        "world_each_filter_2_components_no_entity",
+        FilterBuilder_world_each_filter_2_components_no_entity
     }
 };
 
@@ -3327,7 +3367,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        51,
+        59,
         FilterBuilder_testcases
     },
     {

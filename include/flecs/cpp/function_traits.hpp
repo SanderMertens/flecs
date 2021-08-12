@@ -92,6 +92,7 @@ struct function_traits
 
 } // _
 
+
 template <typename T>
 struct is_callable {
     static constexpr bool value = _::function_traits<T>::is_callable;
@@ -107,5 +108,22 @@ using return_type_t = typename _::function_traits<T>::return_type;
 
 template <typename T>
 using arg_list_t = typename _::function_traits<T>::args;
+
+
+template<typename Func, typename ... Args>
+struct first_arg_impl;
+
+template<typename Func, typename T, typename ... Args>
+struct first_arg_impl<Func, _::arg_list<T, Args ...> > {
+    using type = T;
+};
+
+template<typename Func>
+struct first_arg {
+    using type = typename first_arg_impl<Func, arg_list_t<Func>>::type;
+};
+
+template <typename Func>
+using first_arg_t = typename first_arg<Func>::type;
 
 } // flecs

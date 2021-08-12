@@ -73,6 +73,7 @@ using std::is_const;
 using std::is_pointer;
 using std::is_reference;
 using std::is_volatile;
+using std::is_same;
 
 
 // Apply cv modifiers from source type to destination type

@@ -76,6 +76,7 @@ bool ecs_term_is_owned(
     int32_t term)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
     return it->subjects == NULL || it->subjects[term - 1] == 0;
 }
 
@@ -84,6 +85,7 @@ bool ecs_term_is_readonly(
     int32_t term_index)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_t *query = it->query;
 
@@ -121,10 +123,7 @@ bool ecs_term_is_set(
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!term) {
-        return true;
-    }
+    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
 
     return it->columns[term - 1] != 0;
 }

@@ -6279,6 +6279,12 @@ void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src);
 
+/** Copy resources of one filter to another. */
+FLECS_API
+void ecs_filter_copy(
+    ecs_filter_t *dst,
+    const ecs_filter_t *src);
+
 /** @} */
 
 /**
@@ -9474,6 +9480,7 @@ using std::is_const;
 using std::is_pointer;
 using std::is_reference;
 using std::is_volatile;
+using std::is_same;
 
 
 // Apply cv modifiers from source type to destination type
@@ -9992,6 +9999,7 @@ struct function_traits
 
 } // _
 
+
 template <typename T>
 struct is_callable {
     static constexpr bool value = _::function_traits<T>::is_callable;
@@ -10007,6 +10015,23 @@ using return_type_t = typename _::function_traits<T>::return_type;
 
 template <typename T>
 using arg_list_t = typename _::function_traits<T>::args;
+
+
+template<typename Func, typename ... Args>
+struct first_arg_impl;
+
+template<typename Func, typename T, typename ... Args>
+struct first_arg_impl<Func, _::arg_list<T, Args ...> > {
+    using type = T;
+};
+
+template<typename Func>
+struct first_arg {
+    using type = typename first_arg_impl<Func, arg_list_t<Func>>::type;
+};
+
+template <typename Func>
+using first_arg_t = typename first_arg<Func>::type;
 
 } // flecs
 namespace flecs 
@@ -11860,6 +11885,9 @@ public:
     }
 
     /** Iterate over all entities with provided component.
+     * The function parameter must match the following signature:
+     *   void(*)(T&) or
+     *   void(*)(flecs::entity, T&)
      */
     template <typename T, typename Func>
     void each(Func&& func) const;
@@ -11868,6 +11896,14 @@ public:
      */
     template <typename Func>
     void each(flecs::id_t term_id, Func&& func) const;
+
+    /** Iterate over all entities with components in argument list of function.
+     * The function parameter must match the following signature:
+     *   void(*)(T&, U&, ...) or
+     *   void(*)(flecs::entity, T&, U&, ...)
+     */
+    template <typename Func>
+    void each(Func&& func) const;
 
     /** Create a prefab.
      */
@@ -16496,6 +16532,29 @@ public:
         }
     }
 
+    filter_base(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+    filter_base(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_move(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        ecs_filter_move(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+
     /** Free the filter.
      */
     ~filter_base() {
@@ -16561,6 +16620,20 @@ public:
         ecs_filter_move(&m_filter, &f);
     }
 
+    filter(const filter& obj) : filter_base(obj) { }
+
+    filter& operator=(const filter& obj) {
+        *this = obj;
+        return *this;
+    }
+
+    filter(filter&& obj) : filter_base(std::move(obj)) { }
+
+    filter& operator=(filter&& obj) {
+        filter_base(std::move(obj));
+        return *this;
+    }
+
     template <typename Func>
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
@@ -16576,7 +16649,7 @@ private:
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_filter_iter(m_world, &m_filter);
         while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
+            Invoker<Func, Components...>(std::move(func)).invoke(&it);
         }
     }
 };
@@ -17991,7 +18064,7 @@ inline void world::each(Func&& func) const {
 
     while (ecs_term_next(&it)) {
         _::each_invoker<Func, T>(func).invoke(&it);
-    }        
+    }
 }
 
 template <typename Func>
@@ -18003,6 +18076,61 @@ inline void world::each(flecs::id_t term_id, Func&& func) const {
     while (ecs_term_next(&it)) {
         _::each_invoker<Func>(func).invoke(&it);
     }
+}
+
+namespace _ {
+
+// Each with entity parameter
+template<typename Func, typename ... Args>
+struct filter_invoker_w_ent;
+
+template<typename Func, typename E, typename ... Args>
+struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
+{
+    filter_invoker_w_ent(const flecs::world& world, Func&& func) {
+        flecs::filter<Args ...> f(world);
+        f.each(std::move(func));
+    }
+};
+
+// Each without entity parameter
+template<typename Func, typename ... Args>
+struct filter_invoker_no_ent;
+
+template<typename Func, typename ... Args>
+struct filter_invoker_no_ent<Func, arg_list<Args ...> >
+{
+    filter_invoker_no_ent(const flecs::world& world, Func&& func) {
+        flecs::filter<Args ...> f(world);
+        f.each(std::move(func));
+    }
+};
+
+// Switch between function with & without entity parameter
+template<typename Func, bool V = true>
+class filter_invoker;
+
+template <typename Func>
+class filter_invoker<Func, is_same<first_arg_t<Func>, flecs::entity>::value > {
+public:
+    filter_invoker(const flecs::world& world, Func&& func) {
+        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, std::move(func));
+    }
+};
+
+template <typename Func>
+class filter_invoker<Func, false == is_same<first_arg_t<Func>, flecs::entity>::value > {
+public:
+    filter_invoker(const flecs::world& world, Func&& func) {
+        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, std::move(func));
+    }
+};
+
+}
+
+template <typename Func>
+inline void world::each(Func&& func) const {
+    _::filter_invoker<Func> f_invoker(*this, std::move(func));
 }
 
 } // namespace flecs

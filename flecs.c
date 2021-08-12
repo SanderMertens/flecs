@@ -16925,6 +16925,24 @@ error:
     return -1;
 }
 
+void ecs_filter_copy(
+    ecs_filter_t *dst,
+    const ecs_filter_t *src)   
+{
+    if (src) {
+        *dst = *src;
+
+        if (src->terms == src->term_cache) {
+            dst->terms = dst->term_cache;
+        } else {
+            /* Copying allocated term arrays is unsupported at this moment */
+            ecs_abort(ECS_UNSUPPORTED, NULL);
+        }
+    } else {
+        ecs_os_memset_t(dst, 0, ecs_filter_t);
+    }
+}
+
 void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src)   
@@ -16935,6 +16953,9 @@ void ecs_filter_move(
         if (src->terms == src->term_cache) {
             dst->terms = dst->term_cache;
         }
+
+        src->terms = NULL;
+        src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -17444,7 +17465,7 @@ ecs_iter_t ecs_filter_iter(
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    
+
     ecs_iter_t it = {
         .world = world
     };
@@ -21895,7 +21916,7 @@ void mark_columns_dirty(
                 (subj->entity == EcsThis && subj->set.mask == EcsSelf)))
             {
                 int32_t table_column = table_data->columns[c];
-                if (table_column > 0 && table_column < table->column_count) {
+                if (table_column > 0 && table_column <= table->column_count) {
                     table->dirty_state[table_column] ++;
                 }
             }
@@ -23722,6 +23743,7 @@ bool ecs_term_is_owned(
     int32_t term)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
     return it->subjects == NULL || it->subjects[term - 1] == 0;
 }
 
@@ -23730,6 +23752,7 @@ bool ecs_term_is_readonly(
     int32_t term_index)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_t *query = it->query;
 
@@ -23767,10 +23790,7 @@ bool ecs_term_is_set(
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!term) {
-        return true;
-    }
+    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
 
     return it->columns[term - 1] != 0;
 }

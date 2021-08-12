@@ -17,12 +17,20 @@ int main(int argc, char *argv[]) {
 
     ecs.entity("E1")
         .set<Position>({10, 20})
-        .set<Velocity>({1, 1});
+        .set<Velocity>({1, 2});
 
     ecs.entity("E2")
         .set<Position>({30, 40})
-        .set<Velocity>({1, 1});    
+        .set<Velocity>({3, 4});
 
+    // 1: Iterate all entities with Position, Velocity in the world
+    ecs.each([](flecs::entity e, Position& p, Velocity& v) {
+        std::cout << "Matched " << e.name() << ": Position = {" 
+                  << p.x << ", " << p.y << "} Velocity = {"
+                  << v.x << ", " << v.y << "}" << std::endl;
+    });
+
+    // 2: Iterate all entities in the world
     for (auto it : ecs) {
         flecs::type table_type = it.table_type();
         std::cout << "Iterating table [" << table_type.str() << "]" 

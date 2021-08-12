@@ -1242,3 +1242,220 @@ void FilterBuilder_2_subsequent_args() {
 
     test_int(count, 1);
 }
+
+int filter_arg(flecs::filter<Self> f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
+}
+
+void FilterBuilder_filter_as_arg() {
+    flecs::world ecs;
+
+    auto f = ecs.filter<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(filter_arg(f), 3);
+}
+
+int filter_move_arg(flecs::filter<Self>&& f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
+}
+
+void FilterBuilder_filter_as_move_arg() {
+    flecs::world ecs;
+
+    auto f = ecs.filter<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(filter_move_arg(ecs.filter<Self>()), 3);
+}
+
+flecs::filter<Self> filter_return(flecs::world& ecs) {
+    return ecs.filter<Self>();
+}
+
+void FilterBuilder_filter_as_return() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = filter_return(ecs);
+
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void FilterBuilder_filter_copy() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = ecs.filter<Self>();
+
+    auto f_2 = f;
+
+    int32_t count = 0;
+
+    f_2.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void FilterBuilder_world_each_filter_1_component() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void FilterBuilder_world_each_filter_2_components() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+        .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s, Position& p) {
+        test_assert(e == s.value);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void FilterBuilder_world_each_filter_1_component_no_entity() {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void FilterBuilder_world_each_filter_2_components_no_entity() {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({3, 5});
+
+    ecs.entity()
+        .set<Velocity>({20, 40});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p, Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);        
+        count ++;
+    });
+
+    test_int(count, 3);
+}

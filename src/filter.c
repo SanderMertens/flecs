@@ -464,6 +464,24 @@ error:
     return -1;
 }
 
+void ecs_filter_copy(
+    ecs_filter_t *dst,
+    const ecs_filter_t *src)   
+{
+    if (src) {
+        *dst = *src;
+
+        if (src->terms == src->term_cache) {
+            dst->terms = dst->term_cache;
+        } else {
+            /* Copying allocated term arrays is unsupported at this moment */
+            ecs_abort(ECS_UNSUPPORTED, NULL);
+        }
+    } else {
+        ecs_os_memset_t(dst, 0, ecs_filter_t);
+    }
+}
+
 void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src)   
@@ -474,6 +492,9 @@ void ecs_filter_move(
         if (src->terms == src->term_cache) {
             dst->terms = dst->term_cache;
         }
+
+        src->terms = NULL;
+        src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -983,7 +1004,7 @@ ecs_iter_t ecs_filter_iter(
     const ecs_filter_t *filter)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    
+
     ecs_iter_t it = {
         .world = world
     };

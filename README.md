@@ -89,6 +89,14 @@ int main(int argc, char *argv[]) {
   ecs_set(ecs, e, Position, {10, 20});
   ecs_set(ecs, e, Velocity, {1, 2});
 
+  ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { ecs_id(Position) });
+  while (ecs_term_next(&it)) {
+    Position *p = ecs_term(&it, Position, 1);
+    for (int i = 0; i < it.count; i ++) {
+      printf("{%f, %f}\n", p[i].x, p[i].y);
+    }
+  }
+
   while (ecs_progress(ecs, 0)) { }
 }
 ```
@@ -118,48 +126,44 @@ int main(int argc, char *argv[]) {
       p = {10, 20};
       v = {1, 2};
     });
+
+  ecs.each([](flecs::entity e, Position& p) {
+    std::cout << "{" << p.x << ", " << p.y << "}" << std::endl;
+  });
     
   while (ecs.progress()) { }
 }
 ```
 
 The first C example used macro's to emulate a type-safe layer on top of the
-underlying generic API. This example uses the C API without macro's (system code
-omitted as it's the same as the previous C example):
+underlying generic API. This example shows the C API without macro's:
 
 ```c
-int main(int argc, char *argv[]) {
-  ecs_world_t *ecs = ecs_init();
+// Register the Position component
+ecs_entity_t pos = ecs_component_init(ecs, &(ecs_component_desc_t){
+  .entity.name = "Position",
+  .size = sizeof(Position), .alignment = ECS_ALIGNOF(Position)
+});
 
-  // Register the Position component
-  ecs_entity_t pos = ecs_component_init(ecs, &(ecs_component_desc_t){
-    .entity.name = "Position",
-    .size = sizeof(Position), .alignment = ECS_ALIGNOF(Position)
-  });
+// Register the Velocity component
+ecs_entity_t vel = ecs_component_init(ecs, &(ecs_component_desc_t){
+  .entity.name = "Velocity",
+  .size = sizeof(Velocity), .alignment = ECS_ALIGNOF(Velocity)
+});
 
-  // Register the Velocity component
-  ecs_entity_t vel = ecs_component_init(ecs, &(ecs_component_desc_t){
-    .entity.name = "Velocity",
-    .size = sizeof(Velocity), .alignment = ECS_ALIGNOF(Velocity)
-  });
+// Create the Move system
+ecs_system_init(ecs, &(ecs_system_desc_t){
+  .entity = { .name = "Move", .add = {EcsOnUpdate} },
+  .query.filter.terms = {{pos}, {vel, .inout = EcsIn}},
+  .callback = Move,
+});
 
-  // Create the Move system
-  ecs_system_init(ecs, &(ecs_system_desc_t){
-    .entity = { .name = "Move", .add = {EcsOnUpdate} },
-    .query.filter.terms = {{pos}, {vel, .inout = EcsIn}},
-    .callback = Move,
-  });
+// Create entity
+ecs_entity_t e = ecs_new_id(ecs);
 
-  // Create entity
-  ecs_entity_t e = ecs_new_id(ecs);
-
-  // Set components
-  ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){10, 20});
-  ecs_set_id(ecs, e, vel, sizeof(Velocity), &(Velocity){1, 2});
-
-  // Run the main loop
-  while (ecs_progress(ecs, 0)) { }
-}
+// Set components
+ecs_set_id(ecs, e, pos, sizeof(Position), &(Position){10, 20});
+ecs_set_id(ecs, e, vel, sizeof(Velocity), &(Velocity){1, 2});
 ```
 
 ## Building

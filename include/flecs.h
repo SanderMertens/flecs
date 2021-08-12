@@ -3164,6 +3164,12 @@ void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src);
 
+/** Copy resources of one filter to another. */
+FLECS_API
+void ecs_filter_copy(
+    ecs_filter_t *dst,
+    const ecs_filter_t *src);
+
 /** @} */
 
 /**
