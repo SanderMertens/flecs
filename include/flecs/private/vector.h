@@ -435,6 +435,8 @@ private:
     int m_index;
 };
 
+/* C++ class mainly used as wrapper around internal ecs_vector_t. Do not use
+ * this class as a replacement for STL datastructures! */
 template <typename T>
 class vector {
 public:
@@ -474,6 +476,10 @@ public:
 
     void clear() {
         ecs_vector_clear(m_vector);
+    }
+
+    void destruct() {
+        ecs_vector_free(m_vector);
     }
 
     void add(T& value) {

@@ -198,6 +198,8 @@ void ecs_map_memory(
 
 namespace flecs {
 
+/* C++ class mainly used as wrapper around internal ecs_map_t. Do not use
+ * this class as a replacement for STL datastructures! */
 template <typename K, typename T>
 class map {
 public:
@@ -231,6 +233,10 @@ public:
     T& get(K& key) {
         static_cast<T*>(_ecs_map_get(m_map, sizeof(T),
             reinterpret_cast<ecs_map_key_t>(key)));
+    }
+
+    void destruct() {
+        ecs_map_free(m_map);
     }
 
 private:
