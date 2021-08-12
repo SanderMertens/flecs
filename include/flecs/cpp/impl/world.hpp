@@ -316,11 +316,11 @@ struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 };
 
 // Switch between function with & without entity parameter
-template<typename Func, bool V = true>
+template<typename Func, typename T = int>
 class filter_invoker;
 
 template <typename Func>
-class filter_invoker<Func, is_same<first_arg_t<Func>, flecs::entity>::value > {
+class filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
 public:
     filter_invoker(const flecs::world& world, Func&& func) {
         filter_invoker_w_ent<Func, arg_list_t<Func>>(world, std::move(func));
@@ -328,7 +328,7 @@ public:
 };
 
 template <typename Func>
-class filter_invoker<Func, false == is_same<first_arg_t<Func>, flecs::entity>::value > {
+class filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
 public:
     filter_invoker(const flecs::world& world, Func&& func) {
         filter_invoker_no_ent<Func, arg_list_t<Func>>(world, std::move(func));
