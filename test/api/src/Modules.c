@@ -402,11 +402,3 @@ void Modules_module_tag_on_namespace() {
 
     ecs_fini(world);
 }
-
-void Modules_lookup_by_fullpath() {
-    // Implement testcase
-}
-
-void Modules_lookup_by_fullpath_no_recursion() {
-    // Implement testcase
-}

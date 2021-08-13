@@ -89,13 +89,13 @@ void* get_base_component(
 
     ecs_type_t type = table->type;
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i = tr_isa->column, count = tr_isa->count;
+    int32_t i = tr_isa->column, end = tr_isa->count + tr_isa->column;
     void *ptr = NULL;
 
     do {
-        ecs_id_t pair = ids[i];
-
+        ecs_id_t pair = ids[i ++];
         ecs_entity_t base = ecs_pair_object(world, pair);
+
         ecs_record_t *r = ecs_eis_get(world, base);
         if (!r) {
             continue;
@@ -116,8 +116,7 @@ void* get_base_component(
             int32_t row = flecs_record_to_row(r->row, &is_monitored);
             ptr = get_component_w_index(table, tr->column, row);
         }
-        i ++;
-    } while (!ptr && (i < count));
+    } while (!ptr && (i < end));
 
     return ptr;
 }

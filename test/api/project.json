@@ -1590,7 +1590,16 @@
                 "override_from_recycled_base",
                 "remove_override_from_recycled_base",
                 "instantiate_tree_from_recycled_base",
-                "rematch_after_add_to_recycled_base"
+                "rematch_after_add_to_recycled_base",
+                "get_tag_from_2nd_base",
+                "get_component_from_2nd_base",
+                "get_component_from_1st_base",
+                "get_component_from_2nd_base_of_base",
+                "get_component_from_1st_base_of_base",
+                "get_component_from_2nd_base_prefab_base",
+                "get_component_from_1st_base_prefab_base",
+                "get_component_from_2nd_base_of_base_prefab_base",
+                "get_component_from_1st_base_of_base_prefab_base"                
             ]
         }, {
             "id": "System_w_FromContainer",

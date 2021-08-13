@@ -2006,19 +2006,3 @@ void SystemPeriodic_or_type() {
 
     ecs_fini(world);
 }
-
-void SystemPeriodic_ensure_optional_is_null_field_owned() {
-    // Implement testcase
-}
-
-void SystemPeriodic_ensure_optional_is_null_field_shared() {
-    // Implement testcase
-}
-
-void SystemPeriodic_use_fields_2_owned() {
-    // Implement testcase
-}
-
-void SystemPeriodic_use_fields_1_owned_1_shared() {
-    // Implement testcase
-}

@@ -1492,6 +1492,15 @@ void Prefab_override_from_recycled_base(void);
 void Prefab_remove_override_from_recycled_base(void);
 void Prefab_instantiate_tree_from_recycled_base(void);
 void Prefab_rematch_after_add_to_recycled_base(void);
+void Prefab_get_tag_from_2nd_base(void);
+void Prefab_get_component_from_2nd_base(void);
+void Prefab_get_component_from_1st_base(void);
+void Prefab_get_component_from_2nd_base_of_base(void);
+void Prefab_get_component_from_1st_base_of_base(void);
+void Prefab_get_component_from_2nd_base_prefab_base(void);
+void Prefab_get_component_from_1st_base_prefab_base(void);
+void Prefab_get_component_from_2nd_base_of_base_prefab_base(void);
+void Prefab_get_component_from_1st_base_of_base_prefab_base(void);
 
 // Testsuite 'System_w_FromContainer'
 void System_w_FromContainer_setup(void);
@@ -7628,6 +7637,42 @@ bake_test_case Prefab_testcases[] = {
     {
         "rematch_after_add_to_recycled_base",
         Prefab_rematch_after_add_to_recycled_base
+    },
+    {
+        "get_tag_from_2nd_base",
+        Prefab_get_tag_from_2nd_base
+    },
+    {
+        "get_component_from_2nd_base",
+        Prefab_get_component_from_2nd_base
+    },
+    {
+        "get_component_from_1st_base",
+        Prefab_get_component_from_1st_base
+    },
+    {
+        "get_component_from_2nd_base_of_base",
+        Prefab_get_component_from_2nd_base_of_base
+    },
+    {
+        "get_component_from_1st_base_of_base",
+        Prefab_get_component_from_1st_base_of_base
+    },
+    {
+        "get_component_from_2nd_base_prefab_base",
+        Prefab_get_component_from_2nd_base_prefab_base
+    },
+    {
+        "get_component_from_1st_base_prefab_base",
+        Prefab_get_component_from_1st_base_prefab_base
+    },
+    {
+        "get_component_from_2nd_base_of_base_prefab_base",
+        Prefab_get_component_from_2nd_base_of_base_prefab_base
+    },
+    {
+        "get_component_from_1st_base_of_base_prefab_base",
+        Prefab_get_component_from_1st_base_of_base_prefab_base
     }
 };
 
@@ -9769,7 +9814,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        85,
+        94,
         Prefab_testcases
     },
     {
