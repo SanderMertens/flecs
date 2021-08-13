@@ -45,6 +45,5 @@ int main(int argc, char *argv[]) {
 
     while ( ecs_progress(world, 0));
 
-    /* Cleanup */
     return ecs_fini(world);
 }

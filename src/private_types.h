@@ -217,7 +217,6 @@ typedef struct ecs_matched_table_t {
     ecs_data_t *data;         /**< Table component data */
     ecs_id_t *ids;            /**< Resolved (component) ids for current table */
     ecs_entity_t *subjects;   /**< Subjects (sources) of ids */
-    ecs_type_t *types;        /**< Types for ids for current table */
     ecs_size_t *sizes;        /**< Sizes for ids for current table */
     ecs_ref_t *references;    /**< Cached components for non-this terms */
 

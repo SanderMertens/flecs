@@ -905,10 +905,10 @@ void Query_query_optional_any() {
         
         if (it.entities[0] == e1) {
             test_assert(v != NULL);
-            test_assert(!ecs_is_owned(&it, 2));
+            test_assert(!ecs_term_is_owned(&it, 2));
         } else if (it.entities[0] == e2) {
             test_assert(v != NULL);
-            test_assert(ecs_is_owned(&it, 2));
+            test_assert(ecs_term_is_owned(&it, 2));
         } else if (it.entities[0] == e3) {
             test_assert(v == NULL);
         }

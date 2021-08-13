@@ -405,7 +405,7 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>>
     flecs::column<A> term_owned(int32_t index) const {
-        ecs_assert(!!ecs_is_owned(m_iter, index), ECS_COLUMN_IS_SHARED, NULL);
+        ecs_assert(!!ecs_term_is_owned(m_iter, index), ECS_COLUMN_IS_SHARED, NULL);
         return this->term<A>(index);
     }
 

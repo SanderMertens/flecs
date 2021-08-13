@@ -11,7 +11,7 @@ void Count_count_empty() {
 void Count_count_w_entity_0() {
     ecs_world_t *world = ecs_init();
 
-    test_int(ecs_count_entity(world, 0), 0);
+    test_int(ecs_count_id(world, 0), 0);
 
     ecs_fini(world);
 }

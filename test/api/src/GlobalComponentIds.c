@@ -13,7 +13,7 @@ ecs_entity_t create_entity(ecs_world_t *world) {
 
 static
 ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
-    return ecs_new_w_entity(world, ecs_id(Position));
+    return ecs_new_w_id(world, ecs_id(Position));
 }
 
 static
@@ -23,7 +23,7 @@ ecs_entity_t create_tag_entity(ecs_world_t *world) {
 
 static
 ecs_entity_t create_tag_entity_w_entity(ecs_world_t *world) {
-    return ecs_new_w_entity(world, MyTag);
+    return ecs_new_w_id(world, MyTag);
 }
 
 static ecs_entity_t return_entity() {

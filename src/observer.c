@@ -14,16 +14,14 @@ void observer_callback(ecs_iter_t *it) {
     user_it.column_count = o->filter.term_count_actual,
     user_it.ids = NULL;
     user_it.columns = NULL;
-    user_it.types = NULL;
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
 
     ecs_iter_init(&user_it);
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, 
-        user_it.ids, user_it.columns, user_it.types, user_it.subjects, 
-        user_it.sizes, user_it.ptrs)) 
+    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
+        user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
     {
         ecs_data_t *data = flecs_table_get_data(table);
         

@@ -503,7 +503,7 @@ void Add_add_remove_entity() {
     ECS_ENTITY(world, Tag_1, 0);
     ECS_ENTITY(world, Tag_2, 0);
 
-    ecs_entity_t e = ecs_new_w_entity(world, Tag_2);
+    ecs_entity_t e = ecs_new_w_id(world, Tag_2);
     test_assert(e != 0);
     test_assert(ecs_has_entity(world, e, Tag_2));
 

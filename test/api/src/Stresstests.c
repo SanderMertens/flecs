@@ -13,7 +13,7 @@ void add_random(
 {
     if (rand() % 2) {
         if (!entity) {
-            entity = ecs_new_w_entity(world, component);
+            entity = ecs_new_w_id(world, component);
         } else {
             ecs_add_id(world, entity, component);
         }

@@ -1321,8 +1321,8 @@ void TwoRefs(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(!ecs_is_owned(it, 1));
-    test_assert(!ecs_is_owned(it, 2));
+    test_assert(!ecs_term_is_owned(it, 1));
+    test_assert(!ecs_term_is_owned(it, 2));
 
     (void)p;
     (void)v;
@@ -1501,7 +1501,7 @@ void SystemPeriodic_match_prefab_and_normal() {
 
 static
 void TestIsSharedOnNotSet(ecs_iter_t *it) {
-    test_assert(ecs_is_owned(it, 2) != false);
+    test_assert(ecs_term_is_owned(it, 2) != false);
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {

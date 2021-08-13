@@ -783,10 +783,10 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-To make a component available for other source files, an application can use the `ECS_COMPONENT_EXTERN` macro in a header:
+To make a component available for other source files, an application can use the regular `extern` keyword:
 
 ```c
-ECS_COMPONENT_EXTERN(Position);
+extern ECS_COMPONENT_DECLARE(Position);
 ```
 
 Declaring components globally works with multiple worlds, as the second time a component is registered it will use the same id. There is one caveat: an application should not define a component in world 2 that is not defined in world 1 _before_ defining the shared components. The reason for this is that if world 2 does not know that the shared component exists, it may assign its id to another component, which can cause a conflict.
@@ -1078,224 +1078,6 @@ if (ecs_query_changed(q)) {
     while (ecs_query_next(&it)) {
         // ...
     }
-}
-```
-
-## Signatures
-**NOTE**: This section describes the legacy query DSL. For documentation on the new query DSL and APIs, see the [Queries manual](Queries.md). The following documentation describes the legacy query language that will be deprecated in the next major version of flecs.
-
-The query signature accepts a wide range of operators and options that allow an application to determine with fine granularity which entities to iterate over. The most common kind of signature is one that subscribes for entities with a set of components. An example of such a signature looks like a comma delimited list of component or tag identifiers:
-
-```
-Position, Velocity
-```
-
-Component identifiers can be namespaced, as is often the case with components from a module. If so, a signature will have to include the full path to the component, separated by dots:
-
-```
-my.namespace.Position, my.namespace.Velocity
-```
-
-Signatures may contain type roles. Type roles have the same identifier as the API constants, without the `ECS` prefix.
-
-```
-SWITCH | Movement, my.namespace.Position
-```
-
-The subset of signatures described so far are called "type expressions", and can be used not only for queries, but also for defining types, usually in combination with the `ECS_TYPE` macro:
-
-```c
-ECS_TYPE(world, MyType, SWITCH | Movement, my.namespace.Position);
-```
-
-The features described from here are not allowed in type expressions, and may only occur for queries and systems.
-
-### Source modifiers
-By default, components in a query are matched against the entities in a table. Source modifiers allow a query to request data from other entities, typically ones that have a special relationship with the matched entities. A source modifier can be specified with the colon (`:`) character. The following source modifiers can be provided in a signature:
-
-Modifier | Description
----------|------------
-OWNED    | Match only owned components (default)
-SHARED   | Match only shared components
-ANY      | Match owned or shared components
-PARENT   | Match component from parent
-CASCADE  | Match component from parent, iterate breadth-first
-SYSTEM   | Match component added to system
-Entity   | Get component directly from a named entity
-$        | Match singleton component
-Nothing  | Do not get the component from an entity, just pass in handle
-
-This is an example of a query that requests the `Position` component from both the entity and its parent:
-
-```
-PARENT:Position, Position
-```
-
-#### OWNED
-The `OWNED` modifier matches a component if the entity owns the component. Whenever a component is added to an entity, it is said that the entity owns the component:
-
-```c
-ecs_entity_t e = ecs_new(world, 0);
-
-// Entity 'e' owns Position
-ecs_add(world, e, Position);
-```
-
-Components can be shared, when an entity has a `IsA` relationship, in which case an entity may share components with a base entity:
-
-```c
-ecs_entity_t base = ecs_new(world, 0);
-ecs_add(world, base, Position);
-
-// Entity 'e' does not own Position, Position is shared
-ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
-```
-
-An example of a signature expression with `OWNED:
-
-```
-OWNED:Position, OWNED:Velocity
-```
-
-`OWNED` is the default modifier, which means that if an application does not provide a source modifier, `OWNED` is used.
-
-#### SHARED
-The `SHARED` modifier only matches shared components. A shared component is a component that the entity inherits from a base entity, through an `IsA` relationship (see the examples in `OWNED`).
-
-When a query or system matches with a `SHARED` component, the `ecs_term` function does not provide an array. Instead it provides a pointer to the shared component which is shared with the entities in the table being iterated over:
-
-```c
-// Request Position, Velocity where Velocity must be shared
-ecs_query_t *query = ecs_query_new(world, "Position, SHARED:Velocity");
-
-ecs_iter_t it = ecs_query_iter(query);
-
-while (ecs_query_next(&it)) {
-    // Pointer is an array, Velocity is a pointer
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
-
-    for (int i = 0; i < it.count, i ++) {
-        // Access velocity as pointer, not as array
-        p[i].x += v->x;
-        p[i].y += v->y;
-    }
-}
-```
-
-#### ANY
-The `ANY` modifier matches both `OWNED` and `SHARED` components. When `ANY` is used, a system should use the `ecs_is_owned` function to test whether it is owned or shared:
-
-```c
-// Request Position, Velocity where Velocity must be shared
-ecs_query_t *query = ecs_query_new(world, "Position, ANY:Velocity");
-
-ecs_iter_t it = ecs_query_iter(query);
-
-while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
-
-    // Test outside of loop for better performance
-    if (ecs_is_owned(it, 2)) {
-        // Velocity is owned, access as array
-        for (int i = 0; i < it.count, i ++) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-        }
-    } else {
-        // Velocity is shared, access as pointer
-        for (int i = 0; i < it.count, i ++) {
-            p[i].x += v->x;
-            p[i].y += v->y;
-        }        
-    }
-}
-```
-
-#### PARENT
-The `PARENT` modifier requests a component from the parent of an entity. This works with entities that have a `ChildOf` relationship:
-
-```c
-ecs_entity_t parent = ecs_new(world, 0);
-ecs_add(world, parent, Position);
-
-ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-```
-
-Queries that use a `PARENT` column should access the column data as if it were a `SHARED` column, as a pointer and not as an array:
-
-```c
-ecs_query_t *query = ecs_query_new(world, "Position, PARENT:Position");
-
-ecs_iter_t it = ecs_query_iter(query);
-
-while (ecs_query_next(&it)) {
-    // 1st Position is array, 2nd one is pointer
-    Position *p = ecs_term(&it, Position, 1);
-    Position *p_parent = ecs_term(&it, Position, 2);
-
-    for (int i = 0; i < it.count, i ++) {
-        p[i].x += p_parent->x;
-        p[i].y += p_parent->y;
-    }
-}
-```
-
-If an entity does not have a parent with the specified component, the query will not match with the entity.
-
-#### CASCADE
-The `CASCADE` modifier is like the `PARENT` modifier, except that it iterates entities breadth-first, calculated by counting the number of parents from an entity to the root. Another difference with `PARENT` is that `CASCADE` matches with the root of a tree, which does not have a parent with the specified component. This requires `CASCADE` queries to check if the parent component is available:
-
-```c
-ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
-
-ecs_iter_t it = ecs_query_iter(query);
-
-while (ecs_query_next(&it)) {
-    Position *p = ecs_term(&it, Position, 1);
-    Position *p_parent = ecs_term(&it, Position, 2);
-
-    if (p_parent) {
-        for (int i = 0; i < it.count, i ++) {
-            p[i].x += p_parent->x;
-            p[i].y += p_parent->y;
-        }
-    }
-}
-```
-
-The `CASCADE` modifier is useful for systems that need a certain parent component to be written before the child component is written, which is the case when, for example, transforming from local coordinates to world coordinates.
-
-#### SYSTEM
-The `SYSTEM` modifier automatically adds a component to the system that can be retrieved from the system, and is an easy way to pass data to a system. It can be used like this in a signature:
-
-```
-SYSTEM:MySystemContext
-```
-
-This adds the `MySystemContext` component to the system. An application can get/set this component by using regular ECS operations:
-
-```c
-typedef struct {
-  int value;
-} MySystemContext;
-
-ECS_SYSTEM(world, MySystem, EcsOnUpdate, Position, SYSTEM:MySystemContext);
-
-ecs_set(world, MySystem, MySystemContext, { .value = 10 });
-```
-
-When iterating the system, the component can be retrieved just like other components:
-
-```c
-void MySystem(ecs_iter_t *it) {
-   Position *p = ecs_term(it, Position, 1);
-   MySystemContext *ctx = ecs_term(it, MySystemContext, 2);
-   
-   for (int i = 0; i < it.count; i ++) {
-     p[i].x += ctx->value; // Note that this is a pointer, not an array
-   }
 }
 ```
 
@@ -2239,7 +2021,7 @@ ecs_get(world, child, Position) == ecs_get(world, e_child, Position); // 1
 Prefabs are entities that can be used as templates for other entities. Prefabs are regular entities, except that they are not matched by default with systems. To create a prefab, add the `EcsPrefab` tag when creating an entity:
 
 ```c
-ecs_entity_t prefab = ecs_new_w_entity(world, EcsPrefab);
+ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
 ```
 
 The `EcsPrefab` tag can also be added or removed dynamically:

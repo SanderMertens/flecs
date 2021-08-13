@@ -10,7 +10,7 @@ void Iter(ecs_iter_t *it) {
     bool shared = false;
     
     if (m_ptr) {
-        shared = !ecs_is_owned(it, 1);
+        shared = !ecs_term_is_owned(it, 1);
     }
 
     Position *p = NULL;
@@ -628,7 +628,7 @@ void Dummy(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m_ptr, 1);
     ECS_COLUMN(it, Position, p, 2);
 
-    test_assert(!m_ptr || !ecs_is_owned(it, 1));
+    test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
 
     probe_system(it);
 
@@ -1182,7 +1182,7 @@ void IterSame(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p_parent, 1);
     Position *p = ecs_term(it, Position, 2);
 
-    test_assert(!ecs_is_owned(it, 1));
+    test_assert(!ecs_term_is_owned(it, 1));
 
     probe_system(it);
 

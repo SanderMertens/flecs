@@ -108,7 +108,7 @@ void New_tag() {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e = ecs_new_w_id(world, Tag);
     test_assert(e != 0);
     test_assert(ecs_has_entity(world, e, Tag));
     
@@ -199,11 +199,11 @@ void New_recycle_id_w_entity() {
 
     ecs_entity_t tag = ecs_new(world, 0);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, tag);
+    ecs_entity_t e1 = ecs_new_w_id(world, tag);
     test_assert(e1 != 0);
     ecs_delete(world, e1);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, tag);
+    ecs_entity_t e2 = ecs_new_w_id(world, tag);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -356,7 +356,7 @@ void New_new_hi_component_id() {
 void New_new_w_entity_0() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_w_entity(world, 0);
+    ecs_entity_t e = ecs_new_w_id(world, 0);
     test_assert(e != 0);
     test_assert(ecs_get_type(world, e) == NULL);
 
