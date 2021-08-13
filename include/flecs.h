@@ -3052,6 +3052,15 @@ bool ecs_id_match(
     ecs_id_t id,
     ecs_id_t pattern);
 
+/** Utility to check if id is a pair.
+ *
+ * @param id The id.
+ * @return True if id is a pair.
+ */
+FLECS_API
+bool ecs_id_is_pair(
+    ecs_id_t id);
+
 /** Utility to check if id is a wildcard.
  *
  * @param id The id.

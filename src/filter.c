@@ -140,6 +140,12 @@ bool ecs_id_match(
     return false;
 }
 
+bool ecs_id_is_pair(
+    ecs_id_t id)
+{
+    return ECS_HAS_ROLE(id, PAIR);
+}
+
 bool ecs_id_is_wildcard(
     ecs_id_t id)
 {

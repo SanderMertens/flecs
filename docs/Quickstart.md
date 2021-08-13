@@ -1,407 +1,797 @@
 # Flecs Quickstart
-This document provides a quick overview of Flecs features.
+This document provides a quick overview of the different features and concepts in Flecs with short examples. This is a good resource if you're just getting started or just want to get a better idea of what kind of features are available in Flecs!
 
 ## World
-The world is the container for all of your ECS data. An application can have multiple worlds. To create & delete a world, simply do:
+The world is the container for all ECS data. It stores the entities and their components, does queries and runs systems. Typically there is only a single world, but there is no limit on the number of worlds an application can create.
 
 ```c
 ecs_world_t *world = ecs_init();
 
-/* Application */
+// Do the ECS stuff
 
 ecs_fini(world);
 ```
 ```cpp
 flecs::world world;
 
-/* Application */
+// Do the ECS stuff
 ```
 
-## Entities
-An entity (`ecs_entity_t`) is a 64-bit integer that uniquely identifies a thing or object in your application. Entities are created like this:
+## Entity
+An entity is a unique thing in the world, and is represented by a 64 bit id. Entities can be created and deleted. If an entity is deleted it is no longer considered "alive". A world can contain up to 4 billion(!) alive entities. Entity identifiers contain a few bits that make it possible to check whether an entity is alive or not.
 
 ```c
-ecs_entity_t e = ecs_new(world, 0);
+ecs_entity_t e = ecs_new_id(world);
+ecs_is_alive(world, e); // true!
+
+ecs_delete(world, e);
+ecs_is_alive(world, e); // false!
 ```
 ```cpp
 auto e = world.entity();
+e.is_alive(); // true!
+
+e.destruct();
+e.is_alive(); // false!
 ```
 
-You can also use plain numbers:
+Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. In C a name can be assigned with the `ecs_entity_init` function. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
 
 ```c
-ecs_entity_t e = 1000;
+ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) { .name = "Bob" });
+
+printf("Entity name: %s\n", ecs_get_name(world, e));
 ```
 ```cpp
-auto e = world.entity(1000);
+auto e = world.entity("Bob");
+
+std::cout << "Entity name: " << e.name() << std::endl;
 ```
 
-When not using an explicit id, the framework guarantees that the returned id is not in use.
-
-## Components
-A component is a plain datatype that can be attached to an entity. An entity can contain any number of components. Components must be registered with the world like this:
+Entities can be looked up by name with the `lookup` function:
 
 ```c
-// Components can be defined from regular types
-typedef struct Position {
-    float x, y;
-} Position;
-
-int main() {
-    ecs_world_t *world = ecs_init();
-
-    // Register the component with the world
-    ECS_COMPONENT(world, Position);
-}
+ecs_entity_t e = ecs_lookup(world, "Bob");
 ```
 ```cpp
-// Components can be defined from regular types
-struct Position {
-    float x, y;
-};
-
-int main() {
-    flecs::world world;
-
-    // Register the component with the world
-    world.component<Position>();
-}
+auto e = world.lookup("Bob");
 ```
 
-Once registered, a component can be added to an entity using `add`:
+## Id
+An id is a 64 bit number that can encode anything that can be added to an entity. In flecs this can be either a component, tag or a pair. A component is data that can be added to an entity. A tag is an "empty" component. A pair is a combination of two component/tag ids which is used to encode entity relationships. All entity/component/tag identifiers are valid ids, but not all ids are valid entity identifier.
+
+The following sections describe components, tags and pairs in more detail.
+
+## Component
+A component is a type of which instances can be added and removed to entities. Each component can added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. In C++ this happens automatically.
 
 ```c
-ecs_add(world, e, Position);
-```
-```cpp
-e.add<Position>();
-```
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
 
-You can also create an entity with a component already added:
+ecs_entity_t e = ecs_new_id(world);
 
-```c
-ecs_entity_t e = ecs_new(world, Position);
-```
-```cpp
-auto e = world.entity().add<Position>();
-```
+// Add a component. This creates the component in the ECS storage, but does not
+// assign it with a value.
+ecs_add(world, e, Velocity);
 
-An application can also use `set` to assign a value to the component. If the component was not added yet, `set` will add it implicitly:
-
-```c
+// Set the value for the Position & Velocity components. A component will be
+// added if the entity doesn't have it yet.
 ecs_set(world, e, Position, {10, 20});
-```
-```cpp
-e.set<Position>({10, 20});
-```
+ecs_set(world, e, Velocity, {1, 2});
 
-The value of a component can be requested with `ecs_get`, which will return `NULL` if the entity does not have the component:
-
-```c
+// Get a component
 const Position *p = ecs_get(world, e, Position);
-```
-```cpp
-const Position *p = e.get<Position>();
-```
 
-If you need a pointer that you can modify, use `ecs_get_mut`:
-
-```c
-Position *p = ecs_get_mut(world, e, Position, NULL);
-```
-```cpp
-const Position *p = e.get_mut<Position>();
-```
-
-Components can be removed with `ecs_remove`:
-
-```c
+// Remove component
 ecs_remove(world, e, Position);
 ```
 ```cpp
+auto e = world.entity();
+
+// Add a component. This creates the component in the ECS storage, but does not
+// assign it with a value.
+e.add<Velocity>();
+
+// Set the value for the Position & Velocity components. A component will be
+// added if the entity doesn't have it yet.
+auto e = ecs.entity()
+    .set<Position>({10, 20})
+    .set<Velocity>({1, 2});
+
+// Get a component
+const Position *p = e.get<Position>();
+
+// Remove component
 e.remove<Position>();
 ```
 
-## Tags
-Tags are much like components, but they are not associated with a data type. Tags are typically used to add a flag to an entity, for example to indicate that an entity is an Enemy:
+Each component is associated by a unique entity identifier by Flecs. This makes it possible to inspect component data, or attach your own data to components. C applications can use the `ecs_id` macro to get the entity id for a component. C++ applications can use the `world::id` function:
 
 ```c
-int main() {
-    ecs_world_t *world = ecs_init();
+ECS_COMPONENT(world, Position);
 
-    // Register the tag with the world. There is no Enemy type
-    ECS_TAG(world, Enemy);
-}
+ecs_entity_t pos_e = ecs_id(Position);
+printf("Name: %s\n", ecs_get_name(world, pos_e)); // outputs 'Name: Position'
+
+// It's possible to add components like you would for any entity
+ecs_add(world, pos_e, Serializable);
 ```
 ```cpp
+flecs::entity pos_e = world.id<Position>();
+std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
+
+// It's possible to add components like you would for any entity
+pos_e.add<Serializable>();
+```
+
+The thing that makes an ordinary entity a component is the `EcsComponent` (or `flecs::Component`, in C++) component. This is a builtin component that tells Flecs how much space is needed to store a component, and can be inspected by applications:
+
+```c
+ECS_COMPONENT(world, Position);
+
+ecs_entity_t pos_e = ecs_id(Position);
+
+const EcsComponent *c = ecs_get(world, pos_e, EcsComponent);
+printf("Component size: %u\n", c->size);
+```
+```cpp
+flecs::entity pos_e = world.id<Position>();
+
+const EcsComponent *c = pos_e.get<flecs::Component>();
+std::cout << "Component size: " << c->size << std::endl;
+```
+
+Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relation cleanup properties](Relations.md#relation_cleanup_properties).
+
+## Tag
+A tag is a component that does not have any data. In Flecs tags can be either empty types (in C++) or regular entities (C & C++) that do not have the `EcsComponent` component (or have an `EcsComponent` component with size 0). Tags can be added & removed using the same APIs as adding & removing components, but because tags have no data, they cannot be assigned a value. Because tags (like components) are regular entities, they can be created & deleted at runtime.
+
+```c
+// Create Enemy tag
+ecs_entity_t Enemy = ecs_new_id(world);
+
+// Create entity, add Enemy tag
+ecs_entity_t e = ecs_new_id(world);
+
+ecs_add_id(world, e, Enemy);
+ecs_has_id(world, e, Enemy); // true!
+
+ecs_remove_id(world, e, Enemy);
+ecs_has_id(world, e, Enemy); // false!
+```
+```cpp
+// Option 1: create Tag as empty struct
 struct Enemy { };
 
-int main() {
-    flecs::world world;
+// Create entity, add Enemy tag
+auto e = world.entity().add<Enemy>();
+e.has<Enemy>(); // true!
 
-    // Register the tag with the world
-    world.component<Enemy>();
+e.remove<Enemy>();
+e.has<Enemy>(); // false!
+
+
+// Option 2: create Tag as entity
+auto Enemy = world.entity();
+
+// Create entity, add Enemy tag
+auto e = world.entity().add(Enemy);
+e.has(Enemy); // true!
+
+e.remove(Enemy);
+e.has(Enemy); // false!
+```
+
+Note that both options in the C++ example achieve the same effect. The only difference is that in option 1 the tag is fixed at compile time, whereas in option 2 the tag can be created dynamically at runtime.
+
+When a tag is deleted, the same rules apply as for components (see [Relation cleanup properties](Relations.md#relation_cleanup_properties)).
+
+## Pair
+A pair is a combination of two entity ids. Pairs can be used to store entity relations, where the first id represents the relation kind and the second id represents the relation target (called "object"). This is best explained by an example:
+
+```c
+// Create Likes relation
+ecs_entity_t Likes = ecs_new_id(world); 
+
+// Create a small graph with two entities that like each other
+ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Alice = ecs_new_id(world);
+
+ecs_add_pair(world, Bob, Likes, Alice); // Bob likes Alice
+ecs_add_pair(world, Alice, Likes, Bob); // Alice likes Bob
+ecs_has_pair(world, Bob, Likes, Alice); // true!
+
+ecs_remove_pair(world, Bob, Likes, Alice);
+ecs_has_pair(world, Bob, Likes, Alice); // false!
+```
+```cpp
+// Create Likes relation as empty type (tag)
+struct Likes { };
+
+// Create a small graph with two entities that like each other
+auto Bob = world.entity();
+auto Alice = world.entity();
+
+Bob.add<Likes>(Alice); // Bob likes Alice
+Alice.add<Likes>(Bob); // Alice likes Bob
+Bob.has<Likes>(Alice); // true!
+
+Bob.remove<Likes>(Alice);
+Bob.has<Likes>(Alice); // false!
+```
+
+A pair can be encoded in a single 64 bit identifier by using the `ecs_pair` macro in C, or the `world.pair` function in C++:
+
+```c
+ecs_id_t id = ecs_pair(Likes, Bob);
+```
+```cpp
+flecs::id id = world.pair(Likes, Bob);
+```
+
+The following examples show how to get back the relation and object pairs from a pair id:
+
+```c
+if (ecs_id_is_pair(id)) {
+    ecs_entity_t rel = ecs_pair_relation(world, id);
+    ecs_entity_t obj = ecs_pair_object(world, id);
+}
+```
+```cpp
+if (id.is_pair()) {
+    auto rel = id.relation();
+    auto obj = id.object();
 }
 ```
 
-Once registered, you can now add & remove the tag just like a regular component:
+A component or tag can be added multiple times to the same entity as long as it is part of a pair, and the pair itself is unique:
 
 ```c
-// Add the Enemy tag
-ecs_add(world, e, Enemy);
+ecs_add_pair(world, Bob, Eats, Apples);
+ecs_add_pair(world, Bob, Eats, Pears);
+ecs_add_pair(world, Bob, Grows, Pears);
 
-// Remove the Enemy tag
-ecs_remove(world, e, Enemy);
+ecs_has_pair(world, Bob, Eats, Apples); // true!
+ecs_has_pair(world, Bob, Eats, Pears);  // true!
+ecs_has_pair(world, Bob, Grows, Pears); // true!
 ```
 ```cpp
-// Add the Enemy tag
-e.add<Enemy>();
+Bob.add(Eats, Apples);
+Bob.add(Eats, Pears);
+Bob.add(Grows, Pears);
 
-// Remove the Enemy tag
-e.remove<Enemy>();
+Bob.has(Eats, Apples); // true!
+Bob.has(Eats, Pears);  // true!
+Bob.has(Grows, Pears); // true!
 ```
 
-Note that since a tag does not have data, you cannot use `ecs_set` or `ecs_get`.
-
-## Systems
-Systems are functions that are matched with entities that have a specific set of components. A typical system is defined like this:
+The `get_object` function can be used in C and C++ to get the object for a relation:
 
 ```c
-ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ecs_entity_t o = ecs_get_object(world, Alice, Likes, 0); // Returns Bob
 ```
 ```cpp
-world.system<Position, Velocity>("Move").iter(Move);
+auto o = Alice.get_object<Likes>(); // Returns Bob
 ```
 
-`Move` is the system name and also the name of the system function, `EcsOnUpdate` indicates when the system runs (see [Pipelines](#Pipelines)). `Position, Velocity` is the system signature, and indicates the components the system is subscribed for.
+Entity relations enable lots of interesting patterns and possibilities. Make sure to check out the [Relations manual](Relations.md).
 
-The implementation of this system could look like this:
+## Hierarchies
+Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `flecs::ChildOf`, in C++) relationship. A hierarchy can be created with the regular relationship API, or with the `child_of` shortcut in C++:
 
 ```c
+ecs_entity_t parent = ecs_new_id(world);
+
+// ecs_new_w_pair is the same as ecs_new_id + ecs_add_pair
+ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+// Deleting the parent also deletes its children
+ecs_delete(world, parent);
+```
+```cpp
+auto parent = world.entity();
+auto child = world.entity().child_of(parent);
+
+// Deleting the parent also deletes its children
+parent.destruct();
+```
+
+When entities have names, they can be used together with hierarchies to generate path names or do relative lookups:
+
+```c
+ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t){
+    .name = "parent"
+});
+
+ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
+    .name = "child"
+});
+
+ecs_add_pair(world, child, EcsChildOf, parent);
+
+char *path = ecs_get_fullpath(world, child);
+printf("%s\n", path); // output: 'parent.child'
+ecs_os_free(path);
+
+ecs_lookup_path(world, 0, "parent.child"); // returns child
+ecs_lookup_path(world, parent, "child");   // returns child
+```
+```cpp
+auto parent = world.entity("parent");
+auto child = world.entity("child").child_of(parent);
+std::cout << child.path() << std::endl; // output: 'parent::child'
+
+world.lookup("parent::child"); // returns child
+parent.lookup("child"); // returns child
+```
+
+Queries (see below) can use hierarchies to order data breadth-first, which can come in handy when you're implementing a transform system:
+
+```c
+ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .terms = {
+        { ecs_id(Position) },
+        { ecs_id(Position), .args[0].set = {
+            .mask = EcsCascade,    // Force breadth-first order
+            .relation = EcsChildOf // Use ChildOf relation for ordering
+        }} 
+    }
+});
+
+ecs_iter_t it = ecs_query_iter(q);
+while (ecs_query_next(&it)) {
+    Position *p = ecs_term(&it, Position, 1);
+    Position *p_parent = ecs_term(&it, Position, 2);
+    for (int i = 0; i < it.count; i ++) {
+        // Do the thing
+    }
+}
+```
+```cpp
+auto q = world.query_builder<Position, Position>()
+    .arg(2).set(flecs::Cascade, flecs::ChildOf)
+    .build();
+
+q.each([](Position& p, Position& p_parent) {
+    // Do the thing
+});
+```
+
+## Instancing
+Flecs has builtin support for instancing (sharing a single component with multiple entities) through the builtin `EcsIsA` relation (`flecs::IsA` in C++). An entity with an `IsA` relation to a base entity "inherits" all entities from that base:
+
+```c
+// Shortcut to create entity & set a component
+ecs_entity_t base = ecs_set(world, 0, Triangle, {{0, 0}, {1, 1}, {-1, -1}});
+
+// Create entity that shares components with base
+ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+const Triangle *t = ecs_get(world, e, Triangle); // gets Triangle from base
+```
+```cpp
+auto base = world.entity().set<Triangle>({{0, 0}, {1, 1}, {-1, -1}});
+
+// Create entity that shares components with base
+auto e = world.entity().is_a(base);
+const Triangle *t = e.get<Triangle>(); // gets Triangle from base
+```
+
+Entities can override components from their base:
+
+```c
+// Add private instance of Triangle to e, copy value from base
+ecs_add(world, e, Triangle);
+```
+```cpp
+// Add private instance of Triangle to e, copy value from base
+e.add<Triangle>();
+```
+
+Instancing can be used to build modular prefab hierarchies, as the foundation of a batched renderer with instancing support, or just to reduce memory footprint by sharing common data across entities.
+
+## Type
+The type (often referred to as "archetype") is the list of ids an entity has. Types can be used for introspection which is useful when debugging, or when for example building an entity editor. The most common thing to do with a type is to convert it to text and print it:
+
+```c
+ECS_COMPONENT(world, Position);
+ECS_COMPONENT(world, Velocity);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, e, Position);
+ecs_add(world, e, Velocity);
+
+ecs_type_t type = ecs_get_type(world, e);
+char *type_str = ecs_type_str(world, type);
+printf("Type: %s\n", type_str); // output: 'Position,Velocity'
+ecs_os_free(type_str);
+```
+```cpp
+auto e = ecs.entity()
+    .add<Position>()
+    .add<Velocity>();
+
+std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
+```
+
+A type can also be iterated by an application:
+```c
+ecs_type_t type = ecs_get_type(world, e);
+ecs_id_t *ids = ecs_vector_first(type);
+for (int i = 0; i < ecs_vector_count(type; i ++) {
+    if (ids[i] == ecs_id(Position)) {
+        // Found Position component!
+    }
+}
+```
+```cpp
+e.each([&](flecs:id id) {
+    if (id == world.id<Position>()) {
+        // Found Position component!
+    }
+}
+```
+
+## Singleton
+A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:
+
+```c
+// Set singleton component
+ecs_set_singleton(world, Position, {10, 20});
+
+// Get singleton component
+const Position *p = ecs_get_singleton(world, Position);
+```
+```cpp
+// Set singleton component
+world.set<Position>({10, 20});
+
+// Get singleton component
+const Position *p = world.get<Position>();
+```
+
+Singleton components are created by adding the component to its own entity id. The above code examples are shortcuts for these regular API calls:
+
+```c
+ecs_set(world, ecs_id(Position), Position, {10, 20});
+
+const Position *p = ecs_get(world, ecs_id(Position), Position);
+```
+```cpp
+flecs::entity pos_e = world.id<Position>();
+
+pos_e.set<Position>({10, 20});
+
+const Position *p = pos_e.get<Position>();
+```
+
+## Term
+A term is the simplest kind of query in Flecs, and enables finding all entities for a single specific component, tag or pair. The following examples show how to find & iterate over all entities that have the `Position` component:
+
+```c
+// Create an iterator that finds all entities that have Position
+ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_id(Position) });
+while (ecs_term_next(&it)) {
+    Position *p = ecs_term(&it, Position, 1);
+
+    // Iterate the entities & their Position components
+    for (int i = 0; i < it.count; i ++) {
+        printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]),
+            p[i].x, p[i].y);
+    }
+}
+```
+```cpp
+// Iterate the entities & their Position components
+world.each([](flecs::entity e, Position& p) {
+    std::cout << e.name() << ": {" << p.x << ", " << p.y << "}" << std::endl;
+});
+```
+
+## Filter
+A filter is a list of terms that are matched against entities. Filters are cheap to create and match entities as iteration takes place. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, a typical use case for this being runtime tags. Another advantage of filters is that while they can be reused, their cheap creation time doesn't require it. The following example shows a simple filter:
+
+```c
+// Initialize a filter with 2 terms on the stack
+ecs_filter_t f;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    .terms = {
+        { ecs_id(Position) },
+        { ecs_pair(EcsChildOf, parent) }
+    }
+});
+
+// Iterate the filter results. Because entities are grouped by their type there
+// are two loops: an outer loop for the type, and an inner loop for the entities
+// for that type.
+ecs_iter_t it = ecs_filter_iter(world, &f);
+while (ecs_filter_next(&it)) {
+    // Each type has its own set of component arrays
+    Position *p = ecs_term(&it, Position, 1);
+
+    // Iterate all entities for the type
+    for (int i = 0; i < it.count; i ++) {
+        printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]),
+            p[i].x, p[i].y);
+    }
+}
+```
+```cpp
+// For simple queries the each function can be used
+world.each([](Position& p, Velocity& v) { // flecs::entity argument is optional
+    p.x += v.x;
+    p.y += v.y;
+});
+
+// More complex filters can first be created, then iterated
+auto f = world.filter_builder<Position>()
+    .term(flecs::ChildOf, parent)
+    .build();
+
+// Option 1: each() function that iterates each entity
+f.each([](flecs::entity e, Position& p) {
+    std::cout << e.name() << ": {" << p.x << ", " << p.y << "}" << std::endl;
+});
+
+// Option 2: iter() function that iterates each archetype
+f.iter([](flecs::iter& it, Position *p) {
+    for (int i : it) {
+        std::cout << e.name() 
+            << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
+    }
+});
+```
+
+The time complexity of a filter is roughly O(n), where n is the number of archetypes matched by the term with the smallest number of matching archetypes. Each subsequent term adds a constant-time check per archetype, which makes the average time complexity O(n).
+
+Filters can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
+
+The following example shows a filter that matches all entities with a parent that do not have `Position`:
+
+```c
+ecs_filter_t f;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    .terms = {
+        { ecs_pair(EcsChildOf, EcsWildcard) }
+        { ecs_id(Position), .oper = EcsNot },
+    }
+});
+
+// Iteration code is the same
+```
+```cpp
+auto f = world.filter_builder<>()
+    .term(flecs::ChildOf, flecs::Wildcard)
+    .term<Position>().oper(flecs::Not)
+    .build();
+
+// Iteration code is the same
+```
+
+## Query
+A query is like a filter in that it is a list of terms that is matched with entities. The difference with a filter is that queries cache their results, which makes them more expensive to create, but cheaper to iterate. Because a query caches a list of archetypes rather than a list of entities, the cache stabilizes fast as new archetypes are only created for new component combinations. This makes queries an attractive option for scenarios where an application knows in advance which things to query for (such as with systems), as over the lifespan of an application approximately no time is spent on finding the right entities.
+
+The API for queries looks very similar to filters:
+
+```c
+// Create a query with 2 terms
+ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .terms = {
+        { ecs_id(Position) },
+        { ecs_pair(EcsChildOf, EcsWildcard) }
+    }
+});
+
+ecs_iter_t it = ecs_query_iter(q);
+while (ecs_query_next(&it)) {
+    // Same as for filters
+}
+```
+```cpp
+// Create a query with two terms
+auto q = world.query_builder<Position>()
+    .term(flecs::ChildOf, flecs::Wildcard)
+    .build();
+
+// Iteration is the same as filters
+```
+
+Queries support additional features, such as breadth-first sorting based on relation (the `cascade` modifier) and sorting by component values. See the [query manual](Queries.md) for more details.
+
+## System
+A system is a query combined with a callback. Systems can be either ran manually or ran as part of an ECS-managed main loop (see [Pipeline](#pipeline)). The system API looks similar to queries:
+
+```c
+// Option 1, use the ECS_SYSTEM convenience macro
+ECS_SYSTEM(world, Move, 0, Position, Velocity);
+ecs_run(world, Move, delta_time, NULL); // Run system
+
+// Option 2, use the ecs_system_init function
+ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t) {
+    .filter.terms = {
+        {ecs_id(Position)},
+        {ecs_id(Velocity)},
+    },
+    .callback = Move
+});
+
+ecs_run(world, move_sys, delta_time, NULL); // Run system
+
+// The callback code (same for both options)
 void Move(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
     Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
+        p[i].x += v[i].x * it->delta_time;
+        p[i].y += v[i].y * it->delta_time;
     }
 }
 ```
 ```cpp
-void Move(flecs::iter& it, Position *p, Velocity *v) {
-    for (auto i : it) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-}
-```
-
-The `it` argument contains all the information the system needs to iterate the components. The `ecs_term` function (in C) returns a C array for the subscribed for component. The numbers `1` and `2` indicate where in the system signature the components can be found.
-
-The system will be invoked by `ecs_progress`, which runs the main loop:
-
-```c
-// Progress frame, exit loop when application should quit
-while (ecs_progress(world, 0)) { }
-```
-```cpp
-while (world.progress()) { }
-```
-
-The `Move` function will be invoked once per unique [type](#Type) that matched with the system. For example if a system matched with entities that have `Position, Velocity` and `Position, Velocity, Mass`, the function would be invoked twice.
-
-## Queries
-Queries are like systems in that they let applications iterate over entities, but without having to create a separate function. Systems use queries internally however, so their APIs are similar:
-
-A query can be used like this:
-
-```c
-// Create a query for all entities with Position, Velocity
-ecs_query_t *query = ecs_query_new(world, "Position, Velocity");
-
-// Create iterator for query
-ecs_iter_t it = ecs_query_iter(query);
-
-// Iterate all the matching archetypes
-while (ecs_query_next(&it)) {
-    // Get the component arrays
-    Position *p = ecs_term(&it, Position, 1);
-    Velocity *v = ecs_term(&it, Velocity, 2);
-
-    // Iterate the entities in the archetype
-    for (int i = 0; i < it.count; i ++) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-}
-```
-```cpp
-// Create a query for all entities with Position, Velocity
-auto query = world.query<Position, const Velocity>();
-
-query.each([](flecs::entity e, Position& p, const Velocity &v) {
-    p.x += v.x;
-    p.y += v.y;
-});
-```
-
-Queries are registered with the world, and entities (types) are continuously matched with a query. This means that when an application iterates over a query, matching has already happened, which makes it very fast.
-
-## Traits
-Traits are a special kind of component that is added to an entity,component tuple. Pair components can be useful for implementing functionality that is not specific to one component. A typical example is implementing a timer after which a component should be deleted. We can define the trait component type like this:
-
-```c
-typedef struct ExpiryTimer {
-    float expiry_time;
-    float t;
-} ExpiryTimer;
-```
-```cpp
-struct ExpiryTimer {
-    float expiry_time;
-    float t;
-};
-```
-
-We then create a system that increases the value of t every frame until it matches or exceeds expiry_time, after which we will remove our component. Before looking at the system, let's first look at how we can add a trait to an entity:
-
-```c
-ecs_entity_t e = ecs_new(world, 0);
-
-// Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
-ecs_add(world, e, HealthBuff);
-ecs_set_trait(world, e, HealthBuff, ExpiryTimer, {
-    .expiry_time = 10
-});
-
-// Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
-ecs_set_trait(world, e, StaminaBuff, ExpiryTimer, {
-    .expiry_time = 5
-});
-```
-```cpp
-auto e = world.entity();
-
-// Add HealthBuff, set the ExpiryTimer trait for HealthBuff to 10 seconds
-e.add<HealthBuff>();
-e.set<ExpiryTimer, HealthBuff>({ 10 });
-
-// Add StaminaBuff, set the ExpiryTimer trait for StaminaBuff to 5 seconds
-e.set<ExpiryTimer, StaminaBuff>({ 5 });
-```
-
-Now we need to write a system to increase the timer and execute the remove logic. The system definition looks almost like a regular system:
-
-```c
-ECS_SYSTEM(world, ExpireComponents, EcsOnUpdate, (ExpiryTimer, *));
-```
-```cpp
-world.system<>("ExpireComponents", "(ExpiryTimer, *)").iter(ExpiryTimer);
-```
-
-Note that the `ExpiryTimer` has the `PAIR` role. This lets the system know it should match this component as a trait, not as a regular component. Now lets look at the implementation of this system:
-
-```c
-void ExpireComponents(ecs_iter_t *it) {
-    /* Get the trait component just like a normal component */
-    ExpiryTimer *et = ecs_term(it, ExpiryTimer, 1);
-
-    /* Get the trait handle */
-    ecs_entity_t trait = ecs_term_id(it, 1);
-
-    /* Obtain the component handlem, which is the lower 32 bits
-     * of the trait handle, which can be obtained with the 
-     * ecs_entity_t_lo macro. */
-    ecs_entity_t comp = ecs_entity_t_lo(trait);
-
-    /* Iterate trait component as usual ... */
-    for (int32_t i = 0; i < it->count; i ++) {
-        /* When timer hits expiry time, remove component */
-        et[i].t += it->delta_time;
-        if (et[i].t >= et[i].expiry_time) {
-            /* Remove component */
-            ecs_remove_id(it->world, it->entities[i], comp);
-
-            /* Removes trait, so system won't be invoked again */
-            ecs_remove_id(it->world, it->entities[i], trait);
-        }
-    }
-```
-```cpp
-void ExpireComponents(flecs::iter& it) {
-    /* Get the trait component */
-    ExpiryTimer *et = it.term<ExpiryTimer>(1);
-
-    /* Get the trait handle */
-    auto trait = it.column_entity(1);
-
-    /* Obtain the component handlem, which is the lower 32 bits
-     * of the trait handle, which can be obtained with the 
-     * ecs_entity_t_lo macro. */
-    auto comp = trait.lo();
-
-    /* Iterate trait component as usual ... */
-    for (auto i : it) {
-        /* When timer hits expiry time, remove component */
-        et[i].t += it.delta_time();
-        if (et[i].t >= et[i].expiry_time) {
-            /* Remove component */
-            it.entity(i).remove(comp);
-
-            /* Removes trait, so system won't be invoked again */
-            it.entity(i).remove(trait);
-        }
-    }
-```
-
-Note that this system doesn't contain any code that is specific for the components to which the traits were added. This means this system can be applied to any component.
-
-## Component Lifecycle
-An application can register callbacks for when a component is constructed, destructed, copied or moved. This allows applications to manage resources and prevent memory leaks.
-
-This is an example implementation for the component lifecycle callbacks:
-
-```c
-typedef struct String {
-    char *value;
-} String;
-
-// Component constructor
-ECS_CTOR(String, ptr, {
-    ptr->value = NULL;
-});
-
-// Component destructor
-ECS_DTOR(String, ptr, {
-    free(ptr->value);
-});
-
-// Component copy
-ECS_COPY(String, dst, src, {
-    free(dst->value);
-    dst->value = strdup(src->value);
-});
-
-// Component move
-ECS_MOVE(String, dst, src, {
-    dst->value = src->value;
-    src->value = NULL;
-});
-```
-
-The component lifecycle callbacks can be registered like this:
-
-```c
-ECS_COMPONENT(world, String);
-
-ecs_set_component_actions(world, ecs_id(String), 
-    &(EcsComponentLifecycle){
-        .ctor = ecs_ctor(String),
-        .dtor = ecs_dtor(String),
-        .copy = ecs_copy(String),
-        .move = ecs_move(String)
+// Use each() function that iterates each individual entity
+auto move_sys = world.system<Position, Velocity>()
+    .iter([](flecs::iter it, Position *p, Velocity *v) {
+        p[i].x += v[i].x * it.delta_time();
+        p[i].y += v[i].y * it.delta_time();
     });
+
+    // Just like with filters & queries, systems have both the iter() and
+    // each() methods to iterate entities.
+
+move_sys.run();
 ```
 
-The C++ API automatically uses the component type constructor, destructor and copy, move assignment operators.
+Systems are stored as entities with an `EcsSystem` component (`flecs::System` in C++), similar to components. That means that an application can use a system as a regular entity:
+
+```c
+printf("System: %s\n", ecs_get_name(world, move_sys));
+ecs_add(world, move_sys, EcsOnUpdate);
+ecs_delete(world, move_sys);
+```
+```cpp
+std::cout << "System: " << move_sys.name() << std::endl;
+move_sys.add(flecs::OnUpdate);
+move_sys.destruct();
+```
+
+## Pipeline
+A pipeline is a list of tags that when matched, produces a list of systems to run. These tags are also referred to as a system "phase". Flecs comes with a default pipeline that has the following phases:
+
+```c
+EcsOnLoad
+EcsPostLoad
+EcsPreUpdate
+EcsOnUpdate
+EcsOnValidate
+EcsPostUpdate
+EcsPreStore
+EcsPostStore
+```
+```cpp
+flecs::OnLoad
+flecs::PostLoad
+flecs::PreUpdate
+flecs::OnUpdate
+flecs::PostUpdate
+flecs::OnValidate
+flecs::PostValidate
+flecs::PreStore
+flecs::PostStore
+```
+
+When a pipeline is executed, systems are ran in the order of the phases. This makes pipelines and phases the primary mechanism for defining ordering between systems. The following code shows how to assign systems to a pipeline, and how to run the pipeline with the `progress()` function:
+
+```c
+ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ECS_SYSTEM(world, Transform, EcsPostUpdate, Position, Transform);
+ECS_SYSTEM(world, Render, EcsOnStore, Transform, Mesh);
+
+ecs_progress(world, 0); // run systems in default pipeline
+```
+```cpp
+world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each( ... );
+world.system<Position, Transform>("Transform").kind(flecs::PostUpdate).each( ... );
+world.system<Transform, Mesh>("Render").kind(flecs::OnStore).each( ... );
+
+world.progress();
+```
+
+Because phases are just tags that are added to systems, applications can use the regular API to add/remove systems to a phase:
+```c
+ecs_remove_id(world, Move, EcsOnUpdate);
+ecs_add_id(world, Move, EcsPostUpdate);
+```
+```cpp
+move_sys.add(flecs::OnUpdate);
+move_sys.remove(flecs::PostUpdate);
+```
+
+Inside a phase systems are guaranteed to be ran in their declaration order.
+
+## Trigger
+A trigger is a callback for an event for a single term. Triggers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system, but for a single term and an additional event.
+
+```c
+ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    .term = { ecs_id(Position) },
+    .event = EcsOnSet,
+    .callback = OnSetPosition
+});
+
+// Callback code is same as system
+
+// Trigger the trigger
+ecs_set(world, e, Position, {10, 20});
+```
+```cpp
+// C++ triggers are created as a system with the phase set to the trigger event
+world.system<Position>("OnSetPosition").kind(flecs::OnSet).each( ... );
+
+// Trigger the trigger
+e.set<Position>({10, 20});
+```
+
+## Observer
+An observer is like a trigger, but for multiple terms. Like triggers, observers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system. An observer is only triggered when all terms match the entity.
+
+```c
+ecs_observer_init(world, &(ecs_observer_desc_t) {
+    .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
+    .event = EcsOnSet,
+    .callback = OnSetPosition
+});
+
+// Callback code is same as system
+
+// Trigger the callback
+ecs_entity_t e = ecs_new_id(world);    // Doesn't trigger the observer
+ecs_set(world, e, Position, {10, 20}); // Doesn't trigger the observer
+ecs_set(world, e, Velocity, {1, 2});   // Triggers the observer
+ecs_set(world, e, Position, {20, 40}); // Triggers the observer
+```
+```cpp
+world.observer<Position, Velocity>("OnSetPosition").event(flecs::OnSet).each( ... );
+
+// Trigger the trigger
+auto e = ecs.entity();     // Doesn't trigger the observer
+e.set<Position>({10, 20}); // Doesn't trigger the observer
+e.set<Velocity>({1, 2});   // Triggers the observer
+e.set<Position>({20, 30}); // Triggers the observer
+```
+
+## Module
+A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relation. The following examples show how to define a module in C and C++:
+
+```c
+// A bit of boiler plate for C modules
+typedef struct MyModule {
+    int dummy;
+} MyModule;
+
+#define MyModuleImportHandles(handles)
+
+void MyModuleImport(ecs_world_t *world) {
+    ECS_MODULE(world, MyModule);
+
+    // Define components, systems, triggers, ... as usual. They will be
+    // automatically created inside the scope of the module.
+}
+
+// Import code
+ECS_IMPORT(world, MyModule);
+```
+```cpp
+struct my_module {
+    my_module(flecs::world& world) {
+        world.module<my_module>();
+
+        // Define components, systems, triggers, ... as usual. They will be
+        // automatically created inside the scope of the module.
+    }
+};
+
+// Import code
+world.import<my_module>();
+```
+
