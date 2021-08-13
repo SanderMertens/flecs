@@ -247,7 +247,7 @@ void Monitor_1_comp_prefab_add() {
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new_w_entity(world, EcsPrefab);
+    ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
     ecs_add(world, e, Position);
     test_int(ctx.invoked, 0);
 

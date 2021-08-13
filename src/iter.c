@@ -22,7 +22,6 @@ void ecs_iter_init(
     ecs_iter_t *it)
 {
     INIT_CACHE(it, ids, it->column_count);
-    INIT_CACHE(it, types, it->column_count);
     INIT_CACHE(it, columns, it->column_count);
     INIT_CACHE(it, subjects, it->column_count);
     INIT_CACHE(it, sizes, it->column_count);
@@ -38,7 +37,6 @@ void ecs_iter_fini(
     it->is_valid = false;
 
     FINI_CACHE(it, ids);
-    FINI_CACHE(it, types);
     FINI_CACHE(it, columns);
     FINI_CACHE(it, subjects);
     FINI_CACHE(it, sizes);

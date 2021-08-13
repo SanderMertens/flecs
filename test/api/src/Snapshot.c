@@ -545,7 +545,6 @@ void Snapshot_snapshot_activate_table_w_filter() {
     ecs_progress(world, 0);
     test_bool(invoked, true);
 
-    /* Cleanup */
     ecs_fini(world);
 }
 

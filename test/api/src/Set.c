@@ -437,7 +437,7 @@ void Set_get_mut_tag_new_w_pair() {
     ECS_TAG(world, Pair);
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ecs_pair(ecs_id(Position), Pair));
+    ecs_entity_t e = ecs_new_w_id(world, ecs_pair(ecs_id(Position), Pair));
     test_assert(e != 0);
 
     test_expect_abort();
@@ -514,8 +514,8 @@ void Set_modified_no_component() {
     ecs_fini(world);
 }
 
-ECS_COMPONENT_EXTERN(Position);
-ECS_COMPONENT_EXTERN(Velocity);
+extern ECS_COMPONENT_DECLARE(Position);
+extern ECS_COMPONENT_DECLARE(Velocity);
 
 static
 void OnAdd(ecs_iter_t *it) {

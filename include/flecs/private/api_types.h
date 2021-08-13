@@ -111,7 +111,6 @@ typedef struct ecs_term_iter_t {
     /* Storage */
     ecs_id_t id;
     int32_t column;
-    ecs_type_t type;
     ecs_entity_t subject;
     ecs_size_t size;
     void *ptr;
@@ -151,14 +150,12 @@ typedef struct ecs_snapshot_iter_t {
 /* Inline arrays for queries with small number of components */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
-    ecs_type_t types[ECS_TERM_CACHE_SIZE];
     int32_t columns[ECS_TERM_CACHE_SIZE];
     ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
 
     bool ids_alloc;
-    bool types_alloc;
     bool columns_alloc;
     bool subjects_alloc;
     bool sizes_alloc;
@@ -183,7 +180,6 @@ struct ecs_iter_t {
     ecs_data_t *data;
     
     ecs_id_t *ids;
-    ecs_type_t *types;
     int32_t *columns;
     ecs_entity_t *subjects;
     ecs_size_t *sizes;

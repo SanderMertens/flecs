@@ -608,10 +608,6 @@ add_pair:
         table_data.ids = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
         ecs_assert(table_data.ids != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-        /* Also cache types, so no lookup is needed while iterating */
-        table_data.types = ecs_os_calloc_n(ecs_type_t, query->filter.term_count_actual);
-        ecs_assert(table_data.types != NULL, ECS_OUT_OF_MEMORY, NULL);   
-
         /* Cache subject (source) entity ids for components */
         table_data.subjects = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
         ecs_assert(table_data.subjects != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -722,7 +718,6 @@ add_pair:
         }
 
         table_data.ids[c] = component;
-        table_data.types[c] = get_term_type(world, term, component);
 
         c ++;
     }
@@ -1810,7 +1805,6 @@ void free_matched_table(
     ecs_os_free(table->ids);
     ecs_os_free(table->subjects);
     ecs_os_free(table->sizes);
-    ecs_os_free((ecs_vector_t**)table->types);
     ecs_os_free(table->references);
     ecs_os_free(table->sparse_columns);
     ecs_os_free(table->bitset_columns);
@@ -2126,7 +2120,8 @@ void flecs_query_notify(
     }
 }
 
-void ecs_query_order_by(
+static
+void query_order_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t order_by_component,
@@ -2149,7 +2144,8 @@ void ecs_query_order_by(
     }
 }
 
-void ecs_query_group_by(
+static
+void query_group_by(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_entity_t sort_component,
@@ -2256,7 +2252,7 @@ ecs_query_t* ecs_query_init(
     }
 
     if (desc->order_by) {
-        ecs_query_order_by(
+        query_order_by(
             world, result, desc->order_by_component, desc->order_by);
     }
 
@@ -2264,7 +2260,7 @@ ecs_query_t* ecs_query_init(
         /* Can't have a cascade term and group by at the same time, as cascade
          * uses the group_by mechanism */
         ecs_assert(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
-        ecs_query_group_by(world, result, desc->group_by_id, desc->group_by);
+        query_group_by(world, result, desc->group_by_id, desc->group_by);
         result->group_by_ctx = desc->group_by_ctx;
         result->group_by_ctx_free = desc->group_by_ctx_free;
     }
@@ -2490,7 +2486,6 @@ void flecs_query_set_iter(
     it->table = table;
     it->ids = table_data->ids;
     it->columns = table_data->columns;
-    it->types = table_data->types;
     it->subjects = table_data->subjects;
     it->sizes = table_data->sizes;
     it->references = table_data->references;
@@ -2977,7 +2972,6 @@ bool ecs_query_next(
         it->table = table_data->table;
         it->ids = table_data->ids;
         it->columns = table_data->columns;
-        it->types = table_data->types;
         it->subjects = table_data->subjects;
         it->sizes = table_data->sizes;
         it->references = table_data->references;

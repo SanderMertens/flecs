@@ -215,8 +215,6 @@ void notify_trigger_set(
         sizes[0] = col->size;
     }
 
-    ecs_type_t types[1] = { ecs_type_from_id(world, id) };
-
     ecs_iter_t it = {
         .world = world,
         .event = event,
@@ -224,7 +222,6 @@ void notify_trigger_set(
         .table = table,
         .columns = columns,
         .ids = ids,
-        .types = types,
         .sizes = sizes,
         .ptrs = &ptr,
         .table_count = 1,

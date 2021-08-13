@@ -430,7 +430,6 @@ bool flecs_filter_match_table(
     ecs_type_t type,
     ecs_id_t *ids,
     int32_t *columns,
-    ecs_type_t *types,
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs);

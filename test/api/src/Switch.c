@@ -43,7 +43,7 @@ void Switch_get_case_unset() {
 
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
     test_assert(e != 0);
 
     ecs_entity_t case_id = ecs_get_case(world, e, Type);
@@ -61,7 +61,7 @@ void Switch_get_case_set() {
 
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
     test_assert(e != 0);
 
     ecs_add_id(world, e, ECS_CASE | Walking);
@@ -82,7 +82,7 @@ void Switch_get_case_change() {
 
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
     test_assert(e != 0);
 
     ecs_add_id(world, e, ECS_CASE | Walking);
@@ -107,7 +107,7 @@ void Switch_remove_case() {
 
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e != 0);
 
     ecs_add_id(world, e, ECS_CASE | Walking);
@@ -133,12 +133,12 @@ void Switch_remove_last() {
     ECS_TYPE(world, Movement, Walking, Running);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e1 != 0);
     ecs_add_id(world, e1, ECS_CASE | Walking);
     ecs_add(world, e1, Tag);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e2 != 0);
     ecs_add_id(world, e2, ECS_CASE | Walking);
     ecs_add(world, e2, Tag);
@@ -164,15 +164,15 @@ void Switch_delete_first() {
     ecs_query_t *q = ecs_query_new(world, "CASE | Walking");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e1 != 0);
     ecs_add_id(world, e1, ECS_CASE | Walking);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e2 != 0);
     ecs_add_id(world, e2, ECS_CASE | Walking);
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e3 != 0);
     ecs_add_id(world, e3, ECS_CASE | Walking);
 
@@ -206,15 +206,15 @@ void Switch_delete_last() {
     ecs_query_t *q = ecs_query_new(world, "CASE | Walking");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e1 != 0);
     ecs_add_id(world, e1, ECS_CASE | Walking);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e2 != 0);
     ecs_add_id(world, e2, ECS_CASE | Walking);
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e3 != 0);
     ecs_add_id(world, e3, ECS_CASE | Walking);
 
@@ -248,15 +248,15 @@ void Switch_delete_first_last() {
     ecs_query_t *q = ecs_query_new(world, "CASE | Walking");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e1 != 0);
     ecs_add_id(world, e1, ECS_CASE | Walking);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e2 != 0);
     ecs_add_id(world, e2, ECS_CASE | Walking);
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e3 != 0);
     ecs_add_id(world, e3, ECS_CASE | Walking);
 
@@ -930,7 +930,7 @@ void Switch_add_to_entity_w_switch() {
 
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
     test_assert(e != 0);
 
     ecs_add_id(world, e, ECS_CASE | Walking);
@@ -957,7 +957,7 @@ void Switch_add_pair_to_entity_w_switch() {
 
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
-    ecs_entity_t e = ecs_new_w_entity(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
     test_assert(e != 0);
 
     ecs_add_id(world, e, ECS_CASE | Walking);
@@ -1105,15 +1105,15 @@ void Switch_single_case() {
     ecs_query_t *q = ecs_query_new(world, "CASE | Walking");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e1 != 0);
     ecs_add_id(world, e1, ECS_CASE | Walking);
 
-    ecs_entity_t e2 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e2 != 0);
     ecs_add_id(world, e2, ECS_CASE | Walking);
 
-    ecs_entity_t e3 = ecs_new_w_entity(world, ECS_SWITCH | Movement);
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
     test_assert(e3 != 0);
     ecs_add_id(world, e3, ECS_CASE | Walking);
 

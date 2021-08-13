@@ -50,7 +50,7 @@ void New_w_component(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e;
         if (ctx->component) {
-            e = ecs_new_w_entity(it->world, ctx->component);
+            e = ecs_new_w_id(it->world, ctx->component);
         } else {
             e = ecs_new_w_type(it->world, ctx->type);
         }
@@ -370,7 +370,7 @@ void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_id(it->world, ctx->component);
 
         if (ctx->component_2) {
             ecs_add_id(it->world, e, ctx->component_2);
@@ -1524,7 +1524,7 @@ void Delete_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_id(it->world, ctx->component);
         ecs_delete(it->world, e);
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1677,7 +1677,7 @@ void Set_new_w_component(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_id(it->world, ctx->component);
         ecs_set(it->world, e, Rotation, {10 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1732,7 +1732,7 @@ void Set_existing_new_w_component(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_w_entity(it->world, ctx->component);
+        ecs_entity_t e = ecs_new_w_id(it->world, ctx->component);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;

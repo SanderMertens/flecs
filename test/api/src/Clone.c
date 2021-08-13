@@ -271,7 +271,7 @@ void Clone_tag() {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -289,7 +289,7 @@ void Clone_tag_w_value() {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e1 = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, true);

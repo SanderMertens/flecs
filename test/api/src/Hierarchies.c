@@ -1473,13 +1473,13 @@ void Hierarchies_cascade_after_recycled_parent_change() {
     ecs_delete(world, child);
     test_assert( !ecs_is_alive(world, child));
 
-    parent = ecs_new_w_entity(world, Tag);
+    parent = ecs_new_w_id(world, Tag);
     test_assert(parent != 0);
-    child = ecs_new_w_entity(world, Tag);
+    child = ecs_new_w_id(world, Tag);
     test_assert(child != 0);
     ecs_add_pair(world, child, EcsChildOf, parent);
 
-    ecs_entity_t e = ecs_new_w_entity(world, Tag);
+    ecs_entity_t e = ecs_new_w_id(world, Tag);
     test_assert(e != 0);
 
     ecs_add_pair(world, e, EcsChildOf, child);

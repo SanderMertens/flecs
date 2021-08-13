@@ -490,48 +490,6 @@
                 "long_name_depth_2"
             ]
         }, {
-            "id": "Add_bulk",
-            "testcases": [
-                "add_comp_from_comp_to_empty",
-                "add_comp_from_comp_to_existing",
-                "add_comp_from_tag_to_empty",
-                "add_comp_from_tag_to_existing",
-                "add_tag_from_tag_to_empty",
-                "add_tag_from_tag_to_existing",
-                "add_comp_to_more_existing",
-                "add_comp_to_fewer_existing",
-                "on_add",
-                "add_entity_comp",
-                "add_entity_tag",
-                "add_entity_on_add",
-                "add_entity_existing"
-            ]
-        }, {
-            "id": "Remove_bulk",
-            "testcases": [
-                "remove_comp_from_comp_to_empty",
-                "remove_comp_from_comp_to_existing",
-                "remove_comp_from_tag_to_empty",
-                "remove_comp_from_tag_to_existing",
-                "remove_tag_from_tag_to_empty",
-                "remove_tag_from_tag_to_existing",
-                "remove_all_comp",
-                "remove_all_tag",
-                "on_remove",
-                "remove_entity_comp",
-                "remove_entity_tag",
-                "remove_entity_on_remove",
-                "bulk_remove_w_low_tag_id"
-            ]
-        }, {
-            "id": "Add_remove_bulk",
-            "testcases": [
-                "add_remove_add_only",
-                "add_remove_remove_only",
-                "add_remove_both",
-                "add_remove_same"                
-            ]
-        }, {
             "id": "Has",
             "testcases": [
                 "zero",

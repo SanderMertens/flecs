@@ -462,42 +462,6 @@ void Hierarchies_long_name_depth_0(void);
 void Hierarchies_long_name_depth_1(void);
 void Hierarchies_long_name_depth_2(void);
 
-// Testsuite 'Add_bulk'
-void Add_bulk_add_comp_from_comp_to_empty(void);
-void Add_bulk_add_comp_from_comp_to_existing(void);
-void Add_bulk_add_comp_from_tag_to_empty(void);
-void Add_bulk_add_comp_from_tag_to_existing(void);
-void Add_bulk_add_tag_from_tag_to_empty(void);
-void Add_bulk_add_tag_from_tag_to_existing(void);
-void Add_bulk_add_comp_to_more_existing(void);
-void Add_bulk_add_comp_to_fewer_existing(void);
-void Add_bulk_on_add(void);
-void Add_bulk_add_entity_comp(void);
-void Add_bulk_add_entity_tag(void);
-void Add_bulk_add_entity_on_add(void);
-void Add_bulk_add_entity_existing(void);
-
-// Testsuite 'Remove_bulk'
-void Remove_bulk_remove_comp_from_comp_to_empty(void);
-void Remove_bulk_remove_comp_from_comp_to_existing(void);
-void Remove_bulk_remove_comp_from_tag_to_empty(void);
-void Remove_bulk_remove_comp_from_tag_to_existing(void);
-void Remove_bulk_remove_tag_from_tag_to_empty(void);
-void Remove_bulk_remove_tag_from_tag_to_existing(void);
-void Remove_bulk_remove_all_comp(void);
-void Remove_bulk_remove_all_tag(void);
-void Remove_bulk_on_remove(void);
-void Remove_bulk_remove_entity_comp(void);
-void Remove_bulk_remove_entity_tag(void);
-void Remove_bulk_remove_entity_on_remove(void);
-void Remove_bulk_bulk_remove_w_low_tag_id(void);
-
-// Testsuite 'Add_remove_bulk'
-void Add_remove_bulk_add_remove_add_only(void);
-void Add_remove_bulk_add_remove_remove_only(void);
-void Add_remove_bulk_add_remove_both(void);
-void Add_remove_bulk_add_remove_same(void);
-
 // Testsuite 'Has'
 void Has_zero(void);
 void Has_zero_from_nonzero(void);
@@ -3760,135 +3724,6 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "long_name_depth_2",
         Hierarchies_long_name_depth_2
-    }
-};
-
-bake_test_case Add_bulk_testcases[] = {
-    {
-        "add_comp_from_comp_to_empty",
-        Add_bulk_add_comp_from_comp_to_empty
-    },
-    {
-        "add_comp_from_comp_to_existing",
-        Add_bulk_add_comp_from_comp_to_existing
-    },
-    {
-        "add_comp_from_tag_to_empty",
-        Add_bulk_add_comp_from_tag_to_empty
-    },
-    {
-        "add_comp_from_tag_to_existing",
-        Add_bulk_add_comp_from_tag_to_existing
-    },
-    {
-        "add_tag_from_tag_to_empty",
-        Add_bulk_add_tag_from_tag_to_empty
-    },
-    {
-        "add_tag_from_tag_to_existing",
-        Add_bulk_add_tag_from_tag_to_existing
-    },
-    {
-        "add_comp_to_more_existing",
-        Add_bulk_add_comp_to_more_existing
-    },
-    {
-        "add_comp_to_fewer_existing",
-        Add_bulk_add_comp_to_fewer_existing
-    },
-    {
-        "on_add",
-        Add_bulk_on_add
-    },
-    {
-        "add_entity_comp",
-        Add_bulk_add_entity_comp
-    },
-    {
-        "add_entity_tag",
-        Add_bulk_add_entity_tag
-    },
-    {
-        "add_entity_on_add",
-        Add_bulk_add_entity_on_add
-    },
-    {
-        "add_entity_existing",
-        Add_bulk_add_entity_existing
-    }
-};
-
-bake_test_case Remove_bulk_testcases[] = {
-    {
-        "remove_comp_from_comp_to_empty",
-        Remove_bulk_remove_comp_from_comp_to_empty
-    },
-    {
-        "remove_comp_from_comp_to_existing",
-        Remove_bulk_remove_comp_from_comp_to_existing
-    },
-    {
-        "remove_comp_from_tag_to_empty",
-        Remove_bulk_remove_comp_from_tag_to_empty
-    },
-    {
-        "remove_comp_from_tag_to_existing",
-        Remove_bulk_remove_comp_from_tag_to_existing
-    },
-    {
-        "remove_tag_from_tag_to_empty",
-        Remove_bulk_remove_tag_from_tag_to_empty
-    },
-    {
-        "remove_tag_from_tag_to_existing",
-        Remove_bulk_remove_tag_from_tag_to_existing
-    },
-    {
-        "remove_all_comp",
-        Remove_bulk_remove_all_comp
-    },
-    {
-        "remove_all_tag",
-        Remove_bulk_remove_all_tag
-    },
-    {
-        "on_remove",
-        Remove_bulk_on_remove
-    },
-    {
-        "remove_entity_comp",
-        Remove_bulk_remove_entity_comp
-    },
-    {
-        "remove_entity_tag",
-        Remove_bulk_remove_entity_tag
-    },
-    {
-        "remove_entity_on_remove",
-        Remove_bulk_remove_entity_on_remove
-    },
-    {
-        "bulk_remove_w_low_tag_id",
-        Remove_bulk_bulk_remove_w_low_tag_id
-    }
-};
-
-bake_test_case Add_remove_bulk_testcases[] = {
-    {
-        "add_remove_add_only",
-        Add_remove_bulk_add_remove_add_only
-    },
-    {
-        "add_remove_remove_only",
-        Add_remove_bulk_add_remove_remove_only
-    },
-    {
-        "add_remove_both",
-        Add_remove_bulk_add_remove_both
-    },
-    {
-        "add_remove_same",
-        Add_remove_bulk_add_remove_same
     }
 };
 
@@ -9701,27 +9536,6 @@ static bake_test_suite suites[] = {
         Hierarchies_testcases
     },
     {
-        "Add_bulk",
-        NULL,
-        NULL,
-        13,
-        Add_bulk_testcases
-    },
-    {
-        "Remove_bulk",
-        NULL,
-        NULL,
-        13,
-        Remove_bulk_testcases
-    },
-    {
-        "Add_remove_bulk",
-        NULL,
-        NULL,
-        4,
-        Add_remove_bulk_testcases
-    },
-    {
         "Has",
         NULL,
         NULL,
@@ -10075,5 +9889,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 64);
+    return bake_test_run("api", argc, argv, suites, 61);
 }

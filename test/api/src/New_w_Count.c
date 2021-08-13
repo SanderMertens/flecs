@@ -152,7 +152,7 @@ void New_w_Count_tag() {
 
     const ecs_entity_t *ids = ecs_bulk_new_w_entity(world, Tag, 1000);
     test_assert(ids != NULL);
-    test_int(ecs_count_entity(world, Tag), 1000);
+    test_int(ecs_count_id(world, Tag), 1000);
 
     int i;
     for (i = 0; i < 1000; i ++) {

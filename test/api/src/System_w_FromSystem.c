@@ -26,12 +26,12 @@ void Iter(ecs_iter_t *it) {
 
     if (it->column_count >= 2) {
         v = ecs_term(it, Velocity, 2);
-        test_assert(!ecs_is_owned(it, 2));
+        test_assert(!ecs_term_is_owned(it, 2));
     }
 
     if (it->column_count >= 3) {
         m = ecs_term(it, Mass, 3);
-        test_assert(!m || !ecs_is_owned(it, 3));
+        test_assert(!m || !ecs_term_is_owned(it, 3));
     }
 
     probe_system(it);
@@ -159,7 +159,7 @@ void Iter_reactive(ecs_iter_t *it) {
 
     if (it->column_count >= 2) {
         v = ecs_term(it, Velocity, 2);
-        test_assert(!ecs_is_owned(it, 2));
+        test_assert(!ecs_term_is_owned(it, 2));
     }
 
     probe_system(it);

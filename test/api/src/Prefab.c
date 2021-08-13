@@ -10,7 +10,7 @@ void Prefab_setup() {
 static
 void Iter(ecs_iter_t *it) {
     ECS_COLUMN(it, Mass, m_ptr, 1);
-    bool shared = !ecs_is_owned(it, 1);
+    bool shared = !ecs_term_is_owned(it, 1);
 
     ECS_COLUMN(it, Position, p, 2);
 
@@ -703,7 +703,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     if (it->column_count >= 2) {
         v = ecs_term(it, Velocity, 2);
         if (v) {
-            test_assert(!ecs_is_owned(it, 2));
+            test_assert(!ecs_term_is_owned(it, 2));
         }
     }
     
@@ -1653,7 +1653,7 @@ void Prefab_instantiate_in_progress() {
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count_entity(world, ecs_pair(EcsIsA, Prefab)), 10);
+    test_int(ecs_count_id(world, ecs_pair(EcsIsA, Prefab)), 10);
 
     const Velocity *v_prefab = ecs_get(world, Prefab, Velocity);
 
@@ -1703,7 +1703,7 @@ void Prefab_copy_from_prefab_in_progress() {
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count_entity(world, ecs_pair(EcsIsA, Prefab)), 11);
+    test_int(ecs_count_id(world, ecs_pair(EcsIsA, Prefab)), 11);
 
     int i;
     for (i = 0; i < 10; i ++) {
@@ -1736,7 +1736,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
 
     ecs_progress(world, 1);
 
-    test_int(ecs_count_entity(world, ecs_pair(EcsIsA, Prefab)), 10);
+    test_int(ecs_count_id(world, ecs_pair(EcsIsA, Prefab)), 10);
 
     int i;
     for (i = 0; i < 10; i ++) {
@@ -2038,7 +2038,7 @@ void OnSetVelocity(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
 
-        if (ecs_is_owned(it, 1)) {
+        if (ecs_term_is_owned(it, 1)) {
             v[i].x ++;
             v[i].y ++;
         }
@@ -2142,7 +2142,7 @@ void TestBase(ecs_iter_t *it) {
     ECS_COLUMN(it, Position, p, 1);
     ECS_COLUMN(it, Velocity, v, 2);
 
-    test_assert(!ecs_is_owned(it, 2));
+    test_assert(!ecs_term_is_owned(it, 2));
 
     test_assert(p != NULL);
     test_assert(v != NULL);
