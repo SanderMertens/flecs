@@ -2887,3 +2887,62 @@ void SingleThreadStaging_modify_after_lock() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_get_empty_case_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, CaseOne);
+    ECS_TAG(world, CaseTwo);
+    ECS_TYPE(world, Switch, CaseOne, CaseTwo);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, ECS_SWITCH | Switch);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_entity_t c = ecs_get_case(world, e, Switch);
+    test_assert(c == 0);
+
+    c = ecs_get_case(stage, e, Switch);
+    test_assert(c == 0);
+
+    ecs_staging_end(world);
+
+    ecs_frame_end(world);
+
+    ecs_fini(world);
+}
+
+void SingleThreadStaging_get_case_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, CaseOne);
+    ECS_TAG(world, CaseTwo);
+    ECS_TYPE(world, Switch, CaseOne, CaseTwo);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, ECS_SWITCH | Switch);
+    ecs_add_id(world, e, ECS_CASE | CaseOne);
+
+    ecs_frame_begin(world, 1);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_entity_t c = ecs_get_case(world, e, Switch);
+    test_assert(c == CaseOne);
+
+    c = ecs_get_case(stage, e, Switch);
+    test_assert(c == CaseOne);
+
+    ecs_staging_end(world);
+
+    ecs_frame_end(world);
+
+    ecs_fini(world);
+}

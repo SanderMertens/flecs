@@ -1854,6 +1854,8 @@ void SingleThreadStaging_existing_type_add(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
+void SingleThreadStaging_get_empty_case_from_stage(void);
+void SingleThreadStaging_get_case_from_stage(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -9011,6 +9013,14 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "modify_after_lock",
         SingleThreadStaging_modify_after_lock
+    },
+    {
+        "get_empty_case_from_stage",
+        SingleThreadStaging_get_empty_case_from_stage
+    },
+    {
+        "get_case_from_stage",
+        SingleThreadStaging_get_case_from_stage
     }
 };
 
@@ -9884,7 +9894,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        67,
+        69,
         SingleThreadStaging_testcases
     },
     {

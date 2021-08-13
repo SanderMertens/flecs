@@ -1972,7 +1972,9 @@
                 "existing_type_add",
                 "lock_table",
                 "recursive_lock_table",
-                "modify_after_lock"
+                "modify_after_lock",
+                "get_empty_case_from_stage",
+                "get_case_from_stage"
             ]
         }, {
             "id": "MultiThreadStaging",
