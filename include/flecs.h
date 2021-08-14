@@ -8,6 +8,16 @@
 #ifndef FLECS_H
 #define FLECS_H
 
+/**
+ * @defgroup options API toggles & constants
+ * @{
+ */
+
+/* Customizable precision for floating point operations (such as time ops) */
+#ifndef FLECS_FLOAT
+#define FLECS_FLOAT float
+#endif
+
 /* FLECS_LEGACY should be defined when building for C89 */
 // #define FLECS_LEGACY
 
@@ -17,47 +27,43 @@
 /* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
 // #define FLECS_NO_CPP
 
-/* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
-// #define FLECS_CUSTOM_BUILD
-
 /* FLECS_SANITIZE enables expensive checks that can detect issues early */
 #ifndef NDEBUG
 #define FLECS_SANITIZE
 #endif
 
+/* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
+// #define FLECS_CUSTOM_BUILD
+
 /* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
-/* Modules */
-#define FLECS_SYSTEM
-#define FLECS_PIPELINE
-#define FLECS_TIMER
-
-/* Addons */
-#define FLECS_C
-#define FLECS_MODULE
-#define FLECS_PARSER
-#define FLECS_PLECS
-#define FLECS_SNAPSHOT
-#define FLECS_STATS
+#define FLECS_C             /* C API (convenience macros on top of core) */
+#define FLECS_MODULE        /* Module support */
+#define FLECS_PARSER        /* String parser for queries */
+#define FLECS_PLECS         /* ECS data definition format */
+#define FLECS_SNAPSHOT      /* Snapshot & restore ECS data */
+#define FLECS_STATS         /* Keep track of runtime statistics */
+#define FLECS_SYSTEM        /* System support */
+#define FLECS_PIPELINE      /* Pipeline support */
+#define FLECS_TIMER         /* Timer support */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
-/* Unconditionally include deprecated definitions until the rest of the codebase
- * has caught up */
-#define FLECS_DEPRECATED
+/* Maximum number of components to add/remove in a single operation */
+#define ECS_MAX_ADD_REMOVE (32)
 
-/* Set to double or int to increase accuracy of time keeping. Note that when
- * using an integer type, an application has to provide the delta_time values
- * to the progress() function, as the code that measures time requires a
- * floating point type. */
-#ifndef FLECS_FLOAT
-#define FLECS_FLOAT float
-#endif // FLECS_FLOAT
+/* Maximum number of terms cached in static arrays */
+#define ECS_TERM_CACHE_SIZE (8)
+
+/* Maximum number of events to set in static array of trigger descriptor */
+#define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
+
+/** @} */
 
 #include "flecs/private/api_defines.h"
 #include "flecs/private/log.h"              /* Logging API */
-#include "flecs/private/vector.h"        /* Vector datatype */
-#include "flecs/private/map.h"           /* Map */
-#include "flecs/private/strbuf.h"        /* String builder */
+#include "flecs/private/vector.h"           /* Vector datatype */
+#include "flecs/private/map.h"              /* Map */
+#include "flecs/private/strbuf.h"           /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
@@ -104,7 +110,6 @@ typedef struct ecs_iter_t ecs_iter_t;
 typedef struct ecs_ref_t ecs_ref_t;
 
 /** @} */
-
 
 
 /**
@@ -3505,18 +3510,17 @@ bool ecs_commit(
 
 /** @} */
 
-/* Optional modules */
+/* Include enabled addons */
+
 #ifdef FLECS_SYSTEM
-#include "flecs/modules/system.h"
+#include "flecs/addons/system.h"
 #endif
 #ifdef FLECS_PIPELINE
-#include "flecs/modules/pipeline.h"
+#include "flecs/addons/pipeline.h"
 #endif
 #ifdef FLECS_TIMER
-#include "flecs/modules/timer.h"
+#include "flecs/addons/timer.h"
 #endif
-
-/* Optional addons */
 #ifdef FLECS_C
 #include "flecs/addons/flecs_c.h"
 #endif

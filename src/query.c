@@ -1,7 +1,7 @@
 #include "private_api.h"
 
 #ifdef FLECS_SYSTEMS_H
-#include "modules/system/system.h"
+#include "addons/system/system.h"
 #endif
 
 static

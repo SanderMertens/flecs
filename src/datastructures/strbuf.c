@@ -1,4 +1,4 @@
-#include "private_api.h"
+#include "../private_api.h"
 
 /* Add an extra element to the buffer */
 static

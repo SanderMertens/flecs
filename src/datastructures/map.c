@@ -1,4 +1,4 @@
-#include "private_api.h"
+#include "../private_api.h"
 
 /* The ratio used to determine whether the map should rehash. If
  * (element_count * LOAD_FACTOR) > bucket_count, bucket count is increased. */
