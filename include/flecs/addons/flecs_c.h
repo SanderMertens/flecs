@@ -245,7 +245,7 @@
 
 
 /**
- * @defgroup other_macros Other Macro's
+ * @defgroup temporary_macros Temp macro's for easing the transition to v3
  * @{
  */
 
@@ -290,6 +290,11 @@
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
 #define ecs_on_set(type) type##_on_set
+
+#define ecs_query_new(world, q_expr)\
+    ecs_query_init(world, &(ecs_query_desc_t){\
+        .filter.expr = q_expr\
+    })
 
 /** @} */
 

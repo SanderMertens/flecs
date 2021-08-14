@@ -4,8 +4,6 @@
 
 #include "pipeline.h"
 
-ECS_TYPE_DECL(EcsPipelineQuery);
-
 static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);
 })
@@ -729,8 +727,6 @@ void FlecsPipelineImport(
     flecs_bootstrap_tag(world, EcsPreStore);
     flecs_bootstrap_tag(world, EcsOnStore);
     flecs_bootstrap_tag(world, EcsPostFrame);
-
-    ECS_TYPE_IMPL(EcsPipelineQuery);
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {

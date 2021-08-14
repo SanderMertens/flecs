@@ -265,9 +265,6 @@ typedef int32_t ecs_size_t;
 //// Convert between C typenames and variables
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Translate C type to ecs_type_t variable. */
-#define ecs_type(T) FLECS__T##T
-
 /** Translate C type to id. */
 #define ecs_id(T) FLECS__E##T
 
@@ -2758,17 +2755,7 @@ extern "C" {
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Type handles to builtin components */
-FLECS_API
-extern ecs_type_t 
-    ecs_type(EcsComponent),
-    ecs_type(EcsComponentLifecycle),
-    ecs_type(EcsType),
-    ecs_type(EcsIdentifier);
-
-/** This allows passing 0 as type to functions that accept types */
-#define FLECS__TNULL 0
-#define FLECS__T0 0
+/** This allows passing 0 as type to functions that accept ids */
 #define FLECS__E0 0
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6203,12 +6190,10 @@ ecs_entity_t ecs_module_init(
         .size = sizeof(id),\
         .alignment = ECS_ALIGNOF(id)\
     });\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
     ecs_set_scope(world, ecs_id(id));\
     (void)ecs_id(id);\
-    (void)ecs_type(id);\
-    (void)handles;
+    (void)handles
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -6228,20 +6213,16 @@ ecs_entity_t ecs_module_init(
     ecs_id_t ecs_id(id) = ecs_import(\
         world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id##ImportHandles(ecs_module(id));\
-    (void)ecs_id(id);\
-    (void)ecs_type(id);\
+    (void)ecs_id(id)
 
 /** Utility macro for declaring a component inside a handles type */
 #define ECS_DECLARE_COMPONENT(id)\
-    ecs_id_t ecs_id(id);\
-    ecs_type_t ecs_type(id)
+    ecs_id_t ecs_id(id)
 
 /** Utility macro for declaring an entity inside a handles type */
 #define ECS_DECLARE_ENTITY(id)\
-    ecs_entity_t id;\
-    ecs_type_t ecs_type(id)
+    ecs_entity_t id\
 
 /** Utility macro for declaring a type inside a handles type */
 #define ECS_DECLARE_TYPE(id)\
@@ -6273,14 +6254,12 @@ ecs_entity_t ecs_module_init(
 /** Utility macro for importing a component */
 #define ECS_IMPORT_COMPONENT(handles, id)\
     ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_id(id);\
     (void)ecs_type(id)
 
 /** Utility macro for importing an entity */
 #define ECS_IMPORT_ENTITY(handles, id)\
     ecs_entity_t id = (handles).id;\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)id;\
     (void)ecs_type(id)
 
@@ -6310,11 +6289,6 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-extern ecs_type_t
-    ecs_type(EcsSystem),
-    ecs_type(EcsTickSource);
 
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
@@ -6801,11 +6775,6 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_API
-extern ecs_type_t 
-    ecs_type(EcsTimer),
-    ecs_type(EcsRateFilter);
-
 /** Component used for one shot/interval timer functionality */
 typedef struct EcsTimer {
     FLECS_FLOAT timeout;         /* Timer timeout period */
@@ -7275,7 +7244,7 @@ void FlecsTimerImport(
 
 
 /**
- * @defgroup other_macros Other Macro's
+ * @defgroup temporary_macros Temp macro's for easing the transition to v3
  * @{
  */
 
@@ -7320,6 +7289,11 @@ void FlecsTimerImport(
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
 #define ecs_on_set(type) type##_on_set
+
+#define ecs_query_new(world, q_expr)\
+    ecs_query_init(world, &(ecs_query_desc_t){\
+        .filter.expr = q_expr\
+    })
 
 /** @} */
 

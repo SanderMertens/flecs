@@ -31,17 +31,7 @@ extern "C" {
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Type handles to builtin components */
-FLECS_API
-extern ecs_type_t 
-    ecs_type(EcsComponent),
-    ecs_type(EcsComponentLifecycle),
-    ecs_type(EcsType),
-    ecs_type(EcsIdentifier);
-
-/** This allows passing 0 as type to functions that accept types */
-#define FLECS__TNULL 0
-#define FLECS__T0 0
+/** This allows passing 0 as type to functions that accept ids */
 #define FLECS__E0 0
 
 ////////////////////////////////////////////////////////////////////////////////

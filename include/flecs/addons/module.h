@@ -88,12 +88,10 @@ ecs_entity_t ecs_module_init(
         .size = sizeof(id),\
         .alignment = ECS_ALIGNOF(id)\
     });\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
     ecs_set_scope(world, ecs_id(id));\
     (void)ecs_id(id);\
-    (void)ecs_type(id);\
-    (void)handles;
+    (void)handles
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -113,20 +111,16 @@ ecs_entity_t ecs_module_init(
     ecs_id_t ecs_id(id) = ecs_import(\
         world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
     ecs_os_free(id##__name);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     id##ImportHandles(ecs_module(id));\
-    (void)ecs_id(id);\
-    (void)ecs_type(id);\
+    (void)ecs_id(id)
 
 /** Utility macro for declaring a component inside a handles type */
 #define ECS_DECLARE_COMPONENT(id)\
-    ecs_id_t ecs_id(id);\
-    ecs_type_t ecs_type(id)
+    ecs_id_t ecs_id(id)
 
 /** Utility macro for declaring an entity inside a handles type */
 #define ECS_DECLARE_ENTITY(id)\
-    ecs_entity_t id;\
-    ecs_type_t ecs_type(id)
+    ecs_entity_t id\
 
 /** Utility macro for declaring a type inside a handles type */
 #define ECS_DECLARE_TYPE(id)\
@@ -158,14 +152,12 @@ ecs_entity_t ecs_module_init(
 /** Utility macro for importing a component */
 #define ECS_IMPORT_COMPONENT(handles, id)\
     ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &FLECS__E##id, 1);\
     (void)ecs_id(id);\
     (void)ecs_type(id)
 
 /** Utility macro for importing an entity */
 #define ECS_IMPORT_ENTITY(handles, id)\
     ecs_entity_t id = (handles).id;\
-    ECS_VECTOR_STACK(FLECS__T##id, ecs_entity_t, &id, 1);\
     (void)id;\
     (void)ecs_type(id)
 

@@ -27,11 +27,6 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_API
-extern ecs_type_t
-    ecs_type(EcsSystem),
-    ecs_type(EcsTickSource);
-
 /* Component used to provide a tick source to systems */
 typedef struct EcsTickSource {
     bool tick;                 /* True if providing tick */

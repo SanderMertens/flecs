@@ -5,9 +5,6 @@
 #include "../private_api.h"
 #include "system/system.h"
 
-ecs_type_t ecs_type(EcsTimer);
-ecs_type_t ecs_type(EcsRateFilter);
-
 static
 void AddTickSource(ecs_iter_t *it) {
     int32_t i;

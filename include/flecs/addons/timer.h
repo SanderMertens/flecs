@@ -30,11 +30,6 @@ extern "C" {
 //// Components
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_API
-extern ecs_type_t 
-    ecs_type(EcsTimer),
-    ecs_type(EcsRateFilter);
-
 /** Component used for one shot/interval timer functionality */
 typedef struct EcsTimer {
     FLECS_FLOAT timeout;         /* Timer timeout period */

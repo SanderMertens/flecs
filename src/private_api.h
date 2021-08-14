@@ -7,13 +7,6 @@
 //// Core bootstrap functions
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_TYPE_DECL(component)\
-static const ecs_entity_t __##component = ecs_id(component);\
-ECS_VECTOR_DECL(FLECS__T##component, ecs_entity_t, 1)
-
-#define ECS_TYPE_IMPL(component)\
-ECS_VECTOR_IMPL(FLECS__T##component, ecs_entity_t, &__##component, 1)
-
 /* Bootstrap world */
 void flecs_bootstrap(
     ecs_world_t *world);
