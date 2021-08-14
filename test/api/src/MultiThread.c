@@ -629,7 +629,7 @@ void TestSubset(ecs_iter_t *it) {
 
 static
 void TestAll(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     ecs_entity_t TestSubset = ecs_term_id(it, 2);
 
@@ -741,7 +741,7 @@ void test_combs_100_entity_2_types(int THREADS) {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
     ecs_entity_t ids_1[50];
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES / 2; i ++) {
         ecs_set(world, ids_1[i], Position, {1, 2});
@@ -798,7 +798,7 @@ void MultiThread_change_thread_count() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
     ecs_entity_t ids_1[50];
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, ENTITIES / 2);
 
     for (i = 0; i < ENTITIES / 2; i ++) {
         ecs_set(world, ids_1[i], Position, {1, 2});
@@ -883,7 +883,7 @@ void ReactiveDummySystem(ecs_iter_t * it) {
 
 static
 void PeriodicDummySystem(ecs_iter_t * it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
     
     int i;
     for (i = 0; i < it->count; i++ ) {

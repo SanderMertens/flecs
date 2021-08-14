@@ -2,7 +2,7 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Mass, m_ptr, 1);
+    Mass *m_ptr = ecs_term(it, Mass, 1);
 
     Position *p = NULL;
     Velocity *v = NULL;

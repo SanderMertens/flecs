@@ -198,7 +198,7 @@ void Delete_delete_3_of_3() {
 
 static
 void CreateEntity(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
 }

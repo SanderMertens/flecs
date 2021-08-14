@@ -59,7 +59,7 @@ void Add_random(ecs_iter_t *it) {
 
 static
 void Set_velocity_callback(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 1);
+    Velocity *v = ecs_term(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -106,7 +106,7 @@ void create_delete_entity_random_components_staged(
     ecs_set_context(world, &ctx);
 
     ecs_bulk_new(world, Position, 500);
-    ecs_bulk_new(world, Type, 500);
+    bulk_new_w_type(world, Type, 500);
 
     if (threads) {
         ecs_set_threads(world, threads);
@@ -143,7 +143,7 @@ void set_entity_random_components(
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 5);
     test_assert(ids != NULL);
 
-    ids = ecs_bulk_new(world, Type, 5);
+    ids = bulk_new_w_type(world, Type, 5);
     test_assert(ids != NULL);
 
     if (threads) {
@@ -277,7 +277,7 @@ void Stresstests_add_1k_tags() {
     int i;
     for (i = 0; i < 1000; i ++) {
         ecs_add_id(world, e, i + 1000);
-        test_assert(ecs_has_entity(world, e, i + 1000));
+        test_assert(ecs_has_id(world, e, i + 1000));
     }
 
     ecs_type_t type = ecs_get_type(world, e);

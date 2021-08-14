@@ -14,27 +14,32 @@
  * @{
  */
 
-#define ECS_ENTITY_DECLARE(id) ecs_entity_t id
+#define ECS_ENTITY_DECLARE(id)\
+    ecs_entity_t id;\
+    ecs_entity_t ecs_id(id)
 
 #define ECS_ENTITY_DEFINE(world, id, ...)\
     id = ecs_entity_init(world, &(ecs_entity_desc_t){\
         .name = #id,\
         .add_expr = #__VA_ARGS__\
-    })
+    });\
+    ecs_id(id) = id;\
+    (void)id;\
+    (void)ecs_id(id)
 
 #define ECS_ENTITY(world, id, ...)\
-    ecs_entity_t ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);\
-    (void)id
+    ecs_entity_t ecs_id(id);\
+    ecs_entity_t ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
 
 #define ECS_TAG_DECLARE(id)               ECS_ENTITY_DECLARE(id)
 #define ECS_TAG_DEFINE(world, id)         ECS_ENTITY_DEFINE(world, id, 0)
 #define ECS_TAG(world, id)                ECS_ENTITY(world, id, 0)
 
 #define ECS_PREFAB_DECLARE(id)            ECS_ENTITY_DECLARE(id)
-#define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, ...)
-#define ECS_PREFAB(world, id, ...)        ECS_ENTITY(world, id, Prefab, ...)
+#define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
+#define ECS_PREFAB(world, id, ...)        ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
-#define ECS_COMPONENT_DECLARE(id)         ECS_ENTITY_DECLARE(ecs_id(id))
+#define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
 #define ECS_COMPONENT_DEFINE(world, id)\
     ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
         .entity = {\
@@ -175,17 +180,23 @@
 #define ecs_has(world, entity, T)\
     ecs_has_id(world, entity, ecs_id(T))
 
-#define ecs_has_pair(world, subject, relation, object)\
-    ecs_has_id(world, subject, ecs_pair(relation, object))
+#define ecs_has_pair(world, entity, relation, object)\
+    ecs_has_id(world, entity, ecs_pair(relation, object))
 
 #define ecs_owns_id(world, entity, id)\
     ecs_type_has_id(world, ecs_get_type(world, entity), id, true)
+
+#define ecs_owns_pair(world, entity, relation, object)\
+    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), true)
 
 #define ecs_owns(world, entity, T)\
     ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), true)
 
 #define ecs_shares_id(world, entity, id)\
     ecs_type_has_id(world, ecs_get_type(world, entity), id, false)
+
+#define ecs_shares_pair(world, entity, relation, object)\
+    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), false)
 
 #define ecs_shares(world, entity, T)\
     ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), false)
@@ -203,7 +214,7 @@
 /* -- Count -- */
 
 #define ecs_count(world, type)\
-    ecs_count_type(world, ecs_type(type))
+    ecs_count_id(world, ecs_id(type))
 
 
 /* -- Lookups & Paths -- */
@@ -295,6 +306,13 @@
     ecs_query_init(world, &(ecs_query_desc_t){\
         .filter.expr = q_expr\
     })
+
+#define ECS_TYPE(world, id, ...) \
+    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity.name = #id,\
+        .ids_expr = #__VA_ARGS__\
+    });\
+    (void)id;
 
 /** @} */
 

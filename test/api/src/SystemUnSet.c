@@ -492,20 +492,19 @@ void SystemUnSet_unset_move_to_nonempty_table() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, UnSet_TestComp, EcsUnSet, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);  
 
-    ecs_new(world, Type);
+    ECS_ENTITY(world, DummyA, Position, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_new(world, Type);
+    ECS_ENTITY(world, DummyB, Position, Velocity);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, Position, Velocity);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {20, 10});
     test_int(ctx.invoked, 0);

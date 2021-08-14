@@ -17,7 +17,7 @@ void Hierarchies_get_parent() {
 
     ECS_ENTITY(world, Child, 0);
 
-    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
     test_assert(e == 0);
 
     ecs_fini(world);
@@ -29,7 +29,7 @@ void Hierarchies_get_parent_from_nested() {
     ECS_ENTITY(world, Scope, 0);
     ECS_ENTITY(world, Child, (ChildOf, Scope));
 
-    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
     test_assert(e == Scope);
 
     ecs_fini(world);
@@ -42,7 +42,7 @@ void Hierarchies_get_parent_from_nested_2() {
     ECS_ENTITY(world, ChildScope, (ChildOf, Scope));
     ECS_ENTITY(world, Child, (ChildOf, Scope.ChildScope));
 
-    ecs_entity_t e = ecs_get_parent_w_entity(world, Child, 0);
+    ecs_entity_t e = ecs_get_object(world, Child, EcsChildOf, 0);
     test_assert(e == ChildScope);
 
     ecs_fini(world);
@@ -54,7 +54,7 @@ void Hierarchies_get_parent_from_root() {
     ECS_ENTITY(world, Scope, 0);
     ECS_ENTITY(world, Child, (ChildOf, Scope));
 
-    ecs_entity_t e = ecs_get_parent_w_entity(world, 0, 0);
+    ecs_entity_t e = ecs_get_object(world, 0, EcsChildOf, 0);
     test_assert(e == 0);
 
     ecs_fini(world);
@@ -137,36 +137,6 @@ void Hierarchies_tree_iter_2_tables() {
 
     ecs_fini(world);
 }
-
-void Hierarchies_tree_iter_w_filter() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_ENTITY(world, Parent, 0);
-
-    ECS_ENTITY(world, Child1, (ChildOf, Parent), Position);
-    ECS_ENTITY(world, Child2, (ChildOf, Parent), Position);
-    ECS_ENTITY(world, Child3, (ChildOf, Parent), Position);
-    ECS_ENTITY(world, Child4, (ChildOf, Parent), Velocity);
-
-    ecs_iter_t it = ecs_scope_iter_w_filter(world, Parent, &(ecs_filter_t){
-        .include = ecs_type(Position)
-    });
-
-    test_assert( ecs_scope_next(&it) == true);
-    test_int( it.count, 3);
-
-    test_assert(it.entities[0] == Child1);
-    test_assert(it.entities[1] == Child2);
-    test_assert(it.entities[2] == Child3);
-
-    test_assert( !ecs_scope_next(&it));
-
-    ecs_fini(world);
-}
-
 
 void Hierarchies_path_depth_0() {
     ecs_world_t *world = ecs_init();
@@ -1644,3 +1614,4 @@ void Hierarchies_long_name_depth_2() {
 
     ecs_fini(world);
 }
+

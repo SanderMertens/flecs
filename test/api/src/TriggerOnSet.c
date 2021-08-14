@@ -2,7 +2,7 @@
 
 static
 void OnSet(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
     if (it->column_count >= 2) {
@@ -224,7 +224,7 @@ static bool set_called;
 
 static
 void OnAdd_check_order(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     test_assert(!add_called);
     test_assert(!set_called);
@@ -242,7 +242,7 @@ void OnAdd_check_order(ecs_iter_t *it) {
 
 static
 void OnSet_check_order(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     probe_system(it);
 
@@ -298,7 +298,7 @@ void TriggerOnSet_set_and_add_system() {
 
 static
 void OnSetShared(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
     if (it->column_count >= 2) {
@@ -393,17 +393,15 @@ void TriggerOnSet_on_set_after_override_w_new() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position);
+    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
     ecs_set(world, Prefab, Position, {1, 3});
-
-    ECS_TYPE(world, Type, (IsA, Prefab), Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -428,17 +426,15 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position);
+    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
     ecs_set(world, Prefab, Position, {1, 3});
-
-    ECS_TYPE(world, Type, (IsA, Prefab), Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 3);
+    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Prefab), 3);
     test_assert(ids != NULL);
 
     test_int(ctx.count, 3);
@@ -467,17 +463,15 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position);
+    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
     ecs_set(world, Prefab, Position, {1, 3});
-
-    ECS_TYPE(world, Type, (IsA, Prefab), Position);
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

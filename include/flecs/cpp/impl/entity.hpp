@@ -69,7 +69,7 @@ inline const Base& entity_builder<Base>::component() const {
 }
 
 inline bool entity_view::has_switch(const flecs::type& type) const {
-    return ecs_has_entity(m_world, m_id, flecs::Switch | type.id());
+    return ecs_has_id(m_world, m_id, flecs::Switch | type.id());
 }
 
 inline flecs::entity entity_view::get_case(const flecs::type& sw) const {

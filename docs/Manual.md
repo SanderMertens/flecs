@@ -587,20 +587,6 @@ Which will produce:
 Position, Velocity
 ```
 
-Types can be used to add multiple components in one operation:
-
-```c
-ecs_entity_t e2 = ecs_new_w_type(world, type);
-```
-
-Alternatively, the `ECS_TYPE` macro can be used to create a type:
-
-```c
-ECS_TYPE(world, MyType, Position, Velocity);
-
-ecs_entity_t e = ecs_new(world, MyType);
-```
-
 ### Advanced usage
 A type is stored as a vector of identifiers. Because components are stored as entities in Flecs, a type is defined as (pseudo, not actual definition):
 

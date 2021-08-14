@@ -2,7 +2,7 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     probe_system(it);
 
@@ -78,9 +78,9 @@ void System_w_FromId_3_column_2_from_id() {
 
 static
 void CheckColumnType(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 2);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 2);
 
-    test_assert(ecs_type(Position) == ecs_column_type(it, 1));
+    test_assert(ecs_id(Position) == ecs_term_id(it, 1));
 
     probe_system(it);
 }

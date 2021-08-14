@@ -59,9 +59,9 @@ void Pipeline_system_order_same_phase_after_disable() {
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     ecs_enable(world, SysB, false);
-    test_assert( ecs_has_entity(world, SysB, EcsDisabled));
+    test_assert( ecs_has_id(world, SysB, EcsDisabled));
     ecs_enable(world, SysB, true);
-    test_assert( !ecs_has_entity(world, SysB, EcsDisabled));
+    test_assert( !ecs_has_id(world, SysB, EcsDisabled));
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -122,9 +122,9 @@ void Pipeline_system_order_different_phase_after_disable() {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_enable(world, SysB, false);
-    test_assert( ecs_has_entity(world, SysB, EcsDisabled));
+    test_assert( ecs_has_id(world, SysB, EcsDisabled));
     ecs_enable(world, SysB, true);
-    test_assert( !ecs_has_entity(world, SysB, EcsDisabled));
+    test_assert( !ecs_has_id(world, SysB, EcsDisabled));
 
     ecs_progress(world, 1);
 
@@ -156,9 +156,9 @@ void Pipeline_system_order_same_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has_entity(world, SysB, EcsInactive));
+    test_assert( ecs_has_id(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
-    test_assert( !ecs_has_entity(world, SysB, EcsInactive));
+    test_assert( !ecs_has_id(world, SysB, EcsInactive));
 
     ecs_progress(world, 1);
 
@@ -190,9 +190,9 @@ void Pipeline_system_order_different_phase_after_activate() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
     
-    test_assert( ecs_has_entity(world, SysB, EcsInactive));
+    test_assert( ecs_has_id(world, SysB, EcsInactive));
     ecs_add(world, E, Velocity);
-    test_assert( !ecs_has_entity(world, SysB, EcsInactive));
+    test_assert( !ecs_has_id(world, SysB, EcsInactive));
 
     ecs_progress(world, 1);
 
@@ -325,7 +325,7 @@ static int sys_out_invoked;
 static int sys_in_invoked;
 
 static void SysOut(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     sys_out_invoked ++;
 
@@ -336,7 +336,7 @@ static void SysOut(ecs_iter_t *it) {
 }
 
 static void SysOutMain(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 2);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     sys_out_invoked ++;
 
@@ -348,7 +348,7 @@ static void SysOutMain(ecs_iter_t *it) {
 }
 
 static void SysIn(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -365,7 +365,8 @@ static void SysIn(ecs_iter_t *it) {
 }
 
 static void SysInMain(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 1);
+    Velocity *v = ecs_term(it, Velocity, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 1);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -703,7 +704,6 @@ void RandomReadAfterRW(ecs_iter_t *it) {
 static
 void RandomRead_Not(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_term_id(it, 2);
-    ecs_type_t ecs_type(Position) = ecs_column_type(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

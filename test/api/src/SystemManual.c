@@ -6,7 +6,7 @@ void SystemManual_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
         
@@ -157,7 +157,7 @@ void SystemManual_activate_status() {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

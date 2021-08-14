@@ -199,12 +199,19 @@ void Query_subquery_match_existing() {
 
     ecs_bulk_new(world, Position, 3);
     ecs_bulk_new(world, Velocity, 3);
-    ecs_bulk_new(world, Type, 3);
+    const ecs_id_t *ids = ecs_bulk_new(world, Position, 3);
+    ecs_add(world, ids[0], Velocity);
+    ecs_add(world, ids[1], Velocity);
+    ecs_add(world, ids[2], Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
+    
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
@@ -238,7 +245,7 @@ void Query_subquery_match_existing() {
     test_int(table_count, 1);
     test_int(entity_count, 3); 
 
-    ecs_query_free(sq); 
+     ecs_query_fini(sq); 
 
     ecs_fini(world);
 }
@@ -252,13 +259,18 @@ void Query_subquery_match_new() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
-    ECS_TYPE(world, Type, Position, Velocity);
     ecs_bulk_new(world, Position, 3);
     ecs_bulk_new(world, Velocity, 3);
-    ecs_bulk_new(world, Type, 3);
+    const ecs_id_t *ids = ecs_bulk_new(world, Position, 3);
+    ecs_add(world, ids[0], Velocity);
+    ecs_add(world, ids[1], Velocity);
+    ecs_add(world, ids[2], Velocity);
 
     int32_t table_count = 0, entity_count = 0;
     ecs_iter_t it = ecs_query_iter(q);
@@ -291,7 +303,7 @@ void Query_subquery_match_new() {
     test_int(table_count, 1);
     test_int(entity_count, 3);  
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -302,15 +314,17 @@ void Query_subquery_inactive() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_TYPE(world, Type, Position, Velocity);
     ecs_bulk_new(world, Position, 3);
     ecs_bulk_new(world, Velocity, 3);
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, Position, Velocity);
 
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
     
     /* Create an empty table which should deactivate it for both queries */
@@ -344,7 +358,7 @@ void Query_subquery_inactive() {
 
     test_int(table_count, 0);
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -370,7 +384,10 @@ void Query_subquery_unmatch() {
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
@@ -417,7 +434,7 @@ void Query_subquery_unmatch() {
     it = ecs_query_iter(sq);
     test_int(it.table_count, 0);
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -443,7 +460,10 @@ void Query_subquery_rematch() {
     ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
@@ -503,7 +523,7 @@ void Query_subquery_rematch() {
     it = ecs_query_iter(sq);
     test_int(it.table_count, 1);    
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -529,7 +549,10 @@ void Query_subquery_rematch_w_parent_optional() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     ecs_iter_t it = ecs_query_iter(q);
@@ -549,7 +572,7 @@ void Query_subquery_rematch_w_parent_optional() {
     it = ecs_query_iter(sq);
     test_int(it.table_count, 1);
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -576,7 +599,10 @@ void Query_subquery_rematch_w_sub_optional() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
     test_assert(q != NULL);
 
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Velocity, ?Mass");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Velocity",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     ecs_iter_t it = ecs_query_iter(q);
@@ -596,7 +622,7 @@ void Query_subquery_rematch_w_sub_optional() {
     it = ecs_query_iter(sq);
     test_int(it.table_count, 1);
 
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -679,42 +705,6 @@ void Query_query_single_childof() {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
             test_assert(it.entities[i] == e2);
-            entity_count ++;
-        }
-    }
-
-    test_int(table_count, 1);
-    test_int(entity_count, 1);
-
-    ecs_fini(world);
-}
-
-void Query_query_w_filter() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_new(world, Position);
-    ecs_add(world, ecs_new(world, 
-        Position), 
-        Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_filter_t f = {
-        .include = ecs_type(Velocity)
-    };
-
-    ecs_iter_t it = ecs_query_iter(q);
-    int32_t table_count = 0, entity_count = 0;
-    while (ecs_query_next_w_filter(&it, &f)) {
-        table_count ++;
-
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            ecs_entity_t e = it.entities[i];
-            test_assert(ecs_has(world, e, Position));
-            test_assert(ecs_has(world, e, Velocity));
             entity_count ++;
         }
     }
@@ -1052,7 +1042,7 @@ void Query_explicit_delete() {
     test_assert(q != NULL);
 
     /* Ensure query isn't deleted twice when deleting world */
-    ecs_query_free(q);
+     ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1085,16 +1075,19 @@ void Query_orphaned_query() {
     test_assert(q != NULL);
 
     /* Nonsense subquery, doesn't matter, this is just for orphan testing */
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Position",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     test_assert(!ecs_query_orphaned(sq));
 
-    ecs_query_free(q);
+     ecs_query_fini(q);
 
     test_assert(ecs_query_orphaned(sq));
     
-    ecs_query_free(sq);
+     ecs_query_fini(sq);
 
     ecs_fini(world);
 }
@@ -1110,22 +1103,28 @@ void Query_nested_orphaned_query() {
     test_assert(q != NULL);
 
     /* Nonsense subquery, doesn't matter, this is just for orphan testing */
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Position",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
-    ecs_query_t *nsq = ecs_subquery_new(world, sq, "Position");
+    ecs_query_t *nsq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Position",
+        .parent = sq
+    });
     test_assert(nsq != NULL);    
 
     test_assert(!ecs_query_orphaned(sq));
     test_assert(!ecs_query_orphaned(nsq));
 
-    ecs_query_free(q);
+     ecs_query_fini(q);
 
     test_assert(ecs_query_orphaned(sq));
     test_assert(ecs_query_orphaned(nsq));
     
-    ecs_query_free(sq);
-    ecs_query_free(nsq);
+     ecs_query_fini(sq);
+     ecs_query_fini(nsq);
 
     ecs_fini(world);
 }
@@ -1143,12 +1142,15 @@ void Query_invalid_access_orphaned_query() {
     test_assert(q != NULL);
 
     /* Nonsense subquery, doesn't matter, this is just for orphan testing */
-    ecs_query_t *sq = ecs_subquery_new(world, q, "Position");
+    ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.expr = "Position",
+        .parent = q
+    });
     test_assert(sq != NULL);
 
     test_assert(!ecs_query_orphaned(sq));
 
-    ecs_query_free(q);
+     ecs_query_fini(q);
 
     test_expect_abort();
 
@@ -1172,7 +1174,7 @@ void Query_stresstest_query_free() {
 
     for (int i = 0; i < 10000; i ++) {
         ecs_query_t *q = ecs_query_new(world, "Foo, Bar, Hello");
-        ecs_query_free(q);
+         ecs_query_fini(q);
     }
 
     /* If code did not crash, test passes */

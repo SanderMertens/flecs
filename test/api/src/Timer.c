@@ -281,7 +281,7 @@ void Timer_rate_filter() {
 
     ecs_new(world, Position);
 
-    ecs_entity_t filter = ecs_set_rate_filter(world, SystemA, 3, 0);
+    ecs_entity_t filter = ecs_set_rate(world, SystemA, 3, 0);
     test_assert(filter != 0);
     test_assert(filter == SystemA);
 
@@ -323,10 +323,10 @@ void Timer_rate_filter_w_rate_filter_src() {
 
     ecs_new(world, Position);
 
-    ecs_entity_t filter_a = ecs_set_rate_filter(world, 0, 2, 0);
+    ecs_entity_t filter_a = ecs_set_rate(world, 0, 2, 0);
     test_assert(filter_a != 0);
 
-    ecs_entity_t filter_b = ecs_set_rate_filter(world, SystemC, 3, filter_a);
+    ecs_entity_t filter_b = ecs_set_rate(world, SystemC, 3, filter_a);
     test_assert(filter_b != 0);
     test_assert(filter_b == SystemC);
 
@@ -365,7 +365,7 @@ void Timer_rate_filter_w_timer_src() {
     ecs_entity_t timer = ecs_set_interval(world, 0, 2.0);
     test_assert(timer != 0);
 
-    ecs_entity_t filter = ecs_set_rate_filter(world, SystemC, 3, timer);
+    ecs_entity_t filter = ecs_set_rate(world, SystemC, 3, timer);
     test_assert(filter != 0);
     test_assert(filter == SystemC);
 
@@ -407,7 +407,7 @@ void Timer_rate_filter_with_empty_src() {
     ecs_entity_t filter_a = ecs_new_id(world);
     test_assert(filter_a != 0);
 
-    ecs_entity_t filter_b = ecs_set_rate_filter(world, SystemC, 6, filter_a);
+    ecs_entity_t filter_b = ecs_set_rate(world, SystemC, 6, filter_a);
     test_assert(filter_b != 0);
     test_assert(filter_b == SystemC);
 

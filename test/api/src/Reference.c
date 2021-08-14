@@ -106,7 +106,11 @@ void Reference_get_ref_after_realloc() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ecs_dim_type(world, ecs_type(Position), 1000);
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        // Creating lots of entities which will trigger allocations
+        ecs_new(world, Position);
+    }
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);
@@ -249,8 +253,9 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    ECS_TYPE(world, Type, Position, Name);
-    ecs_dim_type(world, ecs_type(Type), 1000);
+    for (int i = 0; i < 1000; i ++) {
+        ECS_ENTITY(world, e, Position);
+    }
 
     p = ecs_get_ref(world, &ref, e, Position);
     test_assert(p != NULL);

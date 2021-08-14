@@ -36,12 +36,6 @@ inline flecs::entity iter_deprecated<Base>::column_entity(int32_t col) const {
     return flecs::entity(iter()->world, ecs_term_id(iter(), col));
 }
 
-/* Obtain type of column */
-template <typename Base>
-inline type iter_deprecated<Base>::column_type(int32_t col) const {
-    return flecs::type(iter()->world, ecs_column_type(iter(), col));
-}
-
 /* Obtain type of table being iterated over */
 template <typename Base>
 inline type iter_deprecated<Base>::table_type() const {

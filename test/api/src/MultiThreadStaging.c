@@ -40,7 +40,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
 
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, 100);
 
     ecs_set_threads(world, 2);
 
@@ -79,7 +79,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
 
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, 100);
 
     ecs_set_threads(world, 3);
 
@@ -118,7 +118,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
 
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, 100);
 
     ecs_set_threads(world, 4);
 
@@ -157,7 +157,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
 
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, 100);
 
     ecs_set_threads(world, 5);
 
@@ -196,7 +196,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
     memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * 100);
 
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, 100);
+    const ecs_entity_t *ids_2 = bulk_new_w_type(world, Type, 100);
 
     ecs_set_threads(world, 6);
 
@@ -220,7 +220,7 @@ void MultiThreadStaging_6_threads_add_to_current() {
 
 static
 void InitVelocity(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 1);
+    Velocity *v = ecs_term(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -231,7 +231,7 @@ void InitVelocity(ecs_iter_t *it) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -273,7 +273,7 @@ void MultiThreadStaging_2_threads_on_add() {
 
 static
 void New_w_count(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     ecs_bulk_new(it->world, Position, 10);
 }

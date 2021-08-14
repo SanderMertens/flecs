@@ -804,6 +804,12 @@ void flecs_table_free(
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     (void)world;
 
+#ifndef NDEBUG
+    char *expr = ecs_type_str(world, table->type);
+    ecs_trace_2("table #[green][%s]#[normal] deleted", expr);
+    ecs_os_free(expr);
+#endif    
+
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     ecs_data_t *data = flecs_table_get_data(table);
     fini_data(world, table, data, false, true, true, false);
