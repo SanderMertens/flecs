@@ -1,7 +1,6 @@
 #include <api.h>
 
 void Modules_setup() {
-    ecs_tracing_enable(-3);
 }
 
 /* -- Begin module code -- */
@@ -38,7 +37,6 @@ typedef struct SimpleModule {
     ECS_DECLARE_ENTITY(SimpleFooEntity);
     ECS_DECLARE_ENTITY(Move);
     ECS_DECLARE_ENTITY(SimpleFooSystem);
-    ECS_DECLARE_TYPE(SimpleFooType);
     ECS_DECLARE_ENTITY(SimpleFooPrefab);
     ECS_DECLARE_ENTITY(SimpleFooPipeline);
     ECS_DECLARE_ENTITY(SimpleFooTrigger);
@@ -58,7 +56,6 @@ typedef struct SimpleModule {
     ECS_IMPORT_ENTITY(handles, SimpleFooEntity);\
     ECS_IMPORT_ENTITY(handles, Move);\
     ECS_IMPORT_ENTITY(handles, SimpleFooSystem);\
-    ECS_IMPORT_TYPE(handles, SimpleFooType);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPrefab);\
     ECS_IMPORT_ENTITY(handles, SimpleFooPipeline);\
     ECS_IMPORT_ENTITY(handles, SimpleFooTrigger);\
@@ -96,7 +93,6 @@ void SimpleModuleImport(
     ECS_TAG(world, SimpleFooTag);
     ECS_ENTITY(world, SimpleFooEntity, 0);
     ECS_PREFAB(world, SimpleFooPrefab, 0);
-    ECS_TYPE(world, SimpleFooType, Position, Velocity);
     ECS_SYSTEM(world, SimpleFooSystem, EcsOnUpdate, Position);
     ECS_PIPELINE(world, SimpleFooPipeline, Tag);
     ECS_TRIGGER(world, SimpleFooTrigger, EcsOnAdd, Position);
@@ -112,7 +108,6 @@ void SimpleModuleImport(
     ECS_EXPORT_ENTITY(Move);
     ECS_EXPORT_ENTITY(SimpleFooSystem);
     ECS_EXPORT_ENTITY(SimpleFooPrefab);
-    ECS_EXPORT_TYPE(SimpleFooType);
     ECS_EXPORT_ENTITY(SimpleFooPipeline);
     ECS_EXPORT_ENTITY(SimpleFooTrigger);
     ECS_EXPORT_ENTITY(Simple_underscore);
@@ -137,7 +132,7 @@ void Modules_simple_module() {
 
 static
 void AddVtoP(ecs_iter_t *it) {
-    ECS_IMPORT_COLUMN(it, SimpleModule, 2);
+    ECS_IMPORT_TERM(it, SimpleModule, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -277,18 +272,6 @@ void Modules_name_prefix_entity() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_IMPORT(world, SimpleModule);
-
-    ecs_entity_t e = ecs_lookup_fullpath(world, "simple.module.FooType");
-    test_assert(e != 0);
-    test_assert(e == SimpleFooType);
-    
-    ecs_fini(world);
-}
-
 void Modules_name_prefix_prefab() {
     ecs_world_t *world = ecs_init();
 
@@ -349,25 +332,6 @@ void Modules_lookup_by_symbol() {
     e = ecs_lookup_symbol(world, "SimpleFooComponent", true);
     test_assert(e != 0);
     test_assert(e == ecs_id(SimpleFooComponent));
-    
-    e = ecs_lookup_symbol(world, "Simple_underscore", true);
-    test_assert(e != 0);
-    test_assert(e == Simple_underscore);
-
-    ecs_fini(world);
-}
-
-void Modules_import_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_IMPORT(world, SimpleModule);
-
-    ecs_type_t type = ecs_type(SimpleFooType);
-    test_assert(type != NULL);
-
-    test_int(ecs_vector_count(type), 2);
-    test_assert(ecs_type_has_entity(world, type, ecs_id(Position)));
-    test_assert(ecs_type_has_entity(world, type, ecs_id(Velocity)));
 
     ecs_fini(world);
 }

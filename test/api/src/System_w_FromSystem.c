@@ -1,7 +1,7 @@
 #include <api.h>
 
 void InitVelocity(ecs_iter_t *it) {
-    ECS_COLUMN(it, Velocity, v, 1);
+    Velocity *v = ecs_term(it, Velocity, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -11,7 +11,7 @@ void InitVelocity(ecs_iter_t *it) {
 }
 
 void InitMass(ecs_iter_t *it) {
-    ECS_COLUMN(it, Mass, m, 1);    
+    Mass *m = ecs_term(it, Mass, 1);    
     int i;
     for (i = 0; i < it->count; i ++) {
         m[i] = 3;
@@ -19,7 +19,7 @@ void InitMass(ecs_iter_t *it) {
 }
 
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
     Mass *m = NULL;
@@ -152,7 +152,7 @@ void System_w_FromSystem_3_column_2_from_system() {
 }
 
 void Iter_reactive(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = it->param;
     Mass *m = NULL;
@@ -187,8 +187,8 @@ void System_w_FromSystem_auto_add_tag() {
     ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, SYSTEM:Hidden);
     ECS_SYSTEM(world, Dummy_2, 0, Position, SYSTEM:Hidden);
 
-    test_assert( ecs_has_entity(world, Dummy_1, EcsHidden));
-    test_assert( ecs_has_entity(world, Dummy_2, EcsHidden));
+    test_assert( ecs_has_id(world, Dummy_1, EcsHidden));
+    test_assert( ecs_has_id(world, Dummy_2, EcsHidden));
 
     ecs_fini(world);
 }

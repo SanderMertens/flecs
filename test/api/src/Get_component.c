@@ -33,9 +33,8 @@ void Get_component_get_1_from_2() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, Position, Velocity);
     test_assert(e != 0);
 
     test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
@@ -48,9 +47,8 @@ void Get_component_get_2_from_2() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, Position, Velocity);
     test_assert(e != 0);
 
     test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
@@ -64,9 +62,8 @@ void Get_component_get_2_from_3() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, Position, Velocity, Mass);
     test_assert(e != 0);
 
     test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
@@ -76,7 +73,7 @@ void Get_component_get_2_from_3() {
 
 static
 void Test_main_stage(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -101,12 +98,10 @@ void Get_component_get_1_from_2_in_progress_from_main_stage() {
 
 static
 void Add_in_progress(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
-
-    ecs_type_t ecs_type(Velocity) = NULL;
+    ecs_id_t ecs_id(Velocity) = 0;
 
     if (it->column_count >= 2) {
-        ecs_type(Velocity) = ecs_column_type(it, 2);
+        ecs_id(Velocity) = ecs_term_id(it, 2);
     }
 
     for (int i = 0; i < it->count; i ++) {
@@ -135,8 +130,8 @@ void Get_component_get_1_from_2_add_in_progress() {
 
 static
 void Add_in_progress_test_main(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -167,8 +162,8 @@ void Get_component_get_both_from_2_add_in_progress() {
 
 static
 void Add_remove_in_progress_test_main(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Position, 1);
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];

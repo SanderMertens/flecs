@@ -34,123 +34,12 @@ void New_w_Count_component() {
     ecs_fini(world);
 }
 
-void New_w_Count_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TYPE(world, MyType, Position);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, MyType, 1000);
-    test_assert(ids != NULL);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has(world, e, Position));
-    }
-
-    test_int(ecs_count(world, MyType), 1000);
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_of_2() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, MyType, Position, Velocity);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, MyType, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, MyType), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has(world, e, Position));
-        test_assert(ecs_has(world, e, Velocity));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_w_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TYPE(world, Type_1, Position);
-    ECS_TYPE(world, Type_2, AND | Type_1);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type_2, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type_2), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has(world, e, Position));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_w_2_types() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type_1, Position);
-    ECS_TYPE(world, Type_2, Velocity);
-    ECS_TYPE(world, Type_3, AND | Type_1, AND | Type_2);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type_3, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type_3), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has(world, e, Position));
-        test_assert(ecs_has(world, e, Velocity));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_mixed() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type_1, Position);
-    ECS_TYPE(world, Type_2, AND | Type_1, Velocity);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type_2, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type_2), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has(world, e, Position));
-        test_assert(ecs_has(world, e, Velocity));
-    }
-
-    ecs_fini(world);
-}
-
 void New_w_Count_tag() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, 0);
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_entity(world, Tag, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 1000);
     test_assert(ids != NULL);
     test_int(ecs_count_id(world, Tag), 1000);
 
@@ -158,73 +47,7 @@ void New_w_Count_tag() {
     for (i = 0; i < 1000; i ++) {
         ecs_entity_t e = ids[i];
         test_assert(e != 0);
-        test_assert(ecs_has_entity(world, e, Tag));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_w_tag() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Tag, 0);
-    ECS_TYPE(world, Type, Tag);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has_entity(world, e, Tag));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_w_2_tags() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Tag_1, 0);
-    ECS_ENTITY(world, Tag_2, 0);
-    ECS_TYPE(world, Type, Tag_1, Tag_2);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has_entity(world, e, Tag_1));
-        test_assert(ecs_has_entity(world, e, Tag_2));
-    }
-
-    ecs_fini(world);
-}
-
-void New_w_Count_type_w_tag_mixed() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Tag_1, 0);
-    ECS_ENTITY(world, Tag_2, 0);
-    ECS_COMPONENT(world, Position);
-    ECS_TYPE(world, Type, Tag_1, Tag_2, Position);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Type, 1000);
-    test_assert(ids != NULL);
-    test_int(ecs_count(world, Type), 1000);
-
-    int i;
-    for (i = 0; i < 1000; i ++) {
-        ecs_entity_t e = ids[i];
-        test_assert(e != 0);
-        test_assert(ecs_has_entity(world, e, Tag_1));
-        test_assert(ecs_has_entity(world, e, Tag_2));
-        test_assert(ecs_has(world, e, Position));
+        test_assert(ecs_has_id(world, e, Tag));
     }
 
     ecs_fini(world);
@@ -232,8 +55,6 @@ void New_w_Count_type_w_tag_mixed() {
 
 static
 void AddPosition(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-
     ecs_entity_t velocity = *(ecs_entity_t*)it->ctx;
 
     int i;
@@ -246,7 +67,7 @@ void AddPosition(ecs_iter_t *it) {
 
 static
 void SetPosition(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     ecs_entity_t rotation = *(ecs_entity_t*)it->ctx;
 
@@ -444,9 +265,9 @@ void New_w_Count_new_w_data_pair() {
             NULL
         });
 
-    test_assert(ecs_has_entity(world, ids[0], pair_id));
-    test_assert(ecs_has_entity(world, ids[1], pair_id));
-    test_assert(ecs_has_entity(world, ids[2], pair_id));
+    test_assert(ecs_has_id(world, ids[0], pair_id));
+    test_assert(ecs_has_id(world, ids[1], pair_id));
+    test_assert(ecs_has_id(world, ids[2], pair_id));
 
     const Position *
     p = ecs_get_id(world, ids[0], pair_id);
@@ -481,9 +302,9 @@ void New_w_Count_new_w_data_pair_tag() {
             NULL
         });
 
-    test_assert(ecs_has_entity(world, ids[0], pair_id));
-    test_assert(ecs_has_entity(world, ids[1], pair_id));
-    test_assert(ecs_has_entity(world, ids[2], pair_id));
+    test_assert(ecs_has_id(world, ids[0], pair_id));
+    test_assert(ecs_has_id(world, ids[1], pair_id));
+    test_assert(ecs_has_id(world, ids[2], pair_id));
 
     ecs_fini(world);
 }
@@ -674,7 +495,7 @@ void New_w_Count_new_w_data_override_set_pair() {
     ecs_entity_t pair_id = ecs_pair(Pair, ecs_id(Position));
 
     ecs_entity_t base = ecs_new(world, 0);
-    Position *ptr = ecs_get_mut_w_entity(world, base, pair_id, NULL);
+    Position *ptr = ecs_get_mut_id(world, base, pair_id, NULL);
     test_assert(ptr != NULL);
     ptr->x = 100;
     ptr->y = 200;

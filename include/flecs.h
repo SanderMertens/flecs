@@ -569,8 +569,7 @@ typedef struct EcsComponent {
 
 /** Component that stores an ecs_type_t. 
  * This component allows for the creation of entities that represent a type, and
- * therefore the creation of named types. This component is typically 
- * instantiated by ECS_TYPE. */
+ * therefore the creation of named types. */
 typedef struct EcsType {
     ecs_type_t type;        /* Preserved nested types */
     ecs_type_t normalized;  /* Union of type and nested AND types */
@@ -663,7 +662,6 @@ typedef struct ecs_world_info_t {
 #endif
 
 
-
 /**
  * @defgroup type_roles Type Roles
  * @{
@@ -671,16 +669,7 @@ typedef struct ecs_world_info_t {
 
 /* Type roles are used to indicate the role of an entity in a type. If no flag
  * is specified, the entity is interpreted as a regular component or tag. Flags
- * are added to an entity by using a bitwise OR (|). An example:
- *
- * ecs_entity_t parent = ecs_new(world, 0);
- * ecs_entity_t child = ecs_add_pair(world, e, EcsChildOf, parent);
- *
- * Type flags can also be used in type expressions, without the ECS prefix:
- *
- * ECS_ENTITY(world, Base, Position);
- * ECS_TYPE(world, InstanceOfBase, (IsA, Base));
- */
+ * are added to an entity by using a bitwise OR (|). */
 
 /** Role bit added to roles to differentiate between roles and generations */
 #define ECS_ROLE (1ull << 63)

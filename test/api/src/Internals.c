@@ -6,9 +6,9 @@ void Internals_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
-    ECS_COLUMN(it, Mass, m, 3);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
+    Mass *m = ecs_term(it, Mass, 3);
 
     probe_system(it);
 
@@ -140,7 +140,7 @@ static int invoked = 0;
 
 static
 void CreateNewTable(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -215,7 +215,7 @@ void Internals_create_65k_tables() {
     for (i = 0; i <= 65536; i ++) {
         ecs_entity_t e = ecs_new_id(world);
         ecs_add_id(world, e, e);
-        test_assert(ecs_has_entity(world, e, e));
+        test_assert(ecs_has_id(world, e, e));
         test_int(ecs_vector_count(ecs_get_type(world, e)), 1);
     }
     

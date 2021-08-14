@@ -372,7 +372,7 @@ void Set_get_mut_tag_new() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 void Set_get_mut_tag_existing() {
@@ -389,7 +389,7 @@ void Set_get_mut_tag_existing() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 void Set_get_mut_tag_new_w_comp() {
@@ -406,7 +406,7 @@ void Set_get_mut_tag_new_w_comp() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 void Set_get_mut_tag_existing_w_comp() {
@@ -425,7 +425,7 @@ void Set_get_mut_tag_existing_w_comp() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 void Set_get_mut_tag_new_w_pair() {
@@ -443,7 +443,7 @@ void Set_get_mut_tag_new_w_pair() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 void Set_get_mut_tag_existing_w_pair() {
@@ -463,7 +463,7 @@ void Set_get_mut_tag_existing_w_pair() {
     test_expect_abort();
 
     bool is_added = false;
-    ecs_get_mut_w_entity(world, e, MyTag, &is_added);
+    ecs_get_mut_id(world, e, MyTag, &is_added);
 }
 
 static bool is_invoked = false;

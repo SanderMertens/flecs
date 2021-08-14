@@ -447,8 +447,11 @@ void SystemMisc_system_w_or_disabled_and_prefab() {
 
 static
 void TableColumns(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
+
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     ecs_type_t type = ecs_iter_type(it);
     test_int(2, ecs_vector_count(type));
@@ -457,10 +460,10 @@ void TableColumns(ecs_iter_t *it) {
     test_int(components[0], ecs_id(Position));
     test_int(components[1], ecs_id(Velocity));
 
-    void *column_0 = ecs_table_column(it, 0);
+    void *column_0 = ecs_iter_column_w_size(it, sizeof(Position), 0);
     test_assert(column_0 == p);
 
-    void *column_1 = ecs_table_column(it, 1);
+    void *column_1 = ecs_iter_column_w_size(it, sizeof(Velocity), 1);
     test_assert(column_1 == v);
 
     is_invoked ++;
@@ -781,24 +784,24 @@ void SystemMisc_dont_enable_after_rematch() {
 
     /* System is enabled but doesn't match with any entities */
     
-    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
+    test_bool(ecs_has_id(world, Dummy, EcsDisabled), false);
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Explicitly disable system before triggering a rematch */
     ecs_enable(world, Dummy, false);
-    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
+    test_bool(ecs_has_id(world, Dummy, EcsDisabled), true);
 
     /* Trigger a rematch. System should still be disabled after this */
     ecs_add(world, Prefab, Velocity);
-    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), true);
+    test_bool(ecs_has_id(world, Dummy, EcsDisabled), true);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 0);
 
     /* Enable system. It is matched, so should now be invoked */
     ecs_enable(world, Dummy, true);
-    test_bool(ecs_has_entity(world, Dummy, EcsDisabled), false);
+    test_bool(ecs_has_id(world, Dummy, EcsDisabled), false);
 
     ecs_progress(world, 1);
     test_int(ctx.count, 1);
@@ -808,7 +811,7 @@ void SystemMisc_dont_enable_after_rematch() {
 
 static void SysA(ecs_iter_t *it)
 {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
     ecs_add(it->world, it->entities[0], Velocity);
 }
 
@@ -891,34 +894,15 @@ void SystemMisc_match_system() {
     ecs_fini(world);
 }
 
-void SystemMisc_match_system_w_filter() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
-    ECS_SYSTEM(world, SysB, 0, Position);
-
-    ecs_run_w_filter(world, SysB, 0, 0, 0, &(ecs_filter_t){
-        .include = ecs_type(Position)
-    }, NULL);
-
-    test_assert(b_invoked != 0);
-    test_assert(b_entity == SysA);
-    
-    ecs_fini(world);
-}
-
 void SystemMisc_system_initial_state() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SysA, 0, Position);
 
-    test_assert( ecs_has_entity(world, SysA, EcsInactive));
-    test_assert( !ecs_has_entity(world, SysA, EcsDisabled));
-    test_assert( !ecs_has_entity(world, SysA, EcsDisabledIntern));
+    test_assert( ecs_has_id(world, SysA, EcsInactive));
+    test_assert( !ecs_has_id(world, SysA, EcsDisabled));
+    test_assert( !ecs_has_id(world, SysA, EcsDisabledIntern));
 
     ecs_fini(world);
 }
@@ -1001,23 +985,23 @@ void SystemMisc_system_readeactivate() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
     /* No entities, system should be deactivated */
-    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy, EcsInactive));
 
     ecs_entity_t e = ecs_new(world, Position);
 
     /* System should be active, one entity is matched */
-    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy, EcsInactive));
 
     ecs_delete(world, e);
 
     /* System is not automatically deactivated */
-    test_assert( !ecs_has_entity(world, Dummy, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy, EcsInactive));
 
     /* Manually deactivate system that aren't matched with entities */
     ecs_deactivate_systems(world);
 
     /* System should be deactivated */
-    test_assert( ecs_has_entity(world, Dummy, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy, EcsInactive));
 
     ecs_fini(world);
 }
@@ -1038,28 +1022,28 @@ void SystemMisc_system_readeactivate_w_2_systems() {
     ECS_SYSTEM(world, Dummy2, EcsOnUpdate, Mass);
 
     /* No entities, system should be deactivated */
-    test_assert( ecs_has_entity(world, Dummy1, EcsInactive));
-    test_assert( ecs_has_entity(world, Dummy2, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy1, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy2, EcsInactive));
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_new(world, Mass);
 
     /* Systems should be active, one entity is matched */
-    test_assert( !ecs_has_entity(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
 
     ecs_delete(world, e1);
 
     /* System is not automatically deactivated */
-    test_assert( !ecs_has_entity(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
 
     /* Manually deactivate system that aren't matched with entities */
     ecs_deactivate_systems(world);
 
     /* System should be deactivated */
-    test_assert( ecs_has_entity(world, Dummy1, EcsInactive));
-    test_assert( !ecs_has_entity(world, Dummy2, EcsInactive));
+    test_assert( ecs_has_id(world, Dummy1, EcsInactive));
+    test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
 
     ecs_fini(world);
 }
@@ -1226,79 +1210,6 @@ void SystemMisc_two_named_columns_of_two() {
     test_str(term->name, "vel");
 
     ecs_filter_fini(&f);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_get_column_by_name() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "Position p, Velocity v");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(q);
-
-    while (ecs_query_next(&it)) {
-        int32_t p_i = ecs_column_index_from_name(&it, "p");
-        test_assert(p_i == 1);
-        int32_t v_i = ecs_column_index_from_name(&it, "v");
-        test_assert(v_i == 2);
-    }
-
-    ecs_fini(world);
-}
-
-void SystemMisc_get_column_by_name_not_found() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "Position p, Velocity v");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(q);
-
-    while (ecs_query_next(&it)) {
-        int32_t p_i = ecs_column_index_from_name(&it, "r");
-        test_assert(p_i == 0);
-    }
-
-    ecs_fini(world);
-}
-
-void SystemMisc_get_column_by_name_no_names() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(q);
-
-    while (ecs_query_next(&it)) {
-        int32_t p_i = ecs_column_index_from_name(&it, "p");
-        test_assert(p_i == 0);
-        int32_t v_i = ecs_column_index_from_name(&it, "v");
-        test_assert(v_i == 0);
-    }
 
     ecs_fini(world);
 }
@@ -1665,8 +1576,8 @@ void SystemMisc_rw_in_implicit_any() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == true);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == true);
 
     ecs_fini(world);
 }
@@ -1685,8 +1596,8 @@ void SystemMisc_rw_in_implicit_shared() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == true);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == true);
 
     ecs_fini(world);
 }
@@ -1704,8 +1615,8 @@ void SystemMisc_rw_in_implicit_from_empty() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == true);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == true);
 
     ecs_fini(world);
 }
@@ -1724,8 +1635,8 @@ void SystemMisc_rw_in_implicit_from_entity() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == true);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == true);
 
     ecs_fini(world);
 }
@@ -1743,8 +1654,8 @@ void SystemMisc_rw_out_explicit_any() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == false);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == false);
 
     ecs_fini(world);
 }
@@ -1763,8 +1674,8 @@ void SystemMisc_rw_out_explicit_shared() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == false);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == false);
 
     ecs_fini(world);
 }
@@ -1782,8 +1693,8 @@ void SystemMisc_rw_out_explicit_from_empty() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == false);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == false);
 
     ecs_fini(world);
 }
@@ -1802,8 +1713,8 @@ void SystemMisc_rw_out_explicit_from_entity() {
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_is_readonly(&it, 1) == false);
-    test_assert(ecs_is_readonly(&it, 2) == false);
+    test_assert(ecs_term_is_readonly(&it, 1) == false);
+    test_assert(ecs_term_is_readonly(&it, 2) == false);
 
     ecs_fini(world);
 }
@@ -1821,7 +1732,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs() {
     Probe ctx = {0};
     ecs_set_context(world, &ctx);    
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ECS_ENTITY(world, e, (Pair, TagA), (Pair, TagB));
     test_assert(e != 0);
 
     ecs_progress(world, 0);

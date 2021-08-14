@@ -114,7 +114,7 @@ public:
             ECS_INVALID_PARAMETER, NULL);
 
         bool is_added;
-        T *ptr = static_cast<T*>(ecs_get_mut_w_entity(
+        T *ptr = static_cast<T*>(ecs_get_mut_id(
             this->base_world(), this->base_id(), comp_id, &is_added));
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -172,7 +172,7 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
         return static_cast<T*>(
-            ecs_get_mut_w_entity(
+            ecs_get_mut_id(
                 this->base_world(), this->base_id(), ecs_trait(_::cpp_type<C>::id(this->base_world()), 
                     t_id), is_added));
     }
@@ -184,7 +184,7 @@ public:
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
         return static_cast<T*>(
-            ecs_get_mut_w_entity(
+            ecs_get_mut_id(
                 this->base_world(), this->base_id(), ecs_trait( comp_id, c.id()), is_added));
     }
 
@@ -195,14 +195,14 @@ public:
         ecs_assert(_::cpp_type<C>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
         return static_cast<C*>(
-            ecs_get_mut_w_entity(
+            ecs_get_mut_id(
                 this->base_world(), this->base_id(), ecs_trait(comp_id, t.id()), is_added));
     }
 
     template<typename T, typename C>
     ECS_DEPRECATED("use has<Relation, Object>")
     bool has_trait() const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ecs_trait(
+        return ecs_has_id(this->base_world(), this->base_id(), ecs_trait(
             _::cpp_type<C>::id(this->base_world()), 
             _::cpp_type<T>::id(this->base_world())));
     }
@@ -210,20 +210,20 @@ public:
     template<typename T>
     ECS_DEPRECATED("use has<Relation>(const flecs::entity&)")
     bool has_trait(const Base& component) const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ecs_trait(
+        return ecs_has_id(this->base_world(), this->base_id(), ecs_trait(
             component.id(), _::cpp_type<T>::id(this->base_world())));
     }
 
     template<typename C>
     ECS_DEPRECATED("use has_object<Object>(const flecs::entity&)")
     bool has_trait_tag(const Base& trait) const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ecs_trait(
+        return ecs_has_id(this->base_world(), this->base_id(), ecs_trait(
            _::cpp_type<C>::id(this->base_world()), trait.id()));
     }
 
     ECS_DEPRECATED("use has(const flecs::entity&, const flecs::entity&)")
     bool has_trait(const Base& trait, const Base& e) const {
-        return ecs_has_entity(this->base_world(), this->base_id(), ecs_trait(
+        return ecs_has_id(this->base_world(), this->base_id(), ecs_trait(
             e.id(), trait.id()));
     }   
 };

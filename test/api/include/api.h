@@ -32,9 +32,6 @@ typedef struct IterData {
     ecs_entity_t component;
     ecs_entity_t component_2;
     ecs_entity_t component_3;
-    ecs_type_t type;
-    ecs_type_t type_2;
-    ecs_type_t type_3;
     ecs_entity_t new_entities[MAX_ENTITIES];
     int32_t entity_count;
 } IterData;
@@ -69,6 +66,9 @@ void probe_system(ecs_iter_t *it);
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 
 void install_test_abort();
+
+const ecs_entity_t* bulk_new_w_type(
+    ecs_world_t *world, ecs_entity_t type_ent, int32_t count);
 
 #ifdef __cplusplus
 }

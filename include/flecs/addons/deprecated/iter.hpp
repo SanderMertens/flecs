@@ -42,7 +42,7 @@ public:
     template <typename T, if_not_t< is_const<T>::value > = 0>
     ECS_DEPRECATED("use term<T>(int32_t)")
     flecs::column<T> column(int32_t col) const {
-        ecs_assert(!ecs_is_readonly(iter(), col), 
+        ecs_assert(!ecs_term_is_readonly(iter(), col), 
             ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return base()->template term<T>(col);
     }  
@@ -73,7 +73,7 @@ public:
     template <typename T, if_not_t< is_const<T>::value > = 0>
     ECS_DEPRECATED("no replacement")
     T& element(int32_t col, int32_t row) const {
-        ecs_assert(!ecs_is_readonly(iter(), col), 
+        ecs_assert(!ecs_term_is_readonly(iter(), col), 
             ECS_COLUMN_ACCESS_VIOLATION, NULL);
         return base()->template get_element<T>(col, row);
     }

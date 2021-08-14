@@ -19,11 +19,6 @@ ecs_type_t ecs_type_from_id(
     ecs_entity_t entity);
 
 FLECS_API
-ecs_entity_t ecs_type_to_id(
-    const ecs_world_t *world,
-    ecs_type_t type);
-
-FLECS_API
 char* ecs_type_str(
     const ecs_world_t *world,
     ecs_type_t type);  

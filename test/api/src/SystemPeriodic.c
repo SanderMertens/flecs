@@ -2,7 +2,7 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
@@ -1050,8 +1050,8 @@ void SystemPeriodic_match_2_systems_w_populated_table() {
 }
 
 void TestOptional_w_column(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1060,8 +1060,8 @@ void TestOptional_w_column(ecs_iter_t *it) {
 }
 
 void TestOptional_w_shared(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     test_assert(p != NULL);
     test_assert(v == NULL);
@@ -1318,8 +1318,8 @@ void SystemPeriodic_disabled_nested_feature() {
 }
 
 void TwoRefs(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     test_assert(!ecs_term_is_owned(it, 1));
     test_assert(!ecs_term_is_owned(it, 2));
@@ -1887,7 +1887,7 @@ static void AssertReadonly(ecs_iter_t *it) {
     test_assert(dummy_invoked == 0);
     dummy_invoked = it->entities[0];
 
-    test_assert( ecs_is_readonly(it, 1) == true);
+    test_assert( ecs_term_is_readonly(it, 1) == true);
 }
 
 void SystemPeriodic_shared_only() {
@@ -1952,7 +1952,7 @@ void SystemPeriodic_and_type() {
 
     ecs_new(world, Position);
     ecs_new(world, Velocity);
-    ecs_entity_t e3 = ecs_new(world, MyType);
+    ECS_ENTITY(world, e, Position, Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1965,7 +1965,7 @@ void SystemPeriodic_and_type() {
     test_int(ctx.column_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e3);
+    test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], MyType);
     test_int(ctx.s[0][0], 0);
 
@@ -1983,7 +1983,7 @@ void SystemPeriodic_or_type() {
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_entity_t e2 = ecs_new(world, Velocity);
-    ecs_entity_t e3 = ecs_new(world, MyType);
+    ECS_ENTITY(world, e3, Position, Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

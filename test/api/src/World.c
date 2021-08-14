@@ -188,7 +188,7 @@ void World_entity_range_check_after_delete() {
 
 
 void AddToExisting(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -234,7 +234,7 @@ void World_entity_range_add_in_range_in_progress() {
 }
 
 void AddOutOfRange(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -335,39 +335,9 @@ void World_dim() {
     ecs_fini(world);
 }
 
-void World_dim_dim_type() {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.malloc_ = test_malloc;
-    os_api.calloc_ = test_calloc;
-    os_api.realloc_ = test_realloc;
-    ecs_os_set_api(&os_api);    
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_dim(world, 1000);
-    ecs_dim_type(world, ecs_type(Position), 1000);
-
-    malloc_count = 0;
-
-    ecs_bulk_new(world, Position, 500);
-
-    test_int(malloc_count, 0);
-
-    malloc_count = 0;
-
-    ecs_bulk_new(world, Position, 400);
-
-    test_int(malloc_count, 0);
-
-    ecs_fini(world);
-}
-
 static
 void TOnLoad(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 0);
@@ -377,7 +347,7 @@ void TOnLoad(ecs_iter_t *it) {
 
 static
 void TPostLoad(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 1);
@@ -387,7 +357,7 @@ void TPostLoad(ecs_iter_t *it) {
 
 static
 void TPreUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 2);
@@ -397,7 +367,7 @@ void TPreUpdate(ecs_iter_t *it) {
 
 static
 void TOnUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 3);
@@ -407,7 +377,7 @@ void TOnUpdate(ecs_iter_t *it) {
 
 static
 void TOnValidate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 4);
@@ -417,7 +387,7 @@ void TOnValidate(ecs_iter_t *it) {
 
 static
 void TPostUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 5);
@@ -427,7 +397,7 @@ void TPostUpdate(ecs_iter_t *it) {
 
 static
 void TPreStore(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 6);
@@ -437,7 +407,7 @@ void TPreStore(ecs_iter_t *it) {
 
 static
 void TOnStore(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 7);
@@ -447,7 +417,7 @@ void TOnStore(ecs_iter_t *it) {
 
 static
 void TManual(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 8);
@@ -521,7 +491,8 @@ void World_phases_match_in_create() {
 
 static
 void TMergeOnLoad(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -532,7 +503,8 @@ void TMergeOnLoad(ecs_iter_t *it) {
 
 static
 void TMergePostLoad(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -543,7 +515,8 @@ void TMergePostLoad(ecs_iter_t *it) {
 
 static
 void TMergePreUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -554,7 +527,8 @@ void TMergePreUpdate(ecs_iter_t *it) {
 
 static
 void TMergeOnUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -565,7 +539,8 @@ void TMergeOnUpdate(ecs_iter_t *it) {
 
 static
 void TMergeOnValidate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -576,7 +551,8 @@ void TMergeOnValidate(ecs_iter_t *it) {
 
 static
 void TMergePostUpdate(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -587,7 +563,8 @@ void TMergePostUpdate(ecs_iter_t *it) {
 
 static
 void TMergePreStore(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -598,7 +575,8 @@ void TMergePreStore(ecs_iter_t *it) {
 
 static
 void TMergeOnStore(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -609,7 +587,8 @@ void TMergeOnStore(ecs_iter_t *it) {
 
 static
 void TMergeManual(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1016,7 +995,7 @@ void World_is_entity_enabled() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    test_assert( ecs_has_entity(world, e, EcsDisabled) == false);
+    test_assert( ecs_has_id(world, e, EcsDisabled) == false);
 
     ecs_fini(world);
 }

@@ -6,7 +6,7 @@ void System_w_FromContainer_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Mass, m_ptr, 1);
+    Mass *m_ptr = ecs_term(it, Mass, 1);
     bool shared = false;
     
     if (m_ptr) {
@@ -177,7 +177,7 @@ void System_w_FromContainer_2_column_1_from_container() {
 
 static
 void Iter_2_shared(ecs_iter_t *it) {
-    ECS_COLUMN(it, Mass, m_ptr, 1);
+    Mass *m_ptr = ecs_term(it, Mass, 1);
 
     Rotation *r_ptr = NULL;
     Position *p = NULL;
@@ -625,8 +625,8 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
 
 static
 void Dummy(ecs_iter_t *it) {
-    ECS_COLUMN(it, Mass, m_ptr, 1);
-    ECS_COLUMN(it, Position, p, 2);
+    Mass *m_ptr = ecs_term(it, Mass, 1);
+    Position *p = ecs_term(it, Position, 2);
 
     test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
 
@@ -808,7 +808,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
 
 static
 void SetMass(ecs_iter_t *it) {
-    ECS_COLUMN_COMPONENT(it, Mass, 2);
+    ecs_id_t ecs_id(Mass) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1179,7 +1179,7 @@ void System_w_FromContainer_new_child_after_match() {
 }
 
 void IterSame(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p_parent, 1);
+    Position *p_parent = ecs_term(it, Position, 1);
     Position *p = ecs_term(it, Position, 2);
 
     test_assert(!ecs_term_is_owned(it, 1));
@@ -1288,10 +1288,9 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(p->y, 40);
 
     /* Add 1000 entities to table of container, which will trigger realloc */
-    ecs_type_t parent_type = ecs_get_type(world, parent);
-    test_assert(parent_type != 0);
-
-    ecs_bulk_new_w_type(world, parent_type, 1000);
+    for (int i = 0; i < 1000; i ++) {
+        ecs_clone(world, 0, parent, false);
+    }
 
     /* Change value of parent Mass. This will update the value in the new table.
      * If the realloc would not be properly handled, the code could either crash

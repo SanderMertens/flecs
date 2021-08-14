@@ -49,8 +49,8 @@ static Probe pv_probe;
 
 static
 void On_PV(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN(it, Velocity, v, 2);
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
 
     probe_system_w_ctx(it, &pv_probe);
 
@@ -887,16 +887,15 @@ void SystemOnSet_remove_from_current_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new(world, Type);
-    ecs_entity_t e2 = ecs_new(world, Type);
-    ecs_entity_t e3 = ecs_new(world, Type);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
 
     e1 = ecs_set(world, e1, Position, {10, 20});
     e2 = ecs_set(world, e2, Position, {11, 21});
@@ -930,16 +929,15 @@ void SystemOnSet_remove_set_component_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
     ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new(world, Type);
-    ecs_entity_t e2 = ecs_new(world, Type);
-    ecs_entity_t e3 = ecs_new(world, Type);
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
 
     e1 = ecs_set(world, e1, Position, {10, 20});
     e2 = ecs_set(world, e2, Position, {11, 21});
@@ -1060,42 +1058,6 @@ void SystemOnSet_set_from_nothing() {
     ctx = (Probe){ 0 };
     ecs_set(world, e, Velocity, {10, 20});
     test_int(ctx.invoked, 0);
-
-    ecs_fini(world);
-}
-
-static
-void AddNull(ecs_iter_t *it) {
-    probe_system(it);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_add_type(it->world, it->entities[i], NULL);
-    }
-}
-
-void SystemOnSet_add_null_type_in_on_set() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, AddNull, EcsOnSet, Position);
-
-    Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
-
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.system, AddNull);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.s[0][0], 0);
-
-    test_assert( ecs_has(world, e, Position));
 
     ecs_fini(world);
 }

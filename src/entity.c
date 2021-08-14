@@ -2280,20 +2280,26 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_ids_t components = {
-        .array = &id,
-        .count = 1
-    };
+    ecs_ids_t components = { 0 };
+
+    if (id) {
+        ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+        components.array = &id;
+        components.count = 1;
+    }
+
     const ecs_entity_t *ids;
     if (flecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
         return ids;
     }
-    ecs_table_t *table = flecs_table_find_or_create(world, &components);
+
+    ecs_table_t *table = flecs_table_traverse_add(
+        world, &world->store.root, &components, NULL);
     ids = new_w_data(world, table, NULL, count, NULL, NULL);
     flecs_defer_flush(world, stage);
+
     return ids;
 }
 
@@ -2650,8 +2656,8 @@ void ecs_add_id(
     ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_ids_t components = { .array = &id, .count = 1 };
     add_ids(world, entity, &components);
@@ -2664,6 +2670,7 @@ void ecs_remove_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_ids_t components = { .array = &id, .count = 1 };
     remove_ids(world, entity, &components);
@@ -3155,6 +3162,11 @@ bool ecs_has_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (!id) {
+        return true;
+    }
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -3314,24 +3326,6 @@ ecs_type_t ecs_type_from_id(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return table->type;
-}
-
-ecs_id_t ecs_type_to_id(
-    const ecs_world_t *world, 
-    ecs_type_t type)
-{
-    (void)world;
-
-    if (!type) {
-        return 0;
-    }
-    
-    /* If array contains n entities, it cannot be reduced to a single entity */
-    if (ecs_vector_count(type) != 1) {
-        ecs_abort(ECS_TYPE_NOT_AN_ENTITY, NULL);
-    }
-
-    return *(ecs_vector_first(type, ecs_id_t));
 }
 
 ecs_id_t ecs_make_pair(

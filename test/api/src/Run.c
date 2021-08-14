@@ -6,7 +6,7 @@ void Run_setup() {
 
 static
 void Iter(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
     Velocity *v = NULL;
     Mass *m = NULL;
 
@@ -918,192 +918,6 @@ void Run_run_w_limit_out_of_bounds() {
     ecs_fini(world);
 }
 
-void Run_run_w_component_filter() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
-
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
-
-    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    /* Ensure system is not run by ecs_progress */
-    ecs_progress(world, 1);
-    test_int(ctx.invoked, 0);
-
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
-        .include = ecs_type(Mass)
-    }, NULL), 0);
-
-    test_int(ctx.count, 2);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e4);
-    test_int(ctx.e[1], e5);
-
-    int i;
-    for (i = 0; i < ctx.invoked; i ++) {
-        test_int(ctx.c[i][0], ecs_id(Position));
-        test_int(ctx.s[i][0], 0);
-        test_int(ctx.c[i][1], ecs_id(Velocity));
-        test_int(ctx.s[i][1], 0);
-    }
-
-    for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get(world, ctx.e[i], Position);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
-        test_int(v->x, 30);
-        test_int(v->y, 40);        
-    }
-
-    ecs_fini(world);
-}
-
-void Run_run_w_type_filter_of_2() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
-
-    ECS_TYPE(world, Type, Mass, Rotation);
-
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Mass, Rotation);
-    ECS_ENTITY(world, e7, Position);
-
-    ECS_SYSTEM(world, Iter, 0, Position, Velocity);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    /* Ensure system is not run by ecs_progress */
-    ecs_progress(world, 1);
-    test_int(ctx.invoked, 0);
-
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
-        .include = ecs_type(Type)
-    }, NULL), 0);
-
-    test_int(ctx.count, 1);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e6);
-
-    int i;
-    for (i = 0; i < ctx.invoked; i ++) {
-        test_int(ctx.c[i][0], ecs_id(Position));
-        test_int(ctx.s[i][0], 0);
-        test_int(ctx.c[i][1], ecs_id(Velocity));
-        test_int(ctx.s[i][1], 0);
-    }
-
-    for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get(world, ctx.e[i], Position);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
-        test_int(v->x, 30);
-        test_int(v->y, 40);        
-    }
-
-    ecs_fini(world);
-}
-
-void Run_run_w_container_filter() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
-
-    ECS_TYPE(world, Type, Mass, Rotation);
-
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Mass, Rotation);
-    ECS_ENTITY(world, e7, Position);
-
-    ECS_SYSTEM(world, Iter, 0, Position);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    /* Create a parent entity */
-    ecs_entity_t parent = ecs_new(world, 0);
-
-    /* Adopt child entities */
-    ecs_add_pair(world, e1, EcsChildOf, parent);
-    ecs_add_pair(world, e4, EcsChildOf, parent);
-    ecs_add_pair(world, e6, EcsChildOf, parent);
-    ecs_add_pair(world, e7, EcsChildOf, parent);
-
-    /* Get type from parent to use as filter */
-    ecs_type_t ecs_type(Parent) = ecs_type_from_id(world, ecs_pair(EcsChildOf, parent));
-
-    /* Ensure system is not run by ecs_progress */
-    ecs_progress(world, 1);
-    test_int(ctx.invoked, 0);
-
-    test_int( ecs_run_w_filter(world, Iter, 1.0, 0, 0, &(ecs_filter_t){
-        .include = ecs_type(Parent)
-    }, NULL), 0);
-
-    test_int(ctx.count, 4);
-    test_int(ctx.invoked, 4);
-    test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 1);
-    test_null(ctx.param);
-
-    probe_has_entity(&ctx, e1);
-    probe_has_entity(&ctx, e4);
-    probe_has_entity(&ctx, e6);
-    probe_has_entity(&ctx, e7);
-
-    int i;
-    for (i = 0; i < ctx.invoked; i ++) {
-        test_int(ctx.c[i][0], ecs_id(Position));
-        test_int(ctx.s[i][0], 0);
-    }
-
-    for (i = 0; i < ctx.count; i ++) {
-        const Position *p = ecs_get(world, ctx.e[i], Position);
-        test_int(p->x, 10);
-        test_int(p->y, 20);       
-    }
-
-    ecs_fini(world);
-}
-
 void Run_run_no_match() {
     ecs_world_t *world = ecs_init();
 
@@ -1147,7 +961,7 @@ void TestSubset(ecs_iter_t *it) {
 
 static
 void TestAll(ecs_iter_t *it) {
-    ECS_COLUMN(it, Position, p, 1);
+    Position *p = ecs_term(it, Position, 1);
 
     ecs_entity_t TestSubset = ecs_term_id(it, 2);
 
@@ -1190,22 +1004,20 @@ void Run_run_comb_10_entities_2_types() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
 
     int i, ENTITIES = 10;
+    ecs_entity_t ids_1[5], ids_2[5];
 
-    const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, ENTITIES / 2);
-    ecs_entity_t ids_1[5];
-    memcpy(ids_1, temp_ids_1, sizeof(ecs_entity_t) * ENTITIES / 2);
-    const ecs_entity_t *ids_2 = ecs_bulk_new(world, Type, ENTITIES / 2);
-
-    for (i = 0; i < 5; i ++) {
-        ecs_set(world, ids_1[i], Position, {1, 2});
-        ecs_set(world, ids_2[i], Position, {1, 2});
-    }  
+    for (int i = 0; i < ENTITIES / 2; i ++) {
+        ids_1[i] = ecs_set(world, 0, Position, {1, 2});
+    }
+    for (int i = 0; i < ENTITIES / 2; i ++) {
+        ids_2[i] = ecs_set(world, 0, Position, {1, 2});
+        ecs_add(world, ids_2[i], Velocity);
+    } 
 
     ecs_progress(world, 0);
 
@@ -1259,8 +1071,9 @@ static
 void AddVelocity(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    ECS_COLUMN(it, Position, p, 1);
-    ECS_COLUMN_COMPONENT(it, Velocity, 2);
+    Position *p = ecs_term(it, Position, 1);
+    ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     int i;
     for (i = 0; i < it->count; i ++) {

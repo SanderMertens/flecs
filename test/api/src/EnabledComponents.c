@@ -48,7 +48,7 @@ void EnabledComponents_is_0_component_disabled() {
 
     test_expect_abort();
 
-    test_bool(ecs_is_component_enabled_w_entity(world, e, 0), false);
+    test_bool(ecs_is_component_enabled_w_id(world, e, 0), false);
 }
 
 void EnabledComponents_is_nonexist_component_disabled() {
@@ -99,7 +99,7 @@ void EnabledComponents_has_enabled_component() {
 
     ecs_enable_component(world, e, Position, true);
     
-    test_bool(ecs_has_entity(world, e, ECS_DISABLED | ecs_id(Position)), true);
+    test_bool(ecs_has_id(world, e, ECS_DISABLED | ecs_id(Position)), true);
 
     ecs_fini(world);
 }
@@ -116,7 +116,7 @@ void EnabledComponents_is_enabled_after_add() {
 
     ecs_add(world, e, Position);
     test_bool(ecs_is_component_enabled(world, e, Position), true);
-    test_bool(ecs_has_entity(world, e, ECS_DISABLED | ecs_id(Position)), true);
+    test_bool(ecs_has_id(world, e, ECS_DISABLED | ecs_id(Position)), true);
     test_bool(ecs_has(world, e, Position), true);
 
     ecs_fini(world);
@@ -134,7 +134,7 @@ void EnabledComponents_is_enabled_after_remove() {
 
     ecs_remove(world, e, Position);
     test_bool(ecs_is_component_enabled(world, e, Position), true);
-    test_bool(ecs_has_entity(world, e, ECS_DISABLED | ecs_id(Position)), true);
+    test_bool(ecs_has_id(world, e, ECS_DISABLED | ecs_id(Position)), true);
     test_bool(ecs_has(world, e, Position), false);
 
     ecs_fini(world);
@@ -1069,8 +1069,11 @@ void EnabledComponents_sort() {
     test_bool(ecs_is_component_enabled(world, e3, Position), false);
     test_bool(ecs_is_component_enabled(world, e4, Position), false);
     
-    ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_query_order_by(world, q, ecs_id(Position), compare_position);
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position
+    });
 
     ecs_iter_t it = ecs_query_iter(q);
     test_assert(ecs_query_next(&it));

@@ -76,7 +76,7 @@ void Clone_2_component() {
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e1 = ecs_new(world, Type);
+    ECS_ENTITY(world, e1, Position, Velocity);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -103,9 +103,7 @@ void Clone_3_component() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_TYPE(world, Type, Position, Velocity, Mass);
-
-    ecs_entity_t e1 = ecs_new(world, Type);
+    ECS_ENTITY(world, e1, Position, Velocity, Mass);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -278,8 +276,8 @@ void Clone_tag() {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(ecs_has_entity(world, e1, Tag));
-    test_assert(ecs_has_entity(world, e2, Tag));
+    test_assert(ecs_has_id(world, e1, Tag));
+    test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);
 }
@@ -296,8 +294,8 @@ void Clone_tag_w_value() {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(ecs_has_entity(world, e1, Tag));
-    test_assert(ecs_has_entity(world, e2, Tag));
+    test_assert(ecs_has_id(world, e1, Tag));
+    test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);
 }
@@ -315,8 +313,8 @@ void Clone_1_tag_1_component() {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(ecs_has_entity(world, e1, Tag));
-    test_assert(ecs_has_entity(world, e2, Tag));
+    test_assert(ecs_has_id(world, e1, Tag));
+    test_assert(ecs_has_id(world, e2, Tag));
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
@@ -337,8 +335,8 @@ void Clone_1_tag_1_component_w_value() {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(ecs_has_entity(world, e1, Tag));
-    test_assert(ecs_has_entity(world, e2, Tag));
+    test_assert(ecs_has_id(world, e1, Tag));
+    test_assert(ecs_has_id(world, e2, Tag));
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));

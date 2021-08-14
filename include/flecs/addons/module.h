@@ -122,23 +122,13 @@ ecs_entity_t ecs_module_init(
 #define ECS_DECLARE_ENTITY(id)\
     ecs_entity_t id\
 
-/** Utility macro for declaring a type inside a handles type */
-#define ECS_DECLARE_TYPE(id)\
-    ECS_DECLARE_ENTITY(id)
-
 /** Utility macro for setting a component in a module function */
 #define ECS_SET_COMPONENT(id)\
-    if (handles) handles->ecs_id(id) = ecs_id(id);\
-    if (handles) handles->ecs_type(id) = ecs_type(id)
+    if (handles) handles->ecs_id(id) = ecs_id(id)
 
 /** Utility macro for setting an entity in a module function */
 #define ECS_SET_ENTITY(id)\
     if (handles) handles->id = id;
-
-/** Utility macro for setting a type in a module function */
-#define ECS_SET_TYPE(id)\
-    if (handles) handles->id = id;\
-    if (handles) handles->ecs_type(id) = ecs_type(id);
 
 #define ECS_EXPORT_COMPONENT(id)\
     ECS_SET_COMPONENT(id)
@@ -146,27 +136,22 @@ ecs_entity_t ecs_module_init(
 #define ECS_EXPORT_ENTITY(id)\
     ECS_SET_ENTITY(id)
 
-#define ECS_EXPORT_TYPE(id)\
-    ECS_SET_TYPE(id)
-
 /** Utility macro for importing a component */
 #define ECS_IMPORT_COMPONENT(handles, id)\
     ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
-    (void)ecs_id(id);\
-    (void)ecs_type(id)
+    (void)ecs_id(id)
 
 /** Utility macro for importing an entity */
 #define ECS_IMPORT_ENTITY(handles, id)\
     ecs_entity_t id = (handles).id;\
-    (void)id;\
-    (void)ecs_type(id)
+    (void)id
 
-/** Utility macro for importing a type */
-#define ECS_IMPORT_TYPE(handles, id)\
-    ecs_entity_t id = (handles).id;\
-    ecs_type_t ecs_type(id) = (handles).ecs_type(id);\
-    (void)id;\
-    (void)ecs_type(id)
+#define ECS_IMPORT_TERM(it, module, column) \
+    module *ecs_module_ptr(module) = ecs_term(it, module, column);\
+    ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
+    ecs_assert(!ecs_term_is_owned(it, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
+    module ecs_module(module) = *ecs_module_ptr(module);\
+    module##ImportHandles(ecs_module(module))
 
 #ifdef __cplusplus
 }

@@ -1019,18 +1019,24 @@ void OnDelete_stresstest_many_relations_on_delete() {
 
     int i, oi;
 
+    const int COUNT = 2;
+
     /* Precreate objects so we get different relationship ids */
-    ecs_entity_t objects[100];
-    for (i = 0; i < 100; i ++) {
+    ecs_entity_t objects[COUNT];
+    for (i = 0; i < COUNT; i ++) {
         objects[i] = ecs_new_id(world);
     }
+
+    /* Add (OnDeleteObject, Delete) to a dummy object so that it won't mess up
+     * with the table count */
+    ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
 
     ecs_world_stats_t s = {0};
     ecs_get_world_stats(world, &s); 
     float table_count = s.table_count.avg[s.t];    
 
-    for (oi = 0; oi < 100; oi ++) {    
-        for (i = 0; i < 100; i ++) {
+    for (oi = 0; oi < COUNT; oi ++) {    
+        for (i = 0; i < COUNT; i ++) {
             ecs_entity_t r = ecs_new_id(world);
             ecs_add_pair(world, r, EcsOnDeleteObject, EcsDelete);
 

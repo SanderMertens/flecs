@@ -350,7 +350,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_trace_2("table #[green][%s]#[normal] created [%p]", expr, result);
+    ecs_trace_2("table #[green][%s]#[normal] created", expr);
     ecs_os_free(expr);
 #endif
     ecs_log_push();

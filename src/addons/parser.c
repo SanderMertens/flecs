@@ -919,7 +919,19 @@ char* ecs_parse_term(
             return NULL;
         }
 
+        if (subj->set.mask != EcsDefaultSet || 
+           (subj->entity && subj->entity != EcsThis) ||
+           (subj->name && ecs_os_strcmp(subj->name, "This")))
+        {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid combination of 0 with non-default subject");
+            ecs_term_fini(term);
+            return NULL;
+        }
+
         subj->set.mask = EcsNothing;
+        ecs_os_free(term->pred.name);
+        term->pred.name = NULL;
     }
 
     /* Cannot combine EcsNothing with operators other than AND */

@@ -166,27 +166,27 @@ void DeferredActions_defer_bulk_new_w_data_pair() {
     ecs_entity_t ids[3];
     memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
 
-    test_assert(!ecs_has_entity(world, ids[0], pair_id));
-    test_assert(!ecs_has_entity(world, ids[1], pair_id));
-    test_assert(!ecs_has_entity(world, ids[2], pair_id)); 
+    test_assert(!ecs_has_id(world, ids[0], pair_id));
+    test_assert(!ecs_has_id(world, ids[1], pair_id));
+    test_assert(!ecs_has_id(world, ids[2], pair_id)); 
 
     ecs_defer_end(world);
 
-    test_assert(!ecs_has_entity(world, ids[0], pair_id));
-    test_assert(!ecs_has_entity(world, ids[1], pair_id));
-    test_assert(!ecs_has_entity(world, ids[2], pair_id));
+    test_assert(!ecs_has_id(world, ids[0], pair_id));
+    test_assert(!ecs_has_id(world, ids[1], pair_id));
+    test_assert(!ecs_has_id(world, ids[2], pair_id));
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has_entity(world, ids[0], pair_id));
-    test_assert(ecs_has_entity(world, ids[1], pair_id));
-    test_assert(ecs_has_entity(world, ids[2], pair_id));
+    test_assert(ecs_has_id(world, ids[0], pair_id));
+    test_assert(ecs_has_id(world, ids[1], pair_id));
+    test_assert(ecs_has_id(world, ids[2], pair_id));
 
     ecs_frame_end(world);
 
-    test_assert(ecs_has_entity(world, ids[0], pair_id));
-    test_assert(ecs_has_entity(world, ids[1], pair_id));
-    test_assert(ecs_has_entity(world, ids[2], pair_id));
+    test_assert(ecs_has_id(world, ids[0], pair_id));
+    test_assert(ecs_has_id(world, ids[1], pair_id));
+    test_assert(ecs_has_id(world, ids[2], pair_id));
 
     const Position *
     p = ecs_get_id(world, ids[0], pair_id);
@@ -200,164 +200,6 @@ void DeferredActions_defer_bulk_new_w_data_pair() {
     p = ecs_get_id(world, ids[2], pair_id);
     test_int(p->x, 50);
     test_int(p->y, 60);
-
-    ecs_fini(world);
-}
-
-void DeferredActions_defer_bulk_new_two() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
-
-    ecs_frame_begin(world, 1);
-
-    ecs_defer_begin(world);
-
-    ecs_defer_begin(world);
-    
-    const ecs_entity_t *temp_ids = ecs_bulk_new(world, Type, 3);
-    ecs_entity_t ids[3];
-    memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
-
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));
-    
-    test_assert(!ecs_has(world, ids[0], Velocity));
-    test_assert(!ecs_has(world, ids[1], Velocity));
-    test_assert(!ecs_has(world, ids[2], Velocity));    
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));
-    
-    test_assert(!ecs_has(world, ids[0], Velocity));
-    test_assert(!ecs_has(world, ids[1], Velocity));
-    test_assert(!ecs_has(world, ids[2], Velocity));
-
-    ecs_defer_end(world);
-
-    test_assert(ecs_has(world, ids[0], Position));
-    test_assert(ecs_has(world, ids[1], Position));
-    test_assert(ecs_has(world, ids[2], Position));
-    
-    test_assert(ecs_has(world, ids[0], Velocity));
-    test_assert(ecs_has(world, ids[1], Velocity));
-    test_assert(ecs_has(world, ids[2], Velocity));    
-
-    ecs_frame_end(world);
-
-    test_assert(ecs_has(world, ids[0], Position));
-    test_assert(ecs_has(world, ids[1], Position));
-    test_assert(ecs_has(world, ids[2], Position));
-    
-    test_assert(ecs_has(world, ids[0], Velocity));
-    test_assert(ecs_has(world, ids[1], Velocity));
-    test_assert(ecs_has(world, ids[2], Velocity));
-
-    ecs_fini(world);
-}
-
-void DeferredActions_defer_bulk_new_w_data_two() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_frame_begin(world, 1);
-
-    ecs_defer_begin(world);
-
-    ecs_defer_begin(world);
-    
-    const ecs_entity_t *temp_ids = ecs_bulk_new_w_data(world, 3, 
-        &(ecs_ids_t){
-            .array = (ecs_entity_t[]){ecs_id(Position), ecs_id(Velocity)},
-            .count = 2
-        },
-        (void*[]){
-            (Position[]){
-                {10, 20},
-                {30, 40},
-                {50, 60}
-            },
-            (Velocity[]){
-                {1, 2},
-                {3, 4},
-                {5, 6}
-            }
-        });
-
-    ecs_entity_t ids[3];
-    memcpy(ids, temp_ids, sizeof(ecs_entity_t) * 3);
-
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));
-    
-    test_assert(!ecs_has(world, ids[0], Velocity));
-    test_assert(!ecs_has(world, ids[1], Velocity));
-    test_assert(!ecs_has(world, ids[2], Velocity));    
-
-    ecs_defer_end(world);
-
-    test_assert(!ecs_has(world, ids[0], Position));
-    test_assert(!ecs_has(world, ids[1], Position));
-    test_assert(!ecs_has(world, ids[2], Position));
-    
-    test_assert(!ecs_has(world, ids[0], Velocity));
-    test_assert(!ecs_has(world, ids[1], Velocity));
-    test_assert(!ecs_has(world, ids[2], Velocity));
-
-    ecs_defer_end(world);
-
-    test_assert(ecs_has(world, ids[0], Position));
-    test_assert(ecs_has(world, ids[1], Position));
-    test_assert(ecs_has(world, ids[2], Position));
-    
-    test_assert(ecs_has(world, ids[0], Velocity));
-    test_assert(ecs_has(world, ids[1], Velocity));
-    test_assert(ecs_has(world, ids[2], Velocity));    
-
-    ecs_frame_end(world);
-
-    test_assert(ecs_has(world, ids[0], Position));
-    test_assert(ecs_has(world, ids[1], Position));
-    test_assert(ecs_has(world, ids[2], Position));
-    
-    test_assert(ecs_has(world, ids[0], Velocity));
-    test_assert(ecs_has(world, ids[1], Velocity));
-    test_assert(ecs_has(world, ids[2], Velocity));
-
-    const Position *
-    p = ecs_get(world, ids[0], Position);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, ids[1], Position);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    p = ecs_get(world, ids[2], Position);
-    test_int(p->x, 50);
-    test_int(p->y, 60);
-
-    const Velocity *
-    v = ecs_get(world, ids[0], Velocity);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-
-    v = ecs_get(world, ids[1], Velocity);
-    test_int(v->x, 3);
-    test_int(v->y, 4);
-
-    v = ecs_get(world, ids[2], Velocity);
-    test_int(v->x, 5);
-    test_int(v->y, 6);
 
     ecs_fini(world);
 }
@@ -399,7 +241,6 @@ void DeferredActions_defer_add_two() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
     ecs_entity_t e = ecs_new(world, 0);
 
@@ -409,7 +250,8 @@ void DeferredActions_defer_add_two() {
 
     ecs_defer_begin(world);
     
-    ecs_add(world, e, Type);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -469,9 +311,10 @@ void DeferredActions_defer_remove_two() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
 
     ecs_frame_begin(world, 1);
 
@@ -479,7 +322,8 @@ void DeferredActions_defer_remove_two() {
 
     ecs_defer_begin(world);
     
-    ecs_remove(world, e, Type);
+    ecs_remove(world, e, Position);
+    ecs_remove(world, e, Velocity);
 
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -651,7 +495,7 @@ void DeferredActions_defer_twice_in_progress() {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_type_t ecs_type(Velocity) = ecs_column_type(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
     ecs_defer_begin(it->world);
 
@@ -1585,9 +1429,8 @@ void DeferredActions_discard_add_two() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1598,7 +1441,8 @@ void DeferredActions_discard_add_two() {
     ecs_delete(world, e);
     test_assert(ecs_is_alive(world, e));
     
-    ecs_add(world, e, Type);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -1626,9 +1470,10 @@ void DeferredActions_discard_remove_two() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Type);
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
 
     ecs_frame_begin(world, 1);
 
@@ -1639,7 +1484,8 @@ void DeferredActions_discard_remove_two() {
     ecs_delete(world, e);
     test_assert(ecs_is_alive(world, e));
     
-    ecs_remove(world, e, Type);
+    ecs_remove(world, e, Position);
+    ecs_remove(world, e, Velocity);
 
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_has(world, e, Position));
@@ -2078,4 +1924,3 @@ void DeferredActions_defer_disable() {
 
     ecs_fini(world);
 }
-

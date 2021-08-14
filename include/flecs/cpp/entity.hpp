@@ -106,7 +106,7 @@ public:
     }   
 
     bool enabled() {
-        return !ecs_has_entity(m_world, m_id, flecs::Disabled);
+        return !ecs_has_id(m_world, m_id, flecs::Disabled);
     }
 
     /** Return the type.
@@ -422,7 +422,7 @@ public:
      * @return True if the entity owns the provided entity, false otherwise.
      */
     bool owns(flecs::id_t e) const {
-        return ecs_owns_entity(m_world, m_id, e, true);
+        return ecs_owns_id(m_world, m_id, e, true);
     }
 
     /** Check if entity owns the provided pair.
@@ -467,7 +467,7 @@ public:
 
     template <typename T>
     bool has_switch() const {
-        return ecs_has_entity(m_world, m_id, 
+        return ecs_has_id(m_world, m_id, 
             flecs::Switch | _::cpp_type<T>::id(m_world));
     }
 
@@ -477,7 +477,7 @@ public:
      * @return True if the entity has the provided case, false otherwise.
      */
     bool has_case(flecs::id_t sw_case) const {
-        return ecs_has_entity(m_world, m_id, flecs::Case | sw_case);
+        return ecs_has_id(m_world, m_id, flecs::Case | sw_case);
     }
 
     template<typename T>
@@ -514,7 +514,7 @@ public:
      */
     template<typename T>
     bool is_enabled() {
-        return ecs_is_component_enabled_w_entity(
+        return ecs_is_component_enabled_w_id(
             m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
@@ -524,7 +524,7 @@ public:
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity_view& e) {
-        return ecs_is_component_enabled_w_entity(
+        return ecs_is_component_enabled_w_id(
             m_world, m_id, e.id());
     }
 
@@ -1309,7 +1309,7 @@ public:
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<T*>(
-            ecs_get_mut_w_entity(m_world, m_id, comp_id, is_added));
+            ecs_get_mut_id(m_world, m_id, comp_id, is_added));
     }
 
     /** Get mutable component value (untyped).
@@ -1323,7 +1323,7 @@ public:
      * @return Pointer to the component value.
      */
     void* get_mut(entity_t comp, bool *is_added = nullptr) const {
-        return ecs_get_mut_w_entity(m_world, m_id, comp, is_added);
+        return ecs_get_mut_id(m_world, m_id, comp, is_added);
     }
 
     /** Get mutable pointer for a pair.
@@ -1349,7 +1349,7 @@ public:
         auto comp_id = _::cpp_type<Relation>::id(m_world);
         ecs_assert(_::cpp_type<Relation>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Relation*>(
-            ecs_get_mut_w_entity(m_world, m_id, 
+            ecs_get_mut_id(m_world, m_id, 
                 ecs_pair(comp_id, object), is_added));
     }
 
@@ -1361,7 +1361,7 @@ public:
      * @param object the object.
      */
     void* get_mut(entity_t relation, entity_t object, bool *is_added = nullptr) const {
-        return ecs_get_mut_w_entity(m_world, m_id, 
+        return ecs_get_mut_id(m_world, m_id, 
                 ecs_pair(relation, object), is_added);
     }
 
@@ -1376,7 +1376,7 @@ public:
         auto comp_id = _::cpp_type<Object>::id(m_world);
         ecs_assert(_::cpp_type<Object>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Object*>(
-            ecs_get_mut_w_entity(m_world, m_id, 
+            ecs_get_mut_id(m_world, m_id, 
                 ecs_pair(relation, comp_id), is_added));
     }           
 
