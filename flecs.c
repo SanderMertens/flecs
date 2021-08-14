@@ -1292,13 +1292,6 @@ struct ecs_world_t {
 //// Core bootstrap functions
 ////////////////////////////////////////////////////////////////////////////////
 
-#define ECS_TYPE_DECL(component)\
-static const ecs_entity_t __##component = ecs_id(component);\
-ECS_VECTOR_DECL(FLECS__T##component, ecs_entity_t, 1)
-
-#define ECS_TYPE_IMPL(component)\
-ECS_VECTOR_IMPL(FLECS__T##component, ecs_entity_t, &__##component, 1)
-
 /* Bootstrap world */
 void flecs_bootstrap(
     ecs_world_t *world);
@@ -13093,8 +13086,6 @@ void ecs_set_threads(
 #ifdef FLECS_PIPELINE
 
 
-ECS_TYPE_DECL(EcsPipelineQuery);
-
 static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);
 })
@@ -13819,8 +13810,6 @@ void FlecsPipelineImport(
     flecs_bootstrap_tag(world, EcsOnStore);
     flecs_bootstrap_tag(world, EcsPostFrame);
 
-    ECS_TYPE_IMPL(EcsPipelineQuery);
-
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
         .ctor = ecs_ctor(EcsPipelineQuery),
@@ -13850,9 +13839,6 @@ void FlecsPipelineImport(
 
 #ifdef FLECS_TIMER
 
-
-ecs_type_t ecs_type(EcsTimer);
-ecs_type_t ecs_type(EcsRateFilter);
 
 static
 void AddTickSource(ecs_iter_t *it) {
@@ -15218,11 +15204,6 @@ void ecs_snapshot_free(
 #ifdef FLECS_SYSTEM
 
 
-/* Global type variables */
-ECS_TYPE_DECL(EcsComponentLifecycle);
-ECS_TYPE_DECL(EcsSystem);
-ECS_TYPE_DECL(EcsTickSource);
-
 static
 ecs_on_demand_in_t* get_in_component(
     ecs_map_t *component_map,
@@ -15970,10 +15951,6 @@ void FlecsSystemImport(
     flecs_bootstrap_tag(world, EcsOnDemand);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
-
-    ECS_TYPE_IMPL(EcsComponentLifecycle);
-    ECS_TYPE_IMPL(EcsSystem);
-    ECS_TYPE_IMPL(EcsTickSource);
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
@@ -25879,15 +25856,6 @@ ecs_table_t* ecs_table_from_str(
     return result;
 }
 
-/* Global type variables */
-ecs_type_t ecs_type(EcsComponent);
-ecs_type_t ecs_type(EcsType);
-ecs_type_t ecs_type(EcsIdentifier);
-ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsTrigger);
-ecs_type_t ecs_type(EcsObserver);
-ecs_type_t ecs_type(EcsPrefab);
-
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
@@ -26077,16 +26045,6 @@ ecs_type_t flecs_bootstrap_type(
     return table->type;
 }
 
-/** Bootstrap types for builtin components and tags */
-static
-void bootstrap_types(
-    ecs_world_t *world)
-{
-    ecs_type(EcsComponent) = flecs_bootstrap_type(world, ecs_id(EcsComponent));
-    ecs_type(EcsType) = flecs_bootstrap_type(world, ecs_id(EcsType));
-    ecs_type(EcsIdentifier) = flecs_bootstrap_type(world, ecs_id(EcsIdentifier));
-}
-
 /** Initialize component table. This table is manually constructed to bootstrap
  * flecs. After this function has been called, the builtin components can be
  * created. 
@@ -26160,8 +26118,6 @@ void bootstrap_entity(
 void flecs_bootstrap(
     ecs_world_t *world)
 {
-    ecs_type(EcsComponent) = NULL;
-
     ecs_trace_1("bootstrap core components");
     ecs_log_push();
 
@@ -26203,8 +26159,6 @@ void flecs_bootstrap(
     world->stats.last_id = EcsFirstUserEntityId;
     world->stats.min_id = 0;
     world->stats.max_id = 0;
-
-    bootstrap_types(world);
 
     ecs_set_scope(world, EcsFlecsCore);
 

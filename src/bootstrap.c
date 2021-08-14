@@ -1,14 +1,5 @@
 #include "private_api.h"
 
-/* Global type variables */
-ecs_type_t ecs_type(EcsComponent);
-ecs_type_t ecs_type(EcsType);
-ecs_type_t ecs_type(EcsIdentifier);
-ecs_type_t ecs_type(EcsQuery);
-ecs_type_t ecs_type(EcsTrigger);
-ecs_type_t ecs_type(EcsObserver);
-ecs_type_t ecs_type(EcsPrefab);
-
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
@@ -198,16 +189,6 @@ ecs_type_t flecs_bootstrap_type(
     return table->type;
 }
 
-/** Bootstrap types for builtin components and tags */
-static
-void bootstrap_types(
-    ecs_world_t *world)
-{
-    ecs_type(EcsComponent) = flecs_bootstrap_type(world, ecs_id(EcsComponent));
-    ecs_type(EcsType) = flecs_bootstrap_type(world, ecs_id(EcsType));
-    ecs_type(EcsIdentifier) = flecs_bootstrap_type(world, ecs_id(EcsIdentifier));
-}
-
 /** Initialize component table. This table is manually constructed to bootstrap
  * flecs. After this function has been called, the builtin components can be
  * created. 
@@ -281,8 +262,6 @@ void bootstrap_entity(
 void flecs_bootstrap(
     ecs_world_t *world)
 {
-    ecs_type(EcsComponent) = NULL;
-
     ecs_trace_1("bootstrap core components");
     ecs_log_push();
 
@@ -324,8 +303,6 @@ void flecs_bootstrap(
     world->stats.last_id = EcsFirstUserEntityId;
     world->stats.min_id = 0;
     world->stats.max_id = 0;
-
-    bootstrap_types(world);
 
     ecs_set_scope(world, EcsFlecsCore);
 

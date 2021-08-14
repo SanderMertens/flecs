@@ -165,9 +165,6 @@ typedef int32_t ecs_size_t;
 //// Convert between C typenames and variables
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Translate C type to ecs_type_t variable. */
-#define ecs_type(T) FLECS__T##T
-
 /** Translate C type to id. */
 #define ecs_id(T) FLECS__E##T
 

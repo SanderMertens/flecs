@@ -5,11 +5,6 @@
 #include "../../private_api.h"
 #include "system.h"
 
-/* Global type variables */
-ECS_TYPE_DECL(EcsComponentLifecycle);
-ECS_TYPE_DECL(EcsSystem);
-ECS_TYPE_DECL(EcsTickSource);
-
 static
 ecs_on_demand_in_t* get_in_component(
     ecs_map_t *component_map,
@@ -757,10 +752,6 @@ void FlecsSystemImport(
     flecs_bootstrap_tag(world, EcsOnDemand);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
-
-    ECS_TYPE_IMPL(EcsComponentLifecycle);
-    ECS_TYPE_IMPL(EcsSystem);
-    ECS_TYPE_IMPL(EcsTickSource);
 
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
