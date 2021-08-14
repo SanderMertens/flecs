@@ -12,7 +12,7 @@
 #define FLECS_STATS_H
 
 #ifdef FLECS_SYSTEM
-#include "../modules/system.h"
+#include "../addons/system.h"
 #endif
 
 #ifdef __cplusplus

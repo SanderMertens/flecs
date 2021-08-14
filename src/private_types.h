@@ -26,7 +26,7 @@
 #endif
 
 #include "flecs.h"
-#include "entity_index.h"
+#include "datastructures/entity_index.h"
 #include "flecs/private/bitset.h"
 #include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"

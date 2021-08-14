@@ -1,4 +1,4 @@
-#include "private_api.h"
+#include "../private_api.h"
 
 typedef struct ecs_hm_bucket_t {
     ecs_vector_t *keys;

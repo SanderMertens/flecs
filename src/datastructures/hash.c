@@ -1,4 +1,4 @@
-#include "private_api.h"
+#include "../private_api.h"
 
 #ifndef _MSC_VER
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"

@@ -1,4 +1,4 @@
-#include "private_api.h"
+#include "../private_api.h"
 
 /** Resize the vector buffer */
 static

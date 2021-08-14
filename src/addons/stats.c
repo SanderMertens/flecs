@@ -4,11 +4,11 @@
 #ifdef FLECS_STATS
 
 #ifdef FLECS_SYSTEM
-#include "../modules/system/system.h"
+#include "../addons/system/system.h"
 #endif
 
 #ifdef FLECS_PIPELINE
-#include "../modules/pipeline/pipeline.h"
+#include "../addons/pipeline/pipeline.h"
 #endif
 
 static
