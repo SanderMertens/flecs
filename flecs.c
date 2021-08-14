@@ -7894,6 +7894,8 @@ ecs_entity_t ecs_get_case(
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
 
+    world = ecs_get_world(world);
+
     ecs_entity_info_t info;
     ecs_table_t *table;
     if (!flecs_get_info(world, entity, &info) || !(table = info.table)) {
