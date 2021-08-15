@@ -220,6 +220,7 @@ void notify_trigger_set(
         .event = event,
         .event_id = id,
         .table = table,
+        .type = table ? table->type : NULL,
         .columns = columns,
         .ids = ids,
         .sizes = sizes,

@@ -85,29 +85,6 @@ public:
     explicit system(flecs::world_t *world, flecs::entity_t id)
         : entity(world, id) { }
 
-    template <typename T>
-    void order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
-        this->order_by(flecs::_::cpp_type<T>::id(m_world),
-            reinterpret_cast<ecs_order_by_action_t>(compare));
-    }
-
-    void order_by(flecs::entity_t comp, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        ecs_query_t *q = query().c_ptr();
-        ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_query_order_by(m_world, q, comp, compare);
-    }    
-
-    template <typename T>
-    void group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        this->group_by(flecs::_::cpp_type<T>::id(m_world), rank);
-    }
-
-    void group_by(flecs::entity_t comp, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
-        ecs_query_t *q = query().c_ptr();
-        ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_query_group_by(m_world, q, comp, rank);
-    }
-
     /** Set system interval.
      * This operation will cause the system to be ran at the specified interval.
      *

@@ -815,26 +815,6 @@ void World_entity_w_name_as_tag() {
     test_str(e.name(), "Foo");
 }
 
-void World_type_as_tag() {
-    flecs::world ecs;
-
-    auto e = ecs.type()
-        .component<Tag>();
-    test_assert(e.id() != 0);
-
-    auto t = ecs.component<Tag>();
-    test_assert(t.id() != 0);
-    test_assert(e.id() == t);
-
-    auto e2 = ecs.entity()
-        .add<Tag>();
-
-    test_bool(e2.has<Tag>(), true);
-    test_bool(e2.has(e), true);
-
-    test_str(t.name(), "Tag");
-}
-
 void World_entity_as_component() {
     flecs::world ecs;
 
@@ -961,7 +941,6 @@ void World_type_as_component() {
         .set<Position>({10, 20});
 
     test_bool(e2.has<Position>(), true);
-    test_bool(e2.has(e), true);
 
     test_str(t.name(), "Position");
 }
@@ -981,7 +960,6 @@ void World_type_w_name_as_component() {
         .set<Position>({10, 20});
 
     test_bool(e2.has<Position>(), true);
-    test_bool(e2.has(e), true);
 
     test_str(t.name(), "Foo");
 }

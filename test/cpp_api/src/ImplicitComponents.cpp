@@ -275,7 +275,7 @@ void ImplicitComponents_reinit_w_lifecycle() {
     // Explicitly register constructor
     EcsComponentLifecycle cl{};
     cl.ctor = ecs_ctor(Position);
-    ecs_set_component_actions_w_entity(world.c_ptr(), comp_1.id(), &cl);
+    ecs_set_component_actions_w_id(world.c_ptr(), comp_1.id(), &cl);
 
     auto e = world.entity()
         .add<Position>();

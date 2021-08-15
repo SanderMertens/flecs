@@ -20,7 +20,7 @@ flecs::entity module(const flecs::world& world, const char *name = nullptr) {
     cl.copy = _::copy<T>();
     cl.move = _::move<T>();
     cl.dtor = _::dtor<T>();
-    ecs_set_component_actions_w_entity(world, result, &cl);
+    ecs_set_component_actions_w_id(world, result, &cl);
 
     return result;
 }

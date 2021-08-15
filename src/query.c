@@ -2970,6 +2970,9 @@ bool ecs_query_next(
         }
 
         it->table = table_data->table;
+        if (it->table) {
+            it->type = it->table->type;
+        }
         it->ids = table_data->ids;
         it->columns = table_data->columns;
         it->subjects = table_data->subjects;

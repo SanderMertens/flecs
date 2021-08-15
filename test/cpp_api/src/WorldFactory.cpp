@@ -46,11 +46,8 @@ void WorldFactory_type() {
         .add<Position>()
         .add<Velocity>();
 
-    auto e = ecs.entity().add(t);
-
-    test_assert(e.id() != 0);
-    test_assert(e.has<Position>());
-    test_assert(e.has<Velocity>());
+    test_assert(t.has<Position>());
+    test_assert(t.has<Velocity>());
 }
 
 void WorldFactory_type_w_name() {
@@ -60,11 +57,8 @@ void WorldFactory_type_w_name() {
         .add<Position>()
         .add<Velocity>();
 
-    auto e = ecs.entity().add(t);
-
-    test_assert(e.id() != 0);
-    test_assert(e.has<Position>());
-    test_assert(e.has<Velocity>());
+    test_assert(t.has<Position>());
+    test_assert(t.has<Velocity>());
 
     test_assert(ecs.lookup("MyName").id() != 0);
 }

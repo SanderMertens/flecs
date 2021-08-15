@@ -66,7 +66,6 @@ class pipeline;
 class iter;
 class term;
 class filter_iterator;
-class child_iterator;
 class world_filter;
 class snapshot_filter;
 class query_base;

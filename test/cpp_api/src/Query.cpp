@@ -577,9 +577,9 @@ void Query_sort_by() {
     world.entity().set<Position>({5, 0});
     world.entity().set<Position>({4, 0});
 
-    auto q = world.query<Position>();
-
-    q.order_by(compare_position);
+    auto q = world.query_builder<Position>()
+        .order_by(compare_position)
+        .build();
 
     q.iter([](flecs::iter it, Position *p) {
         test_int(it.count(), 5);

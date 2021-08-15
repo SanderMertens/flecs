@@ -127,12 +127,6 @@ void world::modified() const {
     return e.modified<T>();
 }
 
-template <typename T, typename Func>
-void world::patch(const Func& func) const {
-    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    e.patch<T>(func);
-} 
-
 template <typename T>
 const T* world::get() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));

@@ -354,7 +354,6 @@ ecs_entity_t ecs_id(Position) = ecs_component_init(world, &(ecs_component_desc_t
     .size = sizeof(Position),
     .alignment = ECS_ALIGNOF(Position)
 });
-ecs_type_t ecs_type(Position) = ecs_type_from_id(world, ecs_id(Position));
 ```
 
 The first line actually registers the component with Flecs, and captures its name and size. The result is stored in a variable with name `ecs_id(Position)`. Here, `ecs_entity` is a macro that translates the typename of the component to a variable name. The actual name of the variable is:
@@ -363,16 +362,7 @@ The first line actually registers the component with Flecs, and captures its nam
 FLECS__EPosition
 ```
 
-The second thing that happens is that a type variable is declared with the name `ecs_type(Position)`, which translates to `FLECS__TPosition`. A type is a vector of components. In this case, the type only contains the component id for `Position`. We will see in a moment why this is necessary.
-
-The next statement creates a new entity with the `Position` component. The `ecs_new` function is a macro in disguise, and when it is replaced with the actual code, it looks like this:
-
-```c
-ecs_entity_t e = ecs_new_w_type(world, ecs_type(Position));
-```
-
-We can see that the actual plain C function that is called is `ecs_new_w_type`, and that the macro is passing in the type variable into the function. When creating a new entity, it can be initialized with multiple components which is why it accepts a type. Other operations, like `ecs_get` only accept a single component, and use the entity variable:
-
+ECS operations that accept a typename, such as `ecs_get` will look for the `FLECS__E` variable:
 ```c
 Position *p = ecs_get(world, e, Position);
 ```
@@ -450,8 +440,6 @@ The following guidelines apply to Flecs specifically. Following these guidelines
 - Use POD (plain old data) components wherever possible. 
 
 - Use component lifecycle actions for managing memory owned by a component.
-
-- Preallocate memory where possible with `ecs_dim` and `ecs_dim_type`, as this makes application performance more predictable.
 
 - Decide what your pipeline looks like. A pipeline defines the phases your main loop will go through, and determines where your systems should run. You can use the Flecs builtin pipeline, which enables you to use the flecs module ecosystem, or you can define your own.
 
@@ -789,8 +777,8 @@ typedef struct Position {
     float x, y;
 } Position;
 
-void new_w_position(ecs_world_t *t, ecs_type_t ecs_type(Position)) {
-    // ecs_new uses an ecs_type_t
+void new_w_position(ecs_world_t *t, ecs_id_t ecs_id(Position)) {
+    // ecs_new uses an ecs_id_t
     ecs_new(world, Position);
 }
 
@@ -799,22 +787,22 @@ int main() {
 
     ECS_COMPONENT(world, Position);
 
-    new_w_position(world, ecs_type(Position));
+    new_w_position(world, ecs_id(Position));
 
     ecs_fini(world);
 }
 ```
 
-The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code is equivalent to the previous example:
+The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macro's arround functions functions that accept a component id. The following code is equivalent to the previous example:
 
 ```c
 typedef struct Position {
     float x, y;
 } Position;
 
-void new_w_position(ecs_world_t *t, ecs_type_t p_handle) {
-    // Use plain variable name with the ecs_new_w_type operation
-    ecs_new_w_type(world, p_handle); 
+void new_w_position(ecs_world_t *t, ecs_id_t p_id) {
+    // Use plain variable name with the ecs_new_w_id operation
+    ecs_new_w_id(world, p_id); 
 }
 
 int main() {
@@ -822,54 +810,7 @@ int main() {
 
     ECS_COMPONENT(world, Position);
 
-    new_w_position(world, ecs_type(Position));
-
-    ecs_fini(world);
-}
-```
-
-There are also operations which operate on a single component at a time, like `ecs_get` and `ecs_set`. These operations require a component handle of type `ecs_entity_t`. The `ECS_COMPONENT` macro defines a variable of type `ecs_entity_t`that contains the id of the component. The variable defined by `ECS_COMPONENT` can be accessed by the application with `ecs_id(ComponentName)`. The following example shows how to pass an entity handle to another function:
-
-```c
-typedef struct Position {
-    float x, y;
-} Position;
-
-void set_position(ecs_world_t *t, ecs_entity_t ecs_id(Position)) {
-    ecs_entity_t e = ecs_new(world, 0);
-    ecs_set(world, e, Position, {10, 20});
-}
-
-int main() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    set_position(world, ecs_id(Position));
-
-    ecs_fini(world);
-}
-```
-
-The `ecs_set`, `ecs_get` (not exhaustive) functions are wrapper macro's arround functions functions that accept a type. The following code shows how to use the underlying function for `ecs_get`, `ecs_get_id`:
-
-```c
-typedef struct Position {
-    float x, y;
-} Position;
-
-const Position* get_position(ecs_world_t *t, ecs_entity_t e, ecs_entity_t p_handle) {
-    return ecs_get_id(world, e, p_handle);
-}
-
-int main() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t e = ecs_new(world, Position);
-
-    Position *p = get_position(world, e, ecs_id(Position));
+    new_w_position(world, ecs_id(Position));
 
     ecs_fini(world);
 }
@@ -1230,11 +1171,14 @@ Access modifiers are added to a signature using angular brackets:
 The default access modifier is `[inout]`, which by default allows a system to read and write a component, but also means Flecs cannot make optimizations in, for example, how systems can be executed in parallel. For this reason, while not mandatory, applications are encouraged to add access modifiers to systems where possible.
 
 ## Sorting
-Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled with the `ecs_query_order_by` function:
+Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled by setting the order_by function:
 
 ```c
-ecs_query_t q = ecs_query_new(world, "Position");
-ecs_query_order_by(world, q, ecs_id(Position), compare_position);
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .filter.terms = {{ ecs_id(Position) }},
+    .order_by_component = ecs_id(Position),
+    .order_by = compare_position,
+});
 ```
 
 This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
@@ -1299,21 +1243,24 @@ Position           | 6..7
 This process is transparent for applications, except that the slicing will result in smaller contiguous arrays being iterated by the application.
 
 ### Sorting by entity id
-Instead of sorting by a component value, applications can sort by entity id by not specifying a component to the `ecs_query_order_by` function:
+Instead of sorting by a component value, applications can sort by entity id by not specifying order_by_component
 
 ```c
-ecs_query_order_by(world, q, 0, compare_entity);
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .filter.terms = {{ ecs_id(Position) }},
+    .order_by = compare_entity,
+});
 ```
 
 The compare function would look like this:
 
 ```c
-int compare_position(ecs_entity_t e1, Position *p1, ecs_entity_t e2, Position *p2) {
+int compare_entity(ecs_entity_t e1, void *p1, ecs_entity_t e2, void *p2) {
     return e1 - e2;
 }
 ```
 
-When no component is provided in the `ecs_query_order_by` function, no reordering will happen as a result of setting components or running a system with `[out]` columns.
+When no component is provided, no reordering will happen as a result of setting components or running a system with `[out]` columns.
 
 ## Filters
 Filters allow an application to iterate through matching entities in a way that is similar to queries. Contrary to queries however, filters are not prematched, which means that a filter is evaluated as it is iterated over. Filters are therefore slower to evaluate than queries, but they have less overhead and are (much) cheaper to create. This makes filters less suitable for repeated-, but useful for ad-hoc searches where the application doesn't know beforehand which set of entities it will need.
@@ -1335,10 +1282,10 @@ ecs_iter_t it = ecs_filter_iter(world, &filter);
 while (ecs_filter_next(&it)) {
     /* Because a filter does not have a signature, we need to get the component
      * array by finding it in the current table */
-    ecs_type_t table_type = ecs_iter_type(&it);
+    ecs_type_t type = it->type;
 
     /* First Retrieve the column index for Position */
-    int32_t p_index = ecs_type_index_of(table_type, 0, ecs_id(Position));
+    int32_t p_index = ecs_type_index_of(it->type, 0, ecs_id(Position));
 
     /* Now use the column index to get the Position array from the table */
     Position *p = ecs_table_column(&it, p_index);

@@ -35,7 +35,6 @@ void Entity_emplace_2(void);
 void Entity_emplace_after_add(void);
 void Entity_emplace_after_add_pair(void);
 void Entity_emplace_w_self_ctor(void);
-void Entity_replace(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
@@ -64,8 +63,6 @@ void Entity_clear(void);
 void Entity_foce_owned(void);
 void Entity_force_owned_2(void);
 void Entity_force_owned_nested(void);
-void Entity_force_owned_type(void);
-void Entity_force_owned_type_w_pair(void);
 void Entity_tag_has_size_zero(void);
 void Entity_get_null_name(void);
 void Entity_get_parent(void);
@@ -180,13 +177,6 @@ void Pairs_get_mut_pair(void);
 void Pairs_get_mut_pair_existing(void);
 void Pairs_get_mut_pair_tag(void);
 void Pairs_get_mut_pair_tag_existing(void);
-void Pairs_type_w_pair(void);
-void Pairs_type_w_pair_tag(void);
-void Pairs_type_w_pair_tags(void);
-void Pairs_type_w_tag_pair(void);
-void Pairs_override_pair_w_type(void);
-void Pairs_override_pair_w_type_tag(void);
-void Pairs_override_tag_pair_w_type(void);
 void Pairs_get_relation_from_id(void);
 void Pairs_get_w_object_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
@@ -242,13 +232,6 @@ void Paths_alias_entity_by_name(void);
 void Paths_alias_entity_by_scoped_name(void);
 
 // Testsuite 'Type'
-void Type_add_2(void);
-void Type_add_instanceof(void);
-void Type_add_childof(void);
-void Type_1_component(void);
-void Type_2_component(void);
-void Type_1_component_signature(void);
-void Type_2_component_signature(void);
 void Type_type_no_name(void);
 void Type_null_args(void);
 void Type_has_type(void);
@@ -667,7 +650,6 @@ void World_template_component_w_namespace_name_and_namespaced_arg(void);
 void World_template_component_w_same_namespace_name_and_namespaced_arg(void);
 void World_entity_as_tag(void);
 void World_entity_w_name_as_tag(void);
-void World_type_as_tag(void);
 void World_entity_as_component(void);
 void World_entity_w_name_as_component(void);
 void World_entity_as_component_2_worlds(void);
@@ -682,7 +664,6 @@ void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
 void Singleton_emplace_singleton(void);
 void Singleton_modified_singleton(void);
-void Singleton_patch_singleton(void);
 void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_has_singleton(void);
@@ -807,10 +788,6 @@ bake_test_case Entity_testcases[] = {
         Entity_emplace_w_self_ctor
     },
     {
-        "replace",
-        Entity_replace
-    },
-    {
         "get_generic",
         Entity_get_generic
     },
@@ -921,14 +898,6 @@ bake_test_case Entity_testcases[] = {
     {
         "force_owned_nested",
         Entity_force_owned_nested
-    },
-    {
-        "force_owned_type",
-        Entity_force_owned_type
-    },
-    {
-        "force_owned_type_w_pair",
-        Entity_force_owned_type_w_pair
     },
     {
         "tag_has_size_zero",
@@ -1382,34 +1351,6 @@ bake_test_case Pairs_testcases[] = {
         Pairs_get_mut_pair_tag_existing
     },
     {
-        "type_w_pair",
-        Pairs_type_w_pair
-    },
-    {
-        "type_w_pair_tag",
-        Pairs_type_w_pair_tag
-    },
-    {
-        "type_w_pair_tags",
-        Pairs_type_w_pair_tags
-    },
-    {
-        "type_w_tag_pair",
-        Pairs_type_w_tag_pair
-    },
-    {
-        "override_pair_w_type",
-        Pairs_override_pair_w_type
-    },
-    {
-        "override_pair_w_type_tag",
-        Pairs_override_pair_w_type_tag
-    },
-    {
-        "override_tag_pair_w_type",
-        Pairs_override_tag_pair_w_type
-    },
-    {
         "get_relation_from_id",
         Pairs_get_relation_from_id
     },
@@ -1614,34 +1555,6 @@ bake_test_case Paths_testcases[] = {
 };
 
 bake_test_case Type_testcases[] = {
-    {
-        "add_2",
-        Type_add_2
-    },
-    {
-        "add_instanceof",
-        Type_add_instanceof
-    },
-    {
-        "add_childof",
-        Type_add_childof
-    },
-    {
-        "1_component",
-        Type_1_component
-    },
-    {
-        "2_component",
-        Type_2_component
-    },
-    {
-        "1_component_signature",
-        Type_1_component_signature
-    },
-    {
-        "2_component_signature",
-        Type_2_component_signature
-    },
     {
         "type_no_name",
         Type_type_no_name
@@ -3240,10 +3153,6 @@ bake_test_case World_testcases[] = {
         World_entity_w_name_as_tag
     },
     {
-        "type_as_tag",
-        World_type_as_tag
-    },
-    {
         "entity_as_component",
         World_entity_as_component
     },
@@ -3293,10 +3202,6 @@ bake_test_case Singleton_testcases[] = {
     {
         "modified_singleton",
         Singleton_modified_singleton
-    },
-    {
-        "patch_singleton",
-        Singleton_patch_singleton
     },
     {
         "add_singleton",
@@ -3364,14 +3269,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        153,
+        150,
         Entity_testcases
     },
     {
         "Pairs",
         NULL,
         NULL,
-        52,
+        45,
         Pairs_testcases
     },
     {
@@ -3392,7 +3297,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        15,
+        8,
         Type_testcases
     },
     {
@@ -3497,14 +3402,14 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        49,
+        48,
         World_testcases
     },
     {
         "Singleton",
         NULL,
         NULL,
-        11,
+        10,
         Singleton_testcases
     },
     {

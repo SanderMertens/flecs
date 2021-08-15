@@ -4699,6 +4699,56 @@ ecs_column_t *ecs_table_column_for_id(
     return NULL;
 }
 
+ecs_type_t ecs_table_get_type(
+    const ecs_table_t *table)
+{
+    return table->type;
+}
+
+ecs_record_t* ecs_record_find(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    if (r) {
+        return r;
+    } else {
+        return NULL;
+    }
+}
+
+void* ecs_record_get_column(
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size)
+{
+    (void)c_size;
+    ecs_table_t *table = r->table;
+    if (column >= table->column_count) {
+        return NULL;
+    }
+
+    ecs_data_t *data = table->data;
+    if (!data) {
+        return NULL;
+    }
+
+    ecs_column_t *c = &data->columns[column];
+    if (!c) {
+        return NULL;
+    }
+
+    int16_t size = c->size;
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    void *array = ecs_vector_first_t(c->data, c->size, c->alignment);
+    bool is_watched;
+    int32_t row = flecs_record_to_row(r->row, &is_watched);
+
+    return ECS_OFFSET(array, size * row);
+}
+
 
 static
 const ecs_entity_t* new_w_data(
@@ -19236,6 +19286,7 @@ void populate_from_table(
     ecs_table_t *table)
 {
     it->table = table;
+    it->type = table->type;
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = flecs_table_get_data(table);
@@ -19516,6 +19567,7 @@ bool ecs_term_next(
     ecs_data_t *data = flecs_table_get_data(table);
 
     it->table = table;
+    it->type = table->type;
     it->data = data;
     it->ids = &iter->id;
     it->columns = &iter->column;
@@ -23558,6 +23610,9 @@ bool ecs_query_next(
         }
 
         it->table = table_data->table;
+        if (it->table) {
+            it->type = it->table->type;
+        }
         it->ids = table_data->ids;
         it->columns = table_data->columns;
         it->subjects = table_data->subjects;
@@ -24841,27 +24896,6 @@ size_t ecs_term_size(
     return flecs_to_size_t(it->sizes[index - 1]);
 }
 
-ecs_table_t* ecs_iter_table(
-    const ecs_iter_t *it)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    return it->table;
-}
-
-ecs_type_t ecs_iter_type(
-    const ecs_iter_t *it)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-
-    /* If no table is set it means that the iterator isn't pointing to anything
-     * yet. The most likely cause for this is that the operation is invoked on
-     * a new iterator for which "next" hasn't been invoked yet, or on an
-     * iterator that is out of elements. */
-    ecs_table_t *table = ecs_iter_table(it);
-    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    return table->type;
-}
-
 int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)
@@ -25136,6 +25170,7 @@ void notify_trigger_set(
         .event = event,
         .event_id = id,
         .table = table,
+        .type = table ? table->type : NULL,
         .columns = columns,
         .ids = ids,
         .sizes = sizes,
@@ -26831,105 +26866,6 @@ ecs_entity_t ecs_get_scope(
 {
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->scope;
-}
-
-int32_t ecs_get_child_count(
-    const ecs_world_t *world,
-    ecs_entity_t parent)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-
-    int32_t count = 0;
-
-    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
-    if (r && r->table_index) {
-        ecs_map_iter_t it = ecs_map_iter(r->table_index);
-        ecs_table_record_t *tr;
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            count += ecs_table_count(tr->table);
-        }
-    }
-
-    return count;
-}
-
-ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *iter_world,
-    ecs_entity_t parent,
-    ecs_filter_t *filter)
-{
-    ecs_assert(iter_world != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_world_t *world = (ecs_world_t*)ecs_get_world(iter_world);
-    ecs_iter_t it = {
-        .world = iter_world
-    };
-
-    ecs_id_record_t *r = flecs_get_id_record(
-        world, ecs_pair(EcsChildOf, parent));
-    if (r && r->table_index) {
-        it.iter.parent.tables = ecs_map_iter(r->table_index);
-        it.table_count = ecs_map_count(r->table_index);
-        if (filter) {
-            it.iter.parent.filter = *filter;
-        }
-    }
-
-    return it;
-}
-
-ecs_iter_t ecs_scope_iter(
-    ecs_world_t *iter_world,
-    ecs_entity_t parent)
-{
-    return ecs_scope_iter_w_filter(iter_world, parent, NULL);
-}
-
-bool ecs_scope_next(
-    ecs_iter_t *it)
-{
-    ecs_scope_iter_t *iter = &it->iter.parent;
-    ecs_map_iter_t *tables = &iter->tables;
-    ecs_filter_t filter = iter->filter;
-    ecs_table_record_t *tr;
-
-    while ((tr = ecs_map_next(tables, ecs_table_record_t, NULL))) {
-        ecs_table_t *table = tr->table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        iter->index ++;
-
-        ecs_data_t *data = flecs_table_get_data(table);
-        if (!data) {
-            continue;
-        }
-
-        it->count = ecs_table_count(table);
-        if (!it->count) {
-            continue;
-        }
-
-        if (filter.include || filter.exclude) {
-            if (!flecs_table_match_filter(it->world, table, &filter)) {
-                continue;
-            }
-        }
-
-        it->table = table;
-        it->table_columns = data->columns;
-        it->count = ecs_table_count(table);
-        it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-        it->is_valid = true;
-
-        goto yield;
-    }
-
-    it->is_valid = false;
-    return false;
-
-yield:
-    it->is_valid = true;
-    return true;   
 }
 
 const char* ecs_set_name_prefix(

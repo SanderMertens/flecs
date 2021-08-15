@@ -3,11 +3,8 @@
  * @brief Extends the core API with convenience functions/macro's for C applications.
  */
 
-#ifdef FLECS_C
-
 #ifndef FLECS_C_
 #define FLECS_C_
-
 
 /**
  * @defgroup create_macros Macro's that help with creation of ECS objects.
@@ -254,6 +251,16 @@
 
 /** @} */
 
+/**
+ * @defgroup utilities Utility macro's for commonly used operations
+ * @{
+ */
+
+#define ecs_childof(parent) ecs_pair(EcsChildOf, parent)
+
+#define ecs_isa(base) ecs_pair(EcsIsA, base)
+
+/** @} */
 
 /**
  * @defgroup temporary_macros Temp macro's for easing the transition to v3
@@ -318,4 +325,3 @@
 
 
 #endif // FLECS_C_
-#endif // FLECS_C

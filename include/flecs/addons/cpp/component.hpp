@@ -173,7 +173,7 @@ void register_lifecycle_actions(
         cl.ctor_move_dtor = ctor_move_dtor<T>();
         cl.move_dtor = move_dtor<T>();
 
-        ecs_set_component_actions_w_entity( world, component, &cl);
+        ecs_set_component_actions_w_id( world, component, &cl);
     }
 }
 

@@ -82,8 +82,8 @@ void Hierarchies_tree_iter_empty() {
 
     ECS_ENTITY(world, Parent, 0);
 
-    ecs_iter_t it = ecs_scope_iter(world, Parent);
-    test_assert( !ecs_scope_next(&it));
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
+    test_assert( !ecs_term_next(&it));
 
     ecs_fini(world);
 }
@@ -97,15 +97,15 @@ void Hierarchies_tree_iter_1_table() {
     ECS_ENTITY(world, Child2, (ChildOf, Parent));
     ECS_ENTITY(world, Child3, (ChildOf, Parent));
 
-    ecs_iter_t it = ecs_scope_iter(world, Parent);
-    test_assert( ecs_scope_next(&it) == true);
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
+    test_assert( ecs_term_next(&it) == true);
     test_int( it.count, 3);
 
     test_assert(it.entities[0] == Child1);
     test_assert(it.entities[1] == Child2);
     test_assert(it.entities[2] == Child3);
 
-    test_assert( !ecs_scope_next(&it));
+    test_assert( !ecs_term_next(&it));
 
     ecs_fini(world);
 }
@@ -122,18 +122,19 @@ void Hierarchies_tree_iter_2_tables() {
     ECS_ENTITY(world, Child3, (ChildOf, Parent), Position);
     ECS_ENTITY(world, Child4, (ChildOf, Parent), Position);
 
-    ecs_iter_t it = ecs_scope_iter(world, Parent);
-    test_assert( ecs_scope_next(&it) == true);
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
+
+    test_assert( ecs_term_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child1);
     test_int(it.entities[1], Child2);
 
-    test_assert( ecs_scope_next(&it) == true);
+    test_assert( ecs_term_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child3);
     test_int(it.entities[1], Child4);       
 
-    test_assert( !ecs_scope_next(&it));
+    test_assert( !ecs_term_next(&it));
 
     ecs_fini(world);
 }
@@ -1179,7 +1180,7 @@ void Hierarchies_get_child_count() {
     ECS_ENTITY(world, Child2, (ChildOf, Parent), Position);
     ECS_ENTITY(world, Child3, (ChildOf, Parent), Position);
 
-    test_int(ecs_get_child_count(world, Parent), 3);
+    test_int(ecs_count_id(world, ecs_childof(Parent)), 3);
 
     ecs_fini(world);
 }
@@ -1189,7 +1190,7 @@ void Hierarchies_get_child_count_no_children() {
 
     ECS_ENTITY(world, Parent, 0);
 
-    test_int(ecs_get_child_count(world, Parent), 0);
+    test_int(ecs_count_id(world, ecs_childof(Parent)), 0);
 
     ecs_fini(world);
 }
@@ -1206,7 +1207,7 @@ void Hierarchies_get_child_count_2_tables() {
     ECS_ENTITY(world, Child3, (ChildOf, Parent), Position);
     ECS_ENTITY(world, Child4, (ChildOf, Parent), Velocity);
 
-    test_int(ecs_get_child_count(world, Parent), 4);
+    test_int(ecs_count_id(world, ecs_childof(Parent)), 4);
 
     ecs_fini(world);
 }
@@ -1224,8 +1225,8 @@ void Hierarchies_scope_iter_after_delete_tree() {
 
     ecs_delete_children(world, parent);
 
-    ecs_iter_t it = ecs_scope_iter(world, parent);
-    test_assert(!ecs_scope_next(&it));
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(parent) });
+    test_assert(!ecs_term_next(&it));
 
     ecs_fini(world);
 }

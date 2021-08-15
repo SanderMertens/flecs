@@ -11,42 +11,40 @@ flecs_inc = include_directories('include')
 flecs_deps = dependency('threads')
 
 flecs_src = files(
-    'src/addons/bulk.c',
     'src/addons/deprecated.c',
-    'src/addons/direct_access.c',
     'src/addons/module.c',
     'src/addons/parser.c',
-    'src/addons/queue.c',
+    'src/addons/plecs.c',
     'src/addons/snapshot.c',
     'src/addons/stats.c',
-    'src/modules/pipeline/pipeline.c',
-    'src/modules/pipeline/worker.c',
-    'src/modules/system/system.c',
-    'src/modules/timer.c',    
+    'src/addons/pipeline/pipeline.c',
+    'src/addons/pipeline/worker.c',
+    'src/addons/system/system.c',
+    'src/addons/timer.c',    
+    'src/datastructures/bitset.c',
+    'src/datastructures/hash.c',
+    'src/datastructures/hashmap.c',
+    'src/datastructures/map.c',
+    'src/datastructures/sparse.c',
+    'src/datastructures/strbuf.c',
+    'src/datastructures/switch_list.c',
+    'src/datastructures/vector.c',
     'src/api_support.c',
-    'src/bitset.c',
     'src/bootstrap.c',
     'src/entity.c',
     'src/filter.c',
-    'src/hash.c',
-    'src/hashmap.c',
     'src/hierarchy.c',
     'src/iter.c',
     'src/log.c',
-    'src/map.c',
     'src/misc.c',
     'src/observer.c',
     'src/os_api.c',
     'src/query.c',
-    'src/sparse.c',
     'src/stage.c',
-    'src/strbuf.c',
-    'src/switch_list.c',
     'src/table_graph.c',
     'src/table.c',
     'src/trigger.c',
     'src/type.c',
-    'src/vector.c',
     'src/world.c',
 )
 
@@ -69,10 +67,10 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
-helloworld_inc = include_directories('examples/c/01_helloworld/include')
+helloworld_inc = include_directories('examples/c/01_hello_world/include')
 
 helloworld_exe = executable('helloworld',
-    'examples/c/01_helloworld/src/main.c',
+    'examples/c/01_hello_world/src/main.c',
     include_directories : helloworld_inc,
     implicit_include_directories : false,
     dependencies : flecs_dep

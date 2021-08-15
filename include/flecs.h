@@ -34,7 +34,7 @@
 
 /* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
-#define FLECS_C             /* C API (convenience macros on top of core) */
+// #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */
 #define FLECS_MODULE        /* Module support */
 #define FLECS_PARSER        /* String parser for queries */
@@ -1002,8 +1002,7 @@ const ecs_world_info_t* ecs_get_world_info(
 /** Dimension the world for a specified number of entities.
  * This operation will preallocate memory in the world for the specified number
  * of entities. Specifying a number lower than the current number of entities in
- * the world will have no effect. Note that this function does not allocate
- * memory for components (use ecs_dim_type for that).
+ * the world will have no effect.
  *
  * @param world The world.
  * @param entity_count The number of entities to preallocate.
@@ -1479,8 +1478,8 @@ void ecs_clear(
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id
- * will be recycled. Repeatedly calling ecs_delete without ecs_new, 
- * ecs_new_w_id or ecs_new_w_type will cause a memory leak as it will cause
+ * will be recycled. Repeatedly calling ecs_delete without ecs_new or
+ * ecs_new_w_id will cause a memory leak as it will cause
  * the list with ids that can be recycled to grow unbounded.
  *
  * @param world The world.
@@ -2115,55 +2114,6 @@ ecs_entity_t ecs_add_path_w_sep(
  * @defgroup scopes Scopes
  * @{
  */
-
-/** Does entity have children.
- *
- * @param world The world
- * @param entity The entity
- * @return True if the entity has children, false if not.
- */
-FLECS_API
-int32_t ecs_get_child_count(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Return a scope iterator.
- * A scope iterator iterates over all the child entities of the specified 
- * parent.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_API
-ecs_iter_t ecs_scope_iter(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
-/** Return a filtered scope iterator.
- * Same as ecs_scope_iter, but results will be filtered.
- *
- * @param world The world.
- * @param parent The parent entity for which to iterate the children.
- * @return The iterator.
- */
-FLECS_API
-ecs_iter_t ecs_scope_iter_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t parent,
-    ecs_filter_t *filter);
-
-/** Progress the scope iterator.
- * This operation progresses the scope iterator to the next table. The iterator
- * must have been initialized with `ecs_scope_iter`. This operation must be
- * invoked at least once before interpreting the contents of the iterator.
- *
- * @param it The iterator
- * @return True if more data is available, false if not.
- */
-FLECS_API
-bool ecs_scope_next(
-    ecs_iter_t *it);
 
 /** Set the current scope.
  * This operation sets the scope of the current stage to the provided entity.
@@ -2945,27 +2895,6 @@ bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t index);
 
-/** Get the type of the currently entities.
- * This operation returns the type of the current iterated entity/entities. A
- * type is a vector that contains all ids of the components that an entity has.
- *
- * @param it The iterator.
- * @return The type of the currently iterated entity/entities.
- */
-FLECS_API
-ecs_type_t ecs_iter_type(
-    const ecs_iter_t *it);
-
-/** Get the table for the current entities. 
- * This operation returns the table of the current iterated entities
- *
- * @param it The iterator.
- * @return The table of the currently iterated entity/entities.
- */
-FLECS_API
-ecs_table_t* ecs_iter_table(
-    const ecs_iter_t *it);
-
 /** Find the column index for a given id.
  * This operation finds the index of a column in the current type for the 
  * specified id. For example, if an entity has type Position, Velocity, and the
@@ -2974,8 +2903,7 @@ ecs_table_t* ecs_iter_table(
  *
  * Note that the column index returned by this function starts from 0, as
  * opposed to 1 for the terms. The reason for this is that the returned index
- * is equivalent to using the ecs_type_get_index function, with as type the
- * value returned by ecs_iter_type.
+ * is equivalent to using the ecs_type_get_index function.
  *
  * This operation can be used to request columns that are not requested by a
  * query. For example, a query may request Position, Velocity, but an entity
@@ -3002,7 +2930,7 @@ int32_t ecs_iter_find_column(
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_iter_column_size.
  *
- * Note that this function can be used together with ecs_iter_type to 
+ * Note that this function can be used together with iter::type to 
  * dynamically iterate all data that the matched entities have. An application
  * can use the ecs_vector_count function to obtain the number of elements in a
  * type. All indices from 0..ecs_vector_count(type) are valid column indices.
@@ -3495,6 +3423,19 @@ bool ecs_commit(
     ecs_ids_t *added,
     ecs_ids_t *removed);
 
+/** Find record for entity. */
+FLECS_API
+ecs_record_t* ecs_record_find(
+    ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get component pointer from column/record. */
+FLECS_API
+void* ecs_record_get_column(
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size);
+
 /** @} */
 
 /* Include enabled addons */
@@ -3523,9 +3464,8 @@ bool ecs_commit(
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
 #endif
-#ifdef FLECS_C
+
 #include "flecs/addons/flecs_c.h"
-#endif
 
 #ifdef __cplusplus
 }

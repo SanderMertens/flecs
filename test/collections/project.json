@@ -48,15 +48,6 @@
                 "set_min_size_to_smaller"
             ]
         }, {
-            "id": "Queue",
-            "setup": true,
-            "testcases": [
-                "free_empty",
-                "push",
-                "from_array",
-                "last"
-            ]
-        }, {
             "id": "Map",
             "setup": true,
             "testcases": [
