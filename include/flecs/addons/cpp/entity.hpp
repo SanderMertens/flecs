@@ -404,17 +404,6 @@ public:
         return ecs_has_id(m_world, m_id, ecs_pair(relation, comp_id));
     }
 
-    /** Check if entity owns the provided type.
-     * An type is owned if it is not shared from a base entity.
-     *
-     * @param type The type to check.
-     * @return True if the entity owns the provided type, false otherwise.
-     */
-    bool owns(type_t type) const {
-        return ecs_type_owns_type(
-            m_world, ecs_get_type(m_world, m_id), type, true);
-    }
-
     /** Check if entity owns the provided entity.
      * An entity is owned if it is not shared from a base entity.
      *
@@ -422,7 +411,7 @@ public:
      * @return True if the entity owns the provided entity, false otherwise.
      */
     bool owns(flecs::id_t e) const {
-        return ecs_owns_id(m_world, m_id, e, true);
+        return ecs_owns_id(m_world, m_id, e);
     }
 
     /** Check if entity owns the provided pair.

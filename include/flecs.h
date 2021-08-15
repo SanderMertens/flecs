@@ -24,9 +24,6 @@
 /* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
-/* FLECS_NO_CPP should be defined when building for C++ without the C++ API */
-// #define FLECS_NO_CPP
-
 /* FLECS_SANITIZE enables expensive checks that can detect issues early */
 #ifndef NDEBUG
 #define FLECS_SANITIZE
@@ -38,6 +35,7 @@
 /* If this is a regular, non-custom build, build all modules and addons. */
 #ifndef FLECS_CUSTOM_BUILD
 #define FLECS_C             /* C API (convenience macros on top of core) */
+#define FLECS_CPP           /* C++ API */
 #define FLECS_MODULE        /* Module support */
 #define FLECS_PARSER        /* String parser for queries */
 #define FLECS_PLECS         /* ECS data definition format */
@@ -3510,9 +3508,6 @@ bool ecs_commit(
 #ifdef FLECS_TIMER
 #include "flecs/addons/timer.h"
 #endif
-#ifdef FLECS_C
-#include "flecs/addons/flecs_c.h"
-#endif
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"
 #endif
@@ -3528,14 +3523,15 @@ bool ecs_commit(
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
 #endif
+#ifdef FLECS_C
+#include "flecs/addons/flecs_c.h"
+#endif
 
 #ifdef __cplusplus
 }
 
-#ifndef FLECS_NO_CPP
-#ifndef FLECS_LEGACY
-#include "flecs/flecs.hpp"
-#endif
+#ifdef FLECS_CPP
+#include "flecs/addons/cpp/flecs.hpp"
 #endif
 
 #endif

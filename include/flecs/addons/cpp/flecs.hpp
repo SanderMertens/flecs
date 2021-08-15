@@ -195,23 +195,23 @@ static const flecs::entity_t Throw = EcsThrow;
 
 }
 
-#include <flecs/cpp/util.hpp>
-#include <flecs/cpp/pair.hpp>
-#include <flecs/cpp/function_traits.hpp>
-#include <flecs/cpp/lifecycle_traits.hpp>
-#include <flecs/cpp/iter.hpp>
-#include <flecs/cpp/world.hpp>
-#include <flecs/cpp/id.hpp>
-#include <flecs/cpp/entity.hpp>
-#include <flecs/cpp/component.hpp>
-#include <flecs/cpp/invoker.hpp>
-#include <flecs/cpp/builder.hpp>
-#include <flecs/cpp/type.hpp>
-#include <flecs/cpp/module.hpp>
-#include <flecs/cpp/filter.hpp>
-#include <flecs/cpp/snapshot.hpp>
-#include <flecs/cpp/filter_iterator.hpp>
-#include <flecs/cpp/query.hpp>
-#include <flecs/cpp/system.hpp>
-#include <flecs/cpp/observer.hpp>
-#include <flecs/cpp/impl.hpp>
+#include "util.hpp"
+#include "pair.hpp"
+#include "function_traits.hpp"
+#include "lifecycle_traits.hpp"
+#include "iter.hpp"
+#include "world.hpp"
+#include "id.hpp"
+#include "entity.hpp"
+#include "component.hpp"
+#include "invoker.hpp"
+#include "builder.hpp"
+#include "type.hpp"
+#include "module.hpp"
+#include "filter.hpp"
+#include "snapshot.hpp"
+#include "filter_iterator.hpp"
+#include "query.hpp"
+#include "system.hpp"
+#include "observer.hpp"
+#include "impl.hpp"
