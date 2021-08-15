@@ -2,45 +2,9 @@
 namespace flecs 
 {
 
-////////////////////////////////////////////////////////////////////////////////
-//// Entity range, allows for operating on a range of consecutive entities
-////////////////////////////////////////////////////////////////////////////////
-
-class ECS_DEPRECATED("do not use") entity_range final {
-public:
-    entity_range(const world& world, int32_t count) 
-        : m_world(world.c_ptr())
-        , m_ids( ecs_bulk_new_w_type(m_world, nullptr, count)) { }
-
-    entity_range(const world& world, int32_t count, flecs::type type) 
-        : m_world(world.c_ptr())
-        , m_ids( ecs_bulk_new_w_type(m_world, type.c_ptr(), count)) { }
-
-private:
-    world_t *m_world;
-    const entity_t *m_ids;
-};
-
 template <typename T>
 flecs::entity ref<T>::entity() const {
     return flecs::entity(m_world, m_entity);
-}
-
-template <typename Base>
-inline const Base& entity_builder<Base>::add(const type& type) const {
-    ecs_add_type(this->base_world(), this->base_id(), type.c_ptr());
-    return *this;
-}
-
-template <typename Base>
-inline const Base& entity_builder<Base>::remove(const type& type) const {
-    ecs_remove_type(this->base_world(), this->base_id(), type.c_ptr());
-    return *this;
-}
-
-template <typename Base>
-inline const Base& entity_builder<Base>::add_owned(const type& type) const {
-    return add_owned(type.id());
 }
 
 template <typename Base>
@@ -135,16 +99,6 @@ inline flecs::type entity_view::type() const {
     return flecs::type(m_world, ecs_get_type(m_world, m_id));
 }
 
-inline flecs::type entity_view::to_type() const {
-    ecs_type_t type = ecs_type_from_id(m_world, m_id);
-    return flecs::type(m_world, type);
-}
-
-inline child_iterator entity_view::children() const {
-    ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, NULL);
-    return flecs::child_iterator(*this);
-}
-
 template <typename Func>
 inline void entity_view::each(const Func& func) const {
     const ecs_vector_t *type = ecs_get_type(m_world, m_id);
@@ -172,17 +126,29 @@ inline void entity_view::each(const Func& func) const {
 }
 
 template <typename Func>
-inline void entity_view::match(id_t pattern, const Func& func) const {
-    const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& func) const {
+    const ecs_table_t *table = ecs_get_table(m_world, m_id);
+    if (!table) {
+        return;
+    }
+
+    const ecs_vector_t *type = ecs_table_get_type(table);
     if (!type) {
         return;
     }
 
+    flecs::id_t pattern = pred;
+    if (obj) {
+        pattern = ecs_pair(pred, obj);
+    }
+
+    int32_t cur = 0;
     id_t *ids = static_cast<ecs_id_t*>(
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
-    int32_t cur = 0;
-
-    while (-1 != (cur = ecs_type_index_of(type, cur, pattern))) {
+    
+    while (-1 != (cur = ecs_type_match(
+        m_world, table, type, cur, pattern, 0, 0, 0, NULL))) 
+    {
         flecs::id ent(m_world, ids[cur]);
         func(ent);
         cur ++;
@@ -191,7 +157,7 @@ inline void entity_view::match(id_t pattern, const Func& func) const {
 
 template <typename Func>
 inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
-    return this->match(ecs_pair(rel, flecs::Wildcard), [&](flecs::id id) {
+    return this->each(rel, flecs::Wildcard, [&](flecs::id id) {
         flecs::entity obj = id.object();
         func(obj);
     });
@@ -200,18 +166,7 @@ inline void entity_view::each(const flecs::entity_view& rel, const Func& func) c
 template <typename Func, if_t< is_callable<Func>::value > >
 inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
-}
-
-template <typename T>
-inline flecs::entity entity_view::get_parent() {
-    return flecs::entity(m_world, ecs_get_parent_w_entity(m_world, m_id, 
-            _::cpp_type<T>::id(m_world)));
-}
-
-inline flecs::entity entity_view::get_parent(flecs::entity_view e) {
-    return flecs::entity(m_world, 
-        ecs_get_parent_w_entity(m_world, m_id, e.id()));
-}    
+} 
 
 inline flecs::entity entity_view::lookup(const char *path) const {
     auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);

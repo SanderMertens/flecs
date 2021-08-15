@@ -256,31 +256,6 @@ void Entity_emplace_w_self_ctor() {
     test_assert(ptr->e_ == e);
 }
 
-void Entity_replace() {
-    flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
-
-    auto entity = world.entity();
-    test_assert(entity);
-
-    entity.patch<Position>([](Position& p) {
-        p.x = 10;
-        p.y = 20;
-    });
-
-    const Position *p = entity.get<Position>();
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    entity.patch<Position>([](Position& p_arg) {
-        p_arg.x = 30;
-    });
-
-    test_int(p->x, 30); 
-}
-
 void Entity_add_2() {
     flecs::world world;
 
@@ -938,54 +913,6 @@ void Entity_force_owned_nested() {
     test_assert(e.owns<Position>());
     test_assert(e.has<Velocity>());
     test_assert(!e.owns<Velocity>());
-}
-
-void Entity_force_owned_type() {
-    flecs::world world;
-
-    auto type = world.type()
-        .add<Position>()
-        .add<Velocity>();
-
-    auto prefab = world.prefab()
-        .add<Position>()
-        .add<Velocity>()
-        .add<Rotation>()
-        .add_owned(type);
-
-    auto e = world.entity()
-        .add(flecs::IsA, prefab);
-    
-    test_assert(e.has<Position>());
-    test_assert(e.owns<Position>());
-    test_assert(e.has<Velocity>());
-    test_assert(e.owns<Velocity>());
-    test_assert(e.has<Rotation>());
-    test_assert(!e.owns<Rotation>());
-}
-
-void Entity_force_owned_type_w_pair() {
-    flecs::world world;
-
-    auto type = world.type()
-        .add<Position, Velocity>()
-        .add<Velocity>();
-
-    auto prefab = world.prefab()
-        .add<Position, Velocity>()
-        .add<Rotation>()
-        .add_owned(type);
-
-    auto e = world.entity()
-        .add(flecs::IsA, prefab);
-    
-    test_assert((e.has<Position, Velocity>()));
-    test_assert(e.has<Rotation>());
-    test_assert(!e.owns<Rotation>());
-
-    const Position *pp = prefab.get<Position, Velocity>();
-    const Position *p = e.get<Position, Velocity>();
-    test_assert(pp != p);
 }
 
 struct MyTag { };

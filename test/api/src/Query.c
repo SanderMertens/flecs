@@ -1958,3 +1958,26 @@ void Query_query_iter_20_components() {
 
     ecs_fini(world);
 }
+
+void Query_iter_type_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_assert(it.type != NULL);
+    test_int(ecs_vector_count(it.type), 1);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[0], ecs_id(Position));
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

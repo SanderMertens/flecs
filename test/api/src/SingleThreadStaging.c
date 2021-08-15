@@ -48,7 +48,7 @@ void New_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e;
+        ecs_entity_t e = 0;
         if (ctx->component) {
             e = ecs_new_w_id(it->world, ctx->component);
         }
@@ -119,7 +119,7 @@ void SingleThreadStaging_new_empty_w_count() {
 static
 void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_context(it->world);
-    const ecs_entity_t *ids;
+    const ecs_entity_t *ids = NULL;
     if (ctx->component) {
         ids = ecs_bulk_new_w_id(it->world, ctx->component, 1000);
     }

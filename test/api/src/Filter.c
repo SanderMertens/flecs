@@ -1831,6 +1831,83 @@ void Filter_filter_iter_in_stage() {
 
     ecs_staging_end(world);
 
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_term_iter_type_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+
+    ecs_add_id(world, e_2, TagB);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .id = TagA
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_assert(it.type != NULL);
+    test_int(ecs_vector_count(it.type), 2);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[1], TagB);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_assert(it.type != NULL);
+    test_int(ecs_vector_count(it.type), 1);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+
+    test_assert(!ecs_term_next(&it));
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_type_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+
+    ecs_add_id(world, e_2, TagB);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_assert(it.type != NULL);
+    test_int(ecs_vector_count(it.type), 2);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[1], TagB);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_assert(it.type != NULL);
+    test_int(ecs_vector_count(it.type), 1);
+    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 

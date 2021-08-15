@@ -715,6 +715,7 @@ void populate_from_table(
     ecs_table_t *table)
 {
     it->table = table;
+    it->type = table->type;
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = flecs_table_get_data(table);
@@ -995,6 +996,7 @@ bool ecs_term_next(
     ecs_data_t *data = flecs_table_get_data(table);
 
     it->table = table;
+    it->type = table->type;
     it->data = data;
     it->ids = &iter->id;
     it->columns = &iter->column;

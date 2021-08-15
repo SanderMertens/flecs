@@ -550,17 +550,6 @@ public:
         ecs_dim(m_world, entity_count);
     }
 
-    /** Preallocate memory for type
-     * This function preallocates memory for the component arrays of the
-     * specified type.
-     *
-     * @param type Type to preallocate memory for.
-     * @param entity_count Number of entities to preallocate memory for.
-     */
-    void dim_type(type_t t, int32_t entity_count) const {
-        ecs_dim_type(m_world, t, entity_count);
-    }
-
     /** Set entity range.
      * This function limits the range of issued entity ids between min and max.
      *
@@ -646,11 +635,6 @@ public:
      */
     template <typename T>
     void modified() const;
-
-    /** Patch singleton component.
-     */
-    template <typename T, typename Func>
-    void patch(const Func& func) const;
 
     /** Get singleton component.
      */

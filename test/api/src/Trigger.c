@@ -1841,3 +1841,33 @@ void Trigger_trigger_w_index() {
     
     ecs_fini(world);
 }
+
+static ecs_type_t trigger_type;
+
+void TypeTrigger(ecs_iter_t *it) {
+    trigger_type = it->type;
+}
+
+void Trigger_iter_type_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsOnAdd},
+        .callback = TypeTrigger,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    ecs_new(world, Tag);
+
+    test_assert(trigger_type != NULL);
+    test_assert(trigger_type != NULL);
+    test_int(ecs_vector_count(trigger_type), 1);
+    test_int(ecs_vector_first(trigger_type, ecs_id_t)[0], Tag);
+    
+    ecs_fini(world);
+}

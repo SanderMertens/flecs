@@ -938,7 +938,9 @@
                 "filter_iter_10_tags",
                 "filter_iter_20_tags",
                 "filter_iter_10_components",
-                "filter_iter_20_components"
+                "filter_iter_20_components",
+                "term_iter_type_set",
+                "filter_iter_type_set"
             ]
         }, {
             "id": "Query",
@@ -987,7 +989,8 @@
                 "query_iter_10_tags",
                 "query_iter_20_tags",
                 "query_iter_10_components",
-                "query_iter_20_components"
+                "query_iter_20_components",
+                "iter_type_set"
             ]
         }, {
             "id": "Pairs",
@@ -1101,7 +1104,8 @@
                "set_get_binding_context",
                "trigger_w_self",
                "delete_trigger_w_delete_ctx",
-               "trigger_w_index"
+               "trigger_w_index",
+               "iter_type_set"
            ]
         }, {
             "id": "Observer",
@@ -1131,7 +1135,8 @@
                 "add_after_delete_observer",
                 "remove_after_delete_observer",
                 "delete_observer_w_ctx",
-                "filter_w_strings"
+                "filter_w_strings",
+                "iter_type_set"
             ]                
         }, {
             "id": "TriggerOnAdd",

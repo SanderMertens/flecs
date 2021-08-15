@@ -53,42 +53,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Tree iterator
-////////////////////////////////////////////////////////////////////////////////
-
-class tree_iterator
-{
-public:
-    tree_iterator()
-        : m_has_next(false)
-        , m_iter{ } { }
-
-    tree_iterator(flecs::world_t *world, const flecs::entity_t entity) 
-        : m_iter( ecs_scope_iter(world, entity ))
-    {
-        m_has_next = ecs_scope_next(&m_iter);
-    }
-
-    bool operator!=(tree_iterator const& other) const {
-        return m_has_next != other.m_has_next;
-    }
-
-    flecs::iter const operator*() const {
-        return flecs::iter(&m_iter);
-    }
-
-    tree_iterator& operator++() {
-        m_has_next = ecs_scope_next(&m_iter);
-        return *this;
-    }
-
-private:
-    bool m_has_next;
-    ecs_iter_t m_iter;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// Utility for creating a world-based filter iterator
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,31 +96,6 @@ private:
     const world& m_world;
     const snapshot& m_snapshot;
 };
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Utility for creating a child table iterator
-////////////////////////////////////////////////////////////////////////////////
-
-class child_iterator {
-public:
-    child_iterator(const flecs::entity_view& entity) 
-        : m_world( entity.world().c_ptr() )
-        , m_parent( entity.id() ) { }
-
-    inline tree_iterator begin() const {
-        return tree_iterator(m_world, m_parent);
-    }
-
-    inline tree_iterator end() const {
-        return tree_iterator();
-    }
-
-private:
-    flecs::world_t *m_world;
-    flecs::entity_t m_parent;
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Filter fwd declared functions

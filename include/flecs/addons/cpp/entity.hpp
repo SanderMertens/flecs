@@ -15,12 +15,14 @@ public:
 }
 
 #ifdef FLECS_DEPRECATED
-#include "../addons/deprecated/entity.hpp"
+#include "../deprecated/entity.hpp"
 #else
 namespace flecs
 {
 template <typename Base>
 class entity_builder_deprecated { };
+
+template <typename Base>
 class entity_deprecated { };
 }
 #endif
@@ -115,12 +117,6 @@ public:
      */
     flecs::type type() const;
 
-    /** Return type containing the entity.
-     *
-     * @return A type that contains only this entity.
-     */
-    flecs::type to_type() const;
-
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
      *   void(*)(flecs::id id)
@@ -130,10 +126,16 @@ public:
     template <typename Func>
     void each(const Func& func) const;
 
-    /** Iterate objects for a given relationship.
-     * This operation will return the object for all ids that match with the
-     * (rel, *) pattern.
+    /** Iterate matching relation ids of an entity.
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::id id)
      *
+     * @param func The function invoked for each id.
+     */
+    template <typename Func>
+    void each(flecs::id_t rel, flecs::id_t obj, const Func& func) const;
+
+    /** Iterate objects for a given relationship.
      * The function parameter must match the following signature:
      *   void(*)(flecs::entity object)
      *
@@ -144,9 +146,6 @@ public:
     void each(const flecs::entity_view& rel, const Func& func) const;
 
     /** Iterate objects for a given relationship.
-     * This operation will return the object for all ids that match with the
-     * (Rel, *) pattern.
-     *
      * The function parameter must match the following signature:
      *   void(*)(flecs::entity object)
      *
@@ -157,28 +156,6 @@ public:
     void each(const Func& func) const { 
         return each(_::cpp_type<Rel>::id(m_world), func);
     }
-
-    /** Find all (component) ids contained by an entity matching a pattern.
-     * This operation will return all ids that match the provided pattern. The
-     * pattern may contain wildcards by using the flecs::Wildcard constant:
-     *
-     * match(flecs::Wildcard, ...)
-     *   Matches with all non-pair ids.
-     *
-     * match(world.pair(rel, flecs::Wildcard))
-     *   Matches all pair ids with relationship rel
-     *
-     * match(world.pair(flecs::Wildcard, obj))
-     *   Matches all pair ids with object obj
-     *
-     * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
-     *
-     * @param pattern The pattern to use for matching.
-     * @param func The function invoked for each matching id.
-     */
-    template <typename Func>
-    void match(flecs::id_t pattern, const Func& func) const;
 
     /** Get component value.
      * 
@@ -330,15 +307,6 @@ public:
      * @return The found entity, or entity::null if no entity matched.
      */
     flecs::entity lookup(const char *path) const;
-
-    /** Check if entity has the provided type.
-     *
-     * @param entity The type pointer to check.
-     * @return True if the entity has the provided type, false otherwise.
-     */
-    bool has(type_t type) const {
-        return ecs_has_type(m_world, m_id, type);
-    }
 
     /** Check if entity has the provided entity.
      *
@@ -533,7 +501,11 @@ public:
      *
      * @return Iterator to child entities.
      */
-    child_iterator children() const;
+    template <typename Func>
+    void children(Func&& func) const {
+        flecs::world world(m_world);
+        world.each(world.pair(flecs::ChildOf, m_id), std::move(func));
+    }
 
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is
@@ -614,15 +586,6 @@ public:
         ecs_add_id(this->base_world(), this->base_id(), entity);
         return *this;
     }
-
-    /** Add a type to an entity.
-     * A type is a vector of component ids. This operation adds all components
-     * in a single operation, and is a more efficient version of doing 
-     * individual add operations.
-     * 
-     * @param type The type to add.
-     */
-    const Base& add(const type& type) const;
 
     /** Add a pair.
      * This operation adds a pair to the entity.
@@ -722,15 +685,6 @@ public:
         return *this;
     }
 
-    /** Remove a type from an entity.
-     * A type is a vector of component ids. This operation adds all components
-     * in a single operation, and is a more efficient version of doing 
-     * individual add operations.
-     *
-     * @param type the type to remove.
-     */
-    const Base& remove(const type& type) const;
-
     /** Remove a pair.
      * This operation removes a pair from the entity.
      *
@@ -793,9 +747,6 @@ public:
         ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
         return *this;  
     }
-
-    ECS_DEPRECATED("use add_owned(flecs::entity e)")
-    const Base& add_owned(const type& type) const;
 
     /** Set value, add owned flag.
      *
@@ -932,7 +883,7 @@ public:
      */   
     template<typename T>
     const Base& enable() const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(), true);
+        ecs_enable_component_w_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(), true);
         return *this;
     }  
 
@@ -944,7 +895,7 @@ public:
      */   
     template<typename T>
     const Base& disable() const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), _::cpp_type<T>::id(), false);
+        ecs_enable_component_w_id(this->base_world(), this->base_id(), _::cpp_type<T>::id(), false);
         return *this;
     }  
 
@@ -954,7 +905,7 @@ public:
      * @param component The component to enable.
      */   
     const Base& enable(entity_t comp) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), comp, true);
+        ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, true);
         return *this;       
     }
 
@@ -964,7 +915,7 @@ public:
      * @param component The component to disable.
      */   
     const Base& disable(entity_t comp) const {
-        ecs_enable_component_w_entity(this->base_world(), this->base_id(), comp, false);
+        ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, false);
         return *this;       
     }
 
@@ -1236,7 +1187,7 @@ public:
         : flecs::entity_view() 
     {
         m_world = world;
-        m_id = ecs_new_w_type(world, 0);
+        m_id = ecs_new(world, 0);
     }
 
     /** Create a named entity.
@@ -1418,7 +1369,7 @@ public:
      * @param component component that was modified.
      */
     void modified(entity_t comp) const {
-        ecs_modified_w_entity(m_world, m_id, comp);
+        ecs_modified_id(m_world, m_id, comp);
     }
 
     /** Get reference to component.

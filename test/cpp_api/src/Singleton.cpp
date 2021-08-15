@@ -55,20 +55,6 @@ void Singleton_modified_singleton() {
     test_int(invoked, 1);
 }
 
-void Singleton_patch_singleton() {
-    flecs::world world;
-
-    world.patch<Position>([](Position& p) {
-        p.x = 10;
-        p.y = 20;
-    });
-
-    const Position *p = world.get<Position>();
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-}
-
 void Singleton_add_singleton() {
     flecs::world world;
 
@@ -163,4 +149,8 @@ void Singleton_type_id_from_world() {
     auto s = world.singleton<Position>();
     test_assert(s.id() == flecs::type_id<Position>());
     test_assert(s.id() == flecs::type_id<Position>());
+}
+
+void Singleton_patch_singleton() {
+    // Implement testcase
 }

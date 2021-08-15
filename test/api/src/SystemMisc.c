@@ -453,10 +453,9 @@ void TableColumns(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_term_id(it, 1);
     ecs_id_t ecs_id(Velocity) = ecs_term_id(it, 2);
 
-    ecs_type_t type = ecs_iter_type(it);
-    test_int(2, ecs_vector_count(type));
+    test_int(2, ecs_vector_count(it->type));
 
-    ecs_entity_t *components = ecs_vector_first(type, ecs_entity_t);
+    ecs_entity_t *components = ecs_vector_first(it->type, ecs_entity_t);
     test_int(components[0], ecs_id(Position));
     test_int(components[1], ecs_id(Velocity));
 

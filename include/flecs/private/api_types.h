@@ -92,13 +92,6 @@ typedef struct ecs_iter_table_t {
     ecs_ref_t *references;    /**< References to entities (from query) */
 } ecs_iter_table_t;
 
-/** Scope-iterator specific data */
-typedef struct ecs_scope_iter_t {
-    ecs_filter_t filter;
-    ecs_map_iter_t tables;
-    int32_t index;
-} ecs_scope_iter_t;
-
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
     ecs_term_t *term;
@@ -178,6 +171,7 @@ struct ecs_iter_t {
 
     ecs_table_t *table;           /**< Current table */
     ecs_data_t *data;
+    ecs_type_t type;
     
     ecs_id_t *ids;
     int32_t *columns;
@@ -216,7 +210,6 @@ struct ecs_iter_t {
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
 
     union {
-        ecs_scope_iter_t parent;
         ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;

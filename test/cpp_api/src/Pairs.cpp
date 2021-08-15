@@ -323,145 +323,6 @@ void Pairs_get_mut_pair_tag_existing() {
     test_int(p->y, 20);
 }
 
-void Pairs_type_w_pair() {
-    flecs::world ecs;
-
-    auto Type = ecs.type()
-        .add<Pair, Position>();
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has<Pair, Position>()));
-}
-
-void Pairs_type_w_pair_tag() {
-    flecs::world ecs;
-
-    auto Tag = ecs.entity();
-
-    auto Type = ecs.type()
-        .add<Pair>(Tag);
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has<Pair>(Tag)));
-}
-
-void Pairs_type_w_pair_tags() {
-    flecs::world ecs;
-
-    auto Tag = ecs.entity();
-    auto Pair = ecs.entity();
-
-    auto Type = ecs.type()
-        .add(Pair, Tag);
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has(Pair, Tag)));
-}
-
-void Pairs_type_w_tag_pair() {
-    flecs::world ecs;
-
-    auto Tag = ecs.entity();
-
-    auto Type = ecs.type()
-        .add<Pair>(Tag);
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has<Pair>(Tag)));
-}
-
-void Pairs_override_pair_w_type() {
-    flecs::world ecs;
-
-    auto Prefab = ecs.prefab("Prefab")
-        .set<Pair, Position>({10});
-
-    auto Type = ecs.type()
-        .add(flecs::IsA, Prefab)
-        .add<Pair, Position>();
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has<Pair, Position>()));
-
-    const Pair *t_1 = Prefab.get<Pair, Position>();
-    test_assert(t_1 != nullptr);
-    test_int(t_1->value, 10);
-
-    const Pair *t_2 = e.get<Pair, Position>();
-    test_assert(t_2 != nullptr);
-
-    test_assert(t_1 != t_2);
-    test_int(t_2->value, 10);
-}
-
-void Pairs_override_pair_w_type_tag() {
-    flecs::world ecs;
-
-    auto Tag = ecs.entity();
-
-    auto Prefab = ecs.prefab("Prefab")
-        .set<Pair>(Tag, {10});
-
-    auto Type = ecs.type()
-        .add(flecs::IsA, Prefab)
-        .add<Pair>(Tag);
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has<Pair>(Tag)));
-
-    const Pair *t_1 = Prefab.get<Pair>(Tag);
-    test_assert(t_1 != nullptr);
-    test_int(t_1->value, 10);
-
-    const Pair *t_2 = e.get<Pair>(Tag);
-    test_assert(t_2 != nullptr);
-
-    test_assert(t_1 != t_2);
-    test_int(t_2->value, 10);    
-}
-
-void Pairs_override_tag_pair_w_type() {
-    flecs::world ecs;
-
-    auto Pair = ecs.entity();
-
-    auto Prefab = ecs.prefab("Prefab")
-        .set_w_object<Position>(Pair, {10, 20});
-
-    auto Type = ecs.type()
-        .add(flecs::IsA, Prefab)
-        .add_w_object<Position>(Pair);
-
-    auto e = ecs.entity()
-        .add(Type);
-
-    test_assert((e.has_w_object<Position>(Pair)));
-
-    const Position *p_1 = Prefab.get_w_object<Position>(Pair);
-    test_assert(p_1 != nullptr);
-    test_int(p_1->x, 10);
-    test_int(p_1->y, 20);
-
-    const Position *p_2 = e.get_w_object<Position>(Pair);
-    test_assert(p_2 != nullptr);
-
-    test_assert(p_1 != p_2);
-    test_int(p_2->x, 10);
-    test_int(p_2->y, 20);
-}
-
 void Pairs_get_relation_from_id() {
     flecs::world ecs;
 
@@ -738,7 +599,7 @@ void Pairs_match_pair() {
 
     int32_t count = 0;
 
-    e.match(ecs.pair(Eats, Apples), 
+    e.each(Eats, Apples, 
         [&](flecs::id id) {
             test_assert(id.relation() == Eats);
             test_assert(id.object() == Apples);
@@ -766,7 +627,7 @@ void Pairs_match_pair_obj_wildcard() {
 
     int32_t count = 0;
 
-    e.match(ecs.pair(Eats, flecs::Wildcard), 
+    e.each(Eats, flecs::Wildcard, 
         [&](flecs::id id) {
             test_assert(id.relation() == Eats);
             test_assert(id.object() == Apples || id.object() == Pears);
@@ -794,7 +655,7 @@ void Pairs_match_pair_rel_wildcard() {
 
     int32_t count = 0;
 
-    e.match(ecs.pair(flecs::Wildcard, Pears), 
+    e.each(flecs::Wildcard, Pears, 
         [&](flecs::id id) {
             test_assert(id.relation() == Eats);
             test_assert(id.object() == Pears);
@@ -822,7 +683,7 @@ void Pairs_match_pair_both_wildcard() {
 
     int32_t count = 0;
 
-    e.match(ecs.pair(flecs::Wildcard, flecs::Wildcard), 
+    e.each(flecs::Wildcard, flecs::Wildcard, 
         [&](flecs::id id) {
             count ++;
         });

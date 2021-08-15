@@ -165,27 +165,6 @@ size_t ecs_term_size(
     return flecs_to_size_t(it->sizes[index - 1]);
 }
 
-ecs_table_t* ecs_iter_table(
-    const ecs_iter_t *it)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    return it->table;
-}
-
-ecs_type_t ecs_iter_type(
-    const ecs_iter_t *it)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-
-    /* If no table is set it means that the iterator isn't pointing to anything
-     * yet. The most likely cause for this is that the operation is invoked on
-     * a new iterator for which "next" hasn't been invoked yet, or on an
-     * iterator that is out of elements. */
-    ecs_table_t *table = ecs_iter_table(it);
-    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    return table->type;
-}
-
 int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)

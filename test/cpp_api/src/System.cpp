@@ -679,16 +679,14 @@ void System_order_by_type_after_create() {
     int32_t count = 0;
 
     auto sys = world.system<const Position>()
+        .order_by<Position>([](flecs::entity_t e1, const Position *p1, 
+            flecs::entity_t e2, const Position *p2) {
+            return (p1->x > p2->x) - (p1->x < p2->x);
+        })
         .each([&](flecs::entity e, const Position& p) {
             test_assert(p.x > last_val);
             last_val = p.x;
             count ++;
-        });
-
-    sys.order_by<Position>(
-        [](flecs::entity_t e1, const Position *p1, 
-            flecs::entity_t e2, const Position *p2) {
-            return (p1->x > p2->x) - (p1->x < p2->x);
         });
 
     sys.run();
@@ -711,16 +709,15 @@ void System_order_by_id_after_create() {
     int32_t count = 0;
 
     auto sys = world.system<const Position>()
+        .order_by(pos, [](flecs::entity_t e1, const void *p1, flecs::entity_t e2, const void *p2) {
+            return (static_cast<const Position*>(p1)->x > static_cast<const Position*>(p2)->x) - 
+                (static_cast<const Position*>(p1)->x < static_cast<const Position*>(p2)->x);
+        })
         .each([&](flecs::entity e, const Position& p) {
             test_assert(p.x > last_val);
             last_val = p.x;
             count ++;
         });
-
-    sys.order_by(pos, [](flecs::entity_t e1, const void *p1, flecs::entity_t e2, const void *p2) {
-        return (static_cast<const Position*>(p1)->x > static_cast<const Position*>(p2)->x) - 
-               (static_cast<const Position*>(p1)->x < static_cast<const Position*>(p2)->x);
-    });
 
     sys.run();
 
@@ -957,18 +954,21 @@ void System_each_w_mut_children_it() {
     auto e2 = world.entity().set<Position>({0, 0}).child_of(parent);
     auto e3 = world.entity().set<Position>({0, 0}).child_of(parent);
 
+    int32_t count = 0;
+
     world.system<const Position>()
-        .iter([](const flecs::iter& it, const Position* p) {
+        .iter([&](const flecs::iter& it, const Position* p) {
             for (auto i : it) {
-                for (flecs::iter child_it : it.entity(i).children()) {
-                    for (auto c : child_it) {
-                        child_it.entity(c).add<Velocity>();
-                    }
-                }
+                it.entity(i).children([&](flecs::entity child) {
+                    child.add<Velocity>();
+                    count ++;
+                });
             }
         });
 
     world.progress();
+
+    test_int(count, 3);
 
     test_assert(e1.has<Velocity>());
     test_assert(e2.has<Velocity>());
@@ -984,21 +984,25 @@ void System_readonly_children_iter() {
     world.entity().set<Position>({1, 0}).child_of(parent);
     world.entity().set<Position>({1, 0}).child_of(parent);
 
+    int32_t count = 0;
+
     world.system<const Entity>()
-        .iter([](const flecs::iter& it, const Entity* c) {
+        .iter([&](const flecs::iter& it, const Entity* c) {
             for (auto i : it) {
-                for (flecs::iter child_it : c[i].e.children()) {
-                    for (auto c : child_it) {
-                        // Dummy code to ensure we can access the entity
-                        const Position *p = child_it.entity(c).get<Position>();
-                        test_int(p->x, 1);
-                        test_int(p->y, 0);
-                    }
-                }
+                c[i].e.children([&](flecs::entity child) {
+                    // Dummy code to ensure we can access the entity
+                    const Position *p = child.get<Position>();
+                    test_int(p->x, 1);
+                    test_int(p->y, 0);    
+
+                    count ++;                
+                });
             }
         });
 
     world.progress();
+
+    test_int(count, 3);
 }
 
 void System_rate_filter() {

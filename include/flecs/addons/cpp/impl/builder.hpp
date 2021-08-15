@@ -7,7 +7,7 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type) {
     ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
     m_term->pred.entity = type.id();
     return *this;
-}      
+}
 
 template <typename ... Components>
 inline filter_builder_base<Components...>::operator filter<Components ...>() const {

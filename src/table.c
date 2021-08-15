@@ -2309,3 +2309,53 @@ ecs_column_t *ecs_table_column_for_id(
 
     return NULL;
 }
+
+ecs_type_t ecs_table_get_type(
+    const ecs_table_t *table)
+{
+    return table->type;
+}
+
+ecs_record_t* ecs_record_find(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    if (r) {
+        return r;
+    } else {
+        return NULL;
+    }
+}
+
+void* ecs_record_get_column(
+    ecs_record_t *r,
+    int32_t column,
+    size_t c_size)
+{
+    (void)c_size;
+    ecs_table_t *table = r->table;
+    if (column >= table->column_count) {
+        return NULL;
+    }
+
+    ecs_data_t *data = table->data;
+    if (!data) {
+        return NULL;
+    }
+
+    ecs_column_t *c = &data->columns[column];
+    if (!c) {
+        return NULL;
+    }
+
+    int16_t size = c->size;
+    ecs_assert(!flecs_from_size_t(c_size) || flecs_from_size_t(c_size) == c->size, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    void *array = ecs_vector_first_t(c->data, c->size, c->alignment);
+    bool is_watched;
+    int32_t row = flecs_record_to_row(r->row, &is_watched);
+
+    return ECS_OFFSET(array, size * row);
+}
