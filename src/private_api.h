@@ -224,7 +224,6 @@ bool flecs_defer_bulk_new(
     ecs_stage_t *stage,
     int32_t count,
     const ecs_ids_t *components,
-    void **component_data,
     const ecs_entity_t **ids_out);
 
 bool flecs_defer_delete(
