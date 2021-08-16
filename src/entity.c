@@ -3279,35 +3279,6 @@ ecs_entity_t ecs_set_symbol(
     return entity;
 }
 
-ecs_type_t ecs_type_from_id(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-
-    if (!id) {
-        return NULL;
-    }
-
-    if (!(id & ECS_ROLE_MASK)) {
-        const EcsType *type = ecs_get(world, id, EcsType);
-        if (type) {
-            return type->normalized;
-        }
-    }
-
-    ecs_ids_t ids = {
-        .array = &id,
-        .count = 1
-    };
-
-    ecs_table_t *table = flecs_table_find_or_create(world, &ids);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
 ecs_id_t ecs_make_pair(
     ecs_entity_t relation,
     ecs_entity_t object)

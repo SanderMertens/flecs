@@ -3223,35 +3223,6 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
-/** Insert record into table.
- * This will create a new record for the table, which inserts a value for each
- * component. An optional entity and record can be provided.
- *
- * If a non-zero entity id is provided, a record must also be provided and vice
- * versa. The record must be created by the entity index. If the provided record 
- * is not created for the specified entity, the behavior will be undefined.
- *
- * If the provided record is not managed by the entity index, the behavior will
- * be undefined.
- *
- * The returned record contains a reference to the table and the table row. The
- * data pointed to by the record is guaranteed not to move unless one or more
- * rows are removed from this table. A row can be removed as result of a delete,
- * or by adding/removing components from an entity stored in the table.
- *
- * @param world The world.
- * @param table The table.
- * @param entity The entity.
- * @param record The entity-index record for the specified entity.
- * @return A record containing the table and table row.
- */
-FLECS_API
-ecs_record_t ecs_table_insert(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    ecs_record_t *record);
-
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through
  * the regular (entity) API as well as the number of records that have been

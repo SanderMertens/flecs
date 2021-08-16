@@ -278,14 +278,6 @@ bool flecs_defer_purge(
 //// Type API
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Test if type_id_1 contains type_id_2 */
-ecs_entity_t flecs_type_contains(
-    const ecs_world_t *world,
-    ecs_type_t type_id_1,
-    ecs_type_t type_id_2,
-    bool match_all,
-    bool match_prefab);
-
 void flecs_run_add_actions(
     ecs_world_t *world,
     ecs_table_t *table,
