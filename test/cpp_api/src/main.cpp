@@ -472,6 +472,8 @@ void FilterBuilder_world_each_filter_1_component(void);
 void FilterBuilder_world_each_filter_2_components(void);
 void FilterBuilder_world_each_filter_1_component_no_entity(void);
 void FilterBuilder_world_each_filter_2_components_no_entity(void);
+void FilterBuilder_10_terms(void);
+void FilterBuilder_20_terms(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -2496,6 +2498,14 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "world_each_filter_2_components_no_entity",
         FilterBuilder_world_each_filter_2_components_no_entity
+    },
+    {
+        "10_terms",
+        FilterBuilder_10_terms
+    },
+    {
+        "20_terms",
+        FilterBuilder_20_terms
     }
 };
 
@@ -3367,7 +3377,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        59,
+        61,
         FilterBuilder_testcases
     },
     {

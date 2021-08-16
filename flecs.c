@@ -16803,10 +16803,16 @@ int ecs_filter_finalize(
 }
 
 int ecs_filter_init(
-    const ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc)    
 {
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
     int i, term_count = 0;
     ecs_term_t *terms = desc->terms_buffer;
     const char *name = desc->name;
@@ -17347,6 +17353,7 @@ ecs_iter_t ecs_term_iter(
     }
 
     ecs_iter_t it = {
+        .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
         .column_count = 1
     };
@@ -17426,7 +17433,7 @@ bool ecs_term_next(
 {
     ecs_term_iter_t *iter = &it->iter.term;
     ecs_term_t *term = iter->term;
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->real_world;
 
     ecs_entity_t source;
     ecs_table_record_t *tr = term_iter_next(world, iter, &source);
@@ -17483,6 +17490,7 @@ ecs_iter_t ecs_filter_iter(
     const ecs_world_t *world = ecs_get_world(stage);
 
     ecs_iter_t it = {
+        .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage
     };
 
@@ -17569,7 +17577,7 @@ bool ecs_filter_next(
 {
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_filter_t *filter = &iter->filter;
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->real_world;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;

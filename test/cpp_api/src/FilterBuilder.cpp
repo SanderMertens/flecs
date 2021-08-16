@@ -1459,3 +1459,126 @@ void FilterBuilder_world_each_filter_2_components_no_entity() {
 
     test_int(count, 3);
 }
+
+struct TagA { };
+struct TagB { };
+struct TagC { };
+struct TagD { };
+struct TagE { };
+struct TagF { };
+struct TagG { };
+struct TagH { };
+struct TagI { };
+struct TagJ { };
+struct TagK { };
+struct TagL { };
+struct TagM { };
+struct TagN { };
+struct TagO { };
+struct TagP { };
+struct TagQ { };
+struct TagR { };
+struct TagS { };
+struct TagT { };
+
+void FilterBuilder_10_terms() {
+    flecs::world ecs;
+
+    auto f = ecs.filter_builder<>()
+        .term<TagA>()
+        .term<TagB>()
+        .term<TagC>()
+        .term<TagD>()
+        .term<TagE>()
+        .term<TagF>()
+        .term<TagG>()
+        .term<TagH>()
+        .term<TagI>()
+        .term<TagJ>()
+        .build();
+
+    test_int(f.term_count(), 10);
+
+    auto e = ecs.entity()
+        .add<TagA>()
+        .add<TagB>()
+        .add<TagC>()
+        .add<TagD>()
+        .add<TagE>()
+        .add<TagF>()
+        .add<TagG>()
+        .add<TagH>()
+        .add<TagI>()
+        .add<TagJ>();
+
+    int count = 0;
+    f.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_assert(it.entity(0) == e);
+        test_int(it.term_count(), 10);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void FilterBuilder_20_terms() {
+    flecs::world ecs;
+
+    auto f = ecs.filter_builder<>()
+        .term<TagA>()
+        .term<TagB>()
+        .term<TagC>()
+        .term<TagD>()
+        .term<TagE>()
+        .term<TagF>()
+        .term<TagG>()
+        .term<TagH>()
+        .term<TagI>()
+        .term<TagJ>()
+        .term<TagK>()
+        .term<TagL>()
+        .term<TagM>()
+        .term<TagN>()
+        .term<TagO>()
+        .term<TagP>()
+        .term<TagQ>()
+        .term<TagR>()
+        .term<TagS>()
+        .term<TagT>()
+        .build();
+
+    test_int(f.term_count(), 20);
+
+    auto e = ecs.entity()
+        .add<TagA>()
+        .add<TagB>()
+        .add<TagC>()
+        .add<TagD>()
+        .add<TagE>()
+        .add<TagF>()
+        .add<TagG>()
+        .add<TagH>()
+        .add<TagI>()
+        .add<TagJ>()
+        .add<TagK>()
+        .add<TagL>()
+        .add<TagM>()
+        .add<TagN>()
+        .add<TagO>()
+        .add<TagP>()
+        .add<TagQ>()
+        .add<TagR>()
+        .add<TagS>()
+        .add<TagT>();
+
+    int count = 0;
+    f.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_assert(it.entity(0) == e);
+        test_int(it.term_count(), 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

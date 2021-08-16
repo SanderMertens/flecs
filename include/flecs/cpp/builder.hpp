@@ -376,9 +376,26 @@ public:
     }
 
     Base& term() {
-        ecs_assert(m_term_index < ECS_TERM_CACHE_SIZE, 
-            ECS_INVALID_PARAMETER, NULL);
-        this->set_term(&m_desc->terms[m_term_index]);
+        if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
+            if (m_term_index == ECS_TERM_DESC_CACHE_SIZE) {
+                m_desc->terms_buffer = ecs_os_calloc_n(
+                    ecs_term_t, m_term_index + 1);
+                ecs_os_memcpy_n(m_desc->terms_buffer, m_desc->terms, 
+                    ecs_term_t, m_term_index);
+                ecs_os_memset_n(m_desc->terms, 0, 
+                    ecs_term_t, ECS_TERM_DESC_CACHE_SIZE);
+            } else {
+                m_desc->terms_buffer = ecs_os_realloc_n(m_desc->terms_buffer, 
+                    ecs_term_t, m_term_index + 1);
+            }
+
+            m_desc->terms_buffer_count = m_term_index + 1;
+
+            this->set_term(&m_desc->terms_buffer[m_term_index]);
+        } else {
+            this->set_term(&m_desc->terms[m_term_index]);
+        }
+
         m_term_index ++;
         return *this;
     }
@@ -817,6 +834,10 @@ public:
         int res = ecs_filter_init(this->m_world, &f, &this->m_desc);
         if (res != 0) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (this->m_desc.terms_buffer) {
+            ecs_os_free(m_desc.terms_buffer);
         }
 
         return f;

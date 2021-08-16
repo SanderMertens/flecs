@@ -496,7 +496,9 @@
                 "world_each_filter_1_component",
                 "world_each_filter_2_components",
                 "world_each_filter_1_component_no_entity",
-                "world_each_filter_2_components_no_entity"
+                "world_each_filter_2_components_no_entity",
+                "10_terms",
+                "20_terms"
             ]         
         }, {
             "id": "SystemBuilder",
