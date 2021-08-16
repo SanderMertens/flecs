@@ -1,116 +1,6 @@
 #include "private_api.h"
 
-/* -- Private functions -- */
-
-/* O(n) algorithm to check whether type 1 is equal or superset of type 2 */
-ecs_entity_t flecs_type_contains(
-    const ecs_world_t *world,
-    ecs_type_t type_1,
-    ecs_type_t type_2,
-    bool match_all,
-    bool match_prefab)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-    
-    if (!type_1) {
-        return 0;
-    }
-
-    ecs_assert(type_2 != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (type_1 == type_2) {
-        return *(ecs_vector_first(type_1, ecs_entity_t));
-    }
-
-    if (ecs_vector_count(type_2) == 1) {
-        return ecs_type_has_id(world, type_1, 
-            ecs_vector_first(type_2, ecs_id_t)[0], !match_prefab);
-    }
-
-    int32_t i_2, i_1 = 0;
-    ecs_entity_t e1 = 0;
-    ecs_entity_t *t1_array = ecs_vector_first(type_1, ecs_entity_t);
-    ecs_entity_t *t2_array = ecs_vector_first(type_2, ecs_entity_t);
-
-    ecs_assert(t1_array != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(t2_array != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t t1_count = ecs_vector_count(type_1);
-    int32_t t2_count = ecs_vector_count(type_2);
-
-    for (i_2 = 0; i_2 < t2_count; i_2 ++) {
-        ecs_entity_t e2 = t2_array[i_2];
-
-        if (i_1 >= t1_count) {
-            return 0;
-        }
-
-        e1 = t1_array[i_1];
-
-        if (e2 > e1) {
-            do {
-                i_1 ++;
-                if (i_1 >= t1_count) {
-                    return 0;
-                }
-                e1 = t1_array[i_1];
-            } while (e2 > e1);
-        }
-
-        if (e1 != e2) {
-            if (e1 != e2) {
-                if (match_all) return 0;
-            } else if (!match_all) {
-                return e1;
-            }
-        } else {
-            if (!match_all) return e1;
-            i_1 ++;
-            if (i_1 < t1_count) {
-                e1 = t1_array[i_1];
-            }
-        }
-    }
-
-    if (match_all) {
-        return e1;
-    } else {
-        return 0;
-    }
-}
-
 /* -- Public API -- */
-
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t to_add,
-    ecs_type_t to_remove)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* This function is allowed while staged, as long as the type already
-     * exists. If the type does not exist yet and traversing the table graph
-     * results in the creation of a table, an assert will trigger. */    
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-    
-    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
-    ecs_ids_t add_array = flecs_type_to_ids(to_add);
-    ecs_ids_t remove_array = flecs_type_to_ids(to_remove);
-    
-    table = flecs_table_traverse_remove(
-        unsafe_world, table, &remove_array, NULL); 
-
-    table = flecs_table_traverse_add(
-        unsafe_world, table, &add_array, NULL); 
-
-    if (!table) {
-        return NULL;
-    } else {
-        return table->type;
-    }
-}
 
 static
 bool has_case(
@@ -261,23 +151,6 @@ int32_t ecs_type_match(
     return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, out);
 }
 
-bool ecs_type_has_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has)
-{
-    return flecs_type_contains(world, type, has, true, false) != 0;
-}
-
-bool ecs_type_owns_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has,
-    bool owned)
-{
-    return flecs_type_contains(world, type, has, true, !owned) != 0;
-}
-
 ecs_type_t ecs_type_add(
     ecs_world_t *world,
     ecs_type_t type,
@@ -368,30 +241,4 @@ char* ecs_type_str(
     char* result = ecs_os_strdup(ecs_vector_first(chbuf, char));
     ecs_vector_free(chbuf);
     return result;
-}
-
-ecs_entity_t ecs_type_get_entity_for_xor(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t xor)
-{
-    ecs_assert(
-        ecs_type_has_id(world, type, ECS_XOR | xor, true),
-        ECS_INVALID_PARAMETER, NULL);
-
-    const EcsType *type_ptr = ecs_get(world, xor, EcsType);
-    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_type_t xor_type = type_ptr->normalized;
-    ecs_assert(xor_type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-    for (i = 0; i < count; i ++) {
-        if (ecs_type_has_id(world, xor_type, array[i], true)) {
-            return array[i];
-        }
-    }
-
-    return 0;
 }

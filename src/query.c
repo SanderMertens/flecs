@@ -540,17 +540,16 @@ ecs_type_t get_term_type(
     ecs_entity_t component)
 {
     ecs_oper_kind_t oper = term->oper;
+    ecs_assert(oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom,
+        ECS_INTERNAL_ERROR, NULL);
+    (void)oper;
 
-    if (oper == EcsAndFrom || oper == EcsOrFrom || oper == EcsNotFrom) {
-        const EcsType *type = ecs_get(world, component, EcsType);
-        if (type) {
-            return type->normalized;
-        } else {
-            return ecs_get_type(world, component);
-        }
+    const EcsType *type = ecs_get(world, component, EcsType);
+    if (type) {
+        return type->normalized;
     } else {
-        return ecs_type_from_id(world, component);
-    }    
+        return ecs_get_type(world, component);
+    } 
 }
 
 /** Add table to system, compute offsets for system components in table it */

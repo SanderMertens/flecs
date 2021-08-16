@@ -422,28 +422,6 @@ public:
         return s_name.c_str();
     }    
 
-    // Return the type of a component.
-    // The type is a vector of component ids. This will return a type with just
-    // the current component id.
-    static type_t type(world_t *world = nullptr) {
-        // If no id has been registered yet, do it now.
-        if (!s_id) {
-            id(world);
-        }
-
-        // By now we should have a valid identifier
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);        
-
-        // Create a type from the component id.
-        if (!s_type) {
-            s_type = ecs_type_from_id(world, s_id);
-        }
-
-        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_type;
-    }
-
     // Return the size of a component.
     static size_t size() {
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -465,13 +443,11 @@ public:
     // code other than test cases should invoke this function.
     static void reset() {
         s_id = 0;
-        s_type = NULL;
         s_name.clear();
     }
 
 private:
     static entity_t s_id;
-    static type_t s_type;
     static flecs::string s_name;
     static flecs::string s_symbol;
     static bool s_allow_tag;
@@ -479,7 +455,6 @@ private:
 
 // Global templated variables that hold component identifier and other info
 template <typename T> entity_t      cpp_type_impl<T>::s_id( 0 );
-template <typename T> type_t        cpp_type_impl<T>::s_type( nullptr );
 template <typename T> flecs::string cpp_type_impl<T>::s_name;
 template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
 

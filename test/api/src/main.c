@@ -1688,8 +1688,6 @@ void SingleThreadStaging_get_mutable(void);
 void SingleThreadStaging_get_mutable_from_main(void);
 void SingleThreadStaging_get_mutable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
-void SingleThreadStaging_new_type_from_entity(void);
-void SingleThreadStaging_existing_type_from_entity(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
@@ -8184,14 +8182,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_on_add_after_new_type_in_progress
     },
     {
-        "new_type_from_entity",
-        SingleThreadStaging_new_type_from_entity
-    },
-    {
-        "existing_type_from_entity",
-        SingleThreadStaging_existing_type_from_entity
-    },
-    {
         "lock_table",
         SingleThreadStaging_lock_table
     },
@@ -8956,7 +8946,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        66,
+        64,
         SingleThreadStaging_testcases
     },
     {

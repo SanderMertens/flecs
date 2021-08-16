@@ -2076,7 +2076,7 @@ void Filter_filter_iter_20_tags() {
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
+    test_int(it.entities[0], e_1);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(ecs_term_id(&it, 3), TagC);
@@ -2100,7 +2100,7 @@ void Filter_filter_iter_20_tags() {
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
+    test_int(it.entities[0], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(ecs_term_id(&it, 3), TagC);
@@ -2185,7 +2185,7 @@ void Filter_filter_iter_10_components() {
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
+    test_int(it.entities[0], e_1);
     test_int(ecs_term_id(&it, 1), ecs_id(CompA));
     test_int(ecs_term_id(&it, 2), ecs_id(CompB));
     test_int(ecs_term_id(&it, 3), ecs_id(CompC));
@@ -2206,7 +2206,7 @@ void Filter_filter_iter_10_components() {
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
+    test_int(it.entities[0], e_2);
     test_int(ecs_term_id(&it, 1), ecs_id(CompA));
     test_int(ecs_term_id(&it, 2), ecs_id(CompB));
     test_int(ecs_term_id(&it, 3), ecs_id(CompC));

@@ -14,11 +14,6 @@ extern "C" {
 #endif
 
 FLECS_API
-ecs_type_t ecs_type_from_id(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-FLECS_API
 char* ecs_type_str(
     const ecs_world_t *world,
     ecs_type_t type);  
@@ -27,13 +22,6 @@ FLECS_API
 ecs_type_t ecs_type_from_str(
     ecs_world_t *world,
     const char *expr);    
-
-FLECS_API
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t type_add,
-    ecs_type_t type_remove);
 
 FLECS_API
 ecs_type_t ecs_type_add(
@@ -71,25 +59,6 @@ int32_t ecs_type_match(
     int32_t min_depth,
     int32_t max_depth,
     ecs_entity_t *out);
-
-FLECS_API
-bool ecs_type_has_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has);
-
-FLECS_API
-bool ecs_type_owns_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has,
-    bool owned);
-
-FLECS_API
-ecs_entity_t ecs_type_get_entity_for_xor(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t xor_tag);
 
 #ifdef __cplusplus
 }

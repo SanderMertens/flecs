@@ -2789,11 +2789,6 @@ extern "C" {
 #endif
 
 FLECS_API
-ecs_type_t ecs_type_from_id(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-FLECS_API
 char* ecs_type_str(
     const ecs_world_t *world,
     ecs_type_t type);  
@@ -2802,13 +2797,6 @@ FLECS_API
 ecs_type_t ecs_type_from_str(
     ecs_world_t *world,
     const char *expr);    
-
-FLECS_API
-ecs_type_t ecs_type_merge(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t type_add,
-    ecs_type_t type_remove);
 
 FLECS_API
 ecs_type_t ecs_type_add(
@@ -2846,25 +2834,6 @@ int32_t ecs_type_match(
     int32_t min_depth,
     int32_t max_depth,
     ecs_entity_t *out);
-
-FLECS_API
-bool ecs_type_has_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has);
-
-FLECS_API
-bool ecs_type_owns_type(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_type_t has,
-    bool owned);
-
-FLECS_API
-ecs_entity_t ecs_type_get_entity_for_xor(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t xor_tag);
 
 #ifdef __cplusplus
 }
@@ -5782,35 +5751,6 @@ ecs_table_t* ecs_table_from_type(
 FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
-
-/** Insert record into table.
- * This will create a new record for the table, which inserts a value for each
- * component. An optional entity and record can be provided.
- *
- * If a non-zero entity id is provided, a record must also be provided and vice
- * versa. The record must be created by the entity index. If the provided record 
- * is not created for the specified entity, the behavior will be undefined.
- *
- * If the provided record is not managed by the entity index, the behavior will
- * be undefined.
- *
- * The returned record contains a reference to the table and the table row. The
- * data pointed to by the record is guaranteed not to move unless one or more
- * rows are removed from this table. A row can be removed as result of a delete,
- * or by adding/removing components from an entity stored in the table.
- *
- * @param world The world.
- * @param table The table.
- * @param entity The entity.
- * @param record The entity-index record for the specified entity.
- * @return A record containing the table and table row.
- */
-FLECS_API
-ecs_record_t ecs_table_insert(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t entity,
-    ecs_record_t *record);
 
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through
@@ -12346,28 +12286,6 @@ public:
         return s_name.c_str();
     }    
 
-    // Return the type of a component.
-    // The type is a vector of component ids. This will return a type with just
-    // the current component id.
-    static type_t type(world_t *world = nullptr) {
-        // If no id has been registered yet, do it now.
-        if (!s_id) {
-            id(world);
-        }
-
-        // By now we should have a valid identifier
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);        
-
-        // Create a type from the component id.
-        if (!s_type) {
-            s_type = ecs_type_from_id(world, s_id);
-        }
-
-        ecs_assert(s_type != nullptr, ECS_INTERNAL_ERROR, NULL);
-
-        return s_type;
-    }
-
     // Return the size of a component.
     static size_t size() {
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -12389,13 +12307,11 @@ public:
     // code other than test cases should invoke this function.
     static void reset() {
         s_id = 0;
-        s_type = NULL;
         s_name.clear();
     }
 
 private:
     static entity_t s_id;
-    static type_t s_type;
     static flecs::string s_name;
     static flecs::string s_symbol;
     static bool s_allow_tag;
@@ -12403,7 +12319,6 @@ private:
 
 // Global templated variables that hold component identifier and other info
 template <typename T> entity_t      cpp_type_impl<T>::s_id( 0 );
-template <typename T> type_t        cpp_type_impl<T>::s_type( nullptr );
 template <typename T> flecs::string cpp_type_impl<T>::s_name;
 template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
 
@@ -14264,13 +14179,6 @@ public:
     type_base(type_t t)
         : m_type( t )
         , m_normalized( t ) { }
-
-    Base& add(const Base& t) {
-        m_type = ecs_type_add(world(), m_type, t.id());
-        m_normalized = ecs_type_merge(world(), m_normalized, t, nullptr);
-        sync_from_me();
-        return *this;
-    }
 
     Base& add(id_t e) {
         m_type = ecs_type_add(world(), m_type, e);

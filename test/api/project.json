@@ -1799,8 +1799,6 @@
                 "get_mutable_from_main",
                 "get_mutable_w_add",
                 "on_add_after_new_type_in_progress",
-                "new_type_from_entity",
-                "existing_type_from_entity",
                 "lock_table",
                 "recursive_lock_table",
                 "modify_after_lock",

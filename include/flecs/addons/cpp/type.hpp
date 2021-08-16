@@ -35,13 +35,6 @@ public:
         : m_type( t )
         , m_normalized( t ) { }
 
-    Base& add(const Base& t) {
-        m_type = ecs_type_add(world(), m_type, t.id());
-        m_normalized = ecs_type_merge(world(), m_normalized, t, nullptr);
-        sync_from_me();
-        return *this;
-    }
-
     Base& add(id_t e) {
         m_type = ecs_type_add(world(), m_type, e);
         m_normalized = ecs_type_add(world(), m_normalized, e);

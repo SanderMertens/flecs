@@ -48,11 +48,8 @@ void Type_type_of_2_tostr() {
 void Type_type_of_2_tostr_no_id() {
     ecs_world_t *world = ecs_init();
 
-    ecs_type_t t_1 = ecs_type_from_id(world, 100);
-    ecs_type_t t_2 = ecs_type_from_id(world, 200);
-    ecs_type_t t = 0;
-    t = ecs_type_merge(world, t, t_1, 0);
-    t = ecs_type_merge(world, t, t_2, 0);
+    ecs_type_t t = ecs_type_add(world, NULL, 100);
+    t = ecs_type_add(world, t, 200);
     
     char *str = ecs_type_str(world, t);
     
