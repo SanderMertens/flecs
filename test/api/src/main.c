@@ -958,6 +958,12 @@ void Filter_filter_3_terms_w_or(void);
 void Filter_filter_4_terms_w_or_at_1(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
+void Filter_filter_move(void);
+void Filter_filter_copy(void);
+void Filter_filter_w_resources_copy(void);
+void Filter_filter_w_many_terms(void);
+void Filter_filter_w_many_terms_move(void);
+void Filter_filter_w_many_terms_copy(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -976,6 +982,7 @@ void Filter_term_iter_w_superset_self_childof(void);
 void Filter_term_iter_w_superset_tag(void);
 void Filter_term_iter_w_superset_pair(void);
 void Filter_term_iter_w_superset_pair_obj_wildcard(void);
+void Filter_term_iter_in_stage(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
@@ -985,6 +992,7 @@ void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_null(void);
 void Filter_filter_iter_1_not_tag(void);
 void Filter_filter_iter_2_tags_1_optional(void);
+void Filter_filter_iter_in_stage(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1856,6 +1864,7 @@ void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
 void SingleThreadStaging_get_empty_case_from_stage(void);
 void SingleThreadStaging_get_case_from_stage(void);
+void SingleThreadStaging_get_object_from_stage(void);
 
 // Testsuite 'MultiThreadStaging'
 void MultiThreadStaging_setup(void);
@@ -5602,6 +5611,30 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_pred_obj
     },
     {
+        "filter_move",
+        Filter_filter_move
+    },
+    {
+        "filter_copy",
+        Filter_filter_copy
+    },
+    {
+        "filter_w_resources_copy",
+        Filter_filter_w_resources_copy
+    },
+    {
+        "filter_w_many_terms",
+        Filter_filter_w_many_terms
+    },
+    {
+        "filter_w_many_terms_move",
+        Filter_filter_w_many_terms_move
+    },
+    {
+        "filter_w_many_terms_copy",
+        Filter_filter_w_many_terms_copy
+    },
+    {
         "term_w_id",
         Filter_term_w_id
     },
@@ -5674,6 +5707,10 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_w_superset_pair_obj_wildcard
     },
     {
+        "term_iter_in_stage",
+        Filter_term_iter_in_stage
+    },
+    {
         "filter_iter_1_tag",
         Filter_filter_iter_1_tag
     },
@@ -5708,6 +5745,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_2_tags_1_optional",
         Filter_filter_iter_2_tags_1_optional
+    },
+    {
+        "filter_iter_in_stage",
+        Filter_filter_iter_in_stage
     }
 };
 
@@ -9021,6 +9062,10 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "get_case_from_stage",
         SingleThreadStaging_get_case_from_stage
+    },
+    {
+        "get_object_from_stage",
+        SingleThreadStaging_get_object_from_stage
     }
 };
 
@@ -9705,7 +9750,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        34,
+        42,
         Filter_testcases
     },
     {
@@ -9894,7 +9939,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        69,
+        70,
         SingleThreadStaging_testcases
     },
     {

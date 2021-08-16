@@ -278,7 +278,6 @@ ecs_term_t ecs_term_copy(
     dst.pred.name = ecs_os_strdup(src->pred.name);
     dst.args[0].name = ecs_os_strdup(src->args[0].name);
     dst.args[1].name = ecs_os_strdup(src->args[1].name);
-
     return dst;
 }
 
@@ -342,10 +341,16 @@ int ecs_filter_finalize(
 }
 
 int ecs_filter_init(
-    const ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc)    
 {
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
     int i, term_count = 0;
     ecs_term_t *terms = desc->terms_buffer;
     const char *name = desc->name;
@@ -363,7 +368,7 @@ int ecs_filter_init(
         term_count = desc->terms_buffer_count;
     } else {
         terms = (ecs_term_t*)desc->terms;
-        for (i = 0; i < ECS_TERM_CACHE_SIZE; i ++) {
+        for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
@@ -477,11 +482,17 @@ void ecs_filter_copy(
     if (src) {
         *dst = *src;
 
+        int32_t term_count = src->term_count;
+
         if (src->terms == src->term_cache) {
             dst->terms = dst->term_cache;
         } else {
-            /* Copying allocated term arrays is unsupported at this moment */
-            ecs_abort(ECS_UNSUPPORTED, NULL);
+            dst->terms = ecs_os_memdup_n(src->terms, ecs_term_t, term_count);
+        }
+
+        int i;
+        for (i = 0; i < term_count; i ++) {
+            dst->terms[i] = ecs_term_copy(&src->terms[i]);
         }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
@@ -826,7 +837,7 @@ void term_iter_init_no_data(
 
 static
 void term_iter_init_wildcard(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_term_iter_t *iter)
 {
     iter->term = NULL;
@@ -839,7 +850,7 @@ void term_iter_init_wildcard(
 
 static
 void term_iter_init(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_iter_t *iter)
 {    
@@ -865,12 +876,14 @@ void term_iter_init(
 }
 
 ecs_iter_t ecs_term_iter(
-    ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_term_t *term)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term->id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
 
     if (ecs_term_finalize(world, NULL, NULL, term)) {
         /* Invalid term */
@@ -878,7 +891,8 @@ ecs_iter_t ecs_term_iter(
     }
 
     ecs_iter_t it = {
-        .world = world,
+        .real_world = (ecs_world_t*)world,
+        .world = (ecs_world_t*)stage,
         .column_count = 1
     };
 
@@ -957,7 +971,7 @@ bool ecs_term_next(
 {
     ecs_term_iter_t *iter = &it->iter.term;
     ecs_term_t *term = iter->term;
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->real_world;
 
     ecs_entity_t source;
     ecs_table_record_t *tr = term_iter_next(world, iter, &source);
@@ -1006,13 +1020,16 @@ bool ecs_term_next(
 }
 
 ecs_iter_t ecs_filter_iter(
-    ecs_world_t *world,
+    const ecs_world_t *stage,
     const ecs_filter_t *filter)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
 
     ecs_iter_t it = {
-        .world = world
+        .real_world = (ecs_world_t*)world,
+        .world = (ecs_world_t*)stage
     };
 
     ecs_filter_iter_t *iter = &it.iter.filter;
@@ -1098,7 +1115,7 @@ bool ecs_filter_next(
 {
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_filter_t *filter = &iter->filter;
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->real_world;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;

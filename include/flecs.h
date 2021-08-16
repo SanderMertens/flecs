@@ -120,6 +120,9 @@ typedef struct ecs_ref_t ecs_ref_t;
 /* Maximum number of terms cached in static arrays */
 #define ECS_TERM_CACHE_SIZE (8)
 
+/* Maximum number of terms in desc (larger, as these are temp objects) */
+#define ECS_TERM_DESC_CACHE_SIZE (16)
+
 /* Maximum number of events to set in static array of trigger descriptor */
 #define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
 
@@ -410,7 +413,7 @@ typedef struct ecs_type_desc_t {
 typedef struct ecs_filter_desc_t {
     /* Terms of the filter. If a filter has more terms than 
      * ECS_TERM_CACHE_SIZE use terms_buffer */
-    ecs_term_t terms[ECS_TERM_CACHE_SIZE];
+    ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
 
     /* For filters with lots of terms an outside array can be provided. */
     ecs_term_t *terms_buffer;
@@ -2910,7 +2913,7 @@ const char* ecs_set_name_prefix(
  */
 FLECS_API
 ecs_iter_t ecs_term_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_term_t *term);
 
 /** Progress the term iterator.
@@ -3151,7 +3154,7 @@ char* ecs_filter_str(
  */
 FLECS_API
 ecs_iter_t ecs_filter_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_filter_t *filter);  
 
 /** Iterate tables matched by filter.

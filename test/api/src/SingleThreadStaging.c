@@ -2946,3 +2946,7 @@ void SingleThreadStaging_get_case_from_stage() {
 
     ecs_fini(world);
 }
+
+void SingleThreadStaging_get_object_from_stage() {
+    // Implement testcase
+}

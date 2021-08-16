@@ -1023,6 +1023,12 @@
                 "filter_4_terms_w_or_at_1",
                 "filter_w_pair_id",
                 "filter_w_pred_obj",
+                "filter_move",
+                "filter_copy",
+                "filter_w_resources_copy",
+                "filter_w_many_terms",
+                "filter_w_many_terms_move",
+                "filter_w_many_terms_copy",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",
@@ -1041,6 +1047,7 @@
                 "term_iter_w_superset_tag",
                 "term_iter_w_superset_pair",
                 "term_iter_w_superset_pair_obj_wildcard",
+                "term_iter_in_stage",
                 "filter_iter_1_tag",
                 "filter_iter_2_tags",
                 "filter_iter_2_tags_1_not",
@@ -1049,7 +1056,8 @@
                 "filter_iter_2_components",
                 "filter_iter_null",
                 "filter_iter_1_not_tag",
-                "filter_iter_2_tags_1_optional"
+                "filter_iter_2_tags_1_optional",
+                "filter_iter_in_stage"
             ]
         }, {
             "id": "Query",
@@ -1974,7 +1982,8 @@
                 "recursive_lock_table",
                 "modify_after_lock",
                 "get_empty_case_from_stage",
-                "get_case_from_stage"
+                "get_case_from_stage",
+                "get_object_from_stage"
             ]
         }, {
             "id": "MultiThreadStaging",

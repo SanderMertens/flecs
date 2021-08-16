@@ -16740,7 +16740,6 @@ ecs_term_t ecs_term_copy(
     dst.pred.name = ecs_os_strdup(src->pred.name);
     dst.args[0].name = ecs_os_strdup(src->args[0].name);
     dst.args[1].name = ecs_os_strdup(src->args[1].name);
-
     return dst;
 }
 
@@ -16825,7 +16824,7 @@ int ecs_filter_init(
         term_count = desc->terms_buffer_count;
     } else {
         terms = (ecs_term_t*)desc->terms;
-        for (i = 0; i < ECS_TERM_CACHE_SIZE; i ++) {
+        for (i = 0; i < ECS_TERM_DESC_CACHE_SIZE; i ++) {
             if (!ecs_term_is_initialized(&terms[i])) {
                 break;
             }
@@ -16939,11 +16938,17 @@ void ecs_filter_copy(
     if (src) {
         *dst = *src;
 
+        int32_t term_count = src->term_count;
+
         if (src->terms == src->term_cache) {
             dst->terms = dst->term_cache;
         } else {
-            /* Copying allocated term arrays is unsupported at this moment */
-            ecs_abort(ECS_UNSUPPORTED, NULL);
+            dst->terms = ecs_os_memdup_n(src->terms, ecs_term_t, term_count);
+        }
+
+        int i;
+        for (i = 0; i < term_count; i ++) {
+            dst->terms[i] = ecs_term_copy(&src->terms[i]);
         }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
@@ -17288,7 +17293,7 @@ void term_iter_init_no_data(
 
 static
 void term_iter_init_wildcard(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_term_iter_t *iter)
 {
     iter->term = NULL;
@@ -17301,7 +17306,7 @@ void term_iter_init_wildcard(
 
 static
 void term_iter_init(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_iter_t *iter)
 {    
@@ -17327,12 +17332,14 @@ void term_iter_init(
 }
 
 ecs_iter_t ecs_term_iter(
-    ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_term_t *term)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term->id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
 
     if (ecs_term_finalize(world, NULL, NULL, term)) {
         /* Invalid term */
@@ -17340,7 +17347,7 @@ ecs_iter_t ecs_term_iter(
     }
 
     ecs_iter_t it = {
-        .world = world,
+        .world = (ecs_world_t*)stage,
         .column_count = 1
     };
 
@@ -17468,13 +17475,15 @@ bool ecs_term_next(
 }
 
 ecs_iter_t ecs_filter_iter(
-    ecs_world_t *world,
+    const ecs_world_t *stage,
     const ecs_filter_t *filter)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
 
     ecs_iter_t it = {
-        .world = world
+        .world = (ecs_world_t*)stage
     };
 
     ecs_filter_iter_t *iter = &it.iter.filter;
@@ -23683,8 +23692,6 @@ void ecs_map_memory(
             it->f = ecs_os_malloc(ECS_SIZEOF(*(it->f)) * term_count);\
             it->cache.f##_alloc = true;\
         }\
-    } else {\
-        it->cache.f##_alloc = false;\
     }
 
 #define FINI_CACHE(it, f)\
@@ -24450,7 +24457,7 @@ void* ecs_os_memdup(
     if (!src) {
         return NULL;
     }
-    
+        
     void *dst = ecs_os_malloc(size);
     ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_os_memcpy(dst, src, size);  

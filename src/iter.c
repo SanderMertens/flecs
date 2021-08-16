@@ -9,8 +9,6 @@
             it->f = ecs_os_malloc(ECS_SIZEOF(*(it->f)) * term_count);\
             it->cache.f##_alloc = true;\
         }\
-    } else {\
-        it->cache.f##_alloc = false;\
     }
 
 #define FINI_CACHE(it, f)\

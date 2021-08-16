@@ -103,7 +103,7 @@ void* ecs_os_memdup(
     if (!src) {
         return NULL;
     }
-    
+        
     void *dst = ecs_os_malloc(size);
     ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_os_memcpy(dst, src, size);  

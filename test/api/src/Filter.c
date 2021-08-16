@@ -325,6 +325,314 @@ void Filter_term_w_pred_role() {
     ecs_fini(world);
 }
 
+void Filter_filter_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {{TagA}, {TagB}}
+    }), 0);
+
+    test_int(f_1.term_count, 2);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+
+    ecs_filter_t f_2 = {};
+    ecs_filter_move(&f_2, &f_1);
+
+    test_int(f_2.term_count, 2);
+    test_assert(f_2.terms != NULL);
+    test_int(f_2.terms[0].id, TagA);
+    test_int(f_2.terms[1].id, TagB);
+
+    test_int(f_1.term_count, 0);
+    test_assert(f_1.terms == NULL);
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_copy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {{TagA}, {TagB}}
+    }), 0);
+
+    test_int(f_1.term_count, 2);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+
+    ecs_filter_t f_2 = {};
+    ecs_filter_copy(&f_2, &f_1);
+
+    test_int(f_1.term_count, 2);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+
+    test_int(f_2.term_count, 2);
+    test_assert(f_2.terms != NULL);
+    test_int(f_2.terms[0].id, TagA);
+    test_int(f_2.terms[1].id, TagB);
+
+    test_assert(f_1.terms != f_2.terms);
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_resources_copy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {{TagA, .args[0].name = "This"}, {TagB, .args[0].name = "This"}}
+    }), 0);
+
+    test_int(f_1.term_count, 2);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+
+    ecs_filter_t f_2 = {};
+    ecs_filter_copy(&f_2, &f_1);
+
+    test_int(f_1.term_count, 2);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+
+    test_int(f_2.term_count, 2);
+    test_assert(f_2.terms != NULL);
+    test_int(f_2.terms[0].id, TagA);
+    test_int(f_2.terms[1].id, TagB);
+
+    test_assert(f_1.terms != f_2.terms);
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_many_terms() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+    ECS_TAG(world, TagG);
+    ECS_TAG(world, TagH);
+    ECS_TAG(world, TagI);
+    ECS_TAG(world, TagJ);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA}, {TagB}, {TagC}, {TagD}, {TagE}, {TagF}, {TagG}, {TagH}, 
+            {TagI}, {TagJ}
+        }
+    }), 0);
+
+    test_int(f_1.term_count, 10);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+    test_int(f_1.terms[2].id, TagC);
+    test_int(f_1.terms[3].id, TagD);
+    test_int(f_1.terms[4].id, TagE);
+    test_int(f_1.terms[5].id, TagF);
+    test_int(f_1.terms[6].id, TagG);
+    test_int(f_1.terms[7].id, TagH);
+    test_int(f_1.terms[8].id, TagI);
+    test_int(f_1.terms[9].id, TagJ);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+    ecs_add(world, e, TagE);
+    ecs_add(world, e, TagF);
+    ecs_add(world, e, TagG);
+    ecs_add(world, e, TagH);
+    ecs_add(world, e, TagI);
+    ecs_add(world, e, TagJ);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f_1);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.ids[0], TagA);
+    test_int(it.ids[1], TagB);
+    test_int(it.ids[2], TagC);
+    test_int(it.ids[3], TagD);
+    test_int(it.ids[4], TagE);
+    test_int(it.ids[5], TagF);
+    test_int(it.ids[6], TagG);
+    test_int(it.ids[7], TagH);
+    test_int(it.ids[8], TagI);
+    test_int(it.ids[9], TagJ);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f_1);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_many_terms_move() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+    ECS_TAG(world, TagG);
+    ECS_TAG(world, TagH);
+    ECS_TAG(world, TagI);
+    ECS_TAG(world, TagJ);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA}, {TagB}, {TagC}, {TagD}, {TagE}, {TagF}, {TagG}, {TagH}, 
+            {TagI}, {TagJ}
+        }
+    }), 0);
+
+    test_int(f_1.term_count, 10);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+    test_int(f_1.terms[2].id, TagC);
+    test_int(f_1.terms[3].id, TagD);
+    test_int(f_1.terms[4].id, TagE);
+    test_int(f_1.terms[5].id, TagF);
+    test_int(f_1.terms[6].id, TagG);
+    test_int(f_1.terms[7].id, TagH);
+    test_int(f_1.terms[8].id, TagI);
+    test_int(f_1.terms[9].id, TagJ);
+
+    ecs_filter_t f_2 = {};
+    ecs_filter_move(&f_2, &f_1);    
+
+    test_int(f_2.term_count, 10);
+    test_assert(f_2.terms != NULL);
+    test_int(f_2.terms[0].id, TagA);
+    test_int(f_2.terms[1].id, TagB);
+    test_int(f_2.terms[2].id, TagC);
+    test_int(f_2.terms[3].id, TagD);
+    test_int(f_2.terms[4].id, TagE);
+    test_int(f_2.terms[5].id, TagF);
+    test_int(f_2.terms[6].id, TagG);
+    test_int(f_2.terms[7].id, TagH);
+    test_int(f_2.terms[8].id, TagI);
+    test_int(f_2.terms[9].id, TagJ);
+
+    test_int(f_1.term_count, 0);
+    test_assert(f_1.terms == NULL); 
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_many_terms_copy() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+    ECS_TAG(world, TagG);
+    ECS_TAG(world, TagH);
+    ECS_TAG(world, TagI);
+    ECS_TAG(world, TagJ);
+
+    ecs_filter_t f_1;
+    test_int(ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA}, {TagB}, {TagC}, {TagD}, {TagE}, {TagF}, {TagG}, {TagH}, 
+            {TagI}, {TagJ}
+        }
+    }), 0);
+
+    test_int(f_1.term_count, 10);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+    test_int(f_1.terms[2].id, TagC);
+    test_int(f_1.terms[3].id, TagD);
+    test_int(f_1.terms[4].id, TagE);
+    test_int(f_1.terms[5].id, TagF);
+    test_int(f_1.terms[6].id, TagG);
+    test_int(f_1.terms[7].id, TagH);
+    test_int(f_1.terms[8].id, TagI);
+    test_int(f_1.terms[9].id, TagJ);
+
+    ecs_filter_t f_2 = {};
+    ecs_filter_copy(&f_2, &f_1);    
+
+    test_int(f_1.term_count, 10);
+    test_assert(f_1.terms != NULL);
+    test_int(f_1.terms[0].id, TagA);
+    test_int(f_1.terms[1].id, TagB);
+    test_int(f_1.terms[2].id, TagC);
+    test_int(f_1.terms[3].id, TagD);
+    test_int(f_1.terms[4].id, TagE);
+    test_int(f_1.terms[5].id, TagF);
+    test_int(f_1.terms[6].id, TagG);
+    test_int(f_1.terms[7].id, TagH);
+    test_int(f_1.terms[8].id, TagI);
+    test_int(f_1.terms[9].id, TagJ);
+
+    test_int(f_2.term_count, 10);
+    test_assert(f_2.terms != NULL);
+    test_int(f_2.terms[0].id, TagA);
+    test_int(f_2.terms[1].id, TagB);
+    test_int(f_2.terms[2].id, TagC);
+    test_int(f_2.terms[3].id, TagD);
+    test_int(f_2.terms[4].id, TagE);
+    test_int(f_2.terms[5].id, TagF);
+    test_int(f_2.terms[6].id, TagG);
+    test_int(f_2.terms[7].id, TagH);
+    test_int(f_2.terms[8].id, TagI);
+    test_int(f_2.terms[9].id, TagJ);
+
+    test_assert(f_1.terms != f_2.terms); 
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
 void Filter_term_iter_component() {
     ecs_world_t *world = ecs_init();
 
@@ -811,6 +1119,40 @@ void Filter_term_iter_w_superset_pair_obj_wildcard() {
     ecs_fini(world);
 }
 
+void Filter_term_iter_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_add(world, e2, TagB);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+
+    ecs_iter_t it = ecs_term_iter(stage, &(ecs_term_t) { .id = Tag });
+    test_assert(it.real_world == world);
+    test_assert(it.world == stage);
+    
+    test_bool(ecs_term_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(it.ids[0], Tag);
+
+    test_bool(ecs_term_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(it.ids[0], Tag);
+
+    ecs_staging_end(world);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_1_tag() {
     ecs_world_t *world = ecs_init();
 
@@ -1249,6 +1591,37 @@ void Filter_filter_iter_2_tags_1_optional() {
     test_assert(!ecs_filter_next(&it));
 
     ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_in_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(stage, &f, &(ecs_filter_desc_t) { 
+        .terms = {{ Tag }}
+    }), 0);
+
+    ecs_iter_t it = ecs_filter_iter(stage, &f);
+
+    test_assert(it.real_world == world);
+    test_assert(it.world == stage);
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.ids[0], Tag);
+
+    ecs_staging_end(world);
 
     ecs_fini(world);
 }
