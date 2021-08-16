@@ -558,7 +558,7 @@ void Snapshot_snapshot_copy() {
     test_assert(ecs_has(world, e, Position));
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
-    ecs_iter_t it = ecs_snapshot_iter(s, NULL);
+    ecs_iter_t it = ecs_snapshot_iter(s);
     ecs_snapshot_t *s_copy = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
     ecs_snapshot_free(s);
 

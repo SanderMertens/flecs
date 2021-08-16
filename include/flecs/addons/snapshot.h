@@ -71,8 +71,7 @@ void ecs_snapshot_restore(
  * @return Iterator to snapshot data. */
 FLECS_API
 ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);
+    ecs_snapshot_t *snapshot);
 
 /** Progress snapshot iterator.
  * 

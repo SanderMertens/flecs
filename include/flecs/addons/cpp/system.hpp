@@ -19,17 +19,10 @@ public:
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
-        , m_filter()
         , m_offset(0)
         , m_limit(0)
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
-
-    template <typename F>
-    system_runner_fluent& filter(const F& f) {
-        m_filter = f;
-        return *this;
-    }
 
     system_runner_fluent& offset(int32_t offset) {
         m_offset = offset;
@@ -53,8 +46,7 @@ public:
                 m_param);            
         } else {
             ecs_run_w_filter(
-                m_stage, m_id, m_delta_time, m_offset, m_limit, 
-                m_filter.c_ptr(), m_param);
+                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
         }
     }
 
@@ -63,7 +55,6 @@ private:
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
-    flecs::filter<> m_filter;
     int32_t m_offset;
     int32_t m_limit;
     int32_t m_stage_current;

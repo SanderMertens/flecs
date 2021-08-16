@@ -410,12 +410,6 @@ void flecs_table_set_size(
     ecs_data_t *data,
     int32_t count);
 
-/* Match table with filter */
-bool flecs_table_match_filter(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_filter_t *filter);
-
 bool flecs_filter_match_table(
     ecs_world_t *world,
     const ecs_filter_t *filter,

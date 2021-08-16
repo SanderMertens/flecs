@@ -1163,15 +1163,15 @@ void Filter_term_iter_in_stage() {
     ecs_iter_t it = ecs_term_iter(stage, &(ecs_term_t) { .id = Tag });
     test_assert(it.real_world == world);
     test_assert(it.world == stage);
-    
-    test_bool(ecs_term_next(&it), true);
-    test_int(it.count, 1);
-    test_int(it.entities[0], e1);
-    test_int(it.ids[0], Tag);
 
     test_bool(ecs_term_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
+    test_int(it.ids[0], Tag);
+
+    test_bool(ecs_term_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
     test_int(it.ids[0], Tag);
 
     ecs_staging_end(world);

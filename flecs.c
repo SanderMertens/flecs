@@ -1695,12 +1695,6 @@ void flecs_table_set_size(
     ecs_data_t *data,
     int32_t count);
 
-/* Match table with filter */
-bool flecs_table_match_filter(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_filter_t *filter);
-
 bool flecs_filter_match_table(
     ecs_world_t *world,
     const ecs_filter_t *filter,
@@ -4560,53 +4554,6 @@ void flecs_table_replace_data(
     } else if (prev_count && !count) {
         table_activate(world, table, 0, false);
     }
-}
-
-bool flecs_table_match_filter(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_filter_t * filter)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!filter) {
-        return true;
-    }
-
-    ecs_type_t type = table->type;
-    
-    if (filter->include) {
-        /* If filter kind is exact, types must be the same */
-        if (filter->include_kind == EcsMatchExact) {
-            if (type != filter->include) {
-                return false;
-            }
-
-        /* Default for include_kind is MatchAll */
-        } else if (!flecs_type_contains(world, type, filter->include, 
-            filter->include_kind != EcsMatchAny, true)) 
-        {
-            return false;
-        }
-    }
-
-    if (filter->exclude) {
-        /* If filter kind is exact, types must be the same */
-        if (filter->exclude_kind == EcsMatchExact) {
-            if (type == filter->exclude) {
-                return false;
-            }
-        
-        /* Default for exclude_kind is MatchAny */                
-        } else if (flecs_type_contains(world, type, filter->exclude, 
-            filter->exclude_kind == EcsMatchAll, true))
-        {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 int32_t* flecs_table_get_dirty_state(
@@ -8264,46 +8211,22 @@ ecs_id_t ecs_get_typeid(
 
 int32_t ecs_count_id(
     const ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (!entity) {
+    if (!id) {
         return 0;
     }
 
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
+    int32_t count = 0;
 
-    /* Get temporary type that just contains entity */
-    ECS_VECTOR_STACK(type, ecs_entity_t, &entity, 1);
-
-    return ecs_count_filter(world, &(ecs_filter_t){
-        .include = type
-    });
-}
-
-int32_t ecs_count_filter(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
-
-    ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = flecs_sparse_count(tables);
-    int32_t result = 0;
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
-        if (!filter || flecs_table_match_filter(world, table, filter)) {
-            result += ecs_table_count(table);
-        }
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { .id = id });
+    while (ecs_term_next(&it)) {
+        count += it.count;
     }
-    
-    return result;
+
+    return count;
 }
 
 bool ecs_defer_begin(
@@ -12757,7 +12680,6 @@ ecs_entity_t ecs_run_intern(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param);
 
 #endif
@@ -13558,7 +13480,7 @@ void ecs_pipeline_run(
             ecs_entity_t e = it.entities[i];
 
             ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
-                delta_time, 0, 0, NULL, NULL);
+                delta_time, 0, 0, NULL);
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
@@ -15177,11 +15099,9 @@ void ecs_snapshot_restore(
 }
 
 ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter)
+    ecs_snapshot_t *snapshot)
 {
     ecs_snapshot_iter_t iter = {
-        .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = snapshot->tables,
         .index = 0
     };
@@ -15210,16 +15130,13 @@ bool ecs_snapshot_next(
         /* Table must have data or it wouldn't have been added */
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!flecs_table_match_filter(it->world, table, &iter->filter)) {
-            continue;
-        }
-
         it->table = table;
         it->table_columns = data->columns;
         it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         it->is_valid = true;
         iter->index = i + 1;
+        
         goto yield;
     }
 
@@ -15512,7 +15429,6 @@ ecs_entity_t ecs_run_intern(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param) 
 {
     FLECS_FLOAT time_elapsed = delta_time;
@@ -15569,7 +15485,7 @@ ecs_entity_t ecs_run_intern(
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (stage_count <= 1) {
-        while (ecs_query_next_w_filter(&it, filter)) {
+        while (ecs_query_next(&it)) {
             action(&it);
         }
     } else {
@@ -15597,7 +15513,6 @@ ecs_entity_t ecs_run_w_filter(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -15606,9 +15521,8 @@ ecs_entity_t ecs_run_w_filter(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    return ecs_run_intern(
-        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
-        filter, param);
+    return ecs_run_intern(world, stage, system, system_data, 0, 0, delta_time, 
+        offset, limit, param);
 }
 
 ecs_entity_t ecs_run_worker(
@@ -15627,7 +15541,7 @@ ecs_entity_t ecs_run_worker(
 
     return ecs_run_intern(
         world, stage, system, system_data, stage_current, stage_count, 
-        delta_time, 0, 0, NULL, param);
+        delta_time, 0, 0, param);
 }
 
 ecs_entity_t ecs_run(
@@ -15636,7 +15550,7 @@ ecs_entity_t ecs_run(
     FLECS_FLOAT delta_time,
     void *param)
 {
-    return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);
+    return ecs_run_w_filter(world, system, delta_time, 0, 0, param);
 }
 
 void flecs_run_monitor(
@@ -23639,22 +23553,6 @@ done:
     
 yield:
     return true;  
-}
-
-bool ecs_query_next_w_filter(
-    ecs_iter_t *iter,
-    const ecs_filter_t *filter)
-{
-    ecs_table_t *table;
-
-    do {
-        if (!ecs_query_next(iter)) {
-            return false;
-        }
-        table = iter->table;
-    } while (filter && !flecs_table_match_filter(iter->world, table, filter));
-    
-    return true;
 }
 
 bool ecs_query_next_worker(

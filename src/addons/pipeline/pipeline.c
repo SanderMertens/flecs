@@ -426,7 +426,7 @@ void ecs_pipeline_run(
             ecs_entity_t e = it.entities[i];
 
             ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
-                delta_time, 0, 0, NULL, NULL);
+                delta_time, 0, 0, NULL);
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
