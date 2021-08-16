@@ -3515,46 +3515,22 @@ ecs_id_t ecs_get_typeid(
 
 int32_t ecs_count_id(
     const ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (!entity) {
+    if (!id) {
         return 0;
     }
 
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
+    int32_t count = 0;
 
-    /* Get temporary type that just contains entity */
-    ECS_VECTOR_STACK(type, ecs_entity_t, &entity, 1);
-
-    return ecs_count_filter(world, &(ecs_filter_t){
-        .include = type
-    });
-}
-
-int32_t ecs_count_filter(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
-
-    ecs_sparse_t *tables = world->store.tables;
-    int32_t i, count = flecs_sparse_count(tables);
-    int32_t result = 0;
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
-        if (!filter || flecs_table_match_filter(world, table, filter)) {
-            result += ecs_table_count(table);
-        }
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { .id = id });
+    while (ecs_term_next(&it)) {
+        count += it.count;
     }
-    
-    return result;
+
+    return count;
 }
 
 bool ecs_defer_begin(

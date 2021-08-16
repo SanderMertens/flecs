@@ -220,7 +220,6 @@ ecs_entity_t ecs_run_worker(
  * @param world The world.
  * @param system The system to invoke.
  * @param delta_time: The time passed since the last system invocation.
- * @param filter A component or type to filter matched entities.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -231,7 +230,6 @@ ecs_entity_t ecs_run_w_filter(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param);
 
 /** Get the query object for a system.

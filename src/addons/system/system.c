@@ -263,7 +263,6 @@ ecs_entity_t ecs_run_intern(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param) 
 {
     FLECS_FLOAT time_elapsed = delta_time;
@@ -320,7 +319,7 @@ ecs_entity_t ecs_run_intern(
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (stage_count <= 1) {
-        while (ecs_query_next_w_filter(&it, filter)) {
+        while (ecs_query_next(&it)) {
             action(&it);
         }
     } else {
@@ -348,7 +347,6 @@ ecs_entity_t ecs_run_w_filter(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -357,9 +355,8 @@ ecs_entity_t ecs_run_w_filter(
         world, system, EcsSystem);
     assert(system_data != NULL);
 
-    return ecs_run_intern(
-        world, stage, system, system_data, 0, 0, delta_time, offset, limit, 
-        filter, param);
+    return ecs_run_intern(world, stage, system, system_data, 0, 0, delta_time, 
+        offset, limit, param);
 }
 
 ecs_entity_t ecs_run_worker(
@@ -378,7 +375,7 @@ ecs_entity_t ecs_run_worker(
 
     return ecs_run_intern(
         world, stage, system, system_data, stage_current, stage_count, 
-        delta_time, 0, 0, NULL, param);
+        delta_time, 0, 0, param);
 }
 
 ecs_entity_t ecs_run(
@@ -387,7 +384,7 @@ ecs_entity_t ecs_run(
     FLECS_FLOAT delta_time,
     void *param)
 {
-    return ecs_run_w_filter(world, system, delta_time, 0, 0, NULL, param);
+    return ecs_run_w_filter(world, system, delta_time, 0, 0, param);
 }
 
 void flecs_run_monitor(

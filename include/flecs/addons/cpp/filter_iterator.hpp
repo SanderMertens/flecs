@@ -25,7 +25,7 @@ public:
 
     filter_iterator(const world& world, const snapshot& snapshot, ecs_iter_next_action_t action) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), NULL) )
+        , m_iter( ecs_snapshot_iter(snapshot.c_ptr()) )
         , m_action(action)
     {
         m_has_next = m_action(&m_iter);

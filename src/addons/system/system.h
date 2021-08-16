@@ -45,7 +45,6 @@ ecs_entity_t ecs_run_intern(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param);
 
 #endif

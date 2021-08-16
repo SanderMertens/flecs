@@ -2304,13 +2304,6 @@ typedef struct ecs_term_t {
                                  * into the destination term. */
 } ecs_term_t;
 
-/* Deprecated -- do not use! */
-typedef enum ecs_match_kind_t {
-    EcsMatchDefault = 0,
-    EcsMatchAll,
-    EcsMatchAny,
-    EcsMatchExact
-} ecs_match_kind_t;
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
@@ -2326,12 +2319,6 @@ struct ecs_filter_t {
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
-
-    /* Deprecated fields -- do not use! */
-    ecs_type_t include;
-    ecs_type_t exclude;
-    ecs_match_kind_t include_kind;
-    ecs_match_kind_t exclude_kind;
 };
 
 
@@ -4492,18 +4479,6 @@ int32_t ecs_count_id(
     const ecs_world_t *world,
     ecs_id_t entity);
 
-/** Count entities that match a filter.
- * Returns the number of entities that match the specified filter.
- *
- * @param world The world.
- * @param type The type.
- * @return The number of entities that match the specified filter.
- */
-FLECS_API
-int32_t ecs_count_filter(
-    const ecs_world_t *world,
-    const ecs_filter_t *filter);
-
 /** @} */
 
 
@@ -5153,20 +5128,7 @@ ecs_iter_t ecs_query_iter_page(
  */
 FLECS_API
 bool ecs_query_next(
-    ecs_iter_t *iter);      
-
-/** Progress the query iterator with filter.
- * This operation is the same as ecs_query_next, but accepts a filter as an
- * argument. Entities not matching the filter will be skipped by the iterator.
- *
- * @param iter The iterator.
- * @param filter The filter to apply to the iterator.
- * @returns True if more data is available, false if not.
- */
-FLECS_API
-bool ecs_query_next_w_filter(
-    ecs_iter_t *iter,
-    const ecs_filter_t *filter); 
+    ecs_iter_t *iter);
 
 /** Progress the query iterator for a worker thread.
  * This operation is similar to ecs_query_next, but provides the ability to 
@@ -6384,7 +6346,6 @@ ecs_entity_t ecs_run_worker(
  * @param world The world.
  * @param system The system to invoke.
  * @param delta_time: The time passed since the last system invocation.
- * @param filter A component or type to filter matched entities.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -6395,7 +6356,6 @@ ecs_entity_t ecs_run_w_filter(
     FLECS_FLOAT delta_time,
     int32_t offset,
     int32_t limit,
-    const ecs_filter_t *filter,
     void *param);
 
 /** Get the query object for a system.
@@ -7116,8 +7076,7 @@ void ecs_snapshot_restore(
  * @return Iterator to snapshot data. */
 FLECS_API
 ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter);
+    ecs_snapshot_t *snapshot);
 
 /** Progress snapshot iterator.
  * 
@@ -14760,7 +14719,7 @@ public:
     snapshot(const snapshot& obj) 
         : m_world( obj.m_world )
     { 
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
         m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
     }
 
@@ -14773,7 +14732,7 @@ public:
 
     snapshot& operator=(const snapshot& obj) {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot, nullptr);
+        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
         m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);        
         return *this;
     }
@@ -14858,7 +14817,7 @@ public:
 
     filter_iterator(const world& world, const snapshot& snapshot, ecs_iter_next_action_t action) 
         : m_world( world.c_ptr() )
-        , m_iter( ecs_snapshot_iter(snapshot.c_ptr(), NULL) )
+        , m_iter( ecs_snapshot_iter(snapshot.c_ptr()) )
         , m_action(action)
     {
         m_has_next = m_action(&m_iter);
@@ -15138,17 +15097,10 @@ public:
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
-        , m_filter()
         , m_offset(0)
         , m_limit(0)
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
-
-    template <typename F>
-    system_runner_fluent& filter(const F& f) {
-        m_filter = f;
-        return *this;
-    }
 
     system_runner_fluent& offset(int32_t offset) {
         m_offset = offset;
@@ -15172,8 +15124,7 @@ public:
                 m_param);            
         } else {
             ecs_run_w_filter(
-                m_stage, m_id, m_delta_time, m_offset, m_limit, 
-                m_filter.c_ptr(), m_param);
+                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
         }
     }
 
@@ -15182,7 +15133,6 @@ private:
     entity_t m_id;
     FLECS_FLOAT m_delta_time;
     void *m_param;
-    flecs::filter<> m_filter;
     int32_t m_offset;
     int32_t m_limit;
     int32_t m_stage_current;

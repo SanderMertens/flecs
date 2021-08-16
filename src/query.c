@@ -3001,22 +3001,6 @@ yield:
     return true;  
 }
 
-bool ecs_query_next_w_filter(
-    ecs_iter_t *iter,
-    const ecs_filter_t *filter)
-{
-    ecs_table_t *table;
-
-    do {
-        if (!ecs_query_next(iter)) {
-            return false;
-        }
-        table = iter->table;
-    } while (filter && !flecs_table_match_filter(iter->world, table, filter));
-    
-    return true;
-}
-
 bool ecs_query_next_worker(
     ecs_iter_t *it,
     int32_t current,

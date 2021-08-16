@@ -636,7 +636,7 @@ void TestAll(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         Param param = {.entity = it->entities[i], 0};
-        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, 0, &param);
+        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, &param);
         p[i].x += param.count;
     }
 }

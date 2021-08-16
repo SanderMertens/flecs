@@ -281,11 +281,9 @@ void ecs_snapshot_restore(
 }
 
 ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot,
-    const ecs_filter_t *filter)
+    ecs_snapshot_t *snapshot)
 {
     ecs_snapshot_iter_t iter = {
-        .filter = filter ? *filter : (ecs_filter_t){0},
         .tables = snapshot->tables,
         .index = 0
     };
@@ -314,16 +312,13 @@ bool ecs_snapshot_next(
         /* Table must have data or it wouldn't have been added */
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!flecs_table_match_filter(it->world, table, &iter->filter)) {
-            continue;
-        }
-
         it->table = table;
         it->table_columns = data->columns;
         it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         it->is_valid = true;
         iter->index = i + 1;
+        
         goto yield;
     }
 

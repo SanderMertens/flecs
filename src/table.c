@@ -2173,53 +2173,6 @@ void flecs_table_replace_data(
     }
 }
 
-bool flecs_table_match_filter(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_filter_t * filter)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!filter) {
-        return true;
-    }
-
-    ecs_type_t type = table->type;
-    
-    if (filter->include) {
-        /* If filter kind is exact, types must be the same */
-        if (filter->include_kind == EcsMatchExact) {
-            if (type != filter->include) {
-                return false;
-            }
-
-        /* Default for include_kind is MatchAll */
-        } else if (!flecs_type_contains(world, type, filter->include, 
-            filter->include_kind != EcsMatchAny, true)) 
-        {
-            return false;
-        }
-    }
-
-    if (filter->exclude) {
-        /* If filter kind is exact, types must be the same */
-        if (filter->exclude_kind == EcsMatchExact) {
-            if (type == filter->exclude) {
-                return false;
-            }
-        
-        /* Default for exclude_kind is MatchAny */                
-        } else if (flecs_type_contains(world, type, filter->exclude, 
-            filter->exclude_kind == EcsMatchAll, true))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 int32_t* flecs_table_get_dirty_state(
     ecs_table_t *table)
 {
