@@ -2948,5 +2948,22 @@ void SingleThreadStaging_get_case_from_stage() {
 }
 
 void SingleThreadStaging_get_object_from_stage() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, CaseOne);
+    ECS_TAG(world, CaseTwo);
+    ECS_TYPE(world, Switch, CaseOne, CaseTwo);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    test_assert(parent == ecs_get_object(stage, e, EcsChildOf, 0));
+
+    ecs_staging_end(world);
+
+    ecs_fini(world);
 }

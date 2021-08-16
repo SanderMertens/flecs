@@ -1924,14 +1924,14 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_alloca(size) alloca((size_t)(size))
 #endif
 
-#define ecs_os_malloc_t(T) (T*)(ecs_os_malloc(ECS_SIZEOF(T)))
-#define ecs_os_malloc_n(T, count) (T*)(ecs_os_malloc(ECS_SIZEOF(T) * (count)))
-#define ecs_os_calloc_t(T) (T*)(ecs_os_calloc(ECS_SIZEOF(T)))
-#define ecs_os_calloc_n(T, count) (T*)(ecs_os_calloc(ECS_SIZEOF(T) * (count)))
-#define ecs_os_realloc_t(ptr, T) (T*)(ecs_os_realloc([ptr, ECS_SIZEOF(T)))
-#define ecs_os_realloc_n(ptr, T, count) (T*)(ecs_os_realloc(ptr, ECS_SIZEOF(T) * (count)))
-#define ecs_os_alloca_t(T) (T*)(ecs_os_alloca(ECS_SIZEOF(T)))
-#define ecs_os_alloca_n(T, count) (T*)(ecs_os_alloca(ECS_SIZEOF(T) * (count)))
+#define ecs_os_malloc_t(T) ECS_CAST(T*, ecs_os_malloc(ECS_SIZEOF(T)))
+#define ecs_os_malloc_n(T, count) ECS_CAST(T*, ecs_os_malloc(ECS_SIZEOF(T) * (count)))
+#define ecs_os_calloc_t(T) ECS_CAST(T*, ecs_os_calloc(ECS_SIZEOF(T)))
+#define ecs_os_calloc_n(T, count) ECS_CAST(T*, ecs_os_calloc(ECS_SIZEOF(T) * (count)))
+#define ecs_os_realloc_t(ptr, T) ECS_CAST(T*, ecs_os_realloc([ptr, ECS_SIZEOF(T)))
+#define ecs_os_realloc_n(ptr, T, count) ECS_CAST(T*, ecs_os_realloc(ptr, ECS_SIZEOF(T) * (count)))
+#define ecs_os_alloca_t(T) ECS_CAST(T*, ecs_os_alloca(ECS_SIZEOF(T)))
+#define ecs_os_alloca_n(T, count) ECS_CAST(T*, ecs_os_alloca(ECS_SIZEOF(T) * (count)))
 
 /* Strings */
 #ifndef ecs_os_strdup

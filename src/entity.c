@@ -3380,6 +3380,8 @@ ecs_entity_t ecs_get_object(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
 
+    world = ecs_get_world(world);
+
     if (!entity) {
         return 0;
     }
