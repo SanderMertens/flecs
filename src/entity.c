@@ -1564,7 +1564,7 @@ ecs_entity_t ecs_get_with(
     return stage->with;
 }
 
-ecs_entity_t ecs_new_component_id(
+ecs_entity_t ecs_new_low_id(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2051,7 +2051,7 @@ ecs_entity_t ecs_entity_init(
 
         if (!result) {
             if (desc->use_low_id) {
-                result = ecs_new_component_id(world);
+                result = ecs_new_low_id(world);
             } else {
                 result = ecs_new_id(world);
             }
@@ -2254,26 +2254,6 @@ ecs_entity_t ecs_type_init(
     return result;
 }
 
-const ecs_entity_t* ecs_bulk_new_w_data(
-    ecs_world_t *world,
-    int32_t count,
-    const ecs_ids_t *components,
-    void * data)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    const ecs_entity_t *ids;
-    if (flecs_defer_bulk_new(world, stage, count, components, data, &ids)) {
-        return ids;
-    }
-
-    ecs_table_t *table = flecs_table_find_or_create(world, components);    
-    ids = new_w_data(world, table, NULL, count, data, NULL);
-    flecs_defer_flush(world, stage);
-    return ids;
-}
-
 const ecs_entity_t* ecs_bulk_new_w_id(
     ecs_world_t *world,
     ecs_id_t id,
@@ -2291,7 +2271,7 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     }
 
     const ecs_entity_t *ids;
-    if (flecs_defer_bulk_new(world, stage, count, &components, NULL, &ids)) {
+    if (flecs_defer_bulk_new(world, stage, count, &components, &ids)) {
         return ids;
     }
 
@@ -3684,29 +3664,10 @@ void flush_bulk_new(
     ecs_op_t * op)
 {
     ecs_entity_t *ids = op->is._n.entities;
-    void **bulk_data = op->is._n.bulk_data;
-    if (bulk_data) {
-        ecs_entity_t *components = op->components.array;
-        int c, c_count = op->components.count;
-        for (c = 0; c < c_count; c ++) {
-            ecs_entity_t component = components[c];
-            const EcsComponent *cptr = flecs_component_from_id(world, component);
-            ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            size_t size = flecs_to_size_t(cptr->size);
-            void *ptr, *data = bulk_data[c];
-            int i, count = op->is._n.count;
-            for (i = 0, ptr = data; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-                assign_ptr_w_id(world, ids[i], component, size, ptr, 
-                    true, true);
-            }
-            ecs_os_free(data);
-        }
-        ecs_os_free(bulk_data);
-    } else {
-        int i, count = op->is._n.count;
-        for (i = 0; i < count; i ++) {
-            add_ids(world, ids[i], &op->components);
-        }
+
+    int i, count = op->is._n.count;
+    for (i = 0; i < count; i ++) {
+        add_ids(world, ids[i], &op->components);
     }
 
     if (op->components.count > 1) {
@@ -3744,19 +3705,7 @@ void discard_op(
     ecs_world_t *world,
     ecs_op_t * op)
 {
-    if (op->kind == EcsOpBulkNew) {
-        void **bulk_data = op->is._n.bulk_data;
-        if (bulk_data) {
-            ecs_entity_t *entities = op->is._n.entities;
-            ecs_entity_t *components = op->components.array;
-            int c, c_count = op->components.count;
-            for (c = 0; c < c_count; c ++) {
-                free_value(world, entities, components[c], bulk_data[c], 
-                    op->is._n.count);
-                ecs_os_free(bulk_data[c]);
-            }
-        }
-    } else {
+    if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
         if (value) {
             free_value(world, &op->is._1.entity, op->component, op->is._1.value, 1);

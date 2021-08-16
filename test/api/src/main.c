@@ -86,16 +86,6 @@ void New_new_w_type_w_with_defer_w_scope(void);
 void New_w_Count_empty(void);
 void New_w_Count_component(void);
 void New_w_Count_tag(void);
-void New_w_Count_new_w_data_1_comp(void);
-void New_w_Count_new_w_data_2_comp(void);
-void New_w_Count_new_w_data_w_tag(void);
-void New_w_Count_new_w_data_w_comp_and_tag(void);
-void New_w_Count_new_w_data_pair(void);
-void New_w_Count_new_w_data_pair(void);
-void New_w_Count_new_w_data_2_comp_1_not_set(void);
-void New_w_Count_new_w_on_add_on_set_monitor(void);
-void New_w_Count_new_w_data_override_set_comp(void);
-void New_w_Count_new_w_data_override_set_pair(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -634,7 +624,6 @@ void ComponentLifecycle_dtor_on_remove(void);
 void ComponentLifecycle_dtor_on_delete(void);
 void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
-void ComponentLifecycle_copy_on_new_w_data(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_no_copy_on_move(void);
 void ComponentLifecycle_ctor_copy_on_snapshot(void);
@@ -681,7 +670,6 @@ void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
 void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
 void ComponentLifecycle_on_set_after_set(void);
-void ComponentLifecycle_on_set_after_new_w_data(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_setup(void);
@@ -1145,12 +1133,6 @@ void Monitor_1_comp_prefab_add(void);
 void SystemOnSet_set_1_of_1(void);
 void SystemOnSet_set_1_of_2(void);
 void SystemOnSet_set_1_of_3(void);
-void SystemOnSet_bulk_new_1(void);
-void SystemOnSet_bulk_new_2(void);
-void SystemOnSet_bulk_new_2_of_1(void);
-void SystemOnSet_bulk_new_3(void);
-void SystemOnSet_bulk_new_3_of_2(void);
-void SystemOnSet_bulk_new_1_from_base(void);
 void SystemOnSet_set_1_of_2_1_from_base(void);
 void SystemOnSet_set_1_of_3_1_from_base(void);
 void SystemOnSet_add_base(void);
@@ -1587,8 +1569,6 @@ void MultiThread_fini_after_set_threads(void);
 // Testsuite 'DeferredActions'
 void DeferredActions_defer_new(void);
 void DeferredActions_defer_bulk_new(void);
-void DeferredActions_defer_bulk_new_w_data(void);
-void DeferredActions_defer_bulk_new_w_data_pair(void);
 void DeferredActions_defer_add(void);
 void DeferredActions_defer_add_two(void);
 void DeferredActions_defer_remove(void);
@@ -2116,46 +2096,6 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "tag",
         New_w_Count_tag
-    },
-    {
-        "new_w_data_1_comp",
-        New_w_Count_new_w_data_1_comp
-    },
-    {
-        "new_w_data_2_comp",
-        New_w_Count_new_w_data_2_comp
-    },
-    {
-        "new_w_data_w_tag",
-        New_w_Count_new_w_data_w_tag
-    },
-    {
-        "new_w_data_w_comp_and_tag",
-        New_w_Count_new_w_data_w_comp_and_tag
-    },
-    {
-        "new_w_data_pair",
-        New_w_Count_new_w_data_pair
-    },
-    {
-        "new_w_data_pair",
-        New_w_Count_new_w_data_pair
-    },
-    {
-        "new_w_data_2_comp_1_not_set",
-        New_w_Count_new_w_data_2_comp_1_not_set
-    },
-    {
-        "new_w_on_add_on_set_monitor",
-        New_w_Count_new_w_on_add_on_set_monitor
-    },
-    {
-        "new_w_data_override_set_comp",
-        New_w_Count_new_w_data_override_set_comp
-    },
-    {
-        "new_w_data_override_set_pair",
-        New_w_Count_new_w_data_override_set_pair
     }
 };
 
@@ -4187,10 +4127,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_copy_on_override
     },
     {
-        "copy_on_new_w_data",
-        ComponentLifecycle_copy_on_new_w_data
-    },
-    {
         "copy_on_clone",
         ComponentLifecycle_copy_on_clone
     },
@@ -4373,10 +4309,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_after_set",
         ComponentLifecycle_on_set_after_set
-    },
-    {
-        "on_set_after_new_w_data",
-        ComponentLifecycle_on_set_after_new_w_data
     }
 };
 
@@ -6154,30 +6086,6 @@ bake_test_case SystemOnSet_testcases[] = {
         SystemOnSet_set_1_of_3
     },
     {
-        "bulk_new_1",
-        SystemOnSet_bulk_new_1
-    },
-    {
-        "bulk_new_2",
-        SystemOnSet_bulk_new_2
-    },
-    {
-        "bulk_new_2_of_1",
-        SystemOnSet_bulk_new_2_of_1
-    },
-    {
-        "bulk_new_3",
-        SystemOnSet_bulk_new_3
-    },
-    {
-        "bulk_new_3_of_2",
-        SystemOnSet_bulk_new_3_of_2
-    },
-    {
-        "bulk_new_1_from_base",
-        SystemOnSet_bulk_new_1_from_base
-    },
-    {
         "set_1_of_2_1_from_base",
         SystemOnSet_set_1_of_2_1_from_base
     },
@@ -7809,14 +7717,6 @@ bake_test_case DeferredActions_testcases[] = {
         DeferredActions_defer_bulk_new
     },
     {
-        "defer_bulk_new_w_data",
-        DeferredActions_defer_bulk_new_w_data
-    },
-    {
-        "defer_bulk_new_w_data_pair",
-        DeferredActions_defer_bulk_new_w_data_pair
-    },
-    {
         "defer_add",
         DeferredActions_defer_add
     },
@@ -8706,7 +8606,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        13,
+        3,
         New_w_Count_testcases
     },
     {
@@ -8839,7 +8739,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        54,
+        52,
         ComponentLifecycle_testcases
     },
     {
@@ -8930,7 +8830,7 @@ static bake_test_suite suites[] = {
         "SystemOnSet",
         NULL,
         NULL,
-        27,
+        21,
         SystemOnSet_testcases
     },
     {
@@ -9049,7 +8949,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        62,
+        60,
         DeferredActions_testcases
     },
     {

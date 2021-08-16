@@ -2755,7 +2755,7 @@ void Prefab_rematch_after_prefab_delete() {
 void Prefab_add_tag_w_low_id_to_instance() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t Tag = ecs_new_component_id(world);
+    ecs_entity_t Tag = ecs_new_low_id(world);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});

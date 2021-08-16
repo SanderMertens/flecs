@@ -96,17 +96,7 @@
             "testcases": [
                 "empty",
                 "component",
-                "tag",
-                "new_w_data_1_comp",
-                "new_w_data_2_comp",
-                "new_w_data_w_tag",
-                "new_w_data_w_comp_and_tag",
-                "new_w_data_pair",
-                "new_w_data_pair",
-                "new_w_data_2_comp_1_not_set",
-                "new_w_on_add_on_set_monitor",
-                "new_w_data_override_set_comp",
-                "new_w_data_override_set_pair"
+                "tag"
             ]
         }, {
             "id": "Add",
@@ -683,7 +673,6 @@
                 "dtor_on_delete",
                 "copy_on_set",
                 "copy_on_override",
-                "copy_on_new_w_data",
                 "copy_on_clone",
                 "no_copy_on_move",
                 "ctor_copy_on_snapshot",
@@ -729,8 +718,7 @@
                 "delete_in_dtor_same_type_on_delete",
                 "delete_in_dtor_other_type_on_delete",
                 "delete_self_in_dtor_on_delete",
-                "on_set_after_set",
-                "on_set_after_new_w_data"
+                "on_set_after_set"
             ]
         }, {
             "id": "Pipeline",
@@ -1220,12 +1208,6 @@
                 "set_1_of_1",
                 "set_1_of_2",
                 "set_1_of_3",
-                "bulk_new_1",
-                "bulk_new_2",
-                "bulk_new_2_of_1",
-                "bulk_new_3",
-                "bulk_new_3_of_2",
-                "bulk_new_1_from_base",
                 "set_1_of_2_1_from_base",
                 "set_1_of_3_1_from_base",
                 "add_base",
@@ -1696,8 +1678,6 @@
             "testcases": [
                 "defer_new",
                 "defer_bulk_new",
-                "defer_bulk_new_w_data",
-                "defer_bulk_new_w_data_pair",
                 "defer_add",
                 "defer_add_two",
                 "defer_remove",

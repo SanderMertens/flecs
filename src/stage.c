@@ -245,13 +245,10 @@ bool flecs_defer_bulk_new(
     ecs_stage_t *stage,
     int32_t count,
     const ecs_ids_t *components_ids,
-    void **component_data,
     const ecs_entity_t **ids_out)
 {
     if (stage->defer) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
-        void **defer_data = NULL;
-
         world->bulk_new_count ++;
 
         /* Use ecs_new_id as this is thread safe */
@@ -260,47 +257,10 @@ bool flecs_defer_bulk_new(
             ids[i] = ecs_new_id(world);
         }
 
-        /* Create private copy for component data */
-        if (component_data) {
-            int c, c_count = components_ids->count;
-            ecs_entity_t *components = components_ids->array;
-            defer_data = ecs_os_malloc(ECS_SIZEOF(void*) * c_count);
-            for (c = 0; c < c_count; c ++) {
-                ecs_entity_t comp = components[c];
-                const EcsComponent *cptr = flecs_component_from_id(world, comp);
-                ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
-
-                ecs_size_t size = cptr->size;
-                void *data = ecs_os_malloc(size * count);
-                defer_data[c] = data;
-
-                const ecs_type_info_t *cinfo = NULL;
-                ecs_entity_t real_id = ecs_get_typeid(world, comp);
-                if (real_id) {
-                    cinfo = flecs_get_c_info(world, real_id);
-                }
-                ecs_xtor_t ctor;
-                if (cinfo && (ctor = cinfo->lifecycle.ctor)) {
-                    void *ctx = cinfo->lifecycle.ctx;
-                    ctor(world, comp, ids, data, flecs_to_size_t(size), count, ctx);
-                    ecs_move_t move;
-                    if ((move = cinfo->lifecycle.move)) {
-                        move(world, comp, ids, ids, data, component_data[c], 
-                            flecs_to_size_t(size), count, ctx);
-                    } else {
-                        ecs_os_memcpy(data, component_data[c], size * count);
-                    }
-                } else {
-                    ecs_os_memcpy(data, component_data[c], size * count);
-                }
-            }
-        }
-
         /* Store data in op */
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpBulkNew;
         op->is._n.entities = ids;
-        op->is._n.bulk_data = defer_data;
         op->is._n.count = count;
         new_defer_component_ids(op, components_ids);
         *ids_out = ids;

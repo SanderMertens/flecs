@@ -2304,7 +2304,6 @@ typedef struct ecs_term_t {
                                  * into the destination term. */
 } ecs_term_t;
 
-
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_term_t *terms;         /* Array containing terms for filter */
@@ -2320,7 +2319,6 @@ struct ecs_filter_t {
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
 };
-
 
 /** A trigger reacts to events matching a single term */
 struct ecs_trigger_t {
@@ -2343,7 +2341,6 @@ struct ecs_trigger_t {
 
     uint64_t id;                /* Internal id */
 };
-
 
 /* An observer reacts to events matching a filter */
 struct ecs_observer_t {
@@ -3078,7 +3075,7 @@ typedef struct ecs_observer_desc_t {
  * @{
  */
 
-/** A (string) identifier. */
+/** A (string) identifier. Used as pair with EcsName and EcsSymbol tags */
 typedef struct EcsIdentifier {
     char *value;
     ecs_size_t length;
@@ -3759,9 +3756,14 @@ FLECS_API
 ecs_entity_t ecs_new_id(
     ecs_world_t *world);
 
-/** Create new component id.
- * This operation returns a new component id. Component ids are the same as
- * entity ids, but can make use of the [1 .. ECS_HI_COMPONENT_ID] range.
+/** Create new low id.
+ * This operation returns a new low id. Entity ids start after the
+ * ECS_HI_COMPONENT_ID constant. This reserves a range of low ids for things 
+ * like components, and allows parts of the code to optimize operations.
+ *
+ * Note that ECS_HI_COMPONENT_ID does not represent the maximum number of 
+ * components that can be created, only the maximum number of components that
+ * can take advantage of these optimizations.
  * 
  * This operation does not recycle ids.
  *
@@ -3769,7 +3771,7 @@ ecs_entity_t ecs_new_id(
  * @return The new component id.
  */
 FLECS_API
-ecs_entity_t ecs_new_component_id(
+ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
 /** Create new entity.
@@ -3863,25 +3865,6 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     ecs_world_t *world,
     ecs_id_t id,
     int32_t count);
-
-/** Create N new entities and initialize components.
- * This operation is the same as ecs_bulk_new_w_type, but initializes components
- * with the provided component array. Instead of a type the operation accepts an
- * array of component identifiers (entities). The component arrays need to be
- * provided in the same order as the component identifiers.
- * 
- * @param world The world.
- * @param components Array with component identifiers.
- * @param count The number of entities to create.
- * @param data The data arrays to initialize the components with.
- * @return The first entity id of the newly created entities.
- */
-FLECS_API
-const ecs_entity_t* ecs_bulk_new_w_data(
-    ecs_world_t *world,
-    int32_t count,
-    const ecs_ids_t *component_ids,
-    void *data);
 
 /** Clone an entity
  * This operation clones the components of one entity into another entity. If

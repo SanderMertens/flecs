@@ -379,7 +379,6 @@ typedef struct ecs_op_1_t {
 
 typedef struct ecs_op_n_t {
     ecs_entity_t *entities;  
-    void **bulk_data;
     int32_t count;
 } ecs_op_n_t;
 
