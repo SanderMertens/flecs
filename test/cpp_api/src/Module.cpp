@@ -6,7 +6,7 @@ struct NestedNameSpaceType { };
 class NestedModule {
 public:
     NestedModule(flecs::world& world) {
-        flecs::module<ns::NestedModule>(world, "ns::NestedModule");
+        flecs::module<ns::NestedModule>(world);
         flecs::component<Velocity>(world, "Velocity");
     }
 };
@@ -14,7 +14,7 @@ public:
 class SimpleModule {
 public:
     SimpleModule(flecs::world& world) {
-        flecs::module<ns::SimpleModule>(world, "ns::SimpleModule");
+        flecs::module<ns::SimpleModule>(world);
         flecs::import<ns::NestedModule>(world);
         flecs::component<Position>(world, "Position");
     }
@@ -28,29 +28,6 @@ public:
         world.module<NestedTypeModule>();
         world.component<NestedType>();
         world.component<NestedNameSpaceType>();
-    }
-};
-
-class ModuleWithDifferentName {
-public:
-    ModuleWithDifferentName(flecs::world& world) {
-        world.module<ModuleWithDifferentName>("ns::name_1");
-        world.component<Position>("Position");
-    }
-};
-
-class ModuleWithImport {
-public:
-    ModuleWithImport(flecs::world& world) {
-        world.module<ModuleWithImport>("ns::name_2");
-        world.import<ModuleWithDifferentName>();
-
-        // Ensure imported component can be used by systems
-        world.system<Position>()
-            .each([](flecs::entity e, Position& p) { });
-
-        world.system<Position>()
-            .iter([](flecs::iter e, Position *p) { });        
     }
 };
 
@@ -131,23 +108,6 @@ void Module_nested_type_module() {
     });
 
     test_int(childof_count, 1);    
-}
-
-void Module_module_type_w_explicit_name() {
-    flecs::world world;
-    world.import<ns::ModuleWithImport>();
-
-    auto ns_entity = world.lookup("ns");
-    test_assert(ns_entity.id() != 0);
-
-    auto module_1 = world.lookup("ns::name_1");
-    test_assert(module_1.id() != 0);
-
-    auto module_2 = world.lookup("ns::name_2");
-    test_assert(module_2.id() != 0);
-
-    auto comp = world.lookup("ns::name_1::Position");
-    test_assert(comp.id() != 0);
 }
 
 void Module_component_redefinition_outside_module() {

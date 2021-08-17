@@ -513,8 +513,6 @@ void ComponentLifecycle_non_pod_set(void);
 void ComponentLifecycle_non_pod_override(void);
 void ComponentLifecycle_get_mut_new(void);
 void ComponentLifecycle_get_mut_existing(void);
-void ComponentLifecycle_pod_component(void);
-void ComponentLifecycle_relocatable_component(void);
 void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
 void ComponentLifecycle_deleted_copy(void);
@@ -555,7 +553,6 @@ void Module_import(void);
 void Module_lookup_from_scope(void);
 void Module_nested_module(void);
 void Module_nested_type_module(void);
-void Module_module_type_w_explicit_name(void);
 void Module_component_redefinition_outside_module(void);
 void Module_module_tag_on_namespace(void);
 void Module_dtor_on_fini(void);
@@ -607,7 +604,6 @@ void WorldFactory_query(void);
 void WorldFactory_query_w_expr(void);
 void WorldFactory_snapshot(void);
 void WorldFactory_module(void);
-void WorldFactory_module_w_name(void);
 
 // Testsuite 'World'
 void World_builtin_components(void);
@@ -2635,14 +2631,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_get_mut_existing
     },
     {
-        "pod_component",
-        ComponentLifecycle_pod_component
-    },
-    {
-        "relocatable_component",
-        ComponentLifecycle_relocatable_component
-    },
-    {
         "implicit_component",
         ComponentLifecycle_implicit_component
     },
@@ -2791,10 +2779,6 @@ bake_test_case Module_testcases[] = {
     {
         "nested_type_module",
         Module_nested_type_module
-    },
-    {
-        "module_type_w_explicit_name",
-        Module_module_type_w_explicit_name
     },
     {
         "component_redefinition_outside_module",
@@ -2984,10 +2968,6 @@ bake_test_case WorldFactory_testcases[] = {
     {
         "module",
         WorldFactory_module
-    },
-    {
-        "module_w_name",
-        WorldFactory_module_w_name
     }
 };
 
@@ -3360,7 +3340,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        41,
+        39,
         ComponentLifecycle_testcases
     },
     {
@@ -3374,7 +3354,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        8,
+        7,
         Module_testcases
     },
     {
@@ -3395,7 +3375,7 @@ static bake_test_suite suites[] = {
         "WorldFactory",
         NULL,
         NULL,
-        15,
+        14,
         WorldFactory_testcases
     },
     {

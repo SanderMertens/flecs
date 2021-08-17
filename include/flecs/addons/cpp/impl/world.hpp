@@ -60,16 +60,16 @@ template <typename Func>
 void scope(id_t parent, const Func& func);
 
 inline void world::init_builtin_components() {
-    pod_component<Component>("flecs::core::Component");
-    pod_component<Type>("flecs::core::Type");
-    pod_component<Identifier>("flecs::core::Identifier");
-    pod_component<Trigger>("flecs::core::Trigger");
-    pod_component<Observer>("flecs::core::Observer");
-    pod_component<Query>("flecs::core::Query");
+    component<Component>("flecs::core::Component");
+    component<Type>("flecs::core::Type");
+    component<Identifier>("flecs::core::Identifier");
+    component<Trigger>("flecs::core::Trigger");
+    component<Observer>("flecs::core::Observer");
+    component<Query>("flecs::core::Query");
 
-    pod_component<TickSource>("flecs::system::TickSource");
-    pod_component<RateFilter>("flecs::timer::RateFilter");
-    pod_component<Timer>("flecs::timer::Timer");
+    component<TickSource>("flecs::system::TickSource");
+    component<RateFilter>("flecs::timer::RateFilter");
+    component<Timer>("flecs::timer::Timer");
 }
 
 template <typename T>
@@ -242,16 +242,6 @@ inline flecs::entity world::import() {
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) const {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline flecs::entity world::pod_component(Args &&... args) const {
-    return flecs::pod_component<T>(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline flecs::entity world::relocatable_component(Args &&... args) const {
-    return flecs::relocatable_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

@@ -546,8 +546,6 @@
                 "non_pod_override",
                 "get_mut_new",
                 "get_mut_existing",
-                "pod_component",
-                "relocatable_component",
                 "implicit_component",
                 "implicit_after_query",
                 "deleted_copy",
@@ -592,7 +590,6 @@
                 "lookup_from_scope",
                 "nested_module",
                 "nested_type_module",
-                "module_type_w_explicit_name",
                 "component_redefinition_outside_module",
                 "module_tag_on_namespace",
                 "dtor_on_fini"
@@ -649,8 +646,7 @@
                 "query",
                 "query_w_expr",
                 "snapshot",
-                "module",
-                "module_w_name"
+                "module"
             ]
         }, {
             "id": "World",

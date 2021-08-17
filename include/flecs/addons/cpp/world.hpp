@@ -884,16 +884,6 @@ public:
     template <typename T, typename... Args>
     flecs::entity component(Args &&... args) const;
 
-    /** Register a POD component.
-     */
-    template <typename T, typename... Args>
-    flecs::entity pod_component(Args &&... args) const;
-
-    /** Register a relocatable component.
-     */
-    template <typename T, typename... Args>
-    flecs::entity relocatable_component(Args &&... args) const;
-
     /** Create a snapshot.
      */
     template <typename... Args>

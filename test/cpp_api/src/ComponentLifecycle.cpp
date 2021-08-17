@@ -286,56 +286,6 @@ void ComponentLifecycle_get_mut_existing() {
     Pod::move_invoked = 0;
 }
 
-void ComponentLifecycle_pod_component() {
-    flecs::world world;
-
-    flecs::pod_component<Pod>(world, "Pod");
-
-    auto e = flecs::entity(world).add<Pod>();
-    test_assert(e.id() != 0);
-    test_assert(e.has<Pod>());
-
-    const Pod *pod = e.get<Pod>();
-    test_assert(pod != NULL);
-
-    e.remove<Pod>();
-    test_assert(!e.has<Pod>());
-
-    /* Component is registered as pod, no lifecycle actions should be invoked */
-    test_int(Pod::ctor_invoked, 0);
-    test_int(Pod::dtor_invoked, 0);
-    test_int(Pod::copy_invoked, 0);
-    test_int(Pod::move_invoked, 0);
-}
-
-void ComponentLifecycle_relocatable_component() {
-    flecs::world world;
-
-    flecs::relocatable_component<Pod>(world, "Pod");
-
-    auto e = flecs::entity(world).add<Pod>();
-    test_assert(e.id() != 0);
-    test_assert(e.has<Pod>());
-
-    const Pod *pod = e.get<Pod>();
-    test_assert(pod != NULL);
-
-    test_int(pod->value, 10);
-
-    /* Component is registered as relocatable, ctor/dtor/copy are registered,
-     * but move is not. */
-    test_int(Pod::ctor_invoked, 1);
-    test_int(Pod::dtor_invoked, 0);
-    test_int(Pod::copy_invoked, 0);
-    test_int(Pod::move_invoked, 0);
-
-    /* Add another entity, this moves the existing component, but should not
-     * invoke move assignment */
-    flecs::entity(world).add<Pod>();
-    test_int(Pod::ctor_invoked, 2);
-    test_int(Pod::move_invoked, 0);     
-}
-
 void ComponentLifecycle_implicit_component() {
     flecs::world world;
 
