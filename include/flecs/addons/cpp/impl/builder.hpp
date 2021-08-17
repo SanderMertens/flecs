@@ -53,13 +53,6 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::action(Func&& func) const {
-    flecs::entity_t system = build<action_invoker_t<Func>>(std::forward<Func>(func), false);
-    return flecs::system<Components...>(m_world, system);
-}
-
-template <typename ... Components>    
-template <typename Func>
 inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;

@@ -137,7 +137,6 @@ ecs_entity_t ecs_system_init(
     (void)id;
 #endif
 
-/* Deprecated, use ecs_trigger_init */
 #define ECS_TRIGGER(world, trigger_name, kind, component) \
     ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
         .entity.name = #trigger_name,\
