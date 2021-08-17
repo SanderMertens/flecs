@@ -945,16 +945,6 @@ public:
             this->populate_filter_from_pack();
         }
 
-    // put using outside of action so we can still use it without it being
-    // flagged as deprecated.
-    template <typename Func>
-    using action_invoker_t = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-
-    template <typename Func>
-    ECS_DEPRECATED("use each or iter")
-    system<Components...> action(Func&& func) const;
-
     /* Iter (or each) is mandatory and always the last thing that 
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */

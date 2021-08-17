@@ -305,59 +305,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Utility class to invoke a system action (deprecated)
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename Func, typename ... Components>
-class action_invoker : public invoker {
-    using Terms = typename term_ptrs<Components ...>::array;
-public:
-    explicit action_invoker(Func&& func) noexcept : m_func(std::move(func)) { }
-    explicit action_invoker(const Func& func) noexcept : m_func(func) { }
-
-    // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
-    // iterating a query.
-    void invoke(ecs_iter_t *iter) const {
-        term_ptrs<Components...> terms;
-        terms.populate(iter);
-        invoke_callback(iter, m_func, 0, terms.m_terms);
-    }
-
-    // Static function that can be used as callback for systems/triggers
-    static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const action_invoker*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        self->invoke(iter);
-    }
-
-private:
-    template <typename... Targs, 
-        if_t< sizeof...(Targs) == sizeof...(Components) > = 0>
-    static void invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Targs... comps) 
-    {
-        flecs::iter iter_wrapper(iter);
-        func(iter_wrapper, (column<
-        remove_reference_t< remove_pointer_t<Components> > >(
-            static_cast< remove_reference_t< 
-                remove_pointer_t<Components> > *>
-                    (comps.ptr), iter->count, comps.is_ref))...);
-    }
-
-    template <typename... Targs,
-        if_t<sizeof...(Targs) != sizeof...(Components)> = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Targs... comps) 
-    {
-        invoke_callback(iter, func, index + 1, columns, comps..., 
-            columns[index]);
-    }
-
-    Func m_func;
-};
-
-////////////////////////////////////////////////////////////////////////////////
 //// Utility to invoke callback on entity if it has components in signature
 ////////////////////////////////////////////////////////////////////////////////
 

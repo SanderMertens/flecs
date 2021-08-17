@@ -1403,12 +1403,6 @@ public:
         ecs_delete(m_world, m_id);
     }
 
-    /** Used by builder class. Do not invoke (deprecated). */
-    template <typename Func>
-    void invoke(Func&& action) const {
-        action(m_world, m_id);
-    }
-
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.

@@ -155,12 +155,6 @@ public:
             ecs_query_next_worker, stage_current, stage_count);
     }
 
-    template <typename Func>
-    ECS_DEPRECATED("use each or iter")
-    void action(Func&& func) const {
-        iterate<_::action_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
