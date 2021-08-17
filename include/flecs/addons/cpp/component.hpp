@@ -487,7 +487,7 @@ public:
 
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
-flecs::entity pod_component(
+flecs::entity component(
     flecs::world_t *world, 
     const char *name = nullptr, 
     bool allow_tag = true, 
@@ -607,42 +607,26 @@ flecs::entity pod_component(
         /* Register id as usual */
         id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
     }
-    
-    return flecs::entity(world, id);
-}
 
-/** Register component */
-template <typename T>
-flecs::entity component(flecs::world_t *world, const char *name = nullptr) {
-    flecs::entity result = pod_component<T>(world, name);
+    auto result = flecs::entity(world, id);
 
     if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world, result);
     }
-
+    
     return result;
 }
 
 /* Register component with existing entity id */
 template <typename T>
 void component_for_id(flecs::world_t *world, flecs::id_t id) {
-    flecs::entity result = pod_component<T>(world, nullptr, true, id);
+    flecs::entity result = component<T>(world, nullptr, true, id);
 
     ecs_assert(result.id() == id, ECS_INTERNAL_ERROR, NULL);
 
     if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world, result);
     }
-}
-
-ECS_DEPRECATED("API detects automatically whether type is trivial")
-template <typename T>
-flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
-    flecs::entity result = pod_component<T>(world, name);
-
-    _::register_lifecycle_actions<T>(world.c_ptr(), result.id());
-
-    return result;
 }
 
 template <typename T>

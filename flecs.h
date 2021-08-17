@@ -10240,16 +10240,6 @@ public:
     template <typename T, typename... Args>
     flecs::entity component(Args &&... args) const;
 
-    /** Register a POD component.
-     */
-    template <typename T, typename... Args>
-    flecs::entity pod_component(Args &&... args) const;
-
-    /** Register a relocatable component.
-     */
-    template <typename T, typename... Args>
-    flecs::entity relocatable_component(Args &&... args) const;
-
     /** Create a snapshot.
      */
     template <typename... Args>
@@ -12351,7 +12341,7 @@ public:
 
 /** Plain old datatype, no lifecycle actions are registered */
 template <typename T>
-flecs::entity pod_component(
+flecs::entity component(
     flecs::world_t *world, 
     const char *name = nullptr, 
     bool allow_tag = true, 
@@ -12471,42 +12461,26 @@ flecs::entity pod_component(
         /* Register id as usual */
         id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
     }
-    
-    return flecs::entity(world, id);
-}
 
-/** Register component */
-template <typename T>
-flecs::entity component(flecs::world_t *world, const char *name = nullptr) {
-    flecs::entity result = pod_component<T>(world, name);
+    auto result = flecs::entity(world, id);
 
     if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world, result);
     }
-
+    
     return result;
 }
 
 /* Register component with existing entity id */
 template <typename T>
 void component_for_id(flecs::world_t *world, flecs::id_t id) {
-    flecs::entity result = pod_component<T>(world, nullptr, true, id);
+    flecs::entity result = component<T>(world, nullptr, true, id);
 
     ecs_assert(result.id() == id, ECS_INTERNAL_ERROR, NULL);
 
     if (_::cpp_type<T>::size()) {
         _::register_lifecycle_actions<T>(world, result);
     }
-}
-
-ECS_DEPRECATED("API detects automatically whether type is trivial")
-template <typename T>
-flecs::entity relocatable_component(const flecs::world& world, const char *name = nullptr) {
-    flecs::entity result = pod_component<T>(world, name);
-
-    _::register_lifecycle_actions<T>(world.c_ptr(), result.id());
-
-    return result;
 }
 
 template <typename T>
@@ -14350,21 +14324,9 @@ namespace flecs
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-flecs::entity module(const flecs::world& world, const char *name = nullptr) {
-    ecs_set_scope(world.c_ptr(), 0);
-    flecs::entity result = pod_component<T>(world, name, false);
-    ecs_add_module_tag(world, result.id());
-    ecs_set_scope(world.c_ptr(), result.id());
-
-    // Only register copy/move/dtor, make sure to not instantiate ctor as the
-    // default ctor doesn't work for modules. Additionally, the module ctor
-    // should only be invoked once per import.
-    EcsComponentLifecycle cl{};
-    cl.copy = _::copy<T>();
-    cl.move = _::move<T>();
-    cl.dtor = _::dtor<T>();
-    ecs_set_component_actions_w_id(world, result, &cl);
-
+flecs::entity module(const flecs::world& world) {
+    flecs::entity result = world.id<T>().entity();
+    ecs_set_scope(world, result);
     return result;
 }
 
@@ -14378,35 +14340,21 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_log_push();
 
     ecs_entity_t scope = ecs_get_scope(world);
+    ecs_set_scope(world, 0);
 
-    // Create custom storage to prevent object destruction
-    T* module_data = static_cast<T*>(ecs_os_malloc(sizeof(T)));
-    FLECS_PLACEMENT_NEW(module_data, T(world));
+    // Initialize module component type & don't allow it to be registered as a
+    // tag, as this would prevent calling emplace()
+    auto m_c = component<T>(world, nullptr, false);
+    ecs_add_module_tag(world, m_c);
+
+    world.emplace<T>(world);
 
     ecs_set_scope(world, scope);
 
-    // It should now be possible to lookup the module
+    // // It should now be possible to lookup the module
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
-
-    _::cpp_type<T>::init(world, m, false);
-
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INTERNAL_ERROR, NULL);
-
-    // Set module singleton component
-
-    T* module_ptr = static_cast<T*>(
-        ecs_get_mut_id(world, m, 
-            _::cpp_type<T>::id_explicit(world, nullptr, false), NULL));
-
-    *module_ptr = std::move(*module_data);
-
-    // Don't dtor, as a module should only be destructed once when the module
-    // component is removed.
-    ecs_os_free(module_data);
-
-    // Add module tag        
-    ecs_add_id(world, m, flecs::Module);
+    ecs_assert(m == m_c, ECS_INTERNAL_ERROR, NULL);
 
     ecs_log_pop();     
 
@@ -15559,16 +15507,16 @@ template <typename Func>
 void scope(id_t parent, const Func& func);
 
 inline void world::init_builtin_components() {
-    pod_component<Component>("flecs::core::Component");
-    pod_component<Type>("flecs::core::Type");
-    pod_component<Identifier>("flecs::core::Identifier");
-    pod_component<Trigger>("flecs::core::Trigger");
-    pod_component<Observer>("flecs::core::Observer");
-    pod_component<Query>("flecs::core::Query");
+    component<Component>("flecs::core::Component");
+    component<Type>("flecs::core::Type");
+    component<Identifier>("flecs::core::Identifier");
+    component<Trigger>("flecs::core::Trigger");
+    component<Observer>("flecs::core::Observer");
+    component<Query>("flecs::core::Query");
 
-    pod_component<TickSource>("flecs::system::TickSource");
-    pod_component<RateFilter>("flecs::timer::RateFilter");
-    pod_component<Timer>("flecs::timer::Timer");
+    component<TickSource>("flecs::system::TickSource");
+    component<RateFilter>("flecs::timer::RateFilter");
+    component<Timer>("flecs::timer::Timer");
 }
 
 template <typename T>
@@ -15741,16 +15689,6 @@ inline flecs::entity world::import() {
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) const {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline flecs::entity world::pod_component(Args &&... args) const {
-    return flecs::pod_component<T>(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline flecs::entity world::relocatable_component(Args &&... args) const {
-    return flecs::relocatable_component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

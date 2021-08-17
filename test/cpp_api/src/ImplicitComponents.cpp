@@ -268,7 +268,7 @@ ECS_CTOR(Position, ptr, {
 void ImplicitComponents_reinit_w_lifecycle() {
     flecs::world world;
 
-    auto comp_1 = world.pod_component<Position>();
+    auto comp_1 = world.component<Position>();
 
     test_assert(flecs::type_id<Position>() == comp_1.id());
 

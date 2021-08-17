@@ -222,20 +222,3 @@ void WorldFactory_module() {
     auto p = ecs.lookup("MyModule::Position");
     test_assert(p.id() != 0);
 }
-
-class MyNamedModule {
-public:
-    MyNamedModule(flecs::world& ecs) {
-        ecs.module<MyNamedModule>("ModuleName");
-        ecs.component<Position>();
-    }
-};
-
-void WorldFactory_module_w_name() {
-    flecs::world ecs;
-
-    ecs.import<MyNamedModule>();
-
-    auto p = ecs.lookup("ModuleName::Position");
-    test_assert(p.id() != 0);
-}
