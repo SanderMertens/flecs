@@ -4017,9 +4017,11 @@ void flecs_table_move(
                 }
             }
         } else {
-            if (construct && new_component < old_component) {
-                ctor_component(world, new_table->c_info[i_new],
-                    &new_columns[i_new], &dst_entity, new_index, 1);
+            if (new_component < old_component) {
+                if (construct) {
+                    ctor_component(world, new_table->c_info[i_new],
+                        &new_columns[i_new], &dst_entity, new_index, 1);
+                }
             } else {
                 dtor_component(world, old_table->c_info[i_old],
                     &old_columns[i_old], &src_entity, old_index, 1);

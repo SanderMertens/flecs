@@ -627,3 +627,23 @@ void Set_emplace_existing() {
     test_expect_abort();
     ecs_emplace(world, e, Position);
 }
+
+void Set_emplace_w_move() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    // Create entity with name, as name is component that is moved
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    test_assert(e != 0);
+    test_str("Foo", ecs_get_name(world, e));
+
+    Position *p = ecs_emplace(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+
+    test_str("Foo", ecs_get_name(world, e));
+
+    ecs_fini(world);
+}

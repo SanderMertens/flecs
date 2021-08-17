@@ -683,6 +683,7 @@ void Set_get_mut_w_add_in_on_add(void);
 void Set_get_mut_w_remove_in_on_add(void);
 void Set_emplace(void);
 void Set_emplace_existing(void);
+void Set_emplace_w_move(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -4573,6 +4574,10 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_existing",
         Set_emplace_existing
+    },
+    {
+        "emplace_w_move",
+        Set_emplace_w_move
     }
 };
 
@@ -9734,7 +9739,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        27,
+        28,
         Set_testcases
     },
     {
