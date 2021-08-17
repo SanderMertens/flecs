@@ -875,6 +875,77 @@ void World_entity_w_name_as_component() {
     test_str(e.name(), "Foo");
 }
 
+void World_entity_as_component_2_worlds() {
+    flecs::world ecs_1;
+    auto e_1 = ecs_1.entity()
+        .component<Position>();
+    test_assert(e_1.id() != 0);
+
+    flecs::world ecs_2;
+    auto e_2 = ecs_2.entity()
+        .component<Position>();
+    test_assert(e_2.id() != 0);
+
+    test_assert(e_1 == e_2);
+    test_assert(e_1 == ecs_1.component<Position>());
+    test_assert(e_2 == ecs_2.component<Position>());
+}
+
+struct Parent {
+    struct Child { };
+};
+
+void World_entity_as_namespaced_component_2_worlds() {
+    flecs::world ecs_1;
+    auto e_1 = ecs_1.entity()
+        .component<Parent>();
+    test_assert(e_1.id() != 0);
+
+    auto e_1_1 = ecs_1.entity()
+        .component<Parent::Child>();
+    test_assert(e_1_1.id() != 0);
+
+    flecs::world ecs_2;
+    auto e_2 = ecs_2.entity()
+        .component<Parent>();
+    test_assert(e_2.id() != 0);
+
+    auto e_2_1 = ecs_2.entity()
+        .component<Parent::Child>();
+    test_assert(e_2_1.id() != 0);
+
+    test_assert(e_1 == e_2);
+    test_assert(e_1 == ecs_1.component<Parent>());
+    test_assert(e_2 == ecs_2.component<Parent>());
+
+    test_assert(e_1_1 == e_2_1);
+    test_assert(e_1_1 == ecs_1.component<Parent::Child>());
+    test_assert(e_2_1 == ecs_2.component<Parent::Child>());
+}
+
+void World_entity_as_component_2_worlds_implicit_namespaced() {
+    flecs::world ecs_1;
+    auto e_1 = ecs_1.entity()
+        .component<Parent>();
+    test_assert(e_1.id() != 0);
+
+    ecs_1.entity().add<Parent::Child>();
+
+    flecs::world ecs_2;
+    auto e_2 = ecs_2.entity()
+        .component<Parent>();
+    test_assert(e_2.id() != 0);
+
+    ecs_2.entity().add<Parent::Child>();
+
+    test_assert(e_1 == e_2);
+    test_assert(e_1 == ecs_1.component<Parent>());
+    test_assert(e_2 == ecs_2.component<Parent>());
+
+    test_assert(ecs_1.component<Parent::Child>() == 
+        ecs_2.component<Parent::Child>());
+}
+
 void World_type_as_component() {
     flecs::world ecs;
 

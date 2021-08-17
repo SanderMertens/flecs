@@ -14459,8 +14459,8 @@ flecs::entity pod_component(
          * this operation does nothing besides returning the existing id */
         id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
 
-        /* If entity is not empty check if the name matches */
-        if (ecs_get_type(world, id) != nullptr) {
+        /* If entity has a name check if it matches */
+        if (ecs_get_name(world, id) != nullptr) {
             if (!implicit_name && id >= EcsFirstUserComponentId) {
                 char *path = ecs_get_path_w_sep(
                     world, 0, id, "::", nullptr);
@@ -14598,6 +14598,7 @@ flecs::entity_t type_id() {
 }
 
 } // namespace flecs
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system each

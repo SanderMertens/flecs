@@ -714,6 +714,9 @@
                 "type_as_tag",
                 "entity_as_component",
                 "entity_w_name_as_component",
+                "entity_as_component_2_worlds",
+                "entity_as_namespaced_component_2_worlds",
+                "entity_as_component_2_worlds_implicit_namespaced",
                 "type_as_component",
                 "type_w_name_as_component",
                 "component_as_component"
