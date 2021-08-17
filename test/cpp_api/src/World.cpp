@@ -926,6 +926,36 @@ void World_entity_as_component_2_worlds_implicit_namespaced() {
         ecs_2.component<Parent::Child>());
 }
 
+struct PositionDerived : Position {
+    PositionDerived() { }
+    PositionDerived(float x, float y) : Position{x, y} { }
+};
+
+void World_component_as_component() {
+    flecs::world ecs;
+
+    auto e = ecs.component<Position>()
+        .component<PositionDerived>();
+    test_assert(e.id() != 0);
+
+    auto t = ecs.component<Position>();
+    test_assert(t.id() != 0);
+    test_assert(e == t);
+
+    auto e2 = ecs.entity()
+        .set<PositionDerived>({10, 20});
+
+    test_bool(e2.has<Position>(), true);
+    test_bool(e2.has<PositionDerived>(), true);
+
+    const Position *p = e2.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_str(e.name(), "Position");
+}
+
 void World_type_as_component() {
     flecs::world ecs;
 
@@ -962,34 +992,4 @@ void World_type_w_name_as_component() {
     test_bool(e2.has<Position>(), true);
 
     test_str(t.name(), "Foo");
-}
-
-struct PositionDerived : Position {
-    PositionDerived() { }
-    PositionDerived(float x, float y) : Position{x, y} { }
-};
-
-void World_component_as_component() {
-    flecs::world ecs;
-
-    auto e = ecs.component<Position>()
-        .component<PositionDerived>();
-    test_assert(e.id() != 0);
-
-    auto t = ecs.component<Position>();
-    test_assert(t.id() != 0);
-    test_assert(e == t);
-
-    auto e2 = ecs.entity()
-        .set<PositionDerived>({10, 20});
-
-    test_bool(e2.has<Position>(), true);
-    test_bool(e2.has<PositionDerived>(), true);
-
-    const Position *p = e2.get<Position>();
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_str(e.name(), "Position");
 }
