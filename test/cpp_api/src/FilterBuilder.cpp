@@ -1460,27 +1460,6 @@ void FilterBuilder_world_each_filter_2_components_no_entity() {
     test_int(count, 3);
 }
 
-struct TagA { };
-struct TagB { };
-struct TagC { };
-struct TagD { };
-struct TagE { };
-struct TagF { };
-struct TagG { };
-struct TagH { };
-struct TagI { };
-struct TagJ { };
-struct TagK { };
-struct TagL { };
-struct TagM { };
-struct TagN { };
-struct TagO { };
-struct TagP { };
-struct TagQ { };
-struct TagR { };
-struct TagS { };
-struct TagT { };
-
 void FilterBuilder_10_terms() {
     flecs::world ecs;
 

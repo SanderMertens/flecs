@@ -1026,9 +1026,9 @@
                 "filter_move",
                 "filter_copy",
                 "filter_w_resources_copy",
-                "filter_w_many_terms",
-                "filter_w_many_terms_move",
-                "filter_w_many_terms_copy",
+                "filter_w_10_terms",
+                "filter_w_10_terms_move",
+                "filter_w_10_terms_copy",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",
@@ -1057,7 +1057,11 @@
                 "filter_iter_null",
                 "filter_iter_1_not_tag",
                 "filter_iter_2_tags_1_optional",
-                "filter_iter_in_stage"
+                "filter_iter_in_stage",
+                "filter_iter_10_tags",
+                "filter_iter_20_tags",
+                "filter_iter_10_components",
+                "filter_iter_20_components"
             ]
         }, {
             "id": "Query",
@@ -1103,7 +1107,11 @@
                 "group_by_w_ctx",
                 "iter_valid",
                 "query_optional_tag",
-                "query_optional_shared_tag"
+                "query_optional_shared_tag",
+                "query_iter_10_tags",
+                "query_iter_20_tags",
+                "query_iter_10_components",
+                "query_iter_20_components"
             ]
         }, {
             "id": "Pairs",

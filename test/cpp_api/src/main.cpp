@@ -411,6 +411,8 @@ void QueryBuilder_explicit_term_w_pair_id(void);
 void QueryBuilder_1_term_to_empty(void);
 void QueryBuilder_2_subsequent_args(void);
 void QueryBuilder_optional_tag_is_set(void);
+void QueryBuilder_10_terms(void);
+void QueryBuilder_20_terms(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -493,6 +495,8 @@ void SystemBuilder_ptr_type(void);
 void SystemBuilder_const_type(void);
 void SystemBuilder_string_term(void);
 void SystemBuilder_singleton_term(void);
+void SystemBuilder_10_terms(void);
+void SystemBuilder_20_terms(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -500,6 +504,8 @@ void Observer_2_terms_on_remove(void);
 void Observer_2_terms_on_set(void);
 void Observer_2_terms_un_set(void);
 void Observer_observer_w_self(void);
+void Observer_10_terms(void);
+void Observer_20_terms(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2259,6 +2265,14 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "optional_tag_is_set",
         QueryBuilder_optional_tag_is_set
+    },
+    {
+        "10_terms",
+        QueryBuilder_10_terms
+    },
+    {
+        "20_terms",
+        QueryBuilder_20_terms
     }
 };
 
@@ -2577,6 +2591,14 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "singleton_term",
         SystemBuilder_singleton_term
+    },
+    {
+        "10_terms",
+        SystemBuilder_10_terms
+    },
+    {
+        "20_terms",
+        SystemBuilder_20_terms
     }
 };
 
@@ -2600,6 +2622,14 @@ bake_test_case Observer_testcases[] = {
     {
         "observer_w_self",
         Observer_observer_w_self
+    },
+    {
+        "10_terms",
+        Observer_10_terms
+    },
+    {
+        "20_terms",
+        Observer_20_terms
     }
 };
 
@@ -3370,7 +3400,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        53,
+        55,
         QueryBuilder_testcases
     },
     {
@@ -3384,14 +3414,14 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        17,
+        19,
         SystemBuilder_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        5,
+        7,
         Observer_testcases
     },
     {

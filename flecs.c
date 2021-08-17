@@ -21969,9 +21969,9 @@ bool ecs_query_next(
     ecs_world_t *world = query->world;
     (void)world;
 
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    it->is_valid = true;
 
-    ecs_iter_init(it);
+    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
     if (!query->constraints_satisfied) {
         goto done;
@@ -22060,6 +22060,8 @@ bool ecs_query_next(
         it->sizes = table_data->sizes;
         it->references = table_data->references;
         it->frame_offset += prev_count;
+
+        ecs_iter_init(it);
 
         populate_ptrs(world, it);
 

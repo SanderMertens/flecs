@@ -76,6 +76,27 @@ public:
     static int move_ctor_invoked;
 };
 
+struct TagA { };
+struct TagB { };
+struct TagC { };
+struct TagD { };
+struct TagE { };
+struct TagF { };
+struct TagG { };
+struct TagH { };
+struct TagI { };
+struct TagJ { };
+struct TagK { };
+struct TagL { };
+struct TagM { };
+struct TagN { };
+struct TagO { };
+struct TagP { };
+struct TagQ { };
+struct TagR { };
+struct TagS { };
+struct TagT { };
+
 template <typename T>
 struct Template {
     T x;

@@ -433,7 +433,9 @@
                 "explicit_term_w_pair_id",
                 "1_term_to_empty",
                 "2_subsequent_args",
-                "optional_tag_is_set"
+                "optional_tag_is_set",
+                "10_terms",
+                "20_terms"
             ]         
         }, {
             "id": "FilterBuilder",
@@ -519,7 +521,9 @@
                 "ptr_type",
                 "const_type",
                 "string_term",
-                "singleton_term"
+                "singleton_term",
+                "10_terms",
+                "20_terms"
             ]  
         }, {
             "id": "Observer",
@@ -528,7 +532,9 @@
                 "2_terms_on_remove",
                 "2_terms_on_set",
                 "2_terms_un_set",
-                "observer_w_self"
+                "observer_w_self",
+                "10_terms",
+                "20_terms"
             ]
         }, {
             "id": "Filter",

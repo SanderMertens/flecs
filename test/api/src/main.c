@@ -961,9 +961,9 @@ void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
 void Filter_filter_copy(void);
 void Filter_filter_w_resources_copy(void);
-void Filter_filter_w_many_terms(void);
-void Filter_filter_w_many_terms_move(void);
-void Filter_filter_w_many_terms_copy(void);
+void Filter_filter_w_10_terms(void);
+void Filter_filter_w_10_terms_move(void);
+void Filter_filter_w_10_terms_copy(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -993,6 +993,10 @@ void Filter_filter_iter_null(void);
 void Filter_filter_iter_1_not_tag(void);
 void Filter_filter_iter_2_tags_1_optional(void);
 void Filter_filter_iter_in_stage(void);
+void Filter_filter_iter_10_tags(void);
+void Filter_filter_iter_20_tags(void);
+void Filter_filter_iter_10_components(void);
+void Filter_filter_iter_20_components(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1037,6 +1041,10 @@ void Query_group_by_w_ctx(void);
 void Query_iter_valid(void);
 void Query_query_optional_tag(void);
 void Query_query_optional_shared_tag(void);
+void Query_query_iter_10_tags(void);
+void Query_query_iter_20_tags(void);
+void Query_query_iter_10_components(void);
+void Query_query_iter_20_components(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -5623,16 +5631,16 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_resources_copy
     },
     {
-        "filter_w_many_terms",
-        Filter_filter_w_many_terms
+        "filter_w_10_terms",
+        Filter_filter_w_10_terms
     },
     {
-        "filter_w_many_terms_move",
-        Filter_filter_w_many_terms_move
+        "filter_w_10_terms_move",
+        Filter_filter_w_10_terms_move
     },
     {
-        "filter_w_many_terms_copy",
-        Filter_filter_w_many_terms_copy
+        "filter_w_10_terms_copy",
+        Filter_filter_w_10_terms_copy
     },
     {
         "term_w_id",
@@ -5749,6 +5757,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_in_stage",
         Filter_filter_iter_in_stage
+    },
+    {
+        "filter_iter_10_tags",
+        Filter_filter_iter_10_tags
+    },
+    {
+        "filter_iter_20_tags",
+        Filter_filter_iter_20_tags
+    },
+    {
+        "filter_iter_10_components",
+        Filter_filter_iter_10_components
+    },
+    {
+        "filter_iter_20_components",
+        Filter_filter_iter_20_components
     }
 };
 
@@ -5920,6 +5944,22 @@ bake_test_case Query_testcases[] = {
     {
         "query_optional_shared_tag",
         Query_query_optional_shared_tag
+    },
+    {
+        "query_iter_10_tags",
+        Query_query_iter_10_tags
+    },
+    {
+        "query_iter_20_tags",
+        Query_query_iter_20_tags
+    },
+    {
+        "query_iter_10_components",
+        Query_query_iter_10_components
+    },
+    {
+        "query_iter_20_components",
+        Query_query_iter_20_components
     }
 };
 
@@ -9750,14 +9790,14 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        42,
+        46,
         Filter_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        42,
+        46,
         Query_testcases
     },
     {
