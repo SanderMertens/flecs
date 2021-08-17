@@ -16041,7 +16041,17 @@ public:
     operator query<Components ...>() const;
 
     operator ecs_query_t*() const {
-        return ecs_query_init(this->m_world, &this->m_desc);
+        ecs_query_t *result = ecs_query_init(this->m_world, &this->m_desc);
+
+        if (!result) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (this->m_desc.filter.terms_buffer) {
+            ecs_os_free(m_desc.filter.terms_buffer);
+        }
+        
+        return result;
     }    
 
     query<Components ...> build() const;
@@ -16147,6 +16157,10 @@ private:
             e = ecs_system_init(m_world, &desc);
         }
 
+        if (this->m_desc.query.filter.terms_buffer) {
+            ecs_os_free(m_desc.query.filter.terms_buffer);
+        }
+
         return e;
     }
 };
@@ -16198,7 +16212,13 @@ private:
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
 
-        return ecs_observer_init(m_world, &desc);
+        ecs_entity_t result = ecs_observer_init(m_world, &desc);
+
+        if (this->m_desc.filter.terms_buffer) {
+            ecs_os_free(m_desc.filter.terms_buffer);
+        }
+
+        return result;
     }
 };
 
