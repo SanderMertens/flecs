@@ -32,7 +32,8 @@ char *ecs_vasprintf(
 
 static
 char* ecs_colorize(
-    char *msg)
+    char *msg,
+    bool enable_colors)
 {
     ecs_strbuf_t buff = ECS_STRBUF_INIT;
     char *ptr, ch, prev = '\0';
@@ -42,14 +43,13 @@ char* ecs_colorize(
     bool overrideColor = false;
     bool autoColor = true;
     bool dontAppend = false;
-    bool use_colors = true;
 
     for (ptr = msg; (ch = *ptr); ptr++) {
         dontAppend = false;
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 isNum = false;
             }
             if (isStr && (isStr == ch) && prev != '\\') {
@@ -57,7 +57,7 @@ char* ecs_colorize(
             } else if (((ch == '\'') || (ch == '"')) && !isStr &&
                 !isalpha(prev) && (prev != '\\'))
             {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
                 isStr = ch;
             }
 
@@ -66,17 +66,17 @@ char* ecs_colorize(
                  !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
                  (prev != '.'))
             {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
                 isNum = true;
             }
 
             if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 isVar = false;
             }
 
             if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
                 isVar = true;
             }
         }
@@ -89,28 +89,28 @@ char* ecs_colorize(
             if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
                 autoColor = false;
             } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
             } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
             } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
             } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
             } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
             } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
             } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
             } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
             } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
                 overrideColor = false;
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             } else {
                 isColor = false;
                 overrideColor = false;
@@ -128,7 +128,7 @@ char* ecs_colorize(
 
         if (ch == '\n') {
             if (isNum || isStr || isVar || overrideColor) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
                 overrideColor = false;
                 isNum = false;
                 isStr = false;
@@ -142,7 +142,7 @@ char* ecs_colorize(
 
         if (!overrideColor) {
             if (((ch == '\'') || (ch == '"')) && !isStr) {
-                if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
             }
         }
 
@@ -150,7 +150,7 @@ char* ecs_colorize(
     }
 
     if (isNum || isStr || isVar || overrideColor) {
-        if (use_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
+        if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
     }
 
     return ecs_strbuf_get(&buff);
@@ -158,6 +158,7 @@ char* ecs_colorize(
 
 static int trace_indent = 0;
 static int trace_level = 0;
+static bool trace_color = true;
 
 static
 void ecs_log_print(
@@ -180,6 +181,10 @@ void ecs_log_print(
     file = file_buf;
 
     char *file_ptr = strrchr(file, '/');
+    if (!file_ptr) {
+        file_ptr = strrchr(file, '\\');
+    }
+
     if (file_ptr) {
         file = file_ptr + 1;
     } else {
@@ -194,29 +199,41 @@ void ecs_log_print(
     }
     indent[i * 2] = '\0';
 
-    char *msg = ecs_vasprintf(fmt, args);
-    char *color_msg = ecs_colorize(msg);
+    char *msg_nocolor = ecs_vasprintf(fmt, args);
+    char *msg = ecs_colorize(msg_nocolor, trace_color);
 
-    if (level >= 0) {
-        ecs_os_log("%sinfo%s: %s%s%s%s:%s%d%s: %s", ECS_MAGENTA, ECS_NORMAL, 
-            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-            color_msg);
-    } else if (level == -2) {
-        ecs_os_warn("%swarn%s: %s%s%s%s:%s%d%s: %s", ECS_YELLOW, ECS_NORMAL, 
-            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-            color_msg);
-    } else if (level == -3) {
-        ecs_os_err("%serr%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
-            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-            color_msg);
-    } else if (level == -4) {
-        ecs_os_err("%sfatal%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
-            ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-            color_msg);
+    if (trace_color) {
+        if (level >= 0) {
+            ecs_os_log("%sinfo%s: %s%s%s%s:%s%d%s: %s", ECS_MAGENTA, ECS_NORMAL, 
+                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+                msg);
+        } else if (level == -2) {
+            ecs_os_warn("%swarn%s: %s%s%s%s:%s%d%s: %s", ECS_YELLOW, ECS_NORMAL, 
+                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+                msg);
+        } else if (level == -3) {
+            ecs_os_err("%serr%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
+                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+                msg);
+        } else if (level == -4) {
+            ecs_os_err("%sfatal%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
+                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
+                msg);
+        }
+    } else {
+        if (level >= 0) {
+            ecs_os_log("info: %s%s:%d: %s", indent, file, line, msg);
+        } else if (level == -2) {
+            ecs_os_warn("warn: %s%s:%d: %s", indent, file, line, msg); 
+        } else if (level == -3) {
+            ecs_os_err("err:  %s%s:%d: %s", indent, file, line, msg); 
+        } else if (level == -4) {
+            ecs_os_err("fatal:  %s%s:%d: %s", indent, file, line, msg);
+        }
     }
 
-    ecs_os_free(color_msg);
     ecs_os_free(msg);
+    ecs_os_free(msg_nocolor);
 }
 
 void _ecs_trace(
@@ -280,6 +297,12 @@ void ecs_tracing_enable(
     int level)
 {
     trace_level = level;
+}
+
+void ecs_tracing_color_enable(
+    bool enabled)
+{
+    trace_color = enabled;
 }
 
 void _ecs_parser_error(

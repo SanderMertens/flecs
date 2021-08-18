@@ -1309,6 +1309,15 @@ FLECS_API
 void ecs_tracing_enable(
     int level);
 
+/** Enable/disable tracing with colors.
+ * By default colors are enabled.
+ *
+ * @param enabled Whether to enable tracing with colors.
+ */
+FLECS_API
+void ecs_tracing_color_enable(
+    bool enabled);
+
 /** Measure frame time. 
  * Frame time measurements measure the total time passed in a single frame, and 
  * how much of that time was spent on systems and on merging.

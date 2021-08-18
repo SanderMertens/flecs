@@ -169,6 +169,14 @@ public:
         ecs_tracing_enable(level);
     }
 
+    /** Enable tracing with colors.
+     *
+     * @param enabled Whether to enable tracing with colors.
+     */
+    static void enable_tracing_color(bool enabled) {
+        ecs_tracing_color_enable(enabled);
+    }    
+
     void set_pipeline(const flecs::pipeline& pip) const;
 
     /** Progress world, run all systems.
