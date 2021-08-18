@@ -78,7 +78,7 @@ void SystemOnSet_set_1_of_1() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -100,7 +100,7 @@ void SystemOnSet_set_1_of_1() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -139,7 +139,7 @@ void SystemOnSet_set_1_of_2() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -154,7 +154,7 @@ void SystemOnSet_set_1_of_2() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
@@ -199,7 +199,7 @@ void SystemOnSet_set_1_of_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -216,7 +216,7 @@ void SystemOnSet_set_1_of_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
@@ -233,7 +233,7 @@ void SystemOnSet_set_1_of_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
@@ -271,7 +271,7 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -311,7 +311,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -328,7 +328,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
     
     test_int(ctx.e[0], e);
@@ -360,7 +360,7 @@ void SystemOnSet_add_base() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -430,7 +430,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -469,7 +469,7 @@ void SystemOnSet_on_set_after_remove_override() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -674,7 +674,7 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     test_int(pv_probe.count, 3);
     test_int(pv_probe.invoked, 1);
     test_int(pv_probe.system, On_PV);
-    test_int(pv_probe.column_count, 2);
+    test_int(pv_probe.term_count, 2);
     test_null(pv_probe.param);
 
     test_int(pv_probe.e[0], e1);
@@ -705,7 +705,7 @@ void SystemOnSet_set_optional() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -718,7 +718,7 @@ void SystemOnSet_set_optional() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -744,7 +744,7 @@ void SystemOnSet_set_from_nothing() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);

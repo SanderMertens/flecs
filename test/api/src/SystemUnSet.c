@@ -41,7 +41,7 @@ void SystemUnSet_unset_1_of_1() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -84,7 +84,7 @@ void SystemUnSet_unset_1_of_2() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -140,7 +140,7 @@ void SystemUnSet_unset_1_of_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -199,7 +199,7 @@ void SystemUnSet_unset_on_delete_1() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -237,7 +237,7 @@ void SystemUnSet_unset_on_delete_2() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -281,7 +281,7 @@ void SystemUnSet_unset_on_delete_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -323,7 +323,7 @@ void SystemUnSet_unset_on_fini_1() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -367,7 +367,7 @@ void SystemUnSet_unset_on_fini_2() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -420,7 +420,7 @@ void SystemUnSet_unset_on_fini_3() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -458,7 +458,7 @@ void SystemUnSet_overlapping_unset_systems() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -518,7 +518,7 @@ void SystemUnSet_unset_move_to_nonempty_table() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet_TestComp);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -576,7 +576,7 @@ void SystemUnSet_write_in_unset() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, UnSet_WriteComp);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);

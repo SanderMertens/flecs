@@ -8,7 +8,7 @@ void Init(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
     
     Velocity *v = NULL;
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
@@ -101,7 +101,7 @@ void TriggerOnAdd_new_match_1_of_1() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -131,7 +131,7 @@ void TriggerOnAdd_new_match_1_of_2() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -182,7 +182,7 @@ void TriggerOnAdd_add_match_1_of_1() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -217,7 +217,7 @@ void TriggerOnAdd_add_match_1_of_2() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -272,7 +272,7 @@ void TriggerOnAdd_set_match_1_of_1() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -325,7 +325,7 @@ void TriggerOnAdd_clone_match_1_of_1() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -357,7 +357,7 @@ void TriggerOnAdd_clone_match_1_of_2() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -452,7 +452,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Init);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], ids[0]);
@@ -524,7 +524,7 @@ void TriggerOnAdd_override_after_add_in_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, AddVelocity);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -576,7 +576,7 @@ void TriggerOnAdd_set_after_add_in_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, AddVelocity);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));

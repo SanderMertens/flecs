@@ -10,11 +10,11 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
     Mass *m = NULL;
         
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         m = ecs_term(it, Mass, 3);
     }
 
@@ -55,7 +55,7 @@ void SystemManual_1_type_1_component() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);

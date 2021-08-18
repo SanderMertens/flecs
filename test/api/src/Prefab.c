@@ -15,7 +15,7 @@ void Iter(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 2);
 
     Velocity *v = NULL;
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         v = ecs_term(it, Velocity, 3);
     }
 
@@ -548,7 +548,7 @@ void Prefab_get_ptr_prefab() {
 static
 void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
         if (v) {
             test_assert(!ecs_term_is_owned(it, 2));
@@ -556,7 +556,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     }
     
     Mass *m = NULL;
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         m = ecs_term(it, Mass, 3);
     }
 
@@ -598,7 +598,7 @@ void Prefab_iterate_w_prefab_shared() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Prefab_w_shared);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -640,7 +640,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Prefab_w_shared);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -697,7 +697,7 @@ void Prefab_prefab_in_system_expr() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Prefab_w_shared);
-    test_int(ctx.column_count, 4);
+    test_int(ctx.term_count, 4);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);

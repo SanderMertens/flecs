@@ -2755,50 +2755,6 @@ void* ecs_term_w_size(
     size_t size,
     int32_t index);
 
-/** Obtain the component/pair id for a term.
- * This operation retrieves the id for the specified query term. Typically this
- * is the component id, but it can also be a pair id or a role annotated id,
- * depending on the term.
- *
- * @param it The iterator.
- * @param index The index of the term in the query.
- * @return The id associated with te term.
- */
-FLECS_API
-ecs_id_t ecs_term_id(
-    const ecs_iter_t *it,
-    int32_t index);
-
-/** Obtain the source for a term.
- * This operation retrieves the source of the specified term. A source is the
- * entity from which the data is retrieved. If the term is owned by the iterated
- * over entity/entities, the function will return id 0.
- *
- * This operation can be useful to retrieve, for example, the id of a parent
- * entity when a component from a parent has been requested, or to retrieve the
- * id from a prefab, in the case of a shared component.
- *
- * @param it The iterator.
- * @param index The index of the term in the query.
- * @return The source associated with te term.
- */
-FLECS_API
-ecs_entity_t ecs_term_source(
-    const ecs_iter_t *it,
-    int32_t index);
-
-/** Obtain the size for a term.
- * This operation retrieves the size of the datatype for the term.
- *
- * @param it The iterator.
- * @param index The index of the term in the query.
- * @return The size of the datatype associated with te term.
- */
-FLECS_API
-size_t ecs_term_size(
-    const ecs_iter_t *it,
-    int32_t index);
-
 /** Test whether the term is readonly
  * This operation returns whether this is a readonly term. Readonly terms are
  * annotated with [in], or are added as a const type in the C++ API.
@@ -2811,20 +2767,6 @@ FLECS_API
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
-
-/** Test whether term is set.
- * This function returns false for terms with the Not operator and for terms
- * with the Optional operator if the matched entities (table) do not have the
- * (component) id of the term. 
- *
- * @param it The iterator.
- * @param term The term.
- * @return True if term is set, false if it is not set.
- */
-FLECS_API
-bool ecs_term_is_set(
-    const ecs_iter_t *it,
-    int32_t term);
 
 /** Test whether the term is owned
  * This operation returns whether the term is owned by the currently iterated

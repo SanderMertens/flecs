@@ -31,7 +31,7 @@ void System_w_FromId_2_column_1_from_id() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -62,7 +62,7 @@ void System_w_FromId_3_column_2_from_id() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);

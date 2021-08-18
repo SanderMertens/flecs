@@ -394,7 +394,7 @@ void Switch_query_switch() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, MatchSwitch);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -428,7 +428,7 @@ void Switch_query_1_case_1_type() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, MatchSwitch);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -467,7 +467,7 @@ void Switch_query_1_case_2_types() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
     test_int(ctx.system, MatchSwitch);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -520,7 +520,7 @@ void Switch_query_2_cases_1_type() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, MatchSwitch);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e4);
@@ -586,7 +586,7 @@ void Switch_query_2_cases_2_types() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, MatchSwitch);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e4);

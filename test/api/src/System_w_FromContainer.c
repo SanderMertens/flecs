@@ -16,11 +16,11 @@ void Iter(ecs_iter_t *it) {
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         p = ecs_term(it, Position, 2);
     }
 
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         v = ecs_term(it, Velocity, 3);
     }
 
@@ -73,7 +73,7 @@ void System_w_FromContainer_1_column_from_container() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -129,7 +129,7 @@ void System_w_FromContainer_2_column_1_from_container() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -183,15 +183,15 @@ void Iter_2_shared(ecs_iter_t *it) {
     Position *p = NULL;
     Velocity *v = NULL;
 
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         r_ptr = ecs_term(it, Rotation, 2);
     }
 
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         p = ecs_term(it, Position, 3);
     }
 
-    if (it->column_count >= 4) {
+    if (it->term_count >= 4) {
         v = ecs_term(it, Velocity, 4);
     }    
 
@@ -250,7 +250,7 @@ void System_w_FromContainer_3_column_2_from_container() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter_2_shared);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -321,7 +321,7 @@ void System_w_FromContainer_3_column_2_from_different_container() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter_2_shared);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -383,7 +383,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e5);
@@ -457,7 +457,7 @@ void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter_2_shared);
-    test_int(ctx.column_count, 3);
+    test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -516,7 +516,7 @@ void System_w_FromContainer_2_column_1_from_container_w_not_prefab() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -576,7 +576,7 @@ void System_w_FromContainer_2_column_1_from_container_w_or() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 4);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -671,7 +671,7 @@ void System_w_FromContainer_add_component_after_match() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -728,7 +728,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -783,7 +783,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -848,7 +848,7 @@ void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -897,7 +897,7 @@ void System_w_FromContainer_add_component_after_match_unmatch() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -940,7 +940,7 @@ void System_w_FromContainer_add_component_after_match_unmatch_match() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -990,7 +990,7 @@ void System_w_FromContainer_add_component_after_match_2_systems() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Dummy);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1059,7 +1059,7 @@ void System_w_FromContainer_add_component_in_progress_after_match() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1108,7 +1108,7 @@ void System_w_FromContainer_adopt_after_match() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1155,7 +1155,7 @@ void System_w_FromContainer_new_child_after_match() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1223,7 +1223,7 @@ void System_w_FromContainer_select_same_from_container() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, IterSame);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1273,7 +1273,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -1304,7 +1304,7 @@ void System_w_FromContainer_realloc_after_match() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);

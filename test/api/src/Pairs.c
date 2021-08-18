@@ -68,7 +68,7 @@ void Pairs_type_w_one_pair() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessPairs);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -148,7 +148,7 @@ void Pairs_type_w_two_pairs() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessPairs);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -247,7 +247,7 @@ void Pairs_add_tag_pair_for_tag() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessPairTags);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -327,7 +327,7 @@ void Pairs_add_tag_pair_for_component() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessValuePairs);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -408,7 +408,7 @@ void Pairs_query_2_pairs() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, ProcessTwoPairs);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -480,7 +480,7 @@ void Pairs_query_2_pairs_2_instances_per_type() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, ProcessTwoPairs);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -596,7 +596,7 @@ void Pairs_on_add_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -612,7 +612,7 @@ void Pairs_on_add_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -642,7 +642,7 @@ void Pairs_on_add_pair_tag() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -676,7 +676,7 @@ void Pairs_on_remove_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -691,7 +691,7 @@ void Pairs_on_remove_pair() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -723,7 +723,7 @@ void Pairs_on_remove_pair_tag() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -757,7 +757,7 @@ void Pairs_on_remove_pair_on_delete() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, PairTrigger);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
@@ -810,7 +810,7 @@ void Pairs_on_remove_pair_tag_on_delete() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, PairTriggerVelocity);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 

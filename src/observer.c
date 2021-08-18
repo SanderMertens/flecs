@@ -11,14 +11,14 @@ void observer_callback(ecs_iter_t *it) {
     ecs_type_t type = table->type;
 
     ecs_iter_t user_it = *it;
-    user_it.column_count = o->filter.term_count_actual,
+    user_it.term_count = o->filter.term_count_actual,
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
 
-    ecs_iter_init(&user_it);
+    flecs_iter_init(&user_it);
 
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
         user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
@@ -31,12 +31,12 @@ void observer_callback(ecs_iter_t *it) {
         user_it.term_index = it->term_index;
         user_it.self = o->self;
         user_it.ctx = o->ctx;
-        user_it.column_count = o->filter.term_count_actual,
+        user_it.term_count = o->filter.term_count_actual,
         user_it.table_columns = data->columns,
         o->action(&user_it);
     }
 
-    ecs_iter_fini(&user_it);
+    flecs_iter_fini(&user_it);
 }
 
 ecs_entity_t ecs_observer_init(

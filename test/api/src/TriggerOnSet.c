@@ -5,7 +5,7 @@ void OnSet(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
@@ -47,7 +47,7 @@ void TriggerOnSet_set() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -77,7 +77,7 @@ void TriggerOnSet_set_new() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -110,7 +110,7 @@ void TriggerOnSet_set_again() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -147,7 +147,7 @@ void TriggerOnSet_clone() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -185,7 +185,7 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -204,7 +204,7 @@ void TriggerOnSet_clone_w_value() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -276,7 +276,7 @@ void TriggerOnSet_set_and_add_system() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, OnSet_check_order);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -301,7 +301,7 @@ void OnSetShared(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
@@ -336,7 +336,7 @@ void TriggerOnSet_on_set_after_override() {
     test_int(ctx.invoked, 1);
 
     test_int(ctx.system, OnSetShared);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -372,7 +372,7 @@ void TriggerOnSet_on_set_after_override() {
     test_int(ctx.invoked, 1);
 
     test_int(ctx.system, OnSetShared);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -406,7 +406,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -440,7 +440,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], ids[0]);
@@ -476,7 +476,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, OnSet);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -532,7 +532,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     test_int(ctx.count, 10);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, SetPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_int(ctx.c[0][0], ecs_id(Position));
     test_null(ctx.param);
     
