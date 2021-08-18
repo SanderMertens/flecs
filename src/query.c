@@ -805,11 +805,8 @@ static
 bool match_term(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_term_t *term,
-    ecs_match_failure_t *failure_info)
+    ecs_term_t *term)
 {
-    (void)failure_info;
-
     ecs_term_id_t *subj = &term->args[0];
 
     /* If term has no subject, there's nothing to match */
@@ -830,20 +827,9 @@ bool match_term(
 bool flecs_query_match(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    const ecs_query_t *query,
-    ecs_match_failure_t *failure_info)
+    const ecs_query_t *query)
 {
-    /* Prevent having to add if not null checks everywhere */
-    ecs_match_failure_t tmp_failure_info;
-    if (!failure_info) {
-        failure_info = &tmp_failure_info;
-    }
-
-    failure_info->reason = EcsMatchOk;
-    failure_info->column = 0;
-
     if (!(query->flags & EcsQueryNeedsTables)) {
-        failure_info->reason = EcsMatchSystemIsATask;
         return false;
     }
 
@@ -853,7 +839,6 @@ bool flecs_query_match(
     if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_has_id(
         world, table_type, EcsDisabled, true))
     {
-        failure_info->reason = EcsMatchEntityIsDisabled;
         return false;
     }
 
@@ -861,7 +846,6 @@ bool flecs_query_match(
     if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_has_id(
         world, table_type, EcsPrefab, true))
     {
-        failure_info->reason = EcsMatchEntityIsPrefab;
         return false;
     }
 
@@ -877,15 +861,13 @@ bool flecs_query_match(
         ecs_term_t *term = &terms[i];
         ecs_oper_kind_t oper = term->oper;
 
-        failure_info->column = i + 1;
-
         if (oper == EcsAnd) {
-            if (!match_term(world, table, term, failure_info)) {
+            if (!match_term(world, table, term)) {
                 return false;
             }
 
         } else if (oper == EcsNot) {
-            if (match_term(world, table, term, failure_info)) {
+            if (match_term(world, table, term)) {
                 return false;
             }
 
@@ -899,9 +881,7 @@ bool flecs_query_match(
                     break;
                 }
 
-                if (!match && match_term(
-                    world, table, term, failure_info))
-                {
+                if (!match && match_term( world, table, term)) {
                     match = true;
                 }
             }
@@ -921,7 +901,7 @@ bool flecs_query_match(
                 tmp_term.id = ids[j];
                 tmp_term.pred.entity = ids[j];
 
-                if (match_term(world, table, &tmp_term, failure_info)) {
+                if (match_term(world, table, &tmp_term)) {
                     match_count ++;
                 }
             }
@@ -953,7 +933,7 @@ void match_tables(
         ecs_table_t *table = flecs_sparse_get_dense(
             world->store.tables, ecs_table_t, i);
 
-        if (flecs_query_match(world, table, query, NULL)) {
+        if (flecs_query_match(world, table, query)) {
             add_table(world, query, table);
         }
     }
@@ -1555,7 +1535,7 @@ bool match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    if (flecs_query_match(world, table, query, NULL)) {
+    if (flecs_query_match(world, table, query)) {
         add_table(world, query, table);
         return true;
     }
@@ -1938,7 +1918,7 @@ void rematch_table(
 {
     ecs_table_indices_t *match = get_table_indices(query, table);
 
-    if (flecs_query_match(world, table, query, NULL)) {
+    if (flecs_query_match(world, table, query)) {
         /* If the table matches, and it is not currently matched, add */
         if (match == NULL) {
             add_table(world, query, table);

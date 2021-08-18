@@ -219,32 +219,6 @@ struct ecs_iter_t {
     ecs_iter_cache_t cache;       /**< Inline arrays to reduce allocations */
 };
 
-typedef enum EcsMatchFailureReason {
-    EcsMatchOk,
-    EcsMatchNotASystem,
-    EcsMatchSystemIsATask,
-    EcsMatchEntityIsDisabled,
-    EcsMatchEntityIsPrefab,
-    EcsMatchFromSelf,
-    EcsMatchFromOwned,
-    EcsMatchFromShared,
-    EcsMatchFromContainer,
-    EcsMatchFromEntity,
-    EcsMatchOrFromSelf,
-    EcsMatchOrFromOwned,
-    EcsMatchOrFromShared,
-    EcsMatchOrFromContainer,
-    EcsMatchNotFromSelf,
-    EcsMatchNotFromOwned,
-    EcsMatchNotFromShared,
-    EcsMatchNotFromContainer,
-} EcsMatchFailureReason;
-
-typedef struct ecs_match_failure_t {
-    EcsMatchFailureReason reason;
-    int32_t column;
-} ecs_match_failure_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Function types
 ////////////////////////////////////////////////////////////////////////////////
