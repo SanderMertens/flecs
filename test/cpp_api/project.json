@@ -310,7 +310,10 @@
                 "on_add_tag_action",
                 "on_add_tag_iter",
                 "on_add_tag_each",
-                "trigger_w_self"
+                "trigger_w_self",
+                "on_add_id",
+                "on_add_id_arg",
+                "on_add_expr"
             ]
         }, {
             "id": "Query",

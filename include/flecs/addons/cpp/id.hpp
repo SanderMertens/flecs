@@ -110,16 +110,6 @@ public:
         return flecs::string_view( ecs_role_str(m_id & ECS_ROLE_MASK));
     }
 
-    ECS_DEPRECATED("use object()")
-    flecs::entity lo() const;
-
-    ECS_DEPRECATED("use relation()")
-    flecs::entity hi() const;
-
-    ECS_DEPRECATED("use flecs::id(relation, object)")
-    static 
-    flecs::entity comb(entity_view lo, entity_view hi);
-
     flecs::id_t raw_id() const {
         return m_id;
     }
@@ -127,7 +117,7 @@ public:
     operator flecs::id_t() const {
         return m_id;
     }
-
+    
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
     flecs::world_t *m_world;

@@ -87,4 +87,22 @@ inline observer<Components ...> observer_builder<Components...>::each(Func&& fun
     return flecs::observer<Components...>(m_world, observer);
 }
 
+template <typename ... Components>    
+template <typename Func>
+inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func) const {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
+    return flecs::trigger<Components...>(m_world, trigger);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func) const {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
+    return flecs::trigger<Components...>(m_world, trigger);
+}
+
 }

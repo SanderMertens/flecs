@@ -469,15 +469,6 @@ public:
         return ecs_get_threads(m_world);
     }
 
-    /** Get index of current thread.
-     *
-     * @return Unique index for current thread.
-     */
-    ECS_DEPRECATED("use get_stage_id")
-    int32_t get_thread_index() const {
-        return ecs_get_stage_id(m_world);
-    }
-
     /** Set target FPS
      * This will ensure that the main loop (world::progress) does not run faster
      * than the specified frames per second.
@@ -838,6 +829,11 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::system_builder<Comps...> system(Args &&... args) const;
+
+    /** Create a trigger.
+     */
+    template <typename... Comps, typename... Args>
+    flecs::trigger_builder<Comps...> trigger(Args &&... args) const;
 
     /** Create an observer.
      */

@@ -546,16 +546,16 @@ void Entity_pair_role() {
     auto a = world.entity();
     auto b = world.entity();
 
-    auto comb = flecs::entity::comb(a, b);
-    comb = comb.add_role(flecs::Pair);
+    auto pair = flecs::id(a, b);
+    pair = pair.add_role(flecs::Pair);
     
-    test_assert(comb.has_role(flecs::Pair));
+    test_assert(pair.has_role(flecs::Pair));
 
-    auto lo = comb.lo();
-    auto hi = comb.remove_role().hi();
+    auto rel = pair.relation();
+    auto obj = pair.object();
 
-    test_assert(lo == a);
-    test_assert(hi == b);
+    test_assert(rel == a);
+    test_assert(obj == b);
 }
 
 void Entity_equals() {
