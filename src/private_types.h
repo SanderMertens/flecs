@@ -89,29 +89,29 @@ typedef struct ecs_table_event_t {
 
 /** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;        /**< Column data */
-    int16_t size;              /**< Column element size */
-    int16_t alignment;         /**< Column element alignment */
+    ecs_vector_t *data;          /* Column data */
+    int16_t size;                /* Column element size */
+    int16_t alignment;           /* Column element alignment */
 };
 
 /** A switch column. */
 typedef struct ecs_sw_column_t {
-    ecs_switch_t *data;   /**< Column data */
-    ecs_type_t type;      /**< Switch type */
+    ecs_switch_t *data;          /* Column data */
+    ecs_type_t type;             /* Switch type */
 } ecs_sw_column_t;
 
 /** A bitset column. */
 typedef struct ecs_bs_column_t {
-    ecs_bitset_t data;   /**< Column data */
+    ecs_bitset_t data;           /* Column data */
 } ecs_bs_column_t;
 
 /** Stage-specific component data */
 struct ecs_data_t {
-    ecs_vector_t *entities;      /**< Entity identifiers */
-    ecs_vector_t *record_ptrs;   /**< Ptrs to records in main entity index */
-    ecs_column_t *columns;       /**< Component columns */
-    ecs_sw_column_t *sw_columns; /**< Switch columns */
-    ecs_bs_column_t *bs_columns; /**< Bitset columns */
+    ecs_vector_t *entities;      /* Entity identifiers */
+    ecs_vector_t *record_ptrs;   /* Ptrs to records in main entity index */
+    ecs_column_t *columns;       /* Component columns */
+    ecs_sw_column_t *sw_columns; /* Switch columns */
+    ecs_bs_column_t *bs_columns; /* Bitset columns */
 };
 
 /** Small footprint data structure for storing data associated with a table. */
@@ -122,12 +122,12 @@ typedef struct ecs_table_leaf_t {
 } ecs_table_leaf_t;
 
 /** Flags for quickly checking for special properties of a table. */
-#define EcsTableHasBuiltins         1u    /**< Does table have builtin components */
-#define EcsTableIsPrefab            2u    /**< Does the table store prefabs */
-#define EcsTableHasIsA             4u    /**< Does the table type has IsA */
-#define EcsTableHasModule           8u    /**< Does the table have module data */
-#define EcsTableHasXor              32u   /**< Does the table type has XOR */
-#define EcsTableIsDisabled          64u   /**< Does the table type has EcsDisabled */
+#define EcsTableHasBuiltins         1u    /* Does table have builtin components */
+#define EcsTableIsPrefab            2u    /* Does the table store prefabs */
+#define EcsTableHasIsA              4u    /* Does the table type has IsA */
+#define EcsTableHasModule           8u    /* Does the table have module data */
+#define EcsTableHasXor              32u   /* Does the table type has XOR */
+#define EcsTableIsDisabled          64u   /* Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u
 #define EcsTableHasDtors            256u
 #define EcsTableHasCopy             512u
@@ -148,8 +148,8 @@ typedef struct ecs_table_leaf_t {
 
 /** Edge used for traversing the table graph. */
 typedef struct ecs_edge_t {
-    ecs_table_t *add;               /**< Edges traversed when adding */
-    ecs_table_t *remove;            /**< Edges traversed when removing */
+    ecs_table_t *add;            /* Edges traversed when adding */
+    ecs_table_t *remove;         /* Edges traversed when removing */
 } ecs_edge_t;
 
 /** Quey matched with table with backref to query table administration.
@@ -159,8 +159,8 @@ typedef struct ecs_edge_t {
  * fast lookup is required for the query administration, as is the case with
  * OnSet and Monitor systems. */
 typedef struct ecs_matched_query_t {
-    ecs_query_t *query;             /**< The query matched with the table */
-    int32_t matched_table_index;    /**< Table index in the query type */
+    ecs_query_t *query;          /* The query matched with the table */
+    int32_t matched_table_index; /* Table index in the query type */
 } ecs_matched_query_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -168,26 +168,26 @@ typedef struct ecs_matched_query_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
-    uint64_t id;                     /**< Table id in sparse set */
-    ecs_type_t type;                 /**< Identifies table type in type_index */
-    ecs_flags32_t flags;             /**< Flags for testing table properties */
-    int32_t column_count;            /**< Number of data columns in table */
+    uint64_t id;                     /* Table id in sparse set */
+    ecs_type_t type;                 /* Identifies table type in type_index */
+    ecs_flags32_t flags;             /* Flags for testing table properties */
+    int32_t column_count;            /* Number of data columns in table */
 
-    ecs_data_t *data;                /**< Component storage */
-    ecs_type_info_t **c_info;        /**< Cached pointers to component info */
+    ecs_data_t *data;                /* Component storage */
+    ecs_type_info_t **c_info;        /* Cached pointers to component info */
 
-    ecs_edge_t *lo_edges;            /**< Edges to other tables */
+    ecs_edge_t *lo_edges;            /* Edges to other tables */
     ecs_map_t *hi_edges;
 
-    ecs_vector_t *queries;           /**< Queries matched with table */
-    ecs_vector_t *monitors;          /**< Monitor systems matched with table */
-    ecs_vector_t **on_set;           /**< OnSet systems, broken up by column */
-    ecs_vector_t *on_set_all;        /**< All OnSet systems */
-    ecs_vector_t *on_set_override;   /**< All OnSet systems with overrides */
-    ecs_vector_t *un_set_all;        /**< All UnSet systems */
+    ecs_vector_t *queries;           /* Queries matched with table */
+    ecs_vector_t *monitors;          /* Monitor systems matched with table */
+    ecs_vector_t **on_set;           /* OnSet systems, broken up by column */
+    ecs_vector_t *on_set_all;        /* All OnSet systems */
+    ecs_vector_t *on_set_override;   /* All OnSet systems with overrides */
+    ecs_vector_t *un_set_all;        /* All UnSet systems */
 
-    int32_t *dirty_state;            /**< Keep track of changes in columns */
-    int32_t alloc_count;             /**< Increases when columns are reallocd */
+    int32_t *dirty_state;            /* Keep track of changes in columns */
+    int32_t alloc_count;             /* Increases when columns are reallocd */
 
     int32_t sw_column_count;
     int32_t sw_column_offset;
@@ -212,18 +212,18 @@ typedef struct flecs_bitset_column_t {
 
 /** Type containing data for a table matched with a query. */
 typedef struct ecs_matched_table_t {
-    int32_t *columns;         /**< Mapping from query terms to table columns */
-    ecs_table_t *table;       /**< The current table. */
-    ecs_data_t *data;         /**< Table component data */
-    ecs_id_t *ids;            /**< Resolved (component) ids for current table */
-    ecs_entity_t *subjects;   /**< Subjects (sources) of ids */
-    ecs_size_t *sizes;        /**< Sizes for ids for current table */
-    ecs_ref_t *references;    /**< Cached components for non-this terms */
+    int32_t *columns;         /* Mapping from query terms to table columns */
+    ecs_table_t *table;       /* The current table. */
+    ecs_data_t *data;         /* Table component data */
+    ecs_id_t *ids;            /* Resolved (component) ids for current table */
+    ecs_entity_t *subjects;   /* Subjects (sources) of ids */
+    ecs_size_t *sizes;        /* Sizes for ids for current table */
+    ecs_ref_t *references;    /* Cached components for non-this terms */
 
-    ecs_vector_t *sparse_columns;  /**< Column ids of sparse columns */
-    ecs_vector_t *bitset_columns;  /**< Column ids with disabled flags */
-    int32_t *monitor;              /**< Used to monitor table for changes */
-    int32_t rank;                  /**< Rank used to sort tables */
+    ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
+    ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
+    int32_t *monitor;              /* Used to monitor table for changes */
+    int32_t rank;                  /* Rank used to sort tables */
 } ecs_matched_table_t;
 
 /** Type used to track location of table in queries' table lists.
@@ -250,9 +250,9 @@ typedef struct ecs_table_indices_t {
  * when the query iterates over the archetypes, it only needs to iterate the
  * list of ranges. */
 typedef struct ecs_table_slice_t {
-    ecs_matched_table_t *table;     /**< Reference to the matched table */
-    int32_t start_row;              /**< Start of range  */
-    int32_t count;                  /**< Number of entities in range */
+    ecs_matched_table_t *table;      /* Reference to the matched table */
+    int32_t start_row;               /* Start of range  */
+    int32_t count;                   /* Number of entities in range */
 } ecs_table_slice_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
@@ -345,12 +345,12 @@ typedef struct ecs_id_trigger_t {
  * systems. */
 typedef struct ecs_on_demand_out_t {
     ecs_entity_t system;    /* Handle to system */
-    int32_t count;         /* Total number of times [out] columns are used */
+    int32_t count;          /* Total number of times [out] columns are used */
 } ecs_on_demand_out_t;
 
 /** Keep track of which OnDemand systems are matched with which [in] columns */
 typedef struct ecs_on_demand_in_t {
-    int32_t count;         /* Number of active systems with [in] column */
+    int32_t count;          /* Number of active systems with [in] column */
     ecs_vector_t *systems;  /* Systems that have this column as [out] column */
 } ecs_on_demand_in_t;
 
@@ -385,7 +385,7 @@ typedef struct ecs_op_n_t {
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;         /* Operation kind */    
     ecs_entity_t component;     /* Single component (components.count = 1) */
-    ecs_ids_t components;  /* Multiple components */
+    ecs_ids_t components;       /* Multiple components */
     union {
         ecs_op_1_t _1;
         ecs_op_n_t _n;
@@ -398,46 +398,46 @@ typedef struct ecs_op_t {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 struct ecs_stage_t {
-    int32_t magic;              /* Magic number to verify thread pointer */
-    int32_t id;                 /* Unique id that identifies the stage */
+    int32_t magic;               /* Magic number to verify thread pointer */
+    int32_t id;                  /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
     int32_t defer;
     ecs_vector_t *defer_queue;
 
-    ecs_world_t *thread_ctx;    /* Points to stage when a thread stage */
-    ecs_world_t *world;         /* Reference to world */
-    ecs_os_thread_t thread;     /* Thread handle (0 if no threading is used) */
+    ecs_world_t *thread_ctx;     /* Points to stage when a thread stage */
+    ecs_world_t *world;          /* Reference to world */
+    ecs_os_thread_t thread;      /* Thread handle (0 if no threading is used) */
 
     /* One-shot actions to be executed after the merge */
     ecs_vector_t *post_frame_actions;
 
     /* Namespacing */
-    ecs_table_t *scope_table;      /* Table for current scope */
-    ecs_entity_t scope;            /* Entity of current scope */
-    ecs_entity_t with;             /* Id to add by default to new entities */
+    ecs_table_t *scope_table;    /* Table for current scope */
+    ecs_entity_t scope;          /* Entity of current scope */
+    ecs_entity_t with;           /* Id to add by default to new entities */
 
     /* Properties */
-    bool auto_merge;               /* Should this stage automatically merge? */
-    bool asynchronous;             /* Is stage asynchronous? (write only) */
+    bool auto_merge;             /* Should this stage automatically merge? */
+    bool asynchronous;           /* Is stage asynchronous? (write only) */
 };
 
 /* Component monitor */
 typedef struct ecs_monitor_t {
-    ecs_vector_t *queries;  /* vector<ecs_query_t*> */
-    bool is_dirty;          /* Should queries be rematched? */
+    ecs_vector_t *queries;       /* vector<ecs_query_t*> */
+    bool is_dirty;               /* Should queries be rematched? */
 } ecs_monitor_t;
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t *monitors; /* map<id, ecs_monitor_t> */
-    bool is_dirty;       /* Should monitors be evaluated? */
+    ecs_map_t *monitors;         /* map<id, ecs_monitor_t> */
+    bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
 /* Relation monitors. TODO: implement generic monitor mechanism */
 typedef struct ecs_relation_monitor_t {
-    ecs_map_t *monitor_sets; /* map<relation_id, ecs_monitor_set_t> */
-    bool is_dirty;          /* Should monitor sets be evaluated? */
+    ecs_map_t *monitor_sets;     /* map<relation_id, ecs_monitor_set_t> */
+    bool is_dirty;               /* Should monitor sets be evaluated? */
 } ecs_relation_monitor_t;
 
 /* Payload for table index which returns all tables for a given component, with
@@ -462,10 +462,10 @@ typedef struct ecs_store_t {
     ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
 
     /* Table lookup by id */
-    ecs_sparse_t *tables; /* sparse<table_id, ecs_table_t> */
+    ecs_sparse_t *tables;       /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_hashmap_t table_map; /* hashmap<ecs_ids_t, ecs_table_t*> */
+    ecs_hashmap_t table_map;    /* hashmap<ecs_ids_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;
@@ -521,9 +521,9 @@ struct ecs_world_t {
 
     /* --  Storages for API objects -- */
 
-    ecs_sparse_t *queries; /* sparse<query_id, ecs_query_t> */
-    ecs_sparse_t *triggers; /* sparse<query_id, ecs_trigger_t> */
-    ecs_sparse_t *observers; /* sparse<query_id, ecs_observer_t> */
+    ecs_sparse_t *queries;       /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers;      /* sparse<query_id, ecs_trigger_t> */
+    ecs_sparse_t *observers;     /* sparse<query_id, ecs_observer_t> */
     
 
     /* Keep track of components that were added/removed to/from monitored
@@ -546,7 +546,7 @@ struct ecs_world_t {
 
     /* -- Lookup Indices -- */
 
-    ecs_map_t *type_handles;          /* Handles to named types */
+    ecs_map_t *type_handles;     /* Handles to named types */
 
 
     /* -- Aliasses -- */
@@ -557,29 +557,29 @@ struct ecs_world_t {
 
     /* -- Staging -- */
 
-    ecs_stage_t stage;               /* Main storage */
-    ecs_vector_t *worker_stages;     /* Stages for threads */
+    ecs_stage_t stage;           /* Main storage */
+    ecs_vector_t *worker_stages; /* Stages for threads */
 
 
     /* -- Hierarchy administration -- */
 
-    const char *name_prefix;        /* Remove prefix from C names in modules */
+    const char *name_prefix;     /* Remove prefix from C names in modules */
 
 
     /* -- Multithreading -- */
 
-    ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */
-    ecs_os_cond_t sync_cond;         /* Signal that worker thread job is done */
-    ecs_os_mutex_t sync_mutex;       /* Mutex for job_cond */
-    int32_t workers_running;         /* Number of threads running */
-    int32_t workers_waiting;         /* Number of workers waiting on sync */
+    ecs_os_cond_t worker_cond;   /* Signal that worker threads can start */
+    ecs_os_cond_t sync_cond;     /* Signal that worker thread job is done */
+    ecs_os_mutex_t sync_mutex;   /* Mutex for job_cond */
+    int32_t workers_running;     /* Number of threads running */
+    int32_t workers_waiting;     /* Number of workers waiting on sync */
 
 
     /* -- Time management -- */
 
-    ecs_time_t world_start_time;  /* Timestamp of simulation start */
-    ecs_time_t frame_start_time;  /* Timestamp of frame start */
-    FLECS_FLOAT fps_sleep;        /* Sleep time to prevent fps overshoot */
+    ecs_time_t world_start_time; /* Timestamp of simulation start */
+    ecs_time_t frame_start_time; /* Timestamp of frame start */
+    FLECS_FLOAT fps_sleep;       /* Sleep time to prevent fps overshoot */
 
 
     /* -- Metrics -- */
@@ -595,9 +595,9 @@ struct ecs_world_t {
 
     /* -- World lock -- */
 
-    ecs_os_mutex_t mutex;         /* Locks the world if locking enabled */
-    ecs_os_mutex_t thr_sync;      /* Used to signal threads at end of frame */
-    ecs_os_cond_t thr_cond;       /* Used to signal threads at end of frame */
+    ecs_os_mutex_t mutex;        /* Locks the world if locking enabled */
+    ecs_os_mutex_t thr_sync;     /* Used to signal threads at end of frame */
+    ecs_os_cond_t thr_cond;      /* Used to signal threads at end of frame */
 
 
     /* -- Defered operation count -- */
@@ -614,13 +614,13 @@ struct ecs_world_t {
 
     /* -- World state -- */
 
-    bool quit_workers;            /* Signals worker threads to quit */
-    bool is_readonly;             /* Is world being progressed */
-    bool is_fini;                 /* Is the world being cleaned up? */
-    bool measure_frame_time;      /* Time spent on each frame */
-    bool measure_system_time;     /* Time spent by each system */
-    bool should_quit;             /* Did a system signal that app should quit */
-    bool locking_enabled;         /* Lock world when in progress */ 
+    bool quit_workers;           /* Signals worker threads to quit */
+    bool is_readonly;            /* Is world being progressed */
+    bool is_fini;                /* Is the world being cleaned up? */
+    bool measure_frame_time;     /* Time spent on each frame */
+    bool measure_system_time;    /* Time spent by each system */
+    bool should_quit;            /* Did a system signal that app should quit */
+    bool locking_enabled;        /* Lock world when in progress */ 
 
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */

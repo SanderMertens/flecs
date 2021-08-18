@@ -56,19 +56,19 @@ struct ecs_record_t {
 
 /** Cached reference. */
 struct ecs_ref_t {
-    ecs_entity_t entity;    /**< Entity of the reference */
-    ecs_entity_t component; /**< Component of the reference */
-    void *table;            /**< Last known table */
-    int32_t row;            /**< Last known location in table */
-    int32_t alloc_count;    /**< Last known alloc count of table */
-    ecs_record_t *record;   /**< Pointer to record, if in main stage */
-    const void *ptr;        /**< Cached ptr */
+    ecs_entity_t entity;    /* Entity of the reference */
+    ecs_entity_t component; /* Component of the reference */
+    void *table;            /* Last known table */
+    int32_t row;            /* Last known location in table */
+    int32_t alloc_count;    /* Last known alloc count of table */
+    ecs_record_t *record;   /* Pointer to record, if in main stage */
+    const void *ptr;        /* Cached ptr */
 };
 
 /** Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_ids_t {
-    ecs_entity_t *array;    /**< An array with entity ids */
-    int32_t count;          /**< The number of entities in the array */
+    ecs_entity_t *array;    /* An array with entity ids */
+    int32_t count;          /* The number of entities in the array */
 } ecs_ids_t;
 
 typedef struct ecs_page_cursor_t {
@@ -84,12 +84,12 @@ typedef struct ecs_page_iter_t {
 
 /** Table specific data for iterators */
 typedef struct ecs_iter_table_t {
-    int32_t *columns;         /**< Mapping from query terms to table columns */
-    ecs_table_t *table;       /**< The current table. */
-    ecs_data_t *data;         /**< Table component data */
-    ecs_entity_t *components; /**< Components in current table */
-    ecs_type_t *types;        /**< Components in current table */
-    ecs_ref_t *references;    /**< References to entities (from query) */
+    int32_t *columns;         /* Mapping from query terms to table columns */
+    ecs_table_t *table;       /* The current table. */
+    ecs_data_t *data;         /* Table component data */
+    ecs_entity_t *components; /* Components in current table */
+    ecs_type_t *types;        /* Components in current table */
+    ecs_ref_t *references;    /* References to entities (from query) */
 } ecs_iter_table_t;
 
 /** Term-iterator specific data */
@@ -162,61 +162,61 @@ typedef struct ecs_iter_cache_t {
  * consecutive arrays, stored across multiple tables. The ecs_iter_t type 
  * enables iteration across tables. */
 struct ecs_iter_t {
-    ecs_world_t *world;           /**< The world */
-    ecs_world_t *real_world;      /**< Actual world. This differs from world when using threads.  */
-    ecs_entity_t system;          /**< The current system (if applicable) */
-    ecs_entity_t event;           /**< The event (if applicable) */
-    ecs_id_t event_id;            /**< The (component) id for the event */
-    ecs_entity_t self;            /**< Self entity (if set) */
+    ecs_world_t *world;           /* The world */
+    ecs_world_t *real_world;      /* Actual world. This differs from world when using threads.  */
+    ecs_entity_t system;          /* The current system (if applicable) */
+    ecs_entity_t event;           /* The event (if applicable) */
+    ecs_id_t event_id;            /* The (component) id for the event */
+    ecs_entity_t self;            /* Self entity (if set) */
 
-    ecs_table_t *table;           /**< Current table */
+    ecs_table_t *table;           /* Current table */
     ecs_data_t *data;
-    ecs_type_t type;
-    
-    ecs_id_t *ids;
-    int32_t *columns;
-    ecs_entity_t *subjects;
-    ecs_size_t *sizes;
-    void **ptrs;
+    ecs_type_t type;              /* Current type */
+
+    ecs_id_t *ids;                /* (Component) ids */
+    int32_t *columns;             /* Query term to table column mapping */
+    ecs_entity_t *subjects;       /* Subject (source) entities */
+    ecs_size_t *sizes;            /* Component sizes */
+    void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
 
     ecs_ref_t *references;
 
-    ecs_query_t *query;           /**< Current query being evaluated */
-    int32_t table_count;          /**< Active table count for query */
-    int32_t inactive_table_count; /**< Inactive table count for query */
-    int32_t column_count;         /**< Number of columns for system */
-    int32_t term_index;           /**< Index of term that triggered an event.
+    ecs_query_t *query;           /* Current query being evaluated */
+    int32_t table_count;          /* Active table count for query */
+    int32_t inactive_table_count; /* Inactive table count for query */
+    int32_t column_count;         /* Number of columns for system */
+    int32_t term_index;           /* Index of term that triggered an event.
                                    * This field will be set to the 'index' field
                                    * of a trigger/observer term. */
     
-    void *table_columns;          /**< Table component data */
-    ecs_entity_t *entities;       /**< Entity identifiers */
+    void *table_columns;          /* Table component data */
+    ecs_entity_t *entities;       /* Entity identifiers */
 
-    void *param;                  /**< Param passed to ecs_run */
-    void *ctx;                    /**< System context */
-    void *binding_ctx;            /**< Binding context */
-    FLECS_FLOAT delta_time;       /**< Time elapsed since last frame */
-    FLECS_FLOAT delta_system_time;/**< Time elapsed since last system invocation */
-    FLECS_FLOAT world_time;       /**< Time elapsed since start of simulation */
+    void *param;                  /* Param passed to ecs_run */
+    void *ctx;                    /* System context */
+    void *binding_ctx;            /* Binding context */
+    FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
+    FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
+    FLECS_FLOAT world_time;       /* Time elapsed since start of simulation */
 
-    int32_t frame_offset;         /**< Offset relative to frame */
-    int32_t offset;               /**< Offset relative to current table */
-    int32_t count;                /**< Number of entities to process by system */
-    int32_t total_count;          /**< Total number of entities in table */
+    int32_t frame_offset;         /* Offset relative to frame */
+    int32_t offset;               /* Offset relative to current table */
+    int32_t count;                /* Number of entities to process by system */
+    int32_t total_count;          /* Total number of entities in table */
 
-    bool is_valid;                /**< Set to true after first next() */
+    bool is_valid;                /* Set to true after first next() */
 
-    ecs_ids_t *triggered_by;      /**< Component(s) that triggered the system */
-    ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
+    ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
+    ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
 
     union {
         ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
         ecs_snapshot_iter_t snapshot;
-    } iter;                       /**< Iterator specific data */
+    } iter;                       /* Iterator specific data */
 
-    ecs_iter_cache_t cache;       /**< Inline arrays to reduce allocations */
+    ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
 };
 
 ////////////////////////////////////////////////////////////////////////////////
