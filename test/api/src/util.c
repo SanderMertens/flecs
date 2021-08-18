@@ -14,11 +14,11 @@ void probe_system_w_ctx(
     ctx->event = it->event;
     ctx->event_id = it->event_id;
     ctx->offset = 0;
-    ctx->column_count = it->column_count;
+    ctx->term_count = it->term_count;
     ctx->term_index = it->term_index;
 
     int i;
-    for (i = 0; i < ctx->column_count; i ++) {
+    for (i = 0; i < ctx->term_count; i ++) {
         ctx->c[ctx->invoked][i] = it->ids[i];
         ctx->s[ctx->invoked][i] = ecs_term_source(it, i + 1);
 

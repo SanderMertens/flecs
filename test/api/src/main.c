@@ -852,6 +852,7 @@ void Filter_term_iter_w_superset_tag(void);
 void Filter_term_iter_w_superset_pair(void);
 void Filter_term_iter_w_superset_pair_obj_wildcard(void);
 void Filter_term_iter_in_stage(void);
+void Filter_term_iter_w_readonly_term(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
@@ -872,6 +873,7 @@ void Filter_filter_iter_10_components(void);
 void Filter_filter_iter_20_components(void);
 void Filter_term_iter_type_set(void);
 void Filter_filter_iter_type_set(void);
+void Filter_filter_iter_w_readonly_term(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1031,6 +1033,7 @@ void Trigger_trigger_w_self(void);
 void Trigger_delete_trigger_w_delete_ctx(void);
 void Trigger_trigger_w_index(void);
 void Trigger_iter_type_set(void);
+void Trigger_readonly_term(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1060,6 +1063,7 @@ void Observer_remove_after_delete_observer(void);
 void Observer_delete_observer_w_ctx(void);
 void Observer_filter_w_strings(void);
 void Observer_iter_type_set(void);
+void Observer_readonly_term(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5009,6 +5013,10 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_in_stage
     },
     {
+        "term_iter_w_readonly_term",
+        Filter_term_iter_w_readonly_term
+    },
+    {
         "filter_iter_1_tag",
         Filter_filter_iter_1_tag
     },
@@ -5087,6 +5095,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_type_set",
         Filter_filter_iter_type_set
+    },
+    {
+        "filter_iter_w_readonly_term",
+        Filter_filter_iter_w_readonly_term
     }
 };
 
@@ -5708,6 +5720,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "iter_type_set",
         Trigger_iter_type_set
+    },
+    {
+        "readonly_term",
+        Trigger_readonly_term
     }
 };
 
@@ -5819,6 +5835,10 @@ bake_test_case Observer_testcases[] = {
     {
         "iter_type_set",
         Observer_iter_type_set
+    },
+    {
+        "readonly_term",
+        Observer_readonly_term
     }
 };
 
@@ -8757,7 +8777,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        52,
+        54,
         Filter_testcases
     },
     {
@@ -8778,14 +8798,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        50,
+        51,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        27,
+        28,
         Observer_testcases
     },
     {

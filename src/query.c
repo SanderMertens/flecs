@@ -2346,6 +2346,7 @@ ecs_iter_t ecs_query_iter_page(
     }
 
     ecs_query_iter_t it = {
+        .query = query,
         .page_iter = {
             .offset = offset,
             .limit = limit,
@@ -2356,8 +2357,8 @@ ecs_iter_t ecs_query_iter_page(
 
     return (ecs_iter_t){
         .world = world,
-        .query = query,
-        .column_count = query->filter.term_count_actual,
+        .terms = query->filter.terms,
+        .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -2389,7 +2390,7 @@ void populate_ptrs(
     }
 
     int c;
-    for (c = 0; c < it->column_count; c ++) {
+    for (c = 0; c < it->term_count; c ++) {
         int32_t c_index = it->columns[c];
         if (!c_index) {
             it->ptrs[c] = NULL;
@@ -2457,8 +2458,8 @@ void flecs_query_set_iter(
     it->entities = &entity_buffer[row];
 
     it->world = NULL;
-    it->query = query;
-    it->column_count = query->filter.term_count_actual;
+    it->terms = query->filter.terms;
+    it->term_count = query->filter.term_count_actual;
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -2472,7 +2473,7 @@ void flecs_query_set_iter(
     it->count = count;
     it->total_count = count;
 
-    ecs_iter_init(it);
+    flecs_iter_init(it);
 
     populate_ptrs(world, it);
 }
@@ -2861,7 +2862,7 @@ bool ecs_query_next(
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
-    ecs_query_t *query = it->query;
+    ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
     (void)world;
 
@@ -2959,7 +2960,7 @@ bool ecs_query_next(
         it->references = table_data->references;
         it->frame_offset += prev_count;
 
-        ecs_iter_init(it);
+        flecs_iter_init(it);
 
         populate_ptrs(world, it);
 
@@ -2973,7 +2974,7 @@ bool ecs_query_next(
     }
 
 done:
-    ecs_iter_fini(it);
+    flecs_iter_fini(it);
     return false;
     
 yield:
@@ -3007,7 +3008,7 @@ bool ecs_query_next_worker(
             }
         }
 
-        if (!per_worker && !(it->query->flags & EcsQueryNeedsTables)) {
+        if (!per_worker && !(it->iter.query.query->flags & EcsQueryNeedsTables)) {
             if (current == 0) {
                 populate_ptrs(it->world, it);
                 return true;

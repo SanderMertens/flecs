@@ -330,7 +330,7 @@ public:
     /** Number of terms in iteator.
      */
     int32_t term_count() const {
-        return m_iter->column_count;
+        return m_iter->term_count;
     }
 
     /** Size of term data type.

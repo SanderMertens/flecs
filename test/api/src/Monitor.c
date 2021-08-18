@@ -19,7 +19,7 @@ void Monitor_1_comp() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -54,7 +54,7 @@ void Monitor_2_comps() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -72,7 +72,7 @@ void Monitor_2_comps() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -98,7 +98,7 @@ void Monitor_1_comp_1_not() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -116,7 +116,7 @@ void Monitor_1_comp_1_not() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -148,7 +148,7 @@ void Monitor_1_parent() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -178,7 +178,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -202,7 +202,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.invoked, 1);    
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);

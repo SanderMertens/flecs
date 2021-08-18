@@ -909,6 +909,7 @@
                 "term_iter_w_superset_pair",
                 "term_iter_w_superset_pair_obj_wildcard",
                 "term_iter_in_stage",
+                "term_iter_w_readonly_term",
                 "filter_iter_1_tag",
                 "filter_iter_2_tags",
                 "filter_iter_2_tags_1_not",
@@ -928,7 +929,8 @@
                 "filter_iter_10_components",
                 "filter_iter_20_components",
                 "term_iter_type_set",
-                "filter_iter_type_set"
+                "filter_iter_type_set",
+                "filter_iter_w_readonly_term"
             ]
         }, {
             "id": "Query",
@@ -1093,7 +1095,8 @@
                "trigger_w_self",
                "delete_trigger_w_delete_ctx",
                "trigger_w_index",
-               "iter_type_set"
+               "iter_type_set",
+               "readonly_term"
            ]
         }, {
             "id": "Observer",
@@ -1124,7 +1127,8 @@
                 "remove_after_delete_observer",
                 "delete_observer_w_ctx",
                 "filter_w_strings",
-                "iter_type_set"
+                "iter_type_set",
+                "readonly_term"
             ]                
         }, {
             "id": "TriggerOnAdd",

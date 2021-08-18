@@ -227,7 +227,7 @@ void notify_trigger_set(
         .ptrs = &ptr,
         .table_count = 1,
         .inactive_table_count = 0,
-        .column_count = 1,
+        .term_count = 1,
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
@@ -243,6 +243,7 @@ void notify_trigger_set(
         it.ctx = t->ctx;
         it.binding_ctx = t->binding_ctx;
         it.term_index = t->term.index;
+        it.terms = &t->term;
         t->action(&it);                   
     }
 }

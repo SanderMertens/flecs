@@ -126,6 +126,7 @@ typedef struct ecs_filter_iter_t {
 
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
+    ecs_query_t *query;
     ecs_page_iter_t page_iter;
     int32_t index;
     int32_t sparse_smallest;
@@ -170,7 +171,6 @@ struct ecs_iter_t {
     ecs_entity_t self;            /* Self entity (if set) */
 
     ecs_table_t *table;           /* Current table */
-    ecs_data_t *data;
     ecs_type_t type;              /* Current type */
 
     ecs_id_t *ids;                /* (Component) ids */
@@ -181,10 +181,10 @@ struct ecs_iter_t {
 
     ecs_ref_t *references;
 
-    ecs_query_t *query;           /* Current query being evaluated */
+    ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t inactive_table_count; /* Inactive table count for query */
-    int32_t column_count;         /* Number of columns for system */
+    int32_t term_count;           /* Number of terms in query */
     int32_t term_index;           /* Index of term that triggered an event.
                                    * This field will be set to the 'index' field
                                    * of a trigger/observer term. */

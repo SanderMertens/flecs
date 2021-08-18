@@ -16,7 +16,7 @@ void Tasks_no_components() {
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
-    test_int(ctx.column_count, 0);
+    test_int(ctx.term_count, 0);
 
     ecs_fini(world);
 }
@@ -33,7 +33,7 @@ void Tasks_one_tag() {
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_int(ctx.c[0][0], EcsHidden);
 
     ecs_fini(world);
@@ -53,7 +53,7 @@ void Tasks_from_system() {
 
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_int(ctx.c[0][0], ecs_id(Position));
 
     ecs_fini(world);

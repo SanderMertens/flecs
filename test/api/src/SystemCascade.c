@@ -49,7 +49,7 @@ void SystemCascade_cascade_depth_1() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     probe_has_entity(&ctx, e1);
@@ -117,7 +117,7 @@ void SystemCascade_cascade_depth_2() {
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 5);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_assert((ctx.e[0] == e1 && ctx.e[1] == e2) || (ctx.e[0] == e2 && ctx.e[1] == e1));
@@ -194,7 +194,7 @@ void SystemCascade_cascade_depth_2_new_syntax() {
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 5);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_assert((ctx.e[0] == e1 && ctx.e[1] == e2) || (ctx.e[0] == e2 && ctx.e[1] == e1));
@@ -293,7 +293,7 @@ void SystemCascade_add_after_match() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, AddParent);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_assert(ctx.e[0] == e1 || ctx.e[1] == e1 || ctx.e[2] == e1);
@@ -361,7 +361,7 @@ void SystemCascade_adopt_after_match() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, AddParent);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -495,7 +495,7 @@ void SystemCascade_custom_relation_cascade_depth_1() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     probe_has_entity(&ctx, e1);
@@ -564,7 +564,7 @@ void SystemCascade_custom_relation_cascade_depth_2() {
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 5);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_assert((ctx.e[0] == e1 && ctx.e[1] == e2) || (ctx.e[0] == e2 && ctx.e[1] == e1));
@@ -646,7 +646,7 @@ void SystemCascade_custom_relation_add_after_match() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, AddParent);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_assert(ctx.e[0] == e1 || ctx.e[1] == e1 || ctx.e[2] == e1);
@@ -715,7 +715,7 @@ void SystemCascade_custom_relation_adopt_after_match() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, AddParent);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);

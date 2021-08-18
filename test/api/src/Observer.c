@@ -10,7 +10,7 @@ void Observer_w_value(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 1);
-    test_int(it->column_count, 2);
+    test_int(it->term_count, 2);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
@@ -56,7 +56,7 @@ void Observer_2_terms_w_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -94,7 +94,7 @@ void Observer_2_terms_w_on_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -129,7 +129,7 @@ void Observer_2_terms_w_on_set_value() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -167,7 +167,7 @@ void Observer_2_terms_w_on_remove_value() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -203,7 +203,7 @@ void Observer_2_terms_w_on_add_2nd() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -241,7 +241,7 @@ void Observer_2_terms_w_on_remove_2nd() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -281,7 +281,7 @@ void Observer_2_pair_terms_w_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -324,7 +324,7 @@ void Observer_2_pair_terms_w_on_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -361,7 +361,7 @@ void Observer_2_wildcard_pair_terms_w_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -398,7 +398,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_2_matching() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -411,7 +411,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_2_matching() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -449,7 +449,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -462,7 +462,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -475,7 +475,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -516,7 +516,7 @@ void Observer_2_wildcard_pair_terms_w_on_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -557,7 +557,7 @@ void Observer_2_terms_1_not_w_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -604,7 +604,7 @@ void Observer_2_terms_1_not_w_on_remove() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnRemove);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -642,7 +642,7 @@ void Observer_2_terms_w_on_set() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -683,7 +683,7 @@ void Observer_2_terms_w_un_set() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsUnSet);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -719,7 +719,7 @@ void Observer_3_terms_2_or_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -733,7 +733,7 @@ void Observer_3_terms_2_or_on_add() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -1033,7 +1033,7 @@ void Observer_filter_w_strings() {
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -1070,5 +1070,41 @@ void Observer_iter_type_set() {
     test_int(ecs_vector_count(trigger_type), 1);
     test_int(ecs_vector_first(trigger_type, ecs_id_t)[0], Tag);
     
+    ecs_fini(world);
+}
+
+void ObserverReadonly(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+    test_bool(ecs_term_is_readonly(it, 1), true);
+}
+
+void Observer_readonly_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA, .inout = EcsIn }},
+        .events = {EcsOnAdd},
+        .callback = ObserverReadonly,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    ecs_add(world, e, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
     ecs_fini(world);
 }

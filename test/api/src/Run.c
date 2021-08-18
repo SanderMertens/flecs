@@ -10,11 +10,11 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
     Mass *m = NULL;
 
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    if (it->column_count >= 3) {
+    if (it->term_count >= 3) {
         m = ecs_term(it, Mass, 3);
     }
 
@@ -73,7 +73,7 @@ void Run_run() {
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -125,7 +125,7 @@ void Run_run_w_param() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_ptr(ctx.param, &param);
 
     test_int(ctx.e[0], e1);
@@ -169,7 +169,7 @@ void Run_run_w_offset() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e3);
@@ -227,7 +227,7 @@ void Run_run_w_offset_skip_1_archetype() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e4);
@@ -284,7 +284,7 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e5);
@@ -340,7 +340,7 @@ void Run_run_w_offset_skip_2_archetypes() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e6);
@@ -390,7 +390,7 @@ void Run_run_w_limit_skip_1_archetype() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -449,7 +449,7 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -507,7 +507,7 @@ void Run_run_w_limit_skip_2_archetypes() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -564,7 +564,7 @@ void Run_run_w_offset_1_limit_max() {
     test_int(ctx.count, 5);
     test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -623,7 +623,7 @@ void Run_run_w_offset_1_limit_minus_1() {
     test_int(ctx.count, 4);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e2);
@@ -681,7 +681,7 @@ void Run_run_w_offset_2_type_limit_max() {
     test_int(ctx.count, 3);
     test_int(ctx.invoked, 2);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e4);
@@ -738,7 +738,7 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     test_int(ctx.count, 2);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e4);
@@ -800,7 +800,7 @@ void Run_run_w_limit_1_all_offsets() {
     test_int(ctx.count, 6);
     test_int(ctx.invoked, 6);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
@@ -893,7 +893,7 @@ void Run_run_w_limit_out_of_bounds() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Iter);
-    test_int(ctx.column_count, 2);
+    test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e6);

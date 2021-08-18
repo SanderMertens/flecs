@@ -1816,10 +1816,10 @@ void flecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
-void ecs_iter_init(
+void flecs_iter_init(
     ecs_iter_t *it);
 
-void ecs_iter_fini(
+void flecs_iter_fini(
     ecs_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19073,7 +19073,6 @@ void populate_from_table(
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = flecs_table_get_data(table);
-    it->data = (ecs_data_t*)data;
 
     if (data) {
         it->table_columns = data->columns;
@@ -19254,7 +19253,8 @@ ecs_iter_t ecs_term_iter(
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
-        .column_count = 1
+        .terms = term,
+        .term_count = 1
     };
 
     term_iter_init(world, term, &it.iter.term);
@@ -19351,7 +19351,6 @@ bool ecs_term_next(
 
     it->table = table;
     it->type = table->type;
-    it->data = data;
     it->ids = &iter->id;
     it->columns = &iter->column;
     it->subjects = &iter->subject;
@@ -19390,7 +19389,8 @@ ecs_iter_t ecs_filter_iter(
 
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
-        .world = (ecs_world_t*)stage
+        .world = (ecs_world_t*)stage,
+        .terms = filter ? filter->terms : NULL
     };
 
     ecs_filter_iter_t *iter = &it.iter.filter;
@@ -19462,7 +19462,7 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsFilterIterEvalNone;
     }
 
-    it.column_count = filter->term_count_actual;
+    it.term_count = filter->term_count_actual;
 
     if (filter->terms == filter->term_cache) {
         /* Because we're returning the iterator by value, the address of the
@@ -19485,7 +19485,7 @@ bool ecs_filter_next(
         filter->terms = filter->term_cache;
     }
 
-    ecs_iter_init(it);
+    flecs_iter_init(it);
 
     if (iter->kind == EcsFilterIterEvalIndex) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
@@ -19511,7 +19511,7 @@ bool ecs_filter_next(
     }
 
 done:
-    ecs_iter_fini(it);
+    flecs_iter_fini(it);
     return false;
 
 yield:
@@ -19530,14 +19530,14 @@ void observer_callback(ecs_iter_t *it) {
     ecs_type_t type = table->type;
 
     ecs_iter_t user_it = *it;
-    user_it.column_count = o->filter.term_count_actual,
+    user_it.term_count = o->filter.term_count_actual,
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
 
-    ecs_iter_init(&user_it);
+    flecs_iter_init(&user_it);
 
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
         user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
@@ -19550,12 +19550,12 @@ void observer_callback(ecs_iter_t *it) {
         user_it.term_index = it->term_index;
         user_it.self = o->self;
         user_it.ctx = o->ctx;
-        user_it.column_count = o->filter.term_count_actual,
+        user_it.term_count = o->filter.term_count_actual,
         user_it.table_columns = data->columns,
         o->action(&user_it);
     }
 
-    ecs_iter_fini(&user_it);
+    flecs_iter_fini(&user_it);
 }
 
 ecs_entity_t ecs_observer_init(
@@ -22616,6 +22616,7 @@ ecs_iter_t ecs_query_iter_page(
     }
 
     ecs_query_iter_t it = {
+        .query = query,
         .page_iter = {
             .offset = offset,
             .limit = limit,
@@ -22626,8 +22627,8 @@ ecs_iter_t ecs_query_iter_page(
 
     return (ecs_iter_t){
         .world = world,
-        .query = query,
-        .column_count = query->filter.term_count_actual,
+        .terms = query->filter.terms,
+        .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
         .iter.query = it
@@ -22659,7 +22660,7 @@ void populate_ptrs(
     }
 
     int c;
-    for (c = 0; c < it->column_count; c ++) {
+    for (c = 0; c < it->term_count; c ++) {
         int32_t c_index = it->columns[c];
         if (!c_index) {
             it->ptrs[c] = NULL;
@@ -22727,8 +22728,8 @@ void flecs_query_set_iter(
     it->entities = &entity_buffer[row];
 
     it->world = NULL;
-    it->query = query;
-    it->column_count = query->filter.term_count_actual;
+    it->terms = query->filter.terms;
+    it->term_count = query->filter.term_count_actual;
     it->table_count = 1;
     it->inactive_table_count = 0;
     it->table_columns = data->columns;
@@ -22742,7 +22743,7 @@ void flecs_query_set_iter(
     it->count = count;
     it->total_count = count;
 
-    ecs_iter_init(it);
+    flecs_iter_init(it);
 
     populate_ptrs(world, it);
 }
@@ -23131,7 +23132,7 @@ bool ecs_query_next(
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
-    ecs_query_t *query = it->query;
+    ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
     (void)world;
 
@@ -23229,7 +23230,7 @@ bool ecs_query_next(
         it->references = table_data->references;
         it->frame_offset += prev_count;
 
-        ecs_iter_init(it);
+        flecs_iter_init(it);
 
         populate_ptrs(world, it);
 
@@ -23243,7 +23244,7 @@ bool ecs_query_next(
     }
 
 done:
-    ecs_iter_fini(it);
+    flecs_iter_fini(it);
     return false;
     
 yield:
@@ -23277,7 +23278,7 @@ bool ecs_query_next_worker(
             }
         }
 
-        if (!per_worker && !(it->query->flags & EcsQueryNeedsTables)) {
+        if (!per_worker && !(it->iter.query.query->flags & EcsQueryNeedsTables)) {
             if (current == 0) {
                 populate_ptrs(it->world, it);
                 return true;
@@ -24342,19 +24343,19 @@ ecs_table_t* ecs_table_remove_id(
         }\
     }   
 
-void ecs_iter_init(
+void flecs_iter_init(
     ecs_iter_t *it)
 {
-    INIT_CACHE(it, ids, it->column_count);
-    INIT_CACHE(it, columns, it->column_count);
-    INIT_CACHE(it, subjects, it->column_count);
-    INIT_CACHE(it, sizes, it->column_count);
-    INIT_CACHE(it, ptrs, it->column_count);
+    INIT_CACHE(it, ids, it->term_count);
+    INIT_CACHE(it, columns, it->term_count);
+    INIT_CACHE(it, subjects, it->term_count);
+    INIT_CACHE(it, sizes, it->term_count);
+    INIT_CACHE(it, ptrs, it->term_count);
 
     it->is_valid = true;
 }
 
-void ecs_iter_fini(
+void flecs_iter_fini(
     ecs_iter_t *it)
 {
     ecs_assert(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
@@ -24391,15 +24392,6 @@ void* ecs_term_w_size(
     return it->ptrs[term - 1];
 }
 
-bool ecs_term_is_owned(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-    return it->subjects == NULL || it->subjects[term - 1] == 0;
-}
-
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
@@ -24407,13 +24399,7 @@ bool ecs_term_is_readonly(
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_t *query = it->query;
-
-    /* If this is not a query iterator, readonly is meaningless */
-    ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
-    (void)query;
-
-    ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    ecs_term_t *term = &it->terms[term_index - 1];
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (term->inout == EcsIn) {
@@ -24435,58 +24421,6 @@ bool ecs_term_is_readonly(
     }
 
     return false;
-}
-
-bool ecs_term_is_set(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-
-    return it->columns[term - 1] != 0;
-}
-
-ecs_entity_t ecs_term_source(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-    
-    if (!it->subjects) {
-        return 0;
-    } else {
-        return it->subjects[term - 1];
-    }
-}
-
-ecs_id_t ecs_term_id(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    return it->ids[index - 1];
-}
-
-size_t ecs_term_size(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
-
-    if (index == 0) {
-        return sizeof(ecs_entity_t);
-    }
-
-    return flecs_to_size_t(it->sizes[index - 1]);
 }
 
 int32_t ecs_iter_find_column(
@@ -24770,7 +24704,7 @@ void notify_trigger_set(
         .ptrs = &ptr,
         .table_count = 1,
         .inactive_table_count = 0,
-        .column_count = 1,
+        .term_count = 1,
         .table_columns = data->columns,
         .entities = entities,
         .offset = row,
@@ -24786,6 +24720,7 @@ void notify_trigger_set(
         it.ctx = t->ctx;
         it.binding_ctx = t->binding_ctx;
         it.term_index = t->term.index;
+        it.terms = &t->term;
         t->action(&it);                   
     }
 }

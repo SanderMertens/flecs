@@ -719,7 +719,6 @@ void populate_from_table(
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = flecs_table_get_data(table);
-    it->data = (ecs_data_t*)data;
 
     if (data) {
         it->table_columns = data->columns;
@@ -900,7 +899,8 @@ ecs_iter_t ecs_term_iter(
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
-        .column_count = 1
+        .terms = term,
+        .term_count = 1
     };
 
     term_iter_init(world, term, &it.iter.term);
@@ -997,7 +997,6 @@ bool ecs_term_next(
 
     it->table = table;
     it->type = table->type;
-    it->data = data;
     it->ids = &iter->id;
     it->columns = &iter->column;
     it->subjects = &iter->subject;
@@ -1036,7 +1035,8 @@ ecs_iter_t ecs_filter_iter(
 
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
-        .world = (ecs_world_t*)stage
+        .world = (ecs_world_t*)stage,
+        .terms = filter ? filter->terms : NULL
     };
 
     ecs_filter_iter_t *iter = &it.iter.filter;
@@ -1108,7 +1108,7 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsFilterIterEvalNone;
     }
 
-    it.column_count = filter->term_count_actual;
+    it.term_count = filter->term_count_actual;
 
     if (filter->terms == filter->term_cache) {
         /* Because we're returning the iterator by value, the address of the
@@ -1131,7 +1131,7 @@ bool ecs_filter_next(
         filter->terms = filter->term_cache;
     }
 
-    ecs_iter_init(it);
+    flecs_iter_init(it);
 
     if (iter->kind == EcsFilterIterEvalIndex) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
@@ -1157,7 +1157,7 @@ bool ecs_filter_next(
     }
 
 done:
-    ecs_iter_fini(it);
+    flecs_iter_fini(it);
     return false;
 
 yield:

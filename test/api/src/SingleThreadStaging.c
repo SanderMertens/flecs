@@ -2001,7 +2001,7 @@ void SingleThreadStaging_match_table_created_in_progress() {
     test_int(pv_probe.count, 3);
     test_int(pv_probe.invoked, 1);
     test_int(pv_probe.system, On_PV);
-    test_int(pv_probe.column_count, 2);
+    test_int(pv_probe.term_count, 2);
     test_null(pv_probe.param);
 
     test_int(pv_probe.e[0], e1);
@@ -2064,7 +2064,7 @@ void SingleThreadStaging_match_table_created_w_new_in_progress() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, On_V);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.c[0][0], ecs_id(Velocity));
@@ -2097,7 +2097,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, On_V);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.c[0][0], ecs_id(Velocity));
@@ -2133,7 +2133,7 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Create_container);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -2161,7 +2161,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Create_container);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -2214,7 +2214,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, Create_container_reverse);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.c[0][0], ecs_id(Position));

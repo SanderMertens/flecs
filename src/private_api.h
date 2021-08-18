@@ -532,10 +532,10 @@ void flecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
-void ecs_iter_init(
+void flecs_iter_init(
     ecs_iter_t *it);
 
-void ecs_iter_fini(
+void flecs_iter_fini(
     ecs_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////

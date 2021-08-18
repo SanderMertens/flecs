@@ -18,19 +18,19 @@
         }\
     }   
 
-void ecs_iter_init(
+void flecs_iter_init(
     ecs_iter_t *it)
 {
-    INIT_CACHE(it, ids, it->column_count);
-    INIT_CACHE(it, columns, it->column_count);
-    INIT_CACHE(it, subjects, it->column_count);
-    INIT_CACHE(it, sizes, it->column_count);
-    INIT_CACHE(it, ptrs, it->column_count);
+    INIT_CACHE(it, ids, it->term_count);
+    INIT_CACHE(it, columns, it->term_count);
+    INIT_CACHE(it, subjects, it->term_count);
+    INIT_CACHE(it, sizes, it->term_count);
+    INIT_CACHE(it, ptrs, it->term_count);
 
     it->is_valid = true;
 }
 
-void ecs_iter_fini(
+void flecs_iter_fini(
     ecs_iter_t *it)
 {
     ecs_assert(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
@@ -67,15 +67,6 @@ void* ecs_term_w_size(
     return it->ptrs[term - 1];
 }
 
-bool ecs_term_is_owned(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-    return it->subjects == NULL || it->subjects[term - 1] == 0;
-}
-
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
@@ -83,13 +74,7 @@ bool ecs_term_is_readonly(
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_t *query = it->query;
-
-    /* If this is not a query iterator, readonly is meaningless */
-    ecs_assert(query != NULL, ECS_INVALID_OPERATION, NULL);
-    (void)query;
-
-    ecs_term_t *term = &it->query->filter.terms[term_index - 1];
+    ecs_term_t *term = &it->terms[term_index - 1];
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (term->inout == EcsIn) {
@@ -111,58 +96,6 @@ bool ecs_term_is_readonly(
     }
 
     return false;
-}
-
-bool ecs_term_is_set(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-
-    return it->columns[term - 1] != 0;
-}
-
-ecs_entity_t ecs_term_source(
-    const ecs_iter_t *it,
-    int32_t term)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term > 0, ECS_INVALID_PARAMETER, NULL);
-    
-    if (!it->subjects) {
-        return 0;
-    } else {
-        return it->subjects[term - 1];
-    }
-}
-
-ecs_id_t ecs_term_id(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    return it->ids[index - 1];
-}
-
-size_t ecs_term_size(
-    const ecs_iter_t *it,
-    int32_t index)
-{
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index <= it->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
-
-    if (index == 0) {
-        return sizeof(ecs_entity_t);
-    }
-
-    return flecs_to_size_t(it->sizes[index - 1]);
 }
 
 int32_t ecs_iter_find_column(

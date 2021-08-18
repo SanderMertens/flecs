@@ -4,7 +4,7 @@ void Deinit(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
     Velocity *v = NULL;
-    if (it->column_count >= 2) {
+    if (it->term_count >= 2) {
         v = ecs_term(it, Velocity, 2);
     }
 
@@ -60,7 +60,7 @@ void TriggerOnRemove_remove() {
     ecs_remove(world, e, Position);
 
     test_int(ctx.count, 1);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);
@@ -109,7 +109,7 @@ void TriggerOnRemove_delete() {
     ecs_delete(world, e);
 
     test_int(ctx.count, 1);
-    test_int(ctx.column_count, 1);
+    test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e);

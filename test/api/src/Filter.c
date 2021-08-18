@@ -2380,3 +2380,54 @@ void Filter_filter_iter_20_components() {
 
     ecs_fini(world);
 }
+
+void Filter_term_iter_w_readonly_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { TagA, .inout = EcsIn });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_bool(ecs_term_is_readonly(&it, 1), true);
+
+    test_assert(!ecs_term_next(&it));
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_w_readonly_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_add_id(world, e_1, TagB);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA, .inout = EcsIn }, { TagB }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(ecs_term_is_readonly(&it, 1), true);
+    test_bool(ecs_term_is_readonly(&it, 2), false);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
