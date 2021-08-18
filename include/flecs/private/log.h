@@ -96,12 +96,15 @@ void ecs_log_pop(void);
 #define ecs_deprecated(...)
 #endif
 
-/* If in debug mode and no tracing verbosity is defined, compile all tracing */
-#if !defined(NDEBUG) && !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-#define ECS_TRACE_3
+/* If no tracing verbosity is defined, pick default based on build config */
+#if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+#if !defined(NDEBUG)
+#define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
+#else
+#define ECS_TRACE_1 /* Only enable infrequent tracing in release mode */
+#endif
 #endif
 
-#ifndef NDEBUG
 #if defined(ECS_TRACE_3)
 #define ecs_trace_1(...) ecs_trace(1, __VA_ARGS__);
 #define ecs_trace_2(...) ecs_trace(2, __VA_ARGS__);
@@ -121,7 +124,6 @@ void ecs_log_pop(void);
 #define ecs_trace_1(...)
 #define ecs_trace_2(...)
 #define ecs_trace_3(...)
-#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
