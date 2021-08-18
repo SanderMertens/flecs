@@ -525,8 +525,7 @@ void flecs_run_monitor(
 bool flecs_query_match(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    const ecs_query_t *query,
-    ecs_match_failure_t *failure_info);
+    const ecs_query_t *query);
 
 void flecs_query_notify(
     ecs_world_t *world,
