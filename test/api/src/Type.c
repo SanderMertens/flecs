@@ -480,8 +480,8 @@ void Type_role_not_str() {
 }
 
 void Type_role_owned_str() {
-    ecs_entity_t e = ECS_OWNED;
-    test_str(ecs_role_str(e), "OWNED");
+    ecs_entity_t e = ECS_OVERRIDE;
+    test_str(ecs_role_str(e), "OVERRIDE");
 }
 
 void Type_role_disabled_str() {

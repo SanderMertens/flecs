@@ -3195,7 +3195,7 @@ FLECS_API extern const ecs_id_t ECS_SWITCH;
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
-FLECS_API extern const ecs_id_t ECS_OWNED;
+FLECS_API extern const ecs_id_t ECS_OVERRIDE;
 
 /** Track whether component is enabled or not */
 FLECS_API extern const ecs_id_t ECS_DISABLED;
@@ -7723,7 +7723,7 @@ static const flecs::entity_t PostFrame = EcsPostFrame;
 static const flecs::entity_t Pair = ECS_PAIR;
 static const flecs::entity_t Switch = ECS_SWITCH;
 static const flecs::entity_t Case = ECS_CASE;
-static const flecs::entity_t Owned = ECS_OWNED;
+static const flecs::entity_t Owned = ECS_OVERRIDE;
 
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;
@@ -11136,30 +11136,30 @@ public:
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
-     * @param entity The entity for which to add the OWNED flag
+     * @param entity The entity for which to add the OVERRIDE flag
      */    
-    const Base& add_owned(entity_t entity) const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | entity);
+    const Base& override(entity_t entity) const {
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OVERRIDE | entity);
         return *this;  
     }
 
     /** Add owned flag for component (forces ownership when instantiating)
      *
-     * @tparam T The component for which to add the OWNED flag
+     * @tparam T The component for which to add the OVERRIDE flag
      */    
     template <typename T>
-    const Base& add_owned() const {
-        ecs_add_id(this->base_world(), this->base_id(), ECS_OWNED | _::cpp_type<T>::id(this->base_world()));
+    const Base& override() const {
+        ecs_add_id(this->base_world(), this->base_id(), ECS_OVERRIDE | _::cpp_type<T>::id(this->base_world()));
         return *this;  
     }
 
     /** Set value, add owned flag.
      *
-     * @tparam T The component to set and for which to add the OWNED flag
+     * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    const Base& set_owned(T&& val) const {
-        this->add_owned<T>();
+    const Base& set_override(T&& val) const {
+        this->override<T>();
         this->set<T>(std::forward<T>(val));
         return *this;  
     }    

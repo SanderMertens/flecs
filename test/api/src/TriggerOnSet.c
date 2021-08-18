@@ -393,7 +393,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
+    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
@@ -426,7 +426,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
+    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
@@ -463,7 +463,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_PREFAB(world, Prefab, Position, OWNED | Position);
+    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_SYSTEM(world, OnSet, EcsOnSet, Position);

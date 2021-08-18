@@ -866,7 +866,7 @@ void Entity_foce_owned() {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .add_owned<Position>();
+        .override<Position>();
 
     auto e = world.entity()
         .add(flecs::IsA, prefab);
@@ -883,8 +883,8 @@ void Entity_force_owned_2() {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .add_owned<Position>()
-        .add_owned<Velocity>();
+        .override<Position>()
+        .override<Velocity>();
 
     auto e = world.entity()
         .add(flecs::IsA, prefab);
@@ -901,7 +901,7 @@ void Entity_force_owned_nested() {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .add_owned<Position>();
+        .override<Position>();
 
     auto prefab_2 = world.prefab()
         .add(flecs::IsA, prefab);
@@ -1076,11 +1076,11 @@ void Entity_set_deduced() {
     test_int(p->y, 20);
 }
 
-void Entity_add_owned() {
+void Entity_override() {
     flecs::world world;
 
     auto base = world.entity()
-        .add_owned<Position>();
+        .override<Position>();
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1089,11 +1089,11 @@ void Entity_add_owned() {
     test_assert(e.owns<Position>());
 }
 
-void Entity_set_owned() {
+void Entity_set_override() {
     flecs::world world;
 
     auto base = world.entity()
-        .set_owned<Position>({10, 20});
+        .set_override<Position>({10, 20});
 
     auto e = world.entity()
         .add(flecs::IsA, base);

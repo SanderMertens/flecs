@@ -74,8 +74,8 @@ void Entity_get_nonempty_type(void);
 void Entity_set_no_copy(void);
 void Entity_set_copy(void);
 void Entity_set_deduced(void);
-void Entity_add_owned(void);
-void Entity_set_owned(void);
+void Entity_override(void);
+void Entity_set_override(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
 void Entity_implicit_type_str_to_char(void);
@@ -943,12 +943,12 @@ bake_test_case Entity_testcases[] = {
         Entity_set_deduced
     },
     {
-        "add_owned",
-        Entity_add_owned
+        "override",
+        Entity_override
     },
     {
-        "set_owned",
-        Entity_set_owned
+        "set_override",
+        Entity_set_override
     },
     {
         "implicit_name_to_char",
