@@ -5,8 +5,8 @@ void Trigger_on_add() {
 
     int invoked = 0;
 
-    world.system<Position>()
-        .kind(flecs::OnAdd)
+    world.trigger<Position>()
+        .event(flecs::OnAdd)
         .each([&](flecs::entity e, Position& p) {
             invoked ++;
         });
@@ -22,8 +22,8 @@ void Trigger_on_remove() {
 
     int invoked = 0;
 
-    world.system<Position>()
-        .kind(flecs::OnRemove)
+    world.trigger<Position>()
+        .event(flecs::OnRemove)
         .each([&](flecs::entity e, Position& p) {
             invoked ++;
         });
@@ -45,8 +45,8 @@ void Trigger_on_add_tag_action() {
 
     int invoked = 0;
 
-    world.system<MyTag>()
-        .kind(flecs::OnAdd)
+    world.trigger<MyTag>()
+        .event(flecs::OnAdd)
         .iter([&](flecs::iter it, MyTag*) {
             invoked ++;
         });
@@ -62,8 +62,8 @@ void Trigger_on_add_tag_iter() {
 
     int invoked = 0;
 
-    world.system<MyTag>()
-        .kind(flecs::OnAdd)
+    world.trigger<MyTag>()
+        .event(flecs::OnAdd)
         .iter([&](flecs::iter it, MyTag*) {
             invoked ++;
         });
@@ -79,8 +79,8 @@ void Trigger_on_add_tag_each() {
 
     int invoked = 0;
 
-    world.system<MyTag>()
-        .kind(flecs::OnAdd)
+    world.trigger<MyTag>()
+        .event(flecs::OnAdd)
         .each([&](flecs::entity e, MyTag&) {
             invoked ++;
         });
@@ -97,8 +97,9 @@ void Trigger_trigger_w_self() {
     auto self = world.entity();
 
     bool invoked = false;
-    world.system<Position>()
-        .kind(flecs::OnAdd)
+
+    world.trigger<Position>()
+        .event(flecs::OnAdd)
         .self(self)
         .iter([&](flecs::iter& it) {
             test_assert(it.self() == self);
@@ -109,3 +110,68 @@ void Trigger_trigger_w_self() {
 
     test_bool(invoked, true);
 }
+
+void Trigger_on_add_id() {
+   flecs::world world;
+
+    int invoked = 0;
+
+    world.trigger<>().id<Tag>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+        });
+
+    auto e = world.entity().add<Tag>();
+
+    test_int(invoked, 1);
+    
+    e.remove<Tag>();
+
+    test_int(invoked, 1); 
+}
+
+void Trigger_on_add_id_arg() {
+   flecs::world world;
+
+    int invoked = 0;
+
+    auto tag = world.component<Tag>();
+
+    world.trigger<>(nullptr, tag)
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+        });
+
+    auto e = world.entity().add(tag);
+
+    test_int(invoked, 1);
+    
+    e.remove(tag);
+
+    test_int(invoked, 1);
+}
+
+void Trigger_on_add_expr() {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Tag>();
+
+    world.trigger<>().expr("Tag")
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+        });
+
+    auto e = world.entity().add<Tag>();
+
+    test_int(invoked, 1);
+    
+    e.remove<Tag>();
+
+    test_int(invoked, 1);
+}
+

@@ -292,6 +292,9 @@ void Trigger_on_add_tag_action(void);
 void Trigger_on_add_tag_iter(void);
 void Trigger_on_add_tag_each(void);
 void Trigger_trigger_w_self(void);
+void Trigger_on_add_id(void);
+void Trigger_on_add_id_arg(void);
+void Trigger_on_add_expr(void);
 
 // Testsuite 'Query'
 void Query_action(void);
@@ -1780,6 +1783,18 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_w_self",
         Trigger_trigger_w_self
+    },
+    {
+        "on_add_id",
+        Trigger_on_add_id
+    },
+    {
+        "on_add_id_arg",
+        Trigger_on_add_id_arg
+    },
+    {
+        "on_add_expr",
+        Trigger_on_add_expr
     }
 };
 
@@ -3291,7 +3306,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        6,
+        9,
         Trigger_testcases
     },
     {

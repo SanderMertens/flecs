@@ -190,6 +190,11 @@ inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
 }
 
 template <typename... Comps, typename... Args>
+inline flecs::trigger_builder<Comps...> world::trigger(Args &&... args) const {
+    return flecs::trigger_builder<Comps...>(*this, std::forward<Args>(args)...);
+}
+
+template <typename... Comps, typename... Args>
 inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const {
     return flecs::observer_builder<Comps...>(*this, std::forward<Args>(args)...);
 }

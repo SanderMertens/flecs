@@ -149,26 +149,6 @@ public:
         }
     }    
 
-    ECS_DEPRECATED("use interval")
-    void period(FLECS_FLOAT period) {
-        this->interval(period);
-    }
-
-    ECS_DEPRECATED("use interval")
-    void set_period(FLECS_FLOAT period) const {
-        this->interval(period);
-    }
-
-    ECS_DEPRECATED("use ctx(void*)")
-    void set_context(void *ptr) {
-        ctx(ptr);
-    }
-
-    ECS_DEPRECATED("use void* ctx()")
-    void* get_context() const {
-        return ctx();
-    }
-
     query_base query() const {
         return query_base(m_world, ecs_get_system_query(m_world, m_id));
     }

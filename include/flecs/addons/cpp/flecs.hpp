@@ -80,6 +80,9 @@ template<typename ... Components>
 class system;
 
 template<typename ... Components>
+class trigger;
+
+template<typename ... Components>
 class observer;
 
 template <typename ... Components>
@@ -90,6 +93,9 @@ class query_builder;
 
 template <typename ... Components>
 class system_builder;
+
+template <typename ... Components>
+class trigger_builder;
 
 template <typename ... Components>
 class observer_builder;
@@ -212,5 +218,6 @@ static const flecs::entity_t Throw = EcsThrow;
 #include "filter_iterator.hpp"
 #include "query.hpp"
 #include "system.hpp"
+#include "trigger.hpp"
 #include "observer.hpp"
 #include "impl.hpp"

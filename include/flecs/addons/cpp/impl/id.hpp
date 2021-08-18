@@ -50,17 +50,4 @@ inline flecs::entity id::remove_generation() const {
     return flecs::entity(m_world, static_cast<uint32_t>(m_id));
 }
 
-inline entity id::lo() const {
-    return flecs::entity(m_world, ecs_entity_t_lo(m_id));
-}
-
-inline entity id::hi() const {
-    return flecs::entity(m_world, ecs_entity_t_hi(m_id));
-}
-
-inline entity id::comb(entity_view lo, entity_view hi) {
-    return flecs::entity(lo.world(), 
-        ecs_entity_t_comb(lo.id(), hi.id()));
-}
-
 }

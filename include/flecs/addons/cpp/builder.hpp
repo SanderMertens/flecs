@@ -254,10 +254,60 @@ protected:
         }
     }
 
+    // A term can contain at most one component, but the parameter pack makes
+    // the template parameter optional, which makes it easier to reuse the same
+    // code for templated vs. non-templated terms.
+    template <typename ... Components>
+    void populate_term_from_pack() {
+        flecs::array<flecs::id_t, sizeof...(Components)> ids ({
+            (_::cpp_type<Components>::id(world()))...
+        });
+
+        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
+            (type_to_inout<Components>())...
+        });
+
+        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
+            (type_to_oper<Components>())...
+        });
+
+        size_t i = 0;
+        for (auto the_id : ids) {
+            this->id(the_id).inout(inout_kinds[i]).oper(oper_kinds[i]);
+            i ++;
+        }
+    }
+
+    template <typename T, if_t< is_const<T>::value > = 0>
+    constexpr flecs::inout_kind_t type_to_inout() const {
+        return flecs::In;
+    }
+
+    template <typename T, if_t< is_reference<T>::value > = 0>
+    constexpr flecs::inout_kind_t type_to_inout() const {
+        return flecs::Out;
+    }
+
+    template <typename T, if_not_t< 
+        is_const<T>::value || is_reference<T>::value > = 0>
+    constexpr flecs::inout_kind_t type_to_inout() const {
+        return flecs::InOutDefault;
+    }
+
+    template <typename T, if_t< is_pointer<T>::value > = 0>
+    constexpr flecs::oper_kind_t type_to_oper() const {
+        return flecs::Optional;
+    }
+
+    template <typename T, if_not_t< is_pointer<T>::value > = 0>
+    constexpr flecs::oper_kind_t type_to_oper() const {
+        return flecs::And;
+    } 
+
 private:
     operator Base&() {
         return *static_cast<Base*>(this);
-    }
+    }   
 };
 
 // Class that describes a term
@@ -473,11 +523,11 @@ public:
         });
 
         flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
-            (type_to_inout<Components>())...
+            (this->template type_to_inout<Components>())...
         });
 
         flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
-            (type_to_oper<Components>())...
+            (this->template type_to_oper<Components>())...
         });
 
         size_t i = 0;
@@ -494,32 +544,6 @@ protected:
 private:
     operator Base&() {
         return *static_cast<Base*>(this);
-    }
-
-    template <typename T, if_t< is_const<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::In;
-    }
-
-    template <typename T, if_t< is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::Out;
-    }
-
-    template <typename T, if_not_t< 
-        is_const<T>::value || is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::InOutDefault;
-    }
-
-    template <typename T, if_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
-        return flecs::Optional;
-    }
-
-    template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
-        return flecs::And;
     }
 
     ecs_filter_desc_t *m_desc;
@@ -722,17 +746,6 @@ public:
         return *this;
     }
 
-    ECS_DEPRECATED("use interval")
-    Base& period(FLECS_FLOAT period) {
-        return this->interval(period);
-    }   
-
-    ECS_DEPRECATED("use ctx")
-    Base& set_context(void *ptr) {
-        ctx(ptr);
-        return *this;
-    }     
-
 protected:
     virtual flecs::world_t* world() = 0;
 
@@ -744,6 +757,54 @@ private:
     ecs_system_desc_t *m_desc;
     int32_t m_add_count;
 };
+
+// Trigger builder interface
+template<typename Base, typename ... Components>
+class trigger_builder_i : public term_builder_i<Base> {
+    using BaseClass = term_builder_i<Base>;
+public:
+    trigger_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr)
+        , m_event_count(0) { }
+
+    trigger_builder_i(ecs_trigger_desc_t *desc) 
+        : BaseClass(&desc->term)
+        , m_desc(desc)
+        , m_event_count(0) { }
+
+    /** Specify when the event(s) for which the trigger run.
+     * @param kind The kind that specifies when the system should be ran.
+     */
+    Base& event(entity_t kind) {
+        m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Associate trigger with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ptr;
+        return *this;
+    }    
+
+protected:
+    virtual flecs::world_t* world() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_trigger_desc_t *m_desc;
+    int32_t m_event_count;
+};
+
 
 // Observer builder interface
 template<typename Base, typename ... Components>
@@ -760,15 +821,7 @@ public:
         , m_desc(desc)
         , m_event_count(0) { }
 
-    /** Specify when the system should be ran.
-     * Use this function to set in which phase the system should run or whether
-     * the system is reactive. Valid values for reactive systems are:
-     *
-     * flecs::OnAdd
-     * flecs::OnRemove
-     * flecs::OnSet
-     * flecs::UnSet
-     *
+    /** Specify when the event(s) for which the trigger run.
      * @param kind The kind that specifies when the system should be ran.
      */
     Base& event(entity_t kind) {
@@ -967,45 +1020,75 @@ private:
     entity_t build(Func&& func, bool is_each) const {
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
-        entity_t e, kind = m_desc.entity.add[0];
-        bool is_trigger = kind == flecs::OnAdd || kind == flecs::OnRemove;
+        ecs_system_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.self = m_desc.self;
+        desc.query.filter.substitute_default = is_each;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
 
-        if (is_trigger) {
-            ecs_trigger_desc_t desc = {};
-            ecs_term_t term = m_desc.query.filter.terms[0];
-            if (ecs_term_is_initialized(&term)) {
-                desc.term = term;
-            } else {
-                desc.expr = m_desc.query.filter.expr;
-            }
-
-            desc.entity.entity = m_desc.entity.entity;
-            desc.events[0] = kind;
-            desc.callback = Invoker::run;
-            desc.self = m_desc.self;
-            desc.ctx = m_desc.ctx;
-            desc.binding_ctx = ctx;
-            desc.binding_ctx_free = reinterpret_cast<
-                ecs_ctx_free_t>(_::free_obj<Invoker>);
-
-            e = ecs_trigger_init(m_world, &desc);
-        } else {
-            ecs_system_desc_t desc = m_desc;
-            desc.callback = Invoker::run;
-            desc.self = m_desc.self;
-            desc.query.filter.substitute_default = is_each;
-            desc.binding_ctx = ctx;
-            desc.binding_ctx_free = reinterpret_cast<
-                ecs_ctx_free_t>(_::free_obj<Invoker>);
-
-            e = ecs_system_init(m_world, &desc);
-        }
+        entity_t e = ecs_system_init(m_world, &desc);
 
         if (this->m_desc.query.filter.terms_buffer) {
             ecs_os_free(m_desc.query.filter.terms_buffer);
         }
 
         return e;
+    }
+};
+
+template<typename ... Components>
+class trigger_builder final
+    : public trigger_builder_i<trigger_builder<Components...>, Components...>
+{
+    using Class = trigger_builder<Components...>;
+public:
+    explicit trigger_builder(flecs::world_t* world, const char *name = nullptr, flecs::id_t the_id = 0)
+        : trigger_builder_i<Class, Components...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            this->template populate_term_from_pack<Components...>();
+            
+            if (the_id) {
+                /* Id should not be set if term is populated from template */
+                ecs_assert(!m_desc.term.id, ECS_INVALID_PARAMETER, NULL);
+                this->id(the_id);
+            }
+        }
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    trigger<Components...> iter(Func&& func) const;
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    trigger<Components...> each(Func&& func) const;
+
+    ecs_trigger_desc_t m_desc;
+
+protected:
+    flecs::world_t* world() override { return m_world; }
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func) const {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        ecs_trigger_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        return ecs_trigger_init(m_world, &desc);;
     }
 };
 
@@ -1022,7 +1105,6 @@ public:
         { 
             m_desc.entity.name = name;
             m_desc.entity.sep = "::";
-            m_desc.entity.add[0] = flecs::OnUpdate;
             m_desc.filter.expr = expr;
             this->populate_filter_from_pack();
         }
