@@ -31,7 +31,7 @@
 #define TOK_ALL "all"
 
 #define TOK_ANY "ANY"
-#define TOK_OWNED "OWNED"
+#define TOK_OWNED "OVERRIDE"
 #define TOK_SHARED "SHARED"
 #define TOK_SYSTEM "SYSTEM"
 #define TOK_PARENT "PARENT"
@@ -247,7 +247,7 @@ ecs_entity_t parse_role(
     } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
         return ECS_CASE;
     } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        return ECS_OWNED;
+        return ECS_OVERRIDE;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
         return ECS_DISABLED;        
     } else {

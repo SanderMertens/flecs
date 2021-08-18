@@ -665,7 +665,7 @@ void find_owned_components(
     ecs_ids_t * owned)
 {
     /* If we're adding an IsA relationship, check if the base
-     * has OWNED components that need to be added to the instance */
+     * has OVERRIDE components that need to be added to the instance */
     ecs_type_t t = ecs_get_type(world, base);
 
     int i, count = ecs_vector_count(t);
@@ -675,7 +675,7 @@ void find_owned_components(
         if (ECS_HAS_RELATION(e, EcsIsA)) {
             find_owned_components(world, node, ECS_PAIR_OBJECT(e), owned);
         } else
-        if (ECS_HAS_ROLE(e, OWNED)) {
+        if (ECS_HAS_ROLE(e, OVERRIDE)) {
             e = e & ECS_COMPONENT_MASK;
             
             /* If entity is a type, add each component in the type */
@@ -741,7 +741,7 @@ ecs_table_t* flecs_table_traverse_add(
         node = next;
     }
 
-    /* In case OWNED components were found, add them as well */
+    /* In case OVERRIDE components were found, add them as well */
     if (owned.count) {
         node = flecs_table_traverse_add(world, node, &owned, added);
     }

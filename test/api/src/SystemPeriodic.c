@@ -1533,7 +1533,7 @@ void SystemPeriodic_owned_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OWNED:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OVERRIDE:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1562,7 +1562,7 @@ void SystemPeriodic_owned_not_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OWNED:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OVERRIDE:Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1597,7 +1597,7 @@ void SystemPeriodic_owned_or_column() {
     ECS_ENTITY(world, e2, Position, Mass);
     ECS_ENTITY(world, e3, Position, (IsA, base));
 
-    ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, OWNED:Velocity || OWNED:Mass);
+    ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, OVERRIDE:Velocity || OVERRIDE:Mass);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1872,7 +1872,7 @@ void SystemPeriodic_owned_only() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, OWNED:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, OVERRIDE:Position);
 
     ecs_entity_t e = ecs_new(world, Position);
 

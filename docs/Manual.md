@@ -629,7 +629,7 @@ Here, `ECS_SWITCH` is the type role. This is an overview of the different roles:
 |------|-------------|
 | ECS_SWITCH | The entity is a switch type |
 | ECS_CASE | The entity is a case belonging to a switch type |
-| ECS_OWNED | The entity is a component for which ownership is enforced |
+| ECS_OVERRIDE | The entity is a component for which ownership is enforced |
 
 Entities with type roles can be dynamically added or removed:
 
@@ -1880,18 +1880,18 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 // Create a base. Simply deriving the base will share the component, but not override it.
 ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
 
-// Mark as OWNED. This ensures that when base is derived from, Position is overridden
-ecs_add_id(world, world, Base, ECS_OWNED | ecs_id(Position));
+// Mark as OVERRIDE. This ensures that when base is derived from, Position is overridden
+ecs_add_id(world, world, Base, ECS_OVERRIDE | ecs_id(Position));
 
 // Create entity from BaseType. This adds the IsA relationship in addition 
 // to overriding Position, effectively initializing the Position component for the entity.
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 ```
 
-The combination of instancing, overriding and OWNED is one of the fastest and easiest ways to create an entity with a set of initialized components. The OWNED relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
+The combination of instancing, overriding and OVERRIDE is one of the fastest and easiest ways to create an entity with a set of initialized components. The OVERRIDE relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
 
 ```c
-ECS_ENTITY(world, Base, Position, OWNED | Position);
+ECS_ENTITY(world, Base, Position, OVERRIDE | Position);
 
 ecs_set(world, Base, Position, {10, 20});
 

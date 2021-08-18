@@ -666,7 +666,7 @@ FLECS_API extern const ecs_id_t ECS_SWITCH;
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Enforce ownership of a component */
-FLECS_API extern const ecs_id_t ECS_OWNED;
+FLECS_API extern const ecs_id_t ECS_OVERRIDE;
 
 /** Track whether component is enabled or not */
 FLECS_API extern const ecs_id_t ECS_DISABLED;
