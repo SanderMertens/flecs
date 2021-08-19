@@ -175,10 +175,8 @@ ecs_entity_t find_child_in_table(
         return 0;
     }
 
-    ecs_data_t *data = flecs_table_get_data(table);
-    if (!data || !data->columns) {
-        return 0;
-    }
+    const ecs_data_t *data = &table->storage;
+    ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i, count = ecs_vector_count(data->entities);
     if (!count) {

@@ -667,7 +667,7 @@ bool populate_from_column(
             column = tr->column;
         }
 
-        ecs_data_t *data = flecs_table_get_data(table);
+        const ecs_data_t *data = &table->storage;
         ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
 
         /* If there is no data, ensure that iterator won't try to get it */
@@ -718,15 +718,9 @@ void populate_from_table(
     it->type = table->type;
     it->count = ecs_table_count(table);
 
-    const ecs_data_t *data = flecs_table_get_data(table);
-
-    if (data) {
-        it->table_columns = data->columns;
-        it->entities = ecs_vector_first(data->entities, ecs_entity_t);
-    } else {
-        it->table_columns = NULL;
-        it->entities = NULL;
-    }
+    const ecs_data_t *data = &table->storage;
+    it->table_columns = data->columns;
+    it->entities = ecs_vector_first(data->entities, ecs_entity_t);
 }
 
 bool flecs_filter_match_table(
@@ -993,8 +987,6 @@ bool ecs_term_next(
     ecs_assert(source || !iter->iter_set, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = flecs_table_get_data(table);
-
     it->table = table;
     it->type = table->type;
     it->ids = &iter->id;
@@ -1003,9 +995,9 @@ bool ecs_term_next(
     it->sizes = &iter->size;
     it->ptrs = &iter->ptr;
 
-    it->table_columns = data->columns;
+    it->table_columns = &table->storage.columns;
     it->count = ecs_table_count(table);
-    it->entities = ecs_vector_first(data->entities, ecs_entity_t);
+    it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
     it->is_valid = true;
 
     bool has_data = populate_from_column(world, table, term->id, tr->column, 

@@ -13,6 +13,13 @@ struct ecs_snapshot_t {
     ecs_filter_t filter;
 };
 
+/** Small footprint data structure for storing data associated with a table. */
+typedef struct ecs_table_leaf_t {
+    ecs_table_t *table;
+    ecs_type_t type;
+    ecs_data_t *data;
+} ecs_table_leaf_t;
+
 static
 ecs_data_t* duplicate_data(
     const ecs_world_t *world,
@@ -114,15 +121,14 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        ecs_data_t *data = flecs_table_get_data(t);
-        if (!data || !data->entities || !ecs_vector_count(data->entities)) {
+        if (!ecs_table_count(t)) {
             continue;
         }
 
         ecs_table_leaf_t *l = ecs_vector_add(&result->tables, ecs_table_leaf_t);
         l->table = t;
         l->type = t->type;
-        l->data = duplicate_data(world, t, data);
+        l->data = duplicate_data(world, t, &t->storage);
     }
 
     return result;
@@ -206,18 +212,13 @@ void ecs_snapshot_restore(
                 ecs_vector_each(leaf->data->entities, ecs_entity_t, e_ptr, {
                     ecs_record_t *r = ecs_eis_get(world, *e_ptr);
                     if (r && r->table) {
-                        ecs_data_t *data = flecs_table_get_data(r->table);
-                        
-                        /* Data must be not NULL, otherwise entity index could
-                         * not point to it */
-                        ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
                         bool is_monitored;
                         int32_t row = flecs_record_to_row(r->row, &is_monitored);
                         
                         /* Always delete entity, so that even if the entity is
                         * in the current table, there won't be duplicates */
-                        flecs_table_delete(world, r->table, data, row, true);
+                        flecs_table_delete(world, r->table, &table->storage, 
+                            row, true);
                     } else {
                         ecs_eis_set_generation(world, *e_ptr);
                     }
@@ -226,11 +227,10 @@ void ecs_snapshot_restore(
                 int32_t old_count = ecs_table_count(table);
                 int32_t new_count = flecs_table_data_count(leaf->data);
 
-                ecs_data_t *data = flecs_table_get_data(table);
-                data = flecs_table_merge(world, table, table, data, leaf->data);
+                flecs_table_merge(world, table, table, &table->storage, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                flecs_run_set_systems(world, 0, table, data, NULL,
+                flecs_run_set_systems(world, 0, table, &table->storage, NULL,
                     old_count, new_count, true);
 
                 ecs_os_free(leaf->data->columns);
@@ -248,7 +248,8 @@ void ecs_snapshot_restore(
              * snapshot was not filtered, clear the table. */
             if (!is_filtered) {
                 /* Clear data of old table. */
-                flecs_table_clear_data(world, table, flecs_table_get_data(table));
+                flecs_table_clear_data(world, table, &table->storage);
+                flecs_table_init_data(world, table);
             }
         }
 
@@ -262,16 +263,14 @@ void ecs_snapshot_restore(
      * restoring safe */
     if (!is_filtered) {
         for (t = 0; t < table_count; t ++) {
-            ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);
+            ecs_table_t *table = flecs_sparse_get_dense(
+                world->store.tables, ecs_table_t, t);
             if (table->flags & EcsTableHasBuiltins) {
                 continue;
             }
-            
-            ecs_data_t *table_data = flecs_table_get_data(table);
-            int32_t entity_count = flecs_table_data_count(table_data);
 
-            flecs_run_set_systems(world, 0, table, 
-                table_data, NULL, 0, entity_count, true);            
+            flecs_run_set_systems(world, 0, table, &table->storage, NULL, 0, 
+                ecs_table_count(table), true);            
         }
     }
 

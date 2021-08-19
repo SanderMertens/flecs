@@ -306,7 +306,6 @@ void init_table(
 {
     table->type = entities_to_type(entities);
     table->c_info = NULL;
-    table->data = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->monitors = NULL;
@@ -330,6 +329,8 @@ void init_table(
 
     flecs_register_table(world, table);
 
+    flecs_table_init_data(world, table);
+
     /* Register component info flags for all columns */
     flecs_table_notify(world, table, &(ecs_table_event_t){
         .kind = EcsTableComponentInfo
@@ -346,6 +347,7 @@ ecs_table_t *create_table(
     result->id = flecs_sparse_last_id(world->store.tables);
 
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
     init_table(world, result, entities);
 
 #ifndef NDEBUG
@@ -498,7 +500,6 @@ int32_t flecs_table_switch_from_case(
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
-    ecs_data_t *data = flecs_table_get_data(table);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int32_t i, count = table->sw_column_count;
@@ -508,7 +509,7 @@ int32_t flecs_table_switch_from_case(
 
     ecs_sw_column_t *sw_columns = NULL;
 
-    if (data && (sw_columns = data->sw_columns)) {
+    if ((sw_columns = table->storage.sw_columns)) {
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
             ecs_type_t sw_type = sw_columns[i].type;

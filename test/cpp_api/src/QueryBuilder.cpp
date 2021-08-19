@@ -348,6 +348,27 @@ void QueryBuilder_string_term() {
     test_int(count, 1);
 }
 
+void QueryBuilder_string_term_w_expr() {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = ecs.query_builder<>()
+        .term().expr("Position")
+        .build();
+
+    auto e1 = ecs.entity().add<Position>();
+    ecs.entity().add<Velocity>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
 void QueryBuilder_singleton_term() {
     flecs::world ecs;
 

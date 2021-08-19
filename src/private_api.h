@@ -314,21 +314,12 @@ void flecs_run_set_systems(
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
-    const ecs_ids_t *type);   
-
-/* Get table data */
-ecs_data_t *flecs_table_get_data(
-    const ecs_table_t *table);
-
-/* Get or create data */
-ecs_data_t *flecs_table_get_or_create_data(
-    ecs_table_t *table);
+    const ecs_ids_t *type);
 
 /* Initialize columns for data */
-ecs_data_t* flecs_init_data(
+void flecs_table_init_data(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *result); 
+    ecs_table_t *table); 
 
 /* Clear all entities from a table. */
 void flecs_table_clear_entities(
@@ -445,7 +436,7 @@ void flecs_table_replace_data(
     ecs_data_t *data);
 
 /* Merge data of one table into another table */
-ecs_data_t* flecs_table_merge(
+void flecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
     ecs_table_t *old_table,

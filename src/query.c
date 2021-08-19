@@ -1022,8 +1022,8 @@ void sort_table(
     int32_t column_index,
     ecs_order_by_action_t compare)
 {
-    ecs_data_t *data = flecs_table_get_data(table);
-    if (!data || !data->entities) {
+    ecs_data_t *data = &table->storage;
+    if (!data->entities) {
         /* Nothing to sort */
         return;
     }
@@ -1100,9 +1100,9 @@ void build_sorted_table_range(
     for (i = start; i < end; i ++) {
         ecs_matched_table_t *table_data = &tables[i];
         ecs_table_t *table = table_data->table;
-        ecs_data_t *data = flecs_table_get_data(table);
+        ecs_data_t *data = &table->storage;
         ecs_vector_t *entities;
-        if (!data || !(entities = data->entities) || !ecs_table_count(table)) {
+        if (!(entities = data->entities) || !ecs_table_count(table)) {
             continue;
         }
 
@@ -2380,16 +2380,14 @@ void populate_ptrs(
     ecs_iter_t *it)
 {
     ecs_table_t *table = it->table;
-    const ecs_data_t *data = NULL;
     ecs_column_t *columns = NULL;
     ecs_id_t *ids = NULL;
 
     if (table) {
-        data = flecs_table_get_data(table);
         ids = ecs_vector_first(table->type, ecs_id_t);
     }
-    if (data) {
-        columns = data->columns;
+    if (table) {
+        columns = table->storage.columns;
     }
 
     int c;
@@ -2414,7 +2412,7 @@ void populate_ptrs(
             ecs_vector_t *vec;
             ecs_size_t size, align;
             if (ECS_HAS_ROLE(ids[c_index], SWITCH)) {
-                ecs_switch_t *sw = data->sw_columns[
+                ecs_switch_t *sw = table->storage.sw_columns[
                     c_index - table->sw_column_offset].data;
                 vec = flecs_switch_values(sw);
                 size = ECS_SIZEOF(ecs_entity_t);
@@ -2454,8 +2452,7 @@ void flecs_query_set_iter(
     ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table = table_data->table;
-    ecs_data_t *data = flecs_table_get_data(table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_data_t *data = &table->storage;
     
     ecs_entity_t *entity_buffer = ecs_vector_first(data->entities, ecs_entity_t);  
     it->entities = &entity_buffer[row];
@@ -2551,7 +2548,7 @@ int find_smallest_column(
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
-            ecs_data_t *data = flecs_table_get_data(table);
+            ecs_data_t *data = &table->storage;
             sc = sparse_column->sw_column = 
                 &data->sw_columns[table_column_index - 1];
         }
@@ -2707,10 +2704,9 @@ int bitset_column_next(
         ecs_bs_column_t *bs_column = columns[i].bs_column;
 
         if (!bs_column) {
-            ecs_data_t *data = table->data;
             int32_t index = column->column_index;
             ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
-            bs_column = &data->bs_columns[index - bs_offset];
+            bs_column = &table->storage.bs_columns[index - bs_offset];
             columns[i].bs_column = bs_column;
         }
         
@@ -2899,8 +2895,7 @@ bool ecs_query_next(
         if (table) {
             ecs_vector_t *bitset_columns = table_data->bitset_columns;
             ecs_vector_t *sparse_columns = table_data->sparse_columns;
-            data = flecs_table_get_data(table);
-            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            data = &table->storage;
             it->table_columns = data->columns;
             
             if (slice) {

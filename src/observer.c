@@ -23,16 +23,13 @@ void observer_callback(ecs_iter_t *it) {
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
         user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
     {
-        ecs_data_t *data = flecs_table_get_data(table);
-        
         user_it.ids[it->term_index] = it->event_id;
-
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
         user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual,
-        user_it.table_columns = data->columns,
+        user_it.table_columns = table->storage.columns,
         o->action(&user_it);
     }
 
