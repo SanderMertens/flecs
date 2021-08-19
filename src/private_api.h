@@ -210,7 +210,7 @@ bool flecs_defer_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components);
+    ecs_id_t id);
 
 bool flecs_defer_clone(
     ecs_world_t *world,
@@ -223,7 +223,7 @@ bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
-    const ecs_ids_t *components,
+    ecs_id_t id,
     const ecs_entity_t **ids_out);
 
 bool flecs_defer_delete(
@@ -247,13 +247,13 @@ bool flecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components);
+    ecs_id_t id);
 
 bool flecs_defer_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components);
+    ecs_id_t id);
 
 bool flecs_defer_set(
     ecs_world_t *world,
@@ -453,13 +453,13 @@ void flecs_table_swap(
 ecs_table_t *flecs_table_traverse_add(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_ids_t *to_add,
+    ecs_id_t id,
     ecs_ids_t *added);
 
 ecs_table_t *flecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_ids_t *to_remove,
+    ecs_id_t id,
     ecs_ids_t *removed);
 
 void flecs_table_mark_dirty(

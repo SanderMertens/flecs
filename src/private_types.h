@@ -377,8 +377,7 @@ typedef struct ecs_op_n_t {
 
 typedef struct ecs_op_t {
     ecs_op_kind_t kind;         /* Operation kind */    
-    ecs_entity_t component;     /* Single component (components.count = 1) */
-    ecs_ids_t components;       /* Multiple components */
+    ecs_id_t id;                /* (Component) id */
     union {
         ecs_op_1_t _1;
         ecs_op_n_t _n;
