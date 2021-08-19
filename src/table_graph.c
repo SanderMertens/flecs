@@ -923,15 +923,6 @@ ecs_table_t* flecs_table_find_or_create(
     return find_or_create(world, components);
 }
 
-ecs_table_t* ecs_table_from_type(
-    ecs_world_t *world,
-    ecs_type_t type)
-{
-    ecs_ids_t components = flecs_type_to_ids(type);
-    return flecs_table_find_or_create(
-        world, &components);
-}
-
 void flecs_init_root_table(
     ecs_world_t *world)
 {

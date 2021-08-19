@@ -2773,18 +2773,6 @@ ecs_type_t ecs_type_from_str(
     const char *expr);    
 
 FLECS_API
-ecs_type_t ecs_type_add(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_id_t id);
-
-FLECS_API
-ecs_type_t ecs_type_remove(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_id_t id);
-
-FLECS_API
 int32_t ecs_type_index_of(
     ecs_type_t type,
     int32_t offset,
@@ -5647,18 +5635,6 @@ ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *type);
 
-/** Find or create table from type.
- * Same as ecs_table_from_str, but provides the type directly.
- *
- * @param world The world.
- * @param type The type.
- * @return The new or existing table.
- */
-FLECS_API
-ecs_table_t* ecs_table_from_type(
-    ecs_world_t *world,
-    ecs_type_t type);
-
 /** Get type for table.
  *
  * @param table The table.
@@ -7382,19 +7358,19 @@ FLECS_API void ecs_gauge_reduce(
 /* -- Iterators -- */
 
 #define ecs_term_id(it, index)\
-    it->ids[index - 1]
+    ((it)->ids[(index) - 1])
 
 #define ecs_term_source(it, index)\
-    (it->subjects ? it->subjects[index - 1] : 0)
+    ((it)->subjects ? (it)->subjects[(index) - 1] : 0)
 
 #define ecs_term_size(it, index)\
-    (index == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, it->sizes[index - 1]))
+    ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
 
 #define ecs_term_is_set(it, index)\
-    (it->columns[term - 1] != 0)
+    ((it)->columns[(index) - 1] != 0)
 
 #define ecs_term_is_owned(it, index)\
-    (it->subjects == NULL || it->subjects[index - 1] == 0)
+    ((it)->subjects == NULL || (it)->subjects[(index) - 1] == 0)
 
 #define ecs_term(it, T, index)\
     (ECS_CAST(T*, ecs_term_w_size(it, sizeof(T), index)))
@@ -7510,6 +7486,7 @@ using world_t = ecs_world_t;
 using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
+using table_t = ecs_table_t;
 using snapshot_t = ecs_snapshot_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
@@ -14082,16 +14059,20 @@ public:
 
     explicit type_base(world_t *world, type_t t)
         : m_entity( world, static_cast<flecs::id_t>(0) )
-        , m_type( t )
-        , m_normalized( t ) { }
+        , m_type( t ) { }
 
     type_base(type_t t)
-        : m_type( t )
-        , m_normalized( t ) { }
+        : m_type( t ) { }
 
-    Base& add(id_t e) {
-        m_type = ecs_type_add(world(), m_type, e);
-        m_normalized = ecs_type_add(world(), m_normalized, e);
+    Base& add(id_t id) {
+        if (!m_table) {
+            for (auto id : this->vector()) {
+                m_table = ecs_table_add_id(world(), m_table, id);
+            }
+        }
+
+        m_table = ecs_table_add_id(world(), m_table, id);
+        m_type = ecs_table_get_type(m_table);
         sync_from_me();
         return *this;
     }
@@ -14129,11 +14110,11 @@ public:
     }
 
     bool has(id_t id) {
-        return ecs_type_has_id(world(), m_normalized, id, false);
+        return ecs_type_has_id(world(), m_type, id, false);
     }
 
     bool has(id_t relation, id_t object) {
-        return ecs_type_has_id(world(), m_normalized, 
+        return ecs_type_has_id(world(), m_type, 
             ecs_pair(relation, object), false);
     }    
 
@@ -14174,10 +14155,6 @@ public:
         return m_entity.world();
     } 
 
-    type_t c_normalized() const {
-        return m_normalized;
-    }
-
     void enable() const {
         ecs_enable(world(), id(), true);
     }
@@ -14187,7 +14164,7 @@ public:
     }
 
     flecs::vector<flecs::id_t> vector() {
-        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_normalized));
+        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_type));
     }
 
     flecs::id get(int32_t index) {
@@ -14195,7 +14172,7 @@ public:
     }
 
     /* Implicit conversion to type_t */
-    operator type_t() const { return m_normalized; }
+    operator type_t() const { return m_type; }
 
     operator Base&() { return *static_cast<Base*>(this); }
 
@@ -14208,7 +14185,7 @@ private:
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
         tc->type = m_type;
-        tc->normalized = m_normalized;
+        tc->normalized = m_type;
         ecs_modified(world(), id(), EcsType);
 
     }
@@ -14220,14 +14197,15 @@ private:
 
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);            
-        m_type = tc->type;
-        m_normalized = tc->normalized;
+        m_type = tc->normalized;
         ecs_modified(world(), id(), EcsType);
-    }   
+
+        m_table = nullptr;
+    }
 
     flecs::entity m_entity;
     type_t m_type;
-    type_t m_normalized;
+    table_t *m_table = nullptr;
 };
 
 class type : public type_base<type> { 

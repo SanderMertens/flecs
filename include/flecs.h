@@ -3144,18 +3144,6 @@ ecs_table_t* ecs_table_from_str(
     ecs_world_t *world,
     const char *type);
 
-/** Find or create table from type.
- * Same as ecs_table_from_str, but provides the type directly.
- *
- * @param world The world.
- * @param type The type.
- * @return The new or existing table.
- */
-FLECS_API
-ecs_table_t* ecs_table_from_type(
-    ecs_world_t *world,
-    ecs_type_t type);
-
 /** Get type for table.
  *
  * @param table The table.

@@ -48,14 +48,17 @@ void Type_type_of_2_tostr() {
 void Type_type_of_2_tostr_no_id() {
     ecs_world_t *world = ecs_init();
 
-    ecs_type_t t = ecs_type_add(world, NULL, 100);
-    t = ecs_type_add(world, t, 200);
+    ecs_vector_t *t = ecs_vector_new(ecs_id_t, 2);
+    ecs_vector_add(&t, ecs_id_t)[0] = 100;
+    ecs_vector_add(&t, ecs_id_t)[0] = 200;
     
     char *str = ecs_type_str(world, t);
     
     test_str(str, "100,200");
 
     free(str);
+
+    ecs_vector_free(t);
 
     ecs_fini(world);
 }
