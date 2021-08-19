@@ -83,8 +83,8 @@ const EcsComponent* flecs_component_from_id(
 /* Count number of columns with data (excluding tags) */
 static
 int32_t data_column_count(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     int32_t count = 0;
     ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
@@ -110,8 +110,8 @@ int32_t data_column_count(
 /* Ensure the ids used in the columns exist */
 static
 int32_t ensure_columns(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     int32_t count = 0;
     ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
@@ -208,7 +208,7 @@ ecs_edge_t* get_edge(
 
 static
 void init_edges(
-    ecs_table_t * table)
+    ecs_table_t *table)
 {
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
@@ -229,8 +229,8 @@ void init_edges(
 
 static
 void init_flags(
-    ecs_world_t * world,
-    ecs_table_t * table)
+    ecs_world_t *world,
+    ecs_table_t *table)
 {
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
@@ -300,9 +300,9 @@ void init_flags(
 
 static
 void init_table(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_ids_t * entities)
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_ids_t *entities)
 {
     table->type = entities_to_type(entities);
     table->c_info = NULL;
@@ -339,8 +339,8 @@ void init_table(
 
 static
 ecs_table_t *create_table(
-    ecs_world_t * world,
-    ecs_ids_t * entities,
+    ecs_world_t *world,
+    ecs_ids_t *entities,
     flecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
@@ -381,7 +381,6 @@ static
 void add_entity_to_type(
     ecs_type_t type,
     ecs_entity_t add,
-    ecs_entity_t replace,
     ecs_ids_t *out)
 {
     int32_t count = ecs_vector_count(type);
@@ -391,9 +390,6 @@ void add_entity_to_type(
     int32_t i, el = 0;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = array[i];
-        if (e == replace) {
-            continue;
-        }
 
         if (e > add && !added) {
             out->array[el ++] = add;
@@ -437,8 +433,8 @@ void remove_entity_from_type(
 
 static
 void create_backlink_after_add(
-    ecs_table_t * next,
-    ecs_table_t * prev,
+    ecs_table_t *next,
+    ecs_table_t *prev,
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
@@ -449,8 +445,8 @@ void create_backlink_after_add(
 
 static
 void create_backlink_after_remove(
-    ecs_table_t * next,
-    ecs_table_t * prev,
+    ecs_table_t *next,
+    ecs_table_t *prev,
     ecs_entity_t add)
 {
     ecs_edge_t *edge = get_edge(next, add);
@@ -459,44 +455,9 @@ void create_backlink_after_remove(
     }
 }
 
-static
-ecs_entity_t find_xor_replace(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_type_t type,
-    ecs_entity_t add)
-{
-    if (table->flags & EcsTableHasXor) {
-        ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
-        int32_t i, type_count = ecs_vector_count(type);
-        ecs_type_t xor_type = NULL;
-
-        for (i = type_count - 1; i >= 0; i --) {
-            ecs_entity_t e = array[i];
-            if (ECS_HAS_ROLE(e, XOR)) {
-                ecs_entity_t e_type = e & ECS_COMPONENT_MASK;
-                const EcsType *type_ptr = ecs_get(world, e_type, EcsType);
-                ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                if (ecs_type_has_id(
-                    world, type_ptr->normalized, add, true)) 
-                {
-                    xor_type = type_ptr->normalized;
-                }
-            } else if (xor_type) {
-                if (ecs_type_has_id(world, xor_type, e, true)) {
-                    return e;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
 int32_t flecs_table_switch_from_case(
-    const ecs_world_t * world,
-    const ecs_table_t * table,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_entity_t add)
 {
     ecs_type_t type = table->type;
@@ -544,8 +505,8 @@ int32_t flecs_table_switch_from_case(
 
 static
 ecs_table_t *find_or_create_table_include(
-    ecs_world_t * world,
-    ecs_table_t * node,
+    ecs_world_t *world,
+    ecs_table_t *node,
     ecs_entity_t add)
 {
     /* If table has one or more switches and this is a case, return self */
@@ -562,14 +523,7 @@ ecs_table_t *find_or_create_table_include(
             .count = count + 1
         };
 
-        /* If table has a XOR column, check if the entity that is being added to
-         * the table is part of the XOR type, and if it is, find the current 
-         * entity in the table type matching the XOR type. This entity must be 
-         * replaced in the new table, to ensure the XOR constraint isn't 
-         * violated. */
-        ecs_entity_t replace = find_xor_replace(world, node, type, add);
-
-        add_entity_to_type(type, add, replace, &entities);
+        add_entity_to_type(type, add, &entities);
 
         ecs_table_t *result = flecs_table_find_or_create(world, &entities);
         
@@ -582,9 +536,9 @@ ecs_table_t *find_or_create_table_include(
 }
 
 static
-ecs_table_t *find_or_create_table_exclude(
-    ecs_world_t * world,
-    ecs_table_t * node,
+ecs_table_t* find_or_create_table_exclude(
+    ecs_world_t *world,
+    ecs_table_t *node,
     ecs_entity_t remove)
 {
     ecs_type_t type = node->type;
@@ -610,10 +564,10 @@ ecs_table_t *find_or_create_table_exclude(
 }
 
 ecs_table_t* flecs_table_traverse_remove(
-    ecs_world_t * world,
-    ecs_table_t * node,
+    ecs_world_t *world,
+    ecs_table_t *node,
     ecs_id_t id,
-    ecs_ids_t * removed)
+    ecs_ids_t *removed)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -691,10 +645,10 @@ ecs_table_t* find_owned_components(
 }
 
 ecs_table_t* flecs_table_traverse_add(
-    ecs_world_t * world,
-    ecs_table_t * node,
+    ecs_world_t *world,
+    ecs_table_t *node,
     ecs_id_t id,
-    ecs_ids_t * added)    
+    ecs_ids_t *added)    
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
@@ -821,8 +775,8 @@ ecs_table_t* find_or_create(
 }
 
 ecs_table_t* flecs_table_find_or_create(
-    ecs_world_t * world,
-    const ecs_ids_t * components)
+    ecs_world_t *world,
+    const ecs_ids_t *components)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   

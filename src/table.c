@@ -508,9 +508,9 @@ void unregister_query(
 static
 void ctor_component(
     ecs_world_t *world,
-    ecs_type_info_t * cdata,
-    ecs_column_t * column,
-    ecs_entity_t * entities,
+    ecs_type_info_t *cdata,
+    ecs_column_t *column,
+    ecs_entity_t *entities,
     int32_t row,
     int32_t count)
 {
@@ -531,9 +531,9 @@ void ctor_component(
 static
 void dtor_component(
     ecs_world_t *world,
-    ecs_type_info_t * cdata,
-    ecs_column_t * column,
-    ecs_entity_t * entities,
+    ecs_type_info_t *cdata,
+    ecs_column_t *column,
+    ecs_entity_t *entities,
     int32_t row,
     int32_t count)
 {
@@ -561,7 +561,7 @@ static
 void dtor_all_components(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
     bool update_entity_index,
@@ -863,11 +863,11 @@ void flecs_table_mark_dirty(
 
 static
 void move_switch_columns(
-    ecs_table_t * new_table, 
-    ecs_data_t * new_data, 
+    ecs_table_t *new_table, 
+    ecs_data_t *new_data, 
     int32_t new_index,
-    ecs_table_t * old_table, 
-    ecs_data_t * old_data, 
+    ecs_table_t *old_table, 
+    ecs_data_t *old_data, 
     int32_t old_index,
     int32_t count)
 {
@@ -914,11 +914,11 @@ void move_switch_columns(
 
 static
 void move_bitset_columns(
-    ecs_table_t * new_table, 
-    ecs_data_t * new_data, 
+    ecs_table_t *new_table, 
+    ecs_data_t *new_data, 
     int32_t new_index,
-    ecs_table_t * old_table, 
-    ecs_data_t * old_data, 
+    ecs_table_t *old_table, 
+    ecs_data_t *old_data, 
     int32_t old_index,
     int32_t count)
 {
@@ -966,9 +966,9 @@ void move_bitset_columns(
 static
 void grow_column(
     ecs_world_t *world,
-    ecs_entity_t * entities,
-    ecs_column_t * column,
-    ecs_type_info_t * c_info,
+    ecs_entity_t *entities,
+    ecs_column_t *column,
+    ecs_type_info_t *c_info,
     int32_t to_add,
     int32_t new_size,
     bool construct)
@@ -1041,7 +1041,7 @@ static
 int32_t grow_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t to_add,
     int32_t size,
     const ecs_entity_t *ids)
@@ -1146,9 +1146,9 @@ void fast_append(
 int32_t flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     ecs_entity_t entity,
-    ecs_record_t * record,
+    ecs_record_t *record,
     bool construct)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1281,7 +1281,7 @@ void fast_delete(
 void flecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t index,
     bool destruct)
 {
@@ -1422,11 +1422,11 @@ void flecs_table_delete(
 
 static
 void fast_move(
-    ecs_table_t * new_table,
-    ecs_data_t * new_data,
+    ecs_table_t *new_table,
+    ecs_data_t *new_data,
     int32_t new_index,
-    ecs_table_t * old_table,
-    ecs_data_t * old_data,
+    ecs_table_t *old_table,
+    ecs_data_t *old_data,
     int32_t old_index)
 {
     ecs_type_t new_type = new_table->type;
@@ -1589,7 +1589,7 @@ void flecs_table_move(
 int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t to_add,
     const ecs_entity_t *ids)
 {
@@ -1602,7 +1602,7 @@ int32_t flecs_table_appendn(
 void flecs_table_set_size(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t size)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
@@ -1623,7 +1623,7 @@ int32_t flecs_table_data_count(
 static
 void swap_switch_columns(
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {
@@ -1643,7 +1643,7 @@ void swap_switch_columns(
 static
 void swap_bitset_columns(
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row_1,
     int32_t row_2)
 {
@@ -1826,12 +1826,12 @@ void merge_column(
 static
 void merge_table_data(
     ecs_world_t *world,
-    ecs_table_t * new_table,
-    ecs_table_t * old_table,
+    ecs_table_t *new_table,
+    ecs_table_t *old_table,
     int32_t old_count,
     int32_t new_count,
-    ecs_data_t * old_data,
-    ecs_data_t * new_data)
+    ecs_data_t *old_data,
+    ecs_data_t *new_data)
 {
     int32_t i_new = 0, new_component_count = new_table->column_count;
     int32_t i_old = 0, old_component_count = old_table->column_count;
@@ -2040,7 +2040,7 @@ void flecs_table_merge(
 void flecs_table_replace_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data)
+    ecs_data_t *data)
 {
     int32_t prev_count = 0;
     ecs_data_t *table_data = &table->storage;
@@ -2091,7 +2091,7 @@ int32_t* flecs_table_get_monitor(
 void flecs_table_notify(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_event_t * event)
+    ecs_table_event_t *event)
 {
     if (world->is_fini) {
         return;

@@ -87,7 +87,7 @@ const ecs_type_info_t *flecs_get_c_info(
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_type_info_t * flecs_get_or_create_c_info(
+ecs_type_info_t* flecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component);
 

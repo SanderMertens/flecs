@@ -488,7 +488,7 @@ void* _flecs_sparse_set(
     ecs_sparse_t * sparse,
     ecs_size_t elem_size,
     uint64_t index,
-    void * value)
+    void* value)
 {
     void *ptr = _flecs_sparse_ensure(sparse, elem_size, index);
     ecs_os_memcpy(ptr, value, elem_size);
