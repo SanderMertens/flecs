@@ -222,7 +222,7 @@ bool build_pipeline(
 {
     (void)pipeline;
 
-    ecs_query_iter(pq->query);
+    ecs_query_iter(world, pq->query);
 
     if (pq->match_count == pq->query->match_count) {
         /* No need to rebuild the pipeline */
@@ -248,7 +248,7 @@ bool build_pipeline(
     }
 
     /* Iterate systems in pipeline, add ops for running / merging */
-    ecs_iter_t it = ecs_query_iter(query);
+    ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
@@ -313,6 +313,7 @@ bool build_pipeline(
 
 static
 int32_t iter_reset(
+    ecs_world_t *world,
     const EcsPipelineQuery *pq,
     ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
@@ -321,7 +322,7 @@ int32_t iter_reset(
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    *iter_out = ecs_query_iter(pq->query);
+    *iter_out = ecs_query_iter(world, pq->query);
     while (ecs_query_next(iter_out)) {
         int32_t i;
         for(i = 0; i < iter_out->count; i ++) {
@@ -417,7 +418,7 @@ void ecs_pipeline_run(
 
     ecs_worker_begin(stage->thread_ctx);
     
-    ecs_iter_t it = ecs_query_iter(pq->query);
+    ecs_iter_t it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
@@ -441,7 +442,7 @@ void ecs_pipeline_run(
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
                 if (ecs_worker_sync(stage->thread_ctx)) {
-                    i = iter_reset(pq, &it, &op, e);
+                    i = iter_reset(world, pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_term(&it, EcsSystem, 1);
                 }
@@ -647,7 +648,7 @@ void ecs_deactivate_systems(
 
     /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
      * with any tables */
-    ecs_iter_t it = ecs_query_iter(pq->build_query);
+    ecs_iter_t it = ecs_query_iter(world, pq->build_query);
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */

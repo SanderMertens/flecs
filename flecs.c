@@ -13145,7 +13145,7 @@ bool build_pipeline(
 {
     (void)pipeline;
 
-    ecs_query_iter(pq->query);
+    ecs_query_iter(world, pq->query);
 
     if (pq->match_count == pq->query->match_count) {
         /* No need to rebuild the pipeline */
@@ -13171,7 +13171,7 @@ bool build_pipeline(
     }
 
     /* Iterate systems in pipeline, add ops for running / merging */
-    ecs_iter_t it = ecs_query_iter(query);
+    ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
@@ -13236,6 +13236,7 @@ bool build_pipeline(
 
 static
 int32_t iter_reset(
+    ecs_world_t *world,
     const EcsPipelineQuery *pq,
     ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
@@ -13244,7 +13245,7 @@ int32_t iter_reset(
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
     int32_t ran_since_merge = 0;
 
-    *iter_out = ecs_query_iter(pq->query);
+    *iter_out = ecs_query_iter(world, pq->query);
     while (ecs_query_next(iter_out)) {
         int32_t i;
         for(i = 0; i < iter_out->count; i ++) {
@@ -13340,7 +13341,7 @@ void ecs_pipeline_run(
 
     ecs_worker_begin(stage->thread_ctx);
     
-    ecs_iter_t it = ecs_query_iter(pq->query);
+    ecs_iter_t it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
 
@@ -13364,7 +13365,7 @@ void ecs_pipeline_run(
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
                 if (ecs_worker_sync(stage->thread_ctx)) {
-                    i = iter_reset(pq, &it, &op, e);
+                    i = iter_reset(world, pq, &it, &op, e);
                     op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                     sys = ecs_term(&it, EcsSystem, 1);
                 }
@@ -13570,7 +13571,7 @@ void ecs_deactivate_systems(
 
     /* Iterate over all systems, add EcsInvalid tag if queries aren't matched
      * with any tables */
-    ecs_iter_t it = ecs_query_iter(pq->build_query);
+    ecs_iter_t it = ecs_query_iter(world, pq->build_query);
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
@@ -14580,15 +14581,15 @@ static ecs_system_stats_t* get_system_stats(
 }
 
 bool ecs_get_pipeline_stats(
-    const ecs_world_t *world,
+    ecs_world_t *stage,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
-    world = ecs_get_world(world);
+    const ecs_world_t *world = ecs_get_world(stage);
 
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     if (!pq) {
@@ -14596,7 +14597,7 @@ bool ecs_get_pipeline_stats(
     }
 
     /* First find out how many systems are matched by the pipeline */
-    ecs_iter_t it = ecs_query_iter(pq->query);
+    ecs_iter_t it = ecs_query_iter(stage, pq->query);
     int32_t count = 0;
     while (ecs_query_next(&it)) {
         count += it.count;
@@ -14617,7 +14618,8 @@ bool ecs_get_pipeline_stats(
     ecs_entity_t *systems = ecs_vector_first(s->systems, ecs_entity_t);
 
     /* Populate systems vector, keep track of sync points */
-    it = ecs_query_iter(pq->query);
+    it = ecs_query_iter(stage, pq->query);
+    
     int32_t i_system = 0, ran_since_merge = 0;
     while (ecs_query_next(&it)) {
         int32_t i;
@@ -15338,8 +15340,9 @@ ecs_entity_t ecs_run_intern(
     ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
-    ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
-    it.world = stage->thread_ctx;
+    ecs_iter_t it = ecs_query_iter_page(
+        stage->thread_ctx, system_data->query, offset, limit);
+
     it.system = system;
     it.self = system_data->self;
     it.delta_time = delta_time;
@@ -22536,6 +22539,7 @@ const ecs_filter_t* ecs_query_get_filter(
 
 /* Create query iterator */
 ecs_iter_t ecs_query_iter_page(
+    ecs_world_t *stage,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -22543,7 +22547,7 @@ ecs_iter_t ecs_query_iter_page(
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_world_t *world = query->world;
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 
     if (query->needs_reorder) {
         order_grouped_tables(world, query);
@@ -22575,7 +22579,8 @@ ecs_iter_t ecs_query_iter_page(
     };
 
     return (ecs_iter_t){
-        .world = world,
+        .real_world = world,
+        .world = stage,
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
@@ -22585,9 +22590,10 @@ ecs_iter_t ecs_query_iter_page(
 }
 
 ecs_iter_t ecs_query_iter(
+    ecs_world_t *world,
     ecs_query_t *query)
 {
-    return ecs_query_iter_page(query, 0, 0);
+    return ecs_query_iter_page(world, query, 0, 0);
 }
 
 static

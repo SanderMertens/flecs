@@ -35,8 +35,8 @@ public:
 
     Base& add(id_t id) {
         if (!m_table) {
-            for (auto id : this->vector()) {
-                m_table = ecs_table_add_id(world(), m_table, id);
+            for (auto type_id : this->vector()) {
+                m_table = ecs_table_add_id(world(), m_table, type_id);
             }
         }
 

@@ -968,7 +968,7 @@ A query can be used like this:
 ecs_query_t *query = ecs_query_new(world, "Position, Velocity");
 
 // Create iterator for query
-ecs_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(world, query);
 
 // Iterate all the matching archetypes
 while (ecs_query_next(&it)) {
@@ -1001,7 +1001,7 @@ An application is able to see whether the entities and components matched with a
 
 ```c
 if (ecs_query_changed(q)) {
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, world, q);
     while (ecs_query_next(&it)) {
         // ...
     }
@@ -1018,7 +1018,7 @@ ecs_set(world, e, Velocity, {1, 2});
 
 ecs_query_t *q = ecs_query_new(world, "Position, MyEntity:Velocity");
 
-ecs_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(world, query);
 
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
@@ -1051,7 +1051,7 @@ Singleton components can be retrieved from queries like this:
 ```c
 ecs_query_t *query = ecs_query_new(world, "Position, $Game");
 
-ecs_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(world, query);
 
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
@@ -1071,7 +1071,7 @@ The nothing modifier does not get the component from an entity, but instead just
 ```c
 ecs_query_t *query = ecs_query_new(world, "Position, :Velocity");
 
-ecs_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(world, query);
 
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
@@ -1138,7 +1138,7 @@ A query with an optional column should test if the component is set before using
 ```c
 ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
 
-ecs_iter_t it = ecs_query_iter(query);
+ecs_iter_t it = ecs_query_iter(world, query);
 
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
@@ -1194,7 +1194,7 @@ Once sorting is enabled for a query, the data will remain sorted, even after the
 ```c
 ecs_entity_t e = ecs_new(world, Position); // Does not reorder
 ecs_set(world, e, Position, {10, 20}); // Does not reorder
-ecs_iter_t it = ecs_query_iter(q); // Reordering happens here
+ecs_iter_t it = ecs_query_iter(world, q); // Reordering happens here
 ```
 
 The following operations mark data dirty can can trigger a reordering:

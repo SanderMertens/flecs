@@ -410,7 +410,7 @@ void SystemCascade_rematch_w_empty_table() {
     ecs_entity_t child = ecs_new(world, Velocity);
     ecs_add_pair(world, child, EcsChildOf, parent);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], parent);
@@ -423,7 +423,7 @@ void SystemCascade_rematch_w_empty_table() {
     // Change parent, trigger rematch
     ecs_remove(world, parent, Position);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], parent);
@@ -447,7 +447,7 @@ void SystemCascade_query_w_only_cascade() {
     /* Should match everything (since everything is a root without further 
      * qualifications). Since no other entities have been created, all entities
      * must be builtin ones. */
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         for (int i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
@@ -765,7 +765,7 @@ void SystemCascade_custom_relation_rematch_w_empty_table() {
     ecs_entity_t child = ecs_new(world, Velocity);
     ecs_add_pair(world, child, Rel, parent);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], parent);
@@ -778,7 +778,7 @@ void SystemCascade_custom_relation_rematch_w_empty_table() {
     // Change parent, trigger rematch
     ecs_remove(world, parent, Position);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], parent);

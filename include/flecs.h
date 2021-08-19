@@ -2518,17 +2518,20 @@ const ecs_filter_t* ecs_query_get_filter(
  * own set of arrays, an application has to reobtain pointers to those arrays
  * for each matching table.
  *
+ * @param world The world or stage, when iterating in readonly mode.
  * @param query The query to iterate.
  * @return The query iterator.
  */
 FLECS_API
 ecs_iter_t ecs_query_iter(
+    ecs_world_t *world,
     ecs_query_t *query);  
 
 /** Iterate over a query.
  * This operation is similar to ecs_query_iter, but starts iterating from a
  * specified offset, and will not iterate more than limit entities.
  *
+ * @param world The world or stage, when iterating in readonly mode.
  * @param query The query to iterate.
  * @param offset The number of entities to skip.
  * @param limit The maximum number of entities to iterate.
@@ -2536,6 +2539,7 @@ ecs_iter_t ecs_query_iter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter_page(
+    ecs_world_t *world,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  

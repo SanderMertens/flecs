@@ -843,7 +843,7 @@ void Pairs_pair_w_component_query() {
     ecs_query_t *q = ecs_query_new(world, "(Rel, Position)");
     
     int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Rel *t = ecs_term(&it, Rel, 1);
         test_assert(t != NULL);
@@ -873,7 +873,7 @@ void Pairs_query_pair_or_component() {
     ecs_query_t *q = ecs_query_new(world, "(Rel, Position) || Position");
     
     int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Position *t = ecs_term(&it, Position, 1);
         test_assert(t != NULL);
@@ -905,7 +905,7 @@ void Pairs_query_pair_or_pair() {
     ecs_query_t *q = ecs_query_new(world, "(RelA, Position) || (RelB, Position)");
     
     int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Position *t = ecs_term(&it, Position, 1);
         test_assert(t != NULL);
@@ -935,7 +935,7 @@ void Pairs_query_not_pair() {
     ecs_query_t *q = ecs_query_new(world, "!(Rel, Position), Position");
     
     int32_t count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Position *t = ecs_term(&it, Position, 1);
         test_assert(t == NULL);
@@ -1089,7 +1089,7 @@ void Pairs_dsl_pair() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1131,7 +1131,7 @@ void Pairs_dsl_pair_w_pred_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1178,7 +1178,7 @@ void Pairs_dsl_pair_w_obj_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1227,7 +1227,7 @@ void Pairs_dsl_pair_w_both_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2), Tag} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1285,7 +1285,7 @@ void Pairs_dsl_pair_w_explicit_subj_this() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1333,7 +1333,7 @@ void Pairs_dsl_pair_w_explicit_subj() {
         .add = {ecs_pair(Rel_2, Obj_2), Tag} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1376,7 +1376,7 @@ void Pairs_api_pair() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1418,7 +1418,7 @@ void Pairs_api_pair_w_pred_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1465,7 +1465,7 @@ void Pairs_api_pair_w_obj_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1515,7 +1515,7 @@ void Pairs_api_pair_w_both_wildcard() {
         .add = {ecs_pair(Rel_2, Obj_2), Tag} });
     test_assert(e4 != 0);    
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1572,7 +1572,7 @@ void Pairs_api_pair_w_explicit_subj_this() {
         .add = {ecs_pair(Rel_2, Obj_2)} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -1620,7 +1620,7 @@ void Pairs_api_pair_w_explicit_subj() {
         .add = {ecs_pair(Rel_2, Obj_2), Tag} });
     test_assert(e4 != 0);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);

@@ -344,7 +344,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
     }
 });
 
-ecs_iter_t it = ecs_query_iter(q);
+ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
     Position *p = ecs_term(&it, Position, 1);
     Position *p_parent = ecs_term(&it, Position, 2);
@@ -587,7 +587,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
     }
 });
 
-ecs_iter_t it = ecs_query_iter(q);
+ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
     // Same as for filters
 }

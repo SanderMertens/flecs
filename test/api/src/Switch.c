@@ -181,7 +181,7 @@ void Switch_delete_first() {
     test_assert(ecs_has_id(world, e2, ECS_CASE | Walking));
     test_assert(ecs_has_id(world, e3, ECS_CASE | Walking));
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -223,7 +223,7 @@ void Switch_delete_last() {
     test_assert(ecs_has_id(world, e1, ECS_CASE | Walking));
     test_assert(ecs_has_id(world, e2, ECS_CASE | Walking));
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -265,7 +265,7 @@ void Switch_delete_first_last() {
 
     test_assert(ecs_has_id(world, e2, ECS_CASE | Walking));
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -620,14 +620,14 @@ void Switch_query_after_remove() {
     ecs_query_t *q_jumping = ecs_query_new(world, "CASE | Jumping");
 
     /* Verify all queries are correctly matched */
-    ecs_iter_t it = ecs_query_iter(q_walking);
+    ecs_iter_t it = ecs_query_iter(world, q_walking);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e2);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e1);
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_running);
+    it = ecs_query_iter(world, q_running);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e5);
     test_assert(ecs_query_next(&it));
@@ -636,7 +636,7 @@ void Switch_query_after_remove() {
     test_int(it.count, 1); test_int(it.entities[0], e3);    
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_jumping);
+    it = ecs_query_iter(world, q_jumping);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e7);
     test_assert(ecs_query_next(&it));
@@ -649,21 +649,21 @@ void Switch_query_after_remove() {
     test_int(c, 0);
 
     /* Verify queries are still correctly matched, now excluding e4 */
-    it = ecs_query_iter(q_walking);
+    it = ecs_query_iter(world, q_walking);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e2);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e1);
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_running);
+    it = ecs_query_iter(world, q_running);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e5);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e3);    
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_jumping);
+    it = ecs_query_iter(world, q_jumping);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e7);
     test_assert(ecs_query_next(&it));
@@ -676,14 +676,14 @@ void Switch_query_after_remove() {
     test_int(c, Running);
 
     /* Verify e4 is now matched again */
-    it = ecs_query_iter(q_walking);
+    it = ecs_query_iter(world, q_walking);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e2);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e1);
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_running);
+    it = ecs_query_iter(world, q_running);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e4);      
     test_assert(ecs_query_next(&it));
@@ -692,7 +692,7 @@ void Switch_query_after_remove() {
     test_int(it.count, 1); test_int(it.entities[0], e3);      
     test_assert(!ecs_query_next(&it));
 
-    it = ecs_query_iter(q_jumping);
+    it = ecs_query_iter(world, q_jumping);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1); test_int(it.entities[0], e7);
     test_assert(ecs_query_next(&it));
@@ -885,7 +885,7 @@ void Switch_switch_no_match_for_case() {
     ecs_add_id(world, e, ECS_CASE | Walking);
 
     ecs_query_t *q = ecs_query_new(world, "CASE | Running");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     int count = 0;
     while (ecs_query_next(&it)) {
@@ -1012,7 +1012,7 @@ void Switch_sort() {
         .order_by = compare_position
     });
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 4);
     test_assert(it.entities[0] == e4);
@@ -1084,7 +1084,7 @@ void Switch_query_recycled_tags() {
     ecs_add_id(world, e, ECS_CASE | Standing);
 
     ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement, CASE | Standing");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
@@ -1132,7 +1132,7 @@ void Switch_single_case() {
 
     test_assert(ecs_has_id(world, e2, ECS_CASE | Walking));
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
