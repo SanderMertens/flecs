@@ -1456,6 +1456,188 @@ void Filter_filter_iter_2_components() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_pair_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, Obj);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_2_pair_ids() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, RelA, ObjA);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, RelA, ObjA);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, RelA, ObjA);
+
+    ecs_add_pair(world, e_1, RelB, ObjB);
+    ecs_add_pair(world, e_2, RelB, ObjB);
+    ecs_add_pair(world, e_3, RelB, ObjB);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { ecs_pair(RelA, ObjA) },
+            { ecs_pair(RelB, EcsWildcard) }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
+    test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
+    test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_pair_pred_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, Obj);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .args[1].entity = EcsWildcard }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_pair_2_pred_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, RelA, ObjA);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, RelA, ObjA);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, RelA, ObjA);
+
+    ecs_add_pair(world, e_1, RelB, ObjB);
+    ecs_add_pair(world, e_2, RelB, ObjB);
+    ecs_add_pair(world, e_3, RelB, ObjB);
+
+    ecs_add_id(world, e_3, Tag);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .pred.entity = RelA, .args[1].entity = ObjA },
+            { .pred.entity = RelB, .args[1].entity = EcsWildcard }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
+    test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(RelA, ObjA));
+    test_int(ecs_term_id(&it, 2), ecs_pair(RelB, ObjB));
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_null() {
     ecs_world_t *world = ecs_init();
 
