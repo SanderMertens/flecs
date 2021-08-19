@@ -7,52 +7,23 @@ ecs_op_t* new_defer_op(ecs_stage_t *stage) {
     return result;
 }
 
-static 
-void new_defer_component_ids(
-    ecs_op_t *op, 
-    const ecs_ids_t *components)
-{
-    ecs_assert(components != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    int32_t components_count = components->count;
-    if (components_count == 1) {
-        ecs_entity_t component = components->array[0];
-        op->component = component;
-        op->components = (ecs_ids_t) {
-            .array = NULL,
-            .count = 1
-        };
-    } else if (components_count) {
-        ecs_size_t array_size = components_count * ECS_SIZEOF(ecs_entity_t);
-        op->components.array = ecs_os_malloc(array_size);
-        ecs_os_memcpy(op->components.array, components->array, array_size);
-        op->components.count = components_count;
-    } else {
-        op->component = 0;
-        op->components = (ecs_ids_t){ 0 };
-    }
-}
-
 static
 bool defer_add_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
     ecs_entity_t entity,
-    ecs_ids_t *components)
+    ecs_id_t id)
 {
     if (stage->defer) {
-        if (components) {
-            if (!components->count) {
-                return true;
-            }
+        if (!id) {
+            return true;
         }
 
         ecs_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
+        op->id = id;
         op->is._1.entity = entity;
-
-        new_defer_component_ids(op, components);
 
         if (op_kind == EcsOpNew) {
             world->new_count ++;
@@ -146,13 +117,13 @@ bool flecs_defer_modified(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_entity_t component)
+    ecs_id_t id)
 {
     (void)world;
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
-        op->component = component;
+        op->id = id;
         op->is._1.entity = entity;
         return true;
     } else {
@@ -173,7 +144,7 @@ bool flecs_defer_clone(
     if (stage->defer) {
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
-        op->component = src;
+        op->id = src;
         op->is._1.entity = entity;
         op->is._1.clone_value = clone_value;
         return true;
@@ -224,7 +195,7 @@ bool flecs_defer_enable(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_entity_t component,
+    ecs_id_t id,
     bool enable)
 {
     (void)world;
@@ -232,7 +203,7 @@ bool flecs_defer_enable(
         ecs_op_t *op = new_defer_op(stage);
         op->kind = enable ? EcsOpEnable : EcsOpDisable;
         op->is._1.entity = entity;
-        op->component = component;
+        op->id = id;
         return true;
     } else {
         stage->defer ++;
@@ -244,7 +215,7 @@ bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     int32_t count,
-    const ecs_ids_t *components_ids,
+    ecs_id_t id,
     const ecs_entity_t **ids_out)
 {
     if (stage->defer) {
@@ -257,13 +228,19 @@ bool flecs_defer_bulk_new(
             ids[i] = ecs_new_id(world);
         }
 
+        *ids_out = ids;
+
+        if (!id) {
+            /* If no id is provided, there's nothing left to do */
+            return true;
+        }
+
         /* Store data in op */
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpBulkNew;
+        op->id = id;
         op->is._n.entities = ids;
         op->is._n.count = count;
-        new_defer_component_ids(op, components_ids);
-        *ids_out = ids;
 
         return true;
     } else {
@@ -277,27 +254,27 @@ bool flecs_defer_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components)
+    ecs_id_t id)
 {   
-    return defer_add_remove(world, stage, EcsOpNew, entity, components);
+    return defer_add_remove(world, stage, EcsOpNew, entity, id);
 }
 
 bool flecs_defer_add(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components)
+    ecs_id_t id)
 {   
-    return defer_add_remove(world, stage, EcsOpAdd, entity, components);
+    return defer_add_remove(world, stage, EcsOpAdd, entity, id);
 }
 
 bool flecs_defer_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_ids_t *components)
+    ecs_id_t id)
 {
-    return defer_add_remove(world, stage, EcsOpRemove, entity, components);
+    return defer_add_remove(world, stage, EcsOpRemove, entity, id);
 }
 
 bool flecs_defer_set(
@@ -305,7 +282,7 @@ bool flecs_defer_set(
     ecs_stage_t *stage,
     ecs_op_kind_t op_kind,
     ecs_entity_t entity,
-    ecs_entity_t component,
+    ecs_id_t id,
     ecs_size_t size,
     const void *value,
     void **value_out,
@@ -314,27 +291,27 @@ bool flecs_defer_set(
     if (stage->defer) {
         world->set_count ++;
         if (!size) {
-            const EcsComponent *cptr = flecs_component_from_id(world, component);
+            const EcsComponent *cptr = flecs_component_from_id(world, id);
             ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
             size = cptr->size;
         }
 
         ecs_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
-        op->component = component;
+        op->id = id;
         op->is._1.entity = entity;
         op->is._1.size = size;
         op->is._1.value = ecs_os_malloc(size);
 
         if (!value) {
-            value = ecs_get_id(world, entity, component);
+            value = ecs_get_id(world, entity, id);
             if (is_added) {
                 *is_added = value == NULL;
             }
         }
 
         const ecs_type_info_t *c_info = NULL;
-        ecs_entity_t real_id = ecs_get_typeid(world, component);
+        ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
             c_info = flecs_get_c_info(world, real_id);
         }
@@ -342,7 +319,7 @@ bool flecs_defer_set(
         if (value) {
             ecs_copy_ctor_t copy;
             if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
-                copy(world, component, &c_info->lifecycle, &entity, &entity, 
+                copy(world, id, &c_info->lifecycle, &entity, &entity, 
                     op->is._1.value, value, flecs_to_size_t(size), 1, 
                         c_info->lifecycle.ctx);
             } else {
@@ -351,7 +328,7 @@ bool flecs_defer_set(
         } else {
             ecs_xtor_t ctor;
             if (c_info && (ctor = c_info->lifecycle.ctor)) {
-                ctor(world, component, &entity, op->is._1.value, 
+                ctor(world, id, &entity, op->is._1.value, 
                     flecs_to_size_t(size), 1, c_info->lifecycle.ctx);
             }
         }

@@ -276,6 +276,7 @@ void Entity_id_remove_1_comp() {
     });
     test_assert(r != 0);
     test_assert(e == r);
+
     test_assert(!ecs_has_id(world, e, TagA));
 
     ecs_fini(world);

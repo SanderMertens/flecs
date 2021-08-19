@@ -612,58 +612,48 @@ ecs_table_t *find_or_create_table_exclude(
 ecs_table_t* flecs_table_traverse_remove(
     ecs_world_t * world,
     ecs_table_t * node,
-    ecs_ids_t * to_remove,
+    ecs_id_t id,
     ecs_ids_t * removed)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t i, count = to_remove->count;
-    ecs_entity_t *entities = to_remove->array;
     node = node ? node : &world->store.root;
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+    /* Removing 0 from an entity is not valid */
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-        /* Removing 0 from an entity is not valid */
-        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_edge_t *edge = get_edge(node, id);
+    ecs_table_t *next = edge->remove;
 
-        ecs_edge_t *edge = get_edge(node, e);
-        ecs_table_t *next = edge->remove;
-
-        if (!next) {
-            if (edge->add == node) {
-                /* Find table with all components of node except 'e' */
-                next = find_or_create_table_exclude(world, node, e);
-                if (!next) {
-                    return NULL;
-                }
-
-                edge->remove = next;
-            } else {
-                /* If the add edge does not point to self, the table
-                 * does not have the entity in to_remove. */
-                continue;
+    if (!next) {
+        if (edge->add == node) {
+            /* Find table with all components of node except 'e' */
+            next = find_or_create_table_exclude(world, node, id);
+            if (!next) {
+                return NULL;
             }
+
+            edge->remove = next;
+        } else {
+            return node;
         }
+    }
 
-        bool has_case = ECS_HAS_ROLE(e, CASE);
-        if (removed && (node != next || has_case)) {
-            removed->array[removed->count ++] = e; 
-        }
+    bool has_case = ECS_HAS_ROLE(id, CASE);
+    if (removed && (node != next || has_case)) {
+        removed->array[removed->count ++] = id; 
+    }
 
-        node = next;
-    }    
-
-    return node;
+    return next;
 }
 
 static
-void find_owned_components(
-    ecs_world_t * world,
-    ecs_table_t * node,
+ecs_table_t* find_owned_components(
+    ecs_world_t *world,
+    ecs_table_t *node,
     ecs_entity_t base,
-    ecs_ids_t * owned)
+    ecs_ids_t *added)
 {
     /* If we're adding an IsA relationship, check if the base
      * has OVERRIDE components that need to be added to the instance */
@@ -674,7 +664,8 @@ void find_owned_components(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            find_owned_components(world, node, ECS_PAIR_OBJECT(e), owned);
+            node = find_owned_components(
+                world, node, ECS_PAIR_OBJECT(e), added);
         } else
         if (ECS_HAS_ROLE(e, OVERRIDE)) {
             e = e & ECS_COMPONENT_MASK;
@@ -684,70 +675,55 @@ void find_owned_components(
             if (t_ptr) {
                 ecs_type_t n = t_ptr->normalized;
                 int32_t j, n_count = ecs_vector_count(n);
-                ecs_entity_t *n_entities = ecs_vector_first(n, ecs_entity_t);
+                ecs_entity_t *n_ids = ecs_vector_first(n, ecs_entity_t);
                 for (j = 0; j < n_count; j ++) {
-                    owned->array[owned->count ++] = n_entities[j];
+                    node = flecs_table_traverse_add(
+                        world, node, n_ids[j], added);
                 }
             } else {
-                owned->array[owned->count ++] = ECS_PAIR_OBJECT(e);
+                node = flecs_table_traverse_add(
+                    world, node, ECS_PAIR_OBJECT(e), added);
             }
         }
     }
+
+    return node;
 }
 
 ecs_table_t* flecs_table_traverse_add(
     ecs_world_t * world,
     ecs_table_t * node,
-    ecs_ids_t * to_add,
+    ecs_id_t id,
     ecs_ids_t * added)    
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t i, count = to_add->count;
-    ecs_entity_t *entities = to_add->array;
     node = node ? node : &world->store.root;
 
-    ecs_entity_t owned_array[ECS_MAX_ADD_REMOVE];
-    ecs_ids_t owned = {
-        .array = owned_array,
-        .count = 0
-    };    
+    /* Adding 0 to an entity is not valid */
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
+    ecs_edge_t *edge = get_edge(node, id);
+    ecs_table_t *next = edge->add;
 
-        /* Adding 0 to an entity is not valid */
-        ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
-
-        ecs_edge_t *edge = get_edge(node, e);
-        ecs_table_t *next = edge->add;
-
-        if (!next) {
-            next = find_or_create_table_include(world, node, e);
-            ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-            edge->add = next;
-        }
-
-        bool has_case = ECS_HAS_ROLE(e, CASE);
-        if (added && (node != next || has_case)) {
-            added->array[added->count ++] = e; 
-        }
-
-        if ((node != next) && ECS_HAS_RELATION(e, EcsIsA)) {
-            find_owned_components(
-                world, next, ecs_pair_object(world, e), &owned);
-        }        
-
-        node = next;
+    if (!next) {
+        next = find_or_create_table_include(world, node, id);
+        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
+        edge->add = next;
     }
 
-    /* In case OVERRIDE components were found, add them as well */
-    if (owned.count) {
-        node = flecs_table_traverse_add(world, node, &owned, added);
+    bool has_case = ECS_HAS_ROLE(id, CASE);
+    if (added && (node != next || has_case)) {
+        added->array[added->count ++] = id; 
     }
 
-    return node;
+    if ((node != next) && ECS_HAS_RELATION(id, EcsIsA)) {
+        next = find_owned_components(
+            world, next, ecs_pair_object(world, id), added);
+    }
+
+    return next;
 }
 
 static
@@ -990,8 +966,7 @@ ecs_table_t* ecs_table_add_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_ids_t arr = { .array = &id, .count = 1 };
-    return flecs_table_traverse_add(world, table, &arr, NULL);
+    return flecs_table_traverse_add(world, table, id, NULL);
 }
 
 ecs_table_t* ecs_table_remove_id(
@@ -999,6 +974,5 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_ids_t arr = { .array = &id, .count = 1 };
-    return flecs_table_traverse_remove(world, table, &arr, NULL);
+    return flecs_table_traverse_remove(world, table, id, NULL);
 }

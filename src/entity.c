@@ -563,13 +563,9 @@ void components_override(
                  * diff between the on_set systems of the current table and the
                  * table without the base, as these are the systems that need to
                  * be invoked */
-                ecs_ids_t to_remove = {
-                    .array = &component,
-                    .count = 1
-                };
 
                 table_without_base = flecs_table_traverse_remove(world, 
-                    table_without_base, &to_remove, NULL);
+                    table_without_base, component, NULL);
             }
         }
 
@@ -590,12 +586,8 @@ void components_override(
         if (override_component(world, component, type, data, column, 
             row, count)) 
         {
-            ecs_ids_t to_remove = {
-                .array = &component,
-                .count = 1
-            };
             table_without_base = flecs_table_traverse_remove(world, 
-                table_without_base, &to_remove, NULL);
+                table_without_base, component, NULL);
         }
     }
 
@@ -791,20 +783,21 @@ int32_t move_entity(
 
 static
 void delete_entity(
-    ecs_world_t * world,
-    ecs_table_t * src_table,
-    ecs_data_t * src_data,
-    int32_t src_row,
-    ecs_ids_t * removed)
+    ecs_world_t *world,
+    ecs_table_t *src_table,
+    ecs_data_t *src_data,
+    int32_t src_row)
 {
-    if (removed) {
+    if (src_table) {
+        ecs_ids_t removed = flecs_type_to_ids(src_table->type);
+
         flecs_run_monitors(world, src_table, src_table->un_set_all, 
             src_row, 1, NULL);
 
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
             flecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, removed);
+                world, src_table, src_data, src_row, 1, &removed);
         } 
     }
 
@@ -822,7 +815,7 @@ void update_component_monitor_w_array(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t relation,
-    ecs_ids_t * entities)
+    ecs_ids_t *entities)
 {
     if (!entities) {
         return;
@@ -909,7 +902,7 @@ void commit(
                 src_data, info->row, dst_table, added, removed, construct);
             info->table = dst_table;
         } else {
-            delete_entity(world, src_table, src_data, info->row, removed);
+            delete_entity(world, src_table, src_data, info->row);
 
             ecs_eis_set(world, entity, &(ecs_record_t){
                 NULL, (info->is_watched == true) * -1
@@ -945,8 +938,13 @@ void new(
     ecs_ids_t * to_add)
 {
     ecs_entity_info_t info = {0};
-    ecs_table_t *table = flecs_table_traverse_add(
-        world, &world->store.root, to_add, NULL);
+    int32_t i, count = to_add->count;
+    ecs_table_t *table = &world->store.root;
+
+    for (i = 0; i < count; i ++) {
+        table = flecs_table_traverse_add(world, table, to_add->array[i], NULL);
+    }
+
     new_entity(world, entity, &info, table, to_add, true);
 }
 
@@ -1058,53 +1056,33 @@ const ecs_entity_t* new_w_data(
 }
 
 static
-void add_ids_w_info(
+void add_id_w_info(
     ecs_world_t * world,
     ecs_entity_t entity,
     ecs_entity_info_t * info,
-    ecs_ids_t * components,
+    ecs_id_t id,
     bool construct)
 {
-    ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
     ecs_ids_t added = { .array = buffer };
 
     ecs_table_t *src_table = info->table;
     ecs_table_t *dst_table = flecs_table_traverse_add(
-        world, src_table, components, &added);
+        world, src_table, id, &added);
 
     commit(world, entity, info, dst_table, &added, NULL, construct);
 }
 
 static
-void remove_ids_w_info(
-    ecs_world_t * world,
-    ecs_entity_t entity,
-    ecs_entity_info_t * info,
-    ecs_ids_t * components)
-{
-    ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
-    ecs_entity_t buffer[ECS_MAX_ADD_REMOVE];
-    ecs_ids_t removed = { .array = buffer };
-
-    ecs_table_t *src_table = info->table;
-    ecs_table_t *dst_table = flecs_table_traverse_remove(
-        world, src_table, components, &removed);
-
-    commit(world, entity, info, dst_table, NULL, &removed, true);
-}
-
-static
-void add_ids(
+void add_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_ids_t * components)
+    ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (flecs_defer_add(world, stage, entity, components)) {
+    if (flecs_defer_add(world, stage, entity, id)) {
         return;
     }
 
@@ -1116,7 +1094,7 @@ void add_ids(
 
     ecs_table_t *src_table = info.table;
     ecs_table_t *dst_table = flecs_table_traverse_add(
-        world, src_table, components, &added);
+        world, src_table, id, &added);
 
     commit(world, entity, &info, dst_table, &added, NULL, true);
 
@@ -1124,16 +1102,15 @@ void add_ids(
 }
 
 static
-void remove_ids(
+void remove_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_ids_t * components)
+    ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(components->count < ECS_MAX_ADD_REMOVE, ECS_INVALID_PARAMETER, NULL);    
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (flecs_defer_remove(world, stage, entity, components)) {
+    if (flecs_defer_remove(world, stage, entity, id)) {
         return;
     }
 
@@ -1145,7 +1122,7 @@ void remove_ids(
 
     ecs_table_t *src_table = info.table;
     ecs_table_t *dst_table = flecs_table_traverse_remove(
-        world, src_table, components, &removed);
+        world, src_table, id, &removed);
 
     commit(world, entity, &info, dst_table, NULL, &removed, true);
 
@@ -1172,14 +1149,7 @@ void *get_mutable(
 
     if (!dst) {
         ecs_table_t *table = info->table;
-
-        ecs_ids_t to_add = {
-            .array = &component,
-            .count = 1
-        };
-
-        add_ids_w_info(world, entity, info, &to_add, true);
-
+        add_id_w_info(world, entity, info, component, true);
         flecs_get_info(world, entity, info);
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1621,13 +1591,21 @@ ecs_entity_t ecs_new_w_id(
         }
     }
 
-    if (flecs_defer_new(world, stage, entity, &to_add)) {
-        return entity;
-    } 
-
     if (to_add.count) {
+        if (flecs_defer_new(world, stage, entity, to_add.array[0])) {
+            int i;
+            for (i = 1; i < to_add.count; i ++) {
+                flecs_defer_add(world, stage, entity, to_add.array[i]);
+            }
+            return entity;
+        }
+
         new(world, entity, &to_add);
     } else {
+        if (flecs_defer_new(world, stage, entity, 0)) {
+            return entity;
+        }
+
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
 
@@ -1688,13 +1666,12 @@ ecs_table_t *traverse_from_expr(
 
             if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
-                ecs_ids_t arr = { .array = &term.id, .count = 1 };
                 if (is_add) {
                     table = flecs_table_traverse_add(
-                        world, table, &arr, modified);
+                        world, table, term.id, modified);
                 } else {
                     table = flecs_table_traverse_remove(
-                        world, table, &arr, modified);
+                        world, table, term.id, modified);
                 }
 
                 ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1710,13 +1687,12 @@ ecs_table_t *traverse_from_expr(
                 ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
                 int32_t i, count = ecs_vector_count(t->normalized);
                 for (i = 0; i < count; i ++) {
-                    ecs_ids_t arr = { .array = &ids[i], .count = 1 };
                     if (is_add) {
                         table = flecs_table_traverse_add(
-                            world, table, &arr, modified);
+                            world, table, ids[i], modified);
                     } else {
                         table = flecs_table_traverse_remove(
-                            world, table, &arr, modified);
+                            world, table, ids[i], modified);
                     }
                     
                     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1829,14 +1805,12 @@ void traverse_add_remove(
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_entity_t id = ecs_pair(EcsChildOf, scope);
-            ecs_ids_t arr = { .array = &id, .count = 1 };
-            table = flecs_table_traverse_add(world, table, &arr, &added);
+            table = flecs_table_traverse_add(world, table, id, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
         }
 
         if (with) {
-            ecs_ids_t arr = { .array = &with, .count = 1 };
-            table = flecs_table_traverse_add(world, table, &arr, &added);
+            table = flecs_table_traverse_add(world, table, with, &added);
             ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
         }
     }
@@ -1844,8 +1818,7 @@ void traverse_add_remove(
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
         ecs_entity_t id = ecs_pair(ecs_id(EcsIdentifier), EcsName);
-        ecs_ids_t arr = { .array = &id, .count = 1 };
-        table = flecs_table_traverse_add(world, table, &arr, &added);
+        table = flecs_table_traverse_add(world, table, id, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);            
     }
 
@@ -1854,8 +1827,7 @@ void traverse_add_remove(
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_ids_t arr = { .array = &id, .count = 1 };
-        table = flecs_table_traverse_add(world, table, &arr, &added);
+        table = flecs_table_traverse_add(world, table, id, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -1863,8 +1835,7 @@ void traverse_add_remove(
     i = 0;
     ids = desc->remove;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_ids_t arr = { .array = &id, .count = 1 };
-        table = flecs_table_traverse_remove(world, table, &arr, &removed);
+        table = flecs_table_traverse_remove(world, table, id, &removed);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -2191,9 +2162,8 @@ ecs_entity_t ecs_type_init(
     ecs_id_t id;
     const ecs_id_t *ids = desc->ids;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_ids_t arr = { .array = &id, .count = 1 };
-        normalized = flecs_table_traverse_add(world, normalized, &arr, &added);
-        table = flecs_table_traverse_add(world, table, &arr, &added);
+        normalized = flecs_table_traverse_add(world, normalized, id, &added);
+        table = flecs_table_traverse_add(world, table, id, &added);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
     }
 
@@ -2256,23 +2226,19 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     int32_t count)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_ids_t components = { 0 };
-
-    if (id) {
-        ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-        components.array = &id;
-        components.count = 1;
-    }
 
     const ecs_entity_t *ids;
-    if (flecs_defer_bulk_new(world, stage, count, &components, &ids)) {
+    if (flecs_defer_bulk_new(world, stage, count, id, &ids)) {
         return ids;
     }
 
-    ecs_table_t *table = flecs_table_traverse_add(
-        world, &world->store.root, &components, NULL);
+    ecs_table_t *table = &world->store.root;
+    
+    if (id) {
+        table = flecs_table_traverse_add(world, table, id, NULL);
+    }
+
     ids = new_w_data(world, table, NULL, count, NULL, NULL);
     flecs_defer_flush(world, stage);
 
@@ -2298,11 +2264,9 @@ void ecs_clear(
 
     ecs_table_t *table = info.table;
     if (table) {
-        ecs_type_t type = table->type;
-
-        /* Remove all components */
-        ecs_ids_t to_remove = flecs_type_to_ids(type);
-        remove_ids_w_info(world, entity, &info, &to_remove);
+        delete_entity(world, table, &table->storage, info.row);
+        info.record->table = NULL;
+        info.record->row = 0;
     }    
 
     flecs_defer_flush(world, stage);
@@ -2363,9 +2327,8 @@ void remove_from_table(
             continue;
         }
 
-        ecs_ids_t to_remove = { .array = &e, .count = 1 };
         dst_table = flecs_table_traverse_remove(
-            world, dst_table, &to_remove, &removed);
+            world, dst_table, e, &removed);
         
         removed_count ++;
         if (removed_count == column_count) {
@@ -2611,9 +2574,7 @@ void ecs_delete(
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
         if (table_id && flecs_sparse_is_alive(world->store.tables, table_id)) {
-            ecs_type_t type = table->type;
-            ecs_ids_t to_remove = flecs_type_to_ids(type);
-            delete_entity(world, table, info.data, info.row, &to_remove);
+            delete_entity(world, table, info.data, info.row);
             r->table = NULL;
         }
 
@@ -2634,9 +2595,7 @@ void ecs_add_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_ids_t components = { .array = &id, .count = 1 };
-    add_ids(world, entity, &components);
+    add_id(world, entity, id);
 }
 
 void ecs_remove_id(
@@ -2647,9 +2606,7 @@ void ecs_remove_id(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_ids_t components = { .array = &id, .count = 1 };
-    remove_ids(world, entity, &components);
+    remove_id(world, entity, id);
 }
 
 ecs_entity_t ecs_clone(
@@ -2870,13 +2827,7 @@ void* ecs_emplace_id(
     ecs_entity_info_t info;
     flecs_get_info(world, entity, &info);
 
-    ecs_ids_t to_add = {
-        .array = &id,
-        .count = 1
-    };
-
-    add_ids_w_info(world, entity, &info, &to_add, 
-        false /* Add component without constructing it */ );
+    add_id_w_info(world, entity, &info, id, false /* Add without ctor*/);
 
     void *ptr = get_component(world, info.table, info.row, id);
 
@@ -3634,11 +3585,7 @@ void flush_bulk_new(
 
     int i, count = op->is._n.count;
     for (i = 0; i < count; i ++) {
-        add_ids(world, ids[i], &op->components);
-    }
-
-    if (op->components.count > 1) {
-        ecs_os_free(op->components.array);
+        add_id(world, ids[i], op->id);
     }
 
     ecs_os_free(ids);
@@ -3675,15 +3622,10 @@ void discard_op(
     if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
         if (value) {
-            free_value(world, &op->is._1.entity, op->component, op->is._1.value, 1);
+            free_value(world, &op->is._1.entity, op->id, op->is._1.value, 1);
             ecs_os_free(value);
         }
-    }
-
-    ecs_entity_t *components = op->components.array;
-    if (components) {
-        ecs_os_free(components);
-    }    
+    }  
 }
 
 static 
@@ -3700,61 +3642,48 @@ bool is_entity_valid(
 static
 bool remove_invalid(
     ecs_world_t * world,
-    ecs_ids_t * ids)
+    ecs_id_t *id_out)
 {
-    ecs_entity_t *array = ids->array;
-    int32_t i, offset = 0, count = ids->count;
+    ecs_id_t id = *id_out;
 
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = array[i];
-        bool is_remove = false;
-
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t rel = ecs_pair_relation(world, id);
-            if (!rel || !is_entity_valid(world, rel)) {
-                /* After relation is deleted we can no longer see what its
-                 * delete action was, so pretend this never happened */
-                is_remove = true;
-            } else {
-                ecs_entity_t obj = ecs_pair_object(world, id);
-                if (!obj || !is_entity_valid(world, obj)) {
-                    /* Check the relation's policy for deleted objects */
-                    ecs_id_record_t *idr = flecs_get_id_record(world, rel);
-                    if (!idr || (idr->on_delete_object == EcsRemove)) {
-                        is_remove = true;
-                    } else {
-                        if (idr->on_delete_object == EcsDelete) {
-                            /* Entity should be deleted, don't bother checking
-                             * other ids */
-                            return false;
-                        } else if (idr->on_delete_object == EcsThrow) {
-                            /* If policy is throw this object should not have
-                             * been deleted */
-                            throw_invalid_delete(world, id);
-                        }
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_entity_t rel = ecs_pair_relation(world, id);
+        if (!rel || !is_entity_valid(world, rel)) {
+            /* After relation is deleted we can no longer see what its
+             * delete action was, so pretend this never happened */
+            *id_out = 0;
+            return true;
+        } else {
+            ecs_entity_t obj = ecs_pair_object(world, id);
+            if (!obj || !is_entity_valid(world, obj)) {
+                /* Check the relation's policy for deleted objects */
+                ecs_id_record_t *idr = flecs_get_id_record(world, rel);
+                if (!idr || (idr->on_delete_object == EcsRemove)) {
+                    *id_out = 0;
+                    return true;
+                } else {
+                    if (idr->on_delete_object == EcsDelete) {
+                        /* Entity should be deleted, don't bother checking
+                         * other ids */
+                        return false;
+                    } else if (idr->on_delete_object == EcsThrow) {
+                        /* If policy is throw this object should not have
+                         * been deleted */
+                        throw_invalid_delete(world, id);
                     }
                 }
             }
-
-        } else {
-            id &= ECS_COMPONENT_MASK;
-
-            if (!is_entity_valid(world, id)) {
-                /* After relation is deleted we can no longer see what its
-                 * delete action was, so pretend this never happened */
-                is_remove = true;
-            }
         }
 
-        if (is_remove) {
-            offset ++;
-            count --;
+    } else {
+        id &= ECS_COMPONENT_MASK;
+        if (!is_entity_valid(world, id)) {
+            /* After relation is deleted we can no longer see what its
+             * delete action was, so pretend this never happened */
+            *id_out = 0;
+            return true;
         }
-
-        ids->array[i] = ids->array[i + offset];
     }
-
-    ids->count = count;
 
     return true;
 }
@@ -3797,64 +3726,54 @@ bool flecs_defer_flush(
                     continue;
                 }
 
-                if (op->components.count == 1) {
-                    op->components.array = &op->component;
-                }
-
                 switch(op->kind) {
                 case EcsOpNew:
                 case EcsOpAdd:
-                    if (remove_invalid(world, &op->components)) {
-                        world->add_count ++;
-                        add_ids(world, e, &op->components);
+                    ecs_assert(op->id != 0, ECS_INTERNAL_ERROR, NULL);
+                    if (remove_invalid(world, &op->id)) {
+                        if (op->id) {
+                            world->add_count ++;
+                            add_id(world, e, op->id);
+                        }
                     } else {
                         ecs_delete(world, e);
                     }
                     break;
                 case EcsOpRemove:
-                    remove_ids(world, e, &op->components);
+                    remove_id(world, e, op->id);
                     break;
                 case EcsOpClone:
-                    ecs_clone(world, e, op->component, op->is._1.clone_value);
+                    ecs_clone(world, e, op->id, op->is._1.clone_value);
                     break;
                 case EcsOpSet:
                     assign_ptr_w_id(world, e, 
-                        op->component, flecs_to_size_t(op->is._1.size), 
+                        op->id, flecs_to_size_t(op->is._1.size), 
                         op->is._1.value, true, true);
                     break;
                 case EcsOpMut:
                     assign_ptr_w_id(world, e, 
-                        op->component, flecs_to_size_t(op->is._1.size), 
+                        op->id, flecs_to_size_t(op->is._1.size), 
                         op->is._1.value, true, false);
                     break;
                 case EcsOpModified:
-                    ecs_modified_id(world, e, op->component);
+                    ecs_modified_id(world, e, op->id);
                     break;
                 case EcsOpDelete: {
                     ecs_delete(world, e);
                     break;
                 }
                 case EcsOpEnable:
-                    ecs_enable_component_w_id(
-                        world, e, op->component, true);
+                    ecs_enable_component_w_id(world, e, op->id, true);
                     break;
                 case EcsOpDisable:
-                    ecs_enable_component_w_id(
-                        world, e, op->component, false);
+                    ecs_enable_component_w_id(world, e, op->id, false);
                     break;
                 case EcsOpClear:
                     ecs_clear(world, e);
                     break;
                 case EcsOpBulkNew:
                     flush_bulk_new(world, op);
-
-                    /* Continue since flush_bulk_new is repsonsible for cleaning
-                    * up resources. */
                     continue;
-                }
-
-                if (op->components.count > 1) {
-                    ecs_os_free(op->components.array);
                 }
 
                 if (op->is._1.value) {

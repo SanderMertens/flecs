@@ -534,18 +534,12 @@ ecs_entity_t ecs_set_scope(
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    ecs_entity_t e = ecs_pair(EcsChildOf, scope);
-    ecs_ids_t to_add = {
-        .array = &e,
-        .count = 1
-    };
-
     ecs_entity_t cur = stage->scope;
     stage->scope = scope;
 
     if (scope) {
         stage->scope_table = flecs_table_traverse_add(
-            world, &world->store.root, &to_add, NULL);
+            world, &world->store.root, ecs_pair(EcsChildOf, scope), NULL);
     } else {
         stage->scope_table = &world->store.root;
     }
