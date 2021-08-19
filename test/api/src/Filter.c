@@ -1503,15 +1503,15 @@ void Filter_filter_iter_pair_id() {
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
     test_assert(ecs_filter_next(&it));
-    test_int(it.count, 2);
-    test_int(it.entities[0], e_1);
-    test_int(it.entities[1], e_2);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
     test_int(ecs_term_source(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_3);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
     test_int(ecs_term_source(&it, 1), 0);
 
@@ -1573,6 +1573,47 @@ void Filter_filter_iter_2_pair_ids() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_childof_pair_0_parent() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsChildOf, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsChildOf, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsChildOf, Obj);
+
+    ecs_entity_t e_4 = ecs_new_w_id(world, Tag);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ ecs_pair(EcsChildOf, 0) }} /* Special for ChildOf */
+    });
+
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    while (ecs_filter_next(&it)) {
+        test_assert(it.count != 0);
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e_1);
+            test_assert(it.entities[i] != e_2);
+            test_assert(it.entities[i] != e_3);
+
+            if (it.entities[i] == e_4) {
+                test_assert(count == 0);
+                count ++;
+            }
+        }
+    }
+
+    test_int(count, 1);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_pair_pred_obj() {
     ecs_world_t *world = ecs_init();
 
@@ -1594,15 +1635,15 @@ void Filter_filter_iter_pair_pred_obj() {
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
     test_assert(ecs_filter_next(&it));
-    test_int(it.count, 2);
-    test_int(it.entities[0], e_1);
-    test_int(it.entities[1], e_2);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
     test_int(ecs_term_source(&it, 1), 0);
 
     test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_3);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj));
     test_int(ecs_term_source(&it, 1), 0);
 

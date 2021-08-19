@@ -861,6 +861,7 @@ void Filter_filter_iter_1_component(void);
 void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_pair_id(void);
 void Filter_filter_iter_2_pair_ids(void);
+void Filter_filter_iter_childof_pair_0_parent(void);
 void Filter_filter_iter_pair_pred_obj(void);
 void Filter_filter_iter_pair_2_pred_obj(void);
 void Filter_filter_iter_null(void);
@@ -5049,6 +5050,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_pair_ids
     },
     {
+        "filter_iter_childof_pair_0_parent",
+        Filter_filter_iter_childof_pair_0_parent
+    },
+    {
         "filter_iter_pair_pred_obj",
         Filter_filter_iter_pair_pred_obj
     },
@@ -8777,7 +8782,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        54,
+        55,
         Filter_testcases
     },
     {
