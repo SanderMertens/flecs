@@ -1561,3 +1561,31 @@ void FilterBuilder_20_terms() {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_term_after_arg() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .add<TagA>()
+        .add<TagB>()
+        .add<TagC>();
+
+    ecs.entity()
+        .add<TagA>()
+        .add<TagB>();
+
+    auto f = ecs.filter_builder<TagA, TagB>()
+        .arg(1).subject(flecs::This) // dummy
+        .term<TagC>()
+        .build();
+
+    test_int(f.term_count(), 3);
+
+    int count = 0;
+    f.each([&](flecs::entity e, TagA&, TagB&) {
+        test_assert(e == e_1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

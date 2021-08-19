@@ -402,8 +402,10 @@ public:
     
     Base& arg(int32_t term_index) {
         ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+        int32_t prev_index = m_term_index;
         m_term_index = term_index - 1;
         this->term();
+        m_term_index = prev_index;
         ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
         return *this;
     }    
