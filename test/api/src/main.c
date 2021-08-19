@@ -1594,6 +1594,8 @@ void World_no_time(void);
 void World_is_entity_enabled(void);
 void World_get_stats(void);
 void World_ensure_empty_root(void);
+void World_register_alias_twice_same_entity(void);
+void World_register_alias_twice_different_entity(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -8032,6 +8034,14 @@ bake_test_case World_testcases[] = {
     {
         "ensure_empty_root",
         World_ensure_empty_root
+    },
+    {
+        "register_alias_twice_same_entity",
+        World_register_alias_twice_same_entity
+    },
+    {
+        "register_alias_twice_different_entity",
+        World_register_alias_twice_different_entity
     }
 };
 
@@ -9949,7 +9959,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        35,
+        37,
         World_testcases
     },
     {

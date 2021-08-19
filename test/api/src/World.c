@@ -1077,3 +1077,31 @@ void World_ensure_empty_root() {
 
     ecs_fini(world);
 }
+
+void World_register_alias_twice_same_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_use(world, e, "Foo");
+    ecs_use(world, e, "Foo");
+
+    ecs_entity_t f = ecs_lookup(world, "Foo");
+    test_assert(f == e);
+
+    ecs_fini(world);
+}
+
+void World_register_alias_twice_different_entity() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t f = ecs_new_id(world);
+
+    ecs_use(world, e, "Foo");
+    
+    test_expect_abort();
+    ecs_use(world, f, "Foo");
+}

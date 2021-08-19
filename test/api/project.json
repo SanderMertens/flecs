@@ -763,7 +763,7 @@
                 "lookup_path_this",
                 "lookup_path_wildcard",
                 "lookup_path_this_from_scope",
-                "lookup_path_wildcard_from_scope"                                            
+                "lookup_path_wildcard_from_scope"                                       
             ]
         }, {
             "id": "Singleton",
@@ -1702,7 +1702,9 @@
                 "no_time",
                 "is_entity_enabled",
                 "get_stats",
-                "ensure_empty_root"
+                "ensure_empty_root",
+                "register_alias_twice_same_entity",
+                "register_alias_twice_different_entity"
             ]
         }, {
             "id": "Type",

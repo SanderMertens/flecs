@@ -27771,9 +27771,9 @@ void register_by_name(
             ecs_abort(ECS_ALREADY_DEFINED, 
                 "conflicting entity registered with name '%s'", name);
         }
+    } else {
+        key.value = ecs_os_strdup(key.value);
     }
-
-    key.value = ecs_os_strdup(key.value);
 
     flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
         *map, &key, ecs_entity_t);
