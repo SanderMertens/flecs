@@ -151,57 +151,6 @@ int32_t ecs_type_match(
     return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, out);
 }
 
-ecs_type_t ecs_type_add(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t e)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* This function is allowed while staged, as long as the type already
-     * exists. If the type does not exist yet and traversing the table graph
-     * results in the creation of a table, an assert will trigger. */
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-
-    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
-
-    ecs_ids_t entities = {
-        .array = &e,
-        .count = 1
-    };
-
-    table = flecs_table_traverse_add(unsafe_world, table, &entities, NULL);
-
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
-ecs_type_t ecs_type_remove(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t e)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    /* This function is allowed while staged, as long as the type already
-     * exists. If the type does not exist yet and traversing the table graph
-     * results in the creation of a table, an assert will trigger. */
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-    
-    ecs_table_t *table = ecs_table_from_type(unsafe_world, type);
-
-    ecs_ids_t entities = {
-        .array = &e,
-        .count = 1
-    };
-
-    table = flecs_table_traverse_remove(unsafe_world, table, &entities, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;    
-}
-
 char* ecs_type_str(
     const ecs_world_t *world,
     ecs_type_t type)
