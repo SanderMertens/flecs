@@ -5009,17 +5009,20 @@ const ecs_filter_t* ecs_query_get_filter(
  * own set of arrays, an application has to reobtain pointers to those arrays
  * for each matching table.
  *
+ * @param world The world or stage, when iterating in readonly mode.
  * @param query The query to iterate.
  * @return The query iterator.
  */
 FLECS_API
 ecs_iter_t ecs_query_iter(
+    ecs_world_t *world,
     ecs_query_t *query);  
 
 /** Iterate over a query.
  * This operation is similar to ecs_query_iter, but starts iterating from a
  * specified offset, and will not iterate more than limit entities.
  *
+ * @param world The world or stage, when iterating in readonly mode.
  * @param query The query to iterate.
  * @param offset The number of entities to skip.
  * @param limit The maximum number of entities to iterate.
@@ -5027,6 +5030,7 @@ ecs_iter_t ecs_query_iter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter_page(
+    ecs_world_t *world,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
@@ -7092,7 +7096,7 @@ FLECS_API bool ecs_get_system_stats(
  * @return true if success, false if not a pipeline.
  */
 FLECS_API bool ecs_get_pipeline_stats(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
 #endif
@@ -14066,8 +14070,8 @@ public:
 
     Base& add(id_t id) {
         if (!m_table) {
-            for (auto id : this->vector()) {
-                m_table = ecs_table_add_id(world(), m_table, id);
+            for (auto type_id : this->vector()) {
+                m_table = ecs_table_add_id(world(), m_table, type_id);
             }
         }
 
@@ -14712,7 +14716,7 @@ public:
 
     template <typename Func>
     void iter(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
         while (ecs_query_next(&it)) {
             _::iter_invoker<Func>(func).invoke(&it);
         }
@@ -14814,7 +14818,7 @@ public:
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }

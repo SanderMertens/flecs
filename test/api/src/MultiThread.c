@@ -687,12 +687,12 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
         ecs_set(world, ids[i], Position, {1, 2});
     }
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next_worker(&it, 0, 2)) {
         TestAll(&it);
     }
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     while (ecs_query_next_worker(&it, 1, 2)) {
         TestAll(&it);
     }

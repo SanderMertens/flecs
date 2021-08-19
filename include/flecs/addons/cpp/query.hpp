@@ -56,7 +56,7 @@ public:
 
     template <typename Func>
     void iter(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
         while (ecs_query_next(&it)) {
             _::iter_invoker<Func>(func).invoke(&it);
         }
@@ -158,7 +158,7 @@ public:
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_query_iter(m_query);
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }

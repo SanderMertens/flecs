@@ -303,8 +303,9 @@ ecs_entity_t ecs_run_intern(
     ecs_defer_begin(stage->thread_ctx);
 
     /* Prepare the query iterator */
-    ecs_iter_t it = ecs_query_iter_page(system_data->query, offset, limit);
-    it.world = stage->thread_ctx;
+    ecs_iter_t it = ecs_query_iter_page(
+        stage->thread_ctx, system_data->query, offset, limit);
+
     it.system = system;
     it.self = system_data->self;
     it.delta_time = delta_time;

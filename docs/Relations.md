@@ -231,7 +231,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
   }
 });
 
-ecs_iter_t it = ecs_query_iter(q);
+ecs_iter_t it = ecs_query_iter(world, q);
 
 while (ecs_query_next(&it)) {
   ecs_id_t id = ecs_term_id(&it, 1); // Obtain pair id

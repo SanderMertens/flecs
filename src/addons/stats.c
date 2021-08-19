@@ -276,15 +276,15 @@ static ecs_system_stats_t* get_system_stats(
 }
 
 bool ecs_get_pipeline_stats(
-    const ecs_world_t *world,
+    ecs_world_t *stage,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
-    world = ecs_get_world(world);
+    const ecs_world_t *world = ecs_get_world(stage);
 
     const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
     if (!pq) {
@@ -292,7 +292,7 @@ bool ecs_get_pipeline_stats(
     }
 
     /* First find out how many systems are matched by the pipeline */
-    ecs_iter_t it = ecs_query_iter(pq->query);
+    ecs_iter_t it = ecs_query_iter(stage, pq->query);
     int32_t count = 0;
     while (ecs_query_next(&it)) {
         count += it.count;
@@ -313,7 +313,8 @@ bool ecs_get_pipeline_stats(
     ecs_entity_t *systems = ecs_vector_first(s->systems, ecs_entity_t);
 
     /* Populate systems vector, keep track of sync points */
-    it = ecs_query_iter(pq->query);
+    it = ecs_query_iter(stage, pq->query);
+    
     int32_t i_system = 0, ran_since_merge = 0;
     while (ecs_query_next(&it)) {
         int32_t i;

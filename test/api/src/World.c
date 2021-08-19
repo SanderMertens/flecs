@@ -1044,7 +1044,7 @@ void World_ensure_empty_root() {
     ecs_world_t *world = ecs_init();
 
     ecs_query_t *q = ecs_query_new(world, "!(ChildOf, *)");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     /* Make sure that the only entity in the root is the flecs module */
 

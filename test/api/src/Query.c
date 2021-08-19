@@ -11,13 +11,13 @@ void Query_query_changed_after_new() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_new(world, Position);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -34,13 +34,13 @@ void Query_query_changed_after_delete() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_delete(world, e1);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -57,13 +57,13 @@ void Query_query_changed_after_add() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_add(world, e1, Position);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -80,13 +80,13 @@ void Query_query_changed_after_remove() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_remove(world, e1, Position);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -103,13 +103,13 @@ void Query_query_changed_after_set() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_set(world, e1, Position, {10, 20});
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -126,13 +126,13 @@ void Query_query_change_after_modified() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_modified(world, e1, Position);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -153,13 +153,13 @@ void Query_query_change_after_out_system() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_progress(world, 0);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -178,13 +178,13 @@ void Query_query_change_after_in_system() {
     test_assert(q != NULL);
     test_assert(ecs_query_changed(q) == true);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_progress(world, 0);
     test_assert(ecs_query_changed(q) == false);
 
-    ecs_query_iter(q);
+    ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q) == false);
 
     ecs_fini(world);
@@ -215,7 +215,7 @@ void Query_subquery_match_existing() {
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -230,7 +230,7 @@ void Query_subquery_match_existing() {
     test_int(entity_count, 6);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -273,7 +273,7 @@ void Query_subquery_match_new() {
     ecs_add(world, ids[2], Velocity);
 
     int32_t table_count = 0, entity_count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -288,7 +288,7 @@ void Query_subquery_match_new() {
     test_int(entity_count, 6);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -331,7 +331,7 @@ void Query_subquery_inactive() {
     ecs_delete(world, e);
 
     int32_t table_count = 0, entity_count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -346,12 +346,12 @@ void Query_subquery_inactive() {
     test_int(entity_count, 3);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 0);
     test_int(it.inactive_table_count, 1);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     while (ecs_query_next(&it)) {
         table_count ++;
     }
@@ -391,7 +391,7 @@ void Query_subquery_unmatch() {
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -406,7 +406,7 @@ void Query_subquery_unmatch() {
     test_int(entity_count, 2);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -428,10 +428,10 @@ void Query_subquery_unmatch() {
     ecs_progress(world, 0);
 
     /* Test if tables have been unmatched */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 0);
 
      ecs_query_fini(sq);
@@ -467,7 +467,7 @@ void Query_subquery_rematch() {
     test_assert(sq != NULL);
 
     int32_t table_count = 0, entity_count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -482,7 +482,7 @@ void Query_subquery_rematch() {
     test_int(entity_count, 2);
 
     table_count = 0, entity_count = 0;
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     while (ecs_query_next(&it)) {
         table_count ++;
         entity_count += it.count;
@@ -504,10 +504,10 @@ void Query_subquery_rematch() {
     ecs_progress(world, 0);
 
     /* Test if tables have been unmatched */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 0);
 
     /* Rematch queries */
@@ -517,10 +517,10 @@ void Query_subquery_rematch() {
     ecs_progress(world, 0);
 
     /* Test if tables have been rematched */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_int(it.table_count, 2);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 1);    
 
      ecs_query_fini(sq);
@@ -555,10 +555,10 @@ void Query_subquery_rematch_w_parent_optional() {
     });
     test_assert(sq != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 2);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 1);
 
     /* Trigger rematch */
@@ -566,10 +566,10 @@ void Query_subquery_rematch_w_parent_optional() {
     ecs_progress(world, 0);
 
     /* Tables should be matched */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 1);
 
      ecs_query_fini(sq);
@@ -605,10 +605,10 @@ void Query_subquery_rematch_w_sub_optional() {
     });
     test_assert(sq != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 2);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 1);
 
     /* Trigger rematch */
@@ -616,10 +616,10 @@ void Query_subquery_rematch_w_sub_optional() {
     ecs_progress(world, 0);
 
     /* Tables should be matched */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
 
-    it = ecs_query_iter(sq);
+    it = ecs_query_iter(world, sq);
     test_int(it.table_count, 1);
 
      ecs_query_fini(sq);
@@ -642,7 +642,7 @@ void Query_query_single_pairs() {
     int32_t table_count = 0, entity_count = 0;
 
     ecs_query_t *q = ecs_query_new(world, "(Rel, Velocity)");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
 
@@ -670,7 +670,7 @@ void Query_query_single_instanceof() {
     int32_t table_count = 0, entity_count = 0;
 
     ecs_query_t *q = ecs_query_new(world, "(IsA, BaseA)");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
 
@@ -698,7 +698,7 @@ void Query_query_single_childof() {
     int32_t table_count = 0, entity_count = 0;
 
     ecs_query_t *q = ecs_query_new(world, "(ChildOf, BaseA)");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         table_count ++;
 
@@ -734,7 +734,7 @@ void Query_query_optional_owned() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
@@ -785,7 +785,7 @@ void Query_query_optional_shared() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
@@ -838,7 +838,7 @@ void Query_query_optional_shared_nested() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
@@ -883,7 +883,7 @@ void Query_query_optional_any() {
     ecs_query_t *q = ecs_query_new(world, "Position, ?ANY:Velocity");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
@@ -930,7 +930,7 @@ void Query_query_rematch_optional_after_add() {
 
     /* First iteration, base doesn't have Velocity but query should match with
      * entity anyway since the component is optional */
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
@@ -961,7 +961,7 @@ void Query_query_rematch_optional_after_add() {
 
     /* Second iteration, base has Velocity and entity should be able to access
      * the shared component. */
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     count = 0;
     
     while (ecs_query_next(&it)) {
@@ -996,7 +996,7 @@ void Query_get_owned_tag() {
     ecs_query_t *q = ecs_query_new(world, "Tag");
 
     int count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         test_assert(ecs_term_w_size(&it, 0, 1) == NULL);
         test_int(it.count, 1);
@@ -1020,7 +1020,7 @@ void Query_get_shared_tag() {
     ecs_query_t *q = ecs_query_new(world, "SHARED:Tag");
 
     int count = 0;
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         test_assert(ecs_term_w_size(&it, 0, 1) == NULL);
         test_int(it.count, 1);
@@ -1057,7 +1057,7 @@ void Query_get_column_size() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(ecs_term_size(&it, 1), sizeof(Position));
 
@@ -1154,7 +1154,7 @@ void Query_invalid_access_orphaned_query() {
 
     test_expect_abort();
 
-    ecs_query_iter(sq);  
+    ecs_query_iter(world, sq);  
 }
 
 void Query_stresstest_query_free() {
@@ -1191,12 +1191,12 @@ void Query_only_from_entity() {
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "e:Tag");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_add(world, e, Tag);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
     test_assert(ecs_term_id(&it, 1) == Tag);
@@ -1212,12 +1212,12 @@ void Query_only_from_singleton() {
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "$e");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_add_id(world, e, e);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
     test_assert(ecs_term_id(&it, 1) == e);
@@ -1233,14 +1233,14 @@ void Query_only_not_from_entity() {
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "!e:Tag");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
     test_assert(ecs_term_id(&it, 1) == Tag);
 
     ecs_add(world, e, Tag);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1254,14 +1254,14 @@ void Query_only_not_from_singleton() {
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
     ecs_query_t *q = ecs_query_new(world, "!$e");
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
     test_assert(ecs_term_id(&it, 1) == e);
 
     ecs_add_id(world, e, e);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1322,7 +1322,7 @@ void Query_group_by() {
     ecs_add_id(world, e2, TagB);
     ecs_add_id(world, e3, TagA);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -1371,7 +1371,7 @@ void Query_group_by_w_ctx() {
     ecs_add_id(world, e2, TagB);
     ecs_add_id(world, e3, TagA);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -1403,7 +1403,7 @@ void Query_iter_valid() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(it.is_valid, false);
 
     test_bool(ecs_query_next(&it), true);
@@ -1428,7 +1428,7 @@ void Query_query_optional_tag() {
     ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {    
@@ -1468,7 +1468,7 @@ void Query_query_optional_shared_tag() {
     ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|superset)");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {    
@@ -1540,7 +1540,7 @@ void Query_query_iter_10_tags() {
         }
     });
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -1656,7 +1656,7 @@ void Query_query_iter_20_tags() {
         },
     });
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -1762,7 +1762,7 @@ void Query_query_iter_10_components() {
         }
     });
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -1891,7 +1891,7 @@ void Query_query_iter_20_components() {
         }
     });
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
@@ -1969,7 +1969,7 @@ void Query_iter_type_set() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);

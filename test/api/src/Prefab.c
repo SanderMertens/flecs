@@ -2530,14 +2530,14 @@ void Prefab_prefab_instanceof_hierarchy() {
      * sure there are no matching entities for Position up to this point */
     ecs_query_t *q = ecs_query_new(world, "ANY:Position");
     
-    ecs_iter_t qit = ecs_query_iter(q);
+    ecs_iter_t qit = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&qit));
 
     /* Instantiate the prefab */
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e != 0);
 
-    qit = ecs_query_iter(q);
+    qit = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&qit) == true);
     test_int(qit.count, 1);
     test_assert(ecs_query_next(&qit) == true);
@@ -2693,7 +2693,7 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
 
     ecs_add_pair(world, parent, EcsIsA, base);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
 
     test_int(it.count, 1);
@@ -2735,7 +2735,7 @@ void Prefab_rematch_after_prefab_delete() {
 
     ecs_query_t *q = ecs_query_new(world, "SHARED:Position");
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
@@ -2746,7 +2746,7 @@ void Prefab_rematch_after_prefab_delete() {
 
     ecs_delete(world, base);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
@@ -3033,14 +3033,14 @@ void Prefab_rematch_after_add_to_recycled_base() {
     test_assert( ecs_has_pair(world, e, EcsIsA, base));
     ecs_add(world, e, Tag);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), false);
 
     ecs_set(world, base, Position, {10, 20});
 
     ecs_progress(world, 0);
 
-    it = ecs_query_iter(q);
+    it = ecs_query_iter(world, q);
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
 

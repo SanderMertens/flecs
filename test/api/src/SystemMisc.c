@@ -1573,7 +1573,7 @@ void SystemMisc_rw_in_implicit_any() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == true);
@@ -1593,7 +1593,7 @@ void SystemMisc_rw_in_implicit_shared() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == true);
@@ -1612,7 +1612,7 @@ void SystemMisc_rw_in_implicit_from_empty() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == true);
@@ -1632,7 +1632,7 @@ void SystemMisc_rw_in_implicit_from_entity() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == true);
@@ -1651,7 +1651,7 @@ void SystemMisc_rw_out_explicit_any() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == false);
@@ -1671,7 +1671,7 @@ void SystemMisc_rw_out_explicit_shared() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == false);
@@ -1690,7 +1690,7 @@ void SystemMisc_rw_out_explicit_from_empty() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == false);
@@ -1710,7 +1710,7 @@ void SystemMisc_rw_out_explicit_from_entity() {
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
     test_assert(ecs_term_is_readonly(&it, 2) == false);
@@ -1766,7 +1766,7 @@ void SystemMisc_get_query() {
 
     int32_t count = 0;
 
-    ecs_iter_t it = ecs_query_iter(q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
         Position *p = ecs_term(&it, Position, 1);
         test_assert(p != NULL);

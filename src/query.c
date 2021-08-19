@@ -2317,6 +2317,7 @@ const ecs_filter_t* ecs_query_get_filter(
 
 /* Create query iterator */
 ecs_iter_t ecs_query_iter_page(
+    ecs_world_t *stage,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -2324,7 +2325,7 @@ ecs_iter_t ecs_query_iter_page(
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_world_t *world = query->world;
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 
     if (query->needs_reorder) {
         order_grouped_tables(world, query);
@@ -2356,7 +2357,8 @@ ecs_iter_t ecs_query_iter_page(
     };
 
     return (ecs_iter_t){
-        .world = world,
+        .real_world = world,
+        .world = stage,
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
@@ -2366,9 +2368,10 @@ ecs_iter_t ecs_query_iter_page(
 }
 
 ecs_iter_t ecs_query_iter(
+    ecs_world_t *world,
     ecs_query_t *query)
 {
-    return ecs_query_iter_page(query, 0, 0);
+    return ecs_query_iter_page(world, query, 0, 0);
 }
 
 static
