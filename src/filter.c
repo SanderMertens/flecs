@@ -204,6 +204,15 @@ int ecs_term_finalize(
     ecs_term_t *term)
 {
     if (term->id) {
+        /* If id is pair make sure that both predicate and object are set */
+        ecs_assert(!ECS_HAS_ROLE(term->id, PAIR) || 
+            /* Special case, it is allowed to query for (ChildOf, 0) which 
+             * returns all root entities. This would be expensive to do for
+             * any relation, which is why it's a special case for now */
+            ECS_PAIR_RELATION(term->id) == EcsChildOf ||
+            (ECS_PAIR_RELATION(term->id) != 0 && ECS_PAIR_OBJECT(term->id) != 0)
+                , ECS_INVALID_PARAMETER, NULL);
+
         /* Allow for combining explicit object with id */
         if (term->args[1].name && !term->args[1].entity) {
             if (resolve_identifier(world, name, expr, &term->args[1])) {
@@ -217,7 +226,7 @@ int ecs_term_finalize(
             ecs_assert(term->id == 
                 ecs_pair(term->pred.entity, term->args[1].entity), 
                     ECS_INVALID_PARAMETER, NULL);
-        } else if (term->pred.entity) {
+        } else if (term->pred.entity && term->pred.entity != EcsChildOf) {
             /* If only predicate is set (not object) it must match the id
              * without any roles set. */
             ecs_assert(term->pred.entity == (term->id & ECS_COMPONENT_MASK), 

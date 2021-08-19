@@ -18320,6 +18320,15 @@ int ecs_term_finalize(
     ecs_term_t *term)
 {
     if (term->id) {
+        /* If id is pair make sure that both predicate and object are set */
+        ecs_assert(!ECS_HAS_ROLE(term->id, PAIR) || 
+            /* Special case, it is allowed to query for (ChildOf, 0) which 
+             * returns all root entities. This would be expensive to do for
+             * any relation, which is why it's a special case for now */
+            ECS_PAIR_RELATION(term->id) == EcsChildOf ||
+            (ECS_PAIR_RELATION(term->id) != 0 && ECS_PAIR_OBJECT(term->id) != 0)
+                , ECS_INVALID_PARAMETER, NULL);
+
         /* Allow for combining explicit object with id */
         if (term->args[1].name && !term->args[1].entity) {
             if (resolve_identifier(world, name, expr, &term->args[1])) {
@@ -18333,7 +18342,7 @@ int ecs_term_finalize(
             ecs_assert(term->id == 
                 ecs_pair(term->pred.entity, term->args[1].entity), 
                     ECS_INVALID_PARAMETER, NULL);
-        } else if (term->pred.entity) {
+        } else if (term->pred.entity && term->pred.entity != EcsChildOf) {
             /* If only predicate is set (not object) it must match the id
              * without any roles set. */
             ecs_assert(term->pred.entity == (term->id & ECS_COMPONENT_MASK), 
@@ -25657,43 +25666,6 @@ ecs_entity_t get_builtin(
 }
 
 static
-ecs_entity_t find_child_in_table(
-    const ecs_table_t *table,
-    const char *name)
-{
-    /* If table doesn't have names, then don't bother */
-    int32_t name_index = ecs_type_index_of(table->type, 0,
-        ecs_pair(ecs_id(EcsIdentifier), EcsName));
-    if (name_index == -1) {
-        return 0;
-    }
-
-    const ecs_data_t *data = &table->storage;
-    ecs_assert(data->columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t i, count = ecs_vector_count(data->entities);
-    if (!count) {
-        return 0;
-    }
-
-    ecs_column_t *column = &data->columns[name_index];
-    EcsIdentifier *names = ecs_vector_first(column->data, EcsIdentifier);
-
-    if (is_number(name)) {
-        return name_to_id(name);
-    }
-
-    for (i = 0; i < count; i ++) {
-        const char *cur_name = names[i].value;
-        if (cur_name && !strcmp(cur_name, name)) {
-            return *ecs_vector_get(data->entities, ecs_entity_t, i);
-        }
-    }
-
-    return 0;
-}
-
-static
 bool is_sep(
     const char **ptr,
     const char *sep)
@@ -25863,22 +25835,34 @@ ecs_entity_t ecs_lookup_child(
     const char *name)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-    ecs_entity_t result = 0;
 
-    ecs_id_record_t *r = flecs_get_id_record(world, ecs_pair(EcsChildOf, parent));
-    if (r && r->table_index) {        
-        ecs_map_iter_t it = ecs_map_iter(r->table_index);
-        ecs_table_record_t *tr;
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            result = find_child_in_table(tr->table, name);
-            if (result) {
-                return result;
-            }            
+    if (is_number(name)) {
+        return name_to_id(name);
+    }
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_pair( ecs_id(EcsIdentifier), EcsName) },
+            { .id = ecs_pair(EcsChildOf, parent) }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    while (ecs_filter_next(&it)) {
+        EcsIdentifier *ids = ecs_term(&it, EcsIdentifier, 1);
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            char *cur_name = ids[i].value;
+            if (cur_name && !ecs_os_strcmp(cur_name, name)) {
+                ecs_filter_fini(&f);
+                return it.entities[i];
+            }
         }
     }
 
-    return result;
+    ecs_filter_fini(&f);
+    return 0;
 }
 
 ecs_entity_t ecs_lookup(
