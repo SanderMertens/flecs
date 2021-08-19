@@ -617,7 +617,7 @@ ecs_table_t* flecs_table_traverse_remove(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
-    
+
     node = node ? node : &world->store.root;
 
     /* Removing 0 from an entity is not valid */
@@ -768,72 +768,6 @@ int32_t ecs_entity_array_dedup(
     return count - (k - j);
 }
 
-#ifndef NDEBUG
-
-static
-int32_t count_occurrences(
-    ecs_world_t * world,
-    ecs_ids_t * entities,
-    ecs_entity_t entity,
-    int32_t constraint_index)    
-{
-    const EcsType *type_ptr = ecs_get(world, entity, EcsType);
-    ecs_assert(type_ptr != NULL, 
-        ECS_INVALID_PARAMETER, "flag must be applied to type");
-
-    ecs_type_t type = type_ptr->normalized;
-    int32_t count = 0;
-    
-    int i;
-    for (i = 0; i < constraint_index; i ++) {
-        ecs_entity_t e = entities->array[i];
-        if (e & ECS_ROLE_MASK) {
-            break;
-        }
-
-        if (ecs_type_has_id(world, type, e, false)) {
-            count ++;
-        }
-    }
-
-    return count;
-}
-
-static
-void verify_constraints(
-    ecs_world_t * world,
-    ecs_ids_t * entities)
-{
-    int i, count = entities->count;
-    for (i = count - 1; i >= 0; i --) {
-        ecs_entity_t e = entities->array[i];
-        ecs_entity_t mask = e & ECS_ROLE_MASK;
-        if (!mask || 
-            ((mask != ECS_OR) &&
-             (mask != ECS_XOR) &&
-             (mask != ECS_NOT)))
-        {
-            break;
-        }
-
-        ecs_entity_t entity = e & ECS_COMPONENT_MASK;
-        int32_t matches = count_occurrences(world, entities, entity, i);
-        switch(mask) {
-        case ECS_OR:
-            ecs_assert(matches >= 1, ECS_TYPE_CONSTRAINT_VIOLATION, NULL);
-            break;
-        case ECS_XOR:
-            ecs_assert(matches == 1, ECS_TYPE_CONSTRAINT_VIOLATION, NULL);
-            break;
-        case ECS_NOT:
-            ecs_assert(matches == 0, ECS_TYPE_CONSTRAINT_VIOLATION, NULL);    
-            break;
-        }
-    }
-}
-
-#endif
-
 static
 ecs_table_t* find_or_create(
     ecs_world_t *world,
@@ -876,11 +810,6 @@ ecs_table_t* find_or_create(
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-
-#ifndef NDEBUG
-    /* Check for constraint violations */
-    verify_constraints(world, &ordered_ids);
-#endif
 
     /* If we get here, the table has not been found, so create it. */
     ecs_table_t *result = create_table(world, &ordered_ids, elem);

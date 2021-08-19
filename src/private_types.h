@@ -143,6 +143,25 @@ struct ecs_data_t {
 typedef struct ecs_edge_t {
     ecs_table_t *add;            /* Edges traversed when adding */
     ecs_table_t *remove;         /* Edges traversed when removing */
+
+    ecs_table_t *diff;           /* Difference in ids between tables */
+    ecs_table_t *on_set_sidi;    /* OnSet on set, UnSet on remove */
+    ecs_table_t *on_set_bidi;    /* OnSet both ways */
+
+    /* Diff contains the difference in components between two tables. This is
+     * usually the same as the component that was added, but can contain more
+     * when a base entity is added that has ids with the OVERRIDE flag.
+     * 
+     * Single direction OnSets are typically the same as diff, except when a
+     * base entity is added or removed. In this case on_set_sidi also includes
+     * the (non-overridden) components that were exposed by the base. This is
+     * unidirectional as adding a base triggers OnSet, whereas removing a base
+     * triggers UnSet.
+     *
+     * Bidirectional OnSets happen when a table has an IsA relation to a base
+     * with the component. When the component is set, OnSet is triggered for
+     * the override. When the component is removed, OnSet is triggered because
+     * the base component is re-exposed, with a potentially different value. */
 } ecs_edge_t;
 
 /** Quey matched with table with backref to query table administration.
