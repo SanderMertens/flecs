@@ -132,8 +132,8 @@ int32_t set_row_info(
 /* Utility to set info from main stage record */
 static
 void set_info_from_record(
-    ecs_entity_info_t * info,
-    ecs_record_t * record)
+    ecs_entity_info_t *info,
+    ecs_record_t *record)
 {
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -169,10 +169,10 @@ const ecs_type_info_t *get_c_info(
 
 static
 int get_column_info(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_ids_t * components,
-    ecs_column_info_t * cinfo,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_ids_t *components,
+    ecs_column_info_t *cinfo,
     bool get_all)
 {
     int32_t column_count = table->column_count;
@@ -212,12 +212,12 @@ int get_column_info(
 #ifdef FLECS_SYSTEM 
 static
 void run_set_systems_for_entities(
-    ecs_world_t * world,
-    ecs_ids_t * components,
-    ecs_table_t * table,
+    ecs_world_t *world,
+    ecs_ids_t *components,
+    ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_entity_t * entities,
+    ecs_entity_t *entities,
     bool set_all)
 {
     if (set_all) {
@@ -260,9 +260,9 @@ void run_set_systems_for_entities(
 
 static
 void notify(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_entity_t event,
@@ -291,13 +291,13 @@ void instantiate(
 
 static
 void instantiate_children(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t base,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_table_t * child_table)
+    ecs_table_t *child_table)
 {
     ecs_type_t type = child_table->type;
     ecs_data_t *child_data = &child_table->storage;
@@ -403,10 +403,10 @@ void instantiate_children(
 
 static
 void instantiate(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t base,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count)
 {    
@@ -494,11 +494,11 @@ bool override_from_base(
 
 static
 bool override_component(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t component,
     ecs_type_t type,
-    ecs_data_t * data,
-    ecs_column_t * column,
+    ecs_data_t *data,
+    ecs_column_t *column,
     int32_t row,
     int32_t count)
 {
@@ -528,12 +528,12 @@ bool override_component(
 
 static
 void components_override(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_column_info_t * component_info,
+    ecs_column_info_t *component_info,
     int32_t component_count,
     bool run_on_set)
 {
@@ -603,7 +603,7 @@ static
 void set_switch(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t * data,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,    
     ecs_ids_t *entities,
@@ -657,11 +657,11 @@ void ecs_components_switch(
 
 static
 int32_t new_entity(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_info_t * info,
-    ecs_table_t * new_table,
-    ecs_ids_t * added,
+    ecs_entity_info_t *info,
+    ecs_table_t *new_table,
+    ecs_ids_t *added,
     bool construct)
 {
     ecs_record_t *record = info->record;
@@ -701,15 +701,15 @@ int32_t new_entity(
 
 static
 int32_t move_entity(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_info_t * info,
-    ecs_table_t * src_table,
-    ecs_data_t * src_data,
+    ecs_entity_info_t *info,
+    ecs_table_t *src_table,
+    ecs_data_t *src_data,
     int32_t src_row,
-    ecs_table_t * dst_table,
-    ecs_ids_t * added,
-    ecs_ids_t * removed,
+    ecs_table_t *dst_table,
+    ecs_ids_t *added,
+    ecs_ids_t *removed,
     bool construct)
 {    
     ecs_data_t *dst_data = &dst_table->storage;
@@ -857,10 +857,10 @@ void update_component_monitor_w_array(
 
 static
 void update_component_monitors(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_ids_t * added,
-    ecs_ids_t * removed)
+    ecs_ids_t *added,
+    ecs_ids_t *removed)
 {
     update_component_monitor_w_array(world, entity, 0, added);
     update_component_monitor_w_array(world, entity, 0, removed);
@@ -868,12 +868,12 @@ void update_component_monitors(
 
 static
 void commit(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_info_t * info,
-    ecs_table_t * dst_table,   
-    ecs_ids_t * added,
-    ecs_ids_t * removed,
+    ecs_entity_info_t *info,
+    ecs_table_t *dst_table,   
+    ecs_ids_t *added,
+    ecs_ids_t *removed,
     bool construct)
 {
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
@@ -933,9 +933,9 @@ void commit(
 
 static
 void new(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_ids_t * to_add)
+    ecs_ids_t *to_add)
 {
     ecs_entity_info_t info = {0};
     int32_t i, count = to_add->count;
@@ -950,12 +950,12 @@ void new(
 
 static
 const ecs_entity_t* new_w_data(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_ids_t * component_ids,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_ids_t *component_ids,
     int32_t count,
-    void ** component_data,
-    int32_t * row_out)
+    void **component_data,
+    int32_t *row_out)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1057,9 +1057,9 @@ const ecs_entity_t* new_w_data(
 
 static
 void add_id_w_info(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_info_t * info,
+    ecs_entity_info_t *info,
     ecs_id_t id,
     bool construct)
 {
@@ -1131,11 +1131,11 @@ void remove_id(
 
 static
 void *get_mutable(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
-    ecs_entity_info_t * info,
-    bool * is_added)
+    ecs_entity_info_t *info,
+    bool *is_added)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
@@ -1173,12 +1173,12 @@ void *get_mutable(
 /* -- Private functions -- */
 
 void flecs_run_add_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_ids_t * added,
+    ecs_ids_t *added,
     bool get_all,
     bool run_on_set)
 {
@@ -1205,12 +1205,12 @@ void flecs_run_add_actions(
 }
 
 void flecs_run_remove_actions(
-    ecs_world_t * world,
-    ecs_table_t * table,
-    ecs_data_t * data,
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_ids_t * removed)
+    ecs_ids_t *removed)
 {
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1225,9 +1225,9 @@ void flecs_run_remove_actions(
 }
 
 bool flecs_get_info(
-    const ecs_world_t * world,
+    const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_info_t * info)
+    ecs_entity_info_t *info)
 {
     info->table = NULL;
     info->record = NULL;
@@ -1338,9 +1338,9 @@ void flecs_run_set_systems(
 }
 
 void flecs_run_monitors(
-    ecs_world_t * world, 
-    ecs_table_t * dst_table,
-    ecs_vector_t * v_dst_monitors, 
+    ecs_world_t *world, 
+    ecs_table_t *dst_table,
+    ecs_vector_t *v_dst_monitors, 
     int32_t dst_row, 
     int32_t count, 
     ecs_vector_t *v_src_monitors)
@@ -2696,8 +2696,8 @@ const void* ecs_get_id(
 }
 
 const void* ecs_get_ref_w_id(
-    const ecs_world_t * world,
-    ecs_ref_t * ref,
+    const ecs_world_t *world,
+    ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_id_t id)
 {
@@ -2755,7 +2755,7 @@ void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
-    bool * is_added)
+    bool *is_added)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
@@ -2877,7 +2877,7 @@ ecs_entity_t assign_ptr_w_id(
     ecs_entity_t entity,
     ecs_id_t id,
     size_t size,
-    void * ptr,
+    void *ptr,
     bool is_move,
     bool notify)
 {
@@ -3578,8 +3578,8 @@ size_t ecs_id_str(
 
 static
 void flush_bulk_new(
-    ecs_world_t * world,
-    ecs_op_t * op)
+    ecs_world_t *world,
+    ecs_op_t *op)
 {
     ecs_entity_t *ids = op->is._n.entities;
 
@@ -3617,7 +3617,7 @@ void free_value(
 static
 void discard_op(
     ecs_world_t *world,
-    ecs_op_t * op)
+    ecs_op_t *op)
 {
     if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
@@ -3641,7 +3641,7 @@ bool is_entity_valid(
 
 static
 bool remove_invalid(
-    ecs_world_t * world,
+    ecs_world_t *world,
     ecs_id_t *id_out)
 {
     ecs_id_t id = *id_out;

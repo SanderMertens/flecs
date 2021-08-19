@@ -1131,7 +1131,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t * flecs_get_c_info(
+const ecs_type_info_t* flecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -1144,7 +1144,7 @@ const ecs_type_info_t * flecs_get_c_info(
     return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_type_info_t * flecs_get_or_create_c_info(
+ecs_type_info_t* flecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
