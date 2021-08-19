@@ -171,8 +171,8 @@ void ecs_get_world_stats(
         /* Singleton tables are tables that have just one entity that also has
          * itself in the table type. */
         if (entity_count == 1) {
-            ecs_data_t *data = flecs_table_get_data(table);
-            ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
+            ecs_entity_t *entities = ecs_vector_first(
+                table->storage.entities, ecs_entity_t);
             if (ecs_type_has_id(world, table->type, entities[0], false)) {
                 singleton_table_count ++;
             }

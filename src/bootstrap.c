@@ -142,16 +142,14 @@ void _bootstrap_component(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_data_t *data = flecs_table_get_or_create_data(table);
-    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_column_t *columns = data->columns;
+    ecs_column_t *columns = table->storage.columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, data, entity, record, false);
+    int32_t index = flecs_table_append(world, table, &table->storage, 
+        entity, record, false);
     record->row = index + 1;
 
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
@@ -212,14 +210,11 @@ ecs_table_t* bootstrap_component_table(
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
-    ecs_data_t *data = flecs_table_get_or_create_data(result);
+    ecs_data_t *data = &result->storage;
 
     /* Preallocate enough memory for initial components */
     data->entities = ecs_vector_new(ecs_entity_t, EcsFirstUserComponentId);
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
-
-    data->columns = ecs_os_malloc_n(ecs_column_t, 3);
-    ecs_assert(data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
     data->columns[0].size = ECS_SIZEOF(EcsComponent);

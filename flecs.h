@@ -13948,12 +13948,12 @@ public:
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    trigger<Components...> iter(Func&& func) const;
+    trigger<Components...> iter(Func&& func);
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    trigger<Components...> each(Func&& func) const;
+    trigger<Components...> each(Func&& func);
 
     ecs_trigger_desc_t m_desc;
 
@@ -13963,7 +13963,7 @@ protected:
 
 private:
     template <typename Invoker, typename Func>
-    entity_t build(Func&& func) const {
+    entity_t build(Func&& func) {
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         ecs_trigger_desc_t desc = m_desc;
@@ -13972,7 +13972,11 @@ private:
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
 
-        return ecs_trigger_init(m_world, &desc);;
+        entity_t result = ecs_trigger_init(m_world, &desc);
+
+        ecs_term_fini(&m_desc.term);
+        
+        return result;
     }
 };
 
@@ -15775,7 +15779,7 @@ inline observer<Components ...> observer_builder<Components...>::each(Func&& fun
 
 template <typename ... Components>    
 template <typename Func>
-inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func) const {
+inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func) {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
@@ -15784,7 +15788,7 @@ inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func)
 
 template <typename ... Components>    
 template <typename Func>
-inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func) const {
+inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func) {
     using Invoker = typename _::each_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));

@@ -362,6 +362,7 @@ void QueryBuilder_add_optional(void);
 void QueryBuilder_ptr_type(void);
 void QueryBuilder_const_type(void);
 void QueryBuilder_string_term(void);
+void QueryBuilder_string_term_w_expr(void);
 void QueryBuilder_singleton_term(void);
 void QueryBuilder_isa_superset_term(void);
 void QueryBuilder_isa_self_superset_term(void);
@@ -2055,6 +2056,10 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_string_term
     },
     {
+        "string_term_w_expr",
+        QueryBuilder_string_term_w_expr
+    },
+    {
         "singleton_term",
         QueryBuilder_singleton_term
     },
@@ -3320,7 +3325,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        55,
+        56,
         QueryBuilder_testcases
     },
     {

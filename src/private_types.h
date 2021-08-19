@@ -114,13 +114,6 @@ struct ecs_data_t {
     ecs_bs_column_t *bs_columns; /* Bitset columns */
 };
 
-/** Small footprint data structure for storing data associated with a table. */
-typedef struct ecs_table_leaf_t {
-    ecs_table_t *table;
-    ecs_type_t type;
-    ecs_data_t *data;
-} ecs_table_leaf_t;
-
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /* Does table have builtin components */
 #define EcsTableIsPrefab            2u    /* Does the table store prefabs */
@@ -173,7 +166,7 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int32_t column_count;            /* Number of data columns in table */
 
-    ecs_data_t *data;                /* Component storage */
+    ecs_data_t storage;              /* Component storage */
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
 
     ecs_edge_t *lo_edges;            /* Edges to other tables */

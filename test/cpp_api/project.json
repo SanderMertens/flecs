@@ -385,6 +385,7 @@
                 "ptr_type",
                 "const_type",
                 "string_term",
+                "string_term_w_expr",
                 "singleton_term",
                 "isa_superset_term",
                 "isa_self_superset_term",
