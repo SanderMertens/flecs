@@ -833,6 +833,8 @@ void fini_id_index(
     ecs_id_record_t *r;
     while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
         ecs_map_free(r->table_index);
+        ecs_map_free(r->add_refs);
+        ecs_map_free(r->remove_refs);
     }
 
     ecs_map_free(world->id_index);
@@ -1543,15 +1545,78 @@ ecs_table_record_t* flecs_get_table_record(
     return ecs_map_get(idr->table_index, ecs_table_record_t, table->id);
 }
 
+void flecs_register_add_ref(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    if (!idr->add_refs) {
+        idr->add_refs = ecs_map_new(ecs_table_t*, 1);
+    }
+
+    ecs_table_t **ptr = ecs_map_ensure(
+        idr->add_refs, ecs_table_t*, table->id);
+    ptr[0] = (ecs_table_t*)table;
+}
+
+void flecs_register_remove_ref(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    if (!idr->remove_refs) {
+        idr->remove_refs = ecs_map_new(ecs_table_t*, 1);
+    }
+
+    ecs_table_t **ptr = ecs_map_ensure(
+        idr->remove_refs, ecs_table_t*, table->id);
+    ptr[0] = (ecs_table_t*)table;
+}
+
 void flecs_clear_id_record(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_id_t id)    
 {
-    ecs_id_record_t *r = flecs_get_id_record(world, id);
-    if (!r) {
+    if (world->is_fini) {
+        return;
+    }
+    
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
         return;
     }
 
-    ecs_map_free(r->table_index);
+    /* Delete tables in id record. Because deleting the table updates the
+     * map, remove the map pointer from the id record. This will prevent the
+     * table from removing itself from the map as it is deleted, which
+     * allows for iterating the map without changing it. */
+    ecs_map_t *table_index = idr->table_index;
+    idr->table_index = NULL;
+
+    ecs_map_iter_t it = ecs_map_iter(table_index);
+    ecs_table_record_t *tr;
+    while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+        flecs_delete_table(world, tr->table);
+    }
+    ecs_map_free(table_index);
+
+    /* Remove add & remove references to id from tables */
+    ecs_table_t *table;
+    it = ecs_map_iter(idr->add_refs);
+    while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
+        flecs_table_clear_add_edge(table, id);
+    }
+
+    it = ecs_map_iter(idr->remove_refs);
+    while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
+        flecs_table_clear_remove_edge(table, id);
+    }    
+
+    ecs_map_free(idr->add_refs);
+    ecs_map_free(idr->remove_refs);
+
+    ecs_map_free(idr->table_index);
     ecs_map_remove(world->id_index, id);
 }

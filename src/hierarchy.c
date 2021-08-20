@@ -31,7 +31,7 @@ bool path_append(
         }
 
         name = ecs_get_name(world, child);
-        if (!name) {
+        if (!name || !ecs_os_strlen(name)) {
             ecs_os_sprintf(buff, "%u", (uint32_t)child);
             name = buff;
         }        
@@ -315,10 +315,10 @@ char* ecs_get_path_w_sep(
     if (!sep) {
         sep = ".";
     }
-        
+
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    if (parent != child) {
+    if (!child || parent != child) {
         path_append(world, parent, child, sep, prefix, &buf);
     } else {
         ecs_strbuf_appendstr(&buf, "");
@@ -513,8 +513,9 @@ ecs_entity_t ecs_set_scope(
     stage->scope = scope;
 
     if (scope) {
+        ecs_id_t id = ecs_pair(EcsChildOf, scope);
         stage->scope_table = flecs_table_traverse_add(
-            world, &world->store.root, ecs_pair(EcsChildOf, scope), NULL);
+            world, &world->store.root, &id, NULL);
     } else {
         stage->scope_table = &world->store.root;
     }

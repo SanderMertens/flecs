@@ -135,8 +135,18 @@ ecs_table_record_t* flecs_get_table_record(
     const ecs_table_t *table,
     ecs_id_t id);
 
+void flecs_register_add_ref(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
+
+void flecs_register_remove_ref(
+    ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
+
 void flecs_clear_id_record(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_id_t id);
 
 void flecs_triggers_notify(
@@ -453,14 +463,14 @@ void flecs_table_swap(
 ecs_table_t *flecs_table_traverse_add(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_id_t id,
-    ecs_ids_t *added);
+    ecs_id_t *id_ptr,
+    ecs_table_diff_t *diff);
 
 ecs_table_t *flecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_id_t id,
-    ecs_ids_t *removed);
+    ecs_id_t *id_ptr,
+    ecs_table_diff_t *diff);
 
 void flecs_table_mark_dirty(
     ecs_table_t *table,
@@ -483,6 +493,14 @@ void flecs_table_notify(
 void flecs_table_clear_edges(
     ecs_world_t *world,
     ecs_table_t *table);
+
+void flecs_table_clear_add_edge(
+    ecs_table_t *table,
+    ecs_id_t id);
+
+void flecs_table_clear_remove_edge(
+    ecs_table_t *table,
+    ecs_id_t id);
 
 void flecs_table_delete_entities(
     ecs_world_t *world,

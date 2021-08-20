@@ -67,8 +67,9 @@ struct ecs_ref_t {
 
 /** Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_ids_t {
-    ecs_entity_t *array;    /* An array with entity ids */
+    ecs_id_t *array;    /* An array with entity ids */
     int32_t count;          /* The number of entities in the array */
+    int32_t size;           /* The size of the array */
 } ecs_ids_t;
 
 typedef struct ecs_page_cursor_t {

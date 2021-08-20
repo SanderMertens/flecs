@@ -1355,8 +1355,6 @@ void Prefab_single_on_set_on_child_w_override(void);
 void Prefab_force_owned(void);
 void Prefab_force_owned_2(void);
 void Prefab_force_owned_nested(void);
-void Prefab_force_owned_type(void);
-void Prefab_force_owned_type_w_pair(void);
 void Prefab_prefab_instanceof_hierarchy(void);
 void Prefab_override_tag(void);
 void Prefab_empty_prefab(void);
@@ -6929,14 +6927,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_force_owned_nested
     },
     {
-        "force_owned_type",
-        Prefab_force_owned_type
-    },
-    {
-        "force_owned_type_w_pair",
-        Prefab_force_owned_type_w_pair
-    },
-    {
         "prefab_instanceof_hierarchy",
         Prefab_prefab_instanceof_hierarchy
     },
@@ -8901,7 +8891,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        91,
+        89,
         Prefab_testcases
     },
     {

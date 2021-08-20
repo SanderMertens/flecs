@@ -791,8 +791,6 @@ void flecs_table_free(
 
     flecs_unregister_table(world, table);
 
-    ecs_os_free(table->lo_edges);
-    ecs_map_free(table->hi_edges);
     ecs_vector_free(table->queries);
     ecs_os_free(table->dirty_state);
     ecs_vector_free(table->monitors);
@@ -829,12 +827,7 @@ void flecs_table_reset(
     ecs_table_t *table)
 {
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-    
-    (void)world;
-    ecs_os_free(table->lo_edges);
-    ecs_map_free(table->hi_edges);
-    table->lo_edges = NULL;
-    table->hi_edges = NULL;
+    flecs_table_clear_edges(world, table);
 }
 
 static
