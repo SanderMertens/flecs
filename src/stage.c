@@ -230,11 +230,6 @@ bool flecs_defer_bulk_new(
 
         *ids_out = ids;
 
-        if (!id) {
-            /* If no id is provided, there's nothing left to do */
-            return true;
-        }
-
         /* Store data in op */
         ecs_op_t *op = new_defer_op(stage);
         op->kind = EcsOpBulkNew;

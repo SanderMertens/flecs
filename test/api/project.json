@@ -1446,8 +1446,6 @@
                 "force_owned",
                 "force_owned_2",
                 "force_owned_nested",
-                "force_owned_type",
-                "force_owned_type_w_pair",
                 "prefab_instanceof_hierarchy",
                 "override_tag",
                 "empty_prefab",

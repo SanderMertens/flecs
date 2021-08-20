@@ -531,12 +531,11 @@ void Delete_get_alive_w_generation_for_recycled_not_alive() {
 }
 
 void Delete_get_alive_for_0() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
-    test_expect_abort();
-    ecs_get_alive(world, 0);
+    test_assert(0 == ecs_get_alive(world, 0));
+
+    ecs_fini(world);
 }
 
 void Delete_get_alive_for_nonexistent() {

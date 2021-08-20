@@ -1257,7 +1257,7 @@ typedef struct ecs_map_iter_t {
 
 /** Create new map. */
 FLECS_API
-ecs_map_t * _ecs_map_new(
+ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
     ecs_size_t alignment,
     int32_t elem_count);
@@ -1267,7 +1267,7 @@ ecs_map_t * _ecs_map_new(
 
 /** Get element for key, returns NULL if they key doesn't exist. */
 FLECS_API
-void * _ecs_map_get(
+void* _ecs_map_get(
     const ecs_map_t *map,
     ecs_size_t elem_size,
     ecs_map_key_t key);
@@ -1280,7 +1280,7 @@ void * _ecs_map_get(
  * pointer is NULL, and should therefore only be used when the application knows
  * for sure that a pointer should never be NULL. */
 FLECS_API
-void * _ecs_map_get_ptr(
+void* _ecs_map_get_ptr(
     const ecs_map_t *map,
     ecs_map_key_t key);
 
@@ -1295,7 +1295,7 @@ bool ecs_map_has(
 
 /** Get or create element for key. */
 FLECS_API
-void * _ecs_map_ensure(
+void* _ecs_map_ensure(
     ecs_map_t *map,
     ecs_size_t elem_size,
     ecs_map_key_t key);
@@ -2438,8 +2438,9 @@ struct ecs_ref_t {
 
 /** Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_ids_t {
-    ecs_entity_t *array;    /* An array with entity ids */
+    ecs_id_t *array;    /* An array with entity ids */
     int32_t count;          /* The number of entities in the array */
+    int32_t size;           /* The size of the array */
 } ecs_ids_t;
 
 typedef struct ecs_page_cursor_t {

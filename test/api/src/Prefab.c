@@ -2476,45 +2476,6 @@ void Prefab_force_owned_nested() {
     ecs_fini(world);
 }
 
-void Prefab_force_owned_type() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Rotation);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, Position, Rotation);
-
-    ECS_PREFAB(world, Prefab, Position, Rotation, Velocity, OVERRIDE | Type);
-
-    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
-    test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_owns(world, e, Position));
-    test_assert(ecs_has(world, e, Rotation));
-    test_assert(ecs_owns(world, e, Rotation));    
-    test_assert(ecs_has(world, e, Velocity));
-    test_assert(!ecs_owns(world, e, Velocity));
-
-    ecs_fini(world);
-}
-
-void Prefab_force_owned_type_w_pair() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_TYPE(world, Type, (Position, Velocity));
-
-    ECS_PREFAB(world, Prefab, (Position, Velocity), OVERRIDE | Type);
-
-    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
-
-    ecs_entity_t pair = ecs_pair(ecs_id(Position), ecs_id(Velocity));
-    test_assert(ecs_has_id(world, e, pair));
-    test_assert(ecs_owns_id(world, e, pair));
-
-    ecs_fini(world);
-}
-
 void Prefab_prefab_instanceof_hierarchy() {
     ecs_world_t *world = ecs_init();
 
