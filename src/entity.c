@@ -695,7 +695,7 @@ int32_t new_entity(
     }
 
     info->data = new_data;
-    
+
     return new_row;
 }
 
@@ -891,6 +891,8 @@ void commit(
 
         return;
     }
+
+    world->event_id ++;
 
     if (src_table) {
         ecs_data_t *src_data = info->data;

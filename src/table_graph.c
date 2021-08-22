@@ -491,10 +491,54 @@ int32_t flecs_table_switch_from_case(
 }
 
 static
+void diff_insert_removed(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_diff_t *diff,
+    ecs_id_t id)
+{
+    diff->removed.array[diff->removed.count ++] = id;
+    bool un_set = true;
+
+    if (table->flags & EcsTableHasIsA) {
+        /* If next table has a base and component is removed, check if
+         * the removed component was an override. */
+        if (ecs_type_match(world, table, table->type, 0, id, EcsIsA,
+            1, 0, NULL) != -1)
+        {
+            /* If the component was an override, add it to on_set as
+             * reexposing a base component is a change in value */
+            if (!diff->on_set.array) {
+                diff->on_set.array = ecs_os_malloc_n(
+                    ecs_id_t, diff->removed.size);
+                diff->on_set.size = diff->removed.size;
+            }
+
+            diff->on_set.array[diff->on_set.count ++] = id;
+
+            /* Prevent component from being marked as unset */
+            un_set = false;
+        }
+    }
+
+    if (!un_set) {
+        if (!diff->un_set.array) {
+            diff->un_set.array = ecs_os_malloc_n(
+                ecs_id_t, diff->removed.size);
+            diff->un_set.size = diff->removed.size;
+        }
+
+        diff->un_set.array[diff->un_set.count ++] = id;
+    }
+}
+
+static
 void compute_table_diff(
+    ecs_world_t *world,
     ecs_table_t *node,
     ecs_table_t *next,
-    ecs_edge_t *edge)
+    ecs_edge_t *edge,
+    ecs_id_t id)
 {
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
@@ -505,6 +549,7 @@ void compute_table_diff(
     int32_t i_next = 0, next_count = ecs_vector_count(next_type);
     int32_t added_count = 0;
     int32_t removed_count = 0;
+    bool trivial_edge = true;
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
      * or alloc more memory than required. */
@@ -514,6 +559,9 @@ void compute_table_diff(
 
         bool added = id_next < id_node;
         bool removed = id_node < id_next;
+
+        trivial_edge &= !added || id_next == id;
+        trivial_edge &= !removed || id_node == id;
 
         added_count += added;
         removed_count += removed;
@@ -525,7 +573,10 @@ void compute_table_diff(
     added_count += next_count - i_next;
     removed_count += node_count - i_node;
 
-    if (!added_count && !removed_count) {
+    trivial_edge &= (added_count + removed_count) <= 1;
+
+    if (trivial_edge) {
+        /* If edge is trivial there's no need to create a diff element for it */
         edge->diff_index = 0;
         return;
     }
@@ -536,10 +587,12 @@ void compute_table_diff(
     if (added_count) {
         diff->added.array = ecs_os_malloc_n(ecs_id_t, added_count);
         diff->added.count = 0;
+        diff->added.size = added_count;
     }
     if (removed_count) {
         diff->removed.array = ecs_os_malloc_n(ecs_id_t, removed_count);
         diff->removed.count = 0;
+        diff->removed.size = removed_count;
     }
 
     for (i_node = 0, i_next = 0; i_node < node_count && i_next < next_count; ) {
@@ -549,7 +602,7 @@ void compute_table_diff(
         if (id_next < id_node) {
             diff->added.array[diff->added.count ++] = id_next;
         } else if (id_node < id_next) {
-            diff->removed.array[diff->removed.count ++] = id_node;
+            diff_insert_removed(world, next, diff, id_node);
         }
 
         i_node += id_node <= id_next;
@@ -562,7 +615,7 @@ void compute_table_diff(
     }
     for (; i_node < node_count; i_node ++) {
         ecs_id_t id_node = ids_node[i_next];
-        diff->removed.array[diff->removed.count ++] = id_node;
+        diff_insert_removed(world, next, diff, id_node);
     }
 
     ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
@@ -664,6 +717,8 @@ ecs_table_t* find_or_create_table_without(
 
     edge->next = next;
 
+    compute_table_diff(world, node, next, edge, id);
+
     if (node != next) {
         flecs_register_remove_ref(world, node, id);
     }
@@ -679,19 +734,15 @@ ecs_table_t* find_or_create_table_with(
     ecs_id_t id)
 {
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
-    bool trivial_edge = true;
 
     if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
         ecs_entity_t base = ecs_pair_object(world, id);
         next = find_or_create_table_with_isa(world, next, base);
-        trivial_edge = false;
     }
 
     edge->next = next;
 
-    if (!trivial_edge) {
-        compute_table_diff(node, next, edge);
-    }
+    compute_table_diff(world, node, next, edge, id);
 
     if (node != next) {
         flecs_register_add_ref(world, node, id);
@@ -722,8 +773,11 @@ void populate_diff(
             if (remove_ptr) {
                 out->removed.array = remove_ptr;
                 out->removed.count = 1;
+                out->un_set.array = remove_ptr;
+                out->un_set.count = 1;
             } else {
                 out->removed.count = 0;
+                out->un_set.count = 0;
             }
         }
     }
@@ -932,6 +986,8 @@ void flecs_table_clear_edges(
         ecs_table_diff_t *diff = &diffs[i];
         ecs_os_free(diff->added.array);
         ecs_os_free(diff->removed.array);
+        ecs_os_free(diff->on_set.array);
+        ecs_os_free(diff->un_set.array);
     }
 
     ecs_vector_free(node->diffs);

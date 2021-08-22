@@ -143,8 +143,8 @@ struct ecs_data_t {
 typedef struct ecs_table_diff_t {
     ecs_ids_t added;         /* Components added between tables */
     ecs_ids_t removed;       /* Components removed between tables */
-    ecs_table_t *on_set;     /* OnSet from exposing/adding base components */
-    ecs_table_t *un_set;     /* UnSet from hiding/removing base components */   
+    ecs_ids_t on_set;        /* OnSet from exposing/adding base components */
+    ecs_ids_t un_set;        /* UnSet from hiding/removing base components */   
 } ecs_table_diff_t;
 
 /** Single edge. */
@@ -468,10 +468,10 @@ struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
 
-    /* All tables that created an outgoing (add) edge to the id */
+    /* All tables for which an outgoing (add) edge to the id was created */
     ecs_map_t *add_refs;
 
-    /* All tables that created an incoming (remove) edge to the id */
+    /* All tables for which an incoming (remove) edge to the id was created */
     ecs_map_t *remove_refs;
 
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
@@ -526,10 +526,12 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
 
     /* --  Type metadata -- */
-
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
     ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+
+    /* Unique id per generated event used to prevent duplicate notifications */
+    int32_t event_id;
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;

@@ -7,6 +7,11 @@ void observer_callback(ecs_iter_t *it) {
     
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (o->last_event_id == world->event_id) {
+        /* Already handled this event */
+        return;
+    }
+
     ecs_table_t *table = it->table;
     ecs_type_t type = table->type;
 
@@ -34,6 +39,8 @@ void observer_callback(ecs_iter_t *it) {
     }
 
     flecs_iter_fini(&user_it);
+
+    o->last_event_id = world->event_id;
 }
 
 ecs_entity_t ecs_observer_init(
