@@ -802,8 +802,8 @@ struct ecs_data_t {
 typedef struct ecs_table_diff_t {
     ecs_ids_t added;         /* Components added between tables */
     ecs_ids_t removed;       /* Components removed between tables */
-    ecs_table_t *on_set;     /* OnSet from exposing/adding base components */
-    ecs_table_t *un_set;     /* UnSet from hiding/removing base components */   
+    ecs_ids_t on_set;        /* OnSet from exposing/adding base components */
+    ecs_ids_t un_set;        /* UnSet from hiding/removing base components */   
 } ecs_table_diff_t;
 
 /** Single edge. */
@@ -1127,10 +1127,10 @@ struct ecs_id_record_t {
     /* All tables that contain the id */
     ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
 
-    /* All tables that created an outgoing (add) edge to the id */
+    /* All tables for which an outgoing (add) edge to the id was created */
     ecs_map_t *add_refs;
 
-    /* All tables that created an incoming (remove) edge to the id */
+    /* All tables for which an incoming (remove) edge to the id was created */
     ecs_map_t *remove_refs;
 
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
@@ -1185,10 +1185,12 @@ struct ecs_world_t {
     int32_t magic;               /* Magic number to verify world pointer */
 
     /* --  Type metadata -- */
-
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
     ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+
+    /* Unique id per generated event used to prevent duplicate notifications */
+    int32_t event_id;
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -5288,7 +5290,7 @@ int32_t new_entity(
     }
 
     info->data = new_data;
-    
+
     return new_row;
 }
 
@@ -5484,6 +5486,8 @@ void commit(
 
         return;
     }
+
+    world->event_id ++;
 
     if (src_table) {
         ecs_data_t *src_data = info->data;
@@ -19397,6 +19401,11 @@ void observer_callback(ecs_iter_t *it) {
     
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (o->last_event_id == world->event_id) {
+        /* Already handled this event */
+        return;
+    }
+
     ecs_table_t *table = it->table;
     ecs_type_t type = table->type;
 
@@ -19424,6 +19433,8 @@ void observer_callback(ecs_iter_t *it) {
     }
 
     flecs_iter_fini(&user_it);
+
+    o->last_event_id = world->event_id;
 }
 
 ecs_entity_t ecs_observer_init(
@@ -23620,10 +23631,54 @@ int32_t flecs_table_switch_from_case(
 }
 
 static
+void diff_insert_removed(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_diff_t *diff,
+    ecs_id_t id)
+{
+    diff->removed.array[diff->removed.count ++] = id;
+    bool un_set = true;
+
+    if (table->flags & EcsTableHasIsA) {
+        /* If next table has a base and component is removed, check if
+         * the removed component was an override. */
+        if (ecs_type_match(world, table, table->type, 0, id, EcsIsA,
+            1, 0, NULL) != -1)
+        {
+            /* If the component was an override, add it to on_set as
+             * reexposing a base component is a change in value */
+            if (!diff->on_set.array) {
+                diff->on_set.array = ecs_os_malloc_n(
+                    ecs_id_t, diff->removed.size);
+                diff->on_set.size = diff->removed.size;
+            }
+
+            diff->on_set.array[diff->on_set.count ++] = id;
+
+            /* Prevent component from being marked as unset */
+            un_set = false;
+        }
+    }
+
+    if (!un_set) {
+        if (!diff->un_set.array) {
+            diff->un_set.array = ecs_os_malloc_n(
+                ecs_id_t, diff->removed.size);
+            diff->un_set.size = diff->removed.size;
+        }
+
+        diff->un_set.array[diff->un_set.count ++] = id;
+    }
+}
+
+static
 void compute_table_diff(
+    ecs_world_t *world,
     ecs_table_t *node,
     ecs_table_t *next,
-    ecs_edge_t *edge)
+    ecs_edge_t *edge,
+    ecs_id_t id)
 {
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
@@ -23634,6 +23689,7 @@ void compute_table_diff(
     int32_t i_next = 0, next_count = ecs_vector_count(next_type);
     int32_t added_count = 0;
     int32_t removed_count = 0;
+    bool trivial_edge = true;
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
      * or alloc more memory than required. */
@@ -23643,6 +23699,9 @@ void compute_table_diff(
 
         bool added = id_next < id_node;
         bool removed = id_node < id_next;
+
+        trivial_edge &= !added || id_next == id;
+        trivial_edge &= !removed || id_node == id;
 
         added_count += added;
         removed_count += removed;
@@ -23654,7 +23713,10 @@ void compute_table_diff(
     added_count += next_count - i_next;
     removed_count += node_count - i_node;
 
-    if (!added_count && !removed_count) {
+    trivial_edge &= (added_count + removed_count) <= 1;
+
+    if (trivial_edge) {
+        /* If edge is trivial there's no need to create a diff element for it */
         edge->diff_index = 0;
         return;
     }
@@ -23665,10 +23727,12 @@ void compute_table_diff(
     if (added_count) {
         diff->added.array = ecs_os_malloc_n(ecs_id_t, added_count);
         diff->added.count = 0;
+        diff->added.size = added_count;
     }
     if (removed_count) {
         diff->removed.array = ecs_os_malloc_n(ecs_id_t, removed_count);
         diff->removed.count = 0;
+        diff->removed.size = removed_count;
     }
 
     for (i_node = 0, i_next = 0; i_node < node_count && i_next < next_count; ) {
@@ -23678,7 +23742,7 @@ void compute_table_diff(
         if (id_next < id_node) {
             diff->added.array[diff->added.count ++] = id_next;
         } else if (id_node < id_next) {
-            diff->removed.array[diff->removed.count ++] = id_node;
+            diff_insert_removed(world, next, diff, id_node);
         }
 
         i_node += id_node <= id_next;
@@ -23691,7 +23755,7 @@ void compute_table_diff(
     }
     for (; i_node < node_count; i_node ++) {
         ecs_id_t id_node = ids_node[i_next];
-        diff->removed.array[diff->removed.count ++] = id_node;
+        diff_insert_removed(world, next, diff, id_node);
     }
 
     ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
@@ -23793,6 +23857,8 @@ ecs_table_t* find_or_create_table_without(
 
     edge->next = next;
 
+    compute_table_diff(world, node, next, edge, id);
+
     if (node != next) {
         flecs_register_remove_ref(world, node, id);
     }
@@ -23808,19 +23874,15 @@ ecs_table_t* find_or_create_table_with(
     ecs_id_t id)
 {
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
-    bool trivial_edge = true;
 
     if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
         ecs_entity_t base = ecs_pair_object(world, id);
         next = find_or_create_table_with_isa(world, next, base);
-        trivial_edge = false;
     }
 
     edge->next = next;
 
-    if (!trivial_edge) {
-        compute_table_diff(node, next, edge);
-    }
+    compute_table_diff(world, node, next, edge, id);
 
     if (node != next) {
         flecs_register_add_ref(world, node, id);
@@ -23851,8 +23913,11 @@ void populate_diff(
             if (remove_ptr) {
                 out->removed.array = remove_ptr;
                 out->removed.count = 1;
+                out->un_set.array = remove_ptr;
+                out->un_set.count = 1;
             } else {
                 out->removed.count = 0;
+                out->un_set.count = 0;
             }
         }
     }
@@ -24061,6 +24126,8 @@ void flecs_table_clear_edges(
         ecs_table_diff_t *diff = &diffs[i];
         ecs_os_free(diff->added.array);
         ecs_os_free(diff->removed.array);
+        ecs_os_free(diff->on_set.array);
+        ecs_os_free(diff->un_set.array);
     }
 
     ecs_vector_free(node->diffs);

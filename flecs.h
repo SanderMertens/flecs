@@ -2364,7 +2364,8 @@ struct ecs_observer_t {
     ecs_entity_t entity;        /* Observer entity */
     ecs_entity_t self;          /* Entity associated with observer */
 
-    uint64_t id;                /* Internal id */    
+    uint64_t id;                /* Internal id */  
+    int32_t last_event_id;      /* Last handled event id */  
 };
 
 /** @} */
