@@ -4320,9 +4320,14 @@ const char* ecs_role_str(
  * @return The number of characters required to write the string.
  */
 FLECS_API
-size_t ecs_id_str(
+char* ecs_id_str(
     const ecs_world_t *world,
-    ecs_id_t entity,
+    ecs_id_t id);
+
+FLECS_API
+size_t ecs_id_str_w_buf(
+    const ecs_world_t *world,
+    ecs_id_t id,
     char *buffer,
     size_t buffer_len);
 
@@ -6078,18 +6083,6 @@ ecs_entity_t ecs_system_init(
     (void)id;
 #endif
 
-#define ECS_TRIGGER(world, trigger_name, kind, component) \
-    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
-        .entity.name = #trigger_name,\
-        .callback = trigger_name,\
-        .expr = #component,\
-        .events = {kind},\
-    });\
-    ecs_entity_t trigger_name = __F##trigger_name;\
-    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##trigger_name;\
-    (void)trigger_name;
-
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to
  * invoke logic on a set of entities, as manual systems are only matched to
@@ -7166,6 +7159,30 @@ FLECS_API void ecs_gauge_reduce(
     ecs_entity_t ecs_id(id) = 0;\
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
+
+#define ECS_TRIGGER(world, trigger_name, kind, component) \
+    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #trigger_name,\
+        .callback = trigger_name,\
+        .expr = #component,\
+        .events = {kind},\
+    });\
+    ecs_entity_t trigger_name = __F##trigger_name;\
+    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
+    (void)__F##trigger_name;\
+    (void)trigger_name;
+
+#define ECS_OBSERVER(world, observer_name, kind, ...)\
+    ecs_entity_t __F##observer_name = ecs_observer_init(world, &(ecs_observer_desc_t){\
+        .entity.name = #observer_name,\
+        .callback = observer_name,\
+        .filter.expr = #__VA_ARGS__,\
+        .events = {kind},\
+    });\
+    ecs_entity_t observer_name = __F##observer_name;\
+    ecs_assert(observer_name != 0, ECS_INVALID_PARAMETER, NULL);\
+    (void)__F##observer_name;\
+    (void)observer_name;
 
 /** @} */
 
@@ -8965,46 +8982,34 @@ public:
         return row_iterator(m_end);
     }
 
-    /** Obtain handle to current system. 
-     */
     flecs::entity system() const;
 
-    /** Obtain current world. 
-     */
+    flecs::entity event() const;
+
+    flecs::id event_id() const;
+
     flecs::world world() const;
 
-    /** Obtain pointer to C iterator object
-     */
     const flecs::iter_t* c_ptr() const {
         return m_iter;
     }
 
-    /** Number of entities to iterate over. 
-     */
     size_t count() const {
         return static_cast<size_t>(m_iter->count);
     }
 
-    /** Return delta_time of current frame. 
-     */
     FLECS_FLOAT delta_time() const {
         return m_iter->delta_time;
     }
 
-    /** Return time elapsed since last time system was invoked.
-     */
     FLECS_FLOAT delta_system_time() const {
         return m_iter->delta_system_time;
     }
 
-    /** Return total time passed in simulation.
-     */
     FLECS_FLOAT world_time() const {
         return m_iter->world_time;
     }
-    
-    /** Obtain type of the entities being iterated over.
-     */
+
     flecs::type type() const;
 
     /** Is current type a module or does it contain module contents? */
@@ -10276,11 +10281,7 @@ public:
 
     /* Convert id to string */
     flecs::string str() const {
-        size_t size = ecs_id_str(m_world, m_id, NULL, 0);
-        char *result = static_cast<char*>(ecs_os_malloc(
-            static_cast<ecs_size_t>(size) + 1));
-        ecs_id_str(m_world, m_id, result, size + 1);
-        return flecs::string(result);
+        return flecs::string(ecs_id_str(m_world, m_id));
     }
 
     /** Convert role of id to string. */
@@ -15311,6 +15312,14 @@ namespace flecs
 
 inline flecs::entity iter::system() const {
     return flecs::entity(m_iter->world, m_iter->system);
+}
+
+inline flecs::entity iter::event() const {
+    return flecs::entity(m_iter->world, m_iter->event);
+}
+
+inline flecs::id iter::event_id() const {
+    return flecs::id(m_iter->world, m_iter->event_id);
 }
 
  inline flecs::entity iter::self() const {

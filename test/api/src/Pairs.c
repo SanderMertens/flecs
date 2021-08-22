@@ -1011,11 +1011,9 @@ void Pairs_id_str_w_recycled_rel() {
     test_assert(r != 0);
     test_assert((uint32_t)r != r); // ensure recycled
 
-    ecs_id_t pair = ecs_pair(r, o);
-    char buff[64];
-    ecs_id_str(world, pair, buff, sizeof(buff));
-
-    test_str(buff, "(r,o)");
+    char *str = ecs_id_str(world, ecs_pair(r, o));
+    test_str(str, "(r,o)");
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -1033,11 +1031,9 @@ void Pairs_id_str_w_recycled_obj() {
     test_assert(o != 0);
     test_assert((uint32_t)o != o); // ensure recycled
 
-    ecs_id_t pair = ecs_pair(r, o);
-    char buff[64];
-    ecs_id_str(world, pair, buff, sizeof(buff));
-
-    test_str(buff, "(r,o)");
+    char *str = ecs_id_str(world, ecs_pair(r, o));
+    test_str(str, "(r,o)");
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -1640,8 +1636,7 @@ void Pairs_typeid_from_tag() {
     test_assert(tag != 0);
 
     ecs_entity_t id = ecs_get_typeid(world, tag);
-    test_assert(id != 0);
-    test_assert(id == tag);
+    test_assert(id == 0);
 
     ecs_fini(world);
 }

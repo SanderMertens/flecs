@@ -189,7 +189,10 @@ void notify_trigger_set(
         ECS_INTERNAL_ERROR, NULL);
     entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
 
-    int32_t index = ecs_type_index_of(table->type, 0, id);
+    ecs_entity_t base = 0;
+    int32_t index = ecs_type_match(world, table, table->type, 0, id, EcsIsA,
+        0, 0, &base);
+
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
     index ++;
 
@@ -209,10 +212,17 @@ void notify_trigger_set(
 
     void *ptr = NULL;
 
-    if (columns[0] && data && data->columns) {
+    if (!base && columns[0] && data && data->columns) {
         ecs_column_t *col = &data->columns[index - 1];
         ptr = ecs_vector_get_t(col->data, col->size, col->alignment, row);
         sizes[0] = col->size;
+    } else if (base) {
+        ptr = (void*)ecs_get_id(world, base, id);
+        ecs_entity_t e = ecs_get_typeid(world, id);
+        const EcsComponent *comp = ecs_get(world, e, EcsComponent);
+        /* This is a set trigger, so id should be a component */
+        ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+        sizes[0] = comp->size;
     }
 
     ecs_iter_t it = {
@@ -223,6 +233,7 @@ void notify_trigger_set(
         .type = table ? table->type : NULL,
         .columns = columns,
         .ids = ids,
+        .subjects = &base,
         .sizes = sizes,
         .ptrs = &ptr,
         .table_count = 1,

@@ -229,9 +229,7 @@ void Trigger_on_add_component() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -508,9 +506,7 @@ void Trigger_on_remove_component() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -772,9 +768,7 @@ void Trigger_on_set_component() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);
@@ -807,9 +801,7 @@ void Trigger_on_set_wildcard() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);
@@ -1038,9 +1030,7 @@ void Trigger_on_set_component_after_modified() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);
@@ -1074,9 +1064,7 @@ void Trigger_un_set_component() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);
@@ -1110,9 +1098,7 @@ void Trigger_un_set_wildcard() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {ecs_id(Position)}
-    });
+    ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);

@@ -225,46 +225,34 @@ public:
         return row_iterator(m_end);
     }
 
-    /** Obtain handle to current system. 
-     */
     flecs::entity system() const;
 
-    /** Obtain current world. 
-     */
+    flecs::entity event() const;
+
+    flecs::id event_id() const;
+
     flecs::world world() const;
 
-    /** Obtain pointer to C iterator object
-     */
     const flecs::iter_t* c_ptr() const {
         return m_iter;
     }
 
-    /** Number of entities to iterate over. 
-     */
     size_t count() const {
         return static_cast<size_t>(m_iter->count);
     }
 
-    /** Return delta_time of current frame. 
-     */
     FLECS_FLOAT delta_time() const {
         return m_iter->delta_time;
     }
 
-    /** Return time elapsed since last time system was invoked.
-     */
     FLECS_FLOAT delta_system_time() const {
         return m_iter->delta_system_time;
     }
 
-    /** Return total time passed in simulation.
-     */
     FLECS_FLOAT world_time() const {
         return m_iter->world_time;
     }
-    
-    /** Obtain type of the entities being iterated over.
-     */
+
     flecs::type type() const;
 
     /** Is current type a module or does it contain module contents? */

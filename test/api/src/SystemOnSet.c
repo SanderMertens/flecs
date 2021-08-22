@@ -66,7 +66,7 @@ void SystemOnSet_set_1_of_1() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -115,7 +115,7 @@ void SystemOnSet_set_1_of_2() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -172,7 +172,7 @@ void SystemOnSet_set_1_of_3() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, Velocity, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -253,7 +253,7 @@ void SystemOnSet_set_1_of_2_1_from_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -290,7 +290,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -348,7 +348,7 @@ void SystemOnSet_add_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -377,7 +377,7 @@ void SystemOnSet_add_base_to_1_overridden() {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -397,7 +397,7 @@ void SystemOnSet_add_base_to_2_overridden() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position, ANY:Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position, ANY:Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -418,7 +418,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -454,7 +454,7 @@ void SystemOnSet_on_set_after_remove_override() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -485,7 +485,7 @@ void SystemOnSet_no_set_after_remove_base() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, ANY:Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -506,7 +506,7 @@ void SystemOnSet_un_set_after_remove() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, OnPosition, EcsUnSet, Position);
+    ECS_OBSERVER(world, OnPosition, EcsUnSet, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -525,7 +525,7 @@ void SystemOnSet_un_set_after_remove_base() {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_SYSTEM(world, OnPosition, EcsUnSet, ANY:Position);
+    ECS_OBSERVER(world, OnPosition, EcsUnSet, ANY:Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -547,7 +547,7 @@ void SystemOnSet_add_to_current_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+    ECS_OBSERVER(world, Add_to_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
@@ -585,7 +585,7 @@ void SystemOnSet_remove_from_current_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+    ECS_OBSERVER(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_id(Velocity)};
     ecs_set_context(world, &ctx);
@@ -627,7 +627,7 @@ void SystemOnSet_remove_set_component_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Remove_from_current, EcsOnSet, Position);
+    ECS_OBSERVER(world, Remove_from_current, EcsOnSet, Position);
 
     IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
@@ -659,7 +659,7 @@ void SystemOnSet_match_table_created_w_add_in_on_set() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Add_to_current, EcsOnSet, Position);
+    ECS_OBSERVER(world, Add_to_current, EcsOnSet, Position);
     ECS_SYSTEM(world, On_PV, EcsOnUpdate, Position, Velocity);
 
     IterData add_ctx = {.component = ecs_id(Velocity)};
@@ -693,7 +693,7 @@ void SystemOnSet_set_optional() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, ?Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position, ?Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -735,7 +735,7 @@ void SystemOnSet_set_from_nothing() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsOnSet, Position, :Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position, :Velocity);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -777,7 +777,7 @@ void SystemOnSet_add_0_entity_in_on_set() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, Add0, EcsOnSet, Position);
+    ECS_OBSERVER(world, Add0, EcsOnSet, Position);
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -797,7 +797,7 @@ void SystemOnSet_on_set_prefab() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Dummy, EcsOnSet, Position);
+    ECS_OBSERVER(world, Dummy, EcsOnSet, Position);
 
     ECS_PREFAB(world, Prefab, 0);
     ecs_set(world, Prefab, Position, {10, 20});

@@ -274,7 +274,7 @@ void Type_entity_str() {
     ECS_ENTITY(world, e, 0);
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "e");
     test_int(strlen(buffer), result);
 
@@ -288,7 +288,7 @@ void Type_entity_path_str() {
     ECS_ENTITY(world, e, (ChildOf, parent));
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "parent.e");
     test_int(strlen(buffer), result);
 
@@ -303,7 +303,7 @@ void Type_entity_instanceof_str() {
     ecs_entity_t e = ecs_pair(EcsIsA, Foo);
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "(IsA,Foo)");
     test_int(strlen(buffer), result);
 
@@ -318,7 +318,7 @@ void Type_entity_childof_str() {
     ecs_entity_t e = ecs_pair(EcsChildOf, Foo);
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "(ChildOf,Foo)");
     test_int(strlen(buffer), result);
 
@@ -334,7 +334,7 @@ void Type_entity_pair_str() {
     ecs_entity_t e = ecs_pair(Bar, Foo);
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "(Bar,Foo)");
     test_int(strlen(buffer), result);
 
@@ -349,7 +349,7 @@ void Type_entity_switch_str() {
     ecs_entity_t e = ECS_SWITCH | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "SWITCH|Foo");
     test_int(strlen(buffer), result);
 
@@ -364,7 +364,7 @@ void Type_entity_case_str() {
     ecs_entity_t e = ECS_CASE | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "CASE|Foo");
     test_int(strlen(buffer), result);
 
@@ -379,7 +379,7 @@ void Type_entity_and_str() {
     ecs_entity_t e = ECS_AND | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "AND|Foo");
     test_int(strlen(buffer), result);
 
@@ -394,7 +394,7 @@ void Type_entity_or_str() {
     ecs_entity_t e = ECS_OR | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "OR|Foo");
     test_int(strlen(buffer), result);
 
@@ -409,7 +409,7 @@ void Type_entity_xor_str() {
     ecs_entity_t e = ECS_XOR | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "XOR|Foo");
     test_int(strlen(buffer), result);
 
@@ -424,7 +424,7 @@ void Type_entity_not_str() {
     ecs_entity_t e = ECS_NOT | Foo;
 
     char buffer[256];
-    size_t result = ecs_id_str(world, e, buffer, 256);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 256);
     test_str(buffer, "NOT|Foo");
     test_int(strlen(buffer), result);
 
@@ -439,7 +439,7 @@ void Type_entity_str_small_buffer() {
     ecs_entity_t e = ecs_pair(EcsChildOf, Foo);
 
     char buffer[10];
-    size_t result = ecs_id_str(world, e, buffer, 10);
+    size_t result = ecs_id_str_w_buf(world, e, buffer, 10);
     test_str(buffer, "(ChildOf,");
     test_int(strlen(buffer), 9);
     test_int(strlen("(ChildOf,Foo)"), result);

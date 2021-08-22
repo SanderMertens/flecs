@@ -294,7 +294,7 @@ void flecs_run_add_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_ids_t *added,
+    ecs_table_diff_t *diff,
     bool get_all,
     bool run_on_set);   
 
@@ -304,7 +304,7 @@ void flecs_run_remove_actions(
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_ids_t *removed);
+    ecs_table_diff_t *diff);
 
 void flecs_run_set_systems(
     ecs_world_t *world,

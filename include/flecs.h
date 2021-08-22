@@ -1828,9 +1828,14 @@ const char* ecs_role_str(
  * @return The number of characters required to write the string.
  */
 FLECS_API
-size_t ecs_id_str(
+char* ecs_id_str(
     const ecs_world_t *world,
-    ecs_id_t entity,
+    ecs_id_t id);
+
+FLECS_API
+size_t ecs_id_str_w_buf(
+    const ecs_world_t *world,
+    ecs_id_t id,
     char *buffer,
     size_t buffer_len);
 
