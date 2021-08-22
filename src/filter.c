@@ -775,6 +775,7 @@ bool flecs_filter_match_table(
 
         ecs_entity_t subj_entity = subj->entity;
         if (!subj_entity) {
+            ids[term->index] = term->id;
             continue;
         }
 

@@ -137,18 +137,6 @@ ecs_entity_t ecs_system_init(
     (void)id;
 #endif
 
-#define ECS_TRIGGER(world, trigger_name, kind, component) \
-    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
-        .entity.name = #trigger_name,\
-        .callback = trigger_name,\
-        .expr = #component,\
-        .events = {kind},\
-    });\
-    ecs_entity_t trigger_name = __F##trigger_name;\
-    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##trigger_name;\
-    (void)trigger_name;
-
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to
  * invoke logic on a set of entities, as manual systems are only matched to

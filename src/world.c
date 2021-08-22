@@ -1389,8 +1389,6 @@ void register_table_for_id(
         tr->count ++;
     }
 
-    char buf[255]; ecs_id_str(world, id, buf, 255);
-
     /* Set flags if triggers are registered for table */
     if (!(table->flags & EcsTableIsDisabled)) {
         if (flecs_triggers_get(world, id, EcsOnAdd)) {

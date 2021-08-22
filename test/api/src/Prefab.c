@@ -1443,7 +1443,7 @@ void Prefab_on_set_on_instance() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, PrefabReactiveTest, EcsOnSet, ANY:Position);
+    ECS_TRIGGER(world, PrefabReactiveTest, EcsOnSet, ANY:Position);
 
     ECS_PREFAB(world, Prefab, Position);
 

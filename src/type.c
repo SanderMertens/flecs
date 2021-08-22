@@ -178,7 +178,7 @@ char* ecs_type_str(
             ecs_os_strcpy(buffer, "EcsComponent");
             len = ecs_os_strlen("EcsComponent");
         } else {
-            len = flecs_from_size_t(ecs_id_str(world, e, buffer, 256));
+            len = flecs_from_size_t(ecs_id_str_w_buf(world, e, buffer, 256));
         }
 
         dst = ecs_vector_addn(&chbuf, char, len);

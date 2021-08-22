@@ -98,11 +98,7 @@ public:
 
     /* Convert id to string */
     flecs::string str() const {
-        size_t size = ecs_id_str(m_world, m_id, NULL, 0);
-        char *result = static_cast<char*>(ecs_os_malloc(
-            static_cast<ecs_size_t>(size) + 1));
-        ecs_id_str(m_world, m_id, result, size + 1);
-        return flecs::string(result);
+        return flecs::string(ecs_id_str(m_world, m_id));
     }
 
     /** Convert role of id to string. */

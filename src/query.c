@@ -397,8 +397,6 @@ int32_t get_component_index(
                         table_type, ecs_entity_t, result);
                     *component_out = *pair;
 
-                    char buf[256]; ecs_id_str(world, *pair, buf, 256);
-
                     /* Check if the pair is a tag or whether it has data */
                     if (ecs_get(world, rel, EcsComponent) == NULL) {
                         /* If pair has no data associated with it, use the
@@ -677,6 +675,9 @@ add_pair:
         }
 
         ecs_entity_t type_id = ecs_get_typeid(world, component);
+        if (!type_id && !(ECS_ROLE_MASK & component)) {
+            type_id = component;
+        }
 
         if (entity || table_data.columns[c] == -1 || subj.set.mask & EcsCascade) {
             if (type_id) {
@@ -2427,7 +2428,6 @@ void populate_ptrs(
             it->ptrs[c] = ecs_vector_get_t(vec, size, align, it->offset);
         } else {
             ecs_ref_t *ref = &it->references[-c_index - 1];
-            char buf[255]; ecs_id_str(world, ref->component, buf, 255);
             it->ptrs[c] = (void*)ecs_get_ref_w_id(
                 world, ref, ref->entity, ref->component);
         }
