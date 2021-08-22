@@ -22,8 +22,6 @@ void Entity_init_id_name_2_comp(void);
 void Entity_init_id_name_2_comp_w_scope(void);
 void Entity_id_add_1_comp(void);
 void Entity_id_add_2_comp(void);
-void Entity_id_remove_1_comp(void);
-void Entity_id_remove_2_comp(void);
 void Entity_init_id_path_w_sep(void);
 void Entity_find_id_name(void);
 void Entity_find_w_existing_id_name(void);
@@ -40,8 +38,6 @@ void Entity_find_id_path_mismatch(void);
 void Entity_find_id_path_mismatch_w_scope(void);
 void Entity_find_id_add_1_comp(void);
 void Entity_find_id_add_2_comp(void);
-void Entity_find_id_remove_1_comp(void);
-void Entity_find_id_remove_2_comp(void);
 void Entity_init_w_scope_name(void);
 void Entity_init_w_core_name(void);
 void Entity_init_w_with(void);
@@ -1857,14 +1853,6 @@ bake_test_case Entity_testcases[] = {
         Entity_id_add_2_comp
     },
     {
-        "id_remove_1_comp",
-        Entity_id_remove_1_comp
-    },
-    {
-        "id_remove_2_comp",
-        Entity_id_remove_2_comp
-    },
-    {
         "init_id_path_w_sep",
         Entity_init_id_path_w_sep
     },
@@ -1927,14 +1915,6 @@ bake_test_case Entity_testcases[] = {
     {
         "find_id_add_2_comp",
         Entity_find_id_add_2_comp
-    },
-    {
-        "find_id_remove_1_comp",
-        Entity_find_id_remove_1_comp
-    },
-    {
-        "find_id_remove_2_comp",
-        Entity_find_id_remove_2_comp
     },
     {
         "init_w_scope_name",
@@ -8597,7 +8577,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        44,
+        40,
         Entity_testcases
     },
     {

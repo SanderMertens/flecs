@@ -260,53 +260,6 @@ void Entity_id_add_2_comp() {
     ecs_fini(world);
 }
 
-void Entity_id_remove_1_comp() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-
-    ecs_entity_t e = ecs_new_id(world);
-    test_assert(e != 0);
-    ecs_add_id(world, e, TagA);
-    test_assert(ecs_has_id(world, e, TagA));
-
-    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
-        .remove = {TagA}
-    });
-    test_assert(r != 0);
-    test_assert(e == r);
-
-    test_assert(!ecs_has_id(world, e, TagA));
-
-    ecs_fini(world);
-}
-
-void Entity_id_remove_2_comp() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-
-    ecs_entity_t e = ecs_new_id(world);
-    test_assert(e != 0);
-    ecs_add_id(world, e, TagA);
-    ecs_add_id(world, e, TagB);
-    test_assert(ecs_has_id(world, e, TagA));
-    test_assert(ecs_has_id(world, e, TagB));    
-
-    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .entity = e,
-        .remove = {TagA, TagB}
-    });
-    test_assert(r != 0);
-    test_assert(e == r);
-    test_assert(!ecs_has_id(world, e, TagA));
-    test_assert(!ecs_has_id(world, e, TagB));
-
-    ecs_fini(world);
-}
-
 void Entity_init_id_path_w_sep() {
     ecs_world_t *world = ecs_init();
 
@@ -711,55 +664,6 @@ void Entity_find_id_add_2_comp() {
     test_assert(r == e);
     test_assert(ecs_has_id(world, e, TagA));
     test_assert(ecs_has_id(world, e, TagB));
-
-    ecs_fini(world);
-}
-
-void Entity_find_id_remove_1_comp() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "foo",
-        .add = {TagA}
-    });
-    test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "foo");
-    test_assert(ecs_has_id(world, e, TagA));
-
-    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "foo",
-        .remove = {TagA}
-    });
-    test_assert(r == e);
-    test_assert(!ecs_has_id(world, e, TagA));
-
-    ecs_fini(world);
-}
-
-void Entity_find_id_remove_2_comp() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "foo",
-        .add = {TagA, TagB}
-    });
-    test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "foo");
-    test_assert(ecs_has_id(world, e, TagA));
-    test_assert(ecs_has_id(world, e, TagB));
-
-    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "foo",
-        .remove = {TagA, TagB}
-    });
-    test_assert(r == e);
-    test_assert(!ecs_has_id(world, e, TagA));
-    test_assert(!ecs_has_id(world, e, TagB));
 
     ecs_fini(world);
 }

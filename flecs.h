@@ -2840,14 +2840,8 @@ typedef struct ecs_entity_desc_t {
     /* Array of ids to add to the new or existing entity. */
     ecs_id_t add[ECS_MAX_ADD_REMOVE];
 
-    /* Array of ids to remove from the existing entity. */
-    ecs_id_t remove[ECS_MAX_ADD_REMOVE];
-
     /* String expression with components to add */
     const char *add_expr;
-
-    /* String expression with components to remove */
-    const char *remove_expr;
 } ecs_entity_desc_t;
 
 

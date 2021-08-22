@@ -6253,6 +6253,20 @@ void diff_free(
     }
 }
 
+static
+ecs_table_t* table_append(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_table_diff_t *diff)
+{
+    ecs_table_diff_t temp_diff;
+    table = flecs_table_traverse_add(world, table, &id, &temp_diff);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    diff_append(diff, &temp_diff);
+    return table;
+}
+
 #ifdef FLECS_PARSER
 
 /* Traverse table graph by either adding or removing identifiers parsed from the
@@ -6264,12 +6278,10 @@ ecs_table_t *traverse_from_expr(
     const char *name,
     const char *expr,
     ecs_table_diff_t *diff,
-    bool is_add,
     bool replace_and)
 {
     const char *ptr = expr;
     if (ptr) {
-        ecs_table_diff_t temp_diff;
         ecs_term_t term = {0};
         while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
             if (!ecs_term_is_initialized(&term)) {
@@ -6288,17 +6300,7 @@ ecs_table_t *traverse_from_expr(
 
             if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
-                if (is_add) {
-                    table = flecs_table_traverse_add(
-                        world, table, &term.id, &temp_diff);
-                } else {
-                    table = flecs_table_traverse_remove(
-                        world, table, &term.id, &temp_diff);
-                }
-
-                diff_append(diff, &temp_diff);
-
-                ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+                table = table_append(world, table, term.id, diff);
             } else if (term.oper == EcsAndFrom) {
                 /* Add all components from the specified type */
                 const EcsType *t = ecs_get(world, term.id, EcsType);
@@ -6311,17 +6313,7 @@ ecs_table_t *traverse_from_expr(
                 ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
                 int32_t i, count = ecs_vector_count(t->normalized);
                 for (i = 0; i < count; i ++) {
-                    if (is_add) {
-                        table = flecs_table_traverse_add(
-                            world, table, &ids[i], &temp_diff);
-                    } else {
-                        table = flecs_table_traverse_remove(
-                            world, table, &ids[i], &temp_diff);
-                    }
-
-                    diff_append(diff, &temp_diff);
-
-                    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+                    table = table_append(world, table, ids[i], diff);
                 }
             }
 
@@ -6394,10 +6386,10 @@ void defer_from_expr(
 }
 #endif
 
-/* If operation is not deferred, add/remove components by finding the target
+/* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static 
-void traverse_add_remove(
+void traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
     const char *name,
@@ -6419,7 +6411,7 @@ void traverse_add_remove(
     }
 
     ecs_entity_t added[ECS_MAX_ADD_REMOVE], removed[ECS_MAX_ADD_REMOVE];
-    ecs_table_diff_t temp_diff, diff = {
+    ecs_table_diff_t diff = {
         .added = {.array = added, .size = ECS_MAX_ADD_REMOVE},
         .removed = {.array = removed, .size = ECS_MAX_ADD_REMOVE}
     };
@@ -6430,25 +6422,18 @@ void traverse_add_remove(
      * provided, the scope will be added by the add_path_w_sep function */
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
-            ecs_entity_t id = ecs_pair(EcsChildOf, scope);
-            table = flecs_table_traverse_add(world, table, &id, &temp_diff);
-            ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-            diff_append(&diff, &temp_diff);
+            table = table_append(
+                world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
-
         if (with) {
-            table = flecs_table_traverse_add(world, table, &with, &temp_diff);
-            ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);    
-            diff_append(&diff, &temp_diff);
+            table = table_append(world, table, with, &diff);
         }
     }
 
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
-        ecs_entity_t id = ecs_pair(ecs_id(EcsIdentifier), EcsName);
-        table = flecs_table_traverse_add(world, table, &id, &temp_diff);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        diff_append(&diff, &temp_diff);
+        table = table_append(world, table, 
+            ecs_pair(ecs_id(EcsIdentifier), EcsName), &diff);
     }
 
     /* Add components from the 'add' id array */
@@ -6456,35 +6441,14 @@ void traverse_add_remove(
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        table = flecs_table_traverse_add(world, table, &id, &temp_diff);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        diff_append(&diff, &temp_diff);
-    }
-
-    /* Add components from the 'remove' id array */
-    i = 0;
-    ids = desc->remove;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        table = flecs_table_traverse_remove(world, table, &id, &temp_diff);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        diff_append(&diff, &temp_diff);
+        table = table_append(world, table, id, &diff);
     }
 
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
         table = traverse_from_expr(
-            world, table, name, desc->add_expr, &diff, true, true);
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
-    }
-
-    /* Remove components from the 'remove_expr' expression */
-    if (desc->remove_expr) {
-#ifdef FLECS_PARSER
-    table = traverse_from_expr(
-        world, table, name, desc->remove_expr, &diff, false, true);
+            world, table, name, desc->add_expr, &diff, true);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -6550,26 +6514,10 @@ void deferred_add_remove(
         ecs_add_id(world, entity, id);
     }
 
-    /* Add components from the 'remove' id array */
-    i = 0;
-    ids = desc->remove;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_remove_id(world, entity, id);
-    }
-
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
         defer_from_expr(world, entity, name, desc->add_expr, true, true);
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
-    }
-
-    /* Remove components from the 'remove_expr' expression */
-    if (desc->remove_expr) {
-#ifdef FLECS_PARSER
-        defer_from_expr(world, entity, name, desc->remove_expr, true, false);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -6679,7 +6627,7 @@ ecs_entity_t ecs_entity_init(
         deferred_add_remove(world, result, name, desc, 
             scope, with, new_entity, name_assigned);
     } else {
-        traverse_add_remove(world, result, name, desc,
+        traverse_add(world, result, name, desc,
             scope, with, new_entity, name_assigned);
     }
 
@@ -6800,12 +6748,10 @@ ecs_entity_t ecs_type_init(
     if (desc->ids_expr) {
 #ifdef FLECS_PARSER
         normalized = traverse_from_expr(
-            world, normalized, desc->entity.name, desc->ids_expr, &diff, 
-            true, true);
+            world, normalized, desc->entity.name, desc->ids_expr, &diff, true);
 
         table = traverse_from_expr(
-            world, table, desc->entity.name, desc->ids_expr, &diff,
-            true, false);
+            world, table, desc->entity.name, desc->ids_expr, &diff, false);
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif

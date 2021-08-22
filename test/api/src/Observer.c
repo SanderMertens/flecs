@@ -843,7 +843,7 @@ void Observer_2_terms_on_remove_on_clear() {
     test_int(ctx.invoked, 0);
 
     ecs_clear(world, e);
-    test_int(ctx.invoked, 2);    
+    test_int(ctx.invoked, 1);
 
     ecs_fini(world);
 }
@@ -872,7 +872,7 @@ void Observer_2_terms_on_remove_on_delete() {
     test_int(ctx.invoked, 0);
 
     ecs_delete(world, e);
-    test_int(ctx.invoked, 2);    
+    test_int(ctx.invoked, 1);
 
     ecs_fini(world);
 }
