@@ -53,9 +53,7 @@ void Trigger_on_add_trigger_before_table() {
     });
 
     /* Create entity/table after trigger, should invoke trigger */
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -91,9 +89,7 @@ void Trigger_on_add_trigger_after_table() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -125,9 +121,7 @@ void Trigger_on_remove_trigger_before_table() {
     });
 
     /* Create entity/table after trigger, should invoke trigger */
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 0);
@@ -154,9 +148,7 @@ void Trigger_on_remove_trigger_after_table() {
     ECS_TAG(world, TagA);
 
     /* Create entity/before trigger */
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     /* Create trigger after table, should send notification to table */
@@ -197,9 +189,7 @@ void Trigger_on_add_tag() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -260,9 +250,7 @@ void Trigger_on_add_wildcard() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -471,9 +459,7 @@ void Trigger_on_remove_tag() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -983,9 +969,7 @@ void Trigger_on_add_remove() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -1267,6 +1251,149 @@ void Trigger_un_set_pair_wildcard() {
     ecs_fini(world);
 }
 
+void Trigger_on_add_not_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .term.oper = EcsNot,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ctx = (Probe){0};
+
+    ecs_add_id(world, e, TagA);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_remove_not_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .term.oper = EcsNot,
+        .events = {EcsOnRemove},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, TagA);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_add_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .term.args[0].set.mask = EcsSuperSet,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base_no_comp = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_no_comp);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, TagA);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_remove_superset() {
+    // Implement testcase
+}
+
+void Trigger_on_add_superset_childof() {
+    // Implement testcase
+}
+
+void Trigger_on_remove_superset_childof() {
+    // Implement testcase
+}
+
+void Trigger_on_add_self_superset() {
+    // Implement testcase
+}
+
+void Trigger_on_remove_self_superset() {
+    // Implement testcase
+}
+
 void Trigger_add_twice() {
     ecs_world_t *world = ecs_init();
 
@@ -1280,9 +1407,7 @@ void Trigger_add_twice() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -1318,9 +1443,7 @@ void Trigger_remove_twice() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -1358,9 +1481,7 @@ void Trigger_on_remove_w_clear() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -1393,9 +1514,7 @@ void Trigger_on_remove_w_delete() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -1428,9 +1547,7 @@ void Trigger_on_remove_w_world_fini() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -1461,9 +1578,7 @@ void Trigger_on_add_w_clone() {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);
@@ -1508,9 +1623,7 @@ void Trigger_add_in_trigger() {
         .ctx = &TagB
     });
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_assert(ecs_has_id(world, e, TagB));
@@ -1602,9 +1715,7 @@ void Trigger_trigger_w_named_entity() {
     });
 
     /* Create entity/table after trigger, should invoke trigger */
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = {TagA}
-    });
+    ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1);

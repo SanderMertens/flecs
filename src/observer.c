@@ -12,9 +12,6 @@ void observer_callback(ecs_iter_t *it) {
         return;
     }
 
-    ecs_table_t *table = it->table;
-    ecs_type_t type = table->type;
-
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual,
     user_it.ids = NULL;
@@ -25,6 +22,17 @@ void observer_callback(ecs_iter_t *it) {
 
     flecs_iter_init(&user_it);
 
+    ecs_table_t *table = it->table;
+    ecs_term_t *term = &o->filter.terms[it->term_index];
+    if (term->oper == EcsNot && it->event == EcsOnRemove) {
+        table = it->other_table;
+    }
+
+    if (!table) {
+        table = &world->store.root;
+    }
+
+    ecs_type_t type = table->type;
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
         user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
     {
@@ -77,17 +85,15 @@ ecs_entity_t ecs_observer_init(
         ecs_filter_t *filter = &observer->filter;
 
         /* Create a trigger for each term in the filter */
-        observer->triggers = ecs_os_malloc(ECS_SIZEOF(ecs_entity_t) * 
+        observer->triggers = ecs_os_malloc_n(ecs_entity_t, 
             observer->filter.term_count);
-        
+
         int i;
         for (i = 0; i < filter->term_count; i ++) {
             const ecs_term_t *terms = filter->terms;
             const ecs_term_t *t = &terms[i];
 
-            if (t->oper == EcsNot || terms[i].args[0].entity != EcsThis) {
-                /* No need to trigger on components that the entity should not
-                 * have, or on components that are not defined on the entity */
+            if (terms[i].args[0].entity != EcsThis) {
                 observer->triggers[i] = 0;
                 continue;
             }
@@ -101,6 +107,7 @@ ecs_entity_t ecs_observer_init(
 
             ecs_os_memcpy(trigger_desc.events, desc->events, 
                 ECS_SIZEOF(ecs_entity_t) * ECS_TRIGGER_DESC_EVENT_COUNT_MAX);
+
             observer->triggers[i] = ecs_trigger_init(world, &trigger_desc);
         }
 

@@ -206,7 +206,7 @@ void run_on_remove(
         ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
         for (i = 0; i < type_count; i ++) {
             diff.removed.array = &ids[i];
-            flecs_run_remove_actions(world, table, data, 0, count, &diff);
+            flecs_run_remove_actions(world, table, NULL, data, 0, count, &diff);
         }
     }
 }
