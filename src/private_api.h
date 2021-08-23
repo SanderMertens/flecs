@@ -154,6 +154,7 @@ void flecs_triggers_notify(
     ecs_id_t id,
     ecs_entity_t event,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count);
@@ -291,6 +292,7 @@ bool flecs_defer_purge(
 void flecs_run_add_actions(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -301,6 +303,7 @@ void flecs_run_add_actions(
 void flecs_run_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -401,6 +404,17 @@ void flecs_table_set_size(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count);
+
+bool flecs_term_match_table(
+    ecs_world_t *world,
+    const ecs_term_t *term,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    ecs_id_t *id_out,
+    int32_t *column_out,
+    ecs_entity_t *subject_out,
+    ecs_size_t *size_out,
+    void **ptr_out);
 
 bool flecs_filter_match_table(
     ecs_world_t *world,

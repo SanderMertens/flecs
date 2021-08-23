@@ -41,30 +41,42 @@ ecs_map_t* unregister_id_trigger(
 }
 
 static
-void register_trigger(
+void register_trigger_for_id(
     ecs_world_t *world,
-    ecs_trigger_t *trigger)
+    ecs_trigger_t *trigger,
+    ecs_id_t id)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_term_t *term = &trigger->term;
     ecs_map_t *triggers = world->id_triggers;
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_id_trigger_t *idt = ecs_map_ensure(triggers, 
-        ecs_id_trigger_t, trigger->term.id);
+    ecs_id_trigger_t *idt = ecs_map_ensure(triggers, ecs_id_trigger_t, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
         ecs_map_t **set = NULL;
-        if (trigger->events[i] == EcsOnAdd) {
+        ecs_entity_t event = trigger->events[i];
+
+        /* If operator is Not, reverse the event */
+        if (term->oper == EcsNot) {
+            if (event == EcsOnAdd) {
+                event = EcsOnRemove;
+            } else if (event == EcsOnRemove) {
+                event = EcsOnAdd;
+            }
+        }
+
+        if (event == EcsOnAdd) {
             set = &idt->on_add_triggers;
-        } else if (trigger->events[i] == EcsOnRemove) {
+        } else if (event == EcsOnRemove) {
             set = &idt->on_remove_triggers;
-        } else if (trigger->events[i] == EcsOnSet) {
+        } else if (event == EcsOnSet) {
             set = &idt->on_set_triggers;
-        } else if (trigger->events[i] == EcsUnSet) {
+        } else if (event == EcsUnSet) {
             set = &idt->un_set_triggers;            
         } else {
             /* Invalid event provided */
@@ -85,6 +97,18 @@ void register_trigger(
 
         register_id_trigger(*set, trigger);
     }
+}
+
+static
+void register_trigger(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{
+    ecs_term_t *term = &trigger->term;
+
+    // if (term->args[0].set.mask & EcsSelf) {
+        register_trigger_for_id(world, trigger, term->id);
+    // }
 }
 
 static
@@ -171,6 +195,7 @@ void notify_trigger_set(
     ecs_entity_t event,
     const ecs_map_t *triggers,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count)
@@ -230,6 +255,7 @@ void notify_trigger_set(
         .event = event,
         .event_id = id,
         .table = table,
+        .other_table = other_table,
         .type = table ? table->type : NULL,
         .columns = columns,
         .ids = ids,
@@ -264,13 +290,14 @@ void flecs_triggers_notify(
     ecs_id_t id,
     ecs_entity_t event,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count)
 {
     notify_trigger_set(world, id, event,
         flecs_triggers_get(world, id, event), 
-            table, data, row, count);
+            table, other_table, data, row, count);
 
     if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t pred = ECS_PAIR_RELATION(id);
@@ -278,19 +305,19 @@ void flecs_triggers_notify(
 
         notify_trigger_set(world, id, event,
             flecs_triggers_get(world, ecs_pair(pred, EcsWildcard), event), 
-                table, data, row, count);
+                table, other_table, data, row, count);
 
         notify_trigger_set(world, id, event, 
             flecs_triggers_get(world, ecs_pair(EcsWildcard, obj), event), 
-                table, data, row, count);
+                table, other_table, data, row, count);
 
         notify_trigger_set(world, id, event, 
             flecs_triggers_get(world, ecs_pair(EcsWildcard, EcsWildcard), event), 
-                table, data, row, count);                                
+                table, other_table, data, row, count);                                
     } else {
         notify_trigger_set(world, id, event, 
             flecs_triggers_get(world, EcsWildcard, event), 
-                table, data, row, count);
+                table, other_table, data, row, count);
     }
 }
 

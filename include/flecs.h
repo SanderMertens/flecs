@@ -298,6 +298,10 @@ struct ecs_trigger_t {
     ecs_entity_t entity;        /* Trigger entity */
     ecs_entity_t self;          /* Entity associated with observer */
 
+    bool bloom_filter;          /* If true, incoming events will be a superset
+                                 * of matching events, so trigger will have to
+                                 * apply matching before calling callback */
+
     uint64_t id;                /* Internal id */
 };
 
@@ -2379,6 +2383,15 @@ FLECS_API
 int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *filter); 
+
+/** Convert ter, to string expression.
+ * Convert term to a string expression. The resulting expression is equivalent
+ * to the same term, with the exception of And & Or operators.
+ */
+FLECS_API
+char* ecs_term_str(
+    const ecs_world_t *world,
+    const ecs_term_t *term);
 
 /** Convert filter to string expression.
  * Convert filter terms to a string expression. The resulting expression can be

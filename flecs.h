@@ -661,10 +661,22 @@ void _ecs_parser_error(
     const char *fmt,
     ...);
 
+FLECS_API
+void _ecs_parser_errorv(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args);
+
 #ifndef FLECS_LEGACY
 
 #define ecs_parser_error(name, expr, column, ...)\
     _ecs_parser_error(name, expr, column, __VA_ARGS__);\
+    abort()
+
+#define ecs_parser_errorv(name, expr, column, fmt, args)\
+    _ecs_parser_errorv(name, expr, column, fmt, args);\
     abort()
 
 #endif
@@ -2339,6 +2351,10 @@ struct ecs_trigger_t {
     ecs_entity_t entity;        /* Trigger entity */
     ecs_entity_t self;          /* Entity associated with observer */
 
+    bool bloom_filter;          /* If true, incoming events will be a superset
+                                 * of matching events, so trigger will have to
+                                 * apply matching before calling callback */
+
     uint64_t id;                /* Internal id */
 };
 
@@ -2545,6 +2561,7 @@ struct ecs_iter_t {
 
     ecs_table_t *table;           /* Current table */
     ecs_type_t type;              /* Current type */
+    ecs_table_t *other_table;     /* Prev or next table when adding/removing */
 
     ecs_id_t *ids;                /* (Component) ids */
     int32_t *columns;             /* Query term to table column mapping */
@@ -4871,6 +4888,15 @@ FLECS_API
 int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *filter); 
+
+/** Convert ter, to string expression.
+ * Convert term to a string expression. The resulting expression is equivalent
+ * to the same term, with the exception of And & Or operators.
+ */
+FLECS_API
+char* ecs_term_str(
+    const ecs_world_t *world,
+    const ecs_term_t *term);
 
 /** Convert filter to string expression.
  * Convert filter terms to a string expression. The resulting expression can be

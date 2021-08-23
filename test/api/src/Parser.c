@@ -119,8 +119,8 @@ void Parser_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -145,8 +145,8 @@ void Parser_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -169,8 +169,8 @@ void Parser_component_explicit_subject_this() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -194,8 +194,8 @@ void Parser_component_explicit_subject_this_by_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -218,8 +218,8 @@ void Parser_component_explicit_subject_wildcard() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsWildcard, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsWildcard, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -243,9 +243,9 @@ void Parser_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -269,9 +269,9 @@ void Parser_pair_implicit_subject_wildcard_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], EcsWildcard, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], EcsWildcard, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -295,9 +295,9 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], EcsWildcard, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], EcsWildcard, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -321,9 +321,9 @@ void Parser_pair_implicit_subject_this_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], EcsThis, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], EcsThis, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -347,9 +347,9 @@ void Parser_pair_implicit_subject_this_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -374,9 +374,9 @@ void Parser_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -400,9 +400,9 @@ void Parser_pair_explicit_subject_this() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -426,9 +426,9 @@ void Parser_pair_explicit_subject_this_by_name() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -452,9 +452,9 @@ void Parser_pair_explicit_subject_wildcard_pred() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], EcsWildcard, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], EcsWildcard, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -478,9 +478,9 @@ void Parser_pair_explicit_subject_wildcard_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsWildcard, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsWildcard, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -504,9 +504,9 @@ void Parser_pair_explicit_subject_wildcard_obj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], EcsWildcard, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], EcsWildcard, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -529,8 +529,8 @@ void Parser_in_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
 
@@ -554,8 +554,8 @@ void Parser_in_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
 
@@ -579,9 +579,9 @@ void Parser_in_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
 
@@ -606,9 +606,9 @@ void Parser_in_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsIn);
 
@@ -631,8 +631,8 @@ void Parser_inout_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
 
@@ -656,8 +656,8 @@ void Parser_inout_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
 
@@ -681,9 +681,9 @@ void Parser_inout_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
 
@@ -708,9 +708,9 @@ void Parser_inout_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
 
@@ -733,8 +733,8 @@ void Parser_out_component_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
 
@@ -758,8 +758,8 @@ void Parser_out_component_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
 
@@ -783,9 +783,9 @@ void Parser_out_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
 
@@ -810,9 +810,9 @@ void Parser_out_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsOut);
 
@@ -835,8 +835,8 @@ void Parser_component_singleton() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Pred, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -861,8 +861,8 @@ void Parser_this_singleton() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], EcsThis, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], EcsThis, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -885,7 +885,7 @@ void Parser_component_implicit_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -909,7 +909,7 @@ void Parser_component_explicit_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -934,9 +934,9 @@ void Parser_pair_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -960,8 +960,8 @@ void Parser_variable_single_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj_var(terms[0], 0, EcsDefaultSet, "X");
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj_var(terms[0], 0, EcsSelf, "X");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -985,8 +985,8 @@ void Parser_variable_multi_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj_var(terms[0], 0, EcsDefaultSet, "XYZ");
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj_var(terms[0], 0, EcsSelf, "XYZ");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1010,8 +1010,8 @@ void Parser_variable_multi_char_w_underscore() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj_var(terms[0], 0, EcsDefaultSet, "XY_Z");
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj_var(terms[0], 0, EcsSelf, "XY_Z");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1035,8 +1035,8 @@ void Parser_variable_multi_char_w_number() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj_var(terms[0], 0, EcsDefaultSet, "XY_1");
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj_var(terms[0], 0, EcsSelf, "XY_1");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1060,8 +1060,8 @@ void Parser_escaped_all_caps_single_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], X, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], X, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1085,8 +1085,8 @@ void Parser_escaped_all_caps_multi_char() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], XYZ, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], XYZ, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1109,8 +1109,8 @@ void Parser_component_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1134,9 +1134,9 @@ void Parser_pair_implicit_subject_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1161,9 +1161,9 @@ void Parser_pair_explicit_subject_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1187,13 +1187,13 @@ void Parser_2_component_not() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsNot);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -1217,13 +1217,13 @@ void Parser_2_component_not_no_space() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsNot);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsNot);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -1246,8 +1246,8 @@ void Parser_component_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1271,13 +1271,13 @@ void Parser_2_component_optional() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsOptional);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -1301,13 +1301,13 @@ void Parser_2_component_optional_no_space() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsOptional);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -1330,8 +1330,8 @@ void Parser_from_and() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAndFrom);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1354,8 +1354,8 @@ void Parser_from_or() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOrFrom);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1378,8 +1378,8 @@ void Parser_from_not() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsNotFrom);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1403,9 +1403,9 @@ void Parser_pair_implicit_subject_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1430,9 +1430,9 @@ void Parser_pair_explicit_subject_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], Subj, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -1455,8 +1455,8 @@ void Parser_pred_implicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_DISABLED);
@@ -1480,8 +1480,8 @@ void Parser_pred_explicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_DISABLED);
@@ -1505,7 +1505,7 @@ void Parser_pred_no_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -1531,9 +1531,9 @@ void Parser_pair_implicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_PAIR);
@@ -1558,9 +1558,9 @@ void Parser_pair_explicit_subject_w_role() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_PAIR);
@@ -1584,8 +1584,8 @@ void Parser_inout_role_pred_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
     test_int(terms[0].role, ECS_DISABLED);
@@ -1609,7 +1609,7 @@ void Parser_inout_role_pred_no_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
@@ -1634,8 +1634,8 @@ void Parser_inout_role_pred_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
     test_int(terms[0].role, ECS_DISABLED);
@@ -1660,9 +1660,9 @@ void Parser_inout_role_pair_implicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
     test_int(terms[0].role, ECS_PAIR);
@@ -1687,9 +1687,9 @@ void Parser_inout_role_pair_explicit_subject() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOut);
     test_int(terms[0].role, ECS_PAIR);
@@ -1714,13 +1714,13 @@ void Parser_2_pred_implicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
 
@@ -1744,12 +1744,12 @@ void Parser_2_pred_no_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
     test_subj(terms[1], 0, EcsNothing);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
@@ -1774,13 +1774,13 @@ void Parser_2_pred_explicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
 
@@ -1806,15 +1806,15 @@ void Parser_2_pair_implicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
 
@@ -1840,15 +1840,15 @@ void Parser_2_pair_explicit_subject() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault);    
 
@@ -1872,14 +1872,14 @@ void Parser_2_pred_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_DISABLED);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
     test_int(terms[1].role, ECS_DISABLED);   
@@ -1906,16 +1906,16 @@ void Parser_2_pair_implicit_subj_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_PAIR);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
     test_int(terms[1].role, ECS_PAIR);   
@@ -1942,16 +1942,16 @@ void Parser_2_pair_explicit_subj_role() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
     test_int(terms[0].role, ECS_PAIR);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsAnd);
     test_int(terms[1].inout, EcsInOutDefault); 
     test_int(terms[1].role, ECS_PAIR);   
@@ -1976,13 +1976,13 @@ void Parser_2_or_pred_implicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsOr);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -2006,13 +2006,13 @@ void Parser_2_or_pred_explicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsOr);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -2038,15 +2038,15 @@ void Parser_2_or_pair_implicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);    
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);    
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);    
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);    
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsOr);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -2072,15 +2072,15 @@ void Parser_2_or_pair_explicit_subj() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);    
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], Obj_1, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);    
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], Obj_1, EcsSelf);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOutDefault);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);    
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
-    test_obj(terms[1], Obj_2, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);    
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_obj(terms[1], Obj_2, EcsSelf);
     test_int(terms[1].oper, EcsOr);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -2104,13 +2104,13 @@ void Parser_2_or_pred_inout() {
     test_int(filter_count(&f), 2);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred_1, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], Pred_1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsOr);
     test_int(terms[0].inout, EcsInOut);
 
-    test_pred(terms[1], Pred_2, EcsDefaultSet);
-    test_subj(terms[1], EcsThis, EcsDefaultSet);
+    test_pred(terms[1], Pred_2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
     test_int(terms[1].oper, EcsOr);
     test_int(terms[1].inout, EcsInOutDefault);
 
@@ -2131,8 +2131,8 @@ void Parser_1_digit_pred_implicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], 100, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], 100, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2153,7 +2153,7 @@ void Parser_1_digit_pred_no_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], 100, EcsDefaultSet);
+    test_pred(terms[0], 100, EcsSelf);
     test_subj(terms[0], 0, EcsNothing);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2175,8 +2175,8 @@ void Parser_1_digit_pred_explicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], 100, EcsDefaultSet);
-    test_subj(terms[0], 200, EcsDefaultSet);
+    test_pred(terms[0], 100, EcsSelf);
+    test_subj(terms[0], 200, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2200,9 +2200,9 @@ void Parser_1_digit_pair_implicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], 100, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
-    test_obj(terms[0], 300, EcsDefaultSet);
+    test_pred(terms[0], 100, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_obj(terms[0], 300, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2226,9 +2226,9 @@ void Parser_1_digit_pair_explicit_subj() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], 100, EcsDefaultSet);
-    test_subj(terms[0], 200, EcsDefaultSet);
-    test_obj(terms[0], 300, EcsDefaultSet);
+    test_pred(terms[0], 100, EcsSelf);
+    test_subj(terms[0], 200, EcsSelf);
+    test_obj(terms[0], 300, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
@@ -2251,7 +2251,7 @@ void Parser_pred_implicit_subject_self() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2275,7 +2275,7 @@ void Parser_pred_implicit_subject_superset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2300,7 +2300,7 @@ void Parser_pred_implicit_subject_subset() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2325,7 +2325,7 @@ void Parser_pred_implicit_subject_superset_inclusive() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2350,7 +2350,7 @@ void Parser_pred_implicit_subject_subset_inclusive() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2375,7 +2375,7 @@ void Parser_pred_implicit_subject_superset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2400,7 +2400,7 @@ void Parser_pred_implicit_subject_subset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2425,7 +2425,7 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2450,7 +2450,7 @@ void Parser_pred_implicit_subject_subset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2475,7 +2475,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2500,7 +2500,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsSelf | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2526,7 +2526,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2552,7 +2552,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsSelf | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2578,7 +2578,7 @@ void Parser_pred_implicit_subject_superset_depth_1_digit() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2603,7 +2603,7 @@ void Parser_pred_implicit_subject_subset_depth_1_digit() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2628,7 +2628,7 @@ void Parser_pred_implicit_subject_superset_depth_2_digits() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2653,7 +2653,7 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2678,7 +2678,7 @@ void Parser_pred_implicit_superset_min_max_depth() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2704,7 +2704,7 @@ void Parser_pred_implicit_superset_childof_min_max_depth() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
@@ -2732,7 +2732,7 @@ void Parser_pred_implicit_subject_superset_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2757,7 +2757,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2782,7 +2782,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2807,7 +2807,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], Pred, EcsDefaultSet);
+    test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);  
@@ -2839,8 +2839,8 @@ void Parser_expr_w_symbol() {
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
-    test_pred(terms[0], comp, EcsDefaultSet);
-    test_subj(terms[0], EcsThis, EcsDefaultSet);
+    test_pred(terms[0], comp, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 

@@ -173,6 +173,7 @@ struct ecs_iter_t {
 
     ecs_table_t *table;           /* Current table */
     ecs_type_t type;              /* Current type */
+    ecs_table_t *other_table;     /* Prev or next table when adding/removing */
 
     ecs_id_t *ids;                /* (Component) ids */
     int32_t *columns;             /* Query term to table column mapping */

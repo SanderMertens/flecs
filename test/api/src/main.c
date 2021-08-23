@@ -835,6 +835,12 @@ void Filter_term_w_pred_obj(void);
 void Filter_term_w_pair_finalize_twice(void);
 void Filter_term_w_role(void);
 void Filter_term_w_pred_role(void);
+void Filter_term_w_self(void);
+void Filter_term_w_superset(void);
+void Filter_term_w_subset(void);
+void Filter_term_w_self_superset(void);
+void Filter_term_w_superset_custom_relation(void);
+void Filter_term_w_self_superset_custom_relation(void);
 void Filter_term_iter_component(void);
 void Filter_term_iter_tag(void);
 void Filter_term_iter_pair(void);
@@ -1013,6 +1019,14 @@ void Trigger_un_set_pair(void);
 void Trigger_un_set_pair_w_obj_wildcard(void);
 void Trigger_un_set_pair_pred_wildcard(void);
 void Trigger_un_set_pair_wildcard(void);
+void Trigger_on_add_not_tag(void);
+void Trigger_on_remove_not_tag(void);
+void Trigger_on_add_superset(void);
+void Trigger_on_remove_superset(void);
+void Trigger_on_add_superset_childof(void);
+void Trigger_on_remove_superset_childof(void);
+void Trigger_on_add_self_superset(void);
+void Trigger_on_remove_self_superset(void);
 void Trigger_add_twice(void);
 void Trigger_remove_twice(void);
 void Trigger_on_remove_w_clear(void);
@@ -4941,6 +4955,30 @@ bake_test_case Filter_testcases[] = {
         Filter_term_w_pred_role
     },
     {
+        "term_w_self",
+        Filter_term_w_self
+    },
+    {
+        "term_w_superset",
+        Filter_term_w_superset
+    },
+    {
+        "term_w_subset",
+        Filter_term_w_subset
+    },
+    {
+        "term_w_self_superset",
+        Filter_term_w_self_superset
+    },
+    {
+        "term_w_superset_custom_relation",
+        Filter_term_w_superset_custom_relation
+    },
+    {
+        "term_w_self_superset_custom_relation",
+        Filter_term_w_self_superset_custom_relation
+    },
+    {
         "term_iter_component",
         Filter_term_iter_component
     },
@@ -5636,6 +5674,38 @@ bake_test_case Trigger_testcases[] = {
     {
         "un_set_pair_wildcard",
         Trigger_un_set_pair_wildcard
+    },
+    {
+        "on_add_not_tag",
+        Trigger_on_add_not_tag
+    },
+    {
+        "on_remove_not_tag",
+        Trigger_on_remove_not_tag
+    },
+    {
+        "on_add_superset",
+        Trigger_on_add_superset
+    },
+    {
+        "on_remove_superset",
+        Trigger_on_remove_superset
+    },
+    {
+        "on_add_superset_childof",
+        Trigger_on_add_superset_childof
+    },
+    {
+        "on_remove_superset_childof",
+        Trigger_on_remove_superset_childof
+    },
+    {
+        "on_add_self_superset",
+        Trigger_on_add_self_superset
+    },
+    {
+        "on_remove_self_superset",
+        Trigger_on_remove_self_superset
     },
     {
         "add_twice",
@@ -8757,7 +8827,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        56,
+        62,
         Filter_testcases
     },
     {
@@ -8778,7 +8848,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        51,
+        59,
         Trigger_testcases
     },
     {

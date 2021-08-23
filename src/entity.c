@@ -297,6 +297,7 @@ static
 void notify(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -313,7 +314,8 @@ void notify(
 
     int i;
     for (i = 0; i < arr_count; i ++) {
-        flecs_triggers_notify(world, arr[i], event, table, data, row, count);
+        flecs_triggers_notify(
+            world, arr[i], event, table, other_table, data, row, count);
     }
 }
 
@@ -690,7 +692,7 @@ int32_t new_entity(
 
     if (new_table->flags & EcsTableHasAddActions) {
         flecs_run_add_actions(
-            world, new_table, new_data, new_row, 1, diff, true, true);
+            world, new_table, NULL, new_data, new_row, 1, diff, true, true);
 
         if (new_table->flags & EcsTableHasMonitors) {
             flecs_run_monitors(
@@ -737,7 +739,8 @@ int32_t move_entity(
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
 
-        flecs_run_remove_actions(world, src_table, src_data, src_row, 1, diff);
+        flecs_run_remove_actions(
+            world, src_table, dst_table, src_data, src_row, 1, diff);
 
         /* If components were removed, invoke remove actions before deleting */
         if (diff->removed.count && (src_table->flags & EcsTableHasRemoveActions)) {
@@ -760,8 +763,8 @@ int32_t move_entity(
     /* If components were added, invoke add actions */
     if (src_table != dst_table || diff->added.count) {
         if (diff->added.count && (dst_table->flags & EcsTableHasAddActions)) {
-            flecs_run_add_actions(
-                world, dst_table, dst_data, dst_row, 1, diff, false, true);
+            flecs_run_add_actions(world, dst_table, src_table, dst_data, 
+                dst_row, 1, diff, false, true);
         }
 
         /* Run monitors */
@@ -799,7 +802,7 @@ void delete_entity(
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
             flecs_run_remove_actions(
-                world, src_table, src_data, src_row, 1, diff);
+                world, src_table, NULL, src_data, src_row, 1, diff);
         } 
     }
 
@@ -999,7 +1002,7 @@ const ecs_entity_t* new_w_data(
 
     flecs_defer_none(world, &world->stage);
 
-    flecs_run_add_actions(world, table, data, row, count, diff, 
+    flecs_run_add_actions(world, table, NULL, data, row, count, diff, 
         true, component_data == NULL);
 
     if (component_data) {
@@ -1175,6 +1178,7 @@ void *get_mutable(
 void flecs_run_add_actions(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -1193,17 +1197,18 @@ void flecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasOnAdd) {
-        notify(world, table, data, row, count, EcsOnAdd, &diff->added);
+        notify(world, table, other_table, data, row, count, EcsOnAdd, &diff->added);
     }
 
     if (run_on_set) {
-        notify(world, table, data, row, count, EcsOnSet, &diff->on_set);
+        notify(world, table, other_table, data, row, count, EcsOnSet, &diff->on_set);
     }
 }
 
 void flecs_run_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
@@ -1212,14 +1217,14 @@ void flecs_run_remove_actions(
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (count) {
-        notify(world, table, data, row, count, EcsUnSet, &diff->un_set);
+        notify(world, table, other_table, data, row, count, EcsUnSet, &diff->un_set);
 
         if (table->flags & EcsTableHasOnRemove) {
-            notify(world, table, data, row, count, EcsOnRemove, &diff->removed);
+            notify(world, table, other_table, data, row, count, EcsOnRemove, &diff->removed);
         }
 
         if (table->flags & EcsTableHasIsA) {
-            notify(world, table, data, row, count, EcsOnSet, &diff->on_set);
+            notify(world, table, other_table, data, row, count, EcsOnSet, &diff->on_set);
         }
     }
 }
@@ -1323,13 +1328,13 @@ void flecs_run_set_systems(
 
     if (table->flags & EcsTableHasOnSet) {
         if (!set_all) {
-            notify(world, table, data, row, count, EcsOnSet, &components);
+            notify(world, table, NULL, data, row, count, EcsOnSet, &components);
         } else {
             int32_t i, column_count = table->column_count;
             for (i = 0; i < column_count; i ++) {
                 ecs_column_t *c = &data->columns[i];
                 if (c->size) {
-                    notify(world, table, data, row, count, EcsOnSet, 
+                    notify(world, table, NULL, data, row, count, EcsOnSet, 
                         &components);
                 }
             }
@@ -1481,6 +1486,7 @@ bool ecs_commit(
     if (removed) {
         diff.added = *removed;
     }
+    
     commit(world, entity, &info, table, &diff, true);
 
     return src_table != table;
@@ -2264,7 +2270,7 @@ void remove_from_table(
             ecs_data_t *src_data = &src_table->storage;
             int32_t src_count = ecs_table_count(src_table);
             if (diff.removed.count) {
-                flecs_run_remove_actions(world, src_table, 
+                flecs_run_remove_actions(world, src_table, dst_table,
                     src_data, 0, src_count, &diff);
             }
 

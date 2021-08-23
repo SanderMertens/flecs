@@ -1469,12 +1469,8 @@ void process_signature(
         ecs_assert(!(obj->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
 
         /* Superset/subset substitutions aren't supported for pred/obj */
-        ecs_assert(pred->set.mask == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->set.mask == EcsDefaultSet, ECS_UNSUPPORTED, NULL);
-
-        if (subj->set.mask == EcsDefaultSet) {
-            subj->set.mask = EcsSelf;
-        }
+        ecs_assert(pred->set.mask == EcsSelf, ECS_UNSUPPORTED, NULL);
+        ecs_assert(obj->set.mask == EcsSelf, ECS_UNSUPPORTED, NULL);
 
         /* If self is not included in set, always start from depth 1 */
         if (!subj->set.min_depth && !(subj->set.mask & EcsSelf)) {

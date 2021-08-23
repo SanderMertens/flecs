@@ -339,12 +339,14 @@ ecs_entity_t ecs_lookup_child(
     }
 
     ecs_filter_t f;
-    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    int ret = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
             { .id = ecs_pair( ecs_id(EcsIdentifier), EcsName) },
             { .id = ecs_pair(EcsChildOf, parent) }
         }
     });
+    ecs_assert(ret == 0, ECS_INTERNAL_ERROR, NULL);
+    (void)ret;
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
     while (ecs_filter_next(&it)) {

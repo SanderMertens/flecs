@@ -174,10 +174,22 @@ void _ecs_parser_error(
     const char *fmt,
     ...);
 
+FLECS_API
+void _ecs_parser_errorv(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args);
+
 #ifndef FLECS_LEGACY
 
 #define ecs_parser_error(name, expr, column, ...)\
     _ecs_parser_error(name, expr, column, __VA_ARGS__);\
+    abort()
+
+#define ecs_parser_errorv(name, expr, column, fmt, args)\
+    _ecs_parser_errorv(name, expr, column, fmt, args);\
     abort()
 
 #endif

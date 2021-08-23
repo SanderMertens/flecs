@@ -305,16 +305,14 @@ void ecs_tracing_color_enable(
     trace_color = enabled;
 }
 
-void _ecs_parser_error(
+void _ecs_parser_errorv(
     const char *name,
     const char *expr, 
     int64_t column,
     const char *fmt,
-    ...)
+    va_list args)
 {
     if (trace_level >= -2) {
-        va_list args;
-        va_start(args, fmt);
         char *msg = ecs_vasprintf(fmt, args);
 
         if (column != -1) {
@@ -339,7 +337,24 @@ void _ecs_parser_error(
             ecs_os_err("");
         }
 
-        ecs_os_free(msg);        
+        ecs_os_free(msg);
+    }
+
+    ecs_os_abort(); 
+}
+
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    if (trace_level >= -2) {
+        va_list args;
+        va_start(args, fmt);
+        _ecs_parser_errorv(name, expr, column, fmt, args);
+        va_end(args);
     }
 
     ecs_os_abort();
