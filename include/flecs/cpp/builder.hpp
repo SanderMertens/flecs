@@ -839,11 +839,11 @@ public:
         }
 
         if (this->m_desc.terms_buffer) {
-            ecs_os_free(m_desc.terms_buffer);
+            ecs_os_free(this->m_desc.terms_buffer);
         }
 
         return f;
-    }    
+    }
 
     filter<Components ...> build() const;
 

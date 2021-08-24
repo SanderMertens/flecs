@@ -445,6 +445,7 @@ int ecs_filter_init(
         if (!filter_out->expr) {
             if (term_count < ECS_TERM_CACHE_SIZE) {
                 filter_out->terms = filter_out->term_cache;
+                filter_out->term_cache_used = true;
             } else {
                 filter_out->terms = ecs_os_malloc_n(ecs_term_t, term_count);
             }
@@ -459,6 +460,10 @@ int ecs_filter_init(
 
     filter_out->name = ecs_os_strdup(desc->name);
     filter_out->expr = ecs_os_strdup(desc->expr);
+
+    ecs_assert(!filter_out->term_cache_used || 
+        filter_out->terms == filter_out->term_cache,
+        ECS_INTERNAL_ERROR, NULL);
 
     return 0;
 error:
@@ -484,7 +489,7 @@ void ecs_filter_copy(
 
         int32_t term_count = src->term_count;
 
-        if (src->terms == src->term_cache) {
+        if (src->term_cache_used) {
             dst->terms = dst->term_cache;
         } else {
             dst->terms = ecs_os_memdup_n(src->terms, ecs_term_t, term_count);
@@ -506,7 +511,7 @@ void ecs_filter_move(
     if (src) {
         *dst = *src;
 
-        if (src->terms == src->term_cache) {
+        if (src->term_cache_used) {
             dst->terms = dst->term_cache;
         }
 
@@ -526,7 +531,7 @@ void ecs_filter_fini(
             ecs_term_fini(&filter->terms[i]);
         }
 
-        if (filter->terms != filter->term_cache) {
+        if (!filter->term_cache_used) {
             ecs_os_free(filter->terms);
         }
     }
@@ -557,6 +562,9 @@ char* ecs_filter_str(
     const ecs_filter_t *filter)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
@@ -737,6 +745,9 @@ bool flecs_filter_match_table(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
@@ -1036,11 +1047,14 @@ ecs_iter_t ecs_filter_iter(
     if (filter) {
         iter->filter = *filter;
 
-        if (filter->terms == filter->term_cache) {
+        if (filter->term_cache_used) {
             iter->filter.terms = iter->filter.term_cache;
         }
 
-        ecs_filter_finalize(world, &iter->filter);        
+        ecs_filter_finalize(world, &iter->filter);
+
+        ecs_assert(!filter->term_cache_used || 
+            filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
     } else {
         ecs_filter_init(world, &iter->filter, &(ecs_filter_desc_t) {
             .terms = {{ .id = EcsWildcard }}
