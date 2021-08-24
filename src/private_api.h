@@ -578,6 +578,63 @@ FLECS_API
 void flecs_increase_timer_resolution(
     bool enable);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Object API
+////////////////////////////////////////////////////////////////////////////////
+
+/* Initialize object header & mixins for specified type */
+void _ecs_poly_init(
+    ecs_poly_t *object,
+    int32_t kind,
+    ecs_size_t size,
+    ecs_mixins_t *mixins);
+
+#define ecs_poly_init(object, type)\
+    _ecs_poly_init(object, ECS_##type##_MAGIC, sizeof(type), &type##_mixins)
+
+/* Deinitialize object for specified type */
+void _ecs_poly_fini(
+    ecs_poly_t *object,
+    int32_t kind);
+
+#define ecs_poly_fini(object, type)\
+    _ecs_poly_fini(object, ECS_##type##_MAGIC)
+
+/* Utility functions for creating an object on the heap */
+#define ecs_poly_new(type)\
+    ecs_poly_init(ecs_os_calloc_t(type), type)
+
+#define ecs_poly_free(obj, type)\
+    ecs_poly_fini(obj, type);\
+    ecs_os_free(obj)
+
+/* Utilities for testing/asserting an object type */
+#ifndef NDEBUG
+void _ecs_poly_assert(
+    const ecs_poly_t *object,
+    int32_t type,
+    const char *file,
+    int32_t line);
+
+#define ecs_poly_assert(object, type)\
+    _ecs_poly_assert(object, ECS_##type##_MAGIC, __FILE__, __LINE__)
+#else
+#define ecs_poly_assert(object, type)
+#endif
+
+bool _ecs_poly_is(
+    const ecs_poly_t *object,
+    int32_t type);
+
+#define ecs_poly_is(object, type)\
+    _ecs_poly_is(object, ECS_##type##_MAGIC)
+
+/* Utility functions for getting a mixin from an object */
+ecs_observable_t* ecs_get_observable(
+    const ecs_poly_t *object);
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////

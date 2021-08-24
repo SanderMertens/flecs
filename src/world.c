@@ -77,7 +77,7 @@ const ecs_world_t* ecs_get_world(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (world->magic == ECS_WORLD_MAGIC) {
+    if (ecs_poly_is(world, ecs_world_t)) {
         return world;
     } else {
         return ((ecs_stage_t*)world)->world;
@@ -87,15 +87,15 @@ const ecs_world_t* ecs_get_world(
 const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
-    ecs_assert(world->magic == ECS_WORLD_MAGIC ||
-               world->magic == ECS_STAGE_MAGIC,
+    ecs_assert(ecs_poly_is(world, ecs_world_t) ||
+               ecs_poly_is(world, ecs_stage_t),
                ECS_INTERNAL_ERROR,
                NULL);
 
-    if (world->magic == ECS_WORLD_MAGIC) {
+    if (ecs_poly_is(world, ecs_world_t)) {
         return &world->stage;
 
-    } else if (world->magic == ECS_STAGE_MAGIC) {
+    } else if (ecs_poly_is(world, ecs_stage_t)) {
         return (ecs_stage_t*)world;
     }
     
@@ -107,16 +107,16 @@ ecs_stage_t *flecs_stage_from_world(
 {
     ecs_world_t *world = *world_ptr;
 
-    ecs_assert(world->magic == ECS_WORLD_MAGIC ||
-               world->magic == ECS_STAGE_MAGIC,
+    ecs_assert(ecs_poly_is(world, ecs_world_t) ||
+               ecs_poly_is(world, ecs_stage_t),
                ECS_INTERNAL_ERROR,
                NULL);
 
-    if (world->magic == ECS_WORLD_MAGIC) {
+    if (ecs_poly_is(world, ecs_world_t)) {
         ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
         return &world->stage;
 
-    } else if (world->magic == ECS_STAGE_MAGIC) {
+    } else if (ecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
         *world_ptr = stage->world;
         return stage;
@@ -325,7 +325,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    world->magic = ECS_WORLD_MAGIC;
+    ecs_poly_init(world, ecs_world_t);
+
     world->fini_actions = NULL; 
 
     world->type_info = flecs_sparse_new(ecs_type_info_t);
@@ -482,8 +483,7 @@ void flecs_notify_tables(
     ecs_id_t id,
     ecs_table_event_t *event)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     /* If no id is specified, broadcast to all tables */
     if (!id) {
@@ -731,8 +731,7 @@ void ecs_atfini(
     ecs_fini_action_t action,
     void *ctx)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -886,8 +885,7 @@ void fini_misc(
 int ecs_fini(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
@@ -940,14 +938,10 @@ int ecs_fini(
     
     fini_misc(world);
 
-    /* In case the application tries to use the memory of the freed world, this
-     * will trigger an assert */
-    world->magic = 0;
-
     flecs_increase_timer_resolution(0);
 
     /* End of the world */
-    ecs_os_free(world);
+    ecs_poly_free(world, ecs_world_t);
 
     ecs_os_fini(); 
 
@@ -958,16 +952,14 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_eis_set_size(world, entity_count + ECS_HI_COMPONENT_ID);
 }
 
 void flecs_eval_component_monitors(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);    
+    ecs_poly_assert(world, ecs_world_t);    
     eval_component_monitor(world);
 }
 
@@ -975,8 +967,7 @@ void ecs_measure_frame_time(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->stats.target_fps == 0.0f || enable) {
@@ -988,8 +979,7 @@ void ecs_measure_system_time(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
     world->measure_system_time = enable;
 }
@@ -1007,8 +997,7 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     FLECS_FLOAT fps)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (!world->arg_fps) {
@@ -1030,8 +1019,7 @@ void ecs_set_context(
     ecs_world_t *world,
     void *context)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     world->context = context;
 }
 
@@ -1040,8 +1028,7 @@ void ecs_set_entity_range(
     ecs_entity_t id_start,
     ecs_entity_t id_end)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!id_end || id_end > world->stats.last_id, ECS_INVALID_PARAMETER, NULL);
 
@@ -1057,8 +1044,7 @@ bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
+    ecs_poly_assert(world, ecs_world_t);    
     bool old_value = world->range_check_enabled;
     world->range_check_enabled = enable;
     return old_value;
@@ -1074,8 +1060,7 @@ bool ecs_enable_locking(
     ecs_world_t *world,
     bool enable)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     if (enable) {
         if (!world->locking_enabled) {
@@ -1099,8 +1084,7 @@ bool ecs_enable_locking(
 void ecs_lock(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
+    ecs_poly_assert(world, ecs_world_t);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_lock(world->mutex);
 }
@@ -1108,8 +1092,7 @@ void ecs_lock(
 void ecs_unlock(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
+    ecs_poly_assert(world, ecs_world_t);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->mutex);
 }
@@ -1117,8 +1100,7 @@ void ecs_unlock(
 void ecs_begin_wait(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_lock(world->thr_sync);
     ecs_os_cond_wait(world->thr_cond, world->thr_sync);
@@ -1127,8 +1109,7 @@ void ecs_begin_wait(
 void ecs_end_wait(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);    
+    ecs_poly_assert(world, ecs_world_t);    
     ecs_assert(world->locking_enabled, ECS_INVALID_PARAMETER, NULL);
     ecs_os_mutex_unlock(world->thr_sync);
 }
@@ -1137,8 +1118,7 @@ const ecs_type_info_t* flecs_get_c_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);   
+    ecs_poly_assert(world, ecs_world_t);   
 
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ROLE_MASK), ECS_INTERNAL_ERROR, NULL);
@@ -1150,8 +1130,7 @@ ecs_type_info_t* flecs_get_or_create_c_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+    ecs_poly_assert(world, ecs_world_t);  
 
     const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
     ecs_type_info_t *c_info_mut = NULL;
@@ -1171,8 +1150,7 @@ FLECS_FLOAT insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+    ecs_poly_assert(world, ecs_world_t);  
 
     ecs_time_t start = *stop;
     FLECS_FLOAT delta_time = (FLECS_FLOAT)ecs_time_measure(stop);
@@ -1213,8 +1191,7 @@ FLECS_FLOAT start_measure_frame(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+    ecs_poly_assert(world, ecs_world_t);  
 
     FLECS_FLOAT delta_time = 0;
 
@@ -1251,8 +1228,7 @@ static
 void stop_measure_frame(
     ecs_world_t* world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);  
+    ecs_poly_assert(world, ecs_world_t);  
 
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
@@ -1264,8 +1240,7 @@ FLECS_FLOAT ecs_frame_begin(
     ecs_world_t *world,
     FLECS_FLOAT user_delta_time)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
@@ -1294,8 +1269,7 @@ FLECS_FLOAT ecs_frame_begin(
 void ecs_frame_end(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->stats.frame_count_total ++;
@@ -1326,8 +1300,7 @@ void flecs_notify_queries(
     ecs_world_t *world,
     ecs_query_event_t *event)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
+    ecs_poly_assert(world, ecs_world_t); 
 
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
@@ -1340,8 +1313,7 @@ void flecs_delete_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_OPERATION, NULL); 
+    ecs_poly_assert(world, ecs_world_t); 
 
     /* Notify queries that table is to be removed */
     flecs_notify_queries(

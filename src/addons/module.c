@@ -202,9 +202,8 @@ ecs_entity_t ecs_module_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     const char *name = desc->entity.name;
 

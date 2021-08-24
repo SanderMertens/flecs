@@ -73,8 +73,8 @@ extern "C" {
  * @{
  */
 
-/** Pointer object returned by API. */
-typedef void ecs_object_t;
+/** An API object of a type that can morphs into other things (see mixins). */
+typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
  * entity or pair, and can have an optional role. */
@@ -100,6 +100,9 @@ typedef struct ecs_trigger_t ecs_trigger_t;
 
 /** An observer reacts to events matching multiple filter terms */
 typedef struct ecs_observer_t ecs_observer_t;
+
+/** An observable contains lists of triggers for specific events/components */
+typedef struct ecs_observable_t ecs_observable_t;
 
 /* An iterator lets an application iterate entities across tables. */
 typedef struct ecs_iter_t ecs_iter_t;
@@ -494,6 +497,9 @@ typedef struct ecs_trigger_desc_t {
 
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
+
+    /* Observable with which to register the trigger */
+    ecs_poly_t *observable;
 } ecs_trigger_desc_t;
 
 
@@ -524,7 +530,10 @@ typedef struct ecs_observer_desc_t {
     ecs_ctx_free_t ctx_free;
 
     /* Callback to free binding_ctx */     
-    ecs_ctx_free_t binding_ctx_free;    
+    ecs_ctx_free_t binding_ctx_free;
+
+    /* Observable with which to register the trigger */
+    ecs_poly_t *observable;  
 } ecs_observer_desc_t;
 
 /** @} */
@@ -2694,7 +2703,7 @@ typedef struct ecs_event_desc_t {
 
     /* Observable for which to notify the triggers/observers. If NULL, the
      * world will be used as observable. */
-    ecs_object_t *observable;
+    ecs_poly_t *observable;
 } ecs_event_desc_t;
 
 /** Send event.

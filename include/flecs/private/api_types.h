@@ -45,9 +45,24 @@ typedef struct ecs_switch_t ecs_switch_t;
 /* Internal structure to lookup tables for a (component) id */
 typedef struct ecs_id_record_t ecs_id_record_t;
 
+/* Mixins */
+typedef struct ecs_mixins_t ecs_mixins_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
+
+/* Object header */
+typedef struct ecs_header_t {
+    int32_t magic; /* Magic number verifying it's a flecs object */
+    int32_t type;  /* Magic number indicating which type of flecs object */
+    ecs_mixins_t *mixins; /* Offset table to optional mixins */
+} ecs_header_t;
+
+/** Mixin for emitting events to triggers/observers */
+struct ecs_observable_t {
+    ecs_sparse_t *triggers;  /* sparse<event, ecs_event_triggers_t> */
+};
 
 struct ecs_record_t {
     ecs_table_t *table;  /* Identifies a type (and table) in world */

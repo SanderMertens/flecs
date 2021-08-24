@@ -2152,6 +2152,8 @@ ecs_query_t* ecs_query_init(
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     ecs_query_t *result = flecs_sparse_add(world->queries, ecs_query_t);
+    ecs_poly_init(result, ecs_query_t);
+
     result->id = flecs_sparse_last_id(world->queries);
 
     if (ecs_filter_init(world, &result->filter, &desc->filter)) {
@@ -2249,9 +2251,9 @@ ecs_query_t* ecs_query_init(
 void ecs_query_fini(
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     ecs_world_t *world = query->world;
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (query->group_by_ctx_free) {
         if (query->group_by_ctx) {
@@ -2301,6 +2303,8 @@ void ecs_query_fini(
     ecs_vector_free(query->empty_tables);
     ecs_vector_free(query->table_slices);
     ecs_filter_fini(&query->filter);
+
+    ecs_poly_fini(query, ecs_query_t);
     
     /* Remove query from storage */
     flecs_sparse_remove(world->queries, query->id);
@@ -2309,6 +2313,7 @@ void ecs_query_fini(
 const ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return &query->filter;
 }
 
@@ -2319,7 +2324,7 @@ ecs_iter_t ecs_query_iter_page(
     int32_t offset,
     int32_t limit)
 {
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
@@ -2368,6 +2373,7 @@ ecs_iter_t ecs_query_iter(
     ecs_world_t *world,
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return ecs_query_iter_page(world, query, 0, 0);
 }
 
@@ -2439,6 +2445,7 @@ void flecs_query_set_iter(
     int32_t count)
 {
     (void)world;
+    ecs_poly_assert(query, ecs_query_t);
     
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
@@ -2863,7 +2870,7 @@ bool ecs_query_next(
 
     it->is_valid = true;
 
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     if (!query->constraints_satisfied) {
         goto done;
@@ -3026,7 +3033,7 @@ bool ecs_query_next_worker(
 bool ecs_query_changed(
     ecs_query_t *query)
 {
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     return tables_dirty(query);
 }
@@ -3034,6 +3041,7 @@ bool ecs_query_changed(
 bool ecs_query_orphaned(
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return query->flags & EcsQueryIsOrphaned;
 }
 

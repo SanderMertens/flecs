@@ -34,16 +34,46 @@
 #include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
-
-/** These values are used to verify validity of the pointers passed into the API
- * and to allow for passing a thread as a world to some API calls (this allows
- * for transparently passing thread context to API functions) */
-#define ECS_WORLD_MAGIC (0x65637377)
-#define ECS_STAGE_MAGIC (0x65637374)
-
-/* Maximum number of entities that can be added in a single operation. 
- * Increasing this value will increase consumption of stack space. */
 #define ECS_MAX_ADD_REMOVE (32)
+
+/* Magic number for a flecs object */
+#define ECS_OBJECT_MAGIC (0x6563736f)
+
+/* Magic number to identify the type of the object */
+#define ECS_ecs_world_t_MAGIC     (0x65637377)
+#define ECS_ecs_stage_t_MAGIC     (0x65637373)
+#define ECS_ecs_query_t_MAGIC     (0x65637371)
+#define ECS_ecs_table_t_MAGIC     (0x65637374)
+#define ECS_ecs_filter_t_MAGIC    (0x65637366)
+#define ECS_ecs_trigger_t_MAGIC   (0x65637372)
+#define ECS_ecs_observer_t_MAGIC  (0x65637362)
+
+/* Mixin kinds */
+typedef enum ecs_mixin_kind_t {
+    EcsMixinWorld,
+    EcsMixinObservable,
+    EcsMixinBase,        /* If mixin can't be found in object, look in base */
+    EcsMixinMax
+} ecs_mixin_kind_t;
+
+/* The mixin array contains pointers to mixin members for different kinds of
+ * flecs objects. This allows the API to retrieve data from an object regardless
+ * of its type. Each mixin array is only stored once per type */
+struct ecs_mixins_t {
+    const char *type_name; /* Include name of mixin type so debug code doesn't
+                            * need to know about every object */
+    ecs_size_t elems[EcsMixinMax];                        
+};
+
+/* Mixin tables */
+extern ecs_mixins_t ecs_world_t_mixins;
+extern ecs_mixins_t ecs_stage_t_mixins;
+extern ecs_mixins_t ecs_filter_t_mixins;
+extern ecs_mixins_t ecs_query_t_mixins;
+
+/* Types that have no mixins */
+#define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
+
 
 /** Type used for internal string hashmap */
 typedef struct ecs_string_t {
@@ -304,6 +334,8 @@ typedef struct ecs_query_event_t {
 
 /** Query that is automatically matched against active tables */
 struct ecs_query_t {
+    ecs_header_t hdr;
+
     /* Signature of query */
     ecs_filter_t filter;
 
@@ -413,7 +445,8 @@ typedef struct ecs_op_t {
  * iterating. Additionally, worker threads have their own stage that lets them
  * mutate the state of entities without requiring locks. */
 struct ecs_stage_t {
-    int32_t magic;               /* Magic number to verify thread pointer */
+    ecs_header_t hdr;
+
     int32_t id;                  /* Unique id that identifies the stage */
 
     /* Are operations deferred? */
@@ -523,12 +556,15 @@ typedef struct ecs_alias_t {
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
-    int32_t magic;               /* Magic number to verify world pointer */
+    ecs_header_t hdr;
 
     /* --  Type metadata -- */
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
     ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
+
+    /* -- Mixins -- */
+    ecs_observable_t observable;
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
