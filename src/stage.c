@@ -46,7 +46,7 @@ void merge_stages(
     ecs_world_t *world,
     bool force_merge)
 {
-    bool is_stage = world->magic == ECS_STAGE_MAGIC;
+    bool is_stage = ecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     bool measure_frame_time = world->measure_frame_time;
@@ -69,7 +69,7 @@ void merge_stages(
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
-            ecs_assert(s->magic == ECS_STAGE_MAGIC, ECS_INTERNAL_ERROR, NULL);
+            ecs_poly_assert(s, ecs_stage_t);
             if (force_merge || s->auto_merge) {
                 ecs_defer_end((ecs_world_t*)s);
             }
@@ -357,12 +357,10 @@ void flecs_stage_init(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
-    memset(stage, 0, sizeof(ecs_stage_t));
+    ecs_poly_init(stage, ecs_stage_t);
 
-    stage->magic = ECS_STAGE_MAGIC;
     stage->world = world;
     stage->thread_ctx = world;
     stage->auto_merge = true;
@@ -374,16 +372,14 @@ void flecs_stage_deinit(
     ecs_stage_t *stage)
 {
     (void)world;
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(stage->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_poly_assert(stage, ecs_stage_t);
 
     /* Make sure stage has no unmerged data */
     ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
         ECS_INVALID_PARAMETER, NULL);
 
-    /* Set magic to 0 so that accessing the stage after deinitializing it will
-     * throw an assert. */
-    stage->magic = 0;
+    ecs_poly_fini(stage, ecs_stage_t);
 
     ecs_vector_free(stage->defer_queue);
 }
@@ -392,8 +388,7 @@ void ecs_set_stages(
     ecs_world_t *world,
     int32_t stage_count)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     ecs_stage_t *stages;
     int32_t i, count = ecs_vector_count(world->worker_stages);
@@ -405,8 +400,7 @@ void ecs_set_stages(
             /* If stage contains a thread handle, ecs_set_threads was used to
              * create the stages. ecs_set_threads and ecs_set_stages should not
              * be mixed. */
-            ecs_assert(stages[i].magic == ECS_STAGE_MAGIC, 
-                ECS_INTERNAL_ERROR, NULL);
+            ecs_poly_assert(&stages[i], ecs_stage_t);
             ecs_assert(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
             flecs_stage_deinit(world, &stages[i]);
         }
@@ -453,12 +447,12 @@ int32_t ecs_get_stage_id(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (world->magic == ECS_STAGE_MAGIC) {
+    if (ecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = (ecs_stage_t*)world;
 
         /* Index 0 is reserved for main stage */
         return stage->id - 1;
-    } else if (world->magic == ECS_WORLD_MAGIC) {
+    } else if (ecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
@@ -469,8 +463,7 @@ ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(ecs_vector_count(world->worker_stages) > stage_id, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -481,8 +474,7 @@ ecs_world_t* ecs_get_stage(
 bool ecs_staging_begin(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
@@ -501,8 +493,7 @@ bool ecs_staging_begin(
 void ecs_staging_end(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
 
     /* After this it is safe again to mutate the world directly */
@@ -515,8 +506,8 @@ void ecs_merge(
     ecs_world_t *world)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC || 
-               world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_poly_is(world, ecs_world_t) || 
+               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
     do_manual_merge(world);
 }
 
@@ -527,7 +518,7 @@ void ecs_set_automerge(
     /* If a world is provided, set auto_merge globally for the world. This
      * doesn't actually do anything (the main stage never merges) but it serves
      * as the default for when stages are created. */
-    if (world->magic == ECS_WORLD_MAGIC) {
+    if (ecs_poly_is(world, ecs_world_t)) {
         world->stage.auto_merge = auto_merge;
 
         /* Propagate change to all stages */
@@ -541,10 +532,7 @@ void ecs_set_automerge(
      * stage. This allows an application to control per-stage which stage should
      * be automatically merged and which one shouldn't */
     } else {
-        /* Magic needs to be either a world or a stage */
-        ecs_assert(world->magic == ECS_STAGE_MAGIC, 
-            ECS_INVALID_FROM_WORKER, NULL);
-
+        ecs_poly_assert(world, ecs_stage_t);
         ecs_stage_t *stage = (ecs_stage_t*)world;
         stage->auto_merge = auto_merge;
     }
@@ -555,18 +543,18 @@ bool ecs_stage_is_readonly(
 {
     const ecs_world_t *world = ecs_get_world(stage);
 
-    if (stage->magic == ECS_STAGE_MAGIC) {
+    if (ecs_poly_is(stage, ecs_stage_t)) {
         if (((ecs_stage_t*)stage)->asynchronous) {
             return false;
         }
     }
 
     if (world->is_readonly) {
-        if (stage->magic == ECS_WORLD_MAGIC) {
+        if (ecs_poly_is(stage, ecs_world_t)) {
             return true;
         }
     } else {
-        if (stage->magic == ECS_STAGE_MAGIC) {
+        if (ecs_poly_is(stage, ecs_stage_t)) {
             return true;
         }
     }
@@ -592,7 +580,7 @@ ecs_world_t* ecs_async_stage_new(
 void ecs_async_stage_free(
     ecs_world_t *world)
 {
-    ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_stage_t);
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_assert(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_deinit(stage->world, stage);
@@ -606,7 +594,7 @@ bool ecs_stage_is_async(
         return false;
     }
     
-    if (stage->magic != ECS_STAGE_MAGIC) {
+    if (!ecs_poly_is(stage, ecs_stage_t)) {
         return false;
     }
 

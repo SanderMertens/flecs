@@ -351,8 +351,7 @@ int32_t ecs_pipeline_update(
     ecs_entity_t pipeline,
     bool start_of_frame)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(pipeline != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -387,7 +386,7 @@ void ecs_pipeline_run(
 
     /* If the world is passed to ecs_pipeline_run, the function will take care
      * of staging, so the world should not be in staged mode when called. */
-    if (world->magic == ECS_WORLD_MAGIC) {
+    if (ecs_poly_is(world, ecs_world_t)) {
         ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
 
         /* Forward to worker_progress. This function handles staging, threading
@@ -399,7 +398,7 @@ void ecs_pipeline_run(
      * that case the main thread should manage staging, and staging should be
      * enabled. */
     } else {
-        ecs_assert(world->magic == ECS_STAGE_MAGIC, ECS_INVALID_PARAMETER, NULL);
+        ecs_poly_assert(world, ecs_stage_t);
     }
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
@@ -675,8 +674,7 @@ void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
         ECS_INVALID_PARAMETER, NULL);
 

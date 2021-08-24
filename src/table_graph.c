@@ -896,8 +896,7 @@ ecs_table_t* flecs_table_traverse_remove(
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     node = node ? node : &world->store.root;
 
@@ -926,8 +925,7 @@ ecs_table_t* flecs_table_traverse_add(
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     node = node ? node : &world->store.root;
 
@@ -997,8 +995,7 @@ ecs_table_t* find_or_create(
     ecs_world_t *world,
     const ecs_ids_t *ids)
 {    
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+    ecs_poly_assert(world, ecs_world_t);   
 
     /* Make sure array is ordered and does not contain duplicates */
     int32_t type_count = ids->count;
@@ -1048,16 +1045,14 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     const ecs_ids_t *components)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+    ecs_poly_assert(world, ecs_world_t);   
     return find_or_create(world, components);
 }
 
 void flecs_init_root_table(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);   
+    ecs_poly_assert(world, ecs_world_t);   
 
     ecs_ids_t entities = {
         .array = NULL,
@@ -1072,8 +1067,7 @@ void flecs_table_clear_edges(
     ecs_table_t *table)
 {
     (void)world;
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(world->magic == ECS_WORLD_MAGIC, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
 
     int32_t i;
     ecs_graph_node_t *node = &table->node;

@@ -2127,7 +2127,7 @@ extern "C" {
  */
 
 /** Pointer object returned by API. */
-typedef void ecs_object_t;
+typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
  * entity or pair, and can have an optional role. */
@@ -2153,6 +2153,9 @@ typedef struct ecs_trigger_t ecs_trigger_t;
 
 /** An observer reacts to events matching multiple filter terms */
 typedef struct ecs_observer_t ecs_observer_t;
+
+/** An observable contains lists of triggers for specific events/components */
+typedef struct ecs_observable_t ecs_observable_t;
 
 /* An iterator lets an application iterate entities across tables. */
 typedef struct ecs_iter_t ecs_iter_t;
@@ -2433,9 +2436,24 @@ typedef struct ecs_switch_t ecs_switch_t;
 /* Internal structure to lookup tables for a (component) id */
 typedef struct ecs_id_record_t ecs_id_record_t;
 
+/* Mixins */
+typedef struct ecs_mixins_t ecs_mixins_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
+
+/* Object header */
+typedef struct ecs_header_t {
+    int32_t magic; /* Magic number verifying it's a flecs object */
+    int32_t type;  /* Magic number indicating which type of flecs object */
+    ecs_mixins_t *mixins; /* Offset table to optional mixins */
+} ecs_header_t;
+
+/** Mixin for emitting events to triggers/observers */
+struct ecs_observable_t {
+    ecs_sparse_t *triggers;  /* sparse<event, ecs_event_triggers_t> */
+};
 
 struct ecs_record_t {
     ecs_table_t *table;  /* Identifies a type (and table) in world */
@@ -5199,7 +5217,7 @@ typedef struct ecs_event_desc_t {
 
     /* Observable for which to notify the triggers/observers. If NULL, the
      * world will be used as observable. */
-    ecs_object_t *observable;
+    ecs_poly_t *observable;
 } ecs_event_desc_t;
 
 /** Send event.
