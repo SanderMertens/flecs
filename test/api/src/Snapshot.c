@@ -820,3 +820,41 @@ void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
     ecs_fini(world);
 }
 
+
+void Snapshot_snapshot_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_snapshot_t *s = ecs_snapshot_take(stage);
+
+    ecs_delete(stage, e1);
+    ecs_delete(stage, e2);
+
+    ecs_staging_end(world);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+
+    ecs_snapshot_restore(world, s);
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+
+    p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+
+    ecs_fini(world);
+}

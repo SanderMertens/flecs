@@ -15,7 +15,7 @@ struct ecs_snapshot_t {
 
 static
 ecs_data_t* duplicate_data(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *main_data)
 {
@@ -55,13 +55,13 @@ ecs_data_t* duplicate_data(
             
             ecs_xtor_t ctor = cdata->lifecycle.ctor;
             if (ctor) {
-                ctor(world, component, entities, dst_ptr, flecs_to_size_t(size), 
-                    count, ctx);
+                ctor((ecs_world_t*)world, component, entities, dst_ptr, 
+                    flecs_to_size_t(size), count, ctx);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
-            copy(world, component, entities, entities, dst_ptr, src_ptr, 
-                flecs_to_size_t(size), count, ctx);
+            copy((ecs_world_t*)world, component, entities, entities, dst_ptr, 
+                src_ptr, flecs_to_size_t(size), count, ctx);
 
             column->data = dst_vec;
         } else {
@@ -74,7 +74,7 @@ ecs_data_t* duplicate_data(
 
 static
 ecs_snapshot_t* snapshot_create(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_sparse_t *entity_index,
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
@@ -82,7 +82,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_snapshot_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_snapshot_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    result->world = world;
+    result->world = (ecs_world_t*)world;
 
     /* If no iterator is provided, the snapshot will be taken of the entire
      * world, and we can simply copy the entity index as it will be restored
@@ -130,8 +130,10 @@ ecs_snapshot_t* snapshot_create(
 
 /** Create a snapshot */
 ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world)
+    ecs_world_t *stage)
 {
+    const ecs_world_t *world = ecs_get_world(stage);
+
     ecs_snapshot_t *result = snapshot_create(
         world,
         world->store.entity_index,

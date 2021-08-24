@@ -1938,6 +1938,7 @@ void Snapshot_set_after_snapshot(void);
 void Snapshot_restore_recycled(void);
 void Snapshot_snapshot_w_new_in_onset(void);
 void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
+void Snapshot_snapshot_from_stage(void);
 
 // Testsuite 'Modules'
 void Modules_setup(void);
@@ -9350,6 +9351,10 @@ bake_test_case Snapshot_testcases[] = {
     {
         "snapshot_w_new_in_onset_in_snapshot_table",
         Snapshot_snapshot_w_new_in_onset_in_snapshot_table
+    },
+    {
+        "snapshot_from_stage",
+        Snapshot_snapshot_from_stage
     }
 };
 
@@ -10035,7 +10040,7 @@ static bake_test_suite suites[] = {
         "Snapshot",
         NULL,
         NULL,
-        25,
+        26,
         Snapshot_testcases
     },
     {

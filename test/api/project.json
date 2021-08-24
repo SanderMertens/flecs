@@ -2062,7 +2062,8 @@
                 "set_after_snapshot",
                 "restore_recycled",
                 "snapshot_w_new_in_onset",
-                "snapshot_w_new_in_onset_in_snapshot_table"
+                "snapshot_w_new_in_onset_in_snapshot_table",
+                "snapshot_from_stage"
             ]
         }, {
             "id": "Modules",
