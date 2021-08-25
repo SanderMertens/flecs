@@ -893,6 +893,8 @@ bool populate_from_column(
 {
     bool has_data = false;
 
+    ecs_size_t size;
+
     if (column != -1) {
         /* If source is not This, find table of source */
         if (source) {
@@ -909,12 +911,12 @@ bool populate_from_column(
             ecs_column_t *c = &data->columns[column];
             if (c->size) {
                 has_data = true;
-                *size_out = c->size;
+                size = c->size;
             }
         }
 
         if (!has_data) {
-            *size_out = 0;
+            size = 0;
         }
 
         id = ids[column];
@@ -938,7 +940,13 @@ bool populate_from_column(
         }
     }
 
-    *id_out = id;
+    if (id_out) {
+        *id_out = id;
+    }
+
+    if (size_out) {
+        *size_out = size;
+    }
 
     return has_data;
 }
@@ -1084,7 +1092,11 @@ bool flecs_filter_match_table(
         }
 
         bool result = flecs_term_match_table(world, term, match_table, 
-            match_type, &ids[t_i], &columns[t_i], &subjects[t_i], &sizes[t_i], 
+            match_type, 
+            ids ? &ids[t_i] : NULL, 
+            columns ? &columns[t_i] : NULL, 
+            subjects ? &subjects[t_i] : NULL, 
+            sizes ? &sizes[t_i] : NULL,
             ptrs ? &ptrs[t_i] : NULL);
 
         if (is_or) {

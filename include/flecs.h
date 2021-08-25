@@ -336,6 +336,10 @@ struct ecs_observer_t {
 
     uint64_t id;                /* Internal id */  
     int32_t last_event_id;      /* Last handled event id */  
+
+    bool is_monitor;            /* If true, the observer only triggers when the
+                                 * filter did not match with the entity before
+                                 * the event happened. */
 };
 
 /** @} */

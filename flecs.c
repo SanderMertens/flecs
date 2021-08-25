@@ -19372,6 +19372,8 @@ bool populate_from_column(
 {
     bool has_data = false;
 
+    ecs_size_t size;
+
     if (column != -1) {
         /* If source is not This, find table of source */
         if (source) {
@@ -19388,12 +19390,12 @@ bool populate_from_column(
             ecs_column_t *c = &data->columns[column];
             if (c->size) {
                 has_data = true;
-                *size_out = c->size;
+                size = c->size;
             }
         }
 
         if (!has_data) {
-            *size_out = 0;
+            size = 0;
         }
 
         id = ids[column];
@@ -19417,7 +19419,13 @@ bool populate_from_column(
         }
     }
 
-    *id_out = id;
+    if (id_out) {
+        *id_out = id;
+    }
+
+    if (size_out) {
+        *size_out = size;
+    }
 
     return has_data;
 }
@@ -19563,7 +19571,11 @@ bool flecs_filter_match_table(
         }
 
         bool result = flecs_term_match_table(world, term, match_table, 
-            match_type, &ids[t_i], &columns[t_i], &subjects[t_i], &sizes[t_i], 
+            match_type, 
+            ids ? &ids[t_i] : NULL, 
+            columns ? &columns[t_i] : NULL, 
+            subjects ? &subjects[t_i] : NULL, 
+            sizes ? &sizes[t_i] : NULL,
             ptrs ? &ptrs[t_i] : NULL);
 
         if (is_or) {
@@ -19930,19 +19942,58 @@ void observer_callback(ecs_iter_t *it) {
     flecs_iter_init(&user_it);
 
     ecs_table_t *table = it->table;
+    ecs_table_t *prev_table = it->other_table;
     ecs_term_t *term = &o->filter.terms[it->term_index];
-    if (term->oper == EcsNot && it->event == EcsOnRemove) {
+
+    if (term->oper == EcsNot) {
         table = it->other_table;
+        prev_table = it->table;
     }
 
     if (!table) {
         table = &world->store.root;
     }
+    if (!prev_table) {
+        prev_table = &world->store.root;
+    }
 
     ecs_type_t type = table->type;
+    ecs_type_t prev_type = prev_table->type;
+
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
         user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
     {
+        bool match = true;
+
+        if (o->is_monitor) {
+            if (table == prev_table) {
+                goto done;
+            }
+
+            /* If this is a monitor, only trigger if the previous table did not
+             * match the observer */
+            if (flecs_filter_match_table(world, &o->filter, prev_table, 
+                prev_type, NULL, NULL, NULL, NULL, NULL))
+            {
+                match = false;
+            }
+
+            if (!match) {
+                goto done;
+            }
+
+            if (term->oper == EcsNot) {
+                /* Flip event if this is a Not, so OnAdd and OnRemove can be
+                 * reliably used to check if we're entering or leaving the
+                 * monitor */
+                if (it->event == EcsOnAdd) {
+                    user_it.event = EcsOnRemove;
+                } else if (it->event == EcsOnRemove) {
+                    user_it.event = EcsOnAdd;
+                }
+            }
+        }
+
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
@@ -19954,6 +20005,7 @@ void observer_callback(ecs_iter_t *it) {
         o->last_event_id = world->event_id;
     }
 
+done:
     flecs_iter_fini(&user_it);
 }
 
@@ -19991,11 +20043,35 @@ ecs_entity_t ecs_observer_init(
 
         ecs_filter_t *filter = &observer->filter;
 
+        int i;
+        for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
+            ecs_entity_t event = desc->events[i];
+            if (!event) {
+                break;
+            }
+
+            if (event == EcsMonitor) {
+                /* Monitor event must be first and last event */
+                ecs_assert(i == 0, ECS_INVALID_PARAMETER, NULL);
+
+                observer->events[0] = EcsOnAdd;
+                observer->events[1] = EcsOnRemove;
+                observer->event_count ++;
+                observer->is_monitor = true;
+            } else {
+                observer->events[i] = event;
+            }
+
+            observer->event_count ++;
+        }
+
+        /* Observer must have at least one event */
+        ecs_assert(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+
         /* Create a trigger for each term in the filter */
         observer->triggers = ecs_os_malloc_n(ecs_entity_t, 
             observer->filter.term_count);
 
-        int i;
         for (i = 0; i < filter->term_count; i ++) {
             const ecs_term_t *terms = filter->terms;
             const ecs_term_t *t = &terms[i];
@@ -20012,8 +20088,8 @@ ecs_entity_t ecs_observer_init(
                 .binding_ctx = desc->binding_ctx
             };
 
-            ecs_os_memcpy(trigger_desc.events, desc->events, 
-                ECS_SIZEOF(ecs_entity_t) * ECS_TRIGGER_DESC_EVENT_COUNT_MAX);
+            ecs_os_memcpy(trigger_desc.events, observer->events, 
+                ECS_SIZEOF(ecs_entity_t) * observer->event_count);
 
             observer->triggers[i] = ecs_trigger_init(world, &trigger_desc);
         }
@@ -20024,10 +20100,7 @@ ecs_entity_t ecs_observer_init(
         observer->binding_ctx = desc->binding_ctx;
         observer->ctx_free = desc->ctx_free;
         observer->binding_ctx_free = desc->binding_ctx_free;
-        observer->event_count = 0;
-        ecs_os_memcpy(observer->events, desc->events, 
-            observer->event_count * ECS_SIZEOF(ecs_entity_t));
-        observer->entity = entity;        
+        observer->entity = entity;
 
         comp->observer = observer;
     } else {

@@ -2126,7 +2126,7 @@ extern "C" {
  * @{
  */
 
-/** An API object of a type that can morphs into other things (see mixins). */
+/** An object with a mixin table. */
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
@@ -2389,6 +2389,10 @@ struct ecs_observer_t {
 
     uint64_t id;                /* Internal id */  
     int32_t last_event_id;      /* Last handled event id */  
+
+    bool is_monitor;            /* If true, the observer only triggers when the
+                                 * filter did not match with the entity before
+                                 * the event happened. */
 };
 
 /** @} */

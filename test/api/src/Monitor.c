@@ -259,3 +259,309 @@ void Monitor_1_comp_prefab_add() {
 
     ecs_fini(world);
 }
+
+void Monitor_monitor_w_and() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0); // Second unmatch, no trigger
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_or() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity || Mass);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0); // No match, filter doesn't match yet
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First match, triggers OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Mass);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1); // First non-match, triggers OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Position); // First match, trigger
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_not() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Mass, !Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Mass); 
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_optional() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, ?Velocity);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Position);
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(superset));
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t base_1 = ecs_new(world, Velocity);
+    test_assert(base_1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base_2 = ecs_new(world, Velocity);
+    test_assert(base_2 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, EcsIsA, base_1);
+    test_int(ctx.invoked, 1); // First match, trigger
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add_pair(world, e, EcsIsA, base_2);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_remove_pair(world, e, EcsIsA, base_2);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, EcsIsA, base_1);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0); // Second unmatch, no trigger
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|superset));
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t base_1 = ecs_new(world, Velocity);
+    test_assert(base_1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base_2 = ecs_new(world, Velocity);
+    test_assert(base_2 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, EcsIsA, base_1);
+    test_int(ctx.invoked, 1); // First match, trigger
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add_pair(world, e, EcsIsA, base_2);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0); // Third match, no trigger
+
+    ecs_remove_pair(world, e, EcsIsA, base_2);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, EcsIsA, base_1);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 1); // First match, trigger
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Monitor_monitor_w_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Eats);
+    ECS_TAG(world, Apples);
+    ECS_TAG(world, Pears);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, (Eats, *));
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, Eats, Apples);
+
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_add_pair(world, e, Eats, Pears);
+    test_int(ctx.invoked, 0); // Second match, no trigger
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, Position);
+    test_int(ctx.invoked, 1); // First match, trigger OnAdd
+    test_int(ctx.event, EcsOnAdd);
+
+    ctx = (Probe){0};
+
+    ecs_remove_pair(world, e, Eats, Apples);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Eats, Pears);
+    test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
