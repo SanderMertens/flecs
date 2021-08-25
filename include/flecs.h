@@ -73,7 +73,7 @@ extern "C" {
  * @{
  */
 
-/** An API object of a type that can morphs into other things (see mixins). */
+/** An object with a mixin table. */
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an

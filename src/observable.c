@@ -21,6 +21,7 @@ void flecs_observable_fini(
         ecs_id_triggers_t *idt;
         while ((idt = ecs_map_next(&it, ecs_id_triggers_t, NULL))) {
             ecs_map_free(idt->triggers);
+            ecs_map_free(idt->set_triggers);
         }
         ecs_map_free(et->triggers);
     }

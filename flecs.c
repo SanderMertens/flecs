@@ -4872,7 +4872,8 @@ void _ecs_poly_fini(
 }
 
 #define assert_object(cond, file, line)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL); abort()
+    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
+    assert(cond)
 
 #ifndef NDEBUG
 void _ecs_poly_assert(
@@ -18416,6 +18417,7 @@ void flecs_observable_fini(
         ecs_id_triggers_t *idt;
         while ((idt = ecs_map_next(&it, ecs_id_triggers_t, NULL))) {
             ecs_map_free(idt->triggers);
+            ecs_map_free(idt->set_triggers);
         }
         ecs_map_free(et->triggers);
     }
@@ -18619,20 +18621,40 @@ ecs_entity_t entity_from_identifier(
 
 static
 int finalize_term_id(
-    ecs_term_t *term)
+    const ecs_world_t *world,
+    ecs_term_t *term,
+    const char *name)
 {
     ecs_entity_t pred = entity_from_identifier(&term->pred);
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
     ecs_id_t role = term->role;
 
-    if (obj && !role) {
-        term->role = ECS_PAIR;
+    if (ECS_HAS_ROLE(pred, PAIR)) {
+        if (obj) {
+            term_error(world, term, name, 
+                "cannot set term.pred to a pair and term.obj at the same time");
+            return -1;
+        }
+
+        obj = ECS_PAIR_OBJECT(pred);
+        pred = ECS_PAIR_RELATION(pred);
+
+        term->pred.entity = pred;
+        term->args[1].entity = obj;
+
+        finalize_term_identifier(world, term, &term->args[1], name);
     }
 
     if (!obj) {
         term->id = pred | role;
     } else {
+        if (role && role != ECS_PAIR) {
+            term_error(world, term, name, "invalid role for pair");
+            return -1;
+        }
+
         term->id = ecs_pair(pred, obj);
+        term->role = ECS_PAIR;
     }
 
     return 0;
@@ -18909,7 +18931,7 @@ int ecs_term_finalize(
     }
 
     if (!term->id) {
-        if (finalize_term_id(term)) {
+        if (finalize_term_id(world, term, name)) {
             return -1;
         }
     } else {

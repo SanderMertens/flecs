@@ -123,7 +123,8 @@ void _ecs_poly_fini(
 }
 
 #define assert_object(cond, file, line)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL); abort()
+    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
+    assert(cond)
 
 #ifndef NDEBUG
 void _ecs_poly_assert(
