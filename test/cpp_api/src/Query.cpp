@@ -839,7 +839,7 @@ void Query_pair_to_str() {
         .term<Velocity>()
         .term<Eats, Apples>()
         .build();
-    test_str(q.str(), "Position, Velocity, (Eats, Apples)");
+    test_str(q.str(), "Position, Velocity, (Eats,Apples)");
 }
 
 void Query_oper_not_to_str() {
