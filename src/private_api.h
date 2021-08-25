@@ -161,7 +161,7 @@ void flecs_triggers_notify(
     int32_t count,
     void *param);
 
-ecs_map_t* flecs_triggers_get(
+ecs_id_triggers_t* flecs_triggers_for_id(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
