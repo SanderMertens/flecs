@@ -4796,7 +4796,6 @@ FLECS_API
 int ecs_term_finalize(
     const ecs_world_t *world,
     const char *name,
-    const char *expr,
     ecs_term_t *term);
 
 /** Copy resources of a term to another term.
@@ -13328,7 +13327,7 @@ public:
     }
 
     int finalize() {
-        return ecs_term_finalize(m_world, nullptr, nullptr, &value);
+        return ecs_term_finalize(m_world, nullptr, &value);
     }
 
     bool is_set() {

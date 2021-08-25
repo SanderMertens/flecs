@@ -112,7 +112,7 @@ void _ecs_poly_init(
     ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_header_t *hdr = object;
-    memset(object, 0, size);
+    ecs_os_memset(object, 0, size);
 
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;

@@ -2267,7 +2267,6 @@ FLECS_API
 int ecs_term_finalize(
     const ecs_world_t *world,
     const char *name,
-    const char *expr,
     ecs_term_t *term);
 
 /** Copy resources of a term to another term.

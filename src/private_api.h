@@ -299,14 +299,12 @@ void flecs_run_add_actions(
     int32_t row,
     int32_t count,
     ecs_table_diff_t *diff,
-    bool get_all,
     bool run_on_set);   
 
 void flecs_run_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
-    ecs_data_t *data,
     int32_t row,
     int32_t count,
     ecs_table_diff_t *diff);

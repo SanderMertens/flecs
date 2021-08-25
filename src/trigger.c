@@ -36,7 +36,9 @@ static
 void register_trigger(
     ecs_world_t *world,
     ecs_observable_t *observable,
-    ecs_trigger_t *trigger)
+    ecs_trigger_t *trigger,
+    ecs_id_t id,
+    bool register_for_set)
 {
     ecs_sparse_t *triggers = observable->triggers;
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -59,16 +61,25 @@ void register_trigger(
             evt->triggers, ecs_id_triggers_t, trigger->term.id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!idt->triggers) {
-            idt->triggers = ecs_map_new(ecs_trigger_t*, 1);
+        ecs_map_t *id_triggers = NULL;
+
+        if (!register_for_set) {
+            if (!(id_triggers = idt->triggers)) {
+                id_triggers = idt->triggers = ecs_map_new(ecs_trigger_t*, 1);
+            }
+        } else {
+            if (!(id_triggers = idt->set_triggers)) {
+                id_triggers = idt->set_triggers = 
+                    ecs_map_new(ecs_trigger_t*, 1);
+            }
         }
 
         ecs_trigger_t **elem = ecs_map_ensure(
-            idt->triggers, ecs_trigger_t*, trigger->id);
+            id_triggers, ecs_trigger_t*, trigger->id);
         *elem = trigger;
 
         // First trigger of its kind, send table notification
-        flecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
+        flecs_notify_tables(world, id, &(ecs_table_event_t){
             .kind = EcsTableTriggerMatch,
             .event = trigger->events[i]
         });
@@ -77,7 +88,6 @@ void register_trigger(
 
 static
 void unregister_trigger(
-    ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_trigger_t *trigger)
 {
@@ -89,7 +99,7 @@ void unregister_trigger(
         ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
 
         /* Get triggers for event */
-        ecs_event_triggers_t *evt = ecs_sparse_get(
+        ecs_event_triggers_t *evt = flecs_sparse_get(
             triggers, ecs_event_triggers_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -126,7 +136,7 @@ ecs_map_t* get_triggers_for_event(
     ecs_sparse_t *triggers = observable->triggers;
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_event_triggers_t *evt = ecs_sparse_get(
+    const ecs_event_triggers_t *evt = flecs_sparse_get(
         triggers, ecs_event_triggers_t, event);
     
     if (evt) {
@@ -406,15 +416,15 @@ ecs_entity_t ecs_trigger_init(
             term = ecs_term_copy(&desc->term);
         }
 
-        if (ecs_term_finalize(world, name, expr, &term)) {
+        if (ecs_term_finalize(world, name, &term)) {
             goto error;
         }
 
         /* Currently triggers are not supported for specific entities */
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
-        ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->id = ecs_sparse_last_id(world->triggers);
+        ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = flecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -433,7 +443,7 @@ ecs_entity_t ecs_trigger_init(
         /* Trigger must have at least one event */
         ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        register_trigger(world, observable, trigger);
+        register_trigger(world, observable, trigger, trigger->term.id, false);
 
         ecs_term_fini(&term);
     } else {
@@ -488,7 +498,7 @@ void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
-    unregister_trigger(world, trigger->observable, trigger);
+    unregister_trigger(trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
     if (trigger->ctx_free) {

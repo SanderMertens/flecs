@@ -24,8 +24,7 @@ int finalize_term_identifier(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_id_t *identifier,
-    const char *name,
-    const char *expr)
+    const char *name)
 {
     /* Default set is Self */
     if (identifier->set.mask == EcsDefaultSet) {
@@ -91,16 +90,15 @@ static
 int finalize_term_identifiers(
     const ecs_world_t *world,
     ecs_term_t *term,
-    const char *name,
-    const char *expr)
+    const char *name)
 {
-    if (finalize_term_identifier(world, term, &term->pred, name, expr)) {
+    if (finalize_term_identifier(world, term, &term->pred, name)) {
         return -1;
     }
-    if (finalize_term_identifier(world, term, &term->args[0], name, expr)) {
+    if (finalize_term_identifier(world, term, &term->args[0], name)) {
         return -1;
     }
-    if (finalize_term_identifier(world, term, &term->args[1], name, expr)) {
+    if (finalize_term_identifier(world, term, &term->args[1], name)) {
         return -1;
     }
 
@@ -137,15 +135,14 @@ ecs_entity_t entity_from_identifier(
     } else if (identifier->var == EcsVarIsVariable) {
         return EcsWildcard;
     } else {
-        return -1;
+        /* This should've been caught earlier */
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 }
 
 static
 int finalize_term_id(
-    ecs_term_t *term,
-    const char *name,
-    const char *expr)
+    ecs_term_t *term)
 {
     ecs_entity_t pred = entity_from_identifier(&term->pred);
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
@@ -168,8 +165,7 @@ static
 int populate_from_term_id(
     const ecs_world_t *world,
     ecs_term_t *term,
-    const char *name,
-    const char *expr)
+    const char *name)
 {
     ecs_entity_t pred = 0;
     ecs_entity_t obj = 0;
@@ -218,7 +214,7 @@ int populate_from_term_id(
         }
     } else {
         term->pred.entity = pred;
-        if (finalize_term_identifier(world, term, &term->pred, name, expr)) {
+        if (finalize_term_identifier(world, term, &term->pred, name)) {
             return -1;
         }
     }
@@ -232,7 +228,7 @@ int populate_from_term_id(
         }
     } else {
         term->args[1].entity = obj;
-        if (finalize_term_identifier(world, term, &term->args[1], name, expr)) {
+        if (finalize_term_identifier(world, term, &term->args[1], name)) {
             return -1;
         }
     }
@@ -244,8 +240,7 @@ static
 int verify_term_consistency(
     const ecs_world_t *world,
     const ecs_term_t *term,
-    const char *name,
-    const char *expr)
+    const char *name)
 {
     ecs_entity_t pred = entity_from_identifier(&term->pred);
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
@@ -430,24 +425,23 @@ bool ecs_term_is_trivial(
 int ecs_term_finalize(
     const ecs_world_t *world,
     const char *name,
-    const char *expr,
     ecs_term_t *term)
 {
-    if (finalize_term_identifiers(world, term, name, expr)) {
+    if (finalize_term_identifiers(world, term, name)) {
         return -1;
     }
 
     if (!term->id) {
-        if (finalize_term_id(term, name, expr)) {
+        if (finalize_term_id(term)) {
             return -1;
         }
     } else {
-        if (populate_from_term_id(world, term, name, expr)) {
+        if (populate_from_term_id(world, term, name)) {
             return -1;
         }
     }
 
-    if (verify_term_consistency(world, term, name, expr)) {
+    if (verify_term_consistency(world, term, name)) {
         return -1;
     }
 
@@ -500,7 +494,7 @@ int ecs_filter_finalize(
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
-        if (ecs_term_finalize(world, f->name, f->expr, term)) {
+        if (ecs_term_finalize(world, f->name, term)) {
             return -1;
         }
 
@@ -1142,7 +1136,7 @@ ecs_iter_t ecs_term_iter(
 
     const ecs_world_t *world = ecs_get_world(stage);
 
-    if (ecs_term_finalize(world, NULL, NULL, term)) {
+    if (ecs_term_finalize(world, NULL, term)) {
         /* Invalid term */
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
     }
