@@ -124,6 +124,7 @@ void _ecs_poly_fini(
     int32_t type)
 {
     ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    (void)type;
 
     ecs_header_t *hdr = object;
 
@@ -136,6 +137,7 @@ void _ecs_poly_fini(
 #define assert_object(cond, file, line)\
     _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL)
 
+#ifndef NDEBUG
 void _ecs_poly_assert(
     const ecs_poly_t *object,
     int32_t type,
@@ -148,6 +150,7 @@ void _ecs_poly_assert(
     assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
     assert_object(hdr->type == type, file, line);
 }
+#endif
 
 bool _ecs_poly_is(
     const ecs_poly_t *object,
