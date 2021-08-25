@@ -383,13 +383,16 @@ struct ecs_query_t {
 
 /** All triggers for a specific (component) id */
 typedef struct ecs_id_triggers_t {
-    ecs_map_t *triggers; /* set<trigger_id> */
+    /* Triggers for Self */
+    ecs_map_t *triggers; /* map<trigger_id, trigger_t> */
+
+    /* Triggers for SuperSet, SubSet */
+    ecs_map_t *set_triggers; /* map<trigger_id, trigger_t> */
 } ecs_id_triggers_t;
 
 /** All triggers for a specific event */
 typedef struct ecs_event_triggers_t {
     ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
-    ecs_map_t *or_triggers;  /* set<trigger_id> */
 } ecs_event_triggers_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
@@ -563,7 +566,6 @@ struct ecs_world_t {
 
     /* --  Type metadata -- */
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
-    ecs_map_t *id_triggers;      /* map<id, ecs_id_trigger_t> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
     /* -- Mixins -- */
@@ -599,7 +601,7 @@ struct ecs_world_t {
     ecs_relation_monitor_t monitors;
 
     /* -- Systems -- */
-    
+
     ecs_entity_t pipeline;             /* Current pipeline */
     ecs_map_t *on_activate_components; /* Trigger on activate of [in] column */
     ecs_map_t *on_enable_components;   /* Trigger on enable of [in] column */

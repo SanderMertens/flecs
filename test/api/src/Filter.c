@@ -294,7 +294,7 @@ void Filter_term_w_id() {
         .id = Tag
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -317,7 +317,7 @@ void Filter_term_w_pair_id() {
         .id = pair
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, pair);
     test_int(term.pred.entity, Rel);
     test_int(term.role, ECS_PAIR);
@@ -345,7 +345,7 @@ void Filter_term_w_pred_obj() {
         .args[1].entity = Obj
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, pair);
     test_int(term.pred.entity, Rel);
     test_int(term.role, ECS_PAIR);
@@ -373,7 +373,7 @@ void Filter_term_w_pair_finalize_twice() {
         .args[1].entity = Obj
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, pair);
     test_int(term.pred.entity, Rel);
     test_int(term.role, ECS_PAIR);
@@ -385,7 +385,7 @@ void Filter_term_w_pair_finalize_twice() {
     test_int(term.args[1].set.mask, EcsSelf);
     test_int(term.args[1].var, EcsVarIsEntity);
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, pair);
     test_int(term.pred.entity, Rel);
     test_int(term.role, ECS_PAIR);
@@ -410,7 +410,7 @@ void Filter_term_w_role() {
         .role = ECS_SWITCH
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag | ECS_SWITCH);
     test_int(term.role, ECS_SWITCH);
     test_int(term.pred.entity, Tag);
@@ -436,7 +436,7 @@ void Filter_term_w_pred_role() {
         .role = ECS_SWITCH
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.role, ECS_SWITCH);
     test_int(term.id, Tag | ECS_SWITCH);
     test_int(term.pred.entity, Tag);
@@ -459,7 +459,7 @@ void Filter_term_w_self() {
         .args[0].set.mask = EcsSelf
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -480,7 +480,7 @@ void Filter_term_w_superset() {
         .args[0].set.mask = EcsSuperSet
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -502,7 +502,7 @@ void Filter_term_w_subset() {
         .args[0].set.mask = EcsSubSet
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -524,7 +524,7 @@ void Filter_term_w_self_superset() {
         .args[0].set.mask = EcsSelf | EcsSuperSet
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -547,7 +547,7 @@ void Filter_term_w_superset_custom_relation() {
         .args[0].set.relation = EcsChildOf
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -570,7 +570,7 @@ void Filter_term_w_self_superset_custom_relation() {
         .args[0].set.relation = EcsChildOf
     };
 
-    test_assert(ecs_term_finalize(world, NULL, NULL, &term) == 0);
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
     test_int(term.id, Tag);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.var, EcsVarIsEntity);

@@ -383,7 +383,7 @@ public:
     }
 
     int finalize() {
-        return ecs_term_finalize(m_world, nullptr, nullptr, &value);
+        return ecs_term_finalize(m_world, nullptr, &value);
     }
 
     bool is_set() {

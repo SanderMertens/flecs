@@ -57,7 +57,7 @@ ecs_vector_t* expr_to_ids(
             goto error;
         }
 
-        if (ecs_term_finalize(world, name, expr, &term)) {
+        if (ecs_term_finalize(world, name, &term)) {
             goto error;
         }
 

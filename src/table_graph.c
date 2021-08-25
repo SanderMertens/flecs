@@ -503,7 +503,6 @@ static
 void diff_insert_isa(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_table_diff_t *diff,
     ecs_table_diff_t *base_diff,
     ecs_ids_t *append_to,
     ecs_ids_t *append_from,
@@ -571,7 +570,7 @@ void diff_insert_added_isa(
     ecs_id_t id)
 {
     ecs_table_diff_t base_diff;
-    diff_insert_isa(world, table, diff, &base_diff, &diff->on_set, 
+    diff_insert_isa(world, table, &base_diff, &diff->on_set, 
         &base_diff.un_set, id);
 }
 
@@ -583,7 +582,7 @@ void diff_insert_removed_isa(
     ecs_id_t id)
 {
     ecs_table_diff_t base_diff;
-    diff_insert_isa(world, table, diff, &base_diff, &diff->un_set, 
+    diff_insert_isa(world, table, &base_diff, &diff->un_set, 
         &base_diff.un_set, id);
 }
 
