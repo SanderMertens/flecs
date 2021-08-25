@@ -381,13 +381,16 @@ struct ecs_query_t {
 #define EcsEventAdd    (1)
 #define EcsEventRemove (2)
 
-/** Triggers for a specific id */
-typedef struct ecs_id_trigger_t {
-    ecs_map_t *on_add_triggers;
-    ecs_map_t *on_remove_triggers;
-    ecs_map_t *on_set_triggers;
-    ecs_map_t *un_set_triggers;
-} ecs_id_trigger_t;
+/** All triggers for a specific (component) id */
+typedef struct ecs_id_triggers_t {
+    ecs_map_t *triggers; /* set<trigger_id> */
+} ecs_id_triggers_t;
+
+/** All triggers for a specific event */
+typedef struct ecs_event_triggers_t {
+    ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
+    ecs_map_t *or_triggers;  /* set<trigger_id> */
+} ecs_event_triggers_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
  * systems. */

@@ -787,3 +787,18 @@ void* _ecs_sparse_get(
 {
     return _flecs_sparse_get(sparse, elem_size, id);
 }
+
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(elem_size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_sparse_iter_t result;
+    result.sparse = sparse;
+    result.ids = flecs_sparse_ids(sparse);
+    result.size = elem_size;
+    result.i = 0;
+    result.count = sparse->count - 1;
+    return result;
+}

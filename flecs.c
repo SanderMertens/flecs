@@ -377,6 +377,24 @@ void flecs_sparse_memory(
     int32_t *allocd,
     int32_t *used);
 
+FLECS_DBG_API
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define flecs_sparse_iter(sparse, T)\
+    _flecs_sparse_iter(sparse, ECS_SIZEOF(T))
+
+#ifndef FLECS_LEGACY
+#define flecs_sparse_each(sparse, T, var, ...)\
+    {\
+        int var##_i, var##_count = ecs_sparse_count(sparse);\
+        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
+            T* var = ecs_sparse_get_dense(sparse, T, var##_i);\
+            __VA_ARGS__\
+        }\
+    }
+#endif
 
 /* Publicly exposed APIs 
  * The flecs_ functions aren't exposed directly as this can cause some
@@ -874,8 +892,6 @@ typedef struct ecs_matched_query_t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
-    ecs_header_t hdr;
-    
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
@@ -1042,13 +1058,16 @@ struct ecs_query_t {
 #define EcsEventAdd    (1)
 #define EcsEventRemove (2)
 
-/** Triggers for a specific id */
-typedef struct ecs_id_trigger_t {
-    ecs_map_t *on_add_triggers;
-    ecs_map_t *on_remove_triggers;
-    ecs_map_t *on_set_triggers;
-    ecs_map_t *un_set_triggers;
-} ecs_id_trigger_t;
+/** All triggers for a specific (component) id */
+typedef struct ecs_id_triggers_t {
+    ecs_map_t *triggers; /* set<trigger_id> */
+} ecs_id_triggers_t;
+
+/** All triggers for a specific event */
+typedef struct ecs_event_triggers_t {
+    ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
+    ecs_map_t *or_triggers;  /* set<trigger_id> */
+} ecs_event_triggers_t;
 
 /** Keep track of how many [in] columns are active for [out] columns of OnDemand
  * systems. */
@@ -1496,16 +1515,18 @@ void flecs_clear_id_record(
 
 void flecs_triggers_notify(
     ecs_world_t *world,
-    ecs_id_t id,
+    ecs_poly_t *observable,
+    ecs_ids_t *ids,
     ecs_entity_t event,
+    ecs_entity_t entity,
     ecs_table_t *table,
     ecs_table_t *other_table,
-    ecs_data_t *data,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    void *param);
 
 ecs_map_t* flecs_triggers_get(
-    const ecs_world_t *world,
+    const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
 
@@ -1979,6 +2000,16 @@ bool _ecs_poly_is(
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Observables
+////////////////////////////////////////////////////////////////////////////////
+
+void flecs_observable_init(
+    ecs_observable_t *observable);
+
+void flecs_observable_fini(
+    ecs_observable_t *observable);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
@@ -4716,7 +4747,172 @@ void* ecs_record_get_column(
 
     return ECS_OFFSET(array, size * row);
 }
+#include <stddef.h>
 
+static const char* mixin_kind_str[] = {
+    [EcsMixinBase] = "base (should never be requested by application)",
+    [EcsMixinWorld] = "world",
+    [EcsMixinObservable] = "observable",
+    [EcsMixinMax] = "max (should never be requested by application)"
+};
+
+ecs_mixins_t ecs_world_t_mixins = {
+    .type_name = "ecs_world_t",
+    .elems = {
+        [EcsMixinWorld] = -1,
+        [EcsMixinObservable] = offsetof(ecs_world_t, observable)
+    }
+};
+
+ecs_mixins_t ecs_stage_t_mixins = {
+    .type_name = "ecs_stage_t",
+    .elems = {
+        [EcsMixinBase] = offsetof(ecs_stage_t, world),
+        [EcsMixinWorld] = offsetof(ecs_stage_t, world)
+    }
+};
+
+ecs_mixins_t ecs_query_t_mixins = {
+    .type_name = "ecs_query_t",
+    .elems = {
+        [EcsMixinWorld] = offsetof(ecs_query_t, world)
+    }
+};
+
+static
+void* get_mixin(
+    const ecs_poly_t **object_ptr,
+    ecs_mixin_kind_t kind)
+{
+    ecs_assert(object_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
+    
+    const ecs_header_t *hdr = *object_ptr;
+    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_mixins_t *mixins = hdr->mixins;
+    if (!mixins) {
+        /* Object has no mixins */
+        goto not_found;
+    }
+
+    ecs_size_t offset = mixins->elems[kind];
+    if (offset == 0) {
+        /* Object has mixins but not the requested one. Try to find the mixin
+         * in the object's base */
+        goto find_in_base;
+    }
+
+    if (offset == -1) {
+        /* If offset is -1 the mixin is the object itself. While using offset 0
+         * would have been more convenient here, the mixin tables would have to 
+         * be prepopulated with -1 (or some other invalid value) which is more 
+         * error prone as it requires explicit (static) initialization. */
+        return (void*)object_ptr;
+    }
+    
+    /* Object has mixin, return its address */
+    return ECS_OFFSET(hdr, offset);
+
+find_in_base:
+    /* Mixin wasn't found, find base mixin which can't be the object itself */
+    offset = mixins->elems[EcsMixinBase];
+    ecs_assert(offset != -1, ECS_INTERNAL_ERROR, NULL);
+    
+    if (offset) {
+        /* If the object has a base, try to find the mixin in the base */
+        ecs_poly_t *base = *(ecs_poly_t**)ECS_OFFSET(hdr, offset);
+        if (base) {
+            return get_mixin(base, kind);
+        }
+    }
+    
+not_found:
+    /* Mixin wasn't found for object */
+    return NULL;
+}
+
+static
+void* assert_mixin(
+    const ecs_poly_t **object_ptr,
+    ecs_mixin_kind_t kind)
+{
+    void *ptr = get_mixin(object_ptr, kind);
+    if (!ptr) {
+        const ecs_header_t *header = *object_ptr;
+        const ecs_mixins_t *mixins = header->mixins;
+        ecs_err("%s not available for type %s", 
+            mixin_kind_str[kind],
+            mixins ? mixins->type_name : "unknown");
+        ecs_os_abort();
+    }
+
+    return ptr;
+}
+
+void _ecs_poly_init(
+    ecs_poly_t *object,
+    int32_t type,
+    ecs_size_t size,
+    ecs_mixins_t *mixins)
+{
+    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_header_t *hdr = object;
+    memset(object, 0, size);
+
+    hdr->magic = ECS_OBJECT_MAGIC;
+    hdr->type = type;
+    hdr->mixins = mixins;
+}
+
+void _ecs_poly_fini(
+    ecs_poly_t *object,
+    int32_t type)
+{
+    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_header_t *hdr = object;
+
+    /* Don't deinit object that wasn't initialized */
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
+    hdr->magic = 0;
+}
+
+#define assert_object(cond, file, line)\
+    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL)
+
+void _ecs_poly_assert(
+    const ecs_poly_t *object,
+    int32_t type,
+    const char *file,
+    int32_t line)
+{
+    assert_object(object != NULL, file, line);
+    
+    const ecs_header_t *hdr = object;
+    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
+    assert_object(hdr->type == type, file, line);
+}
+
+bool _ecs_poly_is(
+    const ecs_poly_t *object,
+    int32_t type)
+{
+    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_header_t *hdr = object;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    return hdr->type == type;    
+}
+
+ecs_observable_t* ecs_get_observable(
+    const ecs_poly_t *object)
+{
+    return (ecs_observable_t*)assert_mixin(&object, EcsMixinObservable);
+}
 
 static
 const ecs_entity_t* new_w_data(
@@ -5024,16 +5220,23 @@ void notify(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    world->event_id ++;
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = event,
+        .ids = ids,
+        .payload_kind = EcsPayloadTable,
+        .payload.table = {
+            .table = table,
+            .other_table = other_table,
+            .offset = row,
+            .count = count
+        }
+    });
 
-    ecs_id_t *arr = ids->array;
-    int32_t arr_count = ids->count;
-
-    int i;
-    for (i = 0; i < arr_count; i ++) {
-        flecs_triggers_notify(
-            world, arr[i], event, table, other_table, data, row, count);
-    }
+    // int i;
+    // for (i = 0; i < arr_count; i ++) {
+    //     flecs_triggers_notify(
+    //         world, arr[i], event, table, other_table, data, row, count);
+    // }
 }
 
 static
@@ -10339,6 +10542,21 @@ void* _ecs_sparse_get(
     uint64_t id)
 {
     return _flecs_sparse_get(sparse, elem_size, id);
+}
+
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(elem_size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_sparse_iter_t result;
+    result.sparse = sparse;
+    result.ids = flecs_sparse_ids(sparse);
+    result.size = elem_size;
+    result.i = 0;
+    result.count = sparse->count - 1;
+    return result;
 }
 
 #ifdef FLECS_SANITIZE
@@ -16954,7 +17172,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
-    world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
+    flecs_observable_init(&world->observable);
 
     world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);
@@ -17462,22 +17680,6 @@ void fini_id_index(
     ecs_map_free(world->id_index);
 }
 
-static
-void fini_id_triggers(
-    ecs_world_t *world)
-{
-    ecs_map_iter_t it = ecs_map_iter(world->id_triggers);
-    ecs_id_trigger_t *t;
-    while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
-        ecs_map_free(t->on_add_triggers);
-        ecs_map_free(t->on_remove_triggers);
-        ecs_map_free(t->on_set_triggers);
-        ecs_map_free(t->un_set_triggers);
-    }
-    ecs_map_free(world->id_triggers);
-    flecs_sparse_free(world->triggers);
-}
-
 /* Cleanup aliases & symbols */
 static
 void fini_aliases(
@@ -17553,7 +17755,9 @@ int ecs_fini(
 
     fini_id_index(world);
 
-    fini_id_triggers(world);
+    flecs_observable_fini(&world->observable);
+
+    flecs_sparse_free(world->triggers);
 
     fini_aliases(&world->aliases);
     
@@ -18212,6 +18416,88 @@ void flecs_clear_id_record(
 
     ecs_map_free(idr->table_index);
     ecs_map_remove(world->id_index, id);
+}
+
+void flecs_observable_init(
+    ecs_observable_t *observable)
+{
+    observable->triggers = ecs_sparse_new(ecs_event_triggers_t);
+}
+
+void flecs_observable_fini(
+    ecs_observable_t *observable)
+{
+    ecs_sparse_t *triggers = observable->triggers;
+    int32_t i, count = flecs_sparse_count(triggers);
+
+    for (i = 0; i < count; i ++) {
+        ecs_event_triggers_t *et = 
+            ecs_sparse_get_dense(triggers, ecs_event_triggers_t, i);
+        ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_map_iter_t it = ecs_map_iter(et->triggers);
+        ecs_id_triggers_t *idt;
+        while ((idt = ecs_map_next(&it, ecs_id_triggers_t, NULL))) {
+            ecs_map_free(idt->triggers);
+        }
+        ecs_map_free(et->triggers);
+    }
+
+    flecs_sparse_free(observable->triggers);
+}
+
+void ecs_emit(
+    ecs_world_t *world,
+    ecs_event_desc_t *desc)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->event != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc->event != EcsWildcard, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_ids_t ids_storage, *ids = desc->ids;
+    ecs_table_t *table = NULL, *other_table = NULL;
+    int32_t row = 0;
+    int32_t count = 0;
+    ecs_entity_t event = desc->event;
+    ecs_entity_t entity = 0;
+
+    world->event_id ++;
+
+    if (desc->payload_kind == EcsPayloadEntity) {
+        entity = desc->payload.entity;
+        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_record_t *r = ecs_eis_get(world, entity);
+        if (r) {
+            bool is_watched;
+            table = r->table;
+            row = flecs_record_to_row(r->row, &is_watched);
+        }
+        count = 1;
+
+    } else if (desc->payload_kind == EcsPayloadTable) {
+        ecs_assert(desc->payload.table.table != NULL, ECS_INTERNAL_ERROR, NULL);
+        table = desc->payload.table.table;
+        other_table = desc->payload.table.other_table;
+        row = desc->payload.table.offset;
+        int32_t payload_count = desc->payload.table.count;
+        if (!payload_count) {
+            count = ecs_table_count(table) - row;
+        } else {
+            count = payload_count;
+        }
+    }
+
+    if (table) {
+        if (!ids) {
+            ids = &ids_storage;
+            ids_storage.array = ecs_vector_first(table->type, ecs_id_t);
+            ids_storage.count = ecs_vector_count(table->type);
+        }
+    }
+
+    flecs_triggers_notify(world, desc->observable, ids, event, 
+        entity, table, other_table, row, count, desc->param);
 }
 
 
@@ -20338,172 +20624,7 @@ const char* ecs_os_strerror(int err) {
     return strerror(err);
 #endif
 }
-#include <stddef.h>
 
-static const char* mixin_kind_str[] = {
-    [EcsMixinBase] = "base (should never be requested by application)",
-    [EcsMixinWorld] = "world",
-    [EcsMixinObservable] = "observable",
-    [EcsMixinMax] = "max (should never be requested by application)"
-};
-
-ecs_mixins_t ecs_world_t_mixins = {
-    .type_name = "ecs_world_t",
-    .elems = {
-        [EcsMixinWorld] = -1,
-        [EcsMixinObservable] = offsetof(ecs_world_t, observable)
-    }
-};
-
-ecs_mixins_t ecs_stage_t_mixins = {
-    .type_name = "ecs_stage_t",
-    .elems = {
-        [EcsMixinBase] = offsetof(ecs_stage_t, world),
-        [EcsMixinWorld] = offsetof(ecs_stage_t, world)
-    }
-};
-
-ecs_mixins_t ecs_query_t_mixins = {
-    .type_name = "ecs_query_t",
-    .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_t, world)
-    }
-};
-
-static
-void* get_mixin(
-    const ecs_poly_t **object_ptr,
-    ecs_mixin_kind_t kind)
-{
-    ecs_assert(object_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
-    
-    const ecs_header_t *hdr = *object_ptr;
-    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_mixins_t *mixins = hdr->mixins;
-    if (!mixins) {
-        /* Object has no mixins */
-        goto not_found;
-    }
-
-    ecs_size_t offset = mixins->elems[kind];
-    if (offset == 0) {
-        /* Object has mixins but not the requested one. Try to find the mixin
-         * in the object's base */
-        goto find_in_base;
-    }
-
-    if (offset == -1) {
-        /* If offset is -1 the mixin is the object itself. While using offset 0
-         * would have been more convenient here, the mixin tables would have to 
-         * be prepopulated with -1 (or some other invalid value) which is more 
-         * error prone as it requires explicit (static) initialization. */
-        return (void*)object_ptr;
-    }
-    
-    /* Object has mixin, return its address */
-    return ECS_OFFSET(hdr, offset);
-
-find_in_base:
-    /* Mixin wasn't found, find base mixin which can't be the object itself */
-    offset = mixins->elems[EcsMixinBase];
-    ecs_assert(offset != -1, ECS_INTERNAL_ERROR, NULL);
-    
-    if (offset) {
-        /* If the object has a base, try to find the mixin in the base */
-        ecs_poly_t *base = *(ecs_poly_t**)ECS_OFFSET(hdr, offset);
-        if (base) {
-            return get_mixin(base, kind);
-        }
-    }
-    
-not_found:
-    /* Mixin wasn't found for object */
-    return NULL;
-}
-
-static
-void* assert_mixin(
-    const ecs_poly_t **object_ptr,
-    ecs_mixin_kind_t kind)
-{
-    void *ptr = get_mixin(object_ptr, kind);
-    if (!ptr) {
-        const ecs_header_t *header = *object_ptr;
-        const ecs_mixins_t *mixins = header->mixins;
-        ecs_err("%s not available for type %s", 
-            mixin_kind_str[kind],
-            mixins ? mixins->type_name : "unknown");
-        ecs_os_abort();
-    }
-
-    return ptr;
-}
-
-void _ecs_poly_init(
-    ecs_poly_t *object,
-    int32_t type,
-    ecs_size_t size,
-    ecs_mixins_t *mixins)
-{
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_header_t *hdr = object;
-    memset(object, 0, size);
-
-    hdr->magic = ECS_OBJECT_MAGIC;
-    hdr->type = type;
-    hdr->mixins = mixins;
-}
-
-void _ecs_poly_fini(
-    ecs_poly_t *object,
-    int32_t type)
-{
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_header_t *hdr = object;
-
-    /* Don't deinit object that wasn't initialized */
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
-    hdr->magic = 0;
-}
-
-#define assert_object(cond, file, line)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL)
-
-void _ecs_poly_assert(
-    const ecs_poly_t *object,
-    int32_t type,
-    const char *file,
-    int32_t line)
-{
-    assert_object(object != NULL, file, line);
-    
-    const ecs_header_t *hdr = object;
-    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
-    assert_object(hdr->type == type, file, line);
-}
-
-bool _ecs_poly_is(
-    const ecs_poly_t *object,
-    int32_t type)
-{
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_header_t *hdr = object;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    return hdr->type == type;    
-}
-
-ecs_observable_t* ecs_get_observable(
-    const ecs_poly_t *object)
-{
-    return (ecs_observable_t*)assert_mixin(&object, EcsMixinObservable);
-}
 #ifdef FLECS_SYSTEMS_H
 #endif
 
@@ -22816,6 +22937,7 @@ void ecs_query_fini(
 const ecs_filter_t* ecs_query_get_filter(
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return &query->filter;
 }
 
@@ -22826,7 +22948,7 @@ ecs_iter_t ecs_query_iter_page(
     int32_t offset,
     int32_t limit)
 {
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
@@ -22875,6 +22997,7 @@ ecs_iter_t ecs_query_iter(
     ecs_world_t *world,
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return ecs_query_iter_page(world, query, 0, 0);
 }
 
@@ -22946,6 +23069,7 @@ void flecs_query_set_iter(
     int32_t count)
 {
     (void)world;
+    ecs_poly_assert(query, ecs_query_t);
     
     ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
@@ -23533,7 +23657,7 @@ bool ecs_query_next_worker(
 bool ecs_query_changed(
     ecs_query_t *query)
 {
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
     return tables_dirty(query);
 }
@@ -23541,6 +23665,7 @@ bool ecs_query_changed(
 bool ecs_query_orphaned(
     ecs_query_t *query)
 {
+    ecs_poly_assert(query, ecs_query_t);
     return query->flags & EcsQueryIsOrphaned;
 }
 
@@ -24844,311 +24969,338 @@ int32_t count_events(
     }
 
     return i;
-} 
-
-static
-void register_id_trigger(
-    ecs_map_t *set,
-    ecs_trigger_t *trigger)
-{
-    ecs_trigger_t **t = ecs_map_ensure(set, ecs_trigger_t*, trigger->id);
-    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
-    *t = trigger;
 }
 
 static
-ecs_map_t* unregister_id_trigger(
-    ecs_map_t *set,
-    ecs_trigger_t *trigger)
+ecs_entity_t get_actual_event(
+    ecs_trigger_t *trigger, 
+    ecs_entity_t event)
 {
-    ecs_map_remove(set, trigger->id);
-
-    if (!ecs_map_count(set)) {
-        ecs_map_free(set);
-        return NULL;
-    }
-
-    return set;
-}
-
-static
-void register_trigger_for_id(
-    ecs_world_t *world,
-    ecs_trigger_t *trigger,
-    ecs_id_t id)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_term_t *term = &trigger->term;
-    ecs_map_t *triggers = world->id_triggers;
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_id_trigger_t *idt = ecs_map_ensure(triggers, ecs_id_trigger_t, id);
-    ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int i;
-    for (i = 0; i < trigger->event_count; i ++) {
-        ecs_map_t **set = NULL;
-        ecs_entity_t event = trigger->events[i];
-
-        /* If operator is Not, reverse the event */
-        if (term->oper == EcsNot) {
-            if (event == EcsOnAdd) {
-                event = EcsOnRemove;
-            } else if (event == EcsOnRemove) {
-                event = EcsOnAdd;
-            }
-        }
-
+    /* If operator is Not, reverse the event */
+    if (trigger->term.oper == EcsNot) {
         if (event == EcsOnAdd) {
-            set = &idt->on_add_triggers;
+            event = EcsOnRemove;
         } else if (event == EcsOnRemove) {
-            set = &idt->on_remove_triggers;
-        } else if (event == EcsOnSet) {
-            set = &idt->on_set_triggers;
-        } else if (event == EcsUnSet) {
-            set = &idt->un_set_triggers;            
-        } else {
-            /* Invalid event provided */
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+            event = EcsOnAdd;
         }
-
-        ecs_assert(set != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (!*set) {
-            *set = ecs_map_new(ecs_trigger_t*, 1);
-
-            // First trigger of its kind, send table notification
-            flecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
-                .kind = EcsTableTriggerMatch,
-                .event = trigger->events[i]
-            });            
-        }
-
-        register_id_trigger(*set, trigger);
     }
+
+    return event;
 }
 
 static
 void register_trigger(
     ecs_world_t *world,
+    ecs_observable_t *observable,
     ecs_trigger_t *trigger)
 {
-    ecs_term_t *term = &trigger->term;
+    ecs_sparse_t *triggers = observable->triggers;
+    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    // if (term->args[0].set.mask & EcsSelf) {
-        register_trigger_for_id(world, trigger, term->id);
-    // }
+    int i;
+    for (i = 0; i < trigger->event_count; i ++) {
+        ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
+
+        /* Get triggers for event */
+        ecs_event_triggers_t *evt = flecs_sparse_ensure(
+            triggers, ecs_event_triggers_t, event);
+        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!evt->triggers) {
+            evt->triggers = ecs_map_new(ecs_id_triggers_t, 1);
+        }
+        
+        /* Get triggers for (component) id */
+        ecs_id_triggers_t *idt = ecs_map_ensure(
+            evt->triggers, ecs_id_triggers_t, trigger->term.id);
+        ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!idt->triggers) {
+            idt->triggers = ecs_map_new(ecs_trigger_t*, 1);
+        }
+
+        ecs_trigger_t **elem = ecs_map_ensure(
+            idt->triggers, ecs_trigger_t*, trigger->id);
+        *elem = trigger;
+
+        // First trigger of its kind, send table notification
+        flecs_notify_tables(world, trigger->term.id, &(ecs_table_event_t){
+            .kind = EcsTableTriggerMatch,
+            .event = trigger->events[i]
+        });
+    }
 }
 
 static
 void unregister_trigger(
     ecs_world_t *world,
+    ecs_observable_t *observable,
     ecs_trigger_t *trigger)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(trigger != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_map_t *triggers = world->id_triggers;
+    ecs_sparse_t *triggers = observable->triggers;
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_id_trigger_t *idt = ecs_map_get(
-        triggers, ecs_id_trigger_t, trigger->term.id);
-    if (!idt) {
-        return;
-    }
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
-        ecs_map_t **set = NULL;
-        if (trigger->events[i] == EcsOnAdd) {
-            set = &idt->on_add_triggers;
-        } else if (trigger->events[i] == EcsOnRemove) {
-            set = &idt->on_remove_triggers;
-        } else if (trigger->events[i] == EcsOnSet) {
-            set = &idt->on_set_triggers;
-        } else if (trigger->events[i] == EcsUnSet) {
-            set = &idt->un_set_triggers;            
-        } else {
-            /* Invalid event provided */
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-        if (!*set) {
-            return;
-        }
+        ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
 
-        *set = unregister_id_trigger(*set, trigger);                
+        /* Get triggers for event */
+        ecs_event_triggers_t *evt = ecs_sparse_get(
+            triggers, ecs_event_triggers_t, event);
+        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Get triggers for (component) id */
+        ecs_id_triggers_t *idt = ecs_map_get(
+            evt->triggers, ecs_id_triggers_t, trigger->term.id);
+        ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_map_remove(idt->triggers, trigger->id);
+        
+        if (!ecs_map_count(idt->triggers)) {
+            ecs_map_free(idt->triggers);
+            ecs_map_remove(evt->triggers, trigger->term.id);
+            if (!ecs_map_count(evt->triggers)) {
+                ecs_map_free(evt->triggers);
+                evt->triggers = NULL;
+            }
+        }
+    }
+}
+
+static
+ecs_map_t* get_triggers_for_event(
+    const ecs_poly_t *object,
+    ecs_entity_t event)
+{
+    ecs_assert(object != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(event != 0, ECS_INTERNAL_ERROR, NULL);
+
+    /* Get triggers for event */
+    ecs_observable_t *observable = ecs_get_observable(object);
+    ecs_assert(observable != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_sparse_t *triggers = observable->triggers;
+    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_event_triggers_t *evt = ecs_sparse_get(
+        triggers, ecs_event_triggers_t, event);
+    
+    if (evt) {
+        return evt->triggers;
     }
 
-    ecs_map_remove(triggers, trigger->id);
+    return NULL;
+}
+
+static
+ecs_map_t *get_triggers_for_id(
+    const ecs_map_t *evt,
+    ecs_id_t id)
+{
+    ecs_id_triggers_t *idt = ecs_map_get(evt, ecs_id_triggers_t, id);
+    if (idt) {
+        ecs_map_t *set = idt->triggers;
+        if (ecs_map_count(set)) {
+            return set;
+        }
+    }
+
+    return NULL;
 }
 
 ecs_map_t* flecs_triggers_get(
-    const ecs_world_t *world,
+    const ecs_poly_t *object,
     ecs_id_t id,
     ecs_entity_t event)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_map_t *triggers = world->id_triggers;
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_id_trigger_t *idt = ecs_map_get(triggers, ecs_id_trigger_t, id);
-    if (!idt) {
+    const ecs_map_t *evt = get_triggers_for_event(object, event);
+    if (!evt) {
         return NULL;
     }
 
-    ecs_map_t *set = NULL;
+    return get_triggers_for_id(evt, id);
+}
 
-    if (event == EcsOnAdd) {
-        set = idt->on_add_triggers;
-    } else if (event == EcsOnRemove) {
-        set = idt->on_remove_triggers;
-    } else if (event == EcsOnSet) {
-        set = idt->on_set_triggers;
-    } else if (event == EcsUnSet) {
-        set = idt->un_set_triggers;
+static
+void init_iter(
+    ecs_iter_t *it,
+    ecs_id_t id,
+    ecs_entity_t *entity,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    bool *iter_set)
+{
+    ecs_assert(it != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    if (*iter_set) {
+        return;
     }
 
-    if (ecs_map_count(set)) {
-        return set;
-    } else {
-        return NULL;
+    flecs_iter_init(it);
+
+    *iter_set = true;
+
+    it->ids[0] = it->event_id;
+
+    if (count) {
+        if (table) {
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!it->world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+            ecs_data_t *data = &table->storage;
+            ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
+            ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(row < ecs_vector_count(data->entities), 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert((row + count) <= ecs_vector_count(data->entities), 
+                ECS_INTERNAL_ERROR, NULL);
+
+            it->entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
+
+            ecs_entity_t subject = 0;
+            int32_t index = ecs_type_match(it->world, table, table->type, 0, 
+                id, EcsIsA, 0, 0, &subject);
+
+            ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+            index ++;
+
+            it->columns[0] = index;
+            it->sizes[0] = 0;
+
+            /* If there is no data, ensure that system won't try to get it */
+            if (table->column_count < index) {
+                it->columns[0] = 0;
+            } else {
+                ecs_column_t *column = &data->columns[index - 1];
+                if (!column->size) {
+                    it->columns[0] = 0;
+                }
+            }
+
+            if (!subject && it->columns[0] && data && data->columns) {
+                ecs_column_t *col = &data->columns[index - 1];
+                it->ptrs[0] = ecs_vector_get_t(
+                    col->data, col->size, col->alignment, row);
+                it->sizes[0] = col->size;
+            } else if (subject) {
+                it->ptrs[0] = (void*)ecs_get_id(it->world, subject, it->event_id);
+                ecs_entity_t e = ecs_get_typeid(it->world, it->event_id);
+                const EcsComponent *comp = ecs_get(it->world, e, EcsComponent);
+                if (comp) {
+                    it->sizes[0] = comp->size;
+                } else {
+                    it->sizes[0] = 0;
+                }
+                
+                it->subjects[0] = subject;
+            }
+        } else {
+            it->entities = entity;
+        }
     }
 }
 
 static
 void notify_trigger_set(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_entity_t event,
-    const ecs_map_t *triggers,
-    ecs_table_t *table,
-    ecs_table_t *other_table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count)
+    ecs_iter_t *it,
+    const ecs_map_t *triggers)
 {
-    if (!triggers) {
-        return;
-    }
-
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);        
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vector_count(data->entities), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert((row + count) <= ecs_vector_count(data->entities), 
-        ECS_INTERNAL_ERROR, NULL);
-    entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
-
-    ecs_entity_t base = 0;
-    int32_t index = ecs_type_match(world, table, table->type, 0, id, EcsIsA,
-        0, 0, &base);
-
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    index ++;
-
-    ecs_entity_t ids[1] = { id };
-    int32_t columns[1] = { index };
-    ecs_size_t sizes[1] = { 0 };
-
-    /* If there is no data, ensure that system won't try to get it */
-    if (table->column_count < index) {
-        columns[0] = 0;
-    } else {
-        ecs_column_t *column = &data->columns[index - 1];
-        if (!column->size) {
-            columns[0] = 0;
-        }
-    }
-
-    void *ptr = NULL;
-
-    if (!base && columns[0] && data && data->columns) {
-        ecs_column_t *col = &data->columns[index - 1];
-        ptr = ecs_vector_get_t(col->data, col->size, col->alignment, row);
-        sizes[0] = col->size;
-    } else if (base) {
-        ptr = (void*)ecs_get_id(world, base, id);
-        ecs_entity_t e = ecs_get_typeid(world, id);
-        const EcsComponent *comp = ecs_get(world, e, EcsComponent);
-        /* This is a set trigger, so id should be a component */
-        ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-        sizes[0] = comp->size;
-    }
-
-    ecs_iter_t it = {
-        .world = world,
-        .event = event,
-        .event_id = id,
-        .table = table,
-        .other_table = other_table,
-        .type = table ? table->type : NULL,
-        .columns = columns,
-        .ids = ids,
-        .subjects = &base,
-        .sizes = sizes,
-        .ptrs = &ptr,
-        .table_count = 1,
-        .inactive_table_count = 0,
-        .term_count = 1,
-        .table_columns = data->columns,
-        .entities = entities,
-        .offset = row,
-        .count = count,
-        .is_valid = true
-    }; 
+    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
-        it.system = t->entity;
-        it.self = t->self;
-        it.ctx = t->ctx;
-        it.binding_ctx = t->binding_ctx;
-        it.term_index = t->term.index;
-        it.terms = &t->term;
-        t->action(&it);                   
+        it->system = t->entity;
+        it->self = t->self;
+        it->ctx = t->ctx;
+        it->binding_ctx = t->binding_ctx;
+        it->term_index = t->term.index;
+        it->terms = &t->term;
+        t->action(it);                   
+    }
+}
+
+static
+void notify_triggers_for_id(
+    const ecs_map_t *evt,
+    ecs_id_t event_id,
+    ecs_iter_t *it,
+    ecs_entity_t *entity,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    bool *iter_set)
+{
+    const ecs_map_t *triggers = get_triggers_for_id(evt, event_id);
+    if (triggers) {
+        init_iter(it, event_id, entity, table, row, count, iter_set);
+        notify_trigger_set(it, triggers);
     }
 }
 
 void flecs_triggers_notify(
     ecs_world_t *world,
-    ecs_id_t id,
+    ecs_poly_t *observable,
+    ecs_ids_t *ids,
     ecs_entity_t event,
+    ecs_entity_t entity,
     ecs_table_t *table,
     ecs_table_t *other_table,
-    ecs_data_t *data,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    void *param)
 {
-    notify_trigger_set(world, id, event,
-        flecs_triggers_get(world, id, event), 
-            table, other_table, data, row, count);
+    if (!observable) {
+        observable = world;
+    }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t pred = ECS_PAIR_RELATION(id);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+    const ecs_map_t *evt = get_triggers_for_event(observable, event);
+    if (!evt) {
+        return;
+    }
 
-        notify_trigger_set(world, id, event,
-            flecs_triggers_get(world, ecs_pair(pred, EcsWildcard), event), 
-                table, other_table, data, row, count);
+    ecs_iter_t it = {
+        .world = world,
+        .event = event,
+        .term_count = 1,
+        .table = table,
+        .type = table ? table->type : NULL,
+        .other_table = other_table,
+        .offset = row,
+        .count = count,
+        .param = param
+    };
 
-        notify_trigger_set(world, id, event, 
-            flecs_triggers_get(world, ecs_pair(EcsWildcard, obj), event), 
-                table, other_table, data, row, count);
+    int32_t i, ids_count = ids->count;
+    ecs_id_t *ids_array = ids->array;
 
-        notify_trigger_set(world, id, event, 
-            flecs_triggers_get(world, ecs_pair(EcsWildcard, EcsWildcard), event), 
-                table, other_table, data, row, count);                                
-    } else {
-        notify_trigger_set(world, id, event, 
-            flecs_triggers_get(world, EcsWildcard, event), 
-                table, other_table, data, row, count);
+    for (i = 0; i < ids_count; i ++) {
+        ecs_id_t id = ids_array[i];
+        bool iter_set = false;
+
+        it.event_id = id;
+
+        notify_triggers_for_id(
+            evt, id, &it, &entity, table, row, count, &iter_set);
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t pred = ECS_PAIR_RELATION(id);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+
+            notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
+                &it, &entity, table, row, count, &iter_set);
+
+            notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
+                &it, &entity, table, row, count, &iter_set);
+
+            notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
+                &it, &entity, table, row, count, &iter_set);
+        } else {
+            notify_triggers_for_id(evt, EcsWildcard, 
+                &it, &entity, table, row, count, &iter_set);
+        }
     }
 }
 
@@ -25156,12 +25308,18 @@ ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     char *name = NULL;
     const char *expr = desc->expr;
+    
+    ecs_observable_t *observable = desc->observable;
+    if (!observable) {
+        observable = ecs_get_observable(world);
+    }
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
@@ -25209,8 +25367,8 @@ ecs_entity_t ecs_trigger_init(
         /* Currently triggers are not supported for specific entities */
         ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
-        ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
-        trigger->id = flecs_sparse_last_id(world->triggers);
+        ecs_trigger_t *trigger = ecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger->id = ecs_sparse_last_id(world->triggers);
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -25222,15 +25380,16 @@ ecs_entity_t ecs_trigger_init(
             trigger->event_count * ECS_SIZEOF(ecs_entity_t));
         trigger->entity = entity;
         trigger->self = desc->self;
+        trigger->observable = observable;
 
         comp->trigger = trigger;
 
         /* Trigger must have at least one event */
         ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        register_trigger(world, trigger);
+        register_trigger(world, observable, trigger);
 
-        ecs_term_fini(&term);        
+        ecs_term_fini(&term);
     } else {
         ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -25283,7 +25442,7 @@ void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
-    unregister_trigger(world, trigger);
+    unregister_trigger(world, trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
     if (trigger->ctx_free) {

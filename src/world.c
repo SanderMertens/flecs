@@ -331,7 +331,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
-    world->id_triggers = ecs_map_new(ecs_id_trigger_t, 8);
+    flecs_observable_init(&world->observable);
 
     world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);
@@ -839,22 +839,6 @@ void fini_id_index(
     ecs_map_free(world->id_index);
 }
 
-static
-void fini_id_triggers(
-    ecs_world_t *world)
-{
-    ecs_map_iter_t it = ecs_map_iter(world->id_triggers);
-    ecs_id_trigger_t *t;
-    while ((t = ecs_map_next(&it, ecs_id_trigger_t, NULL))) {
-        ecs_map_free(t->on_add_triggers);
-        ecs_map_free(t->on_remove_triggers);
-        ecs_map_free(t->on_set_triggers);
-        ecs_map_free(t->un_set_triggers);
-    }
-    ecs_map_free(world->id_triggers);
-    flecs_sparse_free(world->triggers);
-}
-
 /* Cleanup aliases & symbols */
 static
 void fini_aliases(
@@ -930,7 +914,9 @@ int ecs_fini(
 
     fini_id_index(world);
 
-    fini_id_triggers(world);
+    flecs_observable_fini(&world->observable);
+
+    flecs_sparse_free(world->triggers);
 
     fini_aliases(&world->aliases);
     

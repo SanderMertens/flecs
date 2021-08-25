@@ -301,6 +301,8 @@ struct ecs_trigger_t {
     ecs_entity_t entity;        /* Trigger entity */
     ecs_entity_t self;          /* Entity associated with observer */
 
+    ecs_observable_t *observable;  /* Observable for trigger */
+
     bool bloom_filter;          /* If true, incoming events will be a superset
                                  * of matching events, so trigger will have to
                                  * apply matching before calling callback */
@@ -329,6 +331,8 @@ struct ecs_observer_t {
     
     ecs_entity_t entity;        /* Observer entity */
     ecs_entity_t self;          /* Entity associated with observer */
+
+    ecs_observable_t *observable;  /* Observable for observer */
 
     uint64_t id;                /* Internal id */  
     int32_t last_event_id;      /* Last handled event id */  
@@ -2694,6 +2698,7 @@ typedef struct ecs_event_desc_t {
         ecs_entity_t entity;
         struct {
             ecs_table_t *table;
+            ecs_table_t *other_table;
             int32_t offset;
             int32_t count; /* When 0 notify all entities starting from offset */
         } table;
