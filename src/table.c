@@ -200,7 +200,7 @@ void run_on_remove(
     if (count) {
         flecs_run_monitors(world, table, table->un_set_all, 0, count, NULL);
 
-        ecs_table_diff_t diff = {.removed = {NULL, 1}};
+        ecs_table_diff_t diff = {.removed = {NULL, 1, 0}};
 
         int32_t i, type_count = ecs_vector_count(table->type);
         ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);

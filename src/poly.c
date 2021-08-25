@@ -11,7 +11,7 @@ static const char* mixin_kind_str[] = {
 ecs_mixins_t ecs_world_t_mixins = {
     .type_name = "ecs_world_t",
     .elems = {
-        [EcsMixinWorld] = -1,
+        [EcsMixinWorld] = offsetof(ecs_world_t, self),
         [EcsMixinObservable] = offsetof(ecs_world_t, observable)
     }
 };
@@ -33,13 +33,13 @@ ecs_mixins_t ecs_query_t_mixins = {
 
 static
 void* get_mixin(
-    const ecs_poly_t **object_ptr,
+    const ecs_poly_t *object,
     ecs_mixin_kind_t kind)
 {
-    ecs_assert(object_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
     
-    const ecs_header_t *hdr = *object_ptr;
+    const ecs_header_t *hdr = object;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
@@ -56,22 +56,10 @@ void* get_mixin(
         goto find_in_base;
     }
 
-    if (offset == -1) {
-        /* If offset is -1 the mixin is the object itself. While using offset 0
-         * would have been more convenient here, the mixin tables would have to 
-         * be prepopulated with -1 (or some other invalid value) which is more 
-         * error prone as it requires explicit (static) initialization. */
-        return (void*)object_ptr;
-    }
-    
     /* Object has mixin, return its address */
     return ECS_OFFSET(hdr, offset);
 
-find_in_base:
-    /* Mixin wasn't found, find base mixin which can't be the object itself */
-    offset = mixins->elems[EcsMixinBase];
-    ecs_assert(offset != -1, ECS_INTERNAL_ERROR, NULL);
-    
+find_in_base:    
     if (offset) {
         /* If the object has a base, try to find the mixin in the base */
         ecs_poly_t *base = *(ecs_poly_t**)ECS_OFFSET(hdr, offset);
@@ -87,12 +75,12 @@ not_found:
 
 static
 void* assert_mixin(
-    const ecs_poly_t **object_ptr,
+    const ecs_poly_t *object,
     ecs_mixin_kind_t kind)
 {
-    void *ptr = get_mixin(object_ptr, kind);
+    void *ptr = get_mixin(object, kind);
     if (!ptr) {
-        const ecs_header_t *header = *object_ptr;
+        const ecs_header_t *header = object;
         const ecs_mixins_t *mixins = header->mixins;
         ecs_err("%s not available for type %s", 
             mixin_kind_str[kind],
@@ -135,7 +123,7 @@ void _ecs_poly_fini(
 }
 
 #define assert_object(cond, file, line)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL)
+    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL); abort()
 
 #ifndef NDEBUG
 void _ecs_poly_assert(
@@ -166,5 +154,5 @@ bool _ecs_poly_is(
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object)
 {
-    return (ecs_observable_t*)assert_mixin(&object, EcsMixinObservable);
+    return (ecs_observable_t*)assert_mixin(object, EcsMixinObservable);
 }
