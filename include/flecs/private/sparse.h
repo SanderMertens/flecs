@@ -226,6 +226,24 @@ void flecs_sparse_memory(
     int32_t *allocd,
     int32_t *used);
 
+FLECS_DBG_API
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define flecs_sparse_iter(sparse, T)\
+    _flecs_sparse_iter(sparse, ECS_SIZEOF(T))
+
+#ifndef FLECS_LEGACY
+#define flecs_sparse_each(sparse, T, var, ...)\
+    {\
+        int var##_i, var##_count = ecs_sparse_count(sparse);\
+        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
+            T* var = ecs_sparse_get_dense(sparse, T, var##_i);\
+            __VA_ARGS__\
+        }\
+    }
+#endif
 
 /* Publicly exposed APIs 
  * The flecs_ functions aren't exposed directly as this can cause some

@@ -151,16 +151,18 @@ void flecs_clear_id_record(
 
 void flecs_triggers_notify(
     ecs_world_t *world,
-    ecs_id_t id,
+    ecs_poly_t *observable,
+    ecs_ids_t *ids,
     ecs_entity_t event,
+    ecs_entity_t entity,
     ecs_table_t *table,
     ecs_table_t *other_table,
-    ecs_data_t *data,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    void *param);
 
 ecs_map_t* flecs_triggers_get(
-    const ecs_world_t *world,
+    const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
 
@@ -634,6 +636,16 @@ bool _ecs_poly_is(
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Observables
+////////////////////////////////////////////////////////////////////////////////
+
+void flecs_observable_init(
+    ecs_observable_t *observable);
+
+void flecs_observable_fini(
+    ecs_observable_t *observable);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities

@@ -307,16 +307,23 @@ void notify(
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    world->event_id ++;
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = event,
+        .ids = ids,
+        .payload_kind = EcsPayloadTable,
+        .payload.table = {
+            .table = table,
+            .other_table = other_table,
+            .offset = row,
+            .count = count
+        }
+    });
 
-    ecs_id_t *arr = ids->array;
-    int32_t arr_count = ids->count;
-
-    int i;
-    for (i = 0; i < arr_count; i ++) {
-        flecs_triggers_notify(
-            world, arr[i], event, table, other_table, data, row, count);
-    }
+    // int i;
+    // for (i = 0; i < arr_count; i ++) {
+    //     flecs_triggers_notify(
+    //         world, arr[i], event, table, other_table, data, row, count);
+    // }
 }
 
 static

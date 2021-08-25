@@ -2126,7 +2126,7 @@ extern "C" {
  * @{
  */
 
-/** Pointer object returned by API. */
+/** An API object of a type that can morphs into other things (see mixins). */
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
@@ -2354,6 +2354,8 @@ struct ecs_trigger_t {
     ecs_entity_t entity;        /* Trigger entity */
     ecs_entity_t self;          /* Entity associated with observer */
 
+    ecs_observable_t *observable;  /* Observable for trigger */
+
     bool bloom_filter;          /* If true, incoming events will be a superset
                                  * of matching events, so trigger will have to
                                  * apply matching before calling callback */
@@ -2382,6 +2384,8 @@ struct ecs_observer_t {
     
     ecs_entity_t entity;        /* Observer entity */
     ecs_entity_t self;          /* Entity associated with observer */
+
+    ecs_observable_t *observable;  /* Observable for observer */
 
     uint64_t id;                /* Internal id */  
     int32_t last_event_id;      /* Last handled event id */  
@@ -2547,6 +2551,15 @@ typedef struct ecs_snapshot_iter_t {
     ecs_vector_t *tables; /* ecs_table_leaf_t */
     int32_t index;
 } ecs_snapshot_iter_t;  
+
+/** Type used for iterating ecs_sparse_t */
+typedef struct ecs_sparse_iter_t {
+    ecs_sparse_t *sparse;
+    const uint64_t *ids;
+    ecs_size_t size;
+    int32_t i;
+    int32_t count;
+} ecs_sparse_iter_t;
 
 /* Inline arrays for queries with small number of components */
 typedef struct ecs_iter_cache_t {
@@ -2996,6 +3009,9 @@ typedef struct ecs_trigger_desc_t {
 
     /* Callback to free binding_ctx */     
     ecs_ctx_free_t binding_ctx_free;
+
+    /* Observable with which to register the trigger */
+    ecs_poly_t *observable;
 } ecs_trigger_desc_t;
 
 
@@ -3026,7 +3042,10 @@ typedef struct ecs_observer_desc_t {
     ecs_ctx_free_t ctx_free;
 
     /* Callback to free binding_ctx */     
-    ecs_ctx_free_t binding_ctx_free;    
+    ecs_ctx_free_t binding_ctx_free;
+
+    /* Observable with which to register the trigger */
+    ecs_poly_t *observable;  
 } ecs_observer_desc_t;
 
 /** @} */
@@ -5208,6 +5227,7 @@ typedef struct ecs_event_desc_t {
         ecs_entity_t entity;
         struct {
             ecs_table_t *table;
+            ecs_table_t *other_table;
             int32_t offset;
             int32_t count; /* When 0 notify all entities starting from offset */
         } table;

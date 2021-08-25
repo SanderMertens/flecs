@@ -157,6 +157,15 @@ typedef struct ecs_snapshot_iter_t {
     int32_t index;
 } ecs_snapshot_iter_t;  
 
+/** Type used for iterating ecs_sparse_t */
+typedef struct ecs_sparse_iter_t {
+    ecs_sparse_t *sparse;
+    const uint64_t *ids;
+    ecs_size_t size;
+    int32_t i;
+    int32_t count;
+} ecs_sparse_iter_t;
+
 /* Inline arrays for queries with small number of components */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
