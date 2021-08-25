@@ -327,6 +327,7 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_poly_init(world, ecs_world_t);
 
+    world->self = world;
     world->fini_actions = NULL; 
 
     world->type_info = flecs_sparse_new(ecs_type_info_t);

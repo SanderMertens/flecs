@@ -569,6 +569,7 @@ struct ecs_world_t {
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
     /* -- Mixins -- */
+    ecs_world_t *self;
     ecs_observable_t observable;
 
     /* Unique id per generated event used to prevent duplicate notifications */
