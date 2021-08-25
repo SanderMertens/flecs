@@ -1216,7 +1216,14 @@
                 "1_parent",
                 "1_comp_1_parent",
                 "1_comp_prefab_new",
-                "1_comp_prefab_add"
+                "1_comp_prefab_add",
+                "monitor_w_and",
+                "monitor_w_or",
+                "monitor_w_not",
+                "monitor_w_optional",
+                "monitor_w_superset",
+                "monitor_w_self_superset",
+                "monitor_w_wildcard"
             ]
         }, {
             "id": "SystemOnSet",

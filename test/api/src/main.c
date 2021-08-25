@@ -1144,6 +1144,13 @@ void Monitor_1_parent(void);
 void Monitor_1_comp_1_parent(void);
 void Monitor_1_comp_prefab_new(void);
 void Monitor_1_comp_prefab_add(void);
+void Monitor_monitor_w_and(void);
+void Monitor_monitor_w_or(void);
+void Monitor_monitor_w_not(void);
+void Monitor_monitor_w_optional(void);
+void Monitor_monitor_w_superset(void);
+void Monitor_monitor_w_self_superset(void);
+void Monitor_monitor_w_wildcard(void);
 
 // Testsuite 'SystemOnSet'
 void SystemOnSet_set_1_of_1(void);
@@ -6145,6 +6152,34 @@ bake_test_case Monitor_testcases[] = {
     {
         "1_comp_prefab_add",
         Monitor_1_comp_prefab_add
+    },
+    {
+        "monitor_w_and",
+        Monitor_monitor_w_and
+    },
+    {
+        "monitor_w_or",
+        Monitor_monitor_w_or
+    },
+    {
+        "monitor_w_not",
+        Monitor_monitor_w_not
+    },
+    {
+        "monitor_w_optional",
+        Monitor_monitor_w_optional
+    },
+    {
+        "monitor_w_superset",
+        Monitor_monitor_w_superset
+    },
+    {
+        "monitor_w_self_superset",
+        Monitor_monitor_w_self_superset
+    },
+    {
+        "monitor_w_wildcard",
+        Monitor_monitor_w_wildcard
     }
 };
 
@@ -8883,7 +8918,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        7,
+        14,
         Monitor_testcases
     },
     {
