@@ -300,6 +300,20 @@ void init_iter(
 }
 
 static
+bool ignore_table(
+    ecs_trigger_t *t,
+    ecs_table_t *table)
+{
+    if (!t->match_prefab && (table->flags & EcsTableIsPrefab)) {
+        return true;
+    }
+    if (!t->match_disabled && (table->flags & EcsTableIsDisabled)) {
+        return true;
+    }
+    return false;
+}
+
+static
 void notify_self_triggers(
     ecs_iter_t *it,
     const ecs_map_t *triggers)
@@ -309,6 +323,10 @@ void notify_self_triggers(
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
+        if (ignore_table(t, it->table)) {
+            continue;
+        }
+
         it->system = t->entity;
         it->self = t->self;
         it->ctx = t->ctx;
@@ -329,6 +347,10 @@ void notify_set_triggers(
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
+        if (ignore_table(t, it->table)) {
+            continue;
+        }
+
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->ids, it->columns, it->subjects, it->sizes, it->ptrs))
         {
@@ -519,6 +541,8 @@ ecs_entity_t ecs_trigger_init(
         trigger->entity = entity;
         trigger->self = desc->self;
         trigger->observable = observable;
+        trigger->match_prefab = desc->match_prefab;
+        trigger->match_disabled = desc->match_disabled;
 
         comp->trigger = trigger;
 

@@ -2281,3 +2281,97 @@ void Trigger_readonly_term() {
 
     ecs_fini(world);
 }
+
+void Trigger_trigger_on_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx_1 = {0};
+    Probe ctx_2 = {0};
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { TagA },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { TagA },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_2,
+        .match_prefab = true
+    });
+
+    ecs_new(world, TagA);
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_2.invoked, 1);
+    ctx_1 = (Probe){0};
+    ctx_2 = (Probe){0};
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+    ecs_add(world, e, TagA);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 1);
+    ctx_2 = (Probe){0};
+
+    e = ecs_new_w_id(world, EcsDisabled);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+    ecs_add(world, e, TagA);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_trigger_on_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx_1 = {0};
+    Probe ctx_2 = {0};
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { TagA },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { TagA },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_2,
+        .match_disabled = true
+    });
+
+    ecs_new(world, TagA);
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_2.invoked, 1);
+    ctx_1 = (Probe){0};
+    ctx_2 = (Probe){0};
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+    ecs_add(world, e, TagA);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+    ctx_2 = (Probe){0};
+
+    e = ecs_new_w_id(world, EcsDisabled);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+    ecs_add(world, e, TagA);
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 1);
+
+    ecs_fini(world);
+}
