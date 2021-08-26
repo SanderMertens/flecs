@@ -60,10 +60,6 @@ typedef enum ecs_system_status_t {
  * ecs_enable operation with a state different from the state of the system, for
  * example the system is disabled, and ecs_enable is invoked with enabled: true.
  *
- * Additionally a system may switch between enabled and disabled when it is an
- * EcsOnDemand system, and interest is generated or lost for one of its [out]
- * columns.
- *
  * @param world The world.
  * @param system The system for which to set the action.
  * @param action The action.

@@ -144,7 +144,6 @@ static const flecs::entity_t Hidden = EcsHidden;
 static const flecs::entity_t Disabled = EcsDisabled;
 static const flecs::entity_t DisabledIntern = EcsDisabledIntern;
 static const flecs::entity_t Inactive = EcsInactive;
-static const flecs::entity_t OnDemand = EcsOnDemand;
 static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = EcsPipeline;
 

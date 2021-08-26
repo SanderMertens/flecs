@@ -47,6 +47,10 @@ void observer_callback(ecs_iter_t *it) {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
         if (o->is_monitor) {
+            if (world->is_fini) {
+                goto done;
+            }
+            
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
                 prev_type, NULL, NULL, NULL, NULL, NULL)) {
                 goto done;

@@ -2532,7 +2532,7 @@ ecs_entity_t ecs_clone(
     ecs_table_t *src_table = src_info.table;
 
     if (!found || !src_table) {
-        return dst;
+        goto done;
     }
 
     ecs_type_t src_type = src_table->type;
@@ -2546,11 +2546,12 @@ ecs_entity_t ecs_clone(
             dst_info.row, src_table, src_info.data, src_info.row, true);
 
         flecs_run_set_systems(world, 0,
-                src_table, src_info.data, NULL, dst_info.row, 1, NULL);
+            src_table, src_info.data, NULL, dst_info.row, 1, NULL);
     }
 
-    flecs_defer_flush(world, stage);
 
+done:
+    flecs_defer_flush(world, stage);
     return dst;
 }
 

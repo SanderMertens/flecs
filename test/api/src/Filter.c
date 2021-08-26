@@ -583,7 +583,7 @@ void Filter_term_w_self_superset_custom_relation() {
 }
 
 void Filter_filter_move() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -616,7 +616,7 @@ void Filter_filter_move() {
 }
 
 void Filter_filter_copy() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -653,7 +653,7 @@ void Filter_filter_copy() {
 }
 
 void Filter_filter_w_resources_copy() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -690,7 +690,7 @@ void Filter_filter_w_resources_copy() {
 }
 
 void Filter_filter_w_10_terms() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -759,7 +759,7 @@ void Filter_filter_w_10_terms() {
 }
 
 void Filter_filter_w_10_terms_move() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -819,7 +819,7 @@ void Filter_filter_w_10_terms_move() {
 }
 
 void Filter_filter_w_10_terms_copy() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -891,7 +891,7 @@ void Filter_filter_w_10_terms_copy() {
 }
 
 void Filter_term_iter_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -936,7 +936,7 @@ void Filter_term_iter_component() {
 }
 
 void Filter_term_iter_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag1);
     ECS_TAG(world, Tag2);
@@ -966,7 +966,7 @@ void Filter_term_iter_tag() {
 }
 
 void Filter_term_iter_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -997,7 +997,7 @@ void Filter_term_iter_pair() {
 }
 
 void Filter_term_iter_pair_w_rel_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel_1);
     ECS_TAG(world, Rel_2);
@@ -1031,7 +1031,7 @@ void Filter_term_iter_pair_w_rel_wildcard() {
 }
 
 void Filter_term_iter_pair_w_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj_1);
@@ -1065,7 +1065,7 @@ void Filter_term_iter_pair_w_obj_wildcard() {
 }
 
 void Filter_term_iter_w_superset() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -1109,7 +1109,7 @@ void Filter_term_iter_w_superset() {
 }
 
 void Filter_term_iter_w_superset_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -1160,7 +1160,7 @@ void Filter_term_iter_w_superset_childof() {
 }
 
 void Filter_term_iter_w_superset_self() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -1220,7 +1220,7 @@ void Filter_term_iter_w_superset_self() {
 }
 
 void Filter_term_iter_w_superset_self_childof() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -1278,7 +1278,7 @@ void Filter_term_iter_w_superset_self_childof() {
 }
 
 void Filter_term_iter_w_superset_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1316,7 +1316,7 @@ void Filter_term_iter_w_superset_tag() {
 }
 
 void Filter_term_iter_w_superset_pair() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1355,7 +1355,7 @@ void Filter_term_iter_w_superset_pair() {
 }
 
 void Filter_term_iter_w_superset_pair_obj_wildcard() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj_1);
@@ -1403,7 +1403,7 @@ void Filter_term_iter_w_superset_pair_obj_wildcard() {
 }
 
 void Filter_term_iter_in_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
     ECS_TAG(world, TagB);
@@ -1437,7 +1437,7 @@ void Filter_term_iter_in_stage() {
 }
 
 void Filter_filter_iter_1_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1476,7 +1476,7 @@ void Filter_filter_iter_1_tag() {
 }
 
 void Filter_filter_iter_2_tags() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1524,7 +1524,7 @@ void Filter_filter_iter_2_tags() {
 }
 
 void Filter_filter_iter_2_tags_1_not() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1569,7 +1569,7 @@ void Filter_filter_iter_2_tags_1_not() {
 }
 
 void Filter_filter_iter_3_tags_2_or() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -1617,7 +1617,7 @@ void Filter_filter_iter_3_tags_2_or() {
 }
 
 void Filter_filter_iter_1_component() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, TagB);
@@ -1668,7 +1668,7 @@ void Filter_filter_iter_1_component() {
 }
 
 void Filter_filter_iter_2_components() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1740,7 +1740,7 @@ void Filter_filter_iter_2_components() {
 }
 
 void Filter_filter_iter_pair_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1780,7 +1780,7 @@ void Filter_filter_iter_pair_id() {
 }
 
 void Filter_filter_iter_2_pair_ids() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, ObjA);
@@ -1872,7 +1872,7 @@ void Filter_filter_iter_childof_pair_0_parent() {
 }
 
 void Filter_filter_iter_pair_pred_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
@@ -1912,7 +1912,7 @@ void Filter_filter_iter_pair_pred_obj() {
 }
 
 void Filter_filter_iter_pair_2_pred_obj() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, ObjA);
@@ -1963,7 +1963,7 @@ void Filter_filter_iter_pair_2_pred_obj() {
 }
 
 void Filter_filter_iter_null() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2006,7 +2006,7 @@ void Filter_filter_iter_null() {
 }
 
 void Filter_filter_iter_1_not_tag() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2053,7 +2053,7 @@ void Filter_filter_iter_1_not_tag() {
 }
 
 void Filter_filter_iter_2_tags_1_optional() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2102,7 +2102,7 @@ void Filter_filter_iter_2_tags_1_optional() {
 }
 
 void Filter_filter_iter_in_stage() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
@@ -2135,7 +2135,7 @@ void Filter_filter_iter_in_stage() {
 }
 
 void Filter_term_iter_type_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2170,7 +2170,7 @@ void Filter_term_iter_type_set() {
 }
 
 void Filter_filter_iter_type_set() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2210,7 +2210,7 @@ void Filter_filter_iter_type_set() {
 }
 
 void Filter_filter_iter_10_tags() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2293,7 +2293,7 @@ void Filter_filter_iter_10_tags() {
 }
 
 void Filter_filter_iter_20_tags() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2433,7 +2433,7 @@ typedef struct {
   CompL, CompM, CompN, CompO, CompP, CompQ, CompR, CompS, CompT, CompU;
 
 void Filter_filter_iter_10_components() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, CompA);
     ECS_COMPONENT(world, CompB);
@@ -2530,7 +2530,7 @@ void Filter_filter_iter_10_components() {
 }
 
 void Filter_filter_iter_20_components() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, CompA);
     ECS_COMPONENT(world, CompB);
@@ -2680,7 +2680,7 @@ void Filter_filter_iter_20_components() {
 }
 
 void Filter_term_iter_w_readonly_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2700,7 +2700,7 @@ void Filter_term_iter_w_readonly_term() {
 }
 
 void Filter_filter_iter_w_readonly_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2731,7 +2731,7 @@ void Filter_filter_iter_w_readonly_term() {
 }
 
 void Filter_filter_iter_w_from_nothing_term() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
@@ -2762,7 +2762,7 @@ void Filter_filter_iter_w_from_nothing_term() {
 }
 
 void Filter_match_disabled() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
@@ -2811,7 +2811,7 @@ void Filter_match_disabled() {
 }
 
 void Filter_match_prefab() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 
