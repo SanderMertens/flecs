@@ -341,7 +341,9 @@ ecs_entity_t ecs_lookup_child(
     int ret = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
             { .id = ecs_pair( ecs_id(EcsIdentifier), EcsName) },
-            { .id = ecs_pair(EcsChildOf, parent) }
+            { .id = ecs_pair(EcsChildOf, parent) },
+            { .id = EcsDisabled, .oper = EcsOptional },
+            { .id = EcsPrefab, .oper = EcsOptional }
         }
     });
     ecs_assert(ret == 0, ECS_INTERNAL_ERROR, NULL);

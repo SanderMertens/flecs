@@ -177,16 +177,14 @@ void notify_trigger(
 {
     (void)world;
 
-    if (!(table->flags & (EcsTableIsDisabled|EcsTableIsPrefab))) {
-        if (event == EcsOnAdd) {
-            table->flags |= EcsTableHasOnAdd;
-        } else if (event == EcsOnRemove) {
-            table->flags |= EcsTableHasOnRemove;
-        } else if (event == EcsOnSet) {
-            table->flags |= EcsTableHasOnSet;
-        } else if (event == EcsUnSet) {
-            table->flags |= EcsTableHasUnSet;
-        }
+    if (event == EcsOnAdd) {
+        table->flags |= EcsTableHasOnAdd;
+    } else if (event == EcsOnRemove) {
+        table->flags |= EcsTableHasOnRemove;
+    } else if (event == EcsOnSet) {
+        table->flags |= EcsTableHasOnSet;
+    } else if (event == EcsUnSet) {
+        table->flags |= EcsTableHasUnSet;
     }
 }
 
