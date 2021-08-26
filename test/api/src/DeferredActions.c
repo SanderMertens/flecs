@@ -421,7 +421,7 @@ void DeferredActions_defer_get_mut_no_modify() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -451,7 +451,7 @@ void DeferredActions_defer_get_mut_w_modify() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -483,7 +483,7 @@ void DeferredActions_defer_modify() {
 
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, OnSetVelocity, EcsOnSet, Velocity);
+    ECS_TRIGGER(world, OnSetVelocity, EcsOnSet, Velocity);
 
     ecs_entity_t e = ecs_new(world, Velocity);
 

@@ -34,7 +34,7 @@ void TriggerOnSet_set() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -67,7 +67,7 @@ void TriggerOnSet_set_new() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -97,7 +97,7 @@ void TriggerOnSet_set_again() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -137,7 +137,7 @@ void TriggerOnSet_clone() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -175,7 +175,7 @@ void TriggerOnSet_clone_w_value() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -262,7 +262,7 @@ void TriggerOnSet_set_and_add_system() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnSet_check_order, EcsOnSet, Position);
+    ECS_OBSERVER(world, OnSet_check_order, EcsOnSet, Position);
     ECS_TRIGGER(world, OnAdd_check_order, EcsOnAdd, Position);
 
     Probe ctx = {0};

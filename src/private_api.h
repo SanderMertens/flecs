@@ -317,7 +317,7 @@ void flecs_run_set_systems(
     ecs_column_t *column,
     int32_t row,
     int32_t count,
-    bool set_all);
+    ecs_table_diff_t *diff);
 
 
 ////////////////////////////////////////////////////////////////////////////////

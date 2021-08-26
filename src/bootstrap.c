@@ -45,7 +45,9 @@ static ECS_CTOR(EcsTrigger, ptr, {
 })
 
 static ECS_DTOR(EcsTrigger, ptr, {
-    flecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
+    if (ptr->trigger) {
+        flecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
+    }
 })
 
 static ECS_COPY(EcsTrigger, dst, src, {
@@ -66,7 +68,9 @@ static ECS_CTOR(EcsObserver, ptr, {
 })
 
 static ECS_DTOR(EcsObserver, ptr, {
-    flecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
+    if (ptr->observer) {
+        flecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
+    }
 })
 
 static ECS_COPY(EcsObserver, dst, src, {

@@ -580,6 +580,8 @@ void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
+    ecs_assert(trigger != NULL, ECS_INVALID_PARAMETER, NULL);
+    
     unregister_trigger(trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
