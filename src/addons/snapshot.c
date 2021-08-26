@@ -231,7 +231,7 @@ void ecs_snapshot_restore(
 
                 /* Run OnSet systems for merged entities */
                 flecs_run_set_systems(world, 0, table, &table->storage, NULL,
-                    old_count, new_count, true);
+                    old_count, new_count, NULL);
 
                 ecs_os_free(leaf->data->columns);
             } else {
@@ -270,7 +270,7 @@ void ecs_snapshot_restore(
             }
 
             flecs_run_set_systems(world, 0, table, &table->storage, NULL, 0, 
-                ecs_table_count(table), true);            
+                ecs_table_count(table), NULL);
         }
     }
 

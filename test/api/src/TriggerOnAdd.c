@@ -555,7 +555,7 @@ void TriggerOnAdd_set_after_add_in_on_add() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position);
-    ECS_SYSTEM(world, OnSetPosition, EcsOnSet, Position);
+    ECS_TRIGGER(world, OnSetPosition, EcsOnSet, Position);
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .entity = {AddVelocity}, .ctx = &ecs_id(Velocity)
