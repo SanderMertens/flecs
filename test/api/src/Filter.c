@@ -2760,3 +2760,101 @@ void Filter_filter_iter_w_from_nothing_term() {
 
     ecs_fini(world);
 }
+
+void Filter_match_disabled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_filter_t f_1;
+    ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    });
+
+    ecs_filter_t f_2;
+    ecs_filter_init(world, &f_2, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional }}
+    });
+
+    test_bool(f_1.match_disabled, false);
+    test_bool(f_2.match_disabled, true);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f_1);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_assert(!ecs_filter_next(&it));
+
+    it = ecs_filter_iter(world, &f_2);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_int(ecs_term_id(&it, 1), TagA);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}
+
+void Filter_match_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_filter_t f_1;
+    ecs_filter_init(world, &f_1, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    });
+
+    ecs_filter_t f_2;
+    ecs_filter_init(world, &f_2, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional }}
+    });
+
+    test_bool(f_1.match_prefab, false);
+    test_bool(f_2.match_prefab, true);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f_1);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_assert(!ecs_filter_next(&it));
+
+    it = ecs_filter_iter(world, &f_2);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), TagA);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f_1);
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}

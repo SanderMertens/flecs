@@ -268,7 +268,6 @@ void init_flags(
 
         if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
-            table->flags |= EcsTableIsDisabled;
         }
 
         /* If table contains disabled entities, mark it as disabled */

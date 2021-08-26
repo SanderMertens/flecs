@@ -1349,7 +1349,7 @@ void register_table_for_id(
     }
 
     /* Set flags if triggers are registered for table */
-    if (!(table->flags & EcsTableIsDisabled)) {
+    if (!(table->flags & (EcsTableIsDisabled|EcsTableIsPrefab))) {
         if (flecs_triggers_for_id(world, id, EcsOnAdd)) {
             table->flags |= EcsTableHasOnAdd;
         }

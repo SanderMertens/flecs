@@ -934,7 +934,9 @@
                 "term_iter_type_set",
                 "filter_iter_type_set",
                 "filter_iter_w_readonly_term",
-                "filter_iter_w_from_nothing_term"
+                "filter_iter_w_from_nothing_term",
+                "match_disabled",
+                "match_prefab"
             ]
         }, {
             "id": "Query",

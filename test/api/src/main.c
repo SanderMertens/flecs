@@ -878,6 +878,8 @@ void Filter_term_iter_type_set(void);
 void Filter_filter_iter_type_set(void);
 void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
+void Filter_match_disabled(void);
+void Filter_match_prefab(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -5132,6 +5134,14 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_w_from_nothing_term",
         Filter_filter_iter_w_from_nothing_term
+    },
+    {
+        "match_disabled",
+        Filter_match_disabled
+    },
+    {
+        "match_prefab",
+        Filter_match_prefab
     }
 };
 
@@ -8862,7 +8872,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        62,
+        64,
         Filter_testcases
     },
     {

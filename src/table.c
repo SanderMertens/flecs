@@ -177,7 +177,7 @@ void notify_trigger(
 {
     (void)world;
 
-    if (!(table->flags & EcsTableIsDisabled)) {
+    if (!(table->flags & (EcsTableIsDisabled|EcsTableIsPrefab))) {
         if (event == EcsOnAdd) {
             table->flags |= EcsTableHasOnAdd;
         } else if (event == EcsOnRemove) {
