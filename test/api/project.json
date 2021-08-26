@@ -798,7 +798,6 @@
                 "system_readeactivate",
                 "system_readeactivate_w_2_systems",
                 "add_to_system_in_progress",
-                "add_to_lazy_system_in_progress",
                 "redefine_null_signature",
                 "redefine_0_signature",
                 "one_named_column_of_two",
@@ -1342,37 +1341,6 @@
                 "nested_rate_entity",
                 "nested_rate_entity_empty_src",
                 "naked_tick_entity"
-            ]
-        }, {
-            "id": "SystemOnDemand",
-            "testcases": [
-                "enable_out_after_in",
-                "enable_in_after_out",
-                "enable_out_after_in_2_out_1_in",
-                "enable_out_after_in_1_out_2_in",
-                "enable_in_after_out_2_out_1_in",
-                "enable_in_after_out_1_out_2_in",
-                "disable_after_disable_in",
-                "disable_after_disable_in_2_out_1_in",
-                "disable_after_disable_in_1_out_2_in",
-                "table_after_out",
-                "table_after_out_and_in",
-                "table_after_out_and_in_overlapping_columns",
-                "1_out_system_2_in_systems",
-                "1_out_system_2_in_systems_different_columns",
-                "1_out_system_2_in_systems_overlapping_columns",
-                "disable_after_inactive_in_system",
-                "disable_after_2_inactive_in_systems",
-                "disable_after_2_inactive_in_systems_different_columns",
-                "enable_2_output_1_input_system",
-                "enable_2_output_1_input_system_different_columns",
-                "enable_2_output_1_input_system_overlapping_columns",
-                "out_not_column",
-                "trigger_on_manual",
-                "trigger_on_manual_not_column",
-                "on_demand_task_w_from_entity",
-                "on_demand_task_w_not_from_entity",
-                "enable_after_user_disable"
             ]
         }, {
             "id": "SystemCascade",

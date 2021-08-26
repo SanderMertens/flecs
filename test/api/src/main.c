@@ -745,7 +745,6 @@ void SystemMisc_change_system_action(void);
 void SystemMisc_system_readeactivate(void);
 void SystemMisc_system_readeactivate_w_2_systems(void);
 void SystemMisc_add_to_system_in_progress(void);
-void SystemMisc_add_to_lazy_system_in_progress(void);
 void SystemMisc_redefine_null_signature(void);
 void SystemMisc_redefine_0_signature(void);
 void SystemMisc_one_named_column_of_two(void);
@@ -1261,35 +1260,6 @@ void Timer_rate_entity(void);
 void Timer_nested_rate_entity(void);
 void Timer_nested_rate_entity_empty_src(void);
 void Timer_naked_tick_entity(void);
-
-// Testsuite 'SystemOnDemand'
-void SystemOnDemand_enable_out_after_in(void);
-void SystemOnDemand_enable_in_after_out(void);
-void SystemOnDemand_enable_out_after_in_2_out_1_in(void);
-void SystemOnDemand_enable_out_after_in_1_out_2_in(void);
-void SystemOnDemand_enable_in_after_out_2_out_1_in(void);
-void SystemOnDemand_enable_in_after_out_1_out_2_in(void);
-void SystemOnDemand_disable_after_disable_in(void);
-void SystemOnDemand_disable_after_disable_in_2_out_1_in(void);
-void SystemOnDemand_disable_after_disable_in_1_out_2_in(void);
-void SystemOnDemand_table_after_out(void);
-void SystemOnDemand_table_after_out_and_in(void);
-void SystemOnDemand_table_after_out_and_in_overlapping_columns(void);
-void SystemOnDemand_1_out_system_2_in_systems(void);
-void SystemOnDemand_1_out_system_2_in_systems_different_columns(void);
-void SystemOnDemand_1_out_system_2_in_systems_overlapping_columns(void);
-void SystemOnDemand_disable_after_inactive_in_system(void);
-void SystemOnDemand_disable_after_2_inactive_in_systems(void);
-void SystemOnDemand_disable_after_2_inactive_in_systems_different_columns(void);
-void SystemOnDemand_enable_2_output_1_input_system(void);
-void SystemOnDemand_enable_2_output_1_input_system_different_columns(void);
-void SystemOnDemand_enable_2_output_1_input_system_overlapping_columns(void);
-void SystemOnDemand_out_not_column(void);
-void SystemOnDemand_trigger_on_manual(void);
-void SystemOnDemand_trigger_on_manual_not_column(void);
-void SystemOnDemand_on_demand_task_w_from_entity(void);
-void SystemOnDemand_on_demand_task_w_not_from_entity(void);
-void SystemOnDemand_enable_after_user_disable(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -4618,10 +4588,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_add_to_system_in_progress
     },
     {
-        "add_to_lazy_system_in_progress",
-        SystemMisc_add_to_lazy_system_in_progress
-    },
-    {
         "redefine_null_signature",
         SystemMisc_redefine_null_signature
     },
@@ -6606,117 +6572,6 @@ bake_test_case Timer_testcases[] = {
     {
         "naked_tick_entity",
         Timer_naked_tick_entity
-    }
-};
-
-bake_test_case SystemOnDemand_testcases[] = {
-    {
-        "enable_out_after_in",
-        SystemOnDemand_enable_out_after_in
-    },
-    {
-        "enable_in_after_out",
-        SystemOnDemand_enable_in_after_out
-    },
-    {
-        "enable_out_after_in_2_out_1_in",
-        SystemOnDemand_enable_out_after_in_2_out_1_in
-    },
-    {
-        "enable_out_after_in_1_out_2_in",
-        SystemOnDemand_enable_out_after_in_1_out_2_in
-    },
-    {
-        "enable_in_after_out_2_out_1_in",
-        SystemOnDemand_enable_in_after_out_2_out_1_in
-    },
-    {
-        "enable_in_after_out_1_out_2_in",
-        SystemOnDemand_enable_in_after_out_1_out_2_in
-    },
-    {
-        "disable_after_disable_in",
-        SystemOnDemand_disable_after_disable_in
-    },
-    {
-        "disable_after_disable_in_2_out_1_in",
-        SystemOnDemand_disable_after_disable_in_2_out_1_in
-    },
-    {
-        "disable_after_disable_in_1_out_2_in",
-        SystemOnDemand_disable_after_disable_in_1_out_2_in
-    },
-    {
-        "table_after_out",
-        SystemOnDemand_table_after_out
-    },
-    {
-        "table_after_out_and_in",
-        SystemOnDemand_table_after_out_and_in
-    },
-    {
-        "table_after_out_and_in_overlapping_columns",
-        SystemOnDemand_table_after_out_and_in_overlapping_columns
-    },
-    {
-        "1_out_system_2_in_systems",
-        SystemOnDemand_1_out_system_2_in_systems
-    },
-    {
-        "1_out_system_2_in_systems_different_columns",
-        SystemOnDemand_1_out_system_2_in_systems_different_columns
-    },
-    {
-        "1_out_system_2_in_systems_overlapping_columns",
-        SystemOnDemand_1_out_system_2_in_systems_overlapping_columns
-    },
-    {
-        "disable_after_inactive_in_system",
-        SystemOnDemand_disable_after_inactive_in_system
-    },
-    {
-        "disable_after_2_inactive_in_systems",
-        SystemOnDemand_disable_after_2_inactive_in_systems
-    },
-    {
-        "disable_after_2_inactive_in_systems_different_columns",
-        SystemOnDemand_disable_after_2_inactive_in_systems_different_columns
-    },
-    {
-        "enable_2_output_1_input_system",
-        SystemOnDemand_enable_2_output_1_input_system
-    },
-    {
-        "enable_2_output_1_input_system_different_columns",
-        SystemOnDemand_enable_2_output_1_input_system_different_columns
-    },
-    {
-        "enable_2_output_1_input_system_overlapping_columns",
-        SystemOnDemand_enable_2_output_1_input_system_overlapping_columns
-    },
-    {
-        "out_not_column",
-        SystemOnDemand_out_not_column
-    },
-    {
-        "trigger_on_manual",
-        SystemOnDemand_trigger_on_manual
-    },
-    {
-        "trigger_on_manual_not_column",
-        SystemOnDemand_trigger_on_manual_not_column
-    },
-    {
-        "on_demand_task_w_from_entity",
-        SystemOnDemand_on_demand_task_w_from_entity
-    },
-    {
-        "on_demand_task_w_not_from_entity",
-        SystemOnDemand_on_demand_task_w_not_from_entity
-    },
-    {
-        "enable_after_user_disable",
-        SystemOnDemand_enable_after_user_disable
     }
 };
 
@@ -8878,7 +8733,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        84,
+        83,
         SystemMisc_testcases
     },
     {
@@ -8978,13 +8833,6 @@ static bake_test_suite suites[] = {
         NULL,
         16,
         Timer_testcases
-    },
-    {
-        "SystemOnDemand",
-        NULL,
-        NULL,
-        27,
-        SystemOnDemand_testcases
     },
     {
         "SystemCascade",
@@ -9130,5 +8978,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 59);
+    return bake_test_run("api", argc, argv, suites, 58);
 }

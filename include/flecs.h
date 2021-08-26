@@ -785,6 +785,9 @@ FLECS_API extern const ecs_entity_t EcsOnSet;
 /* Event. Triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
+/* Event. Exactly-once trigger for when an entity matches/unmatches a filter */
+FLECS_API extern const ecs_entity_t EcsMonitor;
+
 /* Event. Triggers when an entity is deleted.
  * Also used as relation for defining cleanup behavior, see: 
  * https://github.com/SanderMertens/flecs/blob/master/docs/Relations.md#relation-cleanup-properties
@@ -836,8 +839,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsThrow;
 
 /* System module tags */
-FLECS_API extern const ecs_entity_t EcsOnDemand;
-FLECS_API extern const ecs_entity_t EcsMonitor;
 FLECS_API extern const ecs_entity_t EcsDisabledIntern;
 FLECS_API extern const ecs_entity_t EcsInactive;
 

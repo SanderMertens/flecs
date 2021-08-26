@@ -6,131 +6,6 @@
 #include "system.h"
 
 static
-ecs_on_demand_in_t* get_in_component(
-    ecs_map_t *component_map,
-    ecs_entity_t component)
-{
-    ecs_on_demand_in_t *in = ecs_map_get(
-        component_map, ecs_on_demand_in_t, component);
-    if (!in) {
-        ecs_on_demand_in_t in_value = {0};
-        ecs_map_set(component_map, component, &in_value);
-        in = ecs_map_get(component_map, ecs_on_demand_in_t, component);
-        ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    return in;
-}
-
-static
-void activate_in_columns(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_map_t *component_map,
-    bool activate)
-{
-    ecs_term_t *terms = query->filter.terms;
-    int32_t i, count = query->filter.term_count;
-
-    for (i = 0; i < count; i ++) {
-        if (terms[i].inout == EcsIn) {
-            ecs_on_demand_in_t *in = get_in_component(
-                component_map, terms[i].id);
-            ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            in->count += activate ? 1 : -1;
-
-            ecs_assert(in->count >= 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* If this is the first system that registers the in component, walk
-             * over all already registered systems to enable them */
-            if (in->systems && 
-               ((activate && in->count == 1) || 
-                (!activate && !in->count))) 
-            {
-                ecs_on_demand_out_t **out = ecs_vector_first(
-                    in->systems, ecs_on_demand_out_t*);
-                int32_t s, in_count = ecs_vector_count(in->systems);
-
-                for (s = 0; s < in_count; s ++) {
-                    /* Increase the count of the system with the out params */
-                    out[s]->count += activate ? 1 : -1;
-                    
-                    /* If this is the first out column that is requested from
-                     * the OnDemand system, enable it */
-                    if (activate && out[s]->count == 1) {
-                        ecs_remove_id(world, out[s]->system, EcsDisabledIntern);
-                    } else if (!activate && !out[s]->count) {
-                        ecs_add_id(world, out[s]->system, EcsDisabledIntern);             
-                    }
-                }
-            }
-        }
-    }    
-}
-
-static
-void register_out_column(
-    ecs_map_t *component_map,
-    ecs_entity_t component,
-    ecs_on_demand_out_t *on_demand_out)
-{
-    ecs_on_demand_in_t *in = get_in_component(component_map, component);
-    ecs_assert(in != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    on_demand_out->count += in->count;
-    ecs_on_demand_out_t **elem = ecs_vector_add(&in->systems, ecs_on_demand_out_t*);
-    *elem = on_demand_out;
-}
-
-static
-void register_out_columns(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    EcsSystem *system_data)
-{
-    ecs_query_t *query = system_data->query;
-    ecs_term_t *terms = query->filter.terms;
-    int32_t out_count = 0, i, count = query->filter.term_count;
-
-    for (i = 0; i < count; i ++) {
-        if (terms[i].inout == EcsOut) {
-            if (!system_data->on_demand) {
-                system_data->on_demand = ecs_os_malloc(sizeof(ecs_on_demand_out_t));
-                ecs_assert(system_data->on_demand != NULL, ECS_OUT_OF_MEMORY, NULL);
-
-                system_data->on_demand->system = system;
-                system_data->on_demand->count = 0;
-            }
-
-            /* If column operator is NOT and the inout kind is [out], the system
-             * explicitly states that it will create the component (it is not
-             * there, yet it is an out column). In this case it doesn't make
-             * sense to wait until [in] terms get activated (matched with
-             * entities) since the component is not there yet. Therefore add it
-             * to the on_enable_components list, so this system will be enabled
-             * when a [in] column is enabled, rather than activated */
-            ecs_map_t *component_map;
-            if (terms[i].oper == EcsNot) {
-                component_map = world->on_enable_components;
-            } else {
-                component_map = world->on_activate_components;
-            }
-
-            register_out_column(
-                component_map, terms[i].id, 
-                system_data->on_demand);
-
-            out_count ++;
-        }
-    }
-
-    /* If there are no out terms in the on-demand system, the system will
-     * never be enabled */
-    ecs_assert(out_count != 0, ECS_NO_OUT_COLUMNS, ecs_get_name(world, system));
-}
-
-static
 void invoke_status_action(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -182,10 +57,6 @@ void ecs_system_activate(
         }            
     }
 
-    /* If system contains in columns, signal that they are now in use */
-    activate_in_columns(
-        world, system_data->query, world->on_activate_components, activate);
-
     /* Invoke system status action */
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
@@ -203,6 +74,7 @@ void ecs_enable_system(
     EcsSystem *system_data,
     bool enabled)
 {
+    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_t *query = system_data->query;
@@ -215,13 +87,6 @@ void ecs_enable_system(
         ecs_system_activate(world, system, enabled, system_data);
         system_data = ecs_get_mut(world, system, EcsSystem, NULL);
     }
-
-    /* Enable/disable systems that trigger on [in] enablement */
-    activate_in_columns(
-        world, 
-        query, 
-        world->on_enable_components, 
-        enabled);
     
     /* Invoke action for enable/disable status */
     invoke_status_action(
@@ -506,6 +371,13 @@ void ecs_colsystem_dtor(
         EcsSystem *system = &system_data[i];
         ecs_entity_t e = entities[i];
 
+        if (!ecs_is_alive(world, e)) {
+            /* This can happen when a set is deferred while a system is being
+             * cleaned up. The operation will be discarded, but the destructor
+             * still needs to be invoked for the value */
+            continue;
+        }
+
         /* Invoke Deactivated action for active systems */
         if (system->query && ecs_vector_count(system->query->tables)) {
             invoke_status_action(world, e, ptr, EcsSystemDeactivated);
@@ -538,31 +410,19 @@ void ecs_colsystem_dtor(
     }
 }
 
-/* Disable system when EcsDisabled is added */
-static 
-void DisableSystem(
-    ecs_iter_t *it)
-{
-    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
-
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_enable_system(
-            it->world, it->entities[i], &system_data[i], false);
-    }
-}
-
-/* Enable system when EcsDisabled is removed */
 static
-void EnableSystem(
+void EnableMonitor(
     ecs_iter_t *it)
 {
-    EcsSystem *system_data = ecs_term(it, EcsSystem, 1);
+    EcsSystem *sys = ecs_term(it, EcsSystem, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
-        ecs_enable_system(
-            it->world, it->entities[i], &system_data[i], true);
+        if (it->event == EcsOnAdd) {
+            ecs_enable_system(it->world, it->entities[i], &sys[i], true);
+        } else if (it->event == EcsOnRemove) {
+            ecs_enable_system(it->world, it->entities[i], &sys[i], false);
+        }
     }
 }
 
@@ -630,21 +490,6 @@ ecs_entity_t ecs_system_init(
              * causes it to be ignored by the main loop. When the system matches
              * with a table it will be activated. */
             ecs_add_id(world, result, EcsInactive);
-        }
-
-        /* If system is enabled, trigger enable components */
-        activate_in_columns(world, query, world->on_enable_components, true);
-
-        /* If the query has a OnDemand system tag, register its [out] terms */
-        if (ecs_has_id(world, result, EcsOnDemand)) {
-            register_out_columns(world, result, system);
-            ecs_assert(system->on_demand != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            /* If there are no systems currently interested in any of the [out]
-             * terms of the on demand system, disable it */
-            if (!system->on_demand->count) {
-                ecs_add_id(world, result, EcsDisabledIntern);
-            }        
         }
 
         if (!ecs_has_id(world, result, EcsDisabled)) {
@@ -747,7 +592,6 @@ void FlecsSystemImport(
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
     flecs_bootstrap_tag(world, EcsDisabledIntern);
     flecs_bootstrap_tag(world, EcsInactive);
-    flecs_bootstrap_tag(world, EcsOnDemand);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
 
@@ -758,12 +602,8 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    /* Monitors that trigger when a system is enabled or disabled */
-    ECS_SYSTEM(world, DisableSystem, EcsMonitor, 
-        System, Disabled || DisabledIntern, SYSTEM:Hidden);
-
-    ECS_SYSTEM(world, EnableSystem, EcsMonitor, 
-        System, !Disabled, !DisabledIntern, SYSTEM:Hidden);
+    ECS_OBSERVER(world, EnableMonitor, EcsMonitor,
+        System, !Disabled, !DisabledIntern);
 }
 
 #endif

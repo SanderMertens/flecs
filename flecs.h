@@ -3314,6 +3314,9 @@ FLECS_API extern const ecs_entity_t EcsOnSet;
 /* Event. Triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
+/* Event. Exactly-once trigger for when an entity matches/unmatches a filter */
+FLECS_API extern const ecs_entity_t EcsMonitor;
+
 /* Event. Triggers when an entity is deleted.
  * Also used as relation for defining cleanup behavior, see: 
  * https://github.com/SanderMertens/flecs/blob/master/docs/Relations.md#relation-cleanup-properties
@@ -3365,8 +3368,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsThrow;
 
 /* System module tags */
-FLECS_API extern const ecs_entity_t EcsOnDemand;
-FLECS_API extern const ecs_entity_t EcsMonitor;
 FLECS_API extern const ecs_entity_t EcsDisabledIntern;
 FLECS_API extern const ecs_entity_t EcsInactive;
 
@@ -6078,10 +6079,6 @@ typedef enum ecs_system_status_t {
  * ecs_enable operation with a state different from the state of the system, for
  * example the system is disabled, and ecs_enable is invoked with enabled: true.
  *
- * Additionally a system may switch between enabled and disabled when it is an
- * EcsOnDemand system, and interest is generated or lost for one of its [out]
- * columns.
- *
  * @param world The world.
  * @param system The system for which to set the action.
  * @param action The action.
@@ -7694,7 +7691,6 @@ static const flecs::entity_t Hidden = EcsHidden;
 static const flecs::entity_t Disabled = EcsDisabled;
 static const flecs::entity_t DisabledIntern = EcsDisabledIntern;
 static const flecs::entity_t Inactive = EcsInactive;
-static const flecs::entity_t OnDemand = EcsOnDemand;
 static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = EcsPipeline;
 

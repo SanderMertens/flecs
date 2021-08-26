@@ -1070,33 +1070,6 @@ void SystemMisc_add_to_system_in_progress() {
 }
 
 static
-void Foo(ecs_iter_t *it) { }
-
-void SystemMisc_add_to_lazy_system_in_progress() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Tag);
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, [out] Position, SYSTEM:OnDemand);
-
-    ecs_new(world, Position);
-
-    ecs_defer_begin(world);
-
-    ecs_add(world, Dummy, Tag);
-
-    ecs_defer_end(world);
-
-    ECS_SYSTEM(world, Foo, EcsOnUpdate, [in] Position);
-
-    ecs_progress(world, 0);
-    test_assert(dummy_invoked == true);
-
-    ecs_fini(world);
-}
-
-static
 void Action(ecs_iter_t *it) { }
 
 void SystemMisc_redefine_null_signature() {
@@ -1895,6 +1868,7 @@ void SystemMisc_delete_system() {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.name = "Foo",
         .query.filter.terms = {{.id = Tag}},
         .callback = Dummy
     });
