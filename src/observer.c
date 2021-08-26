@@ -155,7 +155,9 @@ ecs_entity_t ecs_observer_init(
                 .term = *t,
                 .callback = observer_callback,
                 .ctx = observer,
-                .binding_ctx = desc->binding_ctx
+                .binding_ctx = desc->binding_ctx,
+                .match_prefab = observer->filter.match_prefab,
+                .match_disabled = observer->filter.match_disabled
             };
 
             ecs_os_memcpy(trigger_desc.events, observer->events, 

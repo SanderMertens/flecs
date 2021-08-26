@@ -1080,6 +1080,8 @@ void Observer_delete_observer_w_ctx(void);
 void Observer_filter_w_strings(void);
 void Observer_iter_type_set(void);
 void Observer_readonly_term(void);
+void Observer_trigger_on_prefab(void);
+void Observer_trigger_on_disabled(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -5924,6 +5926,14 @@ bake_test_case Observer_testcases[] = {
     {
         "readonly_term",
         Observer_readonly_term
+    },
+    {
+        "trigger_on_prefab",
+        Observer_trigger_on_prefab
+    },
+    {
+        "trigger_on_disabled",
+        Observer_trigger_on_disabled
     }
 };
 
@@ -8910,7 +8920,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        28,
+        30,
         Observer_testcases
     },
     {

@@ -1144,7 +1144,9 @@
                 "delete_observer_w_ctx",
                 "filter_w_strings",
                 "iter_type_set",
-                "readonly_term"
+                "readonly_term",
+                "trigger_on_prefab",
+                "trigger_on_disabled"
             ]                
         }, {
             "id": "TriggerOnAdd",
