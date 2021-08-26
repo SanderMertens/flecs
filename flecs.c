@@ -2737,7 +2737,7 @@ void notify_trigger(
 {
     (void)world;
 
-    if (!(table->flags & EcsTableIsDisabled)) {
+    if (!(table->flags & (EcsTableIsDisabled|EcsTableIsPrefab))) {
         if (event == EcsOnAdd) {
             table->flags |= EcsTableHasOnAdd;
         } else if (event == EcsOnRemove) {
@@ -18177,7 +18177,7 @@ void register_table_for_id(
     }
 
     /* Set flags if triggers are registered for table */
-    if (!(table->flags & EcsTableIsDisabled)) {
+    if (!(table->flags & (EcsTableIsDisabled|EcsTableIsPrefab))) {
         if (flecs_triggers_for_id(world, id, EcsOnAdd)) {
             table->flags |= EcsTableHasOnAdd;
         }
@@ -19019,7 +19019,14 @@ int ecs_filter_finalize(
             }
         } else {
             f->match_only_this = false;
-        }          
+        }
+
+        if (term->id == EcsPrefab) {
+            f->match_prefab = true;
+        }
+        if (term->id == EcsDisabled) {
+            f->match_disabled = true;
+        }
     }
 
     f->term_count_actual = actual_count;
@@ -19678,7 +19685,9 @@ static
 ecs_table_record_t* term_iter_next(
     ecs_world_t *world,
     ecs_term_iter_t *iter,
-    ecs_entity_t *source_out)
+    ecs_entity_t *source_out,
+    bool match_prefab,
+    bool match_disabled)
 {
     ecs_table_t *table = NULL;
     ecs_entity_t source = 0;
@@ -19701,6 +19710,14 @@ ecs_table_record_t* term_iter_next(
         }
 
         table = tr->table;
+
+        if (!match_prefab && (table->flags & EcsTableIsPrefab)) {
+            continue;
+        }
+
+        if (!match_disabled && (table->flags & EcsTableIsDisabled)) {
+            continue;
+        }
 
         if (!ecs_table_count(table)) {
             continue;
@@ -19747,7 +19764,7 @@ bool ecs_term_next(
     ecs_world_t *world = it->real_world;
 
     ecs_entity_t source;
-    ecs_table_record_t *tr = term_iter_next(world, iter, &source);
+    ecs_table_record_t *tr = term_iter_next(world, iter, &source, false, false);
     if (!tr) {
         it->is_valid = false;
         return false;
@@ -19904,7 +19921,8 @@ bool ecs_filter_next(
 
         do {
             ecs_entity_t source;
-            ecs_table_record_t *tr = term_iter_next(world, term_iter, &source);
+            ecs_table_record_t *tr = term_iter_next(world, term_iter, &source, 
+                filter->match_prefab, filter->match_disabled);
             if (!tr) {
                 goto done;
             }
@@ -24003,7 +24021,6 @@ void init_flags(
 
         if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
-            table->flags |= EcsTableIsDisabled;
         }
 
         /* If table contains disabled entities, mark it as disabled */

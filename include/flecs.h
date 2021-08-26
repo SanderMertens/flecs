@@ -277,6 +277,8 @@ struct ecs_filter_t {
 
     bool match_this;           /* Has terms that match EcsThis */
     bool match_only_this;      /* Has only terms that match EcsThis */
+    bool match_prefab;         /* Does filter match prefabs */
+    bool match_disabled;       /* Does filter match disabled entities */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -303,9 +305,8 @@ struct ecs_trigger_t {
 
     ecs_observable_t *observable;  /* Observable for trigger */
 
-    bool bloom_filter;          /* If true, incoming events will be a superset
-                                 * of matching events, so trigger will have to
-                                 * apply matching before calling callback */
+    bool match_prefab;          /* Should trigger ignore prefabs */
+    bool match_disabled;        /* Should trigger ignore disabled entities */
 
     uint64_t id;                /* Internal id */
 };
@@ -487,6 +488,10 @@ typedef struct ecs_trigger_desc_t {
 
     /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
+
+    /* Should trigger ignore prefabs & disabled entities */
+    bool match_prefab;
+    bool match_disabled;
 
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
