@@ -2469,11 +2469,6 @@ ecs_data_t* flecs_init_data(
                 0);
             result->sw_columns[i].data = sw;
             result->sw_columns[i].type = sw_type;
-
-            int32_t column_id = i + table->sw_column_offset;
-            result->columns[column_id].data = flecs_switch_values(sw);
-            result->columns[column_id].size = sizeof(ecs_entity_t);
-            result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
     }
     
@@ -21537,9 +21532,11 @@ void populate_ptrs(
     ecs_table_t *table = it->table;
     const ecs_data_t *data = NULL;
     ecs_column_t *columns = NULL;
+    ecs_id_t *ids = NULL;
 
     if (table) {
         data = flecs_table_get_data(table);
+        ids = ecs_vector_first(table->type, ecs_id_t);
     }
     if (data) {
         columns = data->columns;
@@ -21564,9 +21561,22 @@ void populate_ptrs(
                 continue;
             }
 
-            ecs_column_t *col = &columns[c_index];
-            it->ptrs[c] = ecs_vector_get_t(
-                col->data, col->size, col->alignment, it->offset);
+            ecs_vector_t *vec;
+            ecs_size_t size, align;
+            if (ECS_HAS_ROLE(ids[c_index], SWITCH)) {
+                ecs_switch_t *sw = data->sw_columns[
+                    c_index - table->sw_column_offset].data;
+                vec = flecs_switch_values(sw);
+                size = ECS_SIZEOF(ecs_entity_t);
+                align = ECS_ALIGNOF(ecs_entity_t);
+            } else {
+                ecs_column_t *col = &columns[c_index];
+                vec = col->data;
+                size = col->size;
+                align = col->alignment;
+            }
+
+            it->ptrs[c] = ecs_vector_get_t(vec, size, align, it->offset);
         } else {
             ecs_ref_t *ref = &it->references[-c_index - 1];
             char buf[255]; ecs_id_str(world, ref->component, buf, 255);

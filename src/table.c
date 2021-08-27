@@ -71,11 +71,6 @@ ecs_data_t* flecs_init_data(
                 0);
             result->sw_columns[i].data = sw;
             result->sw_columns[i].type = sw_type;
-
-            int32_t column_id = i + table->sw_column_offset;
-            result->columns[column_id].data = flecs_switch_values(sw);
-            result->columns[column_id].size = sizeof(ecs_entity_t);
-            result->columns[column_id].alignment = ECS_ALIGNOF(ecs_entity_t);
         }
     }
     
