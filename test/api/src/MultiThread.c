@@ -648,7 +648,7 @@ void test_combs_100_entity(int THREADS) {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     int i, ENTITIES = 100;
 
@@ -677,7 +677,7 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, :TestSubset");
+    ecs_query_t *q = ecs_query_new(world, "Position, TestSubset()");
 
     int i, ENTITIES = 4;
 
@@ -734,7 +734,7 @@ void test_combs_100_entity_2_types(int THREADS) {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     int i, ENTITIES = 100;
 
@@ -791,7 +791,7 @@ void MultiThread_change_thread_count() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     int i, ENTITIES = 100;
 

@@ -50,13 +50,13 @@ public:
         return *this;
     }
 
-    Base& superset(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
+    Base& super(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
     {
         ecs_assert(!(mask & flecs::SubSet), ECS_INVALID_PARAMETER, NULL);
         return set(flecs::SuperSet | mask, relation);
     }
 
-    Base& subset(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
+    Base& sub(const flecs::id_t relation = flecs::IsA, uint8_t mask = 0)
     {
         ecs_assert(!(mask & flecs::SuperSet), ECS_INVALID_PARAMETER, NULL);
         return set(flecs::SubSet | mask, relation);

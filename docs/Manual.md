@@ -1091,11 +1091,6 @@ Or       | `||`   | At least one components in OR expression must match
 Not      | `!`    | Entity should not have component
 Optional | `?`    | Entity may have component
 
-Operators can be combined with source modifiers:
-
-```
-Position, !PARENT:Velocity
-```
 
 #### AND
 And is the most common operator, and allows a query to request a set of components that an entity must have in order to be matched. The AND operator takes lowest precedence, and elements in an AND expression may contain other operators. An example of a signature with an `AND` operator is:
@@ -1111,10 +1106,10 @@ OR expressions allow a signature to match with one of the components in the OR e
 Position, Velocity || Speed
 ```
 
-In this example, any entity that has `Position`, and `Velocity` OR `Speed` will match the signature. Components in an OR expression may contain SOURCE modifiers, but the source modifier must be the same for all elements:
+In this example, any entity that has `Position`, and `Velocity` OR `Speed` will match the signature. Components in an OR expression may override the subject, but the subject must be the same for all elements:
 
 ```
-Position, PARENT:Velocity || PARENT:Speed
+Position, Velocity(parent) || Speed(parent)
 ```
 
 #### NOT
@@ -1136,7 +1131,7 @@ Position, ?Velocity
 A query with an optional column should test if the component is set before using it:
 
 ```c
-ecs_query_t *query = ecs_query_new(world, "Position, CASCADE:Position");
+ecs_query_t *query = ecs_query_new(world, "Position, Position(cascade)");
 
 ecs_iter_t it = ecs_query_iter(world, query);
 
@@ -1670,23 +1665,29 @@ ecs_iter_t it = ecs_scope_iter_w_filter(world, parent, &f);
 ```
 
 ### Hierarchical queries
-Queries and systems can request data from parents of the entity being iterated over with the `PARENT` modifier:
+Queries and systems can request data from parents of the entity being iterated over with the `parent` modifier:
 
 ```c
 // Iterate all entities with Position that have a parent that also has Position
-ecs_query_t *q = ecs_query_new(world, "PARENT:Position, Position");
+ecs_query_t *q = ecs_query_new(world, "Position(parent), Position");
 ```
 
-Additionally, a query can iterate the hierarchy in breadth-first order by providing the `CASCADE` modifier:
+Additionally, a query can iterate the hierarchy in breadth-first order by providing the `cascade` modifier:
 
 ```c
 // Iterate all entities with Position that have a parent that also has Position
-ecs_query_t *q = ecs_query_new(world, "CASCADE:Position, Position");
+ecs_query_t *q = ecs_query_new(world, "Position(parent|cascade), Position");
 ```
 
 This does two things. First, it will iterate over all entities that have Position and that _optionally_ have a parent that has `Position`. By making the parent component optional, it is ensured that if an application is iterating a tree of entities, the root is also included. Secondly, the query iterates over the children in breadth-first order. This is particularly useful when writing transform systems, as they require parent entities to be transformed before child entities.
 
-See the [Signatures](Signatures) section for more details.
+The above query does not match root entities, as they do not have a parent with `Position`. To also match root entities, add `?` to make the term optional:
+
+```c
+ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Position");
+```
+
+See the [query manual](Query.md) section for more details.
 
 ### Path identifiers
 When entities in a hierarchy have names assigned to them, they can be looked up with path expressions. A path expression is a list of entity names, separated by a scope separator character (by default a `.`, and `::` in the C++ API). This example shows how to request the path expression from an entity:

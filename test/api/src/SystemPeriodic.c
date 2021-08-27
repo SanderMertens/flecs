@@ -1105,7 +1105,7 @@ void SystemPeriodic_ensure_optional_is_null_shared() {
 
     ECS_ENTITY(world, e, Position);
 
-    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?PARENT:Velocity);
+    ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?Velocity(parent));
     
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1340,7 +1340,7 @@ void SystemPeriodic_two_refs() {
     ECS_ENTITY(world, e, Position, Velocity);
     ECS_ENTITY(world, E2, Mass);
 
-    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, e:Position, e:Velocity, :e, Mass);
+    ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, Position(e), Velocity(e), e(), Mass);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1533,7 +1533,7 @@ void SystemPeriodic_owned_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, OVERRIDE:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(self));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1562,7 +1562,7 @@ void SystemPeriodic_owned_not_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !OVERRIDE:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(self));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1597,7 +1597,7 @@ void SystemPeriodic_owned_or_column() {
     ECS_ENTITY(world, e2, Position, Mass);
     ECS_ENTITY(world, e3, Position, (IsA, base));
 
-    ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, OVERRIDE:Velocity || OVERRIDE:Mass);
+    ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, Velocity(self) || Mass(self));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1632,7 +1632,7 @@ void SystemPeriodic_shared_column() {
     ECS_ENTITY(world, e2, Position, (IsA, base));
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, SHARED:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(super));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1661,7 +1661,7 @@ void SystemPeriodic_shared_not_column() {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !SHARED:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(super));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1698,7 +1698,7 @@ void SystemPeriodic_shared_or_column() {
     ECS_ENTITY(world, e3, Position, (IsA, base1));
     ECS_ENTITY(world, e4, Position, (IsA, base2));
 
-    ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, SHARED:Velocity || SHARED:Mass);
+    ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, Velocity(super) || Mass(super));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1732,7 +1732,7 @@ void SystemPeriodic_container_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, (IsA, base));
     ECS_ENTITY(world, e2, Position, (ChildOf, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, PARENT:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(parent));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1761,7 +1761,7 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     ECS_ENTITY(world, e1, Position, (IsA, base));
     ECS_ENTITY(world, e2, Position, (ChildOf, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity(parent|cascade));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1794,7 +1794,7 @@ void SystemPeriodic_not_from_entity() {
     ECS_ENTITY(world, e, Position);
     ECS_ENTITY(world, e2, 0);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !e2:Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(e2));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1872,7 +1872,7 @@ void SystemPeriodic_owned_only() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, OVERRIDE:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self));
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -1895,7 +1895,7 @@ void SystemPeriodic_shared_only() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, SHARED:Position);
+    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, Position(super));
 
     ecs_entity_t base = ecs_new(world, Position);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);

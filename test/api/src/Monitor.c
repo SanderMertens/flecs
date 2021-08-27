@@ -133,7 +133,7 @@ void Monitor_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, OnPosition, EcsOnAdd, PARENT:Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position(parent));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -164,7 +164,7 @@ void Monitor_1_comp_1_parent() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_OBSERVER(world, OnPosition, EcsMonitor, 
-        Position, Position(superset(ChildOf)));
+        Position, Position(super(ChildOf)));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -424,7 +424,7 @@ void Monitor_monitor_w_superset() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(superset));
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(super));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -471,7 +471,7 @@ void Monitor_monitor_w_self_superset() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|superset));
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|super));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);

@@ -171,7 +171,7 @@ void SystemManual_no_automerge() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddVelocity, 0, Position, :Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, Velocity());
 
     ECS_ENTITY(world, e1, Position);
 

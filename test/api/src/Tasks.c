@@ -24,7 +24,7 @@ void Tasks_no_components() {
 void Tasks_one_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM:Hidden);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, Hidden(Task));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -44,7 +44,7 @@ void Tasks_from_system() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, SYSTEM:Position);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, Position(Task));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -130,14 +130,14 @@ void Tasks_tasks_in_phases() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, OnLoadTask, EcsOnLoad, :Position);
-    ECS_SYSTEM(world, PostLoadTask, EcsPostLoad, :Position);
-    ECS_SYSTEM(world, PreUpdateTask, EcsPreUpdate, :Position);
-    ECS_SYSTEM(world, OnUpdateTask, EcsOnUpdate, :Position);
-    ECS_SYSTEM(world, OnValidateTask, EcsOnValidate, :Position);
-    ECS_SYSTEM(world, PostUpdateTask, EcsPostUpdate, :Position);
-    ECS_SYSTEM(world, PreStoreTask, EcsPreStore, :Position);
-    ECS_SYSTEM(world, OnStoreTask, EcsOnStore, :Position);
+    ECS_SYSTEM(world, OnLoadTask, EcsOnLoad, Position());
+    ECS_SYSTEM(world, PostLoadTask, EcsPostLoad, Position());
+    ECS_SYSTEM(world, PreUpdateTask, EcsPreUpdate, Position());
+    ECS_SYSTEM(world, OnUpdateTask, EcsOnUpdate, Position());
+    ECS_SYSTEM(world, OnValidateTask, EcsOnValidate, Position());
+    ECS_SYSTEM(world, PostUpdateTask, EcsPostUpdate, Position());
+    ECS_SYSTEM(world, PreStoreTask, EcsPreStore, Position());
+    ECS_SYSTEM(world, OnStoreTask, EcsOnStore, Position());
 
     ecs_progress(world, 1);
 

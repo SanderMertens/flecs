@@ -381,7 +381,7 @@ void Query_subquery_unmatch() {
     ecs_add(world, e2, Position);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
+    ecs_query_t *q = ecs_query_new(world, "Position, Position(parent)");
     test_assert(q != NULL);
 
     ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
@@ -457,7 +457,7 @@ void Query_subquery_rematch() {
     ecs_add(world, e2, Position);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, PARENT:Position");
+    ecs_query_t *q = ecs_query_new(world, "Position, Position(parent)");
     test_assert(q != NULL);
 
     ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
@@ -546,7 +546,7 @@ void Query_subquery_rematch_w_parent_optional() {
     ecs_add(world, e2, Position);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Position(parent)");
     test_assert(q != NULL);
 
     ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
@@ -596,7 +596,7 @@ void Query_subquery_rematch_w_sub_optional() {
     ecs_add(world, e2, Position);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?PARENT:Position");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Position(parent)");
     test_assert(q != NULL);
 
     ecs_query_t *sq = ecs_query_init(world, &(ecs_query_desc_t) {
@@ -782,7 +782,7 @@ void Query_query_optional_shared() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -835,7 +835,7 @@ void Query_query_optional_shared_nested() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -880,7 +880,7 @@ void Query_query_optional_any() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?ANY:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(self|super)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -925,7 +925,7 @@ void Query_query_rematch_optional_after_add() {
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?SHARED:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(super)");
     test_assert(q != NULL);
 
     /* First iteration, base doesn't have Velocity but query should match with
@@ -1017,7 +1017,7 @@ void Query_get_shared_tag() {
     ecs_entity_t base = ecs_new(world, Tag);
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
-    ecs_query_t *q = ecs_query_new(world, "SHARED:Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
 
     int count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1190,7 +1190,7 @@ void Query_only_from_entity() {
 
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
-    ecs_query_t *q = ecs_query_new(world, "e:Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag(e)");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
@@ -1232,7 +1232,7 @@ void Query_only_not_from_entity() {
 
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
-    ecs_query_t *q = ecs_query_new(world, "!e:Tag");
+    ecs_query_t *q = ecs_query_new(world, "!Tag(e)");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
@@ -1465,7 +1465,7 @@ void Query_query_optional_shared_tag() {
     ecs_entity_t e3 = ecs_new(world, TagA);
     ecs_add_pair(world, e3, EcsIsA, e2);
 
-    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|superset)");
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB(self|super)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);

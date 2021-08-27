@@ -347,7 +347,7 @@ struct ecs_query_t {
     ecs_flags32_t flags;
 
     uint64_t id;                /* Id of query in query storage */
-    int32_t cascade_by;         /* Identify CASCADE column */
+    int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
 
@@ -547,9 +547,9 @@ struct ecs_world_t {
     
 
     /* Keep track of components that were added/removed to/from monitored
-     * entities. Monitored entities are entities that a query has matched with
-     * specifically, as is the case with PARENT / CASCADE columns, FromEntity
-     * columns and columns matched from prefabs. 
+     * entities. Monitored entities are entities that are directly referenced by
+     * a query, either explicitly (e.g. Position(Foo)) or implicitly 
+     * (Position(supser)).
      * When these entities change type, queries may have to be rematched.
      * Queries register themselves as component monitors for specific components
      * and when these components change they are rematched. The component 

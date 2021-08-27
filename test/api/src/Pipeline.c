@@ -389,7 +389,7 @@ void Pipeline_merge_after_staged_out() {
 
     ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] :Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] Velocity());
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -473,8 +473,8 @@ void Pipeline_no_merge_after_staged_in_out() {
 
     ECS_ENTITY(world, E, Position, Velocity);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, :Velocity);
-    ECS_SYSTEM(world, SysIn, EcsOnUpdate, :Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, Velocity());
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity());
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -501,7 +501,7 @@ void Pipeline_merge_after_staged_out_before_owned() {
 
     ECS_ENTITY(world, E, Position);
 
-    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] :Velocity);
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [out] Velocity());
     ECS_SYSTEM(world, SysInMain, EcsOnUpdate, Velocity);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -629,7 +629,7 @@ void Pipeline_3_systems_3_types() {
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "SysC", .add = {EcsOnUpdate} },
-        .query.filter.expr = ":Position",
+        .query.filter.expr = "Position()",
         .callback = SysC
     });
 
@@ -719,8 +719,8 @@ void Pipeline_random_read_after_random_write_out_in() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -740,8 +740,8 @@ void Pipeline_random_read_after_random_write_inout_in() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] :Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -761,8 +761,8 @@ void Pipeline_random_read_after_random_write_out_inout() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -782,8 +782,8 @@ void Pipeline_random_read_after_random_write_inout_inout() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] :Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -804,7 +804,7 @@ void Pipeline_random_read_after_random_write_w_not_write() {
     ECS_TAG(world, Tag);
 
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] !Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :Position);
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -824,7 +824,7 @@ void Pipeline_random_read_after_random_write_w_not_read() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead_Not, EcsOnUpdate, Tag, [in] !Position);
     
     ecs_entity_t e = ecs_new(world, Tag);
@@ -845,8 +845,8 @@ void Pipeline_random_read_after_random_write_w_wildcard() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
-    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] :*);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
+    ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] *());
     
     ecs_entity_t e = ecs_new(world, Tag);
 
@@ -866,9 +866,9 @@ void Pipeline_random_in_after_random_inout_after_random_out() {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] :Position);
-    ECS_SYSTEM(world, RandomReadWrite, EcsOnUpdate, Tag, [inout] :Position);
-    ECS_SYSTEM(world, RandomReadAfterRW, EcsOnUpdate, Tag, [in] :Position);
+    ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
+    ECS_SYSTEM(world, RandomReadWrite, EcsOnUpdate, Tag, [inout] Position());
+    ECS_SYSTEM(world, RandomReadAfterRW, EcsOnUpdate, Tag, [in] Position());
     
     ecs_entity_t e = ecs_new(world, Tag);
 

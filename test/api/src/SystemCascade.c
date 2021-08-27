@@ -31,7 +31,7 @@ void SystemCascade_cascade_depth_1() {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
 
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
@@ -95,7 +95,7 @@ void SystemCascade_cascade_depth_2() {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, CASCADE:Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
 
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
@@ -265,7 +265,7 @@ void SystemCascade_add_after_match() {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
 
     ecs_entity_t parent = ecs_new(world, 0);
     ecs_set(world, e1, Position, {1, 2});
@@ -282,7 +282,7 @@ void SystemCascade_add_after_match() {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * CASCADE column, so tables could have been ordered randomly. Make sure
+     * column(parent|cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
@@ -338,7 +338,7 @@ void SystemCascade_adopt_after_match() {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, CASCADE:Position);
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
 
     ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
     ecs_set(world, e1, Position, {1, 2});
@@ -401,7 +401,7 @@ void SystemCascade_rematch_w_empty_table() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "CASCADE:Position, Velocity");
+    ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Velocity");
     test_assert(q != NULL);
 
     ecs_entity_t parent = ecs_new(world, Position);
@@ -439,7 +439,7 @@ void SystemCascade_rematch_w_empty_table() {
 void SystemCascade_query_w_only_cascade() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_query_t *q = ecs_query_new(world, "CASCADE:Name");;
+    ecs_query_t *q = ecs_query_new(world, "?Name(parent|cascade)");;
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -635,7 +635,7 @@ void SystemCascade_custom_relation_add_after_match() {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * CASCADE column, so tables could have been ordered randomly. Make sure
+     * column(parent|cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 

@@ -636,7 +636,7 @@ void TriggerOnAdd_add_in_progress_before_system_def() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, Velocity());
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -705,7 +705,7 @@ void TriggerOnAdd_2_systems_w_table_creation_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_TRIGGER(world, SystemA, EcsOnAdd, Position);
     ECS_TRIGGER(world, SystemB, EcsOnAdd, Position);
-    ECS_SYSTEM(world, NewWithPosition, EcsOnUpdate, :Position);
+    ECS_SYSTEM(world, NewWithPosition, EcsOnUpdate, Position());
 
     ecs_progress(world, 1);   
 

@@ -144,7 +144,7 @@ void Modules_import_module_from_system() {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
-    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, simple.module.Position, simple.module:simple.module);
+    ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, simple.module.Position, $simple.module);
 
     const void *module_ptr = ecs_get(world, ecs_id(SimpleModule), SimpleModule);
     test_assert(module_ptr != NULL);
