@@ -31,6 +31,11 @@ int finalize_term_identifier(
         identifier->set.mask |= EcsSelf;
     }
 
+    if (identifier->set.mask & EcsParent) {
+        identifier->set.mask |= EcsSuperSet;
+        identifier->set.relation = EcsChildOf;
+    }
+
     /* Default relation for superset/subset is EcsIsA */
     if (identifier->set.mask & (EcsSuperSet|EcsSubSet)) {
         if (!identifier->set.relation) {

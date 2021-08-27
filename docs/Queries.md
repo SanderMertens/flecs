@@ -1,4 +1,3 @@
-# Queries
 Queries are the mechanism that allow applications to get the entities that match with a certain set of conditions. Queries can range from simple lists of components to complex expressions that efficiently traverse an entity graph. This manual explains the ins & outs of how to use them.
 
 **NOTE**: this manual describes queries as they are intended to work. The actual implementation may not have support for certain combinations of features. When an application attempts to use a feature that is not yet supported, an `UNSUPPORTED` error will be thrown.
@@ -288,6 +287,98 @@ while (ecs_query_next(&it)) {
     ecs_get_name(world, ecs_get_object(world, id)));
 }
 ```
+
+## Sorting
+Applications are able to access entities in order, by using sorted queries. Sorted queries allow an application to specify a component that entities should be sorted on. Sorting is enabled by setting the order_by function:
+
+```c
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .filter.terms = {{ ecs_id(Position) }},
+    .order_by_component = ecs_id(Position),
+    .order_by = compare_position,
+});
+```
+
+This will sort the query by the `Position` component. The function also accepts a compare function, which looks like this:
+
+```c
+int compare_position(ecs_entity_t e1, Position *p1, ecs_entity_t e2, Position *p2) {
+    return p1->x - p2->x;
+}
+```
+
+Once sorting is enabled for a query, the data will remain sorted, even after the underlying data changes. The query keeps track of any changes that have happened to the data, and if changes could have invalidated the ordering, data will be resorted. Resorting does not happen when the data is modified, which means that sorting will not decrease performance of regular operations. Instead, the sort will be applied when the application obtains an iterator to the query:
+
+```c
+ecs_entity_t e = ecs_new(world, Position); // Does not reorder
+ecs_set(world, e, Position, {10, 20}); // Does not reorder
+ecs_iter_t it = ecs_query_iter(world, q); // Reordering happens here
+```
+
+The following operations mark data dirty can can trigger a reordering:
+- Creating a new entity with the ordered component
+- Deleting an entity with the ordered component
+- Adding the ordered component to an entity
+- Removing the ordered component from an entity
+- Setting the ordered component
+- Running a system that writes the ordered component (through an [out] column)
+
+Applications iterate a sorted query in the same way they would iterate a regular query:
+
+```c
+while (ecs_query_next(&it)) {
+    Position *p = ecs_term(&it, Position, 1);
+
+    for (int i = 0; i < it.count; i ++) {
+        printf("{%f, %f}\n", p[i].x, p[i].y); // Values printed will be in order
+    }
+}
+```
+
+### Sorting algorithm
+The algorithm used for the sort is a quicksort. Each table that is matched with the query will be sorted using a quicksort. As a result, sorting one query affects the order of entities in another query. However, just sorting tables is not enough, as the list of ordered entities may have to jump between tables. For example:
+
+Entitiy | Components (table) | Value used for sorting
+--------|--------------------|-----------------------
+E1      | Position           | 1
+E2      | Position           | 3
+E3      | Position           | 4
+E4      | Position, Velocity | 5
+E5      | Position, Velocity | 7
+E6      | Position, Mass     | 8
+E7      | Position           | 10
+E8      | Position           | 11
+
+To make sure a query iterates the entities in the right order, it will iterate entities in the ordered tables to determine the largest slice of ordered entities in each table, which the query will iterate in order. Slices are precomputed during the sorting step, which means that the performance of query iteration is similar to a regular iteration. For the above set of entities, these slices would look like this:
+
+Table              | Slice
+-------------------|-------
+Position           | 0..2
+Position, Velocity | 3..4
+Position, Mass     | 5
+Position           | 6..7
+
+This process is transparent for applications, except that the slicing will result in smaller contiguous arrays being iterated by the application.
+
+### Sorting by entity id
+Instead of sorting by a component value, applications can sort by entity id by not specifying order_by_component
+
+```c
+ecs_query_t q = ecs_query_init(world, &(ecs_query_desc_t) {
+    .filter.terms = {{ ecs_id(Position) }},
+    .order_by = compare_entity,
+});
+```
+
+The compare function would look like this:
+
+```c
+int compare_entity(ecs_entity_t e1, void *p1, ecs_entity_t e2, void *p2) {
+    return e1 - e2;
+}
+```
+
+When no component is provided, no reordering will happen as a result of setting components or running a system with `[out]` columns.
 
 ## Query Concepts
 Now that we have the basics under our belt, lets look a bit more in-depth at the different concepts from which queries are composed.

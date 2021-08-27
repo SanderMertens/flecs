@@ -2250,7 +2250,8 @@ typedef uint64_t (*ecs_hash_value_action_t)(
 #define EcsSubSet       (4)  /* Select subset until predicate match */
 #define EcsCascade      (8)  /* Use breadth-first ordering of relations */
 #define EcsAll          (16) /* Walk full super/subset, regardless of match */
-#define EcsNothing      (32) /* Select from nothing */
+#define EcsParent       (32) /* Shortcut for SuperSet(ChildOf) */
+#define EcsNothing      (64) /* Select from nothing */
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
@@ -7674,6 +7675,7 @@ static const uint8_t SubSet = EcsSubSet;
 static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;
 static const uint8_t Nothing = EcsNothing;
+static const uint8_t Parent = EcsParent;
 
 /* Builtin tag ids */
 static const flecs::entity_t Module = EcsModule;

@@ -25,6 +25,7 @@
 #define TOK_SUPERSET "super"
 #define TOK_SUBSET "sub"
 #define TOK_CASCADE "cascade"
+#define TOK_PARENT "parent"
 #define TOK_ALL "all"
 
 #define TOK_OWNED "OVERRIDE"
@@ -41,10 +42,6 @@
 #define TOK_IN "in"
 #define TOK_OUT "out"
 #define TOK_INOUT "inout"
-
-/* Convenience shortcut for super(ChildOf) */
-#define TOK_PARENT "parent"
-#define EcsParent (64)
 
 #define ECS_MAX_TOKEN_SIZE (256)
 
@@ -352,12 +349,7 @@ const char* parse_set_expr(
                 "cannot mix super and sub", token);
             return NULL;            
         }
-
-        if (tok == EcsParent) {
-            tok = EcsSuperSet;
-            id->set.relation = EcsChildOf;
-        }
-
+        
         id->set.mask |= tok;
 
         if (ptr[0] == TOK_PAREN_OPEN) {
