@@ -13,13 +13,13 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromId_2_column_1_from_id() {
+void System_w_Empty_2_column_1_from_id() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity());
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -43,14 +43,14 @@ void System_w_FromId_2_column_1_from_id() {
     ecs_fini(world);
 }
 
-void System_w_FromId_3_column_2_from_id() {
+void System_w_Empty_3_column_2_from_id() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, :Velocity, :Rotation);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(), Rotation());
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -85,14 +85,14 @@ void CheckColumnType(ecs_iter_t *it) {
     probe_system(it);
 }
 
-void System_w_FromId_column_type() {
+void System_w_Empty_column_type() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_SYSTEM(world, CheckColumnType, EcsOnUpdate, Position, :Position);
+    ECS_SYSTEM(world, CheckColumnType, EcsOnUpdate, Position, Position());
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

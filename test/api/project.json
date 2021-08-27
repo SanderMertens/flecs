@@ -753,9 +753,6 @@
             "testcases": [
                 "invalid_not_without_id",
                 "invalid_optional_without_id",
-                "invalid_system_without_id",
-                "invalid_container_without_id",
-                "invalid_cascade_without_id",
                 "invalid_entity_without_id",
                 "invalid_empty_without_id",
                 "invalid_empty_element",
@@ -765,12 +762,6 @@
                 "invalid_or_w_not",
                 "invalid_not_w_or",
                 "invalid_0_w_and",
-                "invalid_0_w_from_system",
-                "invalid_0_w_from_container",
-                "invalid_0_w_from_cascade",
-                "invalid_0_w_from_entity",
-                "invalid_0_w_from_empty",
-                "invalid_or_w_empty",
                 "invalid_component_id",
                 "invalid_entity_id",
                 "invalid_null_string",
@@ -1475,7 +1466,7 @@
                 "get_component_from_1st_base_of_base_prefab_base"                
             ]
         }, {
-            "id": "System_w_FromContainer",
+            "id": "System_w_FromParent",
             "setup": true,
             "testcases": [
                 "1_column_from_container",
@@ -1500,7 +1491,7 @@
                 "realloc_after_match"
             ]
         }, {
-            "id": "System_w_FromId",
+            "id": "System_w_Empty",
             "testcases": [
                 "2_column_1_from_id",
                 "3_column_2_from_id",

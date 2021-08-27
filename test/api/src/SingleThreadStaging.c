@@ -1075,7 +1075,7 @@ void SingleThreadStaging_add_remove_add_same_to_current() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, Velocity());
 
     /* Create entities from scratch so they don't have the EcsName component */
     ecs_entity_t e1 = ecs_new(world, Position);
@@ -2244,7 +2244,7 @@ void SingleThreadStaging_merge_after_tasks() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, :Position);
+    ECS_SYSTEM(world, Task, EcsOnUpdate, Position());
 
     ecs_set_context(world, &e);
 
@@ -2318,7 +2318,7 @@ void SingleThreadStaging_get_parent_in_progress() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, Velocity());
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -2579,7 +2579,7 @@ void SingleThreadStaging_get_mutable_w_add() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, MyBool);
-    ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, :MyBool);
+    ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, MyBool());
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -2637,7 +2637,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, Velocity());
     ECS_TRIGGER(world, OnAdd, EcsOnAdd, Velocity);
 
     ecs_entity_t e = ecs_new(world, Position);

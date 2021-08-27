@@ -37,42 +37,6 @@ void SystemMisc_invalid_optional_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_system_without_id() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_container_without_id() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_cascade_without_id() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCADE:);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_entity_without_id() {
     install_test_abort();
 
@@ -197,42 +161,6 @@ void SystemMisc_invalid_0_w_and() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_0_w_from_system() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, SYSTEM:0);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_0_w_from_container() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, PARENT:0);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_0_w_from_cascade() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, CASCASDE.0);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_0_w_from_entity() {
     install_test_abort();
 
@@ -243,33 +171,6 @@ void SystemMisc_invalid_0_w_from_entity() {
     test_expect_abort();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo.0);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_0_w_from_empty() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, :0);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_invalid_or_w_empty() {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, :Position || :Velocity);
 
     ecs_fini(world);
 }
@@ -295,7 +196,7 @@ void SystemMisc_invalid_entity_id() {
 
     test_expect_abort();
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Foo:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(NotValid));
 
     ecs_fini(world);
 }
@@ -359,7 +260,7 @@ void SystemMisc_invalid_mixed_src_modifier() {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
-        .query.filter.expr = "SHARED:Position || Velocity",
+        .query.filter.expr = "Position(super) || Velocity",
         .callback = Dummy
     });
 
@@ -770,7 +671,7 @@ void SystemMisc_dont_enable_after_rematch() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, ANY:Position, ANY:Velocity);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|super), Velocity(self|super));
 
     /* Create an entity that is watched. Whenever components are added/removed
      * to and/or from watched entities, a rematch is triggered. */
@@ -882,7 +783,7 @@ void SystemMisc_match_system() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, SysA, 0, SYSTEM:Position);
+    ECS_SYSTEM(world, SysA, 0, Position(SysA));
     ECS_SYSTEM(world, SysB, 0, Position);
 
     ecs_run(world, SysB, 0, NULL);
@@ -1540,7 +1441,7 @@ void SystemMisc_rw_in_implicit_any() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ANY:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(self|super)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1559,7 +1460,7 @@ void SystemMisc_rw_in_implicit_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, SHARED:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(super)");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -1579,7 +1480,7 @@ void SystemMisc_rw_in_implicit_from_empty() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, :Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity()");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1599,7 +1500,7 @@ void SystemMisc_rw_in_implicit_from_entity() {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, f:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(f)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1618,7 +1519,7 @@ void SystemMisc_rw_out_explicit_any() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] ANY:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|super)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1637,7 +1538,7 @@ void SystemMisc_rw_out_explicit_shared() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] SHARED:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(super)");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -1657,7 +1558,7 @@ void SystemMisc_rw_out_explicit_from_empty() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] :Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity()");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1677,7 +1578,7 @@ void SystemMisc_rw_out_explicit_from_entity() {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] f:Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(f)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);

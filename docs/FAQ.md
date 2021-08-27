@@ -114,10 +114,10 @@ q.iter([](flecs::iter& it) {
 });
 ```
 
-In most cases using template parameters is the way to go, as this provides a slightly easier to use and nicer API. However, for more complex queries, template parameters are insufficient. For example, queries can select entities in a hierarchy from top to bottom with the `CASCADE` modifier:
+In most cases using template parameters is the way to go, as this provides a slightly easier to use and nicer API. However, for more complex queries, template parameters are insufficient. For example, queries can select entities in a hierarchy from top to bottom with the `cascade` modifier:
 
 ```cpp
-auto q = ecs.query<>("CASCADE:Position, Position");
+auto q = ecs.query<>("Position(parent|cascade), Position");
 
 q.iter([](flecs::iter& it) {
     auto p_parent = it.term<Position>(1);

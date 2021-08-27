@@ -380,7 +380,7 @@ void DeferredActions_run_w_defer() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddVelocity, 0, Position, [in] :Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, [in] Velocity());
 
     ecs_entity_t e = ecs_new(world, Position);
 
@@ -397,7 +397,7 @@ void DeferredActions_system_in_progress_w_defer() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, [in] :Velocity);
+    ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, [in] Velocity());
 
     ecs_entity_t e = ecs_new(world, Position);
 

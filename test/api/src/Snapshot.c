@@ -800,7 +800,7 @@ void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
     ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e2 = ecs_set(world, 0, Velocity, {1, 2});
 
-    ECS_OBSERVER(world, CreateV, EcsOnSet, Position, :Velocity);
+    ECS_OBSERVER(world, CreateV, EcsOnSet, Position, Velocity());
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
 

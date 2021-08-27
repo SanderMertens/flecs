@@ -4,9 +4,6 @@
 
 #include "../private_api.h"
 
-/* TODO: after new query parser is working & code is ported to new types for
- *       storing terms, this code needs a big cleanup */
-
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
 #define TOK_COLON ':'
@@ -25,17 +22,12 @@
 #define TOK_AS_ENTITY '\\'
 
 #define TOK_SELF "self"
-#define TOK_SUPERSET "superset"
-#define TOK_SUBSET "subset"
-#define TOK_CASCADE_SET "cascade"
+#define TOK_SUPERSET "super"
+#define TOK_SUBSET "sub"
+#define TOK_CASCADE "cascade"
 #define TOK_ALL "all"
 
-#define TOK_ANY "ANY"
 #define TOK_OWNED "OVERRIDE"
-#define TOK_SHARED "SHARED"
-#define TOK_SYSTEM "SYSTEM"
-#define TOK_PARENT "PARENT"
-#define TOK_CASCADE "CASCADE"
 
 #define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
@@ -49,6 +41,10 @@
 #define TOK_IN "in"
 #define TOK_OUT "out"
 #define TOK_INOUT "inout"
+
+/* Convenience shortcut for super(ChildOf) */
+#define TOK_PARENT "parent"
+#define EcsParent (64)
 
 #define ECS_MAX_TOKEN_SIZE (256)
 
@@ -314,10 +310,12 @@ uint8_t parse_set_token(
         return EcsSuperSet;
     } else if (!ecs_os_strcmp(token, TOK_SUBSET)) {
         return EcsSubSet;
-    } else if (!ecs_os_strcmp(token, TOK_CASCADE_SET)) {
+    } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
         return EcsCascade;
     } else if (!ecs_os_strcmp(token, TOK_ALL)) {
         return EcsAll;
+    } else if (!ecs_os_strcmp(token, TOK_PARENT)) {
+        return EcsParent;
     } else {
         return 0;
     }
@@ -351,9 +349,14 @@ const char* parse_set_expr(
             (tok == EcsSuperSet && id->set.mask & EcsSubSet))
         {
             ecs_parser_error(name, expr, column, 
-                "cannot mix superset and subset", token);
+                "cannot mix super and sub", token);
             return NULL;            
-        }    
+        }
+
+        if (tok == EcsParent) {
+            tok = EcsSuperSet;
+            id->set.relation = EcsChildOf;
+        }
 
         id->set.mask |= tok;
 
@@ -367,14 +370,12 @@ const char* parse_set_expr(
                     return NULL;
                 }         
 
-                ecs_entity_t rel = ecs_lookup_fullpath(world, token);
-                if (!rel) {
+                id->set.relation = ecs_lookup_fullpath(world, token);
+                if (!id->set.relation) {
                     ecs_parser_error(name, expr, column, 
                         "unresolved identifier '%s'", token);
                     return NULL;
                 }
-
-                id->set.relation = rel;
 
                 if (ptr[0] == TOK_AND) {
                     ptr = skip_space(ptr + 1);
@@ -452,8 +453,8 @@ const char* parse_set_expr(
     if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && 
         !(id->set.mask & EcsSubSet))
     {
-        /* If cascade is used without specifying superset or subset, assume
-         * superset */
+        /* If cascade is used without specifying super or sub, assume
+         * super */
         id->set.mask |= EcsSuperSet;
     }
 
@@ -493,13 +494,14 @@ const char* parse_arguments(
                 return NULL;
             }
 
-            /* If token is a self, superset or subset token, this is a set
+            /* If token is a self, super or sub token, this is a set
              * expression */
             if (!ecs_os_strcmp(token, TOK_ALL) ||
-                !ecs_os_strcmp(token, TOK_CASCADE_SET) ||
+                !ecs_os_strcmp(token, TOK_CASCADE) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
-                !ecs_os_strcmp(token, TOK_SUBSET))
+                !ecs_os_strcmp(token, TOK_SUBSET) ||
+                !(ecs_os_strcmp(token, TOK_PARENT)))
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
                     token, &term->args[arg]);
@@ -574,12 +576,6 @@ const char* parse_term(
         if (!ptr) {
             return NULL;
         }
-        
-        /* Is token a source identifier? */
-        if (ptr[0] == TOK_COLON) {
-            ptr ++;
-            goto parse_source;
-        }
 
         /* Is token a type role? */
         if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
@@ -594,10 +590,6 @@ const char* parse_term(
 
         /* Next token must be a predicate */
         goto parse_predicate;
-
-    /* If next token is the source token, this is an empty source */
-    } else if (ptr[0] == TOK_COLON) {
-        goto empty_source;
 
     /* If next token is a singleton, assign identifier to pred and subject */
     } else if (ptr[0] == TOK_SINGLETON) {
@@ -624,74 +616,6 @@ const char* parse_term(
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected character '%c'", ptr[0]);
-        return NULL;
-    }
-
-empty_source:
-    term.args[0].set.mask = EcsNothing;
-    ptr = skip_space(ptr + 1);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        goto parse_predicate;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after source operator");
-        return NULL;
-    }
-
-parse_source:
-    if (!ecs_os_strcmp(token, TOK_PARENT)) {
-        term.args[0].set.mask = EcsSuperSet;
-        term.args[0].set.relation = EcsChildOf;
-        term.args[0].set.max_depth = 1;
-    } else if (!ecs_os_strcmp(token, TOK_SYSTEM)) {
-        term.args[0].name = ecs_os_strdup(name);
-    } else if (!ecs_os_strcmp(token, TOK_ANY)) {
-        term.args[0].set.mask = EcsSelf | EcsSuperSet;
-        term.args[0].set.relation = EcsIsA;
-        term.args[0].entity = EcsThis;
-    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
-        term.args[0].set.mask = EcsSelf;
-        term.args[0].entity = EcsThis;
-    } else if (!ecs_os_strcmp(token, TOK_SHARED)) {
-        term.args[0].set.mask = EcsSuperSet;
-        term.args[0].set.relation = EcsIsA;
-        term.args[0].entity = EcsThis;
-    } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        term.args[0].set.mask = EcsSuperSet | EcsCascade;
-        term.args[0].set.relation = EcsChildOf;
-        term.args[0].entity = EcsThis;
-        term.oper = EcsOptional;
-    } else {
-         if (parse_identifier(token, &term.args[0])) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid identifier '%s'", token); 
-            return NULL;           
-        }
-    }
-
-    ptr = skip_space(ptr);
-    if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        /* Is the next token a role? */
-        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
-            ptr++;
-            goto parse_role;
-        }      
-
-        /* If not, it's a predicate */
-        goto parse_predicate;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after source");
         return NULL;
     }
 

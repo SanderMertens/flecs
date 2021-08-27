@@ -979,7 +979,7 @@ void Run_run_comb_10_entities_1_type() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     int i, ENTITIES = 10;
 
@@ -1006,7 +1006,7 @@ void Run_run_comb_10_entities_2_types() {
     ECS_COMPONENT(world, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, :TestSubset);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
 
     int i, ENTITIES = 10;
     ecs_entity_t ids_1[5], ids_2[5];
@@ -1106,7 +1106,7 @@ void Run_run_staging() {
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
 
-    ECS_SYSTEM(world, AddVelocity, 0, Position, :Velocity);
+    ECS_SYSTEM(world, AddVelocity, 0, Position, Velocity());
 
     ecs_run(world, AddVelocity, 0, NULL);
 

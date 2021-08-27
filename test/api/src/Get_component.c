@@ -119,7 +119,7 @@ void Get_component_get_1_from_2_add_in_progress() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    ECS_SYSTEM(world, Add_in_progress, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, Add_in_progress, EcsOnUpdate, Position, Velocity());
 
     ecs_progress(world, 1);
     test_assert( ecs_has(world, e, Velocity));
@@ -149,7 +149,7 @@ void Get_component_get_both_from_2_add_in_progress() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    ECS_SYSTEM(world, Add_in_progress_test_main, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, Add_in_progress_test_main, EcsOnUpdate, Position, Velocity());
 
     ecs_progress(world, 1);
     
@@ -182,7 +182,7 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    ECS_SYSTEM(world, Add_remove_in_progress_test_main, EcsOnUpdate, Position, :Velocity);
+    ECS_SYSTEM(world, Add_remove_in_progress_test_main, EcsOnUpdate, Position, Velocity());
 
     ecs_progress(world, 1);
     

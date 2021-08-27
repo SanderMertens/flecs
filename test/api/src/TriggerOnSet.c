@@ -324,7 +324,7 @@ void TriggerOnSet_on_set_after_override() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
-    ECS_TRIGGER(world, OnSetShared, EcsOnSet, ANY:Position);
+    ECS_TRIGGER(world, OnSetShared, EcsOnSet, Position(self|super));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);

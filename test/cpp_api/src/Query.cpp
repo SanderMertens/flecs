@@ -69,7 +69,7 @@ void Query_action_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::query<Position> q(world, "ANY:Velocity");
+    flecs::query<Position> q(world, "Velocity(self|super)");
 
     q.iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
@@ -360,7 +360,7 @@ void Query_signature_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::query<> q(world, "Position, [in] ANY:Velocity");
+    flecs::query<> q(world, "Position, [in] Velocity(self|super)");
     
     q.iter([](flecs::iter&it) {
         auto p = it.term<Position>(1);

@@ -45,7 +45,7 @@ void System_w_FromEntity_2_column_1_from_entity() {
     ECS_ENTITY(world, e1, Mass);
     ECS_ENTITY(world, e2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, e1:Mass, Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(e1), Position);
 
     ecs_set(world, e1, Mass, {5});
 
@@ -99,7 +99,7 @@ void System_w_FromEntity_task_from_entity() {
 
     ECS_ENTITY(world, e1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, e1:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(e1));
 
     ecs_progress(world, 1);
 
@@ -123,7 +123,7 @@ void System_w_FromEntity_task_not_from_entity() {
 
     ECS_ENTITY(world, e1, Position);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !e1:Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position(e1));
 
     ecs_progress(world, 1);
 

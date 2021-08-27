@@ -723,7 +723,7 @@ void Switch_add_switch_in_stage() {
     ECS_TAG(world, Jumping);
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
 
-    ECS_SYSTEM(world, AddSwitch, EcsOnUpdate, Position, :Movement);
+    ECS_SYSTEM(world, AddSwitch, EcsOnUpdate, Position, Movement());
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -759,7 +759,7 @@ void Switch_add_case_in_stage() {
     ECS_TAG(world, Jumping);
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Walking);
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Walking());
 
     ECS_ENTITY(world, e1, Position, SWITCH | Movement);
     ECS_ENTITY(world, e2, Position, SWITCH | Movement);
@@ -784,7 +784,7 @@ void Switch_change_case_in_stage() {
     ECS_TAG(world, Jumping);
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Walking);
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Walking());
 
     ECS_ENTITY(world, e1, Position, SWITCH | Movement, CASE | Running);
     ECS_ENTITY(world, e2, Position, SWITCH | Movement, CASE | Running);
@@ -813,7 +813,7 @@ void Switch_change_one_case_in_stage() {
     ECS_TAG(world, Jumping);
     ECS_TYPE(world, Movement, Walking, Running, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, :Jumping, CASE | Walking);
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Jumping(), CASE | Walking);
 
     ECS_ENTITY(world, e0, Position, SWITCH | Movement, CASE | Jumping);
     ECS_ENTITY(world, e1, Position, SWITCH | Movement, CASE | Walking);

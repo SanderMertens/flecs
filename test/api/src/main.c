@@ -700,9 +700,6 @@ void Pipeline_random_in_after_random_inout_after_random_out(void);
 void SystemMisc_setup(void);
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
-void SystemMisc_invalid_system_without_id(void);
-void SystemMisc_invalid_container_without_id(void);
-void SystemMisc_invalid_cascade_without_id(void);
 void SystemMisc_invalid_entity_without_id(void);
 void SystemMisc_invalid_empty_without_id(void);
 void SystemMisc_invalid_empty_element(void);
@@ -712,12 +709,6 @@ void SystemMisc_invalid_empty_or_w_space(void);
 void SystemMisc_invalid_or_w_not(void);
 void SystemMisc_invalid_not_w_or(void);
 void SystemMisc_invalid_0_w_and(void);
-void SystemMisc_invalid_0_w_from_system(void);
-void SystemMisc_invalid_0_w_from_container(void);
-void SystemMisc_invalid_0_w_from_cascade(void);
-void SystemMisc_invalid_0_w_from_entity(void);
-void SystemMisc_invalid_0_w_from_empty(void);
-void SystemMisc_invalid_or_w_empty(void);
 void SystemMisc_invalid_component_id(void);
 void SystemMisc_invalid_entity_id(void);
 void SystemMisc_invalid_null_string(void);
@@ -1387,33 +1378,33 @@ void Prefab_get_component_from_1st_base_prefab_base(void);
 void Prefab_get_component_from_2nd_base_of_base_prefab_base(void);
 void Prefab_get_component_from_1st_base_of_base_prefab_base(void);
 
-// Testsuite 'System_w_FromContainer'
-void System_w_FromContainer_setup(void);
-void System_w_FromContainer_1_column_from_container(void);
-void System_w_FromContainer_2_column_1_from_container(void);
-void System_w_FromContainer_3_column_2_from_container(void);
-void System_w_FromContainer_3_column_2_from_different_container(void);
-void System_w_FromContainer_2_column_1_from_container_w_not(void);
-void System_w_FromContainer_2_column_1_from_container_w_not_prefab(void);
-void System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not(void);
-void System_w_FromContainer_2_column_1_from_container_w_or(void);
-void System_w_FromContainer_select_same_from_container(void);
-void System_w_FromContainer_add_component_after_match(void);
-void System_w_FromContainer_add_component_after_match_and_rematch(void);
-void System_w_FromContainer_add_component_after_match_unmatch(void);
-void System_w_FromContainer_add_component_after_match_unmatch_match(void);
-void System_w_FromContainer_add_component_after_match_2_systems(void);
-void System_w_FromContainer_add_component_in_progress_after_match(void);
-void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr(void);
-void System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr_in_progress(void);
-void System_w_FromContainer_adopt_after_match(void);
-void System_w_FromContainer_new_child_after_match(void);
-void System_w_FromContainer_realloc_after_match(void);
+// Testsuite 'System_w_FromParent'
+void System_w_FromParent_setup(void);
+void System_w_FromParent_1_column_from_container(void);
+void System_w_FromParent_2_column_1_from_container(void);
+void System_w_FromParent_3_column_2_from_container(void);
+void System_w_FromParent_3_column_2_from_different_container(void);
+void System_w_FromParent_2_column_1_from_container_w_not(void);
+void System_w_FromParent_2_column_1_from_container_w_not_prefab(void);
+void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void);
+void System_w_FromParent_2_column_1_from_container_w_or(void);
+void System_w_FromParent_select_same_from_container(void);
+void System_w_FromParent_add_component_after_match(void);
+void System_w_FromParent_add_component_after_match_and_rematch(void);
+void System_w_FromParent_add_component_after_match_unmatch(void);
+void System_w_FromParent_add_component_after_match_unmatch_match(void);
+void System_w_FromParent_add_component_after_match_2_systems(void);
+void System_w_FromParent_add_component_in_progress_after_match(void);
+void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr(void);
+void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr_in_progress(void);
+void System_w_FromParent_adopt_after_match(void);
+void System_w_FromParent_new_child_after_match(void);
+void System_w_FromParent_realloc_after_match(void);
 
-// Testsuite 'System_w_FromId'
-void System_w_FromId_2_column_1_from_id(void);
-void System_w_FromId_3_column_2_from_id(void);
-void System_w_FromId_column_type(void);
+// Testsuite 'System_w_Empty'
+void System_w_Empty_2_column_1_from_id(void);
+void System_w_Empty_3_column_2_from_id(void);
+void System_w_Empty_column_type(void);
 
 // Testsuite 'System_w_FromSystem'
 void System_w_FromSystem_2_column_1_from_system(void);
@@ -4415,18 +4406,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_invalid_optional_without_id
     },
     {
-        "invalid_system_without_id",
-        SystemMisc_invalid_system_without_id
-    },
-    {
-        "invalid_container_without_id",
-        SystemMisc_invalid_container_without_id
-    },
-    {
-        "invalid_cascade_without_id",
-        SystemMisc_invalid_cascade_without_id
-    },
-    {
         "invalid_entity_without_id",
         SystemMisc_invalid_entity_without_id
     },
@@ -4461,30 +4440,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_0_w_and",
         SystemMisc_invalid_0_w_and
-    },
-    {
-        "invalid_0_w_from_system",
-        SystemMisc_invalid_0_w_from_system
-    },
-    {
-        "invalid_0_w_from_container",
-        SystemMisc_invalid_0_w_from_container
-    },
-    {
-        "invalid_0_w_from_cascade",
-        SystemMisc_invalid_0_w_from_cascade
-    },
-    {
-        "invalid_0_w_from_entity",
-        SystemMisc_invalid_0_w_from_entity
-    },
-    {
-        "invalid_0_w_from_empty",
-        SystemMisc_invalid_0_w_from_empty
-    },
-    {
-        "invalid_or_w_empty",
-        SystemMisc_invalid_or_w_empty
     },
     {
         "invalid_component_id",
@@ -7063,101 +7018,101 @@ bake_test_case Prefab_testcases[] = {
     }
 };
 
-bake_test_case System_w_FromContainer_testcases[] = {
+bake_test_case System_w_FromParent_testcases[] = {
     {
         "1_column_from_container",
-        System_w_FromContainer_1_column_from_container
+        System_w_FromParent_1_column_from_container
     },
     {
         "2_column_1_from_container",
-        System_w_FromContainer_2_column_1_from_container
+        System_w_FromParent_2_column_1_from_container
     },
     {
         "3_column_2_from_container",
-        System_w_FromContainer_3_column_2_from_container
+        System_w_FromParent_3_column_2_from_container
     },
     {
         "3_column_2_from_different_container",
-        System_w_FromContainer_3_column_2_from_different_container
+        System_w_FromParent_3_column_2_from_different_container
     },
     {
         "2_column_1_from_container_w_not",
-        System_w_FromContainer_2_column_1_from_container_w_not
+        System_w_FromParent_2_column_1_from_container_w_not
     },
     {
         "2_column_1_from_container_w_not_prefab",
-        System_w_FromContainer_2_column_1_from_container_w_not_prefab
+        System_w_FromParent_2_column_1_from_container_w_not_prefab
     },
     {
         "3_column_1_from_comtainer_1_from_container_w_not",
-        System_w_FromContainer_3_column_1_from_comtainer_1_from_container_w_not
+        System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not
     },
     {
         "2_column_1_from_container_w_or",
-        System_w_FromContainer_2_column_1_from_container_w_or
+        System_w_FromParent_2_column_1_from_container_w_or
     },
     {
         "select_same_from_container",
-        System_w_FromContainer_select_same_from_container
+        System_w_FromParent_select_same_from_container
     },
     {
         "add_component_after_match",
-        System_w_FromContainer_add_component_after_match
+        System_w_FromParent_add_component_after_match
     },
     {
         "add_component_after_match_and_rematch",
-        System_w_FromContainer_add_component_after_match_and_rematch
+        System_w_FromParent_add_component_after_match_and_rematch
     },
     {
         "add_component_after_match_unmatch",
-        System_w_FromContainer_add_component_after_match_unmatch
+        System_w_FromParent_add_component_after_match_unmatch
     },
     {
         "add_component_after_match_unmatch_match",
-        System_w_FromContainer_add_component_after_match_unmatch_match
+        System_w_FromParent_add_component_after_match_unmatch_match
     },
     {
         "add_component_after_match_2_systems",
-        System_w_FromContainer_add_component_after_match_2_systems
+        System_w_FromParent_add_component_after_match_2_systems
     },
     {
         "add_component_in_progress_after_match",
-        System_w_FromContainer_add_component_in_progress_after_match
+        System_w_FromParent_add_component_in_progress_after_match
     },
     {
         "add_component_after_match_and_rematch_w_entity_type_expr",
-        System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr
+        System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr
     },
     {
         "add_component_after_match_and_rematch_w_entity_type_expr_in_progress",
-        System_w_FromContainer_add_component_after_match_and_rematch_w_entity_type_expr_in_progress
+        System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr_in_progress
     },
     {
         "adopt_after_match",
-        System_w_FromContainer_adopt_after_match
+        System_w_FromParent_adopt_after_match
     },
     {
         "new_child_after_match",
-        System_w_FromContainer_new_child_after_match
+        System_w_FromParent_new_child_after_match
     },
     {
         "realloc_after_match",
-        System_w_FromContainer_realloc_after_match
+        System_w_FromParent_realloc_after_match
     }
 };
 
-bake_test_case System_w_FromId_testcases[] = {
+bake_test_case System_w_Empty_testcases[] = {
     {
         "2_column_1_from_id",
-        System_w_FromId_2_column_1_from_id
+        System_w_Empty_2_column_1_from_id
     },
     {
         "3_column_2_from_id",
-        System_w_FromId_3_column_2_from_id
+        System_w_Empty_3_column_2_from_id
     },
     {
         "column_type",
-        System_w_FromId_column_type
+        System_w_Empty_column_type
     }
 };
 
@@ -8773,7 +8728,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         SystemMisc_setup,
         NULL,
-        83,
+        74,
         SystemMisc_testcases
     },
     {
@@ -8896,18 +8851,18 @@ static bake_test_suite suites[] = {
         Prefab_testcases
     },
     {
-        "System_w_FromContainer",
-        System_w_FromContainer_setup,
+        "System_w_FromParent",
+        System_w_FromParent_setup,
         NULL,
         20,
-        System_w_FromContainer_testcases
+        System_w_FromParent_testcases
     },
     {
-        "System_w_FromId",
+        "System_w_Empty",
         NULL,
         NULL,
         3,
-        System_w_FromId_testcases
+        System_w_Empty_testcases
     },
     {
         "System_w_FromSystem",

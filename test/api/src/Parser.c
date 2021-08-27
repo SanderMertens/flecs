@@ -2270,7 +2270,7 @@ void Parser_pred_implicit_subject_superset() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset)"
+        .expr = "Pred(super)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2295,7 +2295,7 @@ void Parser_pred_implicit_subject_subset() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset)"
+        .expr = "Pred(sub)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2320,7 +2320,7 @@ void Parser_pred_implicit_subject_superset_inclusive() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(self|superset)"
+        .expr = "Pred(self|super)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2345,7 +2345,7 @@ void Parser_pred_implicit_subject_subset_inclusive() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(self|subset)"
+        .expr = "Pred(self|sub)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2370,7 +2370,7 @@ void Parser_pred_implicit_subject_superset_cascade() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|cascade)"
+        .expr = "Pred(super|cascade)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2395,7 +2395,7 @@ void Parser_pred_implicit_subject_subset_cascade() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset|cascade)"
+        .expr = "Pred(sub|cascade)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2420,7 +2420,7 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|cascade|self)"
+        .expr = "Pred(super|cascade|self)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2445,7 +2445,7 @@ void Parser_pred_implicit_subject_subset_inclusive_cascade() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset|cascade|self)"
+        .expr = "Pred(sub|cascade|self)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2573,7 +2573,7 @@ void Parser_pred_implicit_subject_superset_depth_1_digit() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset(2))"
+        .expr = "Pred(super(2))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2598,7 +2598,7 @@ void Parser_pred_implicit_subject_subset_depth_1_digit() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset(2))"
+        .expr = "Pred(sub(2))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2623,7 +2623,7 @@ void Parser_pred_implicit_subject_superset_depth_2_digits() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset(20))"
+        .expr = "Pred(super(20))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2648,7 +2648,7 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(subset(20))"
+        .expr = "Pred(sub(20))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2673,7 +2673,7 @@ void Parser_pred_implicit_superset_min_max_depth() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset(2, 3))"
+        .expr = "Pred(super(2, 3))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2699,7 +2699,7 @@ void Parser_pred_implicit_superset_childof_min_max_depth() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset(ChildOf, 2, 3))"
+        .expr = "Pred(super(ChildOf, 2, 3))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2727,7 +2727,7 @@ void Parser_pred_implicit_subject_superset_childof() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset(ChildOf))"
+        .expr = "Pred(super(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2752,7 +2752,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(cascade|superset(ChildOf))"
+        .expr = "Pred(cascade|super(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2777,7 +2777,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(superset|cascade(ChildOf))"
+        .expr = "Pred(super|cascade(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 
@@ -2802,7 +2802,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "?Pred(superset|cascade(ChildOf))"
+        .expr = "?Pred(super|cascade(ChildOf))"
     }));
     test_int(filter_count(&f), 1);
 

@@ -858,10 +858,10 @@ We also need to tell the query in which direction to follow the relationship. We
 The following term shows how to write the above example down in the DSL:
 
 ```
-Position(superset(ChildOf))
+Position(super(ChildOf))
 ```
 
-Let's unpack what is happening here. First of all the term has a regular `Position` predicate. The subject of this term is `superset(ChildOf)`. What this does is, it instructs the term to search upwards (`superset`) for the `ChildOf` relationship.
+Let's unpack what is happening here. First of all the term has a regular `Position` predicate. The subject of this term is `super(ChildOf)`. What this does is, it instructs the term to search upwards (`superset`) for the `ChildOf` relationship.
 
 As a result, this term will follow the `ChildOf` relation of the `This` subject until it has found an object with `Position`. Here is the behavior in pseudo code:
 
@@ -879,7 +879,7 @@ def find_object_w_component(This, Component):
 Substitution can do more than just searching supersets. It is for example possible to start the search on `This` itself, and when the component is not found on `This`, keep searching by following the `ChildOf` relation:
 
 ```c
-Position(self|superset(ChildOf))
+Position(self|super(ChildOf))
 ```
 
 A substitution that has both `self` and `superset` or `subset` is also referred to as an "inclusive" substitution.
@@ -901,14 +901,14 @@ def find_object_w_component(This, Component):
 Queries can specify how deep the query should search. For example, the following term specifies to search the `ChildOf` relation, but no more than 3 levels deep:
 
 ```c
-Position(superset(ChildOf, 3))
+Position(super(ChildOf, 3))
 ```
 
 Additionally, it is also possible to specify a minimum search depth:
 
 ```c
 // Start at depth 2, search until at most depth 4
-Position(superset(ChildOf, 2, 4))
+Position(super(ChildOf, 2, 4))
 ```
 
 #### Cascade Ordering
@@ -917,20 +917,20 @@ Substitution expressions may contain the `cascade` modifier, which ensures that 
 A useful application of `cascade` is transform systems, where parents need to be transformed before their children. The term in the following example finds the `Transform` component from both `This` and its parent, while ordering the results of the query breadth-first:
 
 ```
-Transform, Transform(cascade|superset(ChildOf))
+Transform, Transform(cascade|super(ChildOf))
 ```
 
 In an actual transform system we would also want to match the root, which can be achieved by making the second term optional:
 
 ```
-Transform, ?Transform(cascade|superset(ChildOf))
+Transform, ?Transform(cascade|super(ChildOf))
 ```
 
 #### Substitute for All
 The default behavior of a substitution term is to stop looking when an object with the required component has been found. The following example shows a term that specifies that the substitution needs to keep looking, so that the entire tree (upwards or downwards) for a subject is returned:
 
 ```
-Transform(all|superset(ChildOf))
+Transform(all|super(ChildOf))
 ```
 
 #### Substitution on Identifiers
@@ -938,24 +938,24 @@ So far all the substitution terms have applied to a default (`This`) subject. Su
 
 ```c
 // Get Position for a parent of Bob
-Position(Bob[superset(ChildOf)])
+Position(Bob[super(ChildOf)])
 ```
 
 Additionally, substitution is not limited to the subject:
 
 ```c
 // Does the entity like any of the parents of Alice?
-(Likes, Alice[superset(ChildOf)])
+(Likes, Alice[super(ChildOf)])
 ```
 
 This example shows how to use substitution in the C++ API:
 
 ```cpp
-// Position(superset(ChildOf))
+// Position(super(ChildOf))
 auto qb = world.query_builder<>()
-  .term<Position>().superset(ChildOf);
+  .term<Position>().super(ChildOf);
 
-// Position(self|superset(ChildOf, 3))
+// Position(self|super(ChildOf, 3))
 auto qb = world.query_builder<>()
   .term<Position>()
     .set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
@@ -965,7 +965,7 @@ auto qb = world.query_builder<>()
 This example shows how to use wildcards in the query descriptor:
 
 ```c
-// Position(superset(ChildOf))
+// Position(super(ChildOf))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {ecs_id(Position), .args[0].set = {
@@ -975,7 +975,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   }
 });
 
-// Position(self|superset(ChildOf, 3))
+// Position(self|super(ChildOf, 3))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {ecs_id(Position), .args[0].set = {
@@ -1045,7 +1045,7 @@ To understand how transitivity is implemented, we need to look at how queries in
 To find whether the subject should match this term, it should not just consider `(LocatedIn, SanFrancisco)`, but also `(LocatedIn, Mision)` and `(LocatedIn, SOMA)`. To achieve this, a query will insert an implicit substitution on the object, when the relation is transitive:
 
 ```
-(LocatedIn, SanFrancisco[self|subset(LocatedIn)])
+(LocatedIn, SanFrancisco[self|sub(LocatedIn)])
 ```
 
 Note that the substitution includes `self`, as we also should match entities that are in `SanFrancisco` itself.
@@ -1099,7 +1099,7 @@ SelfPortrait
 To achieve this, a query implicitly substitutes terms with their `IsA` subsets. When written out in full, this looks like:
 
 ```
-Artwork[self|all|subset(IsA)]
+Artwork[self|all|sub(IsA)]
 ```
 
 The default relation for set substitution is `IsA`, so we can rewrite this as a slightly shorter term:
