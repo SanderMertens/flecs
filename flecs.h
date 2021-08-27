@@ -41,6 +41,7 @@
 #define FLECS_MODULE        /* Module support */
 #define FLECS_PARSER        /* String parser for queries */
 #define FLECS_PLECS         /* ECS data definition format */
+#define FLECS_RULES         /* Constraint solver for advanced queries */
 #define FLECS_SNAPSHOT      /* Snapshot & restore ECS data */
 #define FLECS_STATS         /* Keep track of runtime statistics */
 #define FLECS_SYSTEM        /* System support */
@@ -2149,6 +2150,9 @@ typedef struct ecs_query_t ecs_query_t;
 /** A filter allows for uncached, ad hoc iteration over ECS data */
 typedef struct ecs_filter_t ecs_filter_t;
 
+/** A rule implements a non-trivial filter */
+typedef struct ecs_rule_t ecs_rule_t;
+
 /** A trigger reacts to events matching a single filter term */
 typedef struct ecs_trigger_t ecs_trigger_t;
 
@@ -2558,6 +2562,21 @@ typedef struct ecs_sparse_iter_t {
     int32_t count;
 } ecs_sparse_iter_t;
 
+/** Rule-iterator specific data */
+typedef struct ecs_rule_iter_t {
+    const ecs_rule_t *rule;
+    struct ecs_rule_reg_t *registers;    /* Variable storage */
+    struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
+    
+    int32_t *columns;                    /* Column indices */
+    
+    ecs_entity_t entity;                 /* Result in case of 1 entity */
+
+    bool redo;
+    int32_t op;
+    int32_t sp;
+} ecs_rule_iter_t;
+
 /* Inline arrays for queries with small number of components */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
@@ -2631,6 +2650,7 @@ struct ecs_iter_t {
         ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
+        ecs_rule_iter_t rule;
         ecs_snapshot_iter_t snapshot;
     } iter;                       /* Iterator specific data */
 
@@ -4201,6 +4221,15 @@ bool ecs_is_valid(
 FLECS_API
 bool ecs_is_alive(
     const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Remove generation from entity id.
+ *
+ * @param e The entity id.
+ * @return The entity id without the generation count.
+ */
+FLECS_API
+ecs_id_t ecs_strip_generation(
     ecs_entity_t e);
 
 /** Get alive identifier.
@@ -6869,6 +6898,85 @@ char* ecs_parse_term(
 #endif // FLECS_PARSER_H
 
 #endif // FLECS_PARSER
+#endif
+#ifdef FLECS_RULES
+
+/**
+ * @file rules.h
+ * @brief Rules addon.
+ *
+ * The rules addon implements a constraint-solver based query language.
+ */
+
+#ifdef FLECS_RULES
+
+#ifndef FLECS_RULES_H
+#define FLECS_RULES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+ecs_rule_t* ecs_rule_init(
+    ecs_world_t *world,
+    ecs_filter_desc_t *desc);
+
+FLECS_API
+void ecs_rule_fini(
+    ecs_rule_t *rule);
+
+FLECS_API
+int32_t ecs_rule_term_count(
+    const ecs_rule_t *rule);
+
+FLECS_API
+int32_t ecs_rule_variable_count(
+    const ecs_rule_t *rule);
+
+FLECS_API
+int32_t ecs_rule_find_variable(
+    const ecs_rule_t *rule,
+    const char *name);    
+
+FLECS_API
+const char* ecs_rule_variable_name(
+    const ecs_rule_t *rule,
+    int32_t var_id);
+
+FLECS_API
+ecs_entity_t ecs_rule_variable(
+    ecs_iter_t *it,
+    int32_t var_id);
+
+FLECS_API
+bool ecs_rule_variable_is_entity(
+    const ecs_rule_t *rule,
+    int32_t var_id);  
+
+FLECS_API
+ecs_iter_t ecs_rule_iter(
+    const ecs_rule_t *rule);
+
+FLECS_API
+void ecs_rule_iter_free(
+    ecs_iter_t *iter);
+
+FLECS_API
+bool ecs_rule_next(
+    ecs_iter_t *it);
+
+FLECS_API
+char* ecs_rule_str(
+    ecs_rule_t *rule);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // FLECS_RULES_H
+
+#endif // FLECS_RULES
 #endif
 #ifdef FLECS_SNAPSHOT
 /**

@@ -1315,6 +1315,7 @@ void unregister_table_for_id(
     }
 
     ecs_map_remove(r->table_index, table->id);
+
     if (!ecs_map_count(r->table_index)) {
         flecs_clear_id_record(world, id);
     }
@@ -1353,7 +1354,7 @@ void do_register_each_id(
             has_childof = true;
         } 
 
-        do_register_id(world, table, id, i, unregister);
+        do_register_id(world, table, ecs_strip_generation(id), i, unregister);
         do_register_id(world, table, EcsWildcard, i, unregister);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
@@ -1417,14 +1418,16 @@ ecs_id_record_t* flecs_ensure_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_ensure(world->id_index, ecs_id_record_t, id);
+    return ecs_map_ensure(world->id_index, ecs_id_record_t, 
+        ecs_strip_generation(id));
 }
 
 ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_get(world->id_index, ecs_id_record_t, id);
+    return ecs_map_get(world->id_index, ecs_id_record_t, 
+        ecs_strip_generation(id));
 }
 
 ecs_table_record_t* flecs_get_table_record(
@@ -1513,5 +1516,5 @@ void flecs_clear_id_record(
     ecs_map_free(idr->remove_refs);
 
     ecs_map_free(idr->table_index);
-    ecs_map_remove(world->id_index, id);
+    ecs_map_remove(world->id_index, ecs_strip_generation(id));
 }

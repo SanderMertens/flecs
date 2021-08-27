@@ -2979,6 +2979,17 @@ bool ecs_is_valid(
     return !ecs_exists(world, entity) || ecs_is_alive(world, entity);
 }
 
+ecs_id_t ecs_strip_generation(
+    ecs_entity_t e)
+{
+    /* If this is not a pair, erase the generation bits */
+    if (!(e & ECS_ROLE_MASK)) {
+        e &= ~ECS_GENERATION_MASK;
+    }
+
+    return e;
+}
+
 bool ecs_is_alive(
     const ecs_world_t *world,
     ecs_entity_t entity)

@@ -1050,8 +1050,7 @@ void OnDelete_stresstest_many_relations_on_delete() {
     
     ecs_get_world_stats(world, &s);
 
-    /* 1 table for the relations */
-    test_int(s.table_count.avg[s.t] - table_count, 1);
+    test_int(s.table_count.avg[s.t] - table_count, 0);
 
     ecs_fini(world);
 }
