@@ -51,14 +51,6 @@ bool flecs_get_info(
     ecs_entity_t entity,
     ecs_entity_info_t *info);
 
-void flecs_run_monitors(
-    ecs_world_t *world, 
-    ecs_table_t *dst_table,
-    ecs_vector_t *v_dst_monitors, 
-    int32_t dst_row, 
-    int32_t count, 
-    ecs_vector_t *v_src_monitors);
-
 void flecs_register_name(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -174,11 +166,6 @@ void flecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer);
 
-void flecs_use_intern(
-    ecs_entity_t entity,
-    const char *name,
-    ecs_vector_t **alias_vector);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
@@ -287,11 +274,12 @@ bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+
 ////////////////////////////////////////////////////////////////////////////////
-//// Type API
+//// Notifications
 ////////////////////////////////////////////////////////////////////////////////
 
-void flecs_run_add_actions(
+void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -301,24 +289,21 @@ void flecs_run_add_actions(
     ecs_table_diff_t *diff,
     bool run_on_set);   
 
-void flecs_run_remove_actions(
+void flecs_notify_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff,
-    bool unset_removed);
+    ecs_table_diff_t *diff);
 
-void flecs_run_set_systems(
+void flecs_notify_on_set(
     ecs_world_t *world,
-    ecs_id_t component,
     ecs_table_t *table,
-    ecs_data_t *data,
-    ecs_column_t *column,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff);
+    ecs_ids_t *ids,
+    bool owned);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,30 +390,6 @@ void flecs_table_set_size(
     ecs_table_t *table,
     ecs_data_t *data,
     int32_t count);
-
-bool flecs_term_match_table(
-    ecs_world_t *world,
-    const ecs_term_t *term,
-    const ecs_table_t *table,
-    ecs_type_t type,
-    int32_t offset,
-    ecs_id_t *id_out,
-    int32_t *column_out,
-    ecs_entity_t *subject_out,
-    ecs_size_t *size_out,
-    void **ptr_out);
-
-bool flecs_filter_match_table(
-    ecs_world_t *world,
-    const ecs_filter_t *filter,
-    const ecs_table_t *table,
-    ecs_type_t type,
-    int32_t offset,
-    ecs_id_t *ids,
-    int32_t *columns,
-    ecs_entity_t *subjects,
-    ecs_size_t *sizes,
-    void **ptrs);
 
 /* Get dirty state for table columns */
 int32_t* flecs_table_get_dirty_state(
@@ -532,21 +493,31 @@ ecs_column_t *ecs_table_column_for_id(
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
 
-void flecs_query_set_iter(
+/* Match table with term */
+bool flecs_term_match_table(
     ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_iter_t *it,
-    int32_t table_index,
-    int32_t row,
-    int32_t count);
+    const ecs_term_t *term,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    int32_t offset,
+    ecs_id_t *id_out,
+    int32_t *column_out,
+    ecs_entity_t *subject_out,
+    ecs_size_t *size_out,
+    void **ptr_out);
 
-void flecs_run_monitor(
+/* Match table with filter */
+bool flecs_filter_match_table(
     ecs_world_t *world,
-    ecs_matched_query_t *monitor,
-    ecs_ids_t *components,
-    int32_t row,
-    int32_t count,
-    ecs_entity_t *entities);
+    const ecs_filter_t *filter,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    int32_t offset,
+    ecs_id_t *ids,
+    int32_t *columns,
+    ecs_entity_t *subjects,
+    ecs_size_t *sizes,
+    void **ptrs);
 
 bool flecs_query_match(
     const ecs_world_t *world,
@@ -563,6 +534,7 @@ void flecs_iter_init(
 
 void flecs_iter_fini(
     ecs_iter_t *it);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API
@@ -583,7 +555,7 @@ void flecs_increase_timer_resolution(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Object API
+//// Poly API
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Initialize object header & mixins for specified type */
@@ -648,6 +620,7 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
@@ -657,7 +630,7 @@ uint64_t flecs_hash(
     ecs_size_t length);
 
 /* Convert 64 bit signed integer to 16 bit */
-int8_t flflecs_to_i8(
+int8_t flecs_to_i8(
     int64_t v);
 
 /* Convert 64 bit signed integer to 16 bit */

@@ -60,7 +60,7 @@ class column {
 public:
     static_assert(std::is_empty<T>::value == false, 
         "invalid type for column, cannot iterate empty type");
-        
+
     /** Create column from component array.
      *
      * @param array Pointer to the component array.

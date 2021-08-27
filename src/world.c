@@ -323,11 +323,9 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
-
     ecs_poly_init(world, ecs_world_t);
 
     world->self = world;
-    world->fini_actions = NULL; 
 
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
@@ -337,57 +335,18 @@ ecs_world_t *ecs_mini(void) {
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-    world->name_prefix = NULL;
 
     world->aliases = flecs_string_hashmap_new();
     world->symbols = flecs_string_hashmap_new();
+    world->type_handles = ecs_map_new(ecs_entity_t, 0);
 
+    world->stats.time_scale = 1.0;
+    
     monitors_init(&world->monitors);
 
-    world->type_handles = ecs_map_new(ecs_entity_t, 0);
-    world->on_activate_components = ecs_map_new(ecs_on_demand_in_t, 0);
-    world->on_enable_components = ecs_map_new(ecs_on_demand_in_t, 0);
-
-    world->worker_stages = NULL;
-    world->workers_waiting = 0;
-    world->workers_running = 0;
-    world->quit_workers = false;
-    world->is_readonly = false;
-    world->is_fini = false;
-    world->measure_frame_time = false;
-    world->measure_system_time = false;
-    world->should_quit = false;
-    world->locking_enabled = false;
-    world->pipeline = 0;
-
-    world->frame_start_time = (ecs_time_t){0, 0};
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
-
-    world->stats.target_fps = 0;
-    world->stats.last_id = 0;
-
-    world->stats.delta_time_raw = 0;
-    world->stats.delta_time = 0;
-    world->stats.time_scale = 1.0;
-    world->stats.frame_time_total = 0;
-    world->stats.system_time_total = 0;
-    world->stats.merge_time_total = 0;
-    world->stats.world_time_total = 0;
-    world->stats.frame_count_total = 0;
-    world->stats.merge_count_total = 0;
-    world->stats.systems_ran_frame = 0;
-    world->stats.pipeline_build_count_total = 0;
-    
-    world->range_check_enabled = false;
-
-    world->fps_sleep = 0;
-
-    world->context = NULL;
-
-    world->arg_fps = 0;
-    world->arg_threads = 0;
 
     flecs_stage_init(world, &world->stage);
     ecs_set_stages(world, 1);
@@ -462,20 +421,6 @@ bool ecs_should_quit(
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
     return world->should_quit;
-}
-
-static
-void on_demand_in_map_fini(
-    ecs_map_t *map)
-{
-    ecs_map_iter_t it = ecs_map_iter(map);
-    ecs_on_demand_in_t *elem;
-
-    while ((elem = ecs_map_next(&it, ecs_on_demand_in_t, NULL))) {
-        ecs_vector_free(elem->systems);
-    }
-
-    ecs_map_free(map);
 }
 
 void flecs_notify_tables(
@@ -858,8 +803,6 @@ static
 void fini_misc(
     ecs_world_t *world)
 {
-    on_demand_in_map_fini(world->on_activate_components);
-    on_demand_in_map_fini(world->on_enable_components);
     ecs_map_free(world->type_handles);
     ecs_vector_free(world->fini_tasks);
     monitors_fini(&world->monitors);
@@ -986,11 +929,9 @@ void ecs_set_target_fps(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
-    if (!world->arg_fps) {
-        ecs_measure_frame_time(world, true);
-        world->stats.target_fps = fps;
-        set_timer_resolution(fps);
-    }
+    ecs_measure_frame_time(world, true);
+    world->stats.target_fps = fps;
+    set_timer_resolution(fps);
 }
 
 void* ecs_get_context(

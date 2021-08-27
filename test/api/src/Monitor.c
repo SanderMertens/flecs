@@ -163,7 +163,8 @@ void Monitor_1_comp_1_parent() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_SYSTEM(world, OnPosition, EcsMonitor, Position, PARENT:Position);
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, 
+        Position, Position(superset(ChildOf)));
 
     Probe ctx = { 0 };
     ecs_set_context(world, &ctx);
@@ -177,6 +178,7 @@ void Monitor_1_comp_1_parent() {
     ecs_add_pair(world, e, EcsChildOf, parent);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
+    test_int(ctx.event, EcsOnAdd);
     test_int(ctx.system, OnPosition);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
@@ -196,11 +198,16 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, e, Position);
-    test_int(ctx.invoked, 0);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.event, EcsOnRemove);
+
+    ctx = (Probe){ 0 };
 
     ecs_add(world, e, Position);
-    test_int(ctx.invoked, 1);    
+    test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
+    test_int(ctx.event, EcsOnAdd);
     test_int(ctx.system, OnPosition);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);

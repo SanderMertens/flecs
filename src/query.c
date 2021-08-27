@@ -85,16 +85,7 @@ int table_compare(
 }
 
 static
-bool has_auto_activation(
-    ecs_query_t *q)
-{
-    /* Only a basic query with no additional features does table activation */
-    return !(q->flags & EcsQueryNoActivation);
-}
-
-static
 void order_grouped_tables(
-    ecs_world_t *world,
     ecs_query_t *query)
 {
     if (query->group_by) {
@@ -102,47 +93,30 @@ void order_grouped_tables(
 
         /* Recompute the table indices by first resetting all indices, and then
          * re-adding them one by one. */
-        if (has_auto_activation(query)) { 
-            ecs_map_iter_t it = ecs_map_iter(query->table_indices);
-            ecs_table_indices_t *ti;
-            while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
-                /* If table is registered, it must have at least one index */
-                int32_t count = ti->count;
-                ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
-                (void)count;
+        ecs_map_iter_t it = ecs_map_iter(query->table_indices);
+        ecs_table_indices_t *ti;
+        while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
+            /* If table is registered, it must have at least one index */
+            int32_t count = ti->count;
+            ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+            (void)count;
 
-                /* Only active tables are reordered, so don't reset inactive 
-                 * tables */
-                if (ti->indices[0] >= 0) {
-                    ti->count = 0;
-                }
+            /* Only active tables are reordered, so don't reset inactive 
+                * tables */
+            if (ti->indices[0] >= 0) {
+                ti->count = 0;
             }
         }
 
-        /* Re-register monitors after tables have been reordered. This will update
-         * the table administration with the new matched_table ids, so that when a
-         * monitor is executed we can quickly find the right matched_table. */
-        if (query->flags & EcsQueryMonitor) { 
-            ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
-                flecs_table_notify(world, table->table, &(ecs_table_event_t){
-                    .kind = EcsTableQueryMatch,
-                    .query = query,
-                    .matched_table_index = table_i
-                });
-            });
-        }
-
         /* Update table index */
-        if (has_auto_activation(query)) {
-            ecs_vector_each(query->tables, ecs_matched_table_t, table, {  
-                ecs_table_indices_t *ti = ecs_map_get(query->table_indices, 
-                    ecs_table_indices_t, table->table->id);
+        ecs_vector_each(query->tables, ecs_matched_table_t, table, {  
+            ti = ecs_map_get(query->table_indices, 
+                ecs_table_indices_t, table->table->id);
 
-                ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-                ti->indices[ti->count] = table_i;
-                ti->count ++;
-            });
-        }
+            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            ti->indices[ti->count] = table_i;
+            ti->count ++;
+        });
     }
     
     query->match_count ++;
@@ -727,7 +701,7 @@ add_pair:
      * activate signal to the system. */
 
     ecs_matched_table_t *table_elem;
-    if (table && has_auto_activation(query)) {
+    if (table) {
         table_elem = ecs_vector_add(&query->empty_tables, 
             ecs_matched_table_t);
 
@@ -939,7 +913,7 @@ void match_tables(
         }
     }
 
-    order_grouped_tables(world, query);
+    order_grouped_tables(query);
 }
 
 #define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
@@ -1230,7 +1204,7 @@ bool tables_dirty(
     ecs_query_t *query)
 {
     if (query->needs_reorder) {
-        order_grouped_tables(query->world, query);
+        order_grouped_tables(query);
     }
 
     int32_t i, count = ecs_vector_count(query->tables);
@@ -2021,7 +1995,7 @@ void rematch_tables(
     }
 
     group_tables(world, query);
-    order_grouped_tables(world, query);
+    order_grouped_tables(query);
 
     /* Enable/disable system if constraints are (not) met. If the system is
      * already dis/enabled this operation has no side effects. */
@@ -2136,7 +2110,7 @@ void query_group_by(
 
     group_tables(world, query);
 
-    order_grouped_tables(world, query);
+    order_grouped_tables(query);
 
     build_sorted_tables(query);
 }
@@ -2195,20 +2169,6 @@ ecs_query_t* ecs_query_init(
 
     if (!desc->parent) {
         if (result->flags & EcsQueryNeedsTables) {
-            if (desc->system) {
-                if (ecs_has_id(world, desc->system, EcsMonitor)) {
-                    result->flags |= EcsQueryMonitor;
-                }
-                
-                if (ecs_has_id(world, desc->system, EcsOnSet)) {
-                    result->flags |= EcsQueryOnSet;
-                }
-
-                if (ecs_has_id(world, desc->system, EcsUnSet)) {
-                    result->flags |= EcsQueryUnSet;
-                }  
-            }      
-
             match_tables(world, result);
         } else {
             /* Add stub table that resolves references (if any) so everything is
@@ -2330,7 +2290,7 @@ ecs_iter_t ecs_query_iter_page(
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 
     if (query->needs_reorder) {
-        order_grouped_tables(world, query);
+        order_grouped_tables(query);
     }
     
     sort_tables(world, query);
@@ -2434,51 +2394,6 @@ void populate_ptrs(
                 world, ref, ref->entity, ref->component);
         }
     }    
-}
-
-void flecs_query_set_iter(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_iter_t *it,
-    int32_t table_index,
-    int32_t row,
-    int32_t count)
-{
-    (void)world;
-    ecs_poly_assert(query, ecs_query_t);
-    
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
-    
-    ecs_matched_table_t *table_data = ecs_vector_get(
-        query->tables, ecs_matched_table_t, table_index);
-    ecs_assert(table_data != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_table_t *table = table_data->table;
-    ecs_data_t *data = &table->storage;
-    
-    ecs_entity_t *entity_buffer = ecs_vector_first(data->entities, ecs_entity_t);  
-    it->entities = &entity_buffer[row];
-
-    it->world = NULL;
-    it->terms = query->filter.terms;
-    it->term_count = query->filter.term_count_actual;
-    it->table_count = 1;
-    it->inactive_table_count = 0;
-    it->table_columns = data->columns;
-    it->table = table;
-    it->ids = table_data->ids;
-    it->columns = table_data->columns;
-    it->subjects = table_data->subjects;
-    it->sizes = table_data->sizes;
-    it->references = table_data->references;
-    it->offset = row;
-    it->count = count;
-    it->total_count = count;
-
-    flecs_iter_init(it);
-
-    populate_ptrs(world, it);
 }
 
 static

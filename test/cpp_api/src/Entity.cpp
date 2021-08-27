@@ -435,8 +435,8 @@ void Entity_get_mut_generic() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    world.system<Position>()
-        .kind(flecs::OnSet)
+    world.trigger<Position>()
+        .event(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
         });
@@ -483,8 +483,8 @@ void Entity_get_mut_generic_w_id() {
     test_assert(entity.has<Position>());
 
     bool invoked;
-    world.system<Position>()
-        .kind(flecs::OnSet)
+    world.trigger<Position>()
+        .event(flecs::OnSet)
         .each([&invoked](flecs::entity e, Position& p) {
             invoked = true;
         });
@@ -1445,16 +1445,16 @@ void Entity_set_2_w_on_set() {
     int32_t position_set = 0;
     int32_t velocity_set = 0;
 
-    ecs.system<Position>()
-        .kind(flecs::OnSet)
+    ecs.trigger<Position>()
+        .event(flecs::OnSet)
         .each([&](flecs::entity e, Position& p) {
             position_set ++;
             test_int(p.x, 10);
             test_int(p.y, 20);
         });
 
-    ecs.system<Velocity>()
-        .kind(flecs::OnSet)
+    ecs.trigger<Velocity>()
+        .event(flecs::OnSet)
         .each([&](flecs::entity e, Velocity& v) {
             velocity_set ++;
             test_int(v.x, 1);
@@ -1485,16 +1485,16 @@ void Entity_defer_set_2_w_on_set() {
     int32_t position_set = 0;
     int32_t velocity_set = 0;
 
-    ecs.system<Position>()
-        .kind(flecs::OnSet)
+    ecs.trigger<Position>()
+        .event(flecs::OnSet)
         .each([&](flecs::entity e, Position& p) {
             position_set ++;
             test_int(p.x, 10);
             test_int(p.y, 20);
         });
 
-    ecs.system<Velocity>()
-        .kind(flecs::OnSet)
+    ecs.trigger<Velocity>()
+        .event(flecs::OnSet)
         .each([&](flecs::entity e, Velocity& v) {
             velocity_set ++;
             test_int(v.x, 1);

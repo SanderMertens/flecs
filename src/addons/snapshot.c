@@ -230,8 +230,10 @@ void ecs_snapshot_restore(
                 flecs_table_merge(world, table, table, &table->storage, leaf->data);
 
                 /* Run OnSet systems for merged entities */
-                flecs_run_set_systems(world, 0, table, &table->storage, NULL,
-                    old_count, new_count, NULL);
+                if (new_count) {
+                    flecs_notify_on_set(
+                        world, table, old_count, new_count, NULL, true);
+                }
 
                 ecs_os_free(leaf->data->columns);
             } else {
@@ -269,8 +271,10 @@ void ecs_snapshot_restore(
                 continue;
             }
 
-            flecs_run_set_systems(world, 0, table, &table->storage, NULL, 0, 
-                ecs_table_count(table), NULL);
+            int32_t tcount = ecs_table_count(table);
+            if (tcount) {
+                flecs_notify_on_set(world, table, 0, tcount, NULL, true);
+            }
         }
     }
 

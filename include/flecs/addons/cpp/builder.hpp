@@ -669,13 +669,6 @@ public:
     }
 
     /** Specify when the system should be ran.
-     * Use this function to set in which phase the system should run or whether
-     * the system is reactive. Valid values for reactive systems are:
-     *
-     * flecs::OnAdd
-     * flecs::OnRemove
-     * flecs::OnSet
-     * flecs::UnSet
      *
      * @param kind The kind that specifies when the system should be ran.
      */
@@ -719,12 +712,6 @@ public:
      */
     Base& rate(int32_t rate) {
         m_desc->rate = rate;
-        return *this;
-    }
-
-    /** System is an on demand system */
-    Base& on_demand() {
-        m_desc->entity.add[m_add_count ++] = flecs::OnDemand;
         return *this;
     }
 

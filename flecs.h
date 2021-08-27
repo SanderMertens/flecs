@@ -2482,7 +2482,7 @@ struct ecs_ref_t {
 
 /** Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_ids_t {
-    ecs_id_t *array;    /* An array with entity ids */
+    ecs_id_t *array;        /* An array with entity ids */
     int32_t count;          /* The number of entities in the array */
     int32_t size;           /* The size of the array */
 } ecs_ids_t;
@@ -2497,16 +2497,6 @@ typedef struct ecs_page_iter_t {
     int32_t limit;
     int32_t remaining;
 } ecs_page_iter_t;
-
-/** Table specific data for iterators */
-typedef struct ecs_iter_table_t {
-    int32_t *columns;         /* Mapping from query terms to table columns */
-    ecs_table_t *table;       /* The current table. */
-    ecs_data_t *data;         /* Table component data */
-    ecs_entity_t *components; /* Components in current table */
-    ecs_type_t *types;        /* Components in current table */
-    ecs_ref_t *references;    /* References to entities (from query) */
-} ecs_iter_table_t;
 
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
@@ -2550,7 +2540,7 @@ typedef struct ecs_query_iter_t {
     int32_t bitset_first;
 } ecs_query_iter_t;
 
-/** Query-iterator specific data */
+/** Snapshot-iterator specific data */
 typedef struct ecs_snapshot_iter_t {
     ecs_filter_t filter;
     ecs_vector_t *tables; /* ecs_table_leaf_t */
@@ -7689,7 +7679,6 @@ static const flecs::entity_t Module = EcsModule;
 static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Hidden = EcsHidden;
 static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t DisabledIntern = EcsDisabledIntern;
 static const flecs::entity_t Inactive = EcsInactive;
 static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t Pipeline = EcsPipeline;
@@ -8885,7 +8874,7 @@ class column {
 public:
     static_assert(std::is_empty<T>::value == false, 
         "invalid type for column, cannot iterate empty type");
-        
+
     /** Create column from component array.
      *
      * @param array Pointer to the component array.
@@ -13618,13 +13607,6 @@ public:
     }
 
     /** Specify when the system should be ran.
-     * Use this function to set in which phase the system should run or whether
-     * the system is reactive. Valid values for reactive systems are:
-     *
-     * flecs::OnAdd
-     * flecs::OnRemove
-     * flecs::OnSet
-     * flecs::UnSet
      *
      * @param kind The kind that specifies when the system should be ran.
      */
@@ -13668,12 +13650,6 @@ public:
      */
     Base& rate(int32_t rate) {
         m_desc->rate = rate;
-        return *this;
-    }
-
-    /** System is an on demand system */
-    Base& on_demand() {
-        m_desc->entity.add[m_add_count ++] = flecs::OnDemand;
         return *this;
     }
 

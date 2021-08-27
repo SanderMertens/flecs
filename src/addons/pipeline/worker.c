@@ -292,7 +292,7 @@ void ecs_set_threads(
 
     int32_t stage_count = ecs_get_stage_count(world);
 
-    if (!world->arg_threads && stage_count != threads) {
+    if (stage_count != threads) {
         /* Stop existing threads */
         if (stage_count > 1) {
             if (ecs_stop_threads(world)) {

@@ -40,8 +40,8 @@ void Singleton_modified_singleton() {
 
     int invoked = 0;
 
-    world.system<Position>()
-        .kind(flecs::OnSet)
+    world.trigger<Position>()
+        .event(flecs::OnSet)
         .iter([&](flecs::iter it, Position *p) {
             invoked ++;
         });

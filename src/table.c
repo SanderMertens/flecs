@@ -196,8 +196,6 @@ void run_on_remove(
 {
     int32_t count = ecs_vector_count(data->entities);
     if (count) {
-        flecs_run_monitors(world, table, table->un_set_all, 0, count, NULL);
-
         ecs_ids_t removed = {
             .array = ecs_vector_first(table->type, ecs_id_t),
             .count = ecs_vector_count(table->type)
@@ -208,195 +206,8 @@ void run_on_remove(
             .un_set = removed
         };
         
-        flecs_run_remove_actions(world, table, NULL, 0, count, &diff, true);
+        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
     }
-}
-
-static
-int compare_matched_query(
-    const void *ptr1,
-    const void *ptr2)
-{
-    const ecs_matched_query_t *m1 = ptr1;
-    const ecs_matched_query_t *m2 = ptr2;
-    ecs_query_t *q1 = m1->query;
-    ecs_query_t *q2 = m2->query;
-    ecs_assert(q1 != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(q2 != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t s1 = q1->system;
-    ecs_entity_t s2 = q2->system;
-    ecs_assert(s1 != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(s2 != 0, ECS_INTERNAL_ERROR, NULL);
-
-    return (s1 > s2) - (s1 < s2);
-}
-
-static
-void add_monitor(
-    ecs_vector_t **array,
-    ecs_query_t *query,
-    int32_t matched_table_index)
-{
-    /* Add the system to a list that contains all OnSet systems matched with
-     * this table. This makes it easy to get the list of systems that need to be
-     * executed when all components are set, like when new_w_data is used */
-    ecs_matched_query_t *m = ecs_vector_add(array, ecs_matched_query_t);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    m->query = query;
-    m->matched_table_index = matched_table_index;
-
-    /* Sort the system list so that it is easy to get the difference OnSet
-     * OnSet systems between two tables. */
-    qsort(
-        ecs_vector_first(*array, ecs_matched_query_t), 
-        flecs_to_size_t(ecs_vector_count(*array)),
-        ECS_SIZEOF(ecs_matched_query_t), 
-        compare_matched_query);
-}
-
-/* This function is called when a query is matched with a table. A table keeps
- * a list of queries that match so that they can be notified when the table
- * becomes empty / non-empty. */
-static
-void register_monitor(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index)
-{
-    (void)world;
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* First check if system is already registered as monitor. It is possible
-     * the query just wants to update the matched_table_index (for example, if
-     * query tables got reordered) */
-    ecs_vector_each(table->monitors, ecs_matched_query_t, m, {
-        if (m->query == query) {
-            m->matched_table_index = matched_table_index;
-            return;
-        }
-    });
-
-    add_monitor(&table->monitors, query, matched_table_index);
-
-#ifndef NDEBUG
-    char *str = ecs_type_str(world, table->type);
-    ecs_trace_2("monitor #[green]%s#[reset] registered with table #[red]%s",
-        ecs_get_name(world, query->system), str);
-    ecs_os_free(str);
-#endif
-}
-
-static
-bool is_override(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t comp)
-{
-    if (!(table->flags & EcsTableHasIsA)) {
-        return false;
-    }
-
-    ecs_type_t type = table->type;
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
-
-    for (i = count - 1; i >= 0; i --) {
-        ecs_entity_t e = entities[i];
-        if (ECS_HAS_RELATION(e, EcsIsA)) {
-            if (ecs_has_id(world, ECS_PAIR_OBJECT(e), comp)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-static
-void register_on_set(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index)
-{
-    (void)world;
-
-    if (table->column_count) {
-        if (!table->on_set) {
-            table->on_set = 
-                ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
-        }
-
-        /* Get the matched table which holds the list of actual components */
-        ecs_matched_table_t *matched_table = ecs_vector_get(
-            query->tables, ecs_matched_table_t, matched_table_index);
-
-        /* Keep track of whether query matches overrides. When a component is
-         * removed, diffing these arrays between the source and detination
-         * tables gives the list of OnSet systems to run, after exposing the
-         * component that was overridden. */
-        bool match_override = false;
-
-        /* Add system to each matched column. This makes it easy to get the list 
-         * of systems when setting a single component. */
-        ecs_term_t *terms = query->filter.terms;
-        int32_t i, count = query->filter.term_count;
-        
-        for (i = 0; i < count; i ++) {
-            ecs_term_t *term = &terms[i];
-            ecs_term_id_t *subj = &term->args[0];
-            ecs_oper_kind_t oper = term->oper;
-
-            if (!(subj->set.mask & EcsSelf) || !subj->entity ||
-                subj->entity != EcsThis)
-            {
-                continue;
-            }
-
-            if (oper != EcsAnd && oper != EcsOptional) {
-                continue;
-            }
-
-            ecs_entity_t comp = matched_table->ids[i];
-            int32_t index = ecs_type_index_of(table->type, 0, comp);
-            if (index == -1) {
-                continue;
-            }
-
-            if (index >= table->column_count) {
-                continue;
-            }
-            
-            ecs_vector_t *set_c = table->on_set[index];
-            ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
-            m->query = query;
-            m->matched_table_index = matched_table_index;
-            table->on_set[index] = set_c;
-            
-            match_override |= is_override(world, table, comp);
-        } 
-
-        if (match_override) {
-            add_monitor(&table->on_set_override, query, matched_table_index);
-        }
-    }
-
-    add_monitor(&table->on_set_all, query, matched_table_index);   
-}
-
-static
-void register_un_set(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index)
-{
-    (void)world;
-    table->flags |= EcsTableHasUnSet;
-    add_monitor(&table->un_set_all, query, matched_table_index);
 }
 
 /* -- Private functions -- */
@@ -437,42 +248,22 @@ static
 void register_query(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_query_t *query,
-    int32_t matched_table_index)
+    ecs_query_t *query)
 {
-    /* Register system with the table */
-    if (!(query->flags & EcsQueryNoActivation)) {
 #ifndef NDEBUG
-        /* Sanity check if query has already been added */
-        int32_t i, count = ecs_vector_count(table->queries);
-        for (i = 0; i < count; i ++) {
-            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-            ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
-        }
+    /* Sanity check if query has already been added */
+    int32_t i, count = ecs_vector_count(table->queries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+        ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
+    }
 #endif
 
-        ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
-        if (q) *q = query;
+    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
+    if (q) *q = query;
 
-        if (ecs_table_count(table)) {
-            table_activate(world, table, query, true);
-        }
-    }
-
-    /* Register the query as a monitor */
-    if (query->flags & EcsQueryMonitor) {
-        table->flags |= EcsTableHasMonitors;
-        register_monitor(world, table, query, matched_table_index);
-    }
-
-    /* Register the query as an on_set system */
-    if (query->flags & EcsQueryOnSet) {
-        register_on_set(world, table, query, matched_table_index);
-    }
-
-    /* Register the query as an un_set system */
-    if (query->flags & EcsQueryUnSet) {
-        register_un_set(world, table, query, matched_table_index);
+    if (ecs_table_count(table)) {
+        table_activate(world, table, query, true);
     }
 }
 
@@ -487,21 +278,19 @@ void unregister_query(
 {
     (void)world;
 
-    if (!(query->flags & EcsQueryNoActivation)) {
-        int32_t i, count = ecs_vector_count(table->queries);
-        for (i = 0; i < count; i ++) {
-            ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-            if (*q == query) {
-                break;
-            }
+    int32_t i, count = ecs_vector_count(table->queries);
+    for (i = 0; i < count; i ++) {
+        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
+        if (*q == query) {
+            break;
         }
-
-        /* Query must have been registered with table */
-        ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-
-        /* Remove query */
-        ecs_vector_remove(table->queries, ecs_query_t*, i);        
     }
+
+    /* Query must have been registered with table */
+    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+
+    /* Remove query */
+    ecs_vector_remove(table->queries, ecs_query_t*, i);
 }
 
 static
@@ -792,21 +581,9 @@ void flecs_table_free(
 
     ecs_vector_free(table->queries);
     ecs_os_free(table->dirty_state);
-    ecs_vector_free(table->monitors);
-    ecs_vector_free(table->on_set_all);
-    ecs_vector_free(table->on_set_override);
-    ecs_vector_free(table->un_set_all);
 
     if (table->c_info) {
         ecs_os_free(table->c_info);
-    }
-    
-    if (table->on_set) {
-        int32_t i;
-        for (i = 0; i < table->column_count; i ++) {
-            ecs_vector_free(table->on_set[i]);
-        }
-        ecs_os_free(table->on_set);
     }
 
     table->id = 0;
@@ -2091,12 +1868,10 @@ void flecs_table_notify(
 
     switch(event->kind) {
     case EcsTableQueryMatch:
-        register_query(
-            world, table, event->query, event->matched_table_index);
+        register_query(world, table, event->query);
         break;
     case EcsTableQueryUnmatch:
-        unregister_query(
-            world, table, event->query);
+        unregister_query(world, table, event->query);
         break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);

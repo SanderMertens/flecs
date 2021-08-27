@@ -730,8 +730,7 @@ ecs_trigger_init(world, &(ecs_trigger_desc_t) {
 ecs_set(world, e, Position, {10, 20});
 ```
 ```cpp
-// C++ triggers are created as a system with the phase set to the trigger event
-world.system<Position>("OnSetPosition").kind(flecs::OnSet).each( ... );
+world.trigger<Position>("OnSetPosition").event(flecs::OnSet).each( ... );
 
 // Trigger the trigger
 e.set<Position>({10, 20});

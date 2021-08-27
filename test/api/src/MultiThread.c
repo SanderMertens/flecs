@@ -896,7 +896,7 @@ void MultiThread_reactive_system() {
 
     ECS_COMPONENT(world, Position);        
     ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
-    ECS_SYSTEM(world, ReactiveDummySystem, EcsOnSet, Position);
+    ECS_TRIGGER(world, ReactiveDummySystem, EcsOnSet, Position);
 
     ecs_bulk_new(world, Position, 2);
     ecs_set_threads(world, 2);

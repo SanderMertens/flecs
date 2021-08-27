@@ -159,15 +159,14 @@ struct ecs_data_t {
 #define EcsTableHasOnRemove         4096u
 #define EcsTableHasOnSet            8192u
 #define EcsTableHasUnSet            16384u
-#define EcsTableHasMonitors         32768u
 #define EcsTableHasSwitch           65536u
 #define EcsTableHasDisabled         131072u
 
 /* Composite constants */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch | EcsTableHasDisabled)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet | EcsTableHasMonitors)
-#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet | EcsTableHasMonitors)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 
 /** Cache of added/removed components for non-trivial edges between tables */
 typedef struct ecs_table_diff_t {
@@ -199,17 +198,6 @@ typedef struct ecs_graph_node_t {
     ecs_vector_t *diffs;
 } ecs_graph_node_t;
 
-/** Quey matched with table with backref to query table administration.
- * This type is used to store a matched query together with the array index of
- * where the table is stored in the query administration. This type is used when
- * an action that originates on a table needs to invoke a query (system) and a
- * fast lookup is required for the query administration, as is the case with
- * OnSet and Monitor systems. */
-typedef struct ecs_matched_query_t {
-    ecs_query_t *query;          /* The query matched with the table */
-    int32_t matched_table_index; /* Table index in the query type */
-} ecs_matched_query_t;
-
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
@@ -226,11 +214,6 @@ struct ecs_table_t {
     ecs_graph_node_t node;           /* Graph node */
 
     ecs_vector_t *queries;           /* Queries matched with table */
-    ecs_vector_t *monitors;          /* Monitor systems matched with table */
-    ecs_vector_t **on_set;           /* OnSet systems, broken up by column */
-    ecs_vector_t *on_set_all;        /* All OnSet systems */
-    ecs_vector_t *on_set_override;   /* All OnSet systems with overrides */
-    ecs_vector_t *un_set_all;        /* All UnSet systems */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
@@ -302,9 +285,6 @@ typedef struct ecs_table_slice_t {
 } ecs_table_slice_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
-#define EcsQueryMonitor (2)          /* Query needs to be registered as a monitor */
-#define EcsQueryOnSet (4)            /* Query needs to be registered as on_set system */
-#define EcsQueryUnSet (8)            /* Query needs to be registered as un_set system */
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
 #define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
@@ -313,8 +293,6 @@ typedef struct ecs_table_slice_t {
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
 #define EcsQueryHasOptional (2048)   /* Does query have optional columns */
-
-#define EcsQueryNoActivation (EcsQueryMonitor | EcsQueryOnSet | EcsQueryUnSet)
 
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
@@ -377,10 +355,6 @@ struct ecs_query_t {
     bool constraints_satisfied; /* Are all term constraints satisfied */
 };
 
-/** Event mask */
-#define EcsEventAdd    (1)
-#define EcsEventRemove (2)
-
 /** All triggers for a specific (component) id */
 typedef struct ecs_id_triggers_t {
     /* Triggers for Self */
@@ -394,19 +368,6 @@ typedef struct ecs_id_triggers_t {
 typedef struct ecs_event_triggers_t {
     ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
 } ecs_event_triggers_t;
-
-/** Keep track of how many [in] columns are active for [out] columns of OnDemand
- * systems. */
-typedef struct ecs_on_demand_out_t {
-    ecs_entity_t system;    /* Handle to system */
-    int32_t count;          /* Total number of times [out] columns are used */
-} ecs_on_demand_out_t;
-
-/** Keep track of which OnDemand systems are matched with which [in] columns */
-typedef struct ecs_on_demand_in_t {
-    int32_t count;          /* Number of active systems with [in] column */
-    ecs_vector_t *systems;  /* Systems that have this column as [out] column */
-} ecs_on_demand_in_t;
 
 /** Types for deferred operations */
 typedef enum ecs_op_kind_t {
@@ -553,12 +514,6 @@ typedef struct ecs_action_elem_t {
     void *ctx;
 } ecs_action_elem_t;
 
-/* Alias */
-typedef struct ecs_alias_t {
-    char *name;
-    ecs_entity_t entity;
-} ecs_alias_t;
-
 /** The world stores and manages all ECS data. An application can have more than
  * one world, but data is not shared between worlds. */
 struct ecs_world_t {
@@ -604,8 +559,6 @@ struct ecs_world_t {
     /* -- Systems -- */
 
     ecs_entity_t pipeline;             /* Current pipeline */
-    ecs_map_t *on_activate_components; /* Trigger on activate of [in] column */
-    ecs_map_t *on_enable_components;   /* Trigger on enable of [in] column */
     ecs_vector_t *fini_tasks;          /* Tasks to execute on ecs_fini */
 
 
@@ -614,21 +567,16 @@ struct ecs_world_t {
     ecs_map_t *type_handles;     /* Handles to named types */
 
 
-    /* -- Aliasses -- */
+    /* -- Identifiers -- */
 
     ecs_hashmap_t aliases;
     ecs_hashmap_t symbols;
-
+    const char *name_prefix;     /* Remove prefix from C names in modules */
 
     /* -- Staging -- */
 
     ecs_stage_t stage;           /* Main storage */
     ecs_vector_t *worker_stages; /* Stages for threads */
-
-
-    /* -- Hierarchy administration -- */
-
-    const char *name_prefix;     /* Remove prefix from C names in modules */
 
 
     /* -- Multithreading -- */
@@ -650,12 +598,6 @@ struct ecs_world_t {
     /* -- Metrics -- */
 
     ecs_world_info_t stats;
-
-
-    /* -- Settings from command line arguments -- */
-
-    int arg_fps;
-    int arg_threads;
 
 
     /* -- World lock -- */
