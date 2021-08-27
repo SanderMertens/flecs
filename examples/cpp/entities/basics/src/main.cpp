@@ -33,7 +33,8 @@ int main(int, char *[]) {
     // Add a tag after entity is created
     alice.add<Walking>();
 
-    // Print all of the components the entity has
+    // Print all of the components the entity has. This will output:
+    //    Position, Walking, (Identifier,Name)
     std::cout << "[" << alice.type().str() << "]" << "\n";
 
     // Remove tag

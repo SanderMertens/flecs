@@ -101,6 +101,17 @@
 #define ecs_bulk_new(world, component, count)\
     ecs_bulk_new_w_id(world, ecs_id(component), count)
 
+#define ecs_new_entity(world, n)\
+    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+        .name = n,\
+    })
+
+#define ecs_new_prefab(world, n)\
+    ecs_entity_init(world, &(ecs_entity_desc_t) {\
+        .name = n,\
+        .add = {EcsPrefab}\
+    })
+
 /* -- Add -- */
 
 #define ecs_add(world, entity, T)\
@@ -137,6 +148,9 @@
         ecs_pair(relation, ecs_id(object)),\
         sizeof(object), &(object)__VA_ARGS__)
 
+#define ecs_set_override(world, entity, T, ...)\
+    ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
+    ecs_set(world, entity, T, __VA_ARGS__)
 
 /* -- Emplace -- */
 

@@ -20,6 +20,7 @@ void iterate_tree(flecs::entity e, Position p_parent = {0, 0}) {
     Position p_actual = {p->x + p_parent.x, p->y + p_parent.y};
     std::cout << "{" << p_actual.x << ", " << p_actual.y << "}\n\n";
 
+    // Iterate children recursively
     e.children([&](flecs::entity child) {
         iterate_tree(child, p_actual);
     });
