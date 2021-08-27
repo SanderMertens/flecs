@@ -1,6 +1,6 @@
 #include "private_api.h"
 
-int8_t flflecs_to_i8(
+int8_t flecs_to_i8(
     int64_t v)
 {
     ecs_assert(v < INT8_MAX, ECS_INTERNAL_ERROR, NULL);

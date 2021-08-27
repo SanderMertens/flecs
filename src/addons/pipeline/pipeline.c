@@ -566,8 +566,8 @@ void EcsOnUpdatePipeline(
         ecs_log_push();
 
         /* Build signature for pipeline quey that matches EcsSystems, has the
-         * pipeline phases as OR columns, and ignores systems with EcsInactive 
-         * and EcsDisabledIntern. Note that EcsDisabled is automatically ignored 
+         * pipeline phases as OR columns, and ignores systems with EcsInactive. 
+         * Note that EcsDisabled is automatically ignored 
          * by the regular query matching */
         ecs_query_t *query = build_pipeline_query(
             world, pipeline, "BuiltinPipelineQuery", true);

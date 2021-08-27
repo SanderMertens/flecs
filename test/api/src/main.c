@@ -840,6 +840,13 @@ void Filter_term_w_subset(void);
 void Filter_term_w_self_superset(void);
 void Filter_term_w_superset_custom_relation(void);
 void Filter_term_w_self_superset_custom_relation(void);
+void Filter_term_w_self_min_max_depth(void);
+void Filter_term_w_self_invalid_min_depth(void);
+void Filter_term_w_self_invalid_max_depth(void);
+void Filter_term_w_self_invalid_min_max_depth(void);
+void Filter_term_w_superset_min_depth(void);
+void Filter_term_w_superset_max_depth(void);
+void Filter_term_w_superset_min_max_depth(void);
 void Filter_term_iter_component(void);
 void Filter_term_iter_tag(void);
 void Filter_term_iter_pair(void);
@@ -873,6 +880,8 @@ void Filter_filter_iter_10_tags(void);
 void Filter_filter_iter_20_tags(void);
 void Filter_filter_iter_10_components(void);
 void Filter_filter_iter_20_components(void);
+void Filter_filter_iter_superset(void);
+void Filter_filter_iter_superset_childof(void);
 void Filter_term_iter_type_set(void);
 void Filter_filter_iter_type_set(void);
 void Filter_filter_iter_w_readonly_term(void);
@@ -4956,6 +4965,34 @@ bake_test_case Filter_testcases[] = {
         Filter_term_w_self_superset_custom_relation
     },
     {
+        "term_w_self_min_max_depth",
+        Filter_term_w_self_min_max_depth
+    },
+    {
+        "term_w_self_invalid_min_depth",
+        Filter_term_w_self_invalid_min_depth
+    },
+    {
+        "term_w_self_invalid_max_depth",
+        Filter_term_w_self_invalid_max_depth
+    },
+    {
+        "term_w_self_invalid_min_max_depth",
+        Filter_term_w_self_invalid_min_max_depth
+    },
+    {
+        "term_w_superset_min_depth",
+        Filter_term_w_superset_min_depth
+    },
+    {
+        "term_w_superset_max_depth",
+        Filter_term_w_superset_max_depth
+    },
+    {
+        "term_w_superset_min_max_depth",
+        Filter_term_w_superset_min_max_depth
+    },
+    {
         "term_iter_component",
         Filter_term_iter_component
     },
@@ -5086,6 +5123,14 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_20_components",
         Filter_filter_iter_20_components
+    },
+    {
+        "filter_iter_superset",
+        Filter_filter_iter_superset
+    },
+    {
+        "filter_iter_superset_childof",
+        Filter_filter_iter_superset_childof
     },
     {
         "term_iter_type_set",
@@ -8742,7 +8787,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        64,
+        73,
         Filter_testcases
     },
     {

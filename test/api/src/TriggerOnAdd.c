@@ -869,7 +869,7 @@ void TriggerOnAdd_on_set_in_on_add() {
     ECS_COMPONENT(world, Mass);
 
     ECS_TRIGGER(world, Set_current, EcsOnAdd, Position);
-    ECS_SYSTEM(world, Add_3_to_current, EcsOnSet, Rotation);
+    ECS_TRIGGER(world, Add_3_to_current, EcsOnSet, Rotation);
 
     IterData ctx = {.component = ecs_id(Rotation), .component_3 = ecs_id(Mass)};
     ecs_set_context(world, &ctx);

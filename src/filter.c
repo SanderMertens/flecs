@@ -36,13 +36,31 @@ int finalize_term_identifier(
         if (!identifier->set.relation) {
             identifier->set.relation = EcsIsA;
         }
+
+        if (!(identifier->set.mask & EcsSelf)) {
+            if (!identifier->set.min_depth) {
+                identifier->set.min_depth = 1;
+            }
+        }
+    } else {
+        if (identifier->set.min_depth > 0) {
+            term_error(world, term, name, 
+                "min depth cannnot be non-zero for Self term");
+            return -1;
+        }
+        if (identifier->set.max_depth > 1) {
+            term_error(world, term, name, 
+                "max depth cannnot be larger than 1 for Self term");
+            return -1;
+        }
+
+        identifier->set.max_depth = 1;
     }
 
-    /* Nothing mask cannot be combined with others */
     if ((identifier->set.mask != EcsNothing) && 
         (identifier->set.mask & EcsNothing)) 
     {
-        term_error(world, term, name, "Invalid Nothing in set mask");
+        term_error(world, term, name, "invalid Nothing in set mask");
         return -1;
     }
 
@@ -71,7 +89,6 @@ int finalize_term_identifier(
                 return -1;
             }
 
-            /* Use OR, as entity may have already been populated with role */
             identifier->entity = e;
         }
     }
@@ -763,6 +780,27 @@ void filter_str_add_id(
         char *path = ecs_get_fullpath(world, id->entity);
         ecs_strbuf_appendstr(buf, path);
         ecs_os_free(path);
+
+        if (id->set.mask != EcsSelf) {
+            ecs_strbuf_list_push(buf, ":", "|");
+            if (id->set.mask & EcsSelf) {
+                ecs_strbuf_list_appendstr(buf, "self");
+            }
+            if (id->set.mask & EcsSuperSet) {
+                ecs_strbuf_list_appendstr(buf, "superset");
+            }
+            if (id->set.mask & EcsSubSet) {
+                ecs_strbuf_list_appendstr(buf, "subset");
+            }
+            ecs_strbuf_list_push(buf, "(", "");
+
+            char *rel_path = ecs_get_fullpath(world, id->set.relation);
+            ecs_strbuf_appendstr(buf, rel_path);
+            ecs_os_free(rel_path);
+
+            ecs_strbuf_list_pop(buf, ")");
+            ecs_strbuf_list_pop(buf, "");
+        }
     } else {
         ecs_strbuf_appendstr(buf, "0");
     }
@@ -774,6 +812,12 @@ void term_str_w_strbuf(
     const ecs_term_t *term,
     ecs_strbuf_t *buf)
 {
+    const ecs_term_id_t *subj = &term->args[0];
+    const ecs_term_id_t *obj = &term->args[1];
+
+    bool subj_set = ecs_term_id_is_set(subj);
+    bool obj_set = ecs_term_id_is_set(obj);
+
     if (term->role && term->role != ECS_PAIR) {
         ecs_strbuf_appendstr(buf, ecs_role_str(term->role));
         ecs_strbuf_appendstr(buf, " ");
@@ -785,48 +829,22 @@ void term_str_w_strbuf(
         ecs_strbuf_appendstr(buf, "?");
     }
 
-    /* Slightly more convoluted check than necessary for finalized terms, but
-     * this allows the function to be used for generating error strings while
-     * the term is being finalized */
-    if ((term->args[0].entity == EcsThis) || 
-        (!term->args[0].entity && term->args[0].set.mask != EcsNothing)) 
+    if (!subj_set) {
+        filter_str_add_id(world, buf, &term->pred);
+        ecs_strbuf_appendstr(buf, "()");
+    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
     {
-        /* If the term applies to This & id is set, we can simply use id_str */
-        char id_buf[255]; ecs_id_str_w_buf(world, term->id, id_buf, 255);
-        ecs_strbuf_appendstr(buf, id_buf);
-        return;
-    }
-
-    if (term->args[0].entity == EcsThis && 
-        ecs_term_id_is_set(&term->args[1])) 
-    {
+        char *str = ecs_id_str(world, term->id);
+        ecs_strbuf_appendstr(buf, str);
+        ecs_os_free(str);
+    } else {
+        filter_str_add_id(world, buf, &term->pred);
         ecs_strbuf_appendstr(buf, "(");
-    }
-
-    if (!ecs_term_id_is_set(&term->args[1]) && 
-        (term->pred.entity != term->args[0].entity)) 
-    {
-        filter_str_add_id(world, buf, &term->pred);
-
-        if (!ecs_term_id_is_set(&term->args[0])) {
-            ecs_strbuf_appendstr(buf, "()");
-        } else if (term->args[0].entity != EcsThis) {
-            ecs_strbuf_appendstr(buf, "(");
-            filter_str_add_id(world, buf, &term->args[0]);
-        }
-
-        if (ecs_term_id_is_set(&term->args[1])) {
-            ecs_strbuf_appendstr(buf, ", ");
+        filter_str_add_id(world, buf, &term->args[0]);
+        if (obj_set) {
+            ecs_strbuf_appendstr(buf, ",");
             filter_str_add_id(world, buf, &term->args[1]);
-            ecs_strbuf_appendstr(buf, ")");
         }
-    } else if (!ecs_term_id_is_set(&term->args[1])) {
-        ecs_strbuf_appendstr(buf, "$");
-        filter_str_add_id(world, buf, &term->pred);
-    } else if (ecs_term_id_is_set(&term->args[1])) {
-        filter_str_add_id(world, buf, &term->pred);
-        ecs_strbuf_appendstr(buf, ", ");
-        filter_str_add_id(world, buf, &term->args[1]);
         ecs_strbuf_appendstr(buf, ")");
     }
 }
@@ -901,7 +919,7 @@ bool populate_from_column(
 {
     bool has_data = false;
 
-    ecs_size_t size;
+    ecs_size_t size = 0;
 
     if (column != -1) {
         /* If source is not This, find table of source */
@@ -921,10 +939,6 @@ bool populate_from_column(
                 has_data = true;
                 size = c->size;
             }
-        }
-
-        if (!has_data) {
-            size = 0;
         }
 
         id = ids[column];
@@ -1011,6 +1025,10 @@ bool flecs_term_match_table(
 
     ecs_entity_t source;
 
+    // printf("match(%s, %d, %d)\n", 
+    //     ecs_id_str(world, term->id),
+    //     subj->set.min_depth, subj->set.max_depth);
+
     int32_t column = ecs_type_match(world, match_table, match_type,
         0, term->id, subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source);
@@ -1092,7 +1110,9 @@ bool flecs_filter_match_table(
 
         ecs_entity_t subj_entity = subj->entity;
         if (!subj_entity) {
-            ids[term->index] = term->id;
+            if (ids) {
+                ids[term->index] = term->id;
+            }
             continue;
         }
 

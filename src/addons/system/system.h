@@ -8,7 +8,6 @@ typedef struct EcsSystem {
 
     ecs_entity_t entity;            /* Entity id of system, used for ordering */
     ecs_query_t *query;             /* System query */
-    ecs_on_demand_out_t *on_demand; /* Keep track of [out] column refs */
     ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     

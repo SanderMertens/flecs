@@ -465,6 +465,8 @@ void Filter_term_w_self() {
     test_int(term.pred.var, EcsVarIsEntity);
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSelf);
+    test_int(term.args[0].set.min_depth, 0);
+    test_int(term.args[0].set.max_depth, 1);    
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -487,6 +489,8 @@ void Filter_term_w_superset() {
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSuperSet);
     test_int(term.args[0].set.relation, EcsIsA);
+    test_int(term.args[0].set.min_depth, 1);
+    test_int(term.args[0].set.max_depth, 0);
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -509,6 +513,8 @@ void Filter_term_w_subset() {
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSubSet);
     test_int(term.args[0].set.relation, EcsIsA);
+    test_int(term.args[0].set.min_depth, 1);
+    test_int(term.args[0].set.max_depth, 0);    
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -531,6 +537,8 @@ void Filter_term_w_self_superset() {
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSelf | EcsSuperSet);
     test_int(term.args[0].set.relation, EcsIsA);
+    test_int(term.args[0].set.min_depth, 0);
+    test_int(term.args[0].set.max_depth, 0);
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -554,6 +562,8 @@ void Filter_term_w_superset_custom_relation() {
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSuperSet);
     test_int(term.args[0].set.relation, EcsChildOf);
+    test_int(term.args[0].set.min_depth, 1);
+    test_int(term.args[0].set.max_depth, 0);
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -577,6 +587,173 @@ void Filter_term_w_self_superset_custom_relation() {
     test_int(term.args[0].entity, EcsThis);
     test_int(term.args[0].set.mask, EcsSelf | EcsSuperSet);
     test_int(term.args[0].set.relation, EcsChildOf);
+    test_int(term.args[0].set.min_depth, 0);
+    test_int(term.args[0].set.max_depth, 0);
+    test_int(term.args[0].var, EcsVarIsEntity); 
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_self_min_max_depth() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSelf,
+        .args[0].set.min_depth = 0,
+        .args[0].set.max_depth = 1
+    };
+
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
+    test_int(term.id, Tag);
+    test_int(term.pred.entity, Tag);
+    test_int(term.pred.var, EcsVarIsEntity);
+    test_int(term.args[0].entity, EcsThis);
+    test_int(term.args[0].set.mask, EcsSelf);
+    test_int(term.args[0].set.min_depth, 0);
+    test_int(term.args[0].set.max_depth, 1);
+    test_int(term.args[0].var, EcsVarIsEntity); 
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_self_invalid_min_depth() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSelf,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.min_depth = 2
+    };
+
+    test_expect_abort();
+    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_self_invalid_max_depth() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSelf,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.max_depth = 2
+    };
+
+    test_expect_abort();
+    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_self_invalid_min_max_depth() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSelf,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.min_depth = 2,
+        .args[0].set.max_depth = 4
+    };
+
+    test_expect_abort();
+    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_superset_min_depth() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSuperSet,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.min_depth = 2
+    };
+
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
+    test_int(term.id, Tag);
+    test_int(term.pred.entity, Tag);
+    test_int(term.pred.var, EcsVarIsEntity);
+    test_int(term.args[0].entity, EcsThis);
+    test_int(term.args[0].set.mask, EcsSuperSet);
+    test_int(term.args[0].set.relation, EcsChildOf);
+    test_int(term.args[0].set.min_depth, 2);
+    test_int(term.args[0].set.max_depth, 0);
+    test_int(term.args[0].var, EcsVarIsEntity); 
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_superset_max_depth() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSuperSet,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.max_depth = 2
+    };
+
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
+    test_int(term.id, Tag);
+    test_int(term.pred.entity, Tag);
+    test_int(term.pred.var, EcsVarIsEntity);
+    test_int(term.args[0].entity, EcsThis);
+    test_int(term.args[0].set.mask, EcsSuperSet);
+    test_int(term.args[0].set.relation, EcsChildOf);
+    test_int(term.args[0].set.min_depth, 1);
+    test_int(term.args[0].set.max_depth, 2);
+    test_int(term.args[0].var, EcsVarIsEntity); 
+
+    ecs_fini(world);
+}
+
+void Filter_term_w_superset_min_max_depth() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_term_t term = {
+        .pred.entity = Tag,
+        .args[0].set.mask = EcsSuperSet,
+        .args[0].set.relation = EcsChildOf,
+        .args[0].set.min_depth = 2,
+        .args[0].set.max_depth = 4
+    };
+
+    test_assert(ecs_term_finalize(world, NULL, &term) == 0);
+    test_int(term.id, Tag);
+    test_int(term.pred.entity, Tag);
+    test_int(term.pred.var, EcsVarIsEntity);
+    test_int(term.args[0].entity, EcsThis);
+    test_int(term.args[0].set.mask, EcsSuperSet);
+    test_int(term.args[0].set.relation, EcsChildOf);
+    test_int(term.args[0].set.min_depth, 2);
+    test_int(term.args[0].set.max_depth, 4);
     test_int(term.args[0].var, EcsVarIsEntity); 
 
     ecs_fini(world);
@@ -2671,6 +2848,84 @@ void Filter_filter_iter_20_components() {
         test_assert(ptr != NULL);
         test_int(ptr[0].v, 10);
     }
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_new(world, TagA);
+
+    ecs_add_pair(world, e_1, EcsIsA, base);
+    ecs_add_pair(world, e_2, EcsIsA, base);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { TagA },
+            { TagA, .args[0].set = {.mask = EcsSuperSet} }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagA);
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_superset_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t parent = ecs_new(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_new(world, TagA);
+
+    ecs_add_pair(world, e_1, EcsChildOf, parent);
+    ecs_add_pair(world, e_2, EcsChildOf, parent);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA },
+            {TagA, .args[0].set = {.mask = EcsSuperSet, .relation = EcsChildOf}}
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagA);
+    test_int(ecs_term_source(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
 

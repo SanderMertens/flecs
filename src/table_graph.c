@@ -320,11 +320,6 @@ void init_table(
     table->c_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
-    table->monitors = NULL;
-    table->on_set = NULL;
-    table->on_set_all = NULL;
-    table->on_set_override = NULL;
-    table->un_set_all = NULL;
     table->alloc_count = 0;
     table->lock = 0;
 

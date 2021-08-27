@@ -819,7 +819,6 @@ void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
     ecs_fini(world);
 }
 
-
 void Snapshot_snapshot_from_stage() {
     ecs_world_t *world = ecs_init();
 

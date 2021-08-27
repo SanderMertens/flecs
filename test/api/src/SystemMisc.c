@@ -901,7 +901,6 @@ void SystemMisc_system_initial_state() {
 
     test_assert( ecs_has_id(world, SysA, EcsInactive));
     test_assert( !ecs_has_id(world, SysA, EcsDisabled));
-    test_assert( !ecs_has_id(world, SysA, EcsDisabledIntern));
 
     ecs_fini(world);
 }
