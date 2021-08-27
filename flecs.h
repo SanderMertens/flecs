@@ -10580,7 +10580,7 @@ protected:
 template <typename T>
 class column {
 public:
-    static_assert(std::is_empty<T>() == false, 
+    static_assert(std::is_empty<T>::value == false, 
         "invalid type for column, cannot iterate empty type");
         
     /** Create column from component array.
