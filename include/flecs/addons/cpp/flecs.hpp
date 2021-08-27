@@ -136,6 +136,7 @@ static const uint8_t SubSet = EcsSubSet;
 static const uint8_t Cascade = EcsCascade;
 static const uint8_t All = EcsAll;
 static const uint8_t Nothing = EcsNothing;
+static const uint8_t Parent = EcsParent;
 
 /* Builtin tag ids */
 static const flecs::entity_t Module = EcsModule;
