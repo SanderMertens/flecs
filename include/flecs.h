@@ -39,6 +39,7 @@
 #define FLECS_MODULE        /* Module support */
 #define FLECS_PARSER        /* String parser for queries */
 #define FLECS_PLECS         /* ECS data definition format */
+#define FLECS_RULES         /* Constraint solver for advanced queries */
 #define FLECS_SNAPSHOT      /* Snapshot & restore ECS data */
 #define FLECS_STATS         /* Keep track of runtime statistics */
 #define FLECS_SYSTEM        /* System support */
@@ -94,6 +95,9 @@ typedef struct ecs_query_t ecs_query_t;
 
 /** A filter allows for uncached, ad hoc iteration over ECS data */
 typedef struct ecs_filter_t ecs_filter_t;
+
+/** A rule implements a non-trivial filter */
+typedef struct ecs_rule_t ecs_rule_t;
 
 /** A trigger reacts to events matching a single filter term */
 typedef struct ecs_trigger_t ecs_trigger_t;
@@ -1681,6 +1685,15 @@ bool ecs_is_valid(
 FLECS_API
 bool ecs_is_alive(
     const ecs_world_t *world,
+    ecs_entity_t e);
+
+/** Remove generation from entity id.
+ *
+ * @param e The entity id.
+ * @return The entity id without the generation count.
+ */
+FLECS_API
+ecs_id_t ecs_strip_generation(
     ecs_entity_t e);
 
 /** Get alive identifier.
@@ -3344,6 +3357,9 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_PARSER
 #include "flecs/addons/parser.h"
+#endif
+#ifdef FLECS_RULES
+#include "flecs/addons/rules.h"
 #endif
 #ifdef FLECS_SNAPSHOT
 #include "flecs/addons/snapshot.h"

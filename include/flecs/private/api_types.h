@@ -156,6 +156,21 @@ typedef struct ecs_sparse_iter_t {
     int32_t count;
 } ecs_sparse_iter_t;
 
+/** Rule-iterator specific data */
+typedef struct ecs_rule_iter_t {
+    const ecs_rule_t *rule;
+    struct ecs_rule_reg_t *registers;    /* Variable storage */
+    struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
+    
+    int32_t *columns;                    /* Column indices */
+    
+    ecs_entity_t entity;                 /* Result in case of 1 entity */
+
+    bool redo;
+    int32_t op;
+    int32_t sp;
+} ecs_rule_iter_t;
+
 /* Inline arrays for queries with small number of components */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
@@ -229,6 +244,7 @@ struct ecs_iter_t {
         ecs_term_iter_t term;
         ecs_filter_iter_t filter;
         ecs_query_iter_t query;
+        ecs_rule_iter_t rule;
         ecs_snapshot_iter_t snapshot;
     } iter;                       /* Iterator specific data */
 
