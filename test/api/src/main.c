@@ -1081,6 +1081,18 @@ void Observer_iter_type_set(void);
 void Observer_readonly_term(void);
 void Observer_trigger_on_prefab(void);
 void Observer_trigger_on_disabled(void);
+void Observer_unset_1_of_1(void);
+void Observer_unset_1_of_2(void);
+void Observer_unset_1_of_3(void);
+void Observer_unset_on_delete_1(void);
+void Observer_unset_on_delete_2(void);
+void Observer_unset_on_delete_3(void);
+void Observer_unset_on_fini_1(void);
+void Observer_unset_on_fini_2(void);
+void Observer_unset_on_fini_3(void);
+void Observer_overlapping_unset_systems(void);
+void Observer_unset_move_to_nonempty_table(void);
+void Observer_write_in_unset(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -1179,20 +1191,6 @@ void SystemOnSet_set_optional(void);
 void SystemOnSet_set_from_nothing(void);
 void SystemOnSet_add_0_entity_in_on_set(void);
 void SystemOnSet_on_set_prefab(void);
-
-// Testsuite 'SystemUnSet'
-void SystemUnSet_unset_1_of_1(void);
-void SystemUnSet_unset_1_of_2(void);
-void SystemUnSet_unset_1_of_3(void);
-void SystemUnSet_unset_on_delete_1(void);
-void SystemUnSet_unset_on_delete_2(void);
-void SystemUnSet_unset_on_delete_3(void);
-void SystemUnSet_unset_on_fini_1(void);
-void SystemUnSet_unset_on_fini_2(void);
-void SystemUnSet_unset_on_fini_3(void);
-void SystemUnSet_overlapping_unset_systems(void);
-void SystemUnSet_unset_move_to_nonempty_table(void);
-void SystemUnSet_write_in_unset(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -5900,6 +5898,54 @@ bake_test_case Observer_testcases[] = {
     {
         "trigger_on_disabled",
         Observer_trigger_on_disabled
+    },
+    {
+        "unset_1_of_1",
+        Observer_unset_1_of_1
+    },
+    {
+        "unset_1_of_2",
+        Observer_unset_1_of_2
+    },
+    {
+        "unset_1_of_3",
+        Observer_unset_1_of_3
+    },
+    {
+        "unset_on_delete_1",
+        Observer_unset_on_delete_1
+    },
+    {
+        "unset_on_delete_2",
+        Observer_unset_on_delete_2
+    },
+    {
+        "unset_on_delete_3",
+        Observer_unset_on_delete_3
+    },
+    {
+        "unset_on_fini_1",
+        Observer_unset_on_fini_1
+    },
+    {
+        "unset_on_fini_2",
+        Observer_unset_on_fini_2
+    },
+    {
+        "unset_on_fini_3",
+        Observer_unset_on_fini_3
+    },
+    {
+        "overlapping_unset_systems",
+        Observer_overlapping_unset_systems
+    },
+    {
+        "unset_move_to_nonempty_table",
+        Observer_unset_move_to_nonempty_table
+    },
+    {
+        "write_in_unset",
+        Observer_write_in_unset
     }
 };
 
@@ -6263,57 +6309,6 @@ bake_test_case SystemOnSet_testcases[] = {
     {
         "on_set_prefab",
         SystemOnSet_on_set_prefab
-    }
-};
-
-bake_test_case SystemUnSet_testcases[] = {
-    {
-        "unset_1_of_1",
-        SystemUnSet_unset_1_of_1
-    },
-    {
-        "unset_1_of_2",
-        SystemUnSet_unset_1_of_2
-    },
-    {
-        "unset_1_of_3",
-        SystemUnSet_unset_1_of_3
-    },
-    {
-        "unset_on_delete_1",
-        SystemUnSet_unset_on_delete_1
-    },
-    {
-        "unset_on_delete_2",
-        SystemUnSet_unset_on_delete_2
-    },
-    {
-        "unset_on_delete_3",
-        SystemUnSet_unset_on_delete_3
-    },
-    {
-        "unset_on_fini_1",
-        SystemUnSet_unset_on_fini_1
-    },
-    {
-        "unset_on_fini_2",
-        SystemUnSet_unset_on_fini_2
-    },
-    {
-        "unset_on_fini_3",
-        SystemUnSet_unset_on_fini_3
-    },
-    {
-        "overlapping_unset_systems",
-        SystemUnSet_overlapping_unset_systems
-    },
-    {
-        "unset_move_to_nonempty_table",
-        SystemUnSet_unset_move_to_nonempty_table
-    },
-    {
-        "write_in_unset",
-        SystemUnSet_write_in_unset
     }
 };
 
@@ -8775,7 +8770,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        30,
+        42,
         Observer_testcases
     },
     {
@@ -8812,13 +8807,6 @@ static bake_test_suite suites[] = {
         NULL,
         21,
         SystemOnSet_testcases
-    },
-    {
-        "SystemUnSet",
-        NULL,
-        NULL,
-        12,
-        SystemUnSet_testcases
     },
     {
         "SystemPeriodic",
@@ -8978,5 +8966,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 58);
+    return bake_test_run("api", argc, argv, suites, 57);
 }

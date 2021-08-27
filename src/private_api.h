@@ -307,7 +307,8 @@ void flecs_run_remove_actions(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff);
+    ecs_table_diff_t *diff,
+    bool unset_removed);
 
 void flecs_run_set_systems(
     ecs_world_t *world,
@@ -410,6 +411,7 @@ bool flecs_term_match_table(
     const ecs_term_t *term,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -421,6 +423,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,

@@ -352,7 +352,8 @@ void notify_set_triggers(
         }
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
-            it->ids, it->columns, it->subjects, it->sizes, it->ptrs))
+            it->offset, it->ids, it->columns, it->subjects, it->sizes, 
+            it->ptrs))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */
@@ -412,6 +413,12 @@ void flecs_triggers_notify(
     int32_t count,
     void *param)
 {
+    if (!ids || !ids->count) {
+        return;
+    }
+
+    ecs_assert(ids->array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!observable) {
         observable = world;
     }

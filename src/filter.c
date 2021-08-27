@@ -890,6 +890,7 @@ static
 bool populate_from_column(
     ecs_world_t *world,
     const ecs_table_t *table,
+    int32_t offset,
     ecs_id_t id,
     int32_t column,
     ecs_entity_t source,
@@ -940,6 +941,10 @@ bool populate_from_column(
                     ecs_column_t *col = &data->columns[column];
                     *ptr_out = ecs_vector_first_t(
                         col->data, col->size, col->alignment);
+                    
+                    if (*ptr_out && offset) {
+                        *ptr_out = ECS_OFFSET(*ptr_out, col->size * offset);
+                    }
                 }
             } else {
                 *ptr_out = NULL;
@@ -977,6 +982,7 @@ bool flecs_term_match_table(
     const ecs_term_t *term,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -1028,7 +1034,7 @@ bool flecs_term_match_table(
         ecs_assert(id_out != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(subject_out != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        populate_from_column(world, table, term->id, column, 
+        populate_from_column(world, table, offset, term->id, column, 
             source, id_out, subject_out, size_out, ptr_out);
 
         if (column != -1) {
@@ -1046,6 +1052,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
@@ -1099,7 +1106,7 @@ bool flecs_filter_match_table(
         }
 
         bool result = flecs_term_match_table(world, term, match_table, 
-            match_type, 
+            match_type, offset,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
@@ -1300,7 +1307,7 @@ bool ecs_term_next(
     it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
     it->is_valid = true;
 
-    bool has_data = populate_from_column(world, table, term->id, tr->column, 
+    bool has_data = populate_from_column(world, table, 0, term->id, tr->column, 
         source, &iter->id, &iter->subject, &iter->size, 
         &iter->ptr);
 
@@ -1440,7 +1447,7 @@ bool ecs_filter_next(
 
             table = tr->table;
             match = flecs_filter_match_table(world, filter, table, table->type,
-                it->ids, it->columns, it->subjects, it->sizes, 
+                0, it->ids, it->columns, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
