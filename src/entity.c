@@ -734,7 +734,8 @@ int32_t move_entity(
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
-        flecs_run_remove_actions(world, src_table, dst_table, src_row, 1, diff);
+        flecs_run_remove_actions(
+            world, src_table, dst_table, src_row, 1, diff, false);
 
         /* If components were removed, invoke remove actions before deleting */
         if (diff->removed.count && (src_table->flags & EcsTableHasRemoveActions)) {
@@ -795,7 +796,8 @@ void delete_entity(
 
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
-            flecs_run_remove_actions(world, src_table, NULL, src_row, 1, diff);
+            flecs_run_remove_actions(
+                world, src_table, NULL, src_row, 1, diff, false);
         } 
     }
 
@@ -1186,7 +1188,8 @@ void flecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(world, table, data, row, count, &diff->added, NULL);
+        ecs_components_switch(
+            world, table, data, row, count, &diff->added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -1204,7 +1207,8 @@ void flecs_run_remove_actions(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff)
+    ecs_table_diff_t *diff,
+    bool unset_removed)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1212,7 +1216,8 @@ void flecs_run_remove_actions(
         notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set);
 
         if (table->flags & EcsTableHasOnRemove) {
-            notify(world, table, other_table, row, count, EcsOnRemove, &diff->removed);
+            notify(world, table, other_table, row, count, EcsOnRemove, 
+                &diff->removed);
         }
 
         if (table->flags & EcsTableHasIsA) {
@@ -2271,7 +2276,7 @@ void remove_from_table(
             int32_t src_count = ecs_table_count(src_table);
             if (diff.removed.count) {
                 flecs_run_remove_actions(world, src_table, NULL, 
-                    0, src_count, &diff);
+                    0, src_count, &diff, false);
             }
 
             flecs_table_merge(world, dst_table, src_table, 

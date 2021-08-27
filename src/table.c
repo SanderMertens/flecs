@@ -198,14 +198,17 @@ void run_on_remove(
     if (count) {
         flecs_run_monitors(world, table, table->un_set_all, 0, count, NULL);
 
-        ecs_table_diff_t diff = {.removed = {NULL, 1, 0}};
+        ecs_ids_t removed = {
+            .array = ecs_vector_first(table->type, ecs_id_t),
+            .count = ecs_vector_count(table->type)
+        };
 
-        int32_t i, type_count = ecs_vector_count(table->type);
-        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-        for (i = 0; i < type_count; i ++) {
-            diff.removed.array = &ids[i];
-            flecs_run_remove_actions(world, table, NULL, 0, count, &diff);
-        }
+        ecs_table_diff_t diff = {
+            .removed = removed,
+            .un_set = removed
+        };
+        
+        flecs_run_remove_actions(world, table, NULL, 0, count, &diff, true);
     }
 }
 

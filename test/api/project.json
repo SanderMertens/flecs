@@ -1145,7 +1145,19 @@
                 "iter_type_set",
                 "readonly_term",
                 "trigger_on_prefab",
-                "trigger_on_disabled"
+                "trigger_on_disabled",
+                "unset_1_of_1",
+                "unset_1_of_2",
+                "unset_1_of_3",
+                "unset_on_delete_1",
+                "unset_on_delete_2",
+                "unset_on_delete_3",
+                "unset_on_fini_1",
+                "unset_on_fini_2",
+                "unset_on_fini_3",
+                "overlapping_unset_systems",
+                "unset_move_to_nonempty_table",
+                "write_in_unset"
             ]                
         }, {
             "id": "TriggerOnAdd",
@@ -1254,22 +1266,6 @@
                 "set_from_nothing",
                 "add_0_entity_in_on_set",
                 "on_set_prefab"
-            ]
-        }, {
-            "id": "SystemUnSet",
-            "testcases": [
-                "unset_1_of_1",
-                "unset_1_of_2",
-                "unset_1_of_3",
-                "unset_on_delete_1",
-                "unset_on_delete_2",
-                "unset_on_delete_3",
-                "unset_on_fini_1",
-                "unset_on_fini_2",
-                "unset_on_fini_3",
-                "overlapping_unset_systems",
-                "unset_move_to_nonempty_table",
-                "write_in_unset"
             ]
         }, {
             "id": "SystemPeriodic",

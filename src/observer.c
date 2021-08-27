@@ -41,8 +41,9 @@ void observer_callback(ecs_iter_t *it) {
     ecs_type_t type = table->type;
     ecs_type_t prev_type = prev_table->type;
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
-        user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
+    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
+        user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 
+        user_it.ptrs)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
@@ -50,9 +51,9 @@ void observer_callback(ecs_iter_t *it) {
             if (world->is_fini) {
                 goto done;
             }
-            
+
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, NULL, NULL, NULL, NULL, NULL)) {
+                prev_type, 0, NULL, NULL, NULL, NULL, NULL)) {
                 goto done;
             }
 
@@ -75,6 +76,7 @@ void observer_callback(ecs_iter_t *it) {
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
         user_it.table_columns = table->storage.columns;
+
         o->action(&user_it);
         o->last_event_id = world->event_id;
     }

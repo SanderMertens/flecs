@@ -1674,7 +1674,8 @@ void flecs_run_remove_actions(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff);
+    ecs_table_diff_t *diff,
+    bool unset_removed);
 
 void flecs_run_set_systems(
     ecs_world_t *world,
@@ -1777,6 +1778,7 @@ bool flecs_term_match_table(
     const ecs_term_t *term,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -1788,6 +1790,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
@@ -2758,14 +2761,17 @@ void run_on_remove(
     if (count) {
         flecs_run_monitors(world, table, table->un_set_all, 0, count, NULL);
 
-        ecs_table_diff_t diff = {.removed = {NULL, 1, 0}};
+        ecs_ids_t removed = {
+            .array = ecs_vector_first(table->type, ecs_id_t),
+            .count = ecs_vector_count(table->type)
+        };
 
-        int32_t i, type_count = ecs_vector_count(table->type);
-        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-        for (i = 0; i < type_count; i ++) {
-            diff.removed.array = &ids[i];
-            flecs_run_remove_actions(world, table, NULL, 0, count, &diff);
-        }
+        ecs_table_diff_t diff = {
+            .removed = removed,
+            .un_set = removed
+        };
+        
+        flecs_run_remove_actions(world, table, NULL, 0, count, &diff, true);
     }
 }
 
@@ -5639,7 +5645,8 @@ int32_t move_entity(
 
     /* Copy entity & components from src_table to dst_table */
     if (src_table->type) {
-        flecs_run_remove_actions(world, src_table, dst_table, src_row, 1, diff);
+        flecs_run_remove_actions(
+            world, src_table, dst_table, src_row, 1, diff, false);
 
         /* If components were removed, invoke remove actions before deleting */
         if (diff->removed.count && (src_table->flags & EcsTableHasRemoveActions)) {
@@ -5700,7 +5707,8 @@ void delete_entity(
 
         /* Invoke remove actions before deleting */
         if (src_table->flags & EcsTableHasRemoveActions) {   
-            flecs_run_remove_actions(world, src_table, NULL, src_row, 1, diff);
+            flecs_run_remove_actions(
+                world, src_table, NULL, src_row, 1, diff, false);
         } 
     }
 
@@ -6091,7 +6099,8 @@ void flecs_run_add_actions(
     }
 
     if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(world, table, data, row, count, &diff->added, NULL);
+        ecs_components_switch(
+            world, table, data, row, count, &diff->added, NULL);
     }
 
     if (table->flags & EcsTableHasOnAdd) {
@@ -6109,7 +6118,8 @@ void flecs_run_remove_actions(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    ecs_table_diff_t *diff)
+    ecs_table_diff_t *diff,
+    bool unset_removed)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -6117,7 +6127,8 @@ void flecs_run_remove_actions(
         notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set);
 
         if (table->flags & EcsTableHasOnRemove) {
-            notify(world, table, other_table, row, count, EcsOnRemove, &diff->removed);
+            notify(world, table, other_table, row, count, EcsOnRemove, 
+                &diff->removed);
         }
 
         if (table->flags & EcsTableHasIsA) {
@@ -7176,7 +7187,7 @@ void remove_from_table(
             int32_t src_count = ecs_table_count(src_table);
             if (diff.removed.count) {
                 flecs_run_remove_actions(world, src_table, NULL, 
-                    0, src_count, &diff);
+                    0, src_count, &diff, false);
             }
 
             flecs_table_merge(world, dst_table, src_table, 
@@ -19215,6 +19226,7 @@ static
 bool populate_from_column(
     ecs_world_t *world,
     const ecs_table_t *table,
+    int32_t offset,
     ecs_id_t id,
     int32_t column,
     ecs_entity_t source,
@@ -19263,8 +19275,9 @@ bool populate_from_column(
                     *ptr_out = (void*)ecs_get_id(world, source, id);
                 } else {
                     ecs_column_t *col = &data->columns[column];
-                    *ptr_out = ecs_vector_first_t(
-                        col->data, col->size, col->alignment);
+                    *ptr_out = ecs_vector_get_t(
+                        col->data, col->size, col->alignment, offset);
+                    ecs_assert(*ptr_out != NULL, ECS_INTERNAL_ERROR, NULL);
                 }
             } else {
                 *ptr_out = NULL;
@@ -19302,6 +19315,7 @@ bool flecs_term_match_table(
     const ecs_term_t *term,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -19353,7 +19367,7 @@ bool flecs_term_match_table(
         ecs_assert(id_out != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(subject_out != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        populate_from_column(world, table, term->id, column, 
+        populate_from_column(world, table, offset, term->id, column, 
             source, id_out, subject_out, size_out, ptr_out);
 
         if (column != -1) {
@@ -19371,6 +19385,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
@@ -19424,7 +19439,7 @@ bool flecs_filter_match_table(
         }
 
         bool result = flecs_term_match_table(world, term, match_table, 
-            match_type, 
+            match_type, offset,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
@@ -19625,7 +19640,7 @@ bool ecs_term_next(
     it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
     it->is_valid = true;
 
-    bool has_data = populate_from_column(world, table, term->id, tr->column, 
+    bool has_data = populate_from_column(world, table, 0, term->id, tr->column, 
         source, &iter->id, &iter->subject, &iter->size, 
         &iter->ptr);
 
@@ -19765,7 +19780,7 @@ bool ecs_filter_next(
 
             table = tr->table;
             match = flecs_filter_match_table(world, filter, table, table->type,
-                it->ids, it->columns, it->subjects, it->sizes, 
+                0, it->ids, it->columns, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
@@ -19824,8 +19839,9 @@ void observer_callback(ecs_iter_t *it) {
     ecs_type_t type = table->type;
     ecs_type_t prev_type = prev_table->type;
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.ids, 
-        user_it.columns, user_it.subjects, user_it.sizes, user_it.ptrs)) 
+    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
+        user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 
+        user_it.ptrs)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
@@ -19833,9 +19849,9 @@ void observer_callback(ecs_iter_t *it) {
             if (world->is_fini) {
                 goto done;
             }
-            
+
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, NULL, NULL, NULL, NULL, NULL)) {
+                prev_type, 0, NULL, NULL, NULL, NULL, NULL)) {
                 goto done;
             }
 
@@ -19858,6 +19874,7 @@ void observer_callback(ecs_iter_t *it) {
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
         user_it.table_columns = table->storage.columns;
+
         o->action(&user_it);
         o->last_event_id = world->event_id;
     }
@@ -25231,7 +25248,8 @@ void notify_set_triggers(
         }
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
-            it->ids, it->columns, it->subjects, it->sizes, it->ptrs))
+            it->offset, it->ids, it->columns, it->subjects, it->sizes, 
+            it->ptrs))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */
@@ -25291,6 +25309,12 @@ void flecs_triggers_notify(
     int32_t count,
     void *param)
 {
+    if (!ids || !ids->count) {
+        return;
+    }
+
+    ecs_assert(ids->array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!observable) {
         observable = world;
     }
