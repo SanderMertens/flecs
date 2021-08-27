@@ -228,16 +228,6 @@ jobs:
           cmake ..
           cmake --build .
 
-      - name: create examples build folder
-        working-directory: examples
-        run: mkdir cmake_build
-
-      - name: build examples
-        working-directory: examples/cmake_build
-        run: |
-          cmake ..
-          cmake --build .
-
   buildsystem-meson:
     timeout-minutes: 5
     runs-on: ubuntu-latest

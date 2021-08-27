@@ -1,3 +1,5 @@
+# Help needed with updating the cmake file to new directory structure!
+
 cmake_minimum_required(VERSION 3.5)
 
 project(flecs_example LANGUAGES C CXX)
