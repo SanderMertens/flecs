@@ -674,12 +674,10 @@ void _ecs_parser_errorv(
 #ifndef FLECS_LEGACY
 
 #define ecs_parser_error(name, expr, column, ...)\
-    _ecs_parser_error(name, expr, column, __VA_ARGS__);\
-    abort()
+    _ecs_parser_error(name, expr, column, __VA_ARGS__)
 
 #define ecs_parser_errorv(name, expr, column, fmt, args)\
-    _ecs_parser_errorv(name, expr, column, fmt, args);\
-    abort()
+    _ecs_parser_errorv(name, expr, column, fmt, args)
 
 #endif
 
@@ -7296,6 +7294,7 @@ FLECS_API void ecs_gauge_reduce(
         .name = #id,\
         .add_expr = #__VA_ARGS__\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     ecs_id(id) = id;\
     (void)id;\
     (void)ecs_id(id)
@@ -7322,7 +7321,8 @@ FLECS_API void ecs_gauge_reduce(
         },\
         .size = sizeof(id),\
         .alignment = ECS_ALIGNOF(id)\
-    })
+    });\
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
 
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
@@ -7648,6 +7648,7 @@ FLECS_API void ecs_gauge_reduce(
         .entity.name = #id,\
         .ids_expr = #__VA_ARGS__\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)id;
 
 /** @} */

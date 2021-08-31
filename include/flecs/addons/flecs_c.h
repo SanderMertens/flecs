@@ -20,6 +20,7 @@
         .name = #id,\
         .add_expr = #__VA_ARGS__\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     ecs_id(id) = id;\
     (void)id;\
     (void)ecs_id(id)
@@ -46,7 +47,8 @@
         },\
         .size = sizeof(id),\
         .alignment = ECS_ALIGNOF(id)\
-    })
+    });\
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
 
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
@@ -372,6 +374,7 @@
         .entity.name = #id,\
         .ids_expr = #__VA_ARGS__\
     });\
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
     (void)id;
 
 /** @} */

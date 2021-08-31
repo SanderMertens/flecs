@@ -1452,7 +1452,8 @@ ecs_table_t *traverse_from_expr(
     const char *name,
     const char *expr,
     ecs_table_diff_t *diff,
-    bool replace_and)
+    bool replace_and,
+    bool *error)
 {
     const char *ptr = expr;
     if (ptr) {
@@ -1463,10 +1464,16 @@ ecs_table_t *traverse_from_expr(
             }
 
             if (ecs_term_finalize(world, name, &term)) {
+                if (error) {
+                    *error = true;
+                }
                 return NULL;
             }
 
             if (!ecs_term_is_trivial(&term)) {
+                if (error) {
+                    *error = true;
+                }
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid non-trivial term in add expression");
                 return NULL;
@@ -1479,6 +1486,9 @@ ecs_table_t *traverse_from_expr(
                 /* Add all components from the specified type */
                 const EcsType *t = ecs_get(world, term.id, EcsType);
                 if (!t) {
+                    if (error) {
+                        *error = true;
+                    }
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "expected type for AND role");
                     return NULL;
@@ -1563,7 +1573,7 @@ void defer_from_expr(
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static 
-void traverse_add(
+int traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
     const char *name,
@@ -1617,8 +1627,12 @@ void traverse_add(
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
 #ifdef FLECS_PARSER
+        bool error = false;
         table = traverse_from_expr(
-            world, table, name, desc->add_expr, &diff, true);
+            world, table, name, desc->add_expr, &diff, true, &error);
+        if (error) {
+            return -1;
+        }
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
@@ -1647,6 +1661,8 @@ void traverse_add(
     }
 
     diff_free(&diff);
+
+    return 0;
 }
 
 /* When in deferred mode, we need to add/remove components one by one using
@@ -1797,8 +1813,11 @@ ecs_entity_t ecs_entity_init(
         deferred_add_remove(world, result, name, desc, 
             scope, with, new_entity, name_assigned);
     } else {
-        traverse_add(world, result, name, desc,
-            scope, with, new_entity, name_assigned);
+        if (traverse_add(world, result, name, desc,
+            scope, with, new_entity, name_assigned)) 
+        {
+            return 0;
+        }
     }
 
     return result;
@@ -1904,7 +1923,8 @@ ecs_entity_t ecs_type_init(
     ecs_id_t id;
     const ecs_id_t *ids = desc->ids;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        normalized = flecs_table_traverse_add(world, normalized, &id, &temp_diff);
+        normalized = flecs_table_traverse_add(
+            world, normalized, &id, &temp_diff);
         table = flecs_table_traverse_add(world, table, &id, NULL);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
         diff_append(&diff, &temp_diff);
@@ -1913,11 +1933,18 @@ ecs_entity_t ecs_type_init(
     /* If expression is set, add it to the table */
     if (desc->ids_expr) {
 #ifdef FLECS_PARSER
-        normalized = traverse_from_expr(
-            world, normalized, desc->entity.name, desc->ids_expr, &diff, true);
+        bool error = false;
+        normalized = traverse_from_expr(world, normalized, desc->entity.name, 
+            desc->ids_expr, &diff, true, &error);
+        if (error) {
+            return 0;
+        }
 
-        table = traverse_from_expr(
-            world, table, desc->entity.name, desc->ids_expr, &diff, false);
+        table = traverse_from_expr(world, table, desc->entity.name, 
+            desc->ids_expr, &diff, false, &error);
+        if (error) {
+            return 0;
+        }
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif

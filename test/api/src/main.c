@@ -988,6 +988,7 @@ void Pairs_get_1_object_not_found(void);
 void Pairs_get_n_objects(void);
 
 // Testsuite 'Rules'
+void Rules_invalid_rule(void);
 void Rules_comp_recycled_final_id(void);
 void Rules_comp_recycled_id(void);
 void Rules_pair_recycled_final_pred(void);
@@ -5613,6 +5614,10 @@ bake_test_case Pairs_testcases[] = {
 
 bake_test_case Rules_testcases[] = {
     {
+        "invalid_rule",
+        Rules_invalid_rule
+    },
+    {
         "comp_recycled_final_id",
         Rules_comp_recycled_final_id
     },
@@ -9158,7 +9163,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        78,
+        79,
         Rules_testcases
     },
     {
