@@ -22044,6 +22044,7 @@ void term_str_w_strbuf(
     const ecs_term_id_t *subj = &term->args[0];
     const ecs_term_id_t *obj = &term->args[1];
 
+    bool pred_set = ecs_term_id_is_set(&term->pred);
     bool subj_set = ecs_term_id_is_set(subj);
     bool obj_set = ecs_term_id_is_set(obj);
 
@@ -22063,9 +22064,13 @@ void term_str_w_strbuf(
         ecs_strbuf_appendstr(buf, "()");
     } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
     {
-        char *str = ecs_id_str(world, term->id);
-        ecs_strbuf_appendstr(buf, str);
-        ecs_os_free(str);
+        if (term->id) {
+            char *str = ecs_id_str(world, term->id);
+            ecs_strbuf_appendstr(buf, str);
+            ecs_os_free(str);
+        } else if (pred_set) {
+            filter_str_add_id(world, buf, &term->pred);   
+        }
     } else {
         filter_str_add_id(world, buf, &term->pred);
         ecs_strbuf_appendstr(buf, "(");
