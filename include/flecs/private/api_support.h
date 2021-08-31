@@ -59,7 +59,7 @@ void ecs_add_module_tag(
 bool ecs_identifier_is_0(
     const char *id);
 
-bool ecs_identifier_is_var(
+const char* ecs_identifier_is_var(
     const char *id);
 
 /** Calculate offset from address */
