@@ -70,7 +70,11 @@ int finalize_term_identifier(
     }
 
     if (identifier->var == EcsVarDefault) {
+        const char *var = ecs_identifier_is_var(identifier->name);
         if (ecs_identifier_is_var(identifier->name)) {
+            char *var_id = ecs_os_strdup(var);
+            ecs_os_free(identifier->name);
+            identifier->name = var_id;
             identifier->var = EcsVarIsVariable;
         }
     }
@@ -335,30 +339,29 @@ bool ecs_identifier_is_0(
     return id[0] == '0' && !id[1];
 }
 
-bool ecs_identifier_is_var(
+const char* ecs_identifier_is_var(
     const char *id)
 {
     if (!id) {
-        return false;
+        return NULL;
     }
 
-    if (id[0] == '_') {
-        return true;
-    }
-
+    /* Variable identifiers cannot start with a number */
     if (isdigit(id[0])) {
-        return false;
+        return NULL;
     }
 
-    const char *ptr;
-    char ch;
-    for (ptr = id; (ch = *ptr); ptr ++) {
-        if (!isupper(ch) && ch != '_' && !isdigit(ch)) {
-            return false;
-        }
+    /* Identifiers that start with _ are variables */
+    if (id[0] == '_') {
+        return &id[1];
     }
 
-    return true;
+    /* Identifiers that have a single uppercase character are variables */
+    if (ecs_os_strlen(id) == 1 && isupper(id[0])) {
+        return id;
+    }
+
+    return NULL;
 }
 
 bool ecs_id_match(

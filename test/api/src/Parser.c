@@ -980,7 +980,7 @@ void Parser_variable_multi_char() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(XYZ)"
+        .expr = "Pred(_XYZ)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1005,7 +1005,7 @@ void Parser_variable_multi_char_w_underscore() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(XY_Z)"
+        .expr = "Pred(_XY_Z)"
     }));
     test_int(filter_count(&f), 1);
 
@@ -1030,13 +1030,38 @@ void Parser_variable_multi_char_w_number() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(XY_1)"
+        .expr = "Pred(_XY_1)"
     }));
     test_int(filter_count(&f), 1);
 
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsSelf);
     test_subj_var(terms[0], 0, EcsSelf, "XY_1");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_variable_multi_char_not_allcaps() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, XYZ);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(_xyZ)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj_var(terms[0], 0, EcsSelf, "xyZ");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 

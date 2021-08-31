@@ -210,8 +210,6 @@ int parse_identifier(
 
     if (ch == TOK_AS_ENTITY) {
         out->var = EcsVarIsEntity;
-    } else if (ecs_identifier_is_var(tptr)) {
-        out->var = EcsVarIsVariable;
     }
 
     return 0;
