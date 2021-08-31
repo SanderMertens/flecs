@@ -1051,6 +1051,7 @@
         }, {
             "id": "Rules",
             "testcases": [
+                "invalid_rule",
                 "comp_recycled_final_id",
                 "comp_recycled_id",
                 "pair_recycled_final_pred",

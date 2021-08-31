@@ -339,8 +339,6 @@ void _ecs_parser_errorv(
 
         ecs_os_free(msg);
     }
-
-    ecs_os_abort(); 
 }
 
 void _ecs_parser_error(

@@ -633,8 +633,7 @@ void Filter_term_w_self_invalid_min_depth() {
         .args[0].set.min_depth = 2
     };
 
-    test_expect_abort();
-    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+    test_assert(ecs_term_finalize(world, NULL, &term) == -1);
 
     ecs_fini(world);
 }
@@ -653,8 +652,7 @@ void Filter_term_w_self_invalid_max_depth() {
         .args[0].set.max_depth = 2
     };
 
-    test_expect_abort();
-    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+    test_assert(ecs_term_finalize(world, NULL, &term) == -1);
 
     ecs_fini(world);
 }
@@ -674,8 +672,7 @@ void Filter_term_w_self_invalid_min_max_depth() {
         .args[0].set.max_depth = 4
     };
 
-    test_expect_abort();
-    test_assert(ecs_term_finalize(world, NULL, &term) == 1);
+    test_assert(ecs_term_finalize(world, NULL, &term) == -1);
 
     ecs_fini(world);
 }

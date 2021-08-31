@@ -24,6 +24,20 @@
     test_str(_var, str);\
 }
 
+void Rules_invalid_rule() {
+    ecs_tracing_enable(-4);
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
 void Rules_comp_recycled_id() {
     ecs_world_t *world = ecs_init();
 
@@ -2974,4 +2988,3 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj() {
 
     ecs_fini(world);
 }
-
