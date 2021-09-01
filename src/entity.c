@@ -1503,6 +1503,13 @@ ecs_table_t *traverse_from_expr(
 
             ecs_term_fini(&term);
         }
+
+        if (!ptr) {
+            if (error) {
+                *error = true;
+            }
+            return NULL;
+        }
     }
 
     return table;
@@ -1934,6 +1941,7 @@ ecs_entity_t ecs_type_init(
     if (desc->ids_expr) {
 #ifdef FLECS_PARSER
         bool error = false;
+
         normalized = traverse_from_expr(world, normalized, desc->entity.name, 
             desc->ids_expr, &diff, true, &error);
         if (error) {

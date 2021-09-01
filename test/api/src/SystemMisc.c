@@ -249,20 +249,19 @@ void SystemMisc_invalid_empty_string_w_space() {
 }
 
 void SystemMisc_invalid_mixed_src_modifier() {
-    install_test_abort();
-
+    ecs_tracing_enable(-4);
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    test_expect_abort();
-
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = { .name = "Dummy", .add = {EcsOnUpdate} },
         .query.filter.expr = "Position(super) || Velocity",
         .callback = Dummy
     });
+
+    test_assert(s == 0);
 
     ecs_fini(world);
 }

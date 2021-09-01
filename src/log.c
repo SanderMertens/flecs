@@ -354,8 +354,6 @@ void _ecs_parser_error(
         _ecs_parser_errorv(name, expr, column, fmt, args);
         va_end(args);
     }
-
-    ecs_os_abort();
 }
 
 void _ecs_abort(

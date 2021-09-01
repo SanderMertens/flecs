@@ -2372,8 +2372,6 @@ void _ecs_parser_error(
         _ecs_parser_errorv(name, expr, column, fmt, args);
         va_end(args);
     }
-
-    ecs_os_abort();
 }
 
 void _ecs_abort(
@@ -6102,6 +6100,13 @@ ecs_table_t *traverse_from_expr(
 
             ecs_term_fini(&term);
         }
+
+        if (!ptr) {
+            if (error) {
+                *error = true;
+            }
+            return NULL;
+        }
     }
 
     return table;
@@ -6533,6 +6538,7 @@ ecs_entity_t ecs_type_init(
     if (desc->ids_expr) {
 #ifdef FLECS_PARSER
         bool error = false;
+
         normalized = traverse_from_expr(world, normalized, desc->entity.name, 
             desc->ids_expr, &diff, true, &error);
         if (error) {
@@ -15925,14 +15931,6 @@ char* ecs_rule_str(
     return ecs_strbuf_get(&buf);
 }
 
-/* Public function that returns number of terms. */
-int32_t ecs_rule_term_count(
-    const ecs_rule_t *rule)
-{
-    ecs_assert(rule != NULL, ECS_INTERNAL_ERROR, NULL);
-    return rule->filter.term_count;
-}
-
 /* Public function that returns number of variables. This enables an application
  * to iterate the variables and obtain their values. */
 int32_t ecs_rule_variable_count(
@@ -19468,6 +19466,7 @@ char* ecs_parse_term(
         const char *bptr = ptr - 1;
         do {
             char ch = bptr[0];
+
             if (isspace(ch)) {
                 bptr --;
                 continue;
@@ -19486,6 +19485,7 @@ char* ecs_parse_term(
 
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid preceding token");
+
             return NULL;
         } while (true);
     }
@@ -21861,6 +21861,10 @@ int ecs_filter_init(
 
             terms[term_count] = term;
             term_count ++;
+
+            if (ptr[0] == '\n') {
+                break;
+            }
         }
 
         f.terms = terms;

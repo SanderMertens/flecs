@@ -293,6 +293,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof_optional(void);
 void Parser_expr_w_symbol(void);
+void Parser_expr_w_newline(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2970,6 +2971,10 @@ bake_test_case Parser_testcases[] = {
     {
         "expr_w_symbol",
         Parser_expr_w_symbol
+    },
+    {
+        "expr_w_newline",
+        Parser_expr_w_newline
     }
 };
 
@@ -9021,7 +9026,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        109,
+        110,
         Parser_testcases
     },
     {

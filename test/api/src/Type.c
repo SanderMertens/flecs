@@ -112,6 +112,8 @@ void Type_invalid_entity_type_expression() {
 
     ECS_TYPE(world, Type, Entity:Position, Velocity);
 
+    printf("TYpe = %d\n", Type);
+
     ecs_fini(world);
 }
 

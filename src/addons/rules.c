@@ -2281,14 +2281,6 @@ char* ecs_rule_str(
     return ecs_strbuf_get(&buf);
 }
 
-/* Public function that returns number of terms. */
-int32_t ecs_rule_term_count(
-    const ecs_rule_t *rule)
-{
-    ecs_assert(rule != NULL, ECS_INTERNAL_ERROR, NULL);
-    return rule->filter.term_count;
-}
-
 /* Public function that returns number of variables. This enables an application
  * to iterate the variables and obtain their values. */
 int32_t ecs_rule_variable_count(

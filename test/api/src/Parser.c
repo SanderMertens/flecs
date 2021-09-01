@@ -2875,3 +2875,16 @@ void Parser_expr_w_symbol() {
 
     ecs_fini(world);
 }
+
+void Parser_expr_w_newline() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_new_entity(world, "Foo");
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Foo\n"
+    }));
+
+    ecs_fini(world);
+}

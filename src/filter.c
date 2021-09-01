@@ -640,6 +640,10 @@ int ecs_filter_init(
 
             terms[term_count] = term;
             term_count ++;
+
+            if (ptr[0] == '\n') {
+                break;
+            }
         }
 
         f.terms = terms;

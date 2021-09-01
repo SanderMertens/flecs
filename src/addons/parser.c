@@ -760,6 +760,7 @@ char* ecs_parse_term(
         const char *bptr = ptr - 1;
         do {
             char ch = bptr[0];
+
             if (isspace(ch)) {
                 bptr --;
                 continue;
@@ -778,6 +779,7 @@ char* ecs_parse_term(
 
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid preceding token");
+
             return NULL;
         } while (true);
     }

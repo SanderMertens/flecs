@@ -313,7 +313,8 @@
                 "pred_implicit_subject_cascade_superset_childof",
                 "pred_implicit_subject_superset_cascade_childof",
                 "pred_implicit_subject_superset_cascade_childof_optional",
-                "expr_w_symbol"
+                "expr_w_symbol",
+                "expr_w_newline"
             ]
         }, {
             "id": "Plecs",
