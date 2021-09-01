@@ -2148,6 +2148,12 @@ void ecs_rule_fini(
     ecs_os_free(rule);
 }
 
+const ecs_filter_t* ecs_rule_filter(
+    const ecs_rule_t *rule)
+{
+    return &rule->filter; 
+}
+
 /* Quick convenience function to get a variable from an id */
 static
 ecs_rule_var_t* get_variable(

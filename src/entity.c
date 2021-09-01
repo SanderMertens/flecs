@@ -536,6 +536,12 @@ void components_override(
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
             ecs_entity_t base = ECS_PAIR_OBJECT(id);
+
+            /* Cannot inherit from base if base is final */
+            ecs_assert(
+                !ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
+                ECS_INVALID_PARAMETER, NULL);
+
             ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
             instantiate(world, base, table, data, row, count);
         }

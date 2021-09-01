@@ -3228,3 +3228,15 @@ void Prefab_get_component_from_1st_base_of_base_prefab_base() {
 
     ecs_fini(world);
 }
+
+void Prefab_fail_on_override_final() {
+    install_test_abort();
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsFinal);
+
+    test_expect_abort();
+    ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_fini(world);
+}

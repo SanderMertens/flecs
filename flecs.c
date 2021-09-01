@@ -5133,6 +5133,12 @@ void components_override(
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
             ecs_entity_t base = ECS_PAIR_OBJECT(id);
+
+            /* Cannot inherit from base if base is final */
+            ecs_assert(
+                !ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
+                ECS_INVALID_PARAMETER, NULL);
+
             ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
             instantiate(world, base, table, data, row, count);
         }
@@ -15796,6 +15802,12 @@ void ecs_rule_fini(
     ecs_filter_fini(&rule->filter);
 
     ecs_os_free(rule);
+}
+
+const ecs_filter_t* ecs_rule_filter(
+    const ecs_rule_t *rule)
+{
+    return &rule->filter; 
 }
 
 /* Quick convenience function to get a variable from an id */

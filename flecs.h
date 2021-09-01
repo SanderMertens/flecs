@@ -6925,6 +6925,10 @@ void ecs_rule_fini(
     ecs_rule_t *rule);
 
 FLECS_API
+const ecs_filter_t* ecs_rule_filter(
+    const ecs_rule_t *rule);
+
+FLECS_API
 int32_t ecs_rule_variable_count(
     const ecs_rule_t *rule);
 
