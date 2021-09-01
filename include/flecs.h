@@ -2836,6 +2836,22 @@ bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t index);
 
+/** Convert iterator to string.
+ * Prints the contents of an iterator to a string. Useful for debugging and/or
+ * testing the output of an iterator.
+ * 
+ * The function only converts the currently iterated data to a string. To 
+ * convert all data, the application has to manually call the next function and
+ * call ecs_iter_str on each result.
+ * 
+ * @param it The iterator.
+ * @param next The function used to progress the iterator.
+ * @return A string representing the contents of the iterator.
+ */
+FLECS_API
+char* ecs_iter_str(
+    const ecs_iter_t *it);
+
 /** Find the column index for a given id.
  * This operation finds the index of a column in the current type for the 
  * specified id. For example, if an entity has type Position, Velocity, and the

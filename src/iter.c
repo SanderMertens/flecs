@@ -151,3 +151,79 @@ size_t ecs_iter_column_size(
     
     return flecs_to_size_t(column->size);
 }
+
+char* ecs_iter_str(
+    const ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int i;
+
+    if (it->term_count) {
+        ecs_strbuf_list_push(&buf, "term:     ", ",");
+        for (i = 0; i < it->term_count; i ++) {
+            ecs_id_t id = ecs_term_id(it, i + 1);
+            char *str = ecs_id_str(world, id);
+            ecs_strbuf_list_appendstr(&buf, str);
+            ecs_os_free(str);
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
+
+        ecs_strbuf_list_push(&buf, "subject:  ", ",");
+        for (i = 0; i < it->term_count; i ++) {
+            ecs_entity_t subj = ecs_term_source(it, i + 1);
+            char *str = ecs_get_fullpath(world, subj);
+            ecs_strbuf_list_appendstr(&buf, str);
+            ecs_os_free(str);
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
+    }
+
+    if (it->variable_count) {
+        int32_t actual_count = 0;
+        for (i = 0; i < it->variable_count; i ++) {
+            const char *var_name = it->variable_names[i];
+            if (var_name[0] == '_') {
+                /* Skip anonymous variables */
+                continue;
+            }
+            if (var_name[0] == '.') {
+                /* Skip this */
+                continue;
+            }
+
+            ecs_entity_t var = it->variables[i];
+            if (!var) {
+                /* Skip table variables */
+                continue;
+            }
+
+            if (!actual_count) {
+                ecs_strbuf_list_push(&buf, "variable: ", ",");
+            }
+
+            char *str = ecs_get_fullpath(world, var);
+            ecs_strbuf_list_append(&buf, "%s=%s", var_name, str);
+            ecs_os_free(str);
+
+            actual_count ++;
+        }
+        if (actual_count) {
+            ecs_strbuf_list_pop(&buf, "\n");
+        }
+    }
+
+    if (it->count) {
+        ecs_strbuf_appendstr(&buf, "this:     \n");
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t e = it->entities[i];
+            char *str = ecs_get_fullpath(world, e);
+            ecs_strbuf_appendstr(&buf, "- ");
+            ecs_strbuf_appendstr(&buf, str);
+            ecs_strbuf_appendstr(&buf, "\n");
+            ecs_os_free(str);
+        }
+    }
+
+    return ecs_strbuf_get(&buf);
+}

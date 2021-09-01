@@ -301,6 +301,7 @@ void Plecs_empty(void);
 void Plecs_space(void);
 void Plecs_space_newline(void);
 void Plecs_empty_newline(void);
+void Plecs_multiple_trailing_newlines(void);
 void Plecs_entity(void);
 void Plecs_entity_w_entity(void);
 void Plecs_entity_w_pair(void);
@@ -1052,6 +1053,8 @@ void Rules_transitive_fact_subset_superset(void);
 void Rules_transitive_nonfinal_fact(void);
 void Rules_transitive_nonfinal_fact_w_implicit_pred_subset(void);
 void Rules_transitive_all(void);
+void Rules_transitive_superset_w_obj_subj_join(void);
+void Rules_transitive_term_both_variables(void);
 void Rules_same_pred_obj(void);
 void Rules_same_pred_obj_explicit_subject(void);
 void Rules_implicit_is_a_tag_fact(void);
@@ -2999,6 +3002,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "empty_newline",
         Plecs_empty_newline
+    },
+    {
+        "multiple_trailing_newlines",
+        Plecs_multiple_trailing_newlines
     },
     {
         "entity",
@@ -5871,6 +5878,14 @@ bake_test_case Rules_testcases[] = {
     {
         "transitive_all",
         Rules_transitive_all
+    },
+    {
+        "transitive_superset_w_obj_subj_join",
+        Rules_transitive_superset_w_obj_subj_join
+    },
+    {
+        "transitive_term_both_variables",
+        Rules_transitive_term_both_variables
     },
     {
         "same_pred_obj",
@@ -9038,7 +9053,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        11,
+        12,
         Plecs_testcases
     },
     {
@@ -9178,7 +9193,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        79,
+        81,
         Rules_testcases
     },
     {

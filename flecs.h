@@ -2563,7 +2563,8 @@ typedef struct ecs_sparse_iter_t {
 /** Rule-iterator specific data */
 typedef struct ecs_rule_iter_t {
     const ecs_rule_t *rule;
-    struct ecs_rule_reg_t *registers;    /* Variable storage */
+    struct ecs_rule_reg_t *registers;    /* Variable storage (tables, entities) */
+    ecs_entity_t *variables;             /* Variable storage for iterator (entities only) */
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     
     int32_t *columns;                    /* Column indices */
@@ -2590,12 +2591,79 @@ typedef struct ecs_iter_cache_t {
     bool ptrs_alloc;
 } ecs_iter_cache_t;
 
-/** The ecs_iter_t struct allows applications to iterate tables.
- * Queries and filters, among others, allow an application to iterate entities
- * that match a certain set of components. Because of how data is stored 
- * internally, entities with a given set of components may be stored in multiple
- * consecutive arrays, stored across multiple tables. The ecs_iter_t type 
- * enables iteration across tables. */
+/** Iterator.
+ * Contains all data necessary to iterate entities and component data. Iterators
+ * can be used without knowledge about the components being iterated. This makes 
+ * it possible for code like serializers and language bindings to inspect them.
+ *
+ * Each iterable object in flecs has an "iter" and a "next" function that are 
+ * used to obtain an iterator and iterate through the results. For example:
+ *
+ *   ecs_query_t *q = ...;
+ *  
+ *   // Create iterator
+ *   ecs_iter_t it = ecs_query_iter(q);
+ *  
+ *   // Iterate results
+ *   while (ecs_query_next(&it)) { }
+ *
+ * For each time the "next" function returns true, there are "count" entities to
+ * iterate, with the entity ids stored in the "entities" array:
+ *
+ *   while (ecs_query_next(&it)) { 
+ *     for (int i = 0; i < it.count; i ++) {
+ *       printf("entity matched: %u\n", it.entities[i]);
+ *     }
+ *   }
+ *
+ *
+ * It is guaranteed that each entity returned by a single "next" call has the
+ * same components. The type of the current batch of entities is accessible
+ * through the "type" member.
+ *
+ * Component data is accessible through the "ptrs" member which contains an
+ * array where each element stores the component data for a query term. For
+ * example, the following expression accesses a component value for the 2nd 
+ * term, 10th entity of type "Position": ((Position*)it.ptrs[1])[9];
+ *
+ * For convenience and safety checking applications should use ecs_term():
+ *
+ *   Position *p = ecs_term(&it, Position, 2);
+ * 
+ * Note that terms start counting from 1.
+ *
+ * This shows a typical example of iterating two components:
+ *
+ *   while (ecs_query_next(&it)) { 
+ *     Position *p = ecs_term(&it, Position, 1);
+ *     Velocity *v = ecs_term(&it, Velocity, 2);
+ *  
+ *     for (int i = 0; i < it.count; i ++) {
+ *       p[i].x += v[i].x;
+ *       p[i].y += v[i].y;
+ *     }
+ *   }
+ *
+ * When an iterator has terms with a subject that is different from the entity
+ * being matched, the component data is provided as a pointer (vs. an array). An
+ * example of a query with such a term is the following:
+ *
+ *   Position, Velocity, MaxSpeed(Game)
+ * 
+ * Here the 3rd term is explicitly matched on the "Game" entity. As a result
+ * MaxSpeed will be provided as a pointer to Game's component, as is shown here:
+ *
+ *   while (ecs_query_next(&it)) { 
+ *     Position *p = ecs_term(&it, Position, 1);
+ *     Velocity *v = ecs_term(&it, Velocity, 2);
+ *     MaxSpeed *s = ecs_term(&it, MaxSpeed, 3);
+ *  
+ *     for (int i = 0; i < it.count; i ++) {
+ *       p[i].x += max(v[i].x, s->value);
+ *       p[i].y += max(v[i].y, s->value);
+ *     }
+ *   }
+ */
 struct ecs_iter_t {
     ecs_world_t *world;           /* The world */
     ecs_world_t *real_world;      /* Actual world. This differs from world when using threads.  */
@@ -2613,6 +2681,8 @@ struct ecs_iter_t {
     ecs_entity_t *subjects;       /* Subject (source) entities */
     ecs_size_t *sizes;            /* Component sizes */
     void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
+    char **variable_names;        /* Names of variables (if any) */
+    ecs_entity_t *variables;      /* Values of variables (if any) */
 
     ecs_ref_t *references;
 
@@ -2623,6 +2693,7 @@ struct ecs_iter_t {
     int32_t term_index;           /* Index of term that triggered an event.
                                    * This field will be set to the 'index' field
                                    * of a trigger/observer term. */
+    int32_t variable_count;       /* Number of variables for query */
     
     void *table_columns;          /* Table component data */
     ecs_entity_t *entities;       /* Entity identifiers */
@@ -5369,6 +5440,22 @@ FLECS_API
 bool ecs_term_is_owned(
     const ecs_iter_t *it,
     int32_t index);
+
+/** Convert iterator to string.
+ * Prints the contents of an iterator to a string. Useful for debugging and/or
+ * testing the output of an iterator.
+ * 
+ * The function only converts the currently iterated data to a string. To 
+ * convert all data, the application has to manually call the next function and
+ * call ecs_iter_str on each result.
+ * 
+ * @param it The iterator.
+ * @param next The function used to progress the iterator.
+ * @return A string representing the contents of the iterator.
+ */
+FLECS_API
+char* ecs_iter_str(
+    const ecs_iter_t *it);
 
 /** Find the column index for a given id.
  * This operation finds the index of a column in the current type for the 

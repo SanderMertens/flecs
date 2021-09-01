@@ -13725,13 +13725,12 @@ typedef struct ecs_rule_table_reg_t {
 } ecs_rule_table_reg_t;
 
 typedef struct ecs_rule_reg_t {
-    int32_t var_id;
     union {
         ecs_entity_t entity;
         ecs_rule_table_reg_t table;
     } is;
 } ecs_rule_reg_t;
-
+ 
 /* Operations describe how the rule should be evaluated */
 typedef enum ecs_rule_op_kind_t {
     EcsRuleInput,       /* Input placeholder, first instruction in every rule */
@@ -13840,9 +13839,10 @@ struct ecs_rule_t {
     ecs_rule_var_t *variables;  /* Variable array */
     ecs_filter_t filter;        /* Filter of rule */
 
+    char **variable_names;      /* Array with var names, used by iterators */
+
     int32_t variable_count;     /* Number of variables in signature */
     int32_t subject_variable_count;
-    int32_t register_count;     /* Number of registers in rule */
     int32_t frame_count;        /* Number of register frames */
     int32_t operation_count;    /* Number of operations in rule */
 };
@@ -13918,10 +13918,6 @@ ecs_rule_var_t* create_variable(
     var->depth = UINT8_MAX;
     var->marked = false;
     var->occurs = 0;
-
-    if (rule->register_count < rule->variable_count) {
-        rule->register_count ++;
-    }
 
     return var;
 }
@@ -14165,7 +14161,7 @@ void entity_reg_set(
     ecs_entity_t entity)
 {
     (void)rule;
-    ecs_assert(rule->variables[regs[r].var_id].kind == EcsRuleVarKindEntity, 
+    ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_is_valid(rule->world, entity), 
         ECS_INVALID_PARAMETER, NULL);
@@ -14173,14 +14169,14 @@ void entity_reg_set(
     regs[r].is.entity = entity;
 }
 
-static 
+static
 ecs_entity_t entity_reg_get(
     const ecs_rule_t *rule,
     ecs_rule_reg_t *regs,
     int32_t r)
 {
     (void)rule;
-    ecs_assert(rule->variables[regs[r].var_id].kind == EcsRuleVarKindEntity, 
+    ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_is_valid(rule->world, regs[r].is.entity), 
         ECS_INVALID_PARAMETER, NULL);   
@@ -14196,7 +14192,7 @@ void table_reg_set(
     ecs_table_t *table)
 {
     (void)rule;
-    ecs_assert(rule->variables[regs[r].var_id].kind == EcsRuleVarKindTable, 
+    ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
     regs[r].is.table.table = table;
@@ -14211,7 +14207,7 @@ ecs_table_t* table_reg_get(
     int32_t r)
 {
     (void)rule;
-    ecs_assert(rule->variables[regs[r].var_id].kind == EcsRuleVarKindTable, 
+    ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
     return regs[r].is.table.table;       
@@ -15759,6 +15755,18 @@ void compile_program(
     insert_yield(rule);
 }
 
+static
+void create_variable_name_array(
+    ecs_rule_t *rule)
+{
+    rule->variable_names = ecs_os_malloc_n(char*, rule->variable_count);
+    int i;
+    for (i = 0; i < rule->variable_count; i ++) {
+        ecs_rule_var_t *var = &rule->variables[i];
+        rule->variable_names[var->id] = var->name;
+    }
+}
+
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
     ecs_filter_desc_t *desc)
@@ -15779,7 +15787,12 @@ ecs_rule_t* ecs_rule_init(
         goto error;
     }
 
+    /* Generate the opcode array */
     compile_program(result);
+
+    /* Create array with variable names so this can be easily accessed by 
+     * iterators without requiring access to the ecs_rule_t */
+    create_variable_name_array(result);
 
     return result;
 error:
@@ -15798,6 +15811,7 @@ void ecs_rule_fini(
 
     ecs_os_free(rule->variables);
     ecs_os_free(rule->operations);
+    ecs_os_free(rule->variable_names);
 
     ecs_filter_fini(&rule->filter);
 
@@ -16013,6 +16027,8 @@ ecs_iter_t ecs_rule_iter(
         if (rule->variable_count) {
             it->registers = ecs_os_malloc_n(ecs_rule_reg_t, 
                 rule->operation_count * rule->variable_count);
+
+            it->variables = ecs_os_malloc_n(ecs_entity_t, rule->variable_count);
         }
         
         it->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, rule->operation_count);
@@ -16027,7 +16043,6 @@ ecs_iter_t ecs_rule_iter(
 
     int i;
     for (i = 0; i < rule->variable_count; i ++) {
-        it->registers[i].var_id = i;
         if (rule->variables[i].kind == EcsRuleVarKindEntity) {
             entity_reg_set(rule, it->registers, i, EcsWildcard);
         } else {
@@ -16237,7 +16252,7 @@ bool eval_superset(
     ecs_assert(r != UINT8_MAX, ECS_INTERNAL_ERROR, NULL);
 
     /* Superset results are always stored in an entity variable */
-    ecs_assert(rule->variables[regs[r].var_id].kind == EcsRuleVarKindEntity,    
+    ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity,    
         ECS_INTERNAL_ERROR, NULL);
 
     /* Get queried for id, fill out potential variables */
@@ -17048,6 +17063,7 @@ void populate_iterator(
     ecs_rule_op_t *op)
 {
     int32_t r = op->r_in;
+    ecs_rule_reg_t *regs = get_register_frame(it, op->frame);
 
     /* If the input register for the yield does not point to a variable,
      * the rule doesn't contain a this (.) variable. In that case, the
@@ -17058,7 +17074,6 @@ void populate_iterator(
         iter->count = 0;
     } else {
         ecs_rule_var_t *var = &rule->variables[r];
-        ecs_rule_reg_t *regs = get_register_frame(it, op->frame);
         ecs_rule_reg_t *reg = &regs[r];
 
         if (var->kind == EcsRuleVarKindTable) {
@@ -17091,7 +17106,20 @@ void populate_iterator(
             set_iter_table(iter, record->table, op->frame, offset);
             iter->count = 1;
         }
-    }   
+    }
+
+    int32_t i, variable_count = rule->variable_count;
+    iter->variable_count = variable_count;
+    iter->variable_names = rule->variable_names;
+    iter->variables = it->variables;
+
+    for (i = 0; i < variable_count; i ++) {
+        if (rule->variables[i].kind == EcsRuleVarKindEntity) {
+            it->variables[i] = regs[i].is.entity;
+        } else {
+            it->variables[i] = 0;
+        }
+    }
 }
 
 static
@@ -19504,6 +19532,7 @@ char* ecs_parse_term(
 
     ptr = skip_newline_and_space(ptr);
     if (!ptr[0]) {
+        *term = (ecs_term_t){0};
         return (char*)ptr;
     }
 
@@ -27741,6 +27770,82 @@ size_t ecs_iter_column_size(
     ecs_column_t *column = &columns[column_index];
     
     return flecs_to_size_t(column->size);
+}
+
+char* ecs_iter_str(
+    const ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    int i;
+
+    if (it->term_count) {
+        ecs_strbuf_list_push(&buf, "term:     ", ",");
+        for (i = 0; i < it->term_count; i ++) {
+            ecs_id_t id = ecs_term_id(it, i + 1);
+            char *str = ecs_id_str(world, id);
+            ecs_strbuf_list_appendstr(&buf, str);
+            ecs_os_free(str);
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
+
+        ecs_strbuf_list_push(&buf, "subject:  ", ",");
+        for (i = 0; i < it->term_count; i ++) {
+            ecs_entity_t subj = ecs_term_source(it, i + 1);
+            char *str = ecs_get_fullpath(world, subj);
+            ecs_strbuf_list_appendstr(&buf, str);
+            ecs_os_free(str);
+        }
+        ecs_strbuf_list_pop(&buf, "\n");
+    }
+
+    if (it->variable_count) {
+        int32_t actual_count = 0;
+        for (i = 0; i < it->variable_count; i ++) {
+            const char *var_name = it->variable_names[i];
+            if (var_name[0] == '_') {
+                /* Skip anonymous variables */
+                continue;
+            }
+            if (var_name[0] == '.') {
+                /* Skip this */
+                continue;
+            }
+
+            ecs_entity_t var = it->variables[i];
+            if (!var) {
+                /* Skip table variables */
+                continue;
+            }
+
+            if (!actual_count) {
+                ecs_strbuf_list_push(&buf, "variable: ", ",");
+            }
+
+            char *str = ecs_get_fullpath(world, var);
+            ecs_strbuf_list_append(&buf, "%s=%s", var_name, str);
+            ecs_os_free(str);
+
+            actual_count ++;
+        }
+        if (actual_count) {
+            ecs_strbuf_list_pop(&buf, "\n");
+        }
+    }
+
+    if (it->count) {
+        ecs_strbuf_appendstr(&buf, "this:     \n");
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t e = it->entities[i];
+            char *str = ecs_get_fullpath(world, e);
+            ecs_strbuf_appendstr(&buf, "- ");
+            ecs_strbuf_appendstr(&buf, str);
+            ecs_strbuf_appendstr(&buf, "\n");
+            ecs_os_free(str);
+        }
+    }
+
+    return ecs_strbuf_get(&buf);
 }
 
 static

@@ -786,6 +786,7 @@ char* ecs_parse_term(
 
     ptr = skip_newline_and_space(ptr);
     if (!ptr[0]) {
+        *term = (ecs_term_t){0};
         return (char*)ptr;
     }
 

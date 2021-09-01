@@ -2347,6 +2347,68 @@ void Rules_transitive_all() {
     ecs_fini(world);
 }
 
+void Rules_transitive_superset_w_obj_subj_join() {
+    test_quarantine("Sep 1 2021");
+    
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+        "Transitive(LocatedIn)\n"
+        "IsA(Planet, Location)\n"
+        "IsA(City, Location)\n"
+        "IsA(Country, Location)\n"
+        "Planet(Earth)\n"
+        "Country(UnitedStates)\n"
+        "City(SanFrancisco)\n"
+        "LocatedIn(UnitedStates, Earth)\n"
+        "LocatedIn(SanFrancisco, UnitedStates)\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, ruleset) == 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "(LocatedIn, X), Location(X)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    while (ecs_rule_next(&it)) {
+        char *str = ecs_iter_str(&it);
+        printf("%s\n", str);
+    }
+
+    ecs_fini(world);
+}
+
+void Rules_transitive_term_both_variables() {
+    test_quarantine("Sep 1 2021");
+
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+        "Transitive(LocatedIn)\n"
+        "IsA(Planet, Location)\n"
+        "IsA(City, Location)\n"
+        "IsA(Country, Location)\n"
+        "Planet(Earth)\n"
+        "Country(UnitedStates)\n"
+        "City(SanFrancisco)\n"
+        "LocatedIn(UnitedStates, Earth)\n"
+        "LocatedIn(SanFrancisco, UnitedStates)\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, ruleset) == 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "LocatedIn(X, Y)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    while (ecs_rule_next(&it)) {
+        char *str = ecs_iter_str(&it);
+        printf("%s\n", str);
+    }
+
+    ecs_fini(world);
+}
+
 void Rules_transitive_fact_same_subj_obj() {
     ecs_world_t *world = ecs_init();
 

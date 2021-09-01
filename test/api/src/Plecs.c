@@ -40,6 +40,19 @@ void Plecs_empty_newline() {
     ecs_fini(world);
 }
 
+void Plecs_multiple_trailing_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n\n\n") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_vector_count(ecs_get_type(world, foo)), 1);
+
+    ecs_fini(world);
+}
+
 void Plecs_entity() {
     ecs_world_t *world = ecs_init();
 
