@@ -1053,8 +1053,6 @@ void Rules_transitive_fact_subset_superset(void);
 void Rules_transitive_nonfinal_fact(void);
 void Rules_transitive_nonfinal_fact_w_implicit_pred_subset(void);
 void Rules_transitive_all(void);
-void Rules_transitive_superset_w_obj_subj_join(void);
-void Rules_transitive_term_both_variables(void);
 void Rules_same_pred_obj(void);
 void Rules_same_pred_obj_explicit_subject(void);
 void Rules_implicit_is_a_tag_fact(void);
@@ -1072,6 +1070,13 @@ void Rules_implicit_is_a_pair_var(void);
 void Rules_implicit_is_a_transitive_pair_fact(void);
 void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_subset(void);
 void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj(void);
+
+// Testsuite 'TransitiveRules'
+void TransitiveRules_trans_X_X(void);
+void TransitiveRules_trans_X_X_2(void);
+void TransitiveRules_trans_X_Y(void);
+void TransitiveRules_trans_X_Y_2_levels(void);
+void TransitiveRules_trans_pred_This_X__pred_X(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -5880,14 +5885,6 @@ bake_test_case Rules_testcases[] = {
         Rules_transitive_all
     },
     {
-        "transitive_superset_w_obj_subj_join",
-        Rules_transitive_superset_w_obj_subj_join
-    },
-    {
-        "transitive_term_both_variables",
-        Rules_transitive_term_both_variables
-    },
-    {
         "same_pred_obj",
         Rules_same_pred_obj
     },
@@ -5954,6 +5951,29 @@ bake_test_case Rules_testcases[] = {
     {
         "implicit_is_a_transitive_pair_fact_w_implicit_pred_obj",
         Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj
+    }
+};
+
+bake_test_case TransitiveRules_testcases[] = {
+    {
+        "trans_X_X",
+        TransitiveRules_trans_X_X
+    },
+    {
+        "trans_X_X_2",
+        TransitiveRules_trans_X_X_2
+    },
+    {
+        "trans_X_Y",
+        TransitiveRules_trans_X_Y
+    },
+    {
+        "trans_X_Y_2_levels",
+        TransitiveRules_trans_X_Y_2_levels
+    },
+    {
+        "trans_pred_This_X__pred_X",
+        TransitiveRules_trans_pred_This_X__pred_X
     }
 };
 
@@ -9193,8 +9213,15 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        81,
+        79,
         Rules_testcases
+    },
+    {
+        "TransitiveRules",
+        NULL,
+        NULL,
+        5,
+        TransitiveRules_testcases
     },
     {
         "Trigger",
@@ -9403,5 +9430,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 58);
+    return bake_test_run("api", argc, argv, suites, 59);
 }

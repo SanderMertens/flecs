@@ -1116,8 +1116,6 @@
                 "transitive_nonfinal_fact",
                 "transitive_nonfinal_fact_w_implicit_pred_subset",
                 "transitive_all",
-                "transitive_superset_w_obj_subj_join",
-                "transitive_term_both_variables",
                 "same_pred_obj",
                 "same_pred_obj_explicit_subject",
                 "implicit_is_a_tag_fact",
@@ -1135,6 +1133,15 @@
                 "implicit_is_a_transitive_pair_fact",
                 "implicit_is_a_transitive_pair_fact_w_implicit_pred_subset",
                 "implicit_is_a_transitive_pair_fact_w_implicit_pred_obj"
+            ]
+        }, {
+            "id": "TransitiveRules",
+            "testcases": [
+                "trans_X_X",
+                "trans_X_X_2",
+                "trans_X_Y",
+                "trans_X_Y_2_levels",
+                "trans_pred_This_X__pred_X"
             ]
         }, {
            "id": "Trigger",

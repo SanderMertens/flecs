@@ -160,7 +160,7 @@ char* ecs_iter_str(
     int i;
 
     if (it->term_count) {
-        ecs_strbuf_list_push(&buf, "term:     ", ",");
+        ecs_strbuf_list_push(&buf, "term: ", ",");
         for (i = 0; i < it->term_count; i ++) {
             ecs_id_t id = ecs_term_id(it, i + 1);
             char *str = ecs_id_str(world, id);
@@ -169,7 +169,7 @@ char* ecs_iter_str(
         }
         ecs_strbuf_list_pop(&buf, "\n");
 
-        ecs_strbuf_list_push(&buf, "subject:  ", ",");
+        ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
             ecs_entity_t subj = ecs_term_source(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
@@ -187,6 +187,7 @@ char* ecs_iter_str(
                 /* Skip anonymous variables */
                 continue;
             }
+            
             if (var_name[0] == '.') {
                 /* Skip this */
                 continue;
@@ -199,7 +200,7 @@ char* ecs_iter_str(
             }
 
             if (!actual_count) {
-                ecs_strbuf_list_push(&buf, "variable: ", ",");
+                ecs_strbuf_list_push(&buf, "vars: ", ",");
             }
 
             char *str = ecs_get_fullpath(world, var);
@@ -214,11 +215,11 @@ char* ecs_iter_str(
     }
 
     if (it->count) {
-        ecs_strbuf_appendstr(&buf, "this:     \n");
+        ecs_strbuf_appendstr(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
             char *str = ecs_get_fullpath(world, e);
-            ecs_strbuf_appendstr(&buf, "- ");
+            ecs_strbuf_appendstr(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
             ecs_strbuf_appendstr(&buf, "\n");
             ecs_os_free(str);

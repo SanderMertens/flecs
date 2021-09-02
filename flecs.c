@@ -13696,11 +13696,7 @@ typedef struct ecs_rule_pair_t {
  * hoc from pairs, and take into account all variables that had been resolved
  * up to that point. */
 typedef struct ecs_rule_filter_t {
-    ecs_entity_t mask;  /* Mask with wildcard in place of variables */
-
-    /* Bloom filter for quickly eliminating ids in a type */
-    ecs_entity_t expr_mask; /* AND filter to pass through non-wildcard ids */
-    ecs_entity_t expr_match; /* Used to compare with AND expression result */
+    ecs_id_t mask;  /* Mask with wildcard in place of variables */
 
     bool wildcard; /* Does the filter contain wildcards */
     bool pred_wildcard; /* Is predicate a wildcard */
@@ -14383,32 +14379,6 @@ ecs_rule_pair_t term_to_pair(
     return result;
 }
 
-static
-void set_filter_expr_mask(
-    ecs_rule_filter_t *result,
-    ecs_entity_t mask)
-{
-    ecs_entity_t lo = ecs_entity_t_lo(mask);
-    ecs_entity_t hi = ecs_entity_t_hi(mask & ECS_COMPONENT_MASK);
-
-    /* Make sure roles match between expr & eq mask */
-    result->expr_mask = ECS_ROLE_MASK & mask;
-    result->expr_match = ECS_ROLE_MASK & mask;
-
-    /* Set parts that are not wildcards to F's. This ensures that when the
-     * expr mask is AND'd with a type id, only the non-wildcard parts are
-     * set in the id returned by the expression. */
-    result->expr_mask |= 0xFFFFFFFF * (lo != EcsWildcard);
-    result->expr_mask |= ((uint64_t)0xFFFFFFFF << 32) * (hi != EcsWildcard);
-
-    /* Only assign the non-wildcard parts to the id. This is compared with
-     * the result of the AND operation between the expr_mask and id from the
-     * entity's type. If it matches, it means that the non-wildcard parts of
-     * the filter match */
-    result->expr_match |= lo * (lo != EcsWildcard);
-    result->expr_match |= (hi << 32) * (hi != EcsWildcard);
-}
-
 /* When an operation has a pair, it is used to filter its input. This function
  * translates a pair back into an entity id, and in the process substitutes the
  * variables that have already been filled out. It's one of the most important
@@ -14467,13 +14437,6 @@ ecs_rule_filter_t pair_to_filter(
         result.mask = pred;
     } else {
         result.mask = ecs_pair(pred, obj);
-    }
-
-    /* Construct masks for quick evaluation of a filter. These masks act as a
-     * bloom filter that is used to quickly eliminate non-matching elements in
-     * an entity's type. */
-    if (result.wildcard) {
-        set_filter_expr_mask(&result, result.mask);
     }
 
     return result;
@@ -15134,6 +15097,8 @@ void insert_inclusive_set(
 {
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    /* If the operation to be inserted is a superset, the output variable needs
+     * to be an entity as a superset is always resolved one at a time */
     ecs_assert((op_kind != EcsRuleSuperSet) || 
         out->kind == EcsRuleVarKindEntity, ECS_INTERNAL_ERROR, NULL);
 
@@ -15189,7 +15154,7 @@ void insert_inclusive_set(
     } else {
         store->r_in = obj->id;
         store->filter.obj.reg = obj->id;
-        store->filter.reg_mask = RULE_PAIR_OBJECT;
+        store->filter.reg_mask |= RULE_PAIR_OBJECT;
     }
 
     /* This is either a SubSet or SuperSet operation */
@@ -15430,7 +15395,6 @@ void insert_select_or_with(
         ecs_assert(subj != NULL, ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsRuleSelect;
         set_output_to_subj(rule, op, term, subj);
-
         written[subj->id] = true;
     }
 
@@ -15547,6 +15511,8 @@ void insert_term_2(
                 insert_inclusive_set(
                     rule, EcsRuleSuperSet, obj, set_pair, c, written);
             }
+
+        /* subj is not known */
         } else {
             ecs_assert(subj != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -15569,6 +15535,8 @@ void insert_term_2(
 
                 insert_inclusive_set(
                     rule, EcsRuleSubSet, subj, set_pair, c, written);
+            } else if (subj == obj) {
+                insert_select_or_with(rule, c, term, subj, &filter, written);
             } else {
                 ecs_assert(obj != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -15844,6 +15812,7 @@ char* ecs_rule_str(
 {
     ecs_assert(rule != NULL, ECS_INVALID_PARAMETER, NULL);
     
+    ecs_world_t *world = rule->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     char filter_expr[256];
 
@@ -15851,30 +15820,24 @@ char* ecs_rule_str(
     for (i = 1; i < count; i ++) {
         ecs_rule_op_t *op = &rule->operations[i];
         ecs_rule_pair_t pair = op->filter;
-        ecs_entity_t type = ecs_get_alive(rule->world, pair.pred.ent);
-        ecs_entity_t object = ecs_get_alive(rule->world, pair.obj.ent);
-        const char *type_name, *object_name;
+        ecs_entity_t pred = pair.pred.ent;
+        ecs_entity_t obj = pair.obj.ent;
+        const char *pred_name = NULL, *obj_name = NULL;
 
         if (pair.reg_mask & RULE_PAIR_PREDICATE) {
             ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_rule_var_t *type_var = &rule->variables[type];
-            type_name = type_var->name;
-        } else {
-            if (type) {
-                type_name = ecs_get_name(rule->world, type);
-            } else {
-                type_name = NULL;
-            }
+            ecs_rule_var_t *type_var = &rule->variables[pred];
+            pred_name = type_var->name;
+        } else if (pred) {
+            pred_name = ecs_get_name(world, ecs_get_alive(world, pred));
         }
 
-        if (object) {
-            if (pair.reg_mask & RULE_PAIR_OBJECT) {
-                ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_rule_var_t *obj_var = &rule->variables[object];;
-                object_name = obj_var->name;
-            } else {
-                object_name = ecs_get_name(rule->world, object);
-            }
+        if (pair.reg_mask & RULE_PAIR_OBJECT) {
+            ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_rule_var_t *obj_var = &rule->variables[obj];
+            obj_name = obj_var->name;
+        } else if (obj) {
+            obj_name = ecs_get_name(world, ecs_get_alive(world, obj));
         }
 
         ecs_strbuf_append(&buf, "%2d: [S:%2d, P:%2d, F:%2d] ", i, 
@@ -15926,7 +15889,7 @@ char* ecs_rule_str(
                     r_out->name);
             } else if (op->subject) {
                 ecs_strbuf_append(&buf, "O:%s ", 
-                    ecs_get_name(rule->world, op->subject));
+                    ecs_get_name(world, op->subject));
             }
         }
 
@@ -15938,15 +15901,15 @@ char* ecs_rule_str(
                     r_in->name);
             } else if (op->subject) {
                 ecs_strbuf_append(&buf, "I:%s ", 
-                    ecs_get_name(rule->world, op->subject));
+                    ecs_get_name(world, op->subject));
             }
         }
 
         if (has_filter) {
-            if (!object) {
-                ecs_os_sprintf(filter_expr, "(%s)", type_name);
+            if (!obj) {
+                ecs_os_sprintf(filter_expr, "(%s)", pred_name);
             } else {
-                ecs_os_sprintf(filter_expr, "(%s, %s)", type_name, object_name);
+                ecs_os_sprintf(filter_expr, "(%s, %s)", pred_name, obj_name);
             }
             ecs_strbuf_append(&buf, "F:%s", filter_expr);
         }
@@ -16062,61 +16025,86 @@ void ecs_rule_iter_free(
     ecs_os_free(it->registers);
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
+    ecs_os_free(it->variables);
     it->registers = NULL;
     it->columns = NULL;
     it->op_ctx = NULL;
     flecs_iter_fini(iter);
 }
 
-/* This function iterates a type with a provided pair expression, as is returned
- * by pair_get_most_specific_var. It starts looking in the type at an offset ('column') and
- * returns the first matching element. */
+/* Edge case: if the filter has the same variable for both predicate and
+ * object, they are both resolved at the same time but at the time of 
+ * evaluating the filter they're still wildcards which would match columns
+ * that have different predicates/objects. Do an additional scan to make
+ * sure the column we're returning actually matches. */
 static
-int32_t find_next_match(
-    ecs_type_t type, 
+int32_t find_next_same_var(
+    ecs_type_t type,
     int32_t column,
-    ecs_rule_filter_t *filter)
+    ecs_id_t pattern)
 {
-    /* Scan the type for the next match */
+    /* If same_var is true, this has to be a wildcard pair. We cannot have
+     * the same variable in a pair, and one part of a pair resolved with
+     * another part unresolved. */
+    ecs_assert(pattern == ecs_pair(EcsWildcard, EcsWildcard), 
+        ECS_INTERNAL_ERROR, NULL);
+    (void)pattern;
+    
+    /* Keep scanning for an id where rel and obj are the same */
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
-
-    /* If the predicate is not a wildcard, the next element must match the 
-     * queried for entity, or the type won't contain any more matches. The
-     * reason for this is that ids in a type are sorted, and the predicate
-     * occupies the most significant bits in the type */
-    if (!filter->pred_wildcard) {
-        /* Evaluate at most one element if column is not 0. If column is 0,
-         * the entire type is evaluated. */
-        if (column && column < count) {
-            count = column + 1;
+    for (i = column + 1; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        if (!ECS_HAS_ROLE(id, PAIR)) {
+            /* If id is not a pair, this will definitely not match, and we
+             * will find no further matches. */
+            return -1;
         }
-    }
 
-    /* Find next column that equals look_for after masking out the wildcards */
-    ecs_entity_t expr_mask = filter->expr_mask;
-    ecs_entity_t expr_match = filter->expr_match;
-
-    for (i = column; i < count; i ++) {
-        if ((entities[i] & expr_mask) == expr_match) {
-            if (filter->same_var) {
-                ecs_entity_t lo_id = ecs_entity_t_lo(entities[i]);
-                ecs_entity_t hi_id = ecs_entity_t_hi(
-                    entities[i] & ECS_COMPONENT_MASK);
-
-                /* If pair contains the same variable twice but the matched id
-                 * has different values, this is not a match */
-                if (lo_id != hi_id) {
-                    continue;
-                }
-            }
-
+        if (ECS_PAIR_RELATION(id) == ECS_PAIR_OBJECT(id)) {
+            /* Found a match! */
             return i;
         }
     }
 
-    /* No matching columns were found in remainder of type */
+    /* No pairs found with same rel/obj */
     return -1;
+}
+
+static
+int32_t find_next_column(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t column,
+    ecs_rule_filter_t *filter)
+{
+    ecs_entity_t pattern = filter->mask;
+    ecs_type_t type = table->type;
+
+    if (column == -1) {
+        ecs_table_record_t *tr = flecs_get_table_record(world, table, pattern);
+        if (!tr) {
+            return -1;
+        }
+        column = tr->column;
+    } else {   
+        column ++;
+
+        if (ecs_vector_count(table->type) <= column) {
+            return -1;
+        }
+
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+        if (!ecs_id_match(ids[column], pattern)) {
+            return -1;
+        }
+    }
+
+    if (filter->same_var) {
+        column = find_next_same_var(type, column, filter->mask);
+    }
+
+    return column;
 }
 
 /* This function finds the next table in a table set, and is used by the select
@@ -16127,26 +16115,27 @@ ecs_table_record_t find_next_table(
     ecs_rule_filter_t *filter,
     ecs_rule_with_ctx_t *op_ctx)
 {
-    ecs_table_record_t *table_record;
+    ecs_table_record_t *tr;
     ecs_table_t *table;
-    int32_t count, column;
+    int32_t column;
 
     /* Find the next non-empty table */
     do {
-        table_record = ecs_map_next(&op_ctx->table_iter, 
-            ecs_table_record_t, NULL);
-        if (!table_record) {
+        tr = ecs_map_next(&op_ctx->table_iter, ecs_table_record_t, NULL);
+        if (!tr) {
             return (ecs_table_record_t){0};
         }
 
-        table = table_record->table;
-        count = ecs_table_count(table);
-        if (!count) {
+        table = tr->table;
+        if (!ecs_table_count(table)) {
             column = -1;
             continue;
         }
 
-        column = find_next_match(table->type, table_record->column, filter);
+        column = tr->column;
+        if (filter->same_var) {
+            column = find_next_same_var(table->type, column - 1, filter->mask);
+        }
     } while (column == -1);
 
     return (ecs_table_record_t){.table = table, .column = column};
@@ -16258,6 +16247,9 @@ bool eval_superset(
     /* Get queried for id, fill out potential variables */
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
+    ecs_rule_filter_t super_filter = { 
+        .mask = ecs_pair(ECS_PAIR_RELATION(filter.mask), EcsWildcard) 
+    };
     ecs_table_t *table = NULL;
 
     if (!redo) {
@@ -16265,26 +16257,15 @@ bool eval_superset(
         sp = op_ctx->sp = 0;
         frame = &op_ctx->stack[sp];
 
-        ecs_entity_t mask = ecs_pair(pair.pred.ent, EcsWildcard);
-        op_ctx->table_set = find_table_index(world, mask);
-
-        /* If no table set is found for the transitive relationship, there are 
-         * no supersets */
-        if (!op_ctx->table_set) {
-            return false;
-        }
-
         /* Get table of object for which to get supersets */
-        ecs_entity_t obj = ecs_entity_t_lo(filter.mask);
+        ecs_entity_t obj = ECS_PAIR_OBJECT(filter.mask);
 
         /* If obj is wildcard, there's nothing to determine a superset for */
         ecs_assert(obj != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
 
         /* Find first matching column in table */
         table = table_from_entity(world, obj);
-        filter.mask = mask;
-        set_filter_expr_mask(&filter, mask);
-        int32_t column = find_next_match(table->type, 0, &filter);
+        int32_t column = find_next_column(world, table, -1, &super_filter);
 
         /* If no matching column was found, there are no supersets */
         if (column == -1) {
@@ -16308,10 +16289,6 @@ bool eval_superset(
     table = frame->table;
     int32_t column = frame->column;
 
-    ecs_entity_t mask = ecs_pair(pair.pred.ent, EcsWildcard);
-    filter.mask = mask;
-    set_filter_expr_mask(&filter, mask);
-
     ecs_entity_t col_entity = rule_get_column(table->type, column);
     ecs_entity_t col_obj = ecs_entity_t_lo(col_entity);
     ecs_table_t *next_table = table_from_entity(world, col_obj);
@@ -16328,7 +16305,7 @@ bool eval_superset(
         table = frame->table;
         column = frame->column;
 
-        column = find_next_match(table->type, column + 1, &filter);
+        column = find_next_column(world, table, column, &super_filter);
         if (column != -1) {
             op_ctx->sp = sp;
             frame->column = column;
@@ -16511,6 +16488,7 @@ bool eval_select(
     /* Get queried for id, fill out potential variables */
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
+    ecs_entity_t pattern = filter.mask;
 
     int32_t column = -1;
     ecs_table_t *table = NULL;
@@ -16532,7 +16510,7 @@ bool eval_select(
          * table type. Tables are also registered under wildcards, which is why
          * this operation can simply use the look_for variable directly */
 
-        table_set = op_ctx->table_set = find_table_index(world, filter.mask);
+        table_set = op_ctx->table_set = find_table_index(world, pattern);
     }
 
     /* If no table set was found for queried for entity, there are no results */
@@ -16571,7 +16549,7 @@ bool eval_select(
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             column = columns[op->term];
-            column = find_next_match(table->type, column + 1, &filter);
+            column = find_next_column(world, table, column, &filter);
             columns[op->term] = column;
         }
 
@@ -16617,7 +16595,6 @@ bool eval_with(
     const ecs_rule_t *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
-    ecs_table_record_t *table_record = NULL;
     ecs_rule_reg_t *regs = get_registers(iter, op);
 
     /* Get register indices for input */
@@ -16701,61 +16678,35 @@ bool eval_with(
     }
 
     int32_t *columns = rule_get_columns(iter, op);
-    int32_t new_column = -1;
 
-    /* If this is not a redo, start at the beginning */
-    if (!redo) {
-        table = reg_get_table(rule, op, regs, r);
-
-        if (!table) {
-            return false;
-        }
-
-        /* Try to find the table in the table set by the table id. If the table
-         * cannot be found in the table set, the table does not have the
-         * required expression. This is a much faster way to do this check than
-         * iterating the table type, and makes rules that request lots of
-         * components feasible to execute in realtime. */
-        table_record = ecs_map_get(
-            table_set, ecs_table_record_t, table->id);
-
-        /* If no table record was found, there are no results. */
-        if (!table_record) {
-            return false;
-        } else {
-            ecs_assert(table == table_record->table, ECS_INTERNAL_ERROR, NULL);
-
-            /* Set current column to first occurrence of queried for entity */
-            column = table_record->column;
-            new_column = find_next_match(table->type, column, &filter);
-        }
-    
-    /* If this is a redo, progress to the next match */
-    } else {
-        table = reg_get_table(rule, op, regs, r);
-        
-        /* First test if there are any more matches for the current table, in 
-         * case we're looking for a wildcard. */
-        if (filter.wildcard) {
-            if (!table) {
-                return false;
-            }
-
-            /* Find the next match for the expression in the column. The columns
-             * array keeps track of the state for each With operation, so that
-             * even after redoing a With, the search doesn't have to start from
-             * the beginning. */
-            column = columns[op->term] + 1;
-            new_column = find_next_match(table->type, column, &filter);
-        }
-    }
-
-    /* If no next match was found for this table, no more data */
-    if (new_column == -1) {
+    table = reg_get_table(rule, op, regs, r);
+    if (!table) {
         return false;
     }
 
-    column = columns[op->term] = new_column;
+    /* If this is not a redo, start at the beginning */
+    if (!redo) {
+        column = find_next_column(world, table, -1, &filter);
+    
+    /* If this is a redo, progress to the next match */
+    } else {        
+        if (!filter.wildcard) {
+            return false;
+        }
+        
+        /* Find the next match for the expression in the column. The columns
+         * array keeps track of the state for each With operation, so that
+         * even after redoing a With, the search doesn't have to start from
+         * the beginning. */
+        column = find_next_column(world, table, columns[op->term], &filter);
+    }
+
+    /* If no next match was found for this table, no more data */
+    if (column == -1) {
+        return false;
+    }
+
+    columns[op->term] = column;
 
     /* If we got here, we found a match. Table and column must be set */
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -27780,7 +27731,7 @@ char* ecs_iter_str(
     int i;
 
     if (it->term_count) {
-        ecs_strbuf_list_push(&buf, "term:     ", ",");
+        ecs_strbuf_list_push(&buf, "term: ", ",");
         for (i = 0; i < it->term_count; i ++) {
             ecs_id_t id = ecs_term_id(it, i + 1);
             char *str = ecs_id_str(world, id);
@@ -27789,7 +27740,7 @@ char* ecs_iter_str(
         }
         ecs_strbuf_list_pop(&buf, "\n");
 
-        ecs_strbuf_list_push(&buf, "subject:  ", ",");
+        ecs_strbuf_list_push(&buf, "subj: ", ",");
         for (i = 0; i < it->term_count; i ++) {
             ecs_entity_t subj = ecs_term_source(it, i + 1);
             char *str = ecs_get_fullpath(world, subj);
@@ -27807,6 +27758,7 @@ char* ecs_iter_str(
                 /* Skip anonymous variables */
                 continue;
             }
+            
             if (var_name[0] == '.') {
                 /* Skip this */
                 continue;
@@ -27819,7 +27771,7 @@ char* ecs_iter_str(
             }
 
             if (!actual_count) {
-                ecs_strbuf_list_push(&buf, "variable: ", ",");
+                ecs_strbuf_list_push(&buf, "vars: ", ",");
             }
 
             char *str = ecs_get_fullpath(world, var);
@@ -27834,11 +27786,11 @@ char* ecs_iter_str(
     }
 
     if (it->count) {
-        ecs_strbuf_appendstr(&buf, "this:     \n");
+        ecs_strbuf_appendstr(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
             char *str = ecs_get_fullpath(world, e);
-            ecs_strbuf_appendstr(&buf, "- ");
+            ecs_strbuf_appendstr(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
             ecs_strbuf_appendstr(&buf, "\n");
             ecs_os_free(str);
