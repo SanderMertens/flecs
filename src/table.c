@@ -331,10 +331,6 @@ void register_on_set(
                 ecs_os_calloc(ECS_SIZEOF(ecs_vector_t) * table->column_count);
         }
 
-        /* Get the matched table which holds the list of actual components */
-        ecs_matched_table_t *matched_table = ecs_vector_get(
-            query->tables, ecs_matched_table_t, matched_table_index);
-
         /* Keep track of whether query matches overrides. When a component is
          * removed, diffing these arrays between the source and detination
          * tables gives the list of OnSet systems to run, after exposing the
@@ -361,23 +357,24 @@ void register_on_set(
                 continue;
             }
 
-            ecs_entity_t comp = matched_table->ids[i];
-            int32_t index = ecs_type_index_of(table->type, 0, comp);
-            if (index == -1) {
-                continue;
-            }
+            ecs_entity_t comp = term->id;
+            int32_t index = -1;
+            while ((index = ecs_type_index_of(table->type, ++index, comp)) != -1) {
+                ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+                ecs_id_t actual_comp = ids[index];
 
-            if (index >= table->column_count) {
-                continue;
+                if (index >= table->column_count) {
+                    continue;
+                }
+                
+                ecs_vector_t *set_c = table->on_set[index];
+                ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
+                m->query = query;
+                m->matched_table_index = matched_table_index;
+                table->on_set[index] = set_c;
+                
+                match_override |= is_override(world, table, actual_comp);
             }
-            
-            ecs_vector_t *set_c = table->on_set[index];
-            ecs_matched_query_t *m = ecs_vector_add(&set_c, ecs_matched_query_t);
-            m->query = query;
-            m->matched_table_index = matched_table_index;
-            table->on_set[index] = set_c;
-            
-            match_override |= is_override(world, table, comp);
         } 
 
         if (match_override) {
@@ -439,7 +436,7 @@ void register_query(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_query_t *query,
-    int32_t matched_table_index)
+    ecs_vector_t *matched_table_indices)
 {
     /* Register system with the table */
     if (!(query->flags & EcsQueryNoActivation)) {
@@ -460,22 +457,23 @@ void register_query(
             table_activate(world, table, query, true);
         }
     }
+    ecs_vector_each(matched_table_indices, int32_t, matched_table_index, {
+        /* Register the query as a monitor */
+        if (query->flags & EcsQueryMonitor) {
+            table->flags |= EcsTableHasMonitors;
+            register_monitor(world, table, query, *matched_table_index);
+        }
 
-    /* Register the query as a monitor */
-    if (query->flags & EcsQueryMonitor) {
-        table->flags |= EcsTableHasMonitors;
-        register_monitor(world, table, query, matched_table_index);
-    }
+        /* Register the query as an on_set system */
+        if (query->flags & EcsQueryOnSet) {
+            register_on_set(world, table, query, *matched_table_index);
+        }
 
-    /* Register the query as an on_set system */
-    if (query->flags & EcsQueryOnSet) {
-        register_on_set(world, table, query, matched_table_index);
-    }
-
-    /* Register the query as an un_set system */
-    if (query->flags & EcsQueryUnSet) {
-        register_un_set(world, table, query, matched_table_index);
-    }
+        /* Register the query as an un_set system */
+        if (query->flags & EcsQueryUnSet) {
+            register_un_set(world, table, query, *matched_table_index);
+        }
+    });
 }
 
 /* This function is called when a query is unmatched with a table. This can
@@ -2248,7 +2246,7 @@ void flecs_table_notify(
     switch(event->kind) {
     case EcsTableQueryMatch:
         register_query(
-            world, table, event->query, event->matched_table_index);
+            world, table, event->query, event->matched_table_indices);
         break;
     case EcsTableQueryUnmatch:
         unregister_query(
