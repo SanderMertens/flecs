@@ -123,11 +123,14 @@ void order_grouped_tables(
          * the table administration with the new matched_table ids, so that when a
          * monitor is executed we can quickly find the right matched_table. */
         if (query->flags & EcsQueryMonitor) { 
-            ecs_vector_each(query->tables, ecs_matched_table_t, table, {        
+            ecs_vector_t* indecies = ecs_vector_new(int32_t, 1);
+            int32_t* first = ecs_vector_add(&indecies, int32_t);
+            ecs_vector_each(query->tables, ecs_matched_table_t, table, {            
+                *first = table_i; 
                 flecs_table_notify(world, table->table, &(ecs_table_event_t){
                     .kind = EcsTableQueryMatch,
                     .query = query,
-                    .matched_table_index = table_i
+                    .matched_table_indices = indecies
                 });
             });
         }
@@ -586,6 +589,7 @@ void add_table(
     int32_t *table_indices = NULL;
     int32_t table_indices_count = 0;
     int32_t matched_table_index = 0;
+    ecs_vector_t* matched_table_indices = ecs_vector_new(int32_t, 1);
     ecs_matched_table_t table_data;
     ecs_vector_t *references = NULL;
 
@@ -738,6 +742,7 @@ add_pair:
 
         /* Store table index */
         matched_table_index = ecs_vector_count(query->empty_tables);
+        *ecs_vector_add(&matched_table_indices, int32_t) = matched_table_index;
         table_indices_count ++;
         table_indices = ecs_os_realloc(
             table_indices, table_indices_count * ECS_SIZEOF(int32_t));
@@ -761,6 +766,7 @@ add_pair:
          * get the count to determine the current table index. */
         matched_table_index = ecs_vector_count(query->tables) - 1;
         ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
+        *ecs_vector_add(&matched_table_indices, int32_t) = matched_table_index;
     }
 
     if (references) {
@@ -796,7 +802,7 @@ add_pair:
         flecs_table_notify(world, table, &(ecs_table_event_t){
             .kind = EcsTableQueryMatch,
             .query = query,
-            .matched_table_index = matched_table_index
+            .matched_table_indices = matched_table_indices
         });
     } else if (table && ecs_table_count(table)) {
         activate_table(world, query, table, true);
@@ -805,6 +811,7 @@ add_pair:
     if (pair_offsets) {
         ecs_os_free(pair_offsets);
     }
+    ecs_vector_free(matched_table_indices);
 }
 
 static
