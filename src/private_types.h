@@ -74,7 +74,7 @@ typedef struct ecs_table_event_t {
 
     /* Query event */
     ecs_query_t *query;
-    int32_t matched_table_index;
+    ecs_vector_t *matched_table_indices;
 
     /* Component info event */
     ecs_entity_t component;
