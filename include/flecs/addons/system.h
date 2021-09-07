@@ -225,7 +225,7 @@ ecs_entity_t ecs_run_w_filter(
  * @return The query.
  */
 FLECS_API
-ecs_query_t* ecs_get_system_query(
+ecs_query_t* ecs_system_get_query(
     const ecs_world_t *world,
     ecs_entity_t system);
 

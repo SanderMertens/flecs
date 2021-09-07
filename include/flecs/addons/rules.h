@@ -18,7 +18,7 @@ extern "C" {
 FLECS_API
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
-    ecs_filter_desc_t *desc);
+    const ecs_filter_desc_t *desc);
 
 FLECS_API
 void ecs_rule_fini(

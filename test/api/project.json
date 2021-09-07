@@ -314,7 +314,27 @@
                 "pred_implicit_subject_superset_cascade_childof",
                 "pred_implicit_subject_superset_cascade_childof_optional",
                 "expr_w_symbol",
-                "expr_w_newline"
+                "expr_w_newline",
+                "subj_entity_w_explicit_self",
+                "subj_entity_w_explicit_self_superset",
+                "subj_entity_w_explicit_superset_relation",
+                "subj_entity_w_explicit_self_superset_relation",
+                "obj_entity_w_explicit_self",
+                "obj_entity_w_explicit_self_superset",
+                "obj_entity_w_explicit_superset_relation",
+                "obj_entity_w_explicit_self_superset_relation",
+                "pred_entity_w_explicit_self",
+                "pred_entity_w_explicit_self_superset",
+                "pred_entity_w_explicit_superset_relation",
+                "pred_entity_w_explicit_self_superset_relation",
+                "pred_entity_no_args_w_explicit_self",
+                "pred_entity_no_args_w_explicit_self_superset",
+                "pred_entity_no_args_w_explicit_superset_relation",
+                "pred_entity_no_args_w_explicit_self_superset_relation",
+                "pred_entity_no_args_2_terms_w_explicit_self",
+                "pred_entity_no_args_2_terms_w_explicit_self_superset",
+                "pred_entity_no_args_2_terms_w_explicit_superset_relation",
+                "pred_entity_no_args_2_terms_w_explicit_self_superset_relation"
             ]
         }, {
             "id": "Plecs",
@@ -939,6 +959,20 @@
                 "filter_iter_w_from_nothing_term",
                 "match_disabled",
                 "match_prefab"
+            ]
+        }, {
+            "id": "FilterDefaultSubstitution",
+            "testcases": [
+                "final_pred_no_args",
+                "nonfinal_pred_no_args",
+                "final_transitive_pred",
+                "nonfinal_transitive_pred",
+                "final_transitive_pred_final_obj",
+                "nonfinal_transitive_pred_final_obj",
+                "nonfinal_pred_no_args_explicit_self_pred",
+                "implicit_subj_w_self",
+                "explicit_subj_w_self",
+                "transitive_pred_w_self_obj"
             ]
         }, {
             "id": "Query",

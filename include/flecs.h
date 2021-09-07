@@ -421,8 +421,9 @@ typedef struct ecs_filter_desc_t {
     ecs_term_t *terms_buffer;
     int32_t terms_buffer_count;
 
-    /* Substitute IsA relationships by default. If true, any term with 'set' 
-     * assigned to DefaultSet will be modified to Self|SuperSet(IsA). */
+    /* Use default substitution rules where appropriate. When enabled, the
+     * filter will determine based on whether the predicate is transitive and/or
+     * final whether IsA substitution is required. */
     bool substitute_default;
 
     /* Filter expression. Should not be set at the same time as terms array */

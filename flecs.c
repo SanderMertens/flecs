@@ -13605,7 +13605,11 @@ int ecs_plecs_from_str(
         }
     }
 
-    return 0;
+    if (!ptr) {
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
 int ecs_plecs_from_file(
@@ -15737,13 +15741,16 @@ void create_variable_name_array(
 
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
-    ecs_filter_desc_t *desc)
+    const ecs_filter_desc_t *desc)
 {
     ecs_rule_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_rule_t));
 
+    ecs_filter_desc_t local_desc = *desc;
+    local_desc.substitute_default = true;
+
     /* Parse the signature expression. This initializes the columns array which
      * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, desc)) {
+    if (ecs_filter_init(world, &result->filter, &local_desc)) {
         ecs_os_free(result);
         return NULL;
     }
@@ -18382,7 +18389,7 @@ ecs_entity_t ecs_run(
     return ecs_run_w_filter(world, system, delta_time, 0, 0, param);
 }
 
-ecs_query_t* ecs_get_system_query(
+ecs_query_t* ecs_system_get_query(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
@@ -19021,8 +19028,18 @@ const char* parse_set_expr(
     int64_t column,
     const char *ptr,
     char *token,
-    ecs_term_id_t *id)
+    ecs_term_id_t *id,
+    char tok_end)
 {
+    char token_buf[ECS_MAX_TOKEN_SIZE] = {0};
+    if (!token) {
+        token = token_buf;
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+    }
+
     do {
         uint8_t tok = parse_set_token(token);
         if (!tok) {
@@ -19109,11 +19126,12 @@ const char* parse_set_expr(
             }
 
             if (ptr[0] != TOK_PAREN_CLOSE) {
-                ecs_parser_error(name, expr, column, "expected ')'");
+                ecs_parser_error(name, expr, column, "expected ')', got '%c'",
+                    ptr[0]);
                 return NULL;                
             } else {
                 ptr = skip_space(ptr + 1);
-                if (ptr[0] != TOK_PAREN_CLOSE && ptr[0] != TOK_AND) { 
+                if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
                     return NULL;
@@ -19132,7 +19150,7 @@ const char* parse_set_expr(
             }
 
         /* End of set expression */
-        } else if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+        } else if (ptr[0] == tok_end || ptr[0] == TOK_AND || !ptr[0]) {
             break;
         }
     } while (true);
@@ -19181,9 +19199,25 @@ const char* parse_arguments(
                 return NULL;
             }
 
+            /* If token is a colon, the token is an identifier followed by a
+             * set expression. */
+            if (ptr[0] == TOK_COLON) {
+                if (parse_identifier(token, &term->args[arg])) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "invalid identifier '%s'", token);
+                    return NULL;
+                }
+
+                ptr = skip_space(ptr + 1);
+                ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr,
+                    NULL, &term->args[arg], TOK_PAREN_CLOSE);
+                if (!ptr) {
+                    return NULL;
+                }
+
             /* If token is a self, super or sub token, this is a set
              * expression */
-            if (!ecs_os_strcmp(token, TOK_ALL) ||
+            } else if (!ecs_os_strcmp(token, TOK_ALL) ||
                 !ecs_os_strcmp(token, TOK_CASCADE) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
@@ -19191,7 +19225,7 @@ const char* parse_arguments(
                 !(ecs_os_strcmp(token, TOK_PARENT)))
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
-                    token, &term->args[arg]);
+                    token, &term->args[arg], TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
                 }
@@ -19340,6 +19374,30 @@ parse_predicate:
     }
 
     ptr = skip_space(ptr);
+
+    /* Set expression */
+    if (ptr[0] == TOK_COLON) {
+        ptr = skip_space(ptr + 1);
+        ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, NULL, 
+            &term.pred, TOK_COLON);
+        if (!ptr) {
+            return NULL;
+        }
+
+        ptr = skip_space(ptr);
+
+        if (ptr[0] == TOK_AND || !ptr[0]) {
+            goto parse_done;
+        }
+
+        if (ptr[0] != TOK_COLON) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected token '%c' after predicate set expression", ptr[0]);
+            return NULL;
+        }
+
+        ptr = skip_space(ptr + 1);
+    }
     
     if (ptr[0] == TOK_PAREN_OPEN) {
         ptr ++;
@@ -21233,6 +21291,87 @@ void term_error(
 }
 
 static
+ecs_entity_t term_id_entity(
+    const ecs_world_t *world,
+    ecs_term_id_t *term_id)
+{
+    if (term_id->entity && term_id->entity != EcsThis && 
+        term_id->entity != EcsWildcard) 
+    {
+        if (!(term_id->entity & ECS_ROLE_MASK)) {
+            return term_id->entity;
+        } else {
+            return 0;
+        }
+    } else if (term_id->name) {
+        if (term_id->var == EcsVarIsEntity || 
+           (term_id->var == EcsVarDefault && 
+            !ecs_identifier_is_var(term_id->name))) 
+        {
+            return ecs_lookup_fullpath(world, term_id->name);
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+static
+void finalize_default_substitution(
+    const ecs_world_t *world,
+    ecs_term_t *terms,
+    int32_t term_count)
+{
+    int i;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_id_t *pred = &terms[i].pred;
+        ecs_term_id_t *subj = &terms[i].args[0];
+        ecs_term_id_t *obj = &terms[i].args[1];
+
+        /* Term predicate must always be set */
+        ecs_assert(ecs_term_id_is_set(pred), ECS_INTERNAL_ERROR, NULL);
+
+        bool pred_transitive = false;
+        if (pred->set.mask == EcsDefaultSet) {
+            ecs_entity_t e = term_id_entity(world, pred);
+            if (e) {
+                if (ecs_has_id(world, e, EcsFinal)) {
+                    /* Final predicates are never substituted */
+                    pred->set.mask = EcsSelf;
+                } else {
+                    pred->set.mask = EcsSelf|EcsSuperSet;
+                    pred->set.relation = EcsIsA;
+                }
+                pred_transitive = ecs_has_id(world, e, EcsTransitive);
+            }
+        }
+
+        if (subj->set.mask == EcsDefaultSet) {
+            /* By default subjects are substituted with their supersets */
+            subj->set.mask = EcsSelf|EcsSuperSet;
+            subj->set.relation = EcsIsA;
+        }
+
+        if (obj->set.mask == EcsDefaultSet) {
+            /* By default subjects are substituted with their supersets */
+            if (!pred_transitive) {
+                obj->set.mask = EcsSelf|EcsSuperSet;
+                obj->set.relation = EcsIsA;
+            } else {
+                /* If query is transitive, find subsets but only if object is
+                 * not final. */
+                ecs_entity_t e = term_id_entity(world, obj);
+                if  (!e || !ecs_has_id(world, e, EcsFinal)) {
+                    obj->set.mask = EcsSelf|EcsSubSet;
+                    obj->set.relation = EcsIsA;
+                }
+            }
+        }
+    }
+}
+
+static
 int finalize_term_identifier(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -21872,12 +22011,7 @@ int ecs_filter_init(
 
     /* If default substitution is enabled, replace DefaultSet with SuperSet */
     if (desc->substitute_default) {
-        for (i = 0; i < term_count; i ++) {
-            if (terms[i].args[0].set.mask == EcsDefaultSet) {
-                terms[i].args[0].set.mask = EcsSuperSet | EcsSelf;
-                terms[i].args[0].set.relation = EcsIsA;
-            }            
-        }
+        finalize_default_substitution(world, terms, term_count);
     } else {
         for (i = 0; i < term_count; i ++) {
             if (terms[i].args[0].set.mask == EcsDefaultSet) {
@@ -21997,17 +22131,26 @@ static
 void filter_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
-    const ecs_term_id_t *id)
+    const ecs_term_id_t *id,
+    bool is_subject)
 {
     if (id->name) {
         ecs_strbuf_appendstr(buf, id->name);
     } else if (id->entity) {
-        char *path = ecs_get_fullpath(world, id->entity);
-        ecs_strbuf_appendstr(buf, path);
-        ecs_os_free(path);
+        bool id_added = false;
+        if (!is_subject || id->entity != EcsThis) {
+            char *path = ecs_get_fullpath(world, id->entity);
+            ecs_strbuf_appendstr(buf, path);
+            ecs_os_free(path);
+            id_added = true;
+        }
 
         if (id->set.mask != EcsSelf) {
-            ecs_strbuf_list_push(buf, ":", "|");
+            if (id_added) {
+                ecs_strbuf_list_push(buf, ":", "|");
+            } else {
+                ecs_strbuf_list_push(buf, "", "|");
+            }
             if (id->set.mask & EcsSelf) {
                 ecs_strbuf_list_appendstr(buf, "self");
             }
@@ -22017,13 +22160,17 @@ void filter_str_add_id(
             if (id->set.mask & EcsSubSet) {
                 ecs_strbuf_list_appendstr(buf, "subset");
             }
-            ecs_strbuf_list_push(buf, "(", "");
 
-            char *rel_path = ecs_get_fullpath(world, id->set.relation);
-            ecs_strbuf_appendstr(buf, rel_path);
-            ecs_os_free(rel_path);
+            if (id->set.relation != EcsIsA) {
+                ecs_strbuf_list_push(buf, "(", "");
 
-            ecs_strbuf_list_pop(buf, ")");
+                char *rel_path = ecs_get_fullpath(world, id->set.relation);
+                ecs_strbuf_appendstr(buf, rel_path);
+                ecs_os_free(rel_path);
+
+                ecs_strbuf_list_pop(buf, ")");
+            }
+
             ecs_strbuf_list_pop(buf, "");
         }
     } else {
@@ -22056,7 +22203,7 @@ void term_str_w_strbuf(
     }
 
     if (!subj_set) {
-        filter_str_add_id(world, buf, &term->pred);
+        filter_str_add_id(world, buf, &term->pred, false);
         ecs_strbuf_appendstr(buf, "()");
     } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
     {
@@ -22065,15 +22212,15 @@ void term_str_w_strbuf(
             ecs_strbuf_appendstr(buf, str);
             ecs_os_free(str);
         } else if (pred_set) {
-            filter_str_add_id(world, buf, &term->pred);   
+            filter_str_add_id(world, buf, &term->pred, false);   
         }
     } else {
-        filter_str_add_id(world, buf, &term->pred);
+        filter_str_add_id(world, buf, &term->pred, false);
         ecs_strbuf_appendstr(buf, "(");
-        filter_str_add_id(world, buf, &term->args[0]);
+        filter_str_add_id(world, buf, &term->args[0], true);
         if (obj_set) {
             ecs_strbuf_appendstr(buf, ",");
-            filter_str_add_id(world, buf, &term->args[1]);
+            filter_str_add_id(world, buf, &term->args[1], false);
         }
         ecs_strbuf_appendstr(buf, ")");
     }
@@ -24919,15 +25066,6 @@ void process_signature(
             ECS_UNSUPPORTED, NULL);
         ecs_assert(obj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-
-        /* Queries do not support subset substitutions */
-        ecs_assert(!(pred->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
-        ecs_assert(!(subj->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
-        ecs_assert(!(obj->set.mask & EcsSubSet), ECS_UNSUPPORTED, NULL);
-
-        /* Superset/subset substitutions aren't supported for pred/obj */
-        ecs_assert(pred->set.mask == EcsSelf, ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->set.mask == EcsSelf, ECS_UNSUPPORTED, NULL);
 
         /* If self is not included in set, always start from depth 1 */
         if (!subj->set.min_depth && !(subj->set.mask & EcsSelf)) {

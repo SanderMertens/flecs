@@ -324,8 +324,18 @@ const char* parse_set_expr(
     int64_t column,
     const char *ptr,
     char *token,
-    ecs_term_id_t *id)
+    ecs_term_id_t *id,
+    char tok_end)
 {
+    char token_buf[ECS_MAX_TOKEN_SIZE] = {0};
+    if (!token) {
+        token = token_buf;
+        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        if (!ptr) {
+            return NULL;
+        }
+    }
+
     do {
         uint8_t tok = parse_set_token(token);
         if (!tok) {
@@ -412,11 +422,12 @@ const char* parse_set_expr(
             }
 
             if (ptr[0] != TOK_PAREN_CLOSE) {
-                ecs_parser_error(name, expr, column, "expected ')'");
+                ecs_parser_error(name, expr, column, "expected ')', got '%c'",
+                    ptr[0]);
                 return NULL;                
             } else {
                 ptr = skip_space(ptr + 1);
-                if (ptr[0] != TOK_PAREN_CLOSE && ptr[0] != TOK_AND) { 
+                if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
                     return NULL;
@@ -435,7 +446,7 @@ const char* parse_set_expr(
             }
 
         /* End of set expression */
-        } else if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+        } else if (ptr[0] == tok_end || ptr[0] == TOK_AND || !ptr[0]) {
             break;
         }
     } while (true);
@@ -484,9 +495,25 @@ const char* parse_arguments(
                 return NULL;
             }
 
+            /* If token is a colon, the token is an identifier followed by a
+             * set expression. */
+            if (ptr[0] == TOK_COLON) {
+                if (parse_identifier(token, &term->args[arg])) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "invalid identifier '%s'", token);
+                    return NULL;
+                }
+
+                ptr = skip_space(ptr + 1);
+                ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr,
+                    NULL, &term->args[arg], TOK_PAREN_CLOSE);
+                if (!ptr) {
+                    return NULL;
+                }
+
             /* If token is a self, super or sub token, this is a set
              * expression */
-            if (!ecs_os_strcmp(token, TOK_ALL) ||
+            } else if (!ecs_os_strcmp(token, TOK_ALL) ||
                 !ecs_os_strcmp(token, TOK_CASCADE) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_SUPERSET) || 
@@ -494,7 +521,7 @@ const char* parse_arguments(
                 !(ecs_os_strcmp(token, TOK_PARENT)))
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
-                    token, &term->args[arg]);
+                    token, &term->args[arg], TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
                 }
@@ -643,6 +670,30 @@ parse_predicate:
     }
 
     ptr = skip_space(ptr);
+
+    /* Set expression */
+    if (ptr[0] == TOK_COLON) {
+        ptr = skip_space(ptr + 1);
+        ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, NULL, 
+            &term.pred, TOK_COLON);
+        if (!ptr) {
+            return NULL;
+        }
+
+        ptr = skip_space(ptr);
+
+        if (ptr[0] == TOK_AND || !ptr[0]) {
+            goto parse_done;
+        }
+
+        if (ptr[0] != TOK_COLON) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "unexpected token '%c' after predicate set expression", ptr[0]);
+            return NULL;
+        }
+
+        ptr = skip_space(ptr + 1);
+    }
     
     if (ptr[0] == TOK_PAREN_OPEN) {
         ptr ++;

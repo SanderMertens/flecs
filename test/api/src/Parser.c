@@ -2888,3 +2888,551 @@ void Parser_expr_w_newline() {
 
     ecs_fini(world);
 }
+
+void Parser_subj_entity_w_explicit_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj:self)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_subj_entity_w_explicit_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj:self|super)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_subj_entity_w_explicit_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj:super(ChildOf))"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSuperSet);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_subj_entity_w_explicit_self_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj:self|super(ChildOf))"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
+    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_obj_entity_w_explicit_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj, Obj:self)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_obj_entity_w_explicit_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj, Obj:self|super)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_obj_entity_w_explicit_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj, Obj:super(ChildOf))"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_obj_entity_w_explicit_self_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj, Obj:self|super(ChildOf))"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_w_explicit_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self:(Subj)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_w_explicit_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super:(Subj)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_w_explicit_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:super(ChildOf):(Subj)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_w_explicit_self_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super(ChildOf):(Subj)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], Subj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_w_explicit_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_w_explicit_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_w_explicit_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:super(ChildOf)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_w_explicit_self_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super(ChildOf)"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_2_terms_w_explicit_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Pred2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self, Pred2"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_pred(terms[1], Pred2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Pred2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super, Pred2"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_pred(terms[1], Pred2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Pred2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:super(ChildOf), Pred2"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_pred(terms[1], Pred2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Pred2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred:self|super(ChildOf), Pred2"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsChildOf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_pred(terms[1], Pred2, EcsSelf);
+    test_subj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

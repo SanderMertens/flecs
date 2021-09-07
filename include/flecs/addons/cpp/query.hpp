@@ -73,6 +73,10 @@ public:
         }
     }
 
+    filter_base filter() {
+        return filter_base(m_world, ecs_query_get_filter(m_query));
+    }
+
     flecs::term term(int32_t index) {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);

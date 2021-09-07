@@ -2081,13 +2081,16 @@ void create_variable_name_array(
 
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
-    ecs_filter_desc_t *desc)
+    const ecs_filter_desc_t *desc)
 {
     ecs_rule_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_rule_t));
 
+    ecs_filter_desc_t local_desc = *desc;
+    local_desc.substitute_default = true;
+
     /* Parse the signature expression. This initializes the columns array which
      * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, desc)) {
+    if (ecs_filter_init(world, &result->filter, &local_desc)) {
         ecs_os_free(result);
         return NULL;
     }

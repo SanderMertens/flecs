@@ -1633,7 +1633,7 @@ void SystemMisc_get_query() {
     ecs_set(world, 0, Position, {1, 0});
     ecs_set(world, 0, Position, {2, 0});
 
-    ecs_query_t *q = ecs_get_system_query(world, Dummy);
+    ecs_query_t *q = ecs_system_get_query(world, Dummy);
     test_assert(q != NULL);
 
     int32_t count = 0;

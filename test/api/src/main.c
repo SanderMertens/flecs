@@ -294,6 +294,26 @@ void Parser_pred_implicit_subject_superset_cascade_childof(void);
 void Parser_pred_implicit_subject_superset_cascade_childof_optional(void);
 void Parser_expr_w_symbol(void);
 void Parser_expr_w_newline(void);
+void Parser_subj_entity_w_explicit_self(void);
+void Parser_subj_entity_w_explicit_self_superset(void);
+void Parser_subj_entity_w_explicit_superset_relation(void);
+void Parser_subj_entity_w_explicit_self_superset_relation(void);
+void Parser_obj_entity_w_explicit_self(void);
+void Parser_obj_entity_w_explicit_self_superset(void);
+void Parser_obj_entity_w_explicit_superset_relation(void);
+void Parser_obj_entity_w_explicit_self_superset_relation(void);
+void Parser_pred_entity_w_explicit_self(void);
+void Parser_pred_entity_w_explicit_self_superset(void);
+void Parser_pred_entity_w_explicit_superset_relation(void);
+void Parser_pred_entity_w_explicit_self_superset_relation(void);
+void Parser_pred_entity_no_args_w_explicit_self(void);
+void Parser_pred_entity_no_args_w_explicit_self_superset(void);
+void Parser_pred_entity_no_args_w_explicit_superset_relation(void);
+void Parser_pred_entity_no_args_w_explicit_self_superset_relation(void);
+void Parser_pred_entity_no_args_2_terms_w_explicit_self(void);
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset(void);
+void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation(void);
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -882,6 +902,18 @@ void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
+
+// Testsuite 'FilterDefaultSubstitution'
+void FilterDefaultSubstitution_final_pred_no_args(void);
+void FilterDefaultSubstitution_nonfinal_pred_no_args(void);
+void FilterDefaultSubstitution_final_transitive_pred(void);
+void FilterDefaultSubstitution_nonfinal_transitive_pred(void);
+void FilterDefaultSubstitution_final_transitive_pred_final_obj(void);
+void FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj(void);
+void FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred(void);
+void FilterDefaultSubstitution_implicit_subj_w_self(void);
+void FilterDefaultSubstitution_explicit_subj_w_self(void);
+void FilterDefaultSubstitution_transitive_pred_w_self_obj(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -2984,6 +3016,86 @@ bake_test_case Parser_testcases[] = {
     {
         "expr_w_newline",
         Parser_expr_w_newline
+    },
+    {
+        "subj_entity_w_explicit_self",
+        Parser_subj_entity_w_explicit_self
+    },
+    {
+        "subj_entity_w_explicit_self_superset",
+        Parser_subj_entity_w_explicit_self_superset
+    },
+    {
+        "subj_entity_w_explicit_superset_relation",
+        Parser_subj_entity_w_explicit_superset_relation
+    },
+    {
+        "subj_entity_w_explicit_self_superset_relation",
+        Parser_subj_entity_w_explicit_self_superset_relation
+    },
+    {
+        "obj_entity_w_explicit_self",
+        Parser_obj_entity_w_explicit_self
+    },
+    {
+        "obj_entity_w_explicit_self_superset",
+        Parser_obj_entity_w_explicit_self_superset
+    },
+    {
+        "obj_entity_w_explicit_superset_relation",
+        Parser_obj_entity_w_explicit_superset_relation
+    },
+    {
+        "obj_entity_w_explicit_self_superset_relation",
+        Parser_obj_entity_w_explicit_self_superset_relation
+    },
+    {
+        "pred_entity_w_explicit_self",
+        Parser_pred_entity_w_explicit_self
+    },
+    {
+        "pred_entity_w_explicit_self_superset",
+        Parser_pred_entity_w_explicit_self_superset
+    },
+    {
+        "pred_entity_w_explicit_superset_relation",
+        Parser_pred_entity_w_explicit_superset_relation
+    },
+    {
+        "pred_entity_w_explicit_self_superset_relation",
+        Parser_pred_entity_w_explicit_self_superset_relation
+    },
+    {
+        "pred_entity_no_args_w_explicit_self",
+        Parser_pred_entity_no_args_w_explicit_self
+    },
+    {
+        "pred_entity_no_args_w_explicit_self_superset",
+        Parser_pred_entity_no_args_w_explicit_self_superset
+    },
+    {
+        "pred_entity_no_args_w_explicit_superset_relation",
+        Parser_pred_entity_no_args_w_explicit_superset_relation
+    },
+    {
+        "pred_entity_no_args_w_explicit_self_superset_relation",
+        Parser_pred_entity_no_args_w_explicit_self_superset_relation
+    },
+    {
+        "pred_entity_no_args_2_terms_w_explicit_self",
+        Parser_pred_entity_no_args_2_terms_w_explicit_self
+    },
+    {
+        "pred_entity_no_args_2_terms_w_explicit_self_superset",
+        Parser_pred_entity_no_args_2_terms_w_explicit_self_superset
+    },
+    {
+        "pred_entity_no_args_2_terms_w_explicit_superset_relation",
+        Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation
+    },
+    {
+        "pred_entity_no_args_2_terms_w_explicit_self_superset_relation",
+        Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation
     }
 };
 
@@ -5214,6 +5326,49 @@ bake_test_case Filter_testcases[] = {
     {
         "match_prefab",
         Filter_match_prefab
+    }
+};
+
+bake_test_case FilterDefaultSubstitution_testcases[] = {
+    {
+        "final_pred_no_args",
+        FilterDefaultSubstitution_final_pred_no_args
+    },
+    {
+        "nonfinal_pred_no_args",
+        FilterDefaultSubstitution_nonfinal_pred_no_args
+    },
+    {
+        "final_transitive_pred",
+        FilterDefaultSubstitution_final_transitive_pred
+    },
+    {
+        "nonfinal_transitive_pred",
+        FilterDefaultSubstitution_nonfinal_transitive_pred
+    },
+    {
+        "final_transitive_pred_final_obj",
+        FilterDefaultSubstitution_final_transitive_pred_final_obj
+    },
+    {
+        "nonfinal_transitive_pred_final_obj",
+        FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj
+    },
+    {
+        "nonfinal_pred_no_args_explicit_self_pred",
+        FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred
+    },
+    {
+        "implicit_subj_w_self",
+        FilterDefaultSubstitution_implicit_subj_w_self
+    },
+    {
+        "explicit_subj_w_self",
+        FilterDefaultSubstitution_explicit_subj_w_self
+    },
+    {
+        "transitive_pred_w_self_obj",
+        FilterDefaultSubstitution_transitive_pred_w_self_obj
     }
 };
 
@@ -9066,7 +9221,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        110,
+        130,
         Parser_testcases
     },
     {
@@ -9194,6 +9349,13 @@ static bake_test_suite suites[] = {
         NULL,
         73,
         Filter_testcases
+    },
+    {
+        "FilterDefaultSubstitution",
+        NULL,
+        NULL,
+        10,
+        FilterDefaultSubstitution_testcases
     },
     {
         "Query",
@@ -9430,5 +9592,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 59);
+    return bake_test_run("api", argc, argv, suites, 60);
 }

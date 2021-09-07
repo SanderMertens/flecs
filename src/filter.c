@@ -20,6 +20,87 @@ void term_error(
 }
 
 static
+ecs_entity_t term_id_entity(
+    const ecs_world_t *world,
+    ecs_term_id_t *term_id)
+{
+    if (term_id->entity && term_id->entity != EcsThis && 
+        term_id->entity != EcsWildcard) 
+    {
+        if (!(term_id->entity & ECS_ROLE_MASK)) {
+            return term_id->entity;
+        } else {
+            return 0;
+        }
+    } else if (term_id->name) {
+        if (term_id->var == EcsVarIsEntity || 
+           (term_id->var == EcsVarDefault && 
+            !ecs_identifier_is_var(term_id->name))) 
+        {
+            return ecs_lookup_fullpath(world, term_id->name);
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+static
+void finalize_default_substitution(
+    const ecs_world_t *world,
+    ecs_term_t *terms,
+    int32_t term_count)
+{
+    int i;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_id_t *pred = &terms[i].pred;
+        ecs_term_id_t *subj = &terms[i].args[0];
+        ecs_term_id_t *obj = &terms[i].args[1];
+
+        /* Term predicate must always be set */
+        ecs_assert(ecs_term_id_is_set(pred), ECS_INTERNAL_ERROR, NULL);
+
+        bool pred_transitive = false;
+        if (pred->set.mask == EcsDefaultSet) {
+            ecs_entity_t e = term_id_entity(world, pred);
+            if (e) {
+                if (ecs_has_id(world, e, EcsFinal)) {
+                    /* Final predicates are never substituted */
+                    pred->set.mask = EcsSelf;
+                } else {
+                    pred->set.mask = EcsSelf|EcsSuperSet;
+                    pred->set.relation = EcsIsA;
+                }
+                pred_transitive = ecs_has_id(world, e, EcsTransitive);
+            }
+        }
+
+        if (subj->set.mask == EcsDefaultSet) {
+            /* By default subjects are substituted with their supersets */
+            subj->set.mask = EcsSelf|EcsSuperSet;
+            subj->set.relation = EcsIsA;
+        }
+
+        if (obj->set.mask == EcsDefaultSet) {
+            /* By default subjects are substituted with their supersets */
+            if (!pred_transitive) {
+                obj->set.mask = EcsSelf|EcsSuperSet;
+                obj->set.relation = EcsIsA;
+            } else {
+                /* If query is transitive, find subsets but only if object is
+                 * not final. */
+                ecs_entity_t e = term_id_entity(world, obj);
+                if  (!e || !ecs_has_id(world, e, EcsFinal)) {
+                    obj->set.mask = EcsSelf|EcsSubSet;
+                    obj->set.relation = EcsIsA;
+                }
+            }
+        }
+    }
+}
+
+static
 int finalize_term_identifier(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -659,12 +740,7 @@ int ecs_filter_init(
 
     /* If default substitution is enabled, replace DefaultSet with SuperSet */
     if (desc->substitute_default) {
-        for (i = 0; i < term_count; i ++) {
-            if (terms[i].args[0].set.mask == EcsDefaultSet) {
-                terms[i].args[0].set.mask = EcsSuperSet | EcsSelf;
-                terms[i].args[0].set.relation = EcsIsA;
-            }            
-        }
+        finalize_default_substitution(world, terms, term_count);
     } else {
         for (i = 0; i < term_count; i ++) {
             if (terms[i].args[0].set.mask == EcsDefaultSet) {
@@ -784,17 +860,26 @@ static
 void filter_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
-    const ecs_term_id_t *id)
+    const ecs_term_id_t *id,
+    bool is_subject)
 {
     if (id->name) {
         ecs_strbuf_appendstr(buf, id->name);
     } else if (id->entity) {
-        char *path = ecs_get_fullpath(world, id->entity);
-        ecs_strbuf_appendstr(buf, path);
-        ecs_os_free(path);
+        bool id_added = false;
+        if (!is_subject || id->entity != EcsThis) {
+            char *path = ecs_get_fullpath(world, id->entity);
+            ecs_strbuf_appendstr(buf, path);
+            ecs_os_free(path);
+            id_added = true;
+        }
 
         if (id->set.mask != EcsSelf) {
-            ecs_strbuf_list_push(buf, ":", "|");
+            if (id_added) {
+                ecs_strbuf_list_push(buf, ":", "|");
+            } else {
+                ecs_strbuf_list_push(buf, "", "|");
+            }
             if (id->set.mask & EcsSelf) {
                 ecs_strbuf_list_appendstr(buf, "self");
             }
@@ -804,13 +889,17 @@ void filter_str_add_id(
             if (id->set.mask & EcsSubSet) {
                 ecs_strbuf_list_appendstr(buf, "subset");
             }
-            ecs_strbuf_list_push(buf, "(", "");
 
-            char *rel_path = ecs_get_fullpath(world, id->set.relation);
-            ecs_strbuf_appendstr(buf, rel_path);
-            ecs_os_free(rel_path);
+            if (id->set.relation != EcsIsA) {
+                ecs_strbuf_list_push(buf, "(", "");
 
-            ecs_strbuf_list_pop(buf, ")");
+                char *rel_path = ecs_get_fullpath(world, id->set.relation);
+                ecs_strbuf_appendstr(buf, rel_path);
+                ecs_os_free(rel_path);
+
+                ecs_strbuf_list_pop(buf, ")");
+            }
+
             ecs_strbuf_list_pop(buf, "");
         }
     } else {
@@ -843,7 +932,7 @@ void term_str_w_strbuf(
     }
 
     if (!subj_set) {
-        filter_str_add_id(world, buf, &term->pred);
+        filter_str_add_id(world, buf, &term->pred, false);
         ecs_strbuf_appendstr(buf, "()");
     } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
     {
@@ -852,15 +941,15 @@ void term_str_w_strbuf(
             ecs_strbuf_appendstr(buf, str);
             ecs_os_free(str);
         } else if (pred_set) {
-            filter_str_add_id(world, buf, &term->pred);   
+            filter_str_add_id(world, buf, &term->pred, false);   
         }
     } else {
-        filter_str_add_id(world, buf, &term->pred);
+        filter_str_add_id(world, buf, &term->pred, false);
         ecs_strbuf_appendstr(buf, "(");
-        filter_str_add_id(world, buf, &term->args[0]);
+        filter_str_add_id(world, buf, &term->args[0], true);
         if (obj_set) {
             ecs_strbuf_appendstr(buf, ",");
-            filter_str_add_id(world, buf, &term->args[1]);
+            filter_str_add_id(world, buf, &term->args[1], false);
         }
         ecs_strbuf_appendstr(buf, ")");
     }

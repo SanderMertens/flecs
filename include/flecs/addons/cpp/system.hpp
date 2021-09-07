@@ -147,10 +147,10 @@ public:
         } else {
             return ecs_get_trigger_ctx(m_world, m_id);
         }
-    }    
+    }
 
     query_base query() const {
-        return query_base(m_world, ecs_get_system_query(m_world, m_id));
+        return query_base(m_world, ecs_system_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {

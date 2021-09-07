@@ -84,7 +84,11 @@ int ecs_plecs_from_str(
         }
     }
 
-    return 0;
+    if (!ptr) {
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
 int ecs_plecs_from_file(
