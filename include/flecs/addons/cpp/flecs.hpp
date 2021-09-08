@@ -176,10 +176,11 @@ static const flecs::entity_t Flecs = EcsFlecs;
 static const flecs::entity_t FlecsCore = EcsFlecsCore;
 static const flecs::entity_t World = EcsWorld;
 
-/* Ids used by rule solver */
+/* Relation properties */
 static const flecs::entity_t Wildcard = EcsWildcard;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
+static const flecs::entity_t Inclusive = EcsInclusive;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t Tag = EcsTag;
 
