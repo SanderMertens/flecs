@@ -33,7 +33,8 @@ typedef struct ecs_rule_pair_t {
     } obj;
     int32_t reg_mask; /* bit 1 = predicate, bit 2 = object, bit 4 = wildcard */
     bool transitive; /* Is predicate transitive */
-    bool final; /* Is predicate final */
+    bool final;      /* Is predicate final */
+    bool inclusive;  /* Is predicate inclusive */
 } ecs_rule_pair_t;
 
 /* Filter for evaluating & reifing types and variables. Filters are created ad-
@@ -180,6 +181,7 @@ struct ecs_rule_t {
     ecs_filter_t filter;        /* Filter of rule */
 
     char **variable_names;      /* Array with var names, used by iterators */
+    int32_t *subject_variables; /* Variable id for term subject (if any) */
 
     int32_t variable_count;     /* Number of variables in signature */
     int32_t subject_variable_count;
@@ -690,6 +692,10 @@ ecs_rule_pair_t term_to_pair(
         if (ecs_has_id(rule->world, pred_id, EcsFinal)) {
             result.final = true;
         }
+
+        if (ecs_has_id(rule->world, pred_id, EcsInclusive)) {
+            result.inclusive = true;
+        }
     }
 
     /* The pair doesn't do anything with the subject (subjects are the things that
@@ -1143,6 +1149,8 @@ int scan_variables(
     ecs_term_t *terms = rule->filter.terms;
     int32_t i, count = rule->filter.term_count;
 
+    rule->subject_variables = ecs_os_malloc_n(int32_t, count);
+
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
 
@@ -1169,6 +1177,10 @@ int scan_variables(
                 max_occur = subj->occurs;
                 max_occur_var = subj->id;
             }
+
+            rule->subject_variables[i] = subj->id;
+        } else {
+            rule->subject_variables[i] = -1;
         }
     }
 
@@ -1437,7 +1449,8 @@ void insert_inclusive_set(
     ecs_rule_var_t *out,
     const ecs_rule_pair_t pair,
     int32_t c,
-    bool *written)
+    bool *written,
+    bool inclusive)
 {
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1453,52 +1466,70 @@ void insert_inclusive_set(
     int32_t prev_op = setjmp_lbl - 1;
 
     /* Insert 4 operations at once, so we don't have to worry about how
-     * the instruction array reallocs */
-    insert_operation(rule, -1, written);
-    insert_operation(rule, -1, written);
-    insert_operation(rule, -1, written);
-    ecs_rule_op_t *op = insert_operation(rule, -1, written);
+     * the instruction array reallocs. If operation is not inclusive, we only
+     * need to insert the set operation. */
+    if (inclusive) {
+        insert_operation(rule, -1, written);
+        insert_operation(rule, -1, written);
+        insert_operation(rule, -1, written);
+    }
 
+    ecs_rule_op_t *op = insert_operation(rule, -1, written);
     ecs_rule_op_t *setjmp = op - 3;
     ecs_rule_op_t *store = op - 2;
     ecs_rule_op_t *set = op - 1;
     ecs_rule_op_t *jump = op;
 
+    if (!inclusive) {
+        set_lbl = setjmp_lbl;
+        set = op;
+        setjmp = NULL;
+        store = NULL;
+        jump = NULL;
+        next_op = set_lbl + 1;
+        prev_op = set_lbl - 1;
+    }
+
     /* The SetJmp operation stores a conditional jump label that either
      * points to the Store or *Set operation */
-    setjmp->kind = EcsRuleSetJmp;
-    setjmp->on_pass = store_lbl;
-    setjmp->on_fail = set_lbl;
+    if (inclusive) {
+        setjmp->kind = EcsRuleSetJmp;
+        setjmp->on_pass = store_lbl;
+        setjmp->on_fail = set_lbl;
+    }
+
+    ecs_rule_var_t *pred = pair_pred(rule, &pair);
+    ecs_rule_var_t *obj = pair_obj(rule, &pair);
 
     /* The Store operation yields the root of the subtree. After yielding,
      * this operation will fail and return to SetJmp, which will cause it
      * to switch to the *Set operation. */
-    store->kind = EcsRuleStore;
-    store->on_pass = next_op;
-    store->on_fail = setjmp_lbl;
-    store->has_in = true;
-    store->has_out = true;
-    store->r_out = out->id;
-    store->term = c;
+    if (inclusive) {
+        store->kind = EcsRuleStore;
+        store->on_pass = next_op;
+        store->on_fail = setjmp_lbl;
+        store->has_in = true;
+        store->has_out = true;
+        store->r_out = out->id;
+        store->term = c;
 
-    ecs_rule_var_t *pred = pair_pred(rule, &pair);    
-    if (!pred) {
-        store->filter.pred = pair.pred;
-    } else {
-        store->filter.pred.reg = pred->id;
-        store->filter.reg_mask |= RULE_PAIR_PREDICATE;
-    }
+        if (!pred) {
+            store->filter.pred = pair.pred;
+        } else {
+            store->filter.pred.reg = pred->id;
+            store->filter.reg_mask |= RULE_PAIR_PREDICATE;
+        }
 
-    /* If the object of the filter is not a variable, store literal */
-    ecs_rule_var_t *obj = pair_obj(rule, &pair);
-    if (!obj) {
-        store->r_in = UINT8_MAX;
-        store->subject = ecs_get_alive(rule->world, pair.obj.ent);
-        store->filter.obj = pair.obj;
-    } else {
-        store->r_in = obj->id;
-        store->filter.obj.reg = obj->id;
-        store->filter.reg_mask |= RULE_PAIR_OBJECT;
+        /* If the object of the filter is not a variable, store literal */
+        if (!obj) {
+            store->r_in = UINT8_MAX;
+            store->subject = ecs_get_alive(rule->world, pair.obj.ent);
+            store->filter.obj = pair.obj;
+        } else {
+            store->r_in = obj->id;
+            store->filter.obj.reg = obj->id;
+            store->filter.reg_mask |= RULE_PAIR_OBJECT;
+        }
     }
 
     /* This is either a SubSet or SuperSet operation */
@@ -1524,18 +1555,20 @@ void insert_inclusive_set(
         set->filter.reg_mask |= RULE_PAIR_OBJECT;
     }
 
-    /* The jump operation jumps to either the store or subset operation,
-     * depending on whether the store operation already yielded. The 
-     * operation is inserted last, so that the on_fail label of the next 
-     * operation will point to it */
-    jump->kind = EcsRuleJump;
-    
-    /* The pass/fail labels of the Jump operation are not used, since it
-     * jumps to a variable location. Instead, the pass label is (ab)used to
-     * store the label of the SetJmp operation, so that the jump can access
-     * the label it needs to jump to from the setjmp op_ctx. */
-    jump->on_pass = setjmp_lbl;
-    jump->on_fail = -1;
+    if (inclusive) {
+        /* The jump operation jumps to either the store or subset operation,
+        * depending on whether the store operation already yielded. The 
+        * operation is inserted last, so that the on_fail label of the next 
+        * operation will point to it */
+        jump->kind = EcsRuleJump;
+        
+        /* The pass/fail labels of the Jump operation are not used, since it
+        * jumps to a variable location. Instead, the pass label is (ab)used to
+        * store the label of the SetJmp operation, so that the jump can access
+        * the label it needs to jump to from the setjmp op_ctx. */
+        jump->on_pass = setjmp_lbl;
+        jump->on_fail = -1;
+    }
 
     written[out->id] = true;
 }
@@ -1545,7 +1578,8 @@ ecs_rule_var_t* store_inclusive_set(
     ecs_rule_t *rule,
     ecs_rule_op_kind_t op_kind,
     ecs_rule_pair_t *pair,
-    bool *written)
+    bool *written,
+    bool inclusive)
 {
     /* The subset operation returns tables */
     ecs_rule_var_kind_t var_kind = EcsRuleVarKindTable;
@@ -1574,7 +1608,7 @@ ecs_rule_var_t* store_inclusive_set(
     }
 
     /* Generate the operations */
-    insert_inclusive_set(rule, op_kind, av, *pair, -1, written);
+    insert_inclusive_set(rule, op_kind, av, *pair, -1, written, inclusive);
 
     /* Make sure to return entity variable, and that it is populated */
     return ensure_entity_written(rule, av, written);
@@ -1692,7 +1726,7 @@ void insert_select_or_with(
                 .obj.ent = term->args[0].entity
             };
             evar = subj = store_inclusive_set(
-                rule, EcsRuleSuperSet, &isa_pair, written);
+                rule, EcsRuleSuperSet, &isa_pair, written, true);
             tvar = NULL;
             eval_subject_supersets = true;
         }
@@ -1779,7 +1813,7 @@ void prepare_predicate(
         };
 
         ecs_rule_var_t *pred = store_inclusive_set(
-            rule, EcsRuleSubSet, &isa_pair, written);
+            rule, EcsRuleSubSet, &isa_pair, written, true);
 
         pair->pred.reg = pred->id;
         pair->reg_mask |= RULE_PAIR_PREDICATE;
@@ -1821,7 +1855,7 @@ void insert_term_2(
         if (is_known(subj, written)) {
             if (is_known(obj, written)) {
                 ecs_rule_var_t *obj_subsets = store_inclusive_set(
-                    rule, EcsRuleSubSet, &filter, written);
+                    rule, EcsRuleSubSet, &filter, written, true);
 
                 if (subj) {
                     subj = &rule->variables[subj_id];
@@ -1852,8 +1886,8 @@ void insert_term_2(
                     set_pair.obj.ent = term->args[0].entity;
                 }
 
-                insert_inclusive_set(
-                    rule, EcsRuleSuperSet, obj, set_pair, c, written);
+                insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, c, 
+                    written, filter.inclusive);
             }
 
         /* subj is not known */
@@ -1877,8 +1911,8 @@ void insert_term_2(
                     set_pair.obj.ent = term->args[1].entity;
                 }
 
-                insert_inclusive_set(
-                    rule, EcsRuleSubSet, subj, set_pair, c, written);
+                insert_inclusive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
+                    written, filter.inclusive);
             } else if (subj == obj) {
                 insert_select_or_with(rule, c, term, subj, &filter, written);
             } else {
@@ -1920,8 +1954,8 @@ void insert_term_2(
                 push_frame(rule);
 
                 /* Insert superset instruction to find all supersets */
-                insert_inclusive_set(
-                    rule, EcsRuleSuperSet, obj, op->filter, c, written);
+                insert_inclusive_set(rule, EcsRuleSuperSet, obj, op->filter, c, 
+                    written, filter.inclusive);
 
             }
         }
@@ -2110,6 +2144,21 @@ ecs_rule_t* ecs_rule_init(
      * iterators without requiring access to the ecs_rule_t */
     create_variable_name_array(result);
 
+    /* Make sure that subject variable ids are pointing to entity variables */
+    int32_t i;
+    for (i = 0; i < result->filter.term_count; i ++) {
+        int32_t var_id = result->subject_variables[i];
+        if (var_id != -1) {
+            ecs_rule_var_t *var = &result->variables[var_id];
+            var = to_entity(result, var);
+            if (var) {
+                result->subject_variables[i] = var->id;
+            } else {
+                result->subject_variables[i] = -1;
+            }
+        }
+    }
+
     return result;
 error:
     /* TODO: proper cleanup */
@@ -2174,7 +2223,7 @@ char* ecs_rule_str(
 
         if (pair.reg_mask & RULE_PAIR_PREDICATE) {
             ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_rule_var_t *type_var = &rule->variables[pred];
+            ecs_rule_var_t *type_var = &rule->variables[pair.pred.reg];
             pred_name = type_var->name;
         } else if (pred) {
             pred_name = ecs_get_name(world, ecs_get_alive(world, pred));
@@ -2182,7 +2231,7 @@ char* ecs_rule_str(
 
         if (pair.reg_mask & RULE_PAIR_OBJECT) {
             ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_rule_var_t *obj_var = &rule->variables[obj];
+            ecs_rule_var_t *obj_var = &rule->variables[pair.obj.reg];
             obj_name = obj_var->name;
         } else if (obj) {
             obj_name = ecs_get_name(world, ecs_get_alive(world, obj));
@@ -2980,7 +3029,7 @@ bool eval_with(
          * instruction to limit branches for non-transitive queries (and to keep
          * code more readable).
          */
-        if (pair.transitive) {
+        if (pair.transitive && pair.inclusive) {
             ecs_entity_t subj = 0, obj = 0;
             
             if (r == UINT8_MAX) {
@@ -3419,6 +3468,16 @@ void populate_iterator(
             it->variables[i] = 0;
         }
     }
+
+    for (i = 0; i < rule->filter.term_count; i ++) {
+        int32_t v = rule->subject_variables[i];
+        if (v != -1) {
+            ecs_rule_var_t *var = &rule->variables[v];
+            if (var->kind == EcsRuleVarKindEntity) {
+                iter->subjects[i] = regs[var->id].is.entity;
+            }
+        }
+    }
 }
 
 static
@@ -3447,11 +3506,25 @@ bool ecs_rule_next(
     const ecs_rule_t *rule = iter->rule;
     bool redo = iter->redo;
     int32_t last_frame = -1;
+    bool init_subjects = it->subjects == NULL;
 
     /* Can't iterate an iterator that's already depleted */
     ecs_assert(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
 
     flecs_iter_init(it);
+
+    /* Make sure that if there are any terms with literal subjects, they're
+     * initialized in the subjects array */
+    if (init_subjects) {
+        int32_t i;
+        for (i = 0; i < rule->filter.term_count; i ++) {
+            ecs_term_t *t = &rule->filter.terms[i];
+            ecs_term_id_t *subj = &t->args[0];
+            if (subj->var == EcsVarIsEntity && subj->entity != EcsThis) {
+                it->subjects[i] = subj->entity;
+            }
+        }
+    }
 
     do {
         /* Evaluate an operation. The result of an operation determines the

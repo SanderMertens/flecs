@@ -325,6 +325,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
     bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
+    bootstrap_entity(world, EcsInclusive, "Inclusive", EcsFlecsCore);
     bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
     bootstrap_entity(world, EcsTag, "Tag", EcsFlecsCore);
 
@@ -356,6 +357,7 @@ void flecs_bootstrap(
 
     /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
+    ecs_add_id(world, EcsIsA, EcsInclusive);
 
     /* Tag relations (relations that cannot have data) */
     ecs_add_id(world, EcsIsA, EcsTag);

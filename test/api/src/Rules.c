@@ -1352,6 +1352,11 @@ void Rules_find_transitive_2_branches() {
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SpaceShip)");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "XWing");
+
+    test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "(IsA,SpaceShip)");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "CorellianLightFreighter");
     test_str(ecs_get_name(world, it.entities[1]), "YWing");
@@ -1360,11 +1365,6 @@ void Rules_find_transitive_2_branches() {
     test_term_id(&it, 1, "(IsA,CorellianLightFreighter)");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "MilleniumFalcon");
-
-    test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "(IsA,SpaceShip)");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "XWing");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -1393,6 +1393,11 @@ void Rules_transitive_subsets() {
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SpaceShip)");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "XWing");
+
+    test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "(IsA,SpaceShip)");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "CorellianLightFreighter");
     test_str(ecs_get_name(world, it.entities[2]), "YWing");
@@ -1401,11 +1406,6 @@ void Rules_transitive_subsets() {
     test_term_id(&it, 1, "(IsA,CorellianLightFreighter)");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "MilleniumFalcon");
-
-    test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "(IsA,SpaceShip)");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "XWing");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -2251,6 +2251,30 @@ void Rules_transitive_all() {
 
     ecs_iter_t it = ecs_rule_iter(r);
     test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Planet");
+    test_var(&it, y_var, "CelestialBody");
+    test_term_id(&it, 1, "(IsA,CelestialBody)");
+    test_int(it.count, 0); 
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Moon");
+    test_var(&it, y_var, "CelestialBody");
+    test_term_id(&it, 1, "(IsA,CelestialBody)");
+    test_int(it.count, 0); 
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Planet");
+    test_var(&it, y_var, "Thing");
+    test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0); 
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Moon");
+    test_var(&it, y_var, "Thing");
+    test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Human");
     test_var(&it, y_var, "Character");
     test_term_id(&it, 1, "(IsA,Character)");
@@ -2315,30 +2339,6 @@ void Rules_transitive_all() {
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
     test_int(it.count, 0);    
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Planet");
-    test_var(&it, y_var, "CelestialBody");
-    test_term_id(&it, 1, "(IsA,CelestialBody)");
-    test_int(it.count, 0); 
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Moon");
-    test_var(&it, y_var, "CelestialBody");
-    test_term_id(&it, 1, "(IsA,CelestialBody)");
-    test_int(it.count, 0); 
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Planet");
-    test_var(&it, y_var, "Thing");
-    test_term_id(&it, 1, "(IsA,Thing)");
-    test_int(it.count, 0); 
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Moon");
-    test_var(&it, y_var, "Thing");
-    test_term_id(&it, 1, "(IsA,Thing)");
-    test_int(it.count, 0);
 
     test_assert(!ecs_rule_next(&it));
 
@@ -2441,6 +2441,7 @@ void Rules_transitive_nonfinal_fact() {
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
+        "Inclusive(PartOf)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n";
 
@@ -2473,6 +2474,7 @@ void Rules_transitive_nonfinal_fact_w_implicit_pred_subset() {
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
+        "Inclusive(ConnectedWith)\n"
         "IsA(PartOf, ConnectedWith)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n";
@@ -2891,6 +2893,7 @@ void Rules_implicit_is_a_transitive_pair_fact() {
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
+        "Inclusive(PartOf)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n"
         "IsA(MonaLisa, Painting)\n";
@@ -2924,6 +2927,7 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_subset() {
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
+        "Inclusive(ConnectedWith)\n"
         "IsA(PartOf, ConnectedWith)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n"

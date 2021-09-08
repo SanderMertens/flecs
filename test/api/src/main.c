@@ -1111,6 +1111,9 @@ void TransitiveRules_trans_X_Y(void);
 void TransitiveRules_trans_X_Y_2_levels(void);
 void TransitiveRules_trans_pred_This_X__pred_X(void);
 void TransitiveRules_trans_constrained_x_y(void);
+void TransitiveRules_trans_entity_X_non_inclusive(void);
+void TransitiveRules_trans_X_entity_non_inclusive(void);
+void TransitiveRules_trans_entity_entity_non_inclusive(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6139,6 +6142,18 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "trans_constrained_x_y",
         TransitiveRules_trans_constrained_x_y
+    },
+    {
+        "trans_entity_X_non_inclusive",
+        TransitiveRules_trans_entity_X_non_inclusive
+    },
+    {
+        "trans_X_entity_non_inclusive",
+        TransitiveRules_trans_X_entity_non_inclusive
+    },
+    {
+        "trans_entity_entity_non_inclusive",
+        TransitiveRules_trans_entity_entity_non_inclusive
     }
 };
 
@@ -9392,7 +9407,7 @@ static bake_test_suite suites[] = {
         "TransitiveRules",
         NULL,
         NULL,
-        6,
+        9,
         TransitiveRules_testcases
     },
     {

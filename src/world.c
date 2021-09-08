@@ -20,12 +20,13 @@ const ecs_entity_t EcsHidden =                ECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 13;
-const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsInclusive =             ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 15;
-const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 17;
 
 /* Relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 20;

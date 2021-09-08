@@ -740,6 +740,41 @@ LocatedIn.add(flecs::Transitive);
 
 When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
+### Inclusive relations
+A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `Inclusive` becomes more obvious with an example:
+
+Given this dataset:
+```
+IsA(Oak, Tree)
+```
+
+we can ask whether an oak is a tree:
+```
+IsA(Oak, Tree)
+- Yes, an Oak is a tree (Oak has (IsA, Tree))
+```
+
+We can also ask whether a tree is a tree, which it obviously is:
+```
+IsA(Tree, Tree)
+- Yes, even though Tree does not have (IsA, Tree)
+```
+
+However, this does not apply to all relations. Consider a dataset with a 
+`LocatedIn` relation:
+
+```
+LocatedIn(SanFrancisco, UnitedStates)
+```
+
+we can now ask whether SanFrancisco is located in SanFrancisco, which it is not:
+```
+LocatedIn(SanFrancisco, SanFrancisco)
+- No
+```
+
+In these examples, `IsA` is an inclusive relation, whereas `LocatedIn` is not.
+
 ### Tag relations
 A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:
 
