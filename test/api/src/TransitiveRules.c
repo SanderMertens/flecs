@@ -188,3 +188,37 @@ void TransitiveRules_trans_pred_This_X__pred_X() {
     ecs_rule_fini(r);
     ecs_fini(world);
 }
+
+void TransitiveRules_trans_constrained_x_y() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Location(Universe)"
+    LINE "Location(Earth)"
+    LINE "LocatedIn(Earth, Universe)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "LocatedIn(X, Y), Location(X), Location(Y)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+
+    test_bool(true, ecs_rule_next(&it));
+    char *expect =
+    HEAD "term: (LocatedIn,Universe),Location,Location"
+    LINE "subj: 0,Earth,Universe"
+    LINE "vars: X=Earth,Y=Universe"
+    LINE;
+
+    char *result = ecs_iter_str(&it);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}

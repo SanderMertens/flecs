@@ -1889,6 +1889,7 @@ void insert_term_2(
 
                 subj = &rule->variables[subj_id];
                 obj = &rule->variables[obj_id];
+                obj = to_entity(rule, obj);
 
                 /* TODO: this instruction currently does not return inclusive
                  * results. For example, it will return IsA(XWing, Machine) and

@@ -1175,7 +1175,8 @@
                 "trans_X_X_2",
                 "trans_X_Y",
                 "trans_X_Y_2_levels",
-                "trans_pred_This_X__pred_X"
+                "trans_pred_This_X__pred_X",
+                "trans_constrained_x_y"
             ]
         }, {
            "id": "Trigger",
