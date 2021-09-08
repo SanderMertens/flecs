@@ -910,6 +910,7 @@ void FilterDefaultSubstitution_final_transitive_pred(void);
 void FilterDefaultSubstitution_nonfinal_transitive_pred(void);
 void FilterDefaultSubstitution_final_transitive_pred_final_obj(void);
 void FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj(void);
+void FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj(void);
 void FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred(void);
 void FilterDefaultSubstitution_implicit_subj_w_self(void);
 void FilterDefaultSubstitution_explicit_subj_w_self(void);
@@ -5356,6 +5357,10 @@ bake_test_case FilterDefaultSubstitution_testcases[] = {
         FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj
     },
     {
+        "nonfinal_transitive_pred_var_obj",
+        FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj
+    },
+    {
         "nonfinal_pred_no_args_explicit_self_pred",
         FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred
     },
@@ -9359,7 +9364,7 @@ static bake_test_suite suites[] = {
         "FilterDefaultSubstitution",
         NULL,
         NULL,
-        10,
+        11,
         FilterDefaultSubstitution_testcases
     },
     {

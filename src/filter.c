@@ -88,12 +88,15 @@ void finalize_default_substitution(
                 obj->set.mask = EcsSelf|EcsSuperSet;
                 obj->set.relation = EcsIsA;
             } else {
-                /* If query is transitive, find subsets but only if object is
-                 * not final. */
+                /* If query is transitive substitute object. If object is fixed
+                 * insert SubSet ("is <subj> <rel> <obj>"). If object is a
+                 * variable, insert SuperSet ("find <rel> <obj> for <subj>") */
                 ecs_entity_t e = term_id_entity(world, obj);
-                if  (!e || !ecs_has_id(world, e, EcsFinal)) {
+                obj->set.relation = EcsIsA;
+                if (!e) {
+                    obj->set.mask = EcsSelf|EcsSuperSet;
+                } else {
                     obj->set.mask = EcsSelf|EcsSubSet;
-                    obj->set.relation = EcsIsA;
                 }
             }
         }

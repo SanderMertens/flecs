@@ -14,14 +14,17 @@
 
 #define test_pred_var(column, e, isa, str)\
     test_pred(column, e, isa);\
+    test_assert(column.pred.var == EcsVarIsEntity);\
     test_str(column.pred.name, str);
 
 #define test_subj_var(column, e, isa, str)\
     test_subj(column, e, isa);\
+    test_assert(column.args[1].var == EcsVarIsVariable);\
     test_str(column.args[0].name, str);
 
 #define test_obj_var(column, e, isa, str)\
     test_obj(column, e, isa);\
+    test_assert(column.args[1].var == EcsVarIsVariable);\
     test_str(column.args[1].name, str);
 
 void FilterDefaultSubstitution_final_pred_no_args() {
@@ -156,7 +159,7 @@ void FilterDefaultSubstitution_final_transitive_pred_final_obj() {
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
     test_int(terms[0].args[0].set.relation, EcsIsA);
 
-    test_obj(terms[0], Obj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -186,7 +189,36 @@ void FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj() {
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
     test_int(terms[0].args[0].set.relation, EcsIsA);
 
-    test_obj(terms[0], Obj, EcsSelf);
+    test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Pred, Transitive);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "(Pred, X)",
+        .substitute_default = true
+    }));
+
+    test_int(f.term_count, 1);
+
+    ecs_term_t *terms = f.terms;
+    test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
+    test_int(terms[0].pred.set.relation, EcsIsA);
+    
+    test_subj_var(terms[0], EcsThis, EcsSelf|EcsSuperSet, NULL);
+    test_int(terms[0].args[0].set.relation, EcsIsA);
+
+    test_obj_var(terms[0], 0, EcsSelf|EcsSuperSet, "X");
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 

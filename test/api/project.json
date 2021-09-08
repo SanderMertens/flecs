@@ -969,6 +969,7 @@
                 "nonfinal_transitive_pred",
                 "final_transitive_pred_final_obj",
                 "nonfinal_transitive_pred_final_obj",
+                "nonfinal_transitive_pred_var_obj",
                 "nonfinal_pred_no_args_explicit_self_pred",
                 "implicit_subj_w_self",
                 "explicit_subj_w_self",
