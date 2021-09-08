@@ -2992,3 +2992,65 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_obj() {
 
     ecs_fini(world);
 }
+
+void Rules_2_constrained_vars_by_subject_literal() {
+    ecs_world_t *world = ecs_init();
+
+    const char *small_rules = 
+        "Eats(Cat, Fish)\n"
+        "Eats(Dog, Chicken)\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, small_rules) == 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Eats(Cat, X), Eats(Dog, Y)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    test_assert(ecs_rule_next(&it) == true);
+    test_term_id(&it, 1, "(Eats,Fish)");
+    test_term_source(&it, 1, "Cat");
+
+    test_term_id(&it, 2, "(Eats,Chicken)");
+    test_term_source(&it, 2, "Dog");
+
+    test_assert(ecs_rule_next(&it) == false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_2_constrained_vars_by_subject_literal_2_var_terms() {
+    ecs_world_t *world = ecs_init();
+
+    const char *small_rules = 
+        "Food(Fish)\n"
+        "Food(Chicken)\n"
+        "Eats(Cat, Fish)\n"
+        "Eats(Dog, Chicken)\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, small_rules) == 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Eats(Cat, X), Eats(Dog, Y), Food(X), Food(Y)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    test_assert(ecs_rule_next(&it) == true);
+    test_term_id(&it, 1, "(Eats,Fish)");
+    test_term_source(&it, 1, "Cat");
+
+    test_term_id(&it, 2, "(Eats,Chicken)");
+    test_term_source(&it, 2, "Dog");
+
+    test_assert(ecs_rule_next(&it) == false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

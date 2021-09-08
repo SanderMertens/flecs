@@ -14839,7 +14839,7 @@ int scan_variables(
             }
 
             rule->subject_variables[i] = subj->id;
-        } else {
+        } else {            
             rule->subject_variables[i] = -1;
         }
     }
@@ -14847,6 +14847,24 @@ int scan_variables(
     rule->subject_variable_count = rule->variable_count;
 
     ensure_all_variables(rule);
+
+    /* Variables in a term with a literal subject have depth 0 */
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+
+        if (term->args[0].var == EcsVarIsEntity) {
+            ecs_rule_var_t 
+            *pred = term_pred(rule, term),
+            *obj = term_obj(rule, term);
+
+            if (pred) {
+                pred->depth = 0;
+            }
+            if (obj) {
+                obj->depth = 0;
+            }
+        }
+    }
 
     /* Step 2: elect a root. This is either this (.) or the variable with the
      * most occurrences. */
@@ -15837,6 +15855,7 @@ void ecs_rule_fini(
     ecs_os_free(rule->variables);
     ecs_os_free(rule->operations);
     ecs_os_free(rule->variable_names);
+    ecs_os_free(rule->subject_variables);
 
     ecs_filter_fini(&rule->filter);
 
