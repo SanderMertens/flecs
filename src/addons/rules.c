@@ -814,24 +814,24 @@ void reify_variables(
     ecs_entity_t *elem = ecs_vector_get(type, ecs_entity_t, column);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t lo_var = filter->lo_var;
-    int32_t hi_var = filter->hi_var;
+    int32_t obj_var = filter->lo_var;
+    int32_t pred_var = filter->hi_var;
 
-    if (lo_var != -1) {
-        ecs_assert(vars[lo_var].kind == EcsRuleVarKindEntity, 
+    if (obj_var != -1) {
+        ecs_assert(vars[obj_var].kind == EcsRuleVarKindEntity, 
             ECS_INTERNAL_ERROR, NULL);
 
-        entity_reg_set(rule, regs, lo_var, 
-            ecs_get_alive(rule->world, ecs_entity_t_lo(*elem)));
+        entity_reg_set(rule, regs, obj_var, 
+            ecs_get_alive(rule->world, ECS_PAIR_OBJECT(*elem)));
     }
 
-    if (hi_var != -1) {
-        ecs_assert(vars[hi_var].kind == EcsRuleVarKindEntity, 
+    if (pred_var != -1) {
+        ecs_assert(vars[pred_var].kind == EcsRuleVarKindEntity, 
             ECS_INTERNAL_ERROR, NULL);            
 
-        entity_reg_set(rule, regs, hi_var, 
+        entity_reg_set(rule, regs, pred_var, 
             ecs_get_alive(rule->world, 
-                ecs_entity_t_hi(*elem & ECS_COMPONENT_MASK)));
+                ECS_PAIR_RELATION(*elem)));
     }
 }
 
@@ -1206,8 +1206,8 @@ int scan_variables(
         }
     }
 
-    /* Step 2: elect a root. This is either this (.) or the variable with the
-     * most occurrences. */
+    /* Elect a root. This is either this (.) or the variable with the most
+     * occurrences. */
     int32_t root_var = this_var;
     if (root_var == UINT8_MAX) {
         root_var = max_occur_var;
@@ -1232,8 +1232,8 @@ int scan_variables(
         }
     }
 
-    /* Step 4: order variables by depth, followed by occurrence. The variable
-     * array will later be used to lead the iteration over the columns, and
+    /* Order variables by depth, followed by occurrence. The variable
+     * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
     size_t var_count = flecs_to_size_t(rule->variable_count);
     qsort(rule->variables, var_count, sizeof(ecs_rule_var_t), compare_variable);
@@ -1892,20 +1892,49 @@ void insert_term_2(
             } else {
                 ecs_assert(obj != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                obj = to_entity(rule, obj);
+                /* If subject is literal, find supersets for subject */
+                if (subj == NULL || subj->kind == EcsRuleVarKindEntity) {
+                    obj = to_entity(rule, obj);
 
-                ecs_rule_pair_t set_pair = filter;
-                set_pair.reg_mask &= RULE_PAIR_PREDICATE; /* clear object mask */
+                    ecs_rule_pair_t set_pair = filter;
+                    set_pair.reg_mask &= RULE_PAIR_PREDICATE;
 
-                if (subj) {
-                    set_pair.obj.reg = subj->id;
-                    set_pair.reg_mask |= RULE_PAIR_OBJECT;
+                    if (subj) {
+                        set_pair.obj.reg = subj->id;
+                        set_pair.reg_mask |= RULE_PAIR_OBJECT;
+                    } else {
+                        set_pair.obj.ent = term->args[0].entity;
+                    }
+
+                    insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
+                        c, written, filter.inclusive);
+
+                /* If subject is variable, first find matching pair for the 
+                 * evaluated entity(s) and return supersets */
                 } else {
-                    set_pair.obj.ent = term->args[0].entity;
-                }
+                    ecs_rule_var_t *av = create_anonymous_variable(
+                        rule, EcsRuleVarKindEntity);
 
-                insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, c, 
-                    written, filter.inclusive);
+                    subj = &rule->variables[subj_id];
+                    obj = &rule->variables[obj_id];
+                    obj = to_entity(rule, obj);
+
+                    ecs_rule_pair_t set_pair = filter;
+                    set_pair.obj.reg = av->id;
+                    set_pair.reg_mask |= RULE_PAIR_OBJECT;
+
+                    /* Insert with to find initial object for relation */
+                    insert_select_or_with(
+                        rule, c, term, subj, &set_pair, written);
+
+                    push_frame(rule);
+
+                    /* Find supersets for returned initial object. Make sure
+                     * this is always inclusive since it needs to return the
+                     * object from the pair that the entity has itself. */
+                    insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
+                        c, written, true);
+                }
             }
 
         /* subj is not known */
@@ -1973,7 +2002,7 @@ void insert_term_2(
 
                 /* Insert superset instruction to find all supersets */
                 insert_inclusive_set(rule, EcsRuleSuperSet, obj, op->filter, c, 
-                    written, filter.inclusive);
+                    written, true);
 
             }
         }
@@ -2662,6 +2691,7 @@ bool eval_superset(
 
     /* Get queried for id, fill out potential variables */
     ecs_rule_pair_t pair = op->filter;
+
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
     ecs_rule_filter_t super_filter = { 
         .mask = ecs_pair(ECS_PAIR_RELATION(filter.mask), EcsWildcard) 

@@ -31,6 +31,8 @@ void TransitiveRules_trans_X_X() {
     test_str(result, expect);
     ecs_os_free(result);
 
+    test_bool(false, ecs_rule_next(&it));
+
     ecs_rule_fini(r);
     ecs_fini(world);
 }
@@ -69,6 +71,8 @@ void TransitiveRules_trans_X_X_2() {
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
     ecs_fini(world);
@@ -232,6 +236,7 @@ void TransitiveRules_trans_entity_X_non_inclusive() {
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
     LINE "LocatedIn(Earth, Universe)";
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
@@ -307,6 +312,7 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
 
     ecs_iter_t it = ecs_rule_iter(r);
     test_bool(false, ecs_rule_next(&it));
+    ecs_rule_fini(r);
 
     r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(Earth, Earth)"
@@ -315,6 +321,7 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
 
     it = ecs_rule_iter(r);
     test_bool(false, ecs_rule_next(&it));
+    ecs_rule_fini(r);
 
     r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(Earth, Universe)"
@@ -329,6 +336,174 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
     LINE;
 
     char *result = ecs_iter_str(&it);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void TransitiveRules_trans_this_x_after_tag_this() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
+    LINE "Final(Planet)"
+    LINE "LocatedIn(Earth, Universe)"
+    LINE "Planet(Earth)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Planet(This), LocatedIn(This, X)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    test_bool(true, ecs_rule_next(&it));
+    char *expect =
+    HEAD "term: Planet,(LocatedIn,Universe)"
+    LINE "subj: 0,0"
+    LINE "vars: X=Universe"
+    LINE "this:"
+    LINE "    - Earth"
+    LINE;
+
+    char *result = ecs_iter_str(&it);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void TransitiveRules_trans_this_x_before_tag_this() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
+    LINE "Final(Planet)"
+    LINE "LocatedIn(Earth, Universe)"
+    LINE "Planet(Earth)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "LocatedIn(This, X), Planet(This)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    test_bool(true, ecs_rule_next(&it));
+    char *expect =
+    HEAD "term: (LocatedIn,Universe),Planet"
+    LINE "subj: 0,0"
+    LINE "vars: X=Universe"
+    LINE "this:"
+    LINE "    - Earth"
+    LINE;
+
+    char *result = ecs_iter_str(&it);
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void TransitiveRules_trans_this_x_after_tag_this_2_lvls() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
+    LINE "Final(Planet)"
+    LINE "LocatedIn(Earth, Universe)"
+    LINE "LocatedIn(NorthAmerica, Earth)"
+    LINE "Continent(NorthAmerica)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Continent(This), LocatedIn(This, X)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Continent,(LocatedIn,Earth)"
+    LINE "subj: 0,0"
+    LINE "vars: X=Earth"
+    LINE "this:"
+    LINE "    - NorthAmerica"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Continent,(LocatedIn,Universe)"
+    LINE "subj: 0,0"
+    LINE "vars: X=Universe"
+    LINE "this:"
+    LINE "    - NorthAmerica"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void TransitiveRules_trans_this_x_before_tag_this_2_lvls() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
+    LINE "Final(Planet)"
+    LINE "LocatedIn(Earth, Universe)"
+    LINE "LocatedIn(NorthAmerica, Earth)"
+    LINE "Continent(NorthAmerica)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "LocatedIn(This, X), Continent(This)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: (LocatedIn,Earth),Continent"
+    LINE "subj: 0,0"
+    LINE "vars: X=Earth"
+    LINE "this:"
+    LINE "    - NorthAmerica"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: (LocatedIn,Universe),Continent"
+    LINE "subj: 0,0"
+    LINE "vars: X=Universe"
+    LINE "this:"
+    LINE "    - NorthAmerica"
+    LINE;
     test_str(result, expect);
     ecs_os_free(result);
 

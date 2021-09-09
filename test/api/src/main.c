@@ -1116,6 +1116,10 @@ void TransitiveRules_trans_constrained_x_y(void);
 void TransitiveRules_trans_entity_X_non_inclusive(void);
 void TransitiveRules_trans_X_entity_non_inclusive(void);
 void TransitiveRules_trans_entity_entity_non_inclusive(void);
+void TransitiveRules_trans_this_x_after_tag_this(void);
+void TransitiveRules_trans_this_x_before_tag_this(void);
+void TransitiveRules_trans_this_x_after_tag_this_2_lvls(void);
+void TransitiveRules_trans_this_x_before_tag_this_2_lvls(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6164,6 +6168,22 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "trans_entity_entity_non_inclusive",
         TransitiveRules_trans_entity_entity_non_inclusive
+    },
+    {
+        "trans_this_x_after_tag_this",
+        TransitiveRules_trans_this_x_after_tag_this
+    },
+    {
+        "trans_this_x_before_tag_this",
+        TransitiveRules_trans_this_x_before_tag_this
+    },
+    {
+        "trans_this_x_after_tag_this_2_lvls",
+        TransitiveRules_trans_this_x_after_tag_this_2_lvls
+    },
+    {
+        "trans_this_x_before_tag_this_2_lvls",
+        TransitiveRules_trans_this_x_before_tag_this_2_lvls
     }
 };
 
@@ -9417,7 +9437,7 @@ static bake_test_suite suites[] = {
         "TransitiveRules",
         NULL,
         NULL,
-        9,
+        13,
         TransitiveRules_testcases
     },
     {
