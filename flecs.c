@@ -2712,7 +2712,7 @@ void table_activate(
                 .table = table
             });                
         }
-    }     
+    }
 }
 
 /* This function is called when a query is matched with a table. A table keeps
@@ -16276,6 +16276,13 @@ void set_column(
     ecs_type_t type,
     int32_t column)
 {
+    if (op->term == -1) {
+        /* If operation is not associated with a term, don't set anything */
+        return;
+    }
+
+    ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
+
     if (type) {
         it->ids[op->term] = rule_get_column(type, column);
     } else {
@@ -16290,8 +16297,14 @@ void set_source(
     ecs_rule_reg_t *regs,
     int32_t r)
 {
-    const ecs_rule_t *rule = it->iter.rule.rule;
+    if (op->term == -1) {
+        /* If operation is not associated with a term, don't set anything */
+        return;
+    }
 
+    ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_rule_t *rule = it->iter.rule.rule;
     if ((r != UINT8_MAX) && rule->variables[r].kind == EcsRuleVarKindEntity) {
         it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
@@ -22993,8 +23006,6 @@ static
 void observer_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->world;
-    
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (o->last_event_id == world->event_id) {
         /* Already handled this event */
@@ -28369,12 +28380,17 @@ bool ignore_table(
     ecs_trigger_t *t,
     ecs_table_t *table)
 {
+    if (!table) {
+        return false;
+    }
+
     if (!t->match_prefab && (table->flags & EcsTableIsPrefab)) {
         return true;
     }
     if (!t->match_disabled && (table->flags & EcsTableIsDisabled)) {
         return true;
     }
+    
     return false;
 }
 

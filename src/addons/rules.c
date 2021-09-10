@@ -2616,6 +2616,13 @@ void set_column(
     ecs_type_t type,
     int32_t column)
 {
+    if (op->term == -1) {
+        /* If operation is not associated with a term, don't set anything */
+        return;
+    }
+
+    ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
+
     if (type) {
         it->ids[op->term] = rule_get_column(type, column);
     } else {
@@ -2630,8 +2637,14 @@ void set_source(
     ecs_rule_reg_t *regs,
     int32_t r)
 {
-    const ecs_rule_t *rule = it->iter.rule.rule;
+    if (op->term == -1) {
+        /* If operation is not associated with a term, don't set anything */
+        return;
+    }
 
+    ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_rule_t *rule = it->iter.rule.rule;
     if ((r != UINT8_MAX) && rule->variables[r].kind == EcsRuleVarKindEntity) {
         it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
