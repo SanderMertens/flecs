@@ -3054,3 +3054,56 @@ void Rules_2_constrained_vars_by_subject_literal_2_var_terms() {
 
     ecs_fini(world);
 }
+
+void Rules_term_w_nothing_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Pred()"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(ecs_term_id(&it, 1), Pred);
+    test_int(it.count, 0);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_term_w_nothing_set_w_this_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Pred(), Tag"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(ecs_term_id(&it, 1), Pred);
+    test_int(ecs_term_id(&it, 2), Tag);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

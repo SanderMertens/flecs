@@ -1187,7 +1187,9 @@
                 "implicit_is_a_transitive_pair_fact_w_implicit_pred_subset",
                 "implicit_is_a_transitive_pair_fact_w_implicit_pred_obj",
                 "2_constrained_vars_by_subject_literal",
-                "2_constrained_vars_by_subject_literal_2_var_terms"
+                "2_constrained_vars_by_subject_literal_2_var_terms",
+                "term_w_nothing_set",
+                "term_w_nothing_set_w_this_term"
             ]
         }, {
             "id": "TransitiveRules",

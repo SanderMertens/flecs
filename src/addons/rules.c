@@ -855,6 +855,14 @@ bool is_subject(
 }
 
 static
+bool skip_term(ecs_term_t *term) {
+    if (term->args[0].set.mask & EcsNothing) {
+        return true;
+    }
+    return false;
+}
+
+static
 int32_t get_variable_depth(
     ecs_rule_t *rule,
     ecs_rule_var_t *var,
@@ -873,7 +881,10 @@ int32_t crawl_variable(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-
+        if (skip_term(term)) {
+            continue;
+        }
+        
         ecs_rule_var_t 
         *pred = term_pred(rule, term),
         *subj = term_subj(rule, term),
@@ -995,6 +1006,9 @@ int32_t get_variable_depth(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        if (skip_term(term)) {
+            continue;
+        }
 
         ecs_rule_var_t 
         *pred = term_pred(rule, term),
@@ -1031,6 +1045,9 @@ int32_t get_variable_depth(
      * variables are found, loop again & follow predicate & object links */
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        if (skip_term(term)) {
+            continue;
+        }
 
         ecs_rule_var_t 
         *subj = term_subj(rule, term),
@@ -1107,6 +1124,9 @@ void ensure_all_variables(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        if (skip_term(term)) {
+            continue;
+        }
 
         /* If predicate is a variable, make sure it has been registered */
         if (!term->pred.entity || (term->pred.entity == EcsThis)) {
@@ -2065,6 +2085,10 @@ void compile_program(
      * candidates for quickly narrowing down the set of potential results. */
     for (c = 0; c < term_count; c ++) {
         ecs_term_t *term = &terms[c];
+        if (skip_term(term)) {
+            continue;
+        }
+
         ecs_rule_var_t* subj = term_subj(rule, term);
         if (subj) {
             continue;
@@ -2081,6 +2105,9 @@ void compile_program(
 
         for (c = 0; c < term_count; c ++) {
             ecs_term_t *term = &terms[c];
+            if (term->args[0].set.mask & EcsNothing) {
+                continue;
+            }
 
             /* Only process columns for which variable is subject */
             ecs_rule_var_t* subj = term_subj(rule, term);
@@ -2153,11 +2180,13 @@ static
 void create_variable_name_array(
     ecs_rule_t *rule)
 {
-    rule->variable_names = ecs_os_malloc_n(char*, rule->variable_count);
-    int i;
-    for (i = 0; i < rule->variable_count; i ++) {
-        ecs_rule_var_t *var = &rule->variables[i];
-        rule->variable_names[var->id] = var->name;
+    if (rule->variable_count) {
+        rule->variable_names = ecs_os_malloc_n(char*, rule->variable_count);
+        int i;
+        for (i = 0; i < rule->variable_count; i ++) {
+            ecs_rule_var_t *var = &rule->variables[i];
+            rule->variable_names[var->id] = var->name;
+        }
     }
 }
 
@@ -3584,6 +3613,13 @@ bool ecs_rule_next(
             ecs_term_id_t *subj = &t->args[0];
             if (subj->var == EcsVarIsEntity && subj->entity != EcsThis) {
                 it->subjects[i] = subj->entity;
+            }
+        }
+
+        for (i = 0; i < rule->filter.term_count; i ++) {
+            ecs_term_t *term = &rule->filter.terms[i];
+            if (term->args[0].set.mask & EcsNothing) {
+                it->ids[i] = term->id;
             }
         }
     }
