@@ -24,7 +24,7 @@ void Iter(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 3);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -195,7 +195,7 @@ void Iter_2_shared(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 4);
     }    
 
-    probe_system(it);
+    probe_iter(it);
 
     Mass m = 1;
     if (m_ptr) {
@@ -630,7 +630,7 @@ void Dummy(ecs_iter_t *it) {
 
     test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
 
-    probe_system(it);
+    probe_iter(it);
 
     Mass m = 1;
     if (m_ptr) {
@@ -1184,7 +1184,7 @@ void IterSame(ecs_iter_t *it) {
 
     test_assert(!ecs_term_is_owned(it, 1));
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

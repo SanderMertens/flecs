@@ -4,7 +4,7 @@ static
 void Iter(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -82,7 +82,7 @@ void CheckColumnType(ecs_iter_t *it) {
 
     test_assert(ecs_id(Position) == ecs_term_id(it, 1));
 
-    probe_system(it);
+    probe_iter(it);
 }
 
 void System_w_Empty_column_type() {

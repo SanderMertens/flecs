@@ -2,7 +2,7 @@
 
 static
 void OnPosition(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Monitor_1_comp() {

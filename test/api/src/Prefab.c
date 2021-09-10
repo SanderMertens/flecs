@@ -19,7 +19,7 @@ void Iter(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 3);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -560,7 +560,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
         m = ecs_term(it, Mass, 3);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     Position *pos = ecs_term(it, Position, 1);
 
@@ -726,7 +726,7 @@ void Prefab_prefab_in_system_expr() {
 
 static
 void Dummy(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Prefab_dont_match_prefab() {

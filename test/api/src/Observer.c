@@ -1203,7 +1203,7 @@ void Observer_trigger_on_disabled() {
 
 static
 void UnSet(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 static
@@ -1674,7 +1674,7 @@ void UnSet_TestComp(ecs_iter_t *it) {
         return;
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     test_int(it->count, 1);
 
@@ -1735,7 +1735,7 @@ void UnSet_WriteComp(ecs_iter_t *it) {
         return;
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     test_int(it->count, 1);
 

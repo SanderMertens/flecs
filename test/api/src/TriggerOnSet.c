@@ -9,7 +9,7 @@ void OnSet(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -229,7 +229,7 @@ void OnAdd_check_order(ecs_iter_t *it) {
     test_assert(!add_called);
     test_assert(!set_called);
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -244,7 +244,7 @@ static
 void OnSet_check_order(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
-    probe_system(it);
+    probe_iter(it);
 
     test_assert(add_called);
     test_assert(!set_called);
@@ -305,7 +305,7 @@ void OnSetShared(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -493,7 +493,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
 
 static
 void SetPosition(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void TriggerOnSet_on_set_after_snapshot_restore() {

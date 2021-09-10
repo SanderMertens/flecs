@@ -8,7 +8,7 @@ void Deinit(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     /* Write to validate columns point to valid memory */
     int i;

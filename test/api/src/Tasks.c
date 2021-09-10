@@ -1,7 +1,7 @@
 #include <api.h>
 
 void Task(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Tasks_no_components() {

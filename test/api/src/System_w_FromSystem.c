@@ -34,7 +34,7 @@ void Iter(ecs_iter_t *it) {
         test_assert(!m || !ecs_term_is_owned(it, 3));
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -162,7 +162,7 @@ void Iter_reactive(ecs_iter_t *it) {
         test_assert(!ecs_term_is_owned(it, 2));
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

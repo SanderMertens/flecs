@@ -18,7 +18,7 @@ void Iter(ecs_iter_t *it) {
         }
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1019,8 +1019,8 @@ void SystemPeriodic_6_type_1_and_2_optional() {
     ecs_fini(world);
 }
 
-static void Dummy_1(ecs_iter_t *it) { probe_system(it); }
-static void Dummy_2(ecs_iter_t *it) { probe_system(it); }
+static void Dummy_1(ecs_iter_t *it) { probe_iter(it); }
+static void Dummy_2(ecs_iter_t *it) { probe_iter(it); }
 
 void SystemPeriodic_match_2_systems_w_populated_table() {
     ecs_world_t *world = ecs_init();
@@ -1056,7 +1056,7 @@ void TestOptional_w_column(ecs_iter_t *it) {
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(it);
+    probe_iter(it);
 }
 
 void TestOptional_w_shared(ecs_iter_t *it) {
@@ -1066,7 +1066,7 @@ void TestOptional_w_shared(ecs_iter_t *it) {
     test_assert(p != NULL);
     test_assert(v == NULL);
 
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemPeriodic_ensure_optional_is_unset_column() {
@@ -1327,7 +1327,7 @@ void TwoRefs(ecs_iter_t *it) {
     (void)p;
     (void)v;
 
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemPeriodic_two_refs() {
@@ -1582,7 +1582,7 @@ void SystemPeriodic_owned_not_column() {
 }
 
 void OwnedOr(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemPeriodic_owned_or_column() {
@@ -1681,7 +1681,7 @@ void SystemPeriodic_shared_not_column() {
 }
 
 void SharedOr(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemPeriodic_shared_or_column() {
@@ -1938,7 +1938,7 @@ void SystemPeriodic_get_period() {
 }
 
 void TypeSystem(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemPeriodic_and_type() {

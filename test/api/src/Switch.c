@@ -369,7 +369,7 @@ static
 void MatchSwitch(ecs_iter_t *it) {
     ecs_entity_t *movement = ecs_term(it, ecs_entity_t, 1);
     test_assert(movement != NULL);
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Switch_query_switch() {

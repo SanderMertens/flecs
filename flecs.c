@@ -28504,52 +28504,67 @@ void flecs_triggers_notify(
         observable = world;
     }
 
-    const ecs_map_t *evt = get_triggers_for_event(observable, event);
-    if (!evt) {
-        return;
-    }
+    ecs_entity_t trigger_event = event; 
 
-    ecs_iter_t it = {
-        .world = world,
-        .event = event,
-        .term_count = 1,
-        .table = table,
-        .type = table ? table->type : NULL,
-        .other_table = other_table,
-        .offset = row,
-        .count = count,
-        .param = param
-    };
-
-    int32_t i, ids_count = ids->count;
-    ecs_id_t *ids_array = ids->array;
-
-    for (i = 0; i < ids_count; i ++) {
-        ecs_id_t id = ids_array[i];
-        bool iter_set = false;
-
-        it.event_id = id;
-
-        notify_triggers_for_id(
-            evt, id, &it, &entity, table, row, count, &iter_set);
-
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t pred = ECS_PAIR_RELATION(id);
-            ecs_entity_t obj = ECS_PAIR_OBJECT(id);
-
-            notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
-                &it, &entity, table, row, count, &iter_set);
-
-            notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
-                &it, &entity, table, row, count, &iter_set);
-
-            notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
-                &it, &entity, table, row, count, &iter_set);
-        } else {
-            notify_triggers_for_id(evt, EcsWildcard, 
-                &it, &entity, table, row, count, &iter_set);
+    do {
+        const ecs_map_t *evt = get_triggers_for_event(observable, trigger_event);
+        if (!evt && trigger_event != EcsWildcard) {
+            trigger_event = EcsWildcard;
+            continue;
         }
-    }
+
+        if (!evt) {
+            return;
+        }
+
+        ecs_iter_t it = {
+            .world = world,
+            .event = event,
+            .term_count = 1,
+            .table = table,
+            .type = table ? table->type : NULL,
+            .other_table = other_table,
+            .offset = row,
+            .count = count,
+            .param = param
+        };
+
+        int32_t i, ids_count = ids->count;
+        ecs_id_t *ids_array = ids->array;
+
+        for (i = 0; i < ids_count; i ++) {
+            ecs_id_t id = ids_array[i];
+            bool iter_set = false;
+
+            it.event_id = id;
+
+            notify_triggers_for_id(
+                evt, id, &it, &entity, table, row, count, &iter_set);
+
+            if (ECS_HAS_ROLE(id, PAIR)) {
+                ecs_entity_t pred = ECS_PAIR_RELATION(id);
+                ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+
+                notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
+                    &it, &entity, table, row, count, &iter_set);
+
+                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
+                    &it, &entity, table, row, count, &iter_set);
+
+                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
+                    &it, &entity, table, row, count, &iter_set);
+            } else {
+                notify_triggers_for_id(evt, EcsWildcard, 
+                    &it, &entity, table, row, count, &iter_set);
+            }
+        }
+
+        if (trigger_event == EcsWildcard) {
+            break;
+        }
+        
+        trigger_event = EcsWildcard;
+    } while (true);
 }
 
 ecs_entity_t ecs_trigger_init(

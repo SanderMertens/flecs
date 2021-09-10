@@ -10,7 +10,7 @@ bool dummy_invoked = false;
 static
 void Dummy(ecs_iter_t *it) {
     dummy_invoked = true;
-    probe_system(it);
+    probe_iter(it);
 }
 
 void SystemMisc_invalid_not_without_id() {

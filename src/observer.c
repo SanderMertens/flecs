@@ -4,8 +4,6 @@ static
 void observer_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->world;
-    
-    ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (o->last_event_id == world->event_id) {
         /* Already handled this event */

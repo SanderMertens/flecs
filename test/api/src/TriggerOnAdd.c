@@ -12,7 +12,7 @@ void Init(ecs_iter_t *it) {
         v = ecs_term(it, Velocity, 2);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -484,7 +484,7 @@ void AddVelocity(ecs_iter_t *it) {
         v = ecs_term_id(it, 2);
     }
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

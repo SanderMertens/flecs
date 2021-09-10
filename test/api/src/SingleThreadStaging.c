@@ -2031,7 +2031,7 @@ static
 void On_V(ecs_iter_t *it) {
     Velocity *v = ecs_term(it, Velocity, 1);
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2108,7 +2108,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set() {
 
 static
 void Create_container(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2177,7 +2177,7 @@ static ecs_entity_t g_parent = 0;
 static
 void Create_container_reverse(ecs_iter_t *it) {
 
-    probe_system(it);
+    probe_iter(it);
 
     ecs_world_t *world = it->world;
 

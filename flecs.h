@@ -3415,10 +3415,10 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
 // FLECS_API extern const ecs_entity_t EcsOnDeleteTable;
 
 /* Event. Triggers when a table becomes empty (doesn't trigger on creation). */
-// FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
+FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
-// FLECS_API extern const ecs_entity_t EcsOnTableNonEmpty;
+FLECS_API extern const ecs_entity_t EcsOnTableNonEmpty;
 
 /* Event. Triggers when a trigger is created. */
 // FLECS_API extern const ecs_entity_t EcsOnCreateTrigger;

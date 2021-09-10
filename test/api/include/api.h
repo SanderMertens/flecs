@@ -61,7 +61,7 @@ void probe_system_w_ctx(
     ecs_iter_t *it,
     Probe *ctx);
 
-void probe_system(ecs_iter_t *it);
+void probe_iter(ecs_iter_t *it);
 
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 

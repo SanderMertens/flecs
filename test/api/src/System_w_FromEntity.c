@@ -17,7 +17,7 @@ void Iter(ecs_iter_t *it) {
 
     test_assert(!m_ptr || !ecs_term_is_owned(it, 1));
 
-    probe_system(it);
+    probe_iter(it);
 
     Mass m = 1;
     if (m_ptr) {

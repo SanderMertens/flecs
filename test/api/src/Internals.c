@@ -10,7 +10,7 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = ecs_term(it, Velocity, 2);
     Mass *m = ecs_term(it, Mass, 3);
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

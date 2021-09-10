@@ -20,7 +20,7 @@ void Iter(ecs_iter_t *it) {
 
     int *param = it->param;
 
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

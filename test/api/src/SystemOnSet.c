@@ -2,7 +2,7 @@
 
 static
 void OnPosition(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 static
@@ -762,7 +762,7 @@ void SystemOnSet_set_from_nothing() {
 
 static
 void Add0(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 
     int i;
     for (i = 0; i < it->count; i ++) {

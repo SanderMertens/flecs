@@ -19,7 +19,7 @@ typedef struct Obj {
 void ProcessPairs(ecs_iter_t *it) {
     Rel *tr = ecs_term(it, Rel, 1);
 
-    probe_system(it);
+    probe_iter(it);
 
     if (tr) {
         int32_t i;
@@ -216,7 +216,7 @@ void Pairs_remove_pair() {
 }
 
 void ProcessPairTags(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Pairs_add_tag_pair_for_tag() {
@@ -277,7 +277,7 @@ void ProcessValuePairs(ecs_iter_t *it) {
      * the same layout. */
     Position *p = ecs_term(it, Position, 1);
 
-    probe_system(it);
+    probe_iter(it);
 
     if (p) {
         int32_t i;
@@ -355,7 +355,7 @@ void ProcessTwoPairs(ecs_iter_t *it) {
     RelA *tr_a = ecs_term(it, RelA, 1);
     RelB *tr_b = ecs_term(it, RelB, 2);
 
-    probe_system(it);
+    probe_iter(it);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -575,7 +575,7 @@ void Pairs_override_tag_pair() {
 
 static
 void PairTrigger(ecs_iter_t *it) {
-    probe_system(it);
+    probe_iter(it);
 }
 
 void Pairs_on_add_pair() {

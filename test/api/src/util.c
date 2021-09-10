@@ -43,10 +43,13 @@ void probe_system_w_ctx(
     ctx->invoked ++;
 }
 
-void probe_system(
+void probe_iter(
     ecs_iter_t *it) 
 {
     Probe *ctx = ecs_get_context(it->world);
+    if (!ctx) {
+        ctx = it->ctx;
+    }
     probe_system_w_ctx(it, ctx);
 }
 

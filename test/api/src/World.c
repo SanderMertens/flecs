@@ -8,7 +8,7 @@ static
 void Move(ecs_iter_t *it) {
     Position *pos = ecs_term(it, Position, 1);
     Velocity *vel = ecs_term(it, Velocity, 2);
-    probe_system(it);
+    probe_iter(it);
 
     int row;
     for (row = 0; row < it->count; row ++) {

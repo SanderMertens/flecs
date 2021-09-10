@@ -50,6 +50,22 @@ void Entity_is_0_valid(void);
 void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
 
+// Testsuite 'Event'
+void Event_empty_entity_1_id_w_trigger(void);
+void Event_empty_entity_1_id_w_observer(void);
+void Event_entity_1_id_w_trigger(void);
+void Event_entity_2_ids_w_trigger(void);
+void Event_table_1_id_w_trigger(void);
+void Event_table_2_ids_w_trigger(void);
+void Event_table_no_ids_w_trigger(void);
+void Event_entity_1_id_w_observer(void);
+void Event_entity_2_ids_w_observer(void);
+void Event_table_1_id_w_observer(void);
+void Event_table_2_ids_w_observer(void);
+void Event_table_no_ids_w_observer(void);
+void Event_entity_1_id_w_wildcard_trigger(void);
+void Event_observer_1_id_w_wildcard_trigger(void);
+
 // Testsuite 'New'
 void New_setup(void);
 void New_empty(void);
@@ -2090,6 +2106,65 @@ bake_test_case Entity_testcases[] = {
     {
         "is_not_alive_valid",
         Entity_is_not_alive_valid
+    }
+};
+
+bake_test_case Event_testcases[] = {
+    {
+        "empty_entity_1_id_w_trigger",
+        Event_empty_entity_1_id_w_trigger
+    },
+    {
+        "empty_entity_1_id_w_observer",
+        Event_empty_entity_1_id_w_observer
+    },
+    {
+        "entity_1_id_w_trigger",
+        Event_entity_1_id_w_trigger
+    },
+    {
+        "entity_2_ids_w_trigger",
+        Event_entity_2_ids_w_trigger
+    },
+    {
+        "table_1_id_w_trigger",
+        Event_table_1_id_w_trigger
+    },
+    {
+        "table_2_ids_w_trigger",
+        Event_table_2_ids_w_trigger
+    },
+    {
+        "table_no_ids_w_trigger",
+        Event_table_no_ids_w_trigger
+    },
+    {
+        "entity_1_id_w_observer",
+        Event_entity_1_id_w_observer
+    },
+    {
+        "entity_2_ids_w_observer",
+        Event_entity_2_ids_w_observer
+    },
+    {
+        "table_1_id_w_observer",
+        Event_table_1_id_w_observer
+    },
+    {
+        "table_2_ids_w_observer",
+        Event_table_2_ids_w_observer
+    },
+    {
+        "table_no_ids_w_observer",
+        Event_table_no_ids_w_observer
+    },
+    {
+        "entity_1_id_w_wildcard_trigger",
+        Event_entity_1_id_w_wildcard_trigger
+    },
+    {
+        "observer_1_id_w_wildcard_trigger",
+        Event_observer_1_id_w_wildcard_trigger
     }
 };
 
@@ -9231,6 +9306,13 @@ static bake_test_suite suites[] = {
         Entity_testcases
     },
     {
+        "Event",
+        NULL,
+        NULL,
+        14,
+        Event_testcases
+    },
+    {
         "New",
         New_setup,
         NULL,
@@ -9647,5 +9729,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 60);
+    return bake_test_run("api", argc, argv, suites, 61);
 }
