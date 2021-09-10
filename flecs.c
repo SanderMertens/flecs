@@ -13576,6 +13576,53 @@ int create_term(
     return 0;
 }
 
+static
+const char *plecs_skip_space(
+    const char *ptr)
+{
+    while ((*ptr != '\n') && isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
+static
+bool is_newline_comment(
+    const char *ptr)
+{
+    if (ptr[0] == '/' && ptr[1] == '/') {
+        return true;
+    }
+    return false;
+}
+
+static 
+const char* skip_fluff(
+    const char *ptr) 
+{
+    do {
+        /* Skip whitespaces before checking for a comment */
+        ptr = plecs_skip_space(ptr);
+
+        /* Newline comment, skip until newline character */
+        if (is_newline_comment(ptr)) {
+            ptr += 2;
+            while (ptr[0] && ptr[0] != '\n') {
+                ptr ++;
+            }
+        }
+
+        /* If a newline character is found, skip it */
+        if (ptr[0] == TOK_NEWLINE) {
+            ptr ++;
+        }
+
+    } while (isspace(ptr[0]) || is_newline_comment(ptr));
+
+    return ptr;
+}
+
 int ecs_plecs_from_str(
     ecs_world_t *world,
     const char *name,
@@ -13588,6 +13635,8 @@ int ecs_plecs_from_str(
         return 0;
     }
 
+    expr = ptr = skip_fluff(ptr);
+
     while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
         if (!ecs_term_is_initialized(&term)) {
             break;
@@ -13599,10 +13648,7 @@ int ecs_plecs_from_str(
 
         ecs_term_fini(&term);
 
-        if (ptr[0] == TOK_NEWLINE) {
-            ptr ++;
-            expr = ptr;
-        }
+        expr = ptr = skip_fluff(ptr);
     }
 
     if (!ptr) {
@@ -19746,7 +19792,7 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && ptr[0]) {
+    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && (ptr[0] != '/') && ptr[0]) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected end of expression or next term");
         ecs_term_fini(term);

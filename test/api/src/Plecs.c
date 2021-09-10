@@ -187,3 +187,78 @@ void Plecs_3_entities_w_pairs() {
 
     ecs_fini(world);
 }
+
+void Plecs_line_comment() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "// Foo(Bar)\n") == 0);
+
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Bar") == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_line_comment_before_stmt() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\nFoo\n") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_line_comment_after_stmt() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\n") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_line_comment_between_stmt() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\nBar\n") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_multiple_line_comment() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\n// Boo(Baz)\nFoo") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup(world, "Boo") == 0);
+    test_assert(ecs_lookup(world, "Baz") == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_line_comment_after_stmt_same_line() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo // Hello(World)\nBar\n") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}

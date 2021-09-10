@@ -368,7 +368,13 @@
                 "entity_w_pair",
                 "2_entities",
                 "2_entities_w_entities",
-                "3_entities_w_pairs"
+                "3_entities_w_pairs",
+                "line_comment",
+                "line_comment_before_stmt",
+                "line_comment_after_stmt",
+                "line_comment_between_stmt",
+                "multiple_line_comment",
+                "line_comment_after_stmt_same_line"
             ]            
         }, {
             "id": "GlobalComponentIds",

@@ -344,6 +344,12 @@ void Plecs_entity_w_pair(void);
 void Plecs_2_entities(void);
 void Plecs_2_entities_w_entities(void);
 void Plecs_3_entities_w_pairs(void);
+void Plecs_line_comment(void);
+void Plecs_line_comment_before_stmt(void);
+void Plecs_line_comment_after_stmt(void);
+void Plecs_line_comment_between_stmt(void);
+void Plecs_multiple_line_comment(void);
+void Plecs_line_comment_after_stmt_same_line(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3235,6 +3241,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "3_entities_w_pairs",
         Plecs_3_entities_w_pairs
+    },
+    {
+        "line_comment",
+        Plecs_line_comment
+    },
+    {
+        "line_comment_before_stmt",
+        Plecs_line_comment_before_stmt
+    },
+    {
+        "line_comment_after_stmt",
+        Plecs_line_comment_after_stmt
+    },
+    {
+        "line_comment_between_stmt",
+        Plecs_line_comment_between_stmt
+    },
+    {
+        "multiple_line_comment",
+        Plecs_multiple_line_comment
+    },
+    {
+        "line_comment_after_stmt_same_line",
+        Plecs_line_comment_after_stmt_same_line
     }
 };
 
@@ -9375,7 +9405,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        12,
+        18,
         Plecs_testcases
     },
     {

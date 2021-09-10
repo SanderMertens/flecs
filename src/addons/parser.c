@@ -870,7 +870,7 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && ptr[0]) {
+    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && (ptr[0] != '/') && ptr[0]) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected end of expression or next term");
         ecs_term_fini(term);
