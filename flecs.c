@@ -13527,6 +13527,14 @@ void FlecsTimerImport(
 
 #define TOK_NEWLINE '\n'
 
+#define STACK_MAX_SIZE (32)
+
+typedef struct {
+    ecs_entity_t last_subject;
+    ecs_entity_t scope[STACK_MAX_SIZE];
+    int32_t sp;
+} plecs_state_t;
+
 static
 ecs_entity_t ensure_entity(
     ecs_world_t *world,
@@ -13551,7 +13559,8 @@ int create_term(
     ecs_term_t *term,
     const char *name,
     const char *expr,
-    int32_t column)
+    int64_t column,
+    plecs_state_t *state)
 {
     if (!ecs_term_id_is_set(&term->pred)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
@@ -13577,6 +13586,9 @@ int create_term(
         } else {
             ecs_add_pair(world, subj, pred, obj);
         }
+        state->last_subject = subj;
+    } else {
+        state->last_subject = pred;
     }
 
     return 0;
@@ -13629,6 +13641,34 @@ const char* skip_fluff(
     return ptr;
 }
 
+static
+const char* parse_stmt(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    (void)world;
+    (void)name;
+    (void)expr;
+
+    ptr = skip_fluff(ptr);
+
+    if (ptr[0] == '{') {
+        state->scope[++ state->sp] = state->last_subject;
+        ptr ++;
+        ecs_set_scope(world, state->last_subject);
+    }
+    if (ptr[0] == '}') {
+        state->sp --;
+        ptr ++;
+        ecs_set_scope(world, state->scope[state->sp]);
+    }
+
+    return skip_fluff(ptr);
+}
+
 int ecs_plecs_from_str(
     ecs_world_t *world,
     const char *name,
@@ -13636,32 +13676,42 @@ int ecs_plecs_from_str(
 {
     const char *ptr = expr;
     ecs_term_t term = {0};
+    plecs_state_t state = {0};
 
     if (!expr) {
         return 0;
     }
 
-    expr = ptr = skip_fluff(ptr);
-
-    while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-        if (!ecs_term_is_initialized(&term)) {
-            break;
+    do {
+        expr = ptr = parse_stmt(world, name, expr, ptr, &state);
+        if (!ptr) {
+            goto error;
         }
-        
-        if (create_term(world, &term, name, expr, (int32_t)(ptr - expr))) {
-            return -1;
+
+        if (!ptr[0]) {
+            break; /* End of expression */
+        }
+
+        ptr = ecs_parse_term(world, name, expr, ptr, &term);
+        if (!ptr) {
+            goto error; /* Error occurred */
+        }
+
+        if (!ecs_term_is_initialized(&term)) {
+            goto error; /* No term found */
+        }
+
+        if (create_term(world, &term, name, expr, (ptr - expr), &state)) {
+            goto error; /* Failed to create term */
         }
 
         ecs_term_fini(&term);
+    } while (true);
 
-        expr = ptr = skip_fluff(ptr);
-    }
-
-    if (!ptr) {
-        return -1;
-    } else {
-        return 0;
-    }
+    return 0;
+error:
+    ecs_term_fini(&term);
+    return -1;
 }
 
 int ecs_plecs_from_file(
@@ -19752,6 +19802,7 @@ parse_pair:
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected character '%c'", ptr[0]);
+        return NULL;
     }
 
 parse_pair_predicate:
@@ -19809,6 +19860,23 @@ parse_done:
     *term_out = term;
 
     return ptr;
+}
+
+static
+bool is_valid_end_of_term(
+    const char *ptr)
+{
+    if ((ptr[0] == TOK_AND) ||    /* another term with And operator */
+        (ptr[0] == TOK_OR[0]) ||  /* another term with Or operator */
+        (ptr[0] == '\n') ||       /* newlines are valid */
+        (ptr[0] == '\0') ||       /* end of string */
+        (ptr[0] == '/') ||        /* comment (in plecs) */
+        (ptr[0] == '{') ||        /* scope (in plecs) */
+        (ptr[0] == '}'))          
+    {
+        return true;
+    }
+    return false;
 }
 
 char* ecs_parse_term(
@@ -19870,7 +19938,6 @@ char* ecs_parse_term(
     /* Parse next element */
     ptr = parse_term(world, name, ptr, term);
     if (!ptr) {
-        ecs_term_fini(term);
         return NULL;
     }
 
@@ -19882,7 +19949,6 @@ char* ecs_parse_term(
         if (term->oper != EcsAnd) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine || with other operators");
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -19890,10 +19956,9 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && (ptr[0] != '/') && ptr[0]) {
+    if (!is_valid_end_of_term(ptr)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected end of expression or next term");
-        ecs_term_fini(term);
         return NULL;
     }
 
@@ -19903,7 +19968,6 @@ char* ecs_parse_term(
         if (ptr[0]) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected term after 0"); 
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -19913,7 +19977,6 @@ char* ecs_parse_term(
         {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid combination of 0 with non-default subject");
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -19926,7 +19989,6 @@ char* ecs_parse_term(
     if (term->oper != EcsAnd && subj->set.mask == EcsNothing) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
-        ecs_term_fini(term);    
         return NULL;
     }
 
@@ -19936,7 +19998,6 @@ char* ecs_parse_term(
         if (subj->set.mask != prev_set) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine different sources in OR expression");
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -22198,6 +22259,11 @@ void ecs_term_fini(
     ecs_os_free(term->args[0].name);
     ecs_os_free(term->args[1].name);
     ecs_os_free(term->name);
+
+    term->pred.name = NULL;
+    term->args[0].name = NULL;
+    term->args[1].name = NULL;
+    term->name = NULL;
 }
 
 int ecs_filter_finalize(

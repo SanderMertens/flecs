@@ -368,6 +368,18 @@ void Plecs_comma_separated_pred_w_subj_obj(void);
 void Plecs_comma_separated_pred_trailing_comma(void);
 void Plecs_comma_separated_pred_trailing_comma_newline(void);
 void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void);
+void Plecs_hierarchy_1_child(void);
+void Plecs_hierarchy_2_children(void);
+void Plecs_hierarchy_1_child_same_line(void);
+void Plecs_hierarchy_2_children_same_line(void);
+void Plecs_entity_after_hierarchy(void);
+void Plecs_newline_before_scope_open(void);
+void Plecs_comment_before_scope_open(void);
+void Plecs_comment_after_newline_before_scope_open(void);
+void Plecs_hierarchy_2_levels(void);
+void Plecs_hierarchy_2_levels_2_subtrees(void);
+void Plecs_missing_end_of_scope(void);
+void Plecs_create_in_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3361,6 +3373,54 @@ bake_test_case Plecs_testcases[] = {
     {
         "comma_separated_pred_trailing_comma_newline_multiline",
         Plecs_comma_separated_pred_trailing_comma_newline_multiline
+    },
+    {
+        "hierarchy_1_child",
+        Plecs_hierarchy_1_child
+    },
+    {
+        "hierarchy_2_children",
+        Plecs_hierarchy_2_children
+    },
+    {
+        "hierarchy_1_child_same_line",
+        Plecs_hierarchy_1_child_same_line
+    },
+    {
+        "hierarchy_2_children_same_line",
+        Plecs_hierarchy_2_children_same_line
+    },
+    {
+        "entity_after_hierarchy",
+        Plecs_entity_after_hierarchy
+    },
+    {
+        "newline_before_scope_open",
+        Plecs_newline_before_scope_open
+    },
+    {
+        "comment_before_scope_open",
+        Plecs_comment_before_scope_open
+    },
+    {
+        "comment_after_newline_before_scope_open",
+        Plecs_comment_after_newline_before_scope_open
+    },
+    {
+        "hierarchy_2_levels",
+        Plecs_hierarchy_2_levels
+    },
+    {
+        "hierarchy_2_levels_2_subtrees",
+        Plecs_hierarchy_2_levels_2_subtrees
+    },
+    {
+        "missing_end_of_scope",
+        Plecs_missing_end_of_scope
+    },
+    {
+        "create_in_scope",
+        Plecs_create_in_scope
     }
 };
 
@@ -9525,7 +9585,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        27,
+        39,
         Plecs_testcases
     },
     {

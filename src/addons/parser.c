@@ -732,6 +732,7 @@ parse_pair:
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected character '%c'", ptr[0]);
+        return NULL;
     }
 
 parse_pair_predicate:
@@ -789,6 +790,23 @@ parse_done:
     *term_out = term;
 
     return ptr;
+}
+
+static
+bool is_valid_end_of_term(
+    const char *ptr)
+{
+    if ((ptr[0] == TOK_AND) ||    /* another term with And operator */
+        (ptr[0] == TOK_OR[0]) ||  /* another term with Or operator */
+        (ptr[0] == '\n') ||       /* newlines are valid */
+        (ptr[0] == '\0') ||       /* end of string */
+        (ptr[0] == '/') ||        /* comment (in plecs) */
+        (ptr[0] == '{') ||        /* scope (in plecs) */
+        (ptr[0] == '}'))          
+    {
+        return true;
+    }
+    return false;
 }
 
 char* ecs_parse_term(
@@ -850,7 +868,6 @@ char* ecs_parse_term(
     /* Parse next element */
     ptr = parse_term(world, name, ptr, term);
     if (!ptr) {
-        ecs_term_fini(term);
         return NULL;
     }
 
@@ -862,7 +879,6 @@ char* ecs_parse_term(
         if (term->oper != EcsAnd) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine || with other operators");
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -870,10 +886,9 @@ char* ecs_parse_term(
     }
 
     /* Term must either end in end of expression, AND or OR token */
-    if (ptr[0] != TOK_AND && (ptr[0] != TOK_OR[0]) && (ptr[0] != '\n') && (ptr[0] != '/') && ptr[0]) {
+    if (!is_valid_end_of_term(ptr)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected end of expression or next term");
-        ecs_term_fini(term);
         return NULL;
     }
 
@@ -883,7 +898,6 @@ char* ecs_parse_term(
         if (ptr[0]) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unexpected term after 0"); 
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -893,7 +907,6 @@ char* ecs_parse_term(
         {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid combination of 0 with non-default subject");
-            ecs_term_fini(term);
             return NULL;
         }
 
@@ -906,7 +919,6 @@ char* ecs_parse_term(
     if (term->oper != EcsAnd && subj->set.mask == EcsNothing) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid operator for empty source"); 
-        ecs_term_fini(term);    
         return NULL;
     }
 
@@ -916,7 +928,6 @@ char* ecs_parse_term(
         if (subj->set.mask != prev_set) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "cannot combine different sources in OR expression");
-            ecs_term_fini(term);
             return NULL;
         }
 

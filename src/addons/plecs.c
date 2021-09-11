@@ -6,6 +6,14 @@
 
 #define TOK_NEWLINE '\n'
 
+#define STACK_MAX_SIZE (32)
+
+typedef struct {
+    ecs_entity_t last_subject;
+    ecs_entity_t scope[STACK_MAX_SIZE];
+    int32_t sp;
+} plecs_state_t;
+
 static
 ecs_entity_t ensure_entity(
     ecs_world_t *world,
@@ -30,7 +38,8 @@ int create_term(
     ecs_term_t *term,
     const char *name,
     const char *expr,
-    int32_t column)
+    int64_t column,
+    plecs_state_t *state)
 {
     if (!ecs_term_id_is_set(&term->pred)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
@@ -56,6 +65,9 @@ int create_term(
         } else {
             ecs_add_pair(world, subj, pred, obj);
         }
+        state->last_subject = subj;
+    } else {
+        state->last_subject = pred;
     }
 
     return 0;
@@ -108,6 +120,35 @@ const char* skip_fluff(
     return ptr;
 }
 
+static
+const char* parse_stmt(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    (void)world;
+    (void)name;
+    (void)expr;
+
+    ptr = skip_fluff(ptr);
+
+    if (ptr[0] == '{') {
+        state->scope[++ state->sp] = state->last_subject;
+        ptr ++;
+        ecs_set_scope(world, state->last_subject);
+    }
+
+    while (ptr[0] == '}') {
+        state->sp --;
+        ptr = skip_fluff(ptr + 1);
+        ecs_set_scope(world, state->scope[state->sp]);
+    }
+
+    return skip_fluff(ptr);
+}
+
 int ecs_plecs_from_str(
     ecs_world_t *world,
     const char *name,
@@ -115,32 +156,51 @@ int ecs_plecs_from_str(
 {
     const char *ptr = expr;
     ecs_term_t term = {0};
+    plecs_state_t state = {0};
 
     if (!expr) {
         return 0;
     }
 
-    expr = ptr = skip_fluff(ptr);
+    state.scope[0] = ecs_get_scope(world);
 
-    while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
-        if (!ecs_term_is_initialized(&term)) {
-            break;
+    do {
+        expr = ptr = parse_stmt(world, name, expr, ptr, &state);
+        if (!ptr) {
+            goto error;
         }
-        
-        if (create_term(world, &term, name, expr, (int32_t)(ptr - expr))) {
-            return -1;
+
+        if (!ptr[0]) {
+            break; /* End of expression */
+        }
+
+        ptr = ecs_parse_term(world, name, expr, ptr, &term);
+        if (!ptr) {
+            goto error; /* Error occurred */
+        }
+
+        if (!ecs_term_is_initialized(&term)) {
+            goto error; /* No term found */
+        }
+
+        if (create_term(world, &term, name, expr, (ptr - expr), &state)) {
+            goto error; /* Failed to create term */
         }
 
         ecs_term_fini(&term);
+    } while (true);
 
-        expr = ptr = skip_fluff(ptr);
+    ecs_set_scope(world, state.scope[0]);
+
+    if (state.sp != 0) {
+        ecs_parser_error(name, expr, 0, "missing end of scope");
+        goto error;
     }
 
-    if (!ptr) {
-        return -1;
-    } else {
-        return 0;
-    }
+    return 0;
+error:
+    ecs_term_fini(&term);
+    return -1;
 }
 
 int ecs_plecs_from_file(

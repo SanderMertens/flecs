@@ -392,7 +392,19 @@
                 "comma_separated_pred_w_subj_obj",
                 "comma_separated_pred_trailing_comma",
                 "comma_separated_pred_trailing_comma_newline",
-                "comma_separated_pred_trailing_comma_newline_multiline"
+                "comma_separated_pred_trailing_comma_newline_multiline",
+                "hierarchy_1_child",
+                "hierarchy_2_children",
+                "hierarchy_1_child_same_line",
+                "hierarchy_2_children_same_line",
+                "entity_after_hierarchy",
+                "newline_before_scope_open",
+                "comment_before_scope_open",
+                "comment_after_newline_before_scope_open",
+                "hierarchy_2_levels",
+                "hierarchy_2_levels_2_subtrees",
+                "missing_end_of_scope",
+                "create_in_scope"
             ]            
         }, {
             "id": "GlobalComponentIds",

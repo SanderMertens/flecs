@@ -610,6 +610,11 @@ void ecs_term_fini(
     ecs_os_free(term->args[0].name);
     ecs_os_free(term->args[1].name);
     ecs_os_free(term->name);
+
+    term->pred.name = NULL;
+    term->args[0].name = NULL;
+    term->args[1].name = NULL;
+    term->name = NULL;
 }
 
 int ecs_filter_finalize(

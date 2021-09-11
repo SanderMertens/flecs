@@ -1,5 +1,8 @@
 #include <api.h>
 
+#define HEAD
+#define LINE "\n"
+
 void Plecs_null() {
     ecs_world_t *world = ecs_init();
 
@@ -381,6 +384,299 @@ void Plecs_comma_separated_pred_trailing_comma_newline_multiline() {
     test_assert(ecs_lookup(world, "Worlds") != 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_1_child() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_2_children() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " ChildA"
+    LINE " ChildB"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+
+    test_assert(parent != 0);
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+
+    test_assert(ecs_has_pair(world, child_a, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, child_b, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_1_child_same_line() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent { Child }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_2_children_same_line() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent { ChildA, ChildB }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+
+    test_assert(parent != 0);
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+
+    test_assert(ecs_has_pair(world, child_a, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, child_b, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_entity_after_hierarchy() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child"
+    LINE "}"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_newline_before_scope_open() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "{"
+    LINE " Child"
+    LINE "}"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_comment_before_scope_open() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent // Some(Comment)"
+    LINE "{"
+    LINE " Child"
+    LINE "}"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_fullpath(world, "Some") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Comment") == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_comment_after_newline_before_scope_open() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Some(Comment)"
+    LINE "{"
+    LINE " Child"
+    LINE "}"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_fullpath(world, "Some") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Comment") == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child {"
+    LINE "  GrandChild"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t grandchild = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(grandchild != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, grandchild, EcsChildOf, child));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_2_levels_2_subtrees() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " ChildA {"
+    LINE "  GrandChild"
+    LINE " }"
+    LINE " ChildB {"
+    LINE "  GrandChild"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+    ecs_entity_t grandchild_a = ecs_lookup_fullpath(world, "Parent.ChildA.GrandChild");
+    ecs_entity_t grandchild_b = ecs_lookup_fullpath(world, "Parent.ChildB.GrandChild");
+
+    test_assert(parent != 0);
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+    test_assert(child_a != child_b);
+    test_assert(grandchild_a != 0);
+    test_assert(grandchild_b != 0);
+    test_assert(grandchild_a != grandchild_b);
+
+    test_assert(ecs_has_pair(world, child_a, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, child_b, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, grandchild_a, EcsChildOf, child_a));
+    test_assert(ecs_has_pair(world, grandchild_b, EcsChildOf, child_b));
+
+    ecs_fini(world);
+}
+
+void Plecs_missing_end_of_scope() {
+    ecs_tracing_enable(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    test_assert(ecs_get_scope(world) == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_create_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Root);
+
+    ecs_set_scope(world, Root);
+
+    const char *expr =
+    HEAD "Parent { Child }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_set_scope(world, 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Root.Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Root.Parent.Child");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, parent, EcsChildOf, Root));
 
     ecs_fini(world);
 }
