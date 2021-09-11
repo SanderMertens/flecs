@@ -32,10 +32,34 @@ void Plecs_space_newline() {
     ecs_fini(world);
 }
 
-void Plecs_empty_newline() {
+void Plecs_two_empty_newlines() {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "\n\n") == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_three_empty_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "\n\n\n") == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_newline_trailing_space() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "\n ") == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_newline_trailing_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "\n   ") == 0);
 
     ecs_fini(world);
 }

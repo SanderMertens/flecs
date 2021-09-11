@@ -3107,3 +3107,15 @@ void Rules_term_w_nothing_set_w_this_term() {
 
     ecs_fini(world);
 }
+
+void Rules_empty_rule() {
+    ecs_tracing_enable(-4);
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}

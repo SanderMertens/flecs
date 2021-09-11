@@ -3436,3 +3436,170 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation() {
 
     ecs_fini(world);
 }
+
+void Parser_newline() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "\n"
+    }));
+
+    test_int(filter_count(&f), 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_2_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "\n\n"
+    }));
+
+    test_int(filter_count(&f), 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_3_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "\n\n"
+    }));
+
+    test_int(filter_count(&f), 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_space() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = " "
+    }));
+
+    test_int(filter_count(&f), 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_2_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "  "
+    }));
+
+    test_int(filter_count(&f), 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_trailing_newline() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred\n"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_2_trailing_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred\n\n"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_trailing_space() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred "
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_2_trailing_spaces() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred  "
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

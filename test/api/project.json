@@ -352,7 +352,16 @@
                 "pred_entity_no_args_2_terms_w_explicit_self",
                 "pred_entity_no_args_2_terms_w_explicit_self_superset",
                 "pred_entity_no_args_2_terms_w_explicit_superset_relation",
-                "pred_entity_no_args_2_terms_w_explicit_self_superset_relation"
+                "pred_entity_no_args_2_terms_w_explicit_self_superset_relation",
+                "newline",
+                "2_newlines",
+                "3_newlines",
+                "space",
+                "2_spaces",
+                "trailing_newline",
+                "2_trailing_newlines",
+                "trailing_space",
+                "2_trailing_spaces"
             ]
         }, {
             "id": "Plecs",
@@ -361,7 +370,10 @@
                 "empty",
                 "space",
                 "space_newline",
-                "empty_newline",
+                "two_empty_newlines",
+                "three_empty_newlines",
+                "newline_trailing_space",
+                "newline_trailing_spaces",
                 "multiple_trailing_newlines",
                 "entity",
                 "entity_w_entity",
@@ -1113,6 +1125,7 @@
         }, {
             "id": "Rules",
             "testcases": [
+                "empty_rule",
                 "invalid_rule",
                 "comp_recycled_final_id",
                 "comp_recycled_id",

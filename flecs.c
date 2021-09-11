@@ -13636,6 +13636,8 @@ int ecs_plecs_from_str(
     }
 
     expr = ptr = skip_fluff(ptr);
+    
+    printf("ptr = '%s'\n", ptr);
 
     while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
         if (!ecs_term_is_initialized(&term)) {
@@ -13649,6 +13651,7 @@ int ecs_plecs_from_str(
         ecs_term_fini(&term);
 
         expr = ptr = skip_fluff(ptr);
+        printf("ptr = '%s'\n", ptr);
     }
 
     if (!ptr) {

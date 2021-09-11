@@ -2208,6 +2208,13 @@ ecs_rule_t* ecs_rule_init(
 
     result->world = world;
 
+    /* Rule has no terms */
+    if (!result->filter.term_count) {
+        rule_error(result, "rule has no tersm");
+        ecs_os_free(result);
+        return NULL;
+    }
+
     /* Find all variables & resolve dependencies */
     if (scan_variables(result) != 0) {
         goto error;

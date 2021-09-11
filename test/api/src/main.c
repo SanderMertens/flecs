@@ -330,13 +330,25 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self(void);
 void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset(void);
 void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation(void);
 void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation(void);
+void Parser_newline(void);
+void Parser_2_newlines(void);
+void Parser_3_newlines(void);
+void Parser_space(void);
+void Parser_2_spaces(void);
+void Parser_trailing_newline(void);
+void Parser_2_trailing_newlines(void);
+void Parser_trailing_space(void);
+void Parser_2_trailing_spaces(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
 void Plecs_empty(void);
 void Plecs_space(void);
 void Plecs_space_newline(void);
-void Plecs_empty_newline(void);
+void Plecs_two_empty_newlines(void);
+void Plecs_three_empty_newlines(void);
+void Plecs_newline_trailing_space(void);
+void Plecs_newline_trailing_spaces(void);
 void Plecs_multiple_trailing_newlines(void);
 void Plecs_entity(void);
 void Plecs_entity_w_entity(void);
@@ -1046,6 +1058,7 @@ void Pairs_get_1_object_not_found(void);
 void Pairs_get_n_objects(void);
 
 // Testsuite 'Rules'
+void Rules_empty_rule(void);
 void Rules_invalid_rule(void);
 void Rules_comp_recycled_final_id(void);
 void Rules_comp_recycled_id(void);
@@ -3190,6 +3203,42 @@ bake_test_case Parser_testcases[] = {
     {
         "pred_entity_no_args_2_terms_w_explicit_self_superset_relation",
         Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation
+    },
+    {
+        "newline",
+        Parser_newline
+    },
+    {
+        "2_newlines",
+        Parser_2_newlines
+    },
+    {
+        "3_newlines",
+        Parser_3_newlines
+    },
+    {
+        "space",
+        Parser_space
+    },
+    {
+        "2_spaces",
+        Parser_2_spaces
+    },
+    {
+        "trailing_newline",
+        Parser_trailing_newline
+    },
+    {
+        "2_trailing_newlines",
+        Parser_2_trailing_newlines
+    },
+    {
+        "trailing_space",
+        Parser_trailing_space
+    },
+    {
+        "2_trailing_spaces",
+        Parser_2_trailing_spaces
     }
 };
 
@@ -3211,8 +3260,20 @@ bake_test_case Plecs_testcases[] = {
         Plecs_space_newline
     },
     {
-        "empty_newline",
-        Plecs_empty_newline
+        "two_empty_newlines",
+        Plecs_two_empty_newlines
+    },
+    {
+        "three_empty_newlines",
+        Plecs_three_empty_newlines
+    },
+    {
+        "newline_trailing_space",
+        Plecs_newline_trailing_space
+    },
+    {
+        "newline_trailing_spaces",
+        Plecs_newline_trailing_spaces
     },
     {
         "multiple_trailing_newlines",
@@ -5913,6 +5974,10 @@ bake_test_case Pairs_testcases[] = {
 };
 
 bake_test_case Rules_testcases[] = {
+    {
+        "empty_rule",
+        Rules_empty_rule
+    },
     {
         "invalid_rule",
         Rules_invalid_rule
@@ -9398,14 +9463,14 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        130,
+        139,
         Parser_testcases
     },
     {
         "Plecs",
         NULL,
         NULL,
-        18,
+        21,
         Plecs_testcases
     },
     {
@@ -9552,7 +9617,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        83,
+        84,
         Rules_testcases
     },
     {
