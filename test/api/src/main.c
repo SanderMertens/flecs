@@ -362,6 +362,12 @@ void Plecs_line_comment_after_stmt(void);
 void Plecs_line_comment_between_stmt(void);
 void Plecs_multiple_line_comment(void);
 void Plecs_line_comment_after_stmt_same_line(void);
+void Plecs_comma_separated_pred(void);
+void Plecs_comma_separated_pred_w_subj(void);
+void Plecs_comma_separated_pred_w_subj_obj(void);
+void Plecs_comma_separated_pred_trailing_comma(void);
+void Plecs_comma_separated_pred_trailing_comma_newline(void);
+void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3331,6 +3337,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "line_comment_after_stmt_same_line",
         Plecs_line_comment_after_stmt_same_line
+    },
+    {
+        "comma_separated_pred",
+        Plecs_comma_separated_pred
+    },
+    {
+        "comma_separated_pred_w_subj",
+        Plecs_comma_separated_pred_w_subj
+    },
+    {
+        "comma_separated_pred_w_subj_obj",
+        Plecs_comma_separated_pred_w_subj_obj
+    },
+    {
+        "comma_separated_pred_trailing_comma",
+        Plecs_comma_separated_pred_trailing_comma
+    },
+    {
+        "comma_separated_pred_trailing_comma_newline",
+        Plecs_comma_separated_pred_trailing_comma_newline
+    },
+    {
+        "comma_separated_pred_trailing_comma_newline_multiline",
+        Plecs_comma_separated_pred_trailing_comma_newline_multiline
     }
 };
 
@@ -9495,7 +9525,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        21,
+        27,
         Plecs_testcases
     },
     {

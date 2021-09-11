@@ -286,3 +286,101 @@ void Plecs_line_comment_after_stmt_same_line() {
 
     ecs_fini(world);
 }
+
+void Plecs_comma_separated_pred() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") != 0);
+    test_assert(ecs_lookup(world, "Worlds") != 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_comma_separated_pred_w_subj() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar),Hello(Worlds)") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t _world = ecs_lookup(world, "Worlds");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+
+    test_assert(ecs_has_id(world, bar, foo));
+    test_assert(ecs_has_id(world, _world, hello));
+
+    ecs_fini(world);
+}
+
+void Plecs_comma_separated_pred_w_subj_obj() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar, Obj1),Hello(Worlds, Obj2)") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t _world = ecs_lookup(world, "Worlds");
+    ecs_entity_t obj1 = ecs_lookup(world, "Obj1");
+    ecs_entity_t obj2 = ecs_lookup(world, "Obj2");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(obj1 != 0);
+    test_assert(obj2 != 0);
+
+    test_assert(ecs_has_pair(world, bar, foo, obj1));
+    test_assert(ecs_has_pair(world, _world, hello, obj2));
+
+    ecs_fini(world);
+}
+
+void Plecs_comma_separated_pred_trailing_comma() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") != 0);
+    test_assert(ecs_lookup(world, "Worlds") != 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_comma_separated_pred_trailing_comma_newline() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,\n") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") != 0);
+    test_assert(ecs_lookup(world, "Worlds") != 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_comma_separated_pred_trailing_comma_newline_multiline() {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,\nHello,Worlds,") == 0);
+
+    test_assert(ecs_lookup(world, "Hello") != 0);
+    test_assert(ecs_lookup(world, "Worlds") != 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}

@@ -386,7 +386,13 @@
                 "line_comment_after_stmt",
                 "line_comment_between_stmt",
                 "multiple_line_comment",
-                "line_comment_after_stmt_same_line"
+                "line_comment_after_stmt_same_line",
+                "comma_separated_pred",
+                "comma_separated_pred_w_subj",
+                "comma_separated_pred_w_subj_obj",
+                "comma_separated_pred_trailing_comma",
+                "comma_separated_pred_trailing_comma_newline",
+                "comma_separated_pred_trailing_comma_newline_multiline"
             ]            
         }, {
             "id": "GlobalComponentIds",

@@ -11,7 +11,11 @@ ecs_entity_t ensure_entity(
     ecs_world_t *world,
     const char *path)
 {
-    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    if (!path) {
+        return 0;
+    }
+
+    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, path, NULL, NULL, true);
     if (!e) {
         e = ecs_new_from_path(world, 0, path);
         ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
@@ -46,10 +50,12 @@ int create_term(
         obj = ensure_entity(world, term->args[1].name);
     }
 
-    if (!obj) {
-        ecs_add_id(world, subj, pred);
-    } else {
-        ecs_add_pair(world, subj, pred, obj);
+    if (subj) {
+        if (!obj) {
+            ecs_add_id(world, subj, pred);
+        } else {
+            ecs_add_pair(world, subj, pred, obj);
+        }
     }
 
     return 0;
