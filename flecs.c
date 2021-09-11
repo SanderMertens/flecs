@@ -13636,8 +13636,6 @@ int ecs_plecs_from_str(
     }
 
     expr = ptr = skip_fluff(ptr);
-    
-    printf("ptr = '%s'\n", ptr);
 
     while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
         if (!ecs_term_is_initialized(&term)) {
@@ -13651,7 +13649,6 @@ int ecs_plecs_from_str(
         ecs_term_fini(&term);
 
         expr = ptr = skip_fluff(ptr);
-        printf("ptr = '%s'\n", ptr);
     }
 
     if (!ptr) {
@@ -13792,6 +13789,7 @@ typedef enum ecs_rule_op_kind_t {
     EcsRuleEach,        /* Forwards each entity in a table */
     EcsRuleSetJmp,      /* Set label for jump operation to one of two values */
     EcsRuleJump,        /* Jump to an operation label */
+    EcsRuleNot,         /* Invert result of an operation */
     EcsRuleYield        /* Yield result */
 } ecs_rule_op_kind_t;
 
@@ -14067,12 +14065,10 @@ ecs_rule_var_t* term_id_to_var(
     ecs_term_id_t *id)
 {
     ecs_rule_var_t *result;
-    if (!id->entity) {
+    if (!id->entity) {;
         result = find_variable(rule, EcsRuleVarKindUnknown, id->name);
-        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     } else if (id->entity == EcsThis) {
         result = find_variable(rule, EcsRuleVarKindUnknown, ".");
-        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         result = NULL;
     }
@@ -14568,6 +14564,9 @@ bool skip_term(ecs_term_t *term) {
     if (term->args[0].set.mask & EcsNothing) {
         return true;
     }
+    if (term->oper == EcsNot) {
+        return true;
+    }
     return false;
 }
 
@@ -14876,11 +14875,11 @@ int scan_variables(
 
     /* Step 1: find all possible roots */
     ecs_term_t *terms = rule->filter.terms;
-    int32_t i, count = rule->filter.term_count;
+    int32_t i, term_count = rule->filter.term_count;
 
-    rule->subject_variables = ecs_os_malloc_n(int32_t, count);
+    rule->subject_variables = ecs_os_malloc_n(int32_t, term_count);
 
-    for (i = 0; i < count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
         /* Evaluate the subject. The predicate and object are not evaluated, 
@@ -14918,7 +14917,7 @@ int scan_variables(
     ensure_all_variables(rule);
 
     /* Variables in a term with a literal subject have depth 0 */
-    for (i = 0; i < count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
         if (term->args[0].var == EcsVarIsEntity) {
@@ -14957,6 +14956,29 @@ int scan_variables(
         if (rule->variables[i].depth == UINT8_MAX) {
             rule_error(rule, "unconstrained variable '%s'", 
                 rule->variables[i].name);
+            goto error;
+        } 
+    }
+
+    /* For each Not term, verify that variables are known */
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (term->oper != EcsNot) {
+            continue;
+        }
+
+        ecs_rule_var_t 
+        *pred = term_pred(rule, term),
+        *obj = term_obj(rule, term);
+
+        if (!pred && term_id_is_variable(&term->pred)) {
+            rule_error(rule, "missing predicate variable '%s'", 
+                term->pred.name);
+            goto error;
+        }
+        if (!obj && term_id_is_variable(&term->args[1])) {
+            rule_error(rule, "missing object variable '%s'", 
+                term->args[1].name);
             goto error;
         }
     }
@@ -15814,7 +15836,7 @@ void compile_program(
 
         for (c = 0; c < term_count; c ++) {
             ecs_term_t *term = &terms[c];
-            if (term->args[0].set.mask & EcsNothing) {
+            if (skip_term(term)) {
                 continue;
             }
 
@@ -15828,6 +15850,35 @@ void compile_program(
 
             var = &rule->variables[v];
         }
+    }
+
+    for (c = 0; c < term_count; c ++) {
+        ecs_term_t *term = &terms[c];
+        if (term->oper != EcsNot) {
+            continue;
+        }
+
+        int32_t prev = rule->operation_count;
+
+        /* Prepend Not which turns a fail into a pass */
+        ecs_rule_op_t *not_pre = insert_operation(rule, -1, written);
+        not_pre->kind = EcsRuleNot;
+        not_pre->has_in = false;
+        not_pre->has_out = false;
+
+        /* First insert the operation(s) for the term as usual */
+        insert_term(rule, term, c, written);
+
+        /* Append Not which turns a pass into a fail */
+        ecs_rule_op_t *not_post = insert_operation(rule, -1, written);
+        not_post->kind = EcsRuleNot;
+        not_post->has_in = false;
+        not_post->has_out = false;
+
+        not_post->on_pass = prev - 1;
+        not_post->on_fail = prev - 1;
+        not_pre = &rule->operations[prev];
+        not_pre->on_fail = rule->operation_count;
     }
 
     /* Verify all subject variables have been written. Subject variables are of
@@ -15911,11 +15962,31 @@ ecs_rule_t* ecs_rule_init(
     /* Parse the signature expression. This initializes the columns array which
      * contains the information about which components/pairs are requested. */
     if (ecs_filter_init(world, &result->filter, &local_desc)) {
-        ecs_os_free(result);
-        return NULL;
+        goto error;
     }
 
     result->world = world;
+
+    /* Rule has no terms */
+    if (!result->filter.term_count) {
+        rule_error(result, "rule has no terms");
+        goto error;
+    }
+
+    ecs_term_t *terms = result->filter.terms;
+    int32_t i, term_count = result->filter.term_count;
+
+    /* Make sure rule doesn't just have Not terms */
+    for (i = 0; i < term_count; i++) {
+        ecs_term_t *term = &terms[i];
+        if (term->oper != EcsNot) {
+            break;
+        }
+    }
+    if (i == term_count) {
+        rule_error(result, "rule cannot only have terms with Not operator");
+        goto error;
+    }
 
     /* Find all variables & resolve dependencies */
     if (scan_variables(result) != 0) {
@@ -15930,8 +16001,7 @@ ecs_rule_t* ecs_rule_init(
     create_variable_name_array(result);
 
     /* Make sure that subject variable ids are pointing to entity variables */
-    int32_t i;
-    for (i = 0; i < result->filter.term_count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         int32_t var_id = result->subject_variables[i];
         if (var_id != -1) {
             ecs_rule_var_t *var = &result->variables[var_id];
@@ -15946,8 +16016,7 @@ ecs_rule_t* ecs_rule_init(
 
     return result;
 error:
-    /* TODO: proper cleanup */
-    ecs_os_free(result);
+    ecs_rule_fini(result);
     return NULL;
 }
 
@@ -16056,6 +16125,9 @@ char* ecs_rule_str(
             break;
         case EcsRuleJump:
             ecs_strbuf_append(&buf, "jump     ");
+            break;
+        case EcsRuleNot:
+            ecs_strbuf_append(&buf, "not      ");
             break;            
         case EcsRuleYield:
             ecs_strbuf_append(&buf, "yield    ");
@@ -17071,6 +17143,21 @@ bool eval_jump(
     return !redo;
 }
 
+/* The not operation reverts the result of the operation it embeds */
+static
+bool eval_not(
+    ecs_iter_t *it,
+    ecs_rule_op_t *op,
+    int32_t op_index,
+    bool redo)
+{
+    (void)it;
+    (void)op;
+    (void)op_index;
+
+    return !redo;
+}
+
 /* Yield operation. This is the simplest operation, as all it does is return
  * false. This will move the solver back to the previous instruction which
  * forces redo's on previous operations, for as long as there are matching
@@ -17119,6 +17206,8 @@ bool eval_op(
         return eval_setjmp(it, op, op_index, redo);
     case EcsRuleJump:
         return eval_jump(it, op, op_index, redo);
+    case EcsRuleNot:
+        return eval_not(it, op, op_index, redo);
     case EcsRuleYield:
         return eval_yield(it, op, op_index, redo);
     default:
@@ -17327,7 +17416,7 @@ bool ecs_rule_next(
 
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *term = &rule->filter.terms[i];
-            if (term->args[0].set.mask & EcsNothing) {
+            if (term->args[0].set.mask & EcsNothing || term->oper == EcsNot) {
                 it->ids[i] = term->id;
             }
         }

@@ -1142,6 +1142,11 @@ void Rules_2_constrained_vars_by_subject_literal(void);
 void Rules_2_constrained_vars_by_subject_literal_2_var_terms(void);
 void Rules_term_w_nothing_set(void);
 void Rules_term_w_nothing_set_w_this_term(void);
+void Rules_comp_w_not_term(void);
+void Rules_invalid_rule_w_only_not_term(void);
+void Rules_invalid_rule_w_not_term_unknown_var(void);
+void Rules_invalid_rule_w_not_term_unknown_pair_var(void);
+void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6309,6 +6314,26 @@ bake_test_case Rules_testcases[] = {
     {
         "term_w_nothing_set_w_this_term",
         Rules_term_w_nothing_set_w_this_term
+    },
+    {
+        "comp_w_not_term",
+        Rules_comp_w_not_term
+    },
+    {
+        "invalid_rule_w_only_not_term",
+        Rules_invalid_rule_w_only_not_term
+    },
+    {
+        "invalid_rule_w_not_term_unknown_var",
+        Rules_invalid_rule_w_not_term_unknown_var
+    },
+    {
+        "invalid_rule_w_not_term_unknown_pair_var",
+        Rules_invalid_rule_w_not_term_unknown_pair_var
+    },
+    {
+        "invalid_rule_w_not_term_unknown_pair_var_subj_var",
+        Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var
     }
 };
 
@@ -9617,7 +9642,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        84,
+        89,
         Rules_testcases
     },
     {

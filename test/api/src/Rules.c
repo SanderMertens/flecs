@@ -24,6 +24,18 @@
     test_str(_var, str);\
 }
 
+void Rules_empty_rule() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
 void Rules_invalid_rule() {
     ecs_tracing_enable(-4);
     
@@ -3108,12 +3120,102 @@ void Rules_term_w_nothing_set_w_this_term() {
     ecs_fini(world);
 }
 
-void Rules_empty_rule() {
-    ecs_tracing_enable(-4);
-    
+void Rules_comp_w_not_term() {
     ecs_world_t *world = ecs_init();
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ });
+    ECS_ENTITY(world, TagA, 0);
+    ECS_ENTITY(world, TagB, 0);
+    ECS_ENTITY(world, TagC, 0);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, TagB);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, TagB);
+    ecs_add_id(world, e_3, TagC);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "TagA, !TagB"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_invalid_rule_w_only_not_term() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "!TagA"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void Rules_invalid_rule_w_not_term_unknown_var() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+    ECS_ENTITY(world, TagB, 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "TagA, !TagB(_X)"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void Rules_invalid_rule_w_not_term_unknown_pair_var() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+    ECS_ENTITY(world, TagB, 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "TagA, !TagB(This, _X)"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+    ECS_ENTITY(world, TagB, 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "TagA(_Y), !TagB(_Y, _X)"
+    });
 
     test_assert(r == NULL);
 
