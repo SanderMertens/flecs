@@ -379,12 +379,15 @@ void Plecs_comment_after_newline_before_scope_open(void);
 void Plecs_hierarchy_2_levels(void);
 void Plecs_hierarchy_2_levels_2_subtrees(void);
 void Plecs_missing_end_of_scope(void);
+void Plecs_missing_end_of_predicate_scope(void);
 void Plecs_create_in_scope(void);
 void Plecs_hierarchy_w_pred_subj(void);
 void Plecs_hierarchy_custom_relation(void);
 void Plecs_hierarchy_custom_relation_2_levels(void);
 void Plecs_entity_after_hierarchy_custom_relation(void);
 void Plecs_entity_after_hierarchy_custom_relation_2_levels(void);
+void Plecs_single_component_scope(void);
+void Plecs_single_component_scope_2_levels(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3424,6 +3427,10 @@ bake_test_case Plecs_testcases[] = {
         Plecs_missing_end_of_scope
     },
     {
+        "missing_end_of_predicate_scope",
+        Plecs_missing_end_of_predicate_scope
+    },
+    {
         "create_in_scope",
         Plecs_create_in_scope
     },
@@ -3446,6 +3453,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "entity_after_hierarchy_custom_relation_2_levels",
         Plecs_entity_after_hierarchy_custom_relation_2_levels
+    },
+    {
+        "single_component_scope",
+        Plecs_single_component_scope
+    },
+    {
+        "single_component_scope_2_levels",
+        Plecs_single_component_scope_2_levels
     }
 };
 
@@ -9610,7 +9625,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        44,
+        47,
         Plecs_testcases
     },
     {

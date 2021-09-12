@@ -676,6 +676,23 @@ void Plecs_missing_end_of_scope() {
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     test_assert(ecs_get_scope(world) == 0);
+    test_assert(ecs_get_with(world) == 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_missing_end_of_predicate_scope() {
+    ecs_tracing_enable(-4);
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent() {"
+    LINE " Child";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    test_assert(ecs_get_scope(world) == 0);
+    test_assert(ecs_get_with(world) == 0);
 
     ecs_fini(world);
 }
@@ -836,6 +853,7 @@ void Plecs_entity_after_hierarchy_custom_relation() {
     test_assert(foo != 0);
     test_assert(bar != 0);
     test_assert(child != 0);
+    test_assert(hello != 0);
 
     test_assert(!ecs_has_id(world, bar, foo));
     test_assert(!ecs_has_id(world, foo, bar));
@@ -913,6 +931,58 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels() {
 
     test_assert(!ecs_has_pair(world, test_b, foo, bar));
     test_assert(!ecs_has_pair(world, test_b, rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_single_component_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo() {"
+    LINE " Hello"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+
+    test_assert(foo != 0);
+    test_assert(hello != 0);
+
+    test_assert(!ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(ecs_has_id(world, hello, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_single_component_scope_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo() {"
+    LINE "  Bar() {"
+    LINE "    Hello"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+
+    test_assert(!ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(!ecs_has_pair(world, hello, EcsChildOf, bar));
+    test_assert(!ecs_has_id(world, bar, foo));
+    test_assert(!ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(!ecs_has_id(world, hello, foo));
+    test_assert(ecs_has_id(world, hello, bar));
 
     ecs_fini(world);
 }

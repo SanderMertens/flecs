@@ -404,12 +404,15 @@
                 "hierarchy_2_levels",
                 "hierarchy_2_levels_2_subtrees",
                 "missing_end_of_scope",
+                "missing_end_of_predicate_scope",
                 "create_in_scope",
                 "hierarchy_w_pred_subj",
                 "hierarchy_custom_relation",
                 "hierarchy_custom_relation_2_levels",
                 "entity_after_hierarchy_custom_relation",
-                "entity_after_hierarchy_custom_relation_2_levels"
+                "entity_after_hierarchy_custom_relation_2_levels",
+                "single_component_scope",
+                "single_component_scope_2_levels"
             ]            
         }, {
             "id": "GlobalComponentIds",

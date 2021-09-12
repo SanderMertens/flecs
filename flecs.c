@@ -13593,11 +13593,6 @@ int create_term(
         return -1;
     }
 
-    if (!ecs_term_id_is_set(&term->args[0])) {
-        ecs_parser_error(name, expr, column, "missing subject in expression");
-        return -1;
-    }
-
     ecs_entity_t pred = ensure_entity(world, term->pred.name, term->args[0].name == NULL);
     ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
     ecs_entity_t obj = 0;
@@ -13617,8 +13612,13 @@ int create_term(
         state->last_subject = subj;
     } else {
         if (!obj) {
-            /* If no subject or object were provided, use predicate as subj */
-            state->last_subject = pred;
+            /* If no subject or object were provided, use predicate as subj 
+             * unless the expression explictly excluded the subject */
+            if (term->args[0].set.mask != EcsNothing) {
+                state->last_subject = pred;
+            } else {
+                state->last_predicate = pred;
+            }
         } else {
             state->last_predicate = pred;
             state->last_object = obj;
@@ -13696,9 +13696,14 @@ const char* parse_stmt(
             state->scope[state->sp] = state->last_subject;
             ecs_set_scope(world, state->last_subject);
         } else {
-            ecs_id_t pair = ecs_pair(state->last_predicate, state->last_object);
-            state->scope[state->sp] = pair;
-            ecs_set_with(world, pair);
+            ecs_id_t id;
+            if (state->last_object) {
+                id = ecs_pair(state->last_predicate, state->last_object);
+            } else {
+                id = state->last_predicate;
+            }
+            state->scope[state->sp] = id;
+            ecs_set_with(world, id);
         }
 
         ptr ++;

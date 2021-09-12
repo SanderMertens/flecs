@@ -72,12 +72,11 @@ int create_term(
         return -1;
     }
 
-    if (!ecs_term_id_is_set(&term->args[0])) {
-        ecs_parser_error(name, expr, column, "missing subject in expression");
-        return -1;
-    }
+    ecs_entity_t pred = ensure_entity(
+        world, term->pred.name, 
+        term->args[0].name == NULL && /* Treat as subj if none was provided */
+            term->args[0].set.mask != EcsNothing); 
 
-    ecs_entity_t pred = ensure_entity(world, term->pred.name, term->args[0].name == NULL);
     ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
     ecs_entity_t obj = 0;
 
@@ -96,8 +95,13 @@ int create_term(
         state->last_subject = subj;
     } else {
         if (!obj) {
-            /* If no subject or object were provided, use predicate as subj */
-            state->last_subject = pred;
+            /* If no subject or object were provided, use predicate as subj 
+             * unless the expression explictly excluded the subject */
+            if (term->args[0].set.mask != EcsNothing) {
+                state->last_subject = pred;
+            } else {
+                state->last_predicate = pred;
+            }
         } else {
             state->last_predicate = pred;
             state->last_object = obj;
@@ -175,9 +179,14 @@ const char* parse_stmt(
             state->scope[state->sp] = state->last_subject;
             ecs_set_scope(world, state->last_subject);
         } else {
-            ecs_id_t pair = ecs_pair(state->last_predicate, state->last_object);
-            state->scope[state->sp] = pair;
-            ecs_set_with(world, pair);
+            ecs_id_t id;
+            if (state->last_object) {
+                id = ecs_pair(state->last_predicate, state->last_object);
+            } else {
+                id = state->last_predicate;
+            }
+            state->scope[state->sp] = id;
+            ecs_set_with(world, id);
         }
 
         ptr ++;
@@ -212,6 +221,7 @@ int ecs_plecs_from_str(
     }
 
     state.scope[0] = ecs_get_scope(world);
+    ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     do {
         expr = ptr = parse_stmt(world, name, expr, ptr, &state);
@@ -240,6 +250,7 @@ int ecs_plecs_from_str(
     } while (true);
 
     ecs_set_scope(world, state.scope[0]);
+    ecs_set_with(world, prev_with);
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");
@@ -248,6 +259,8 @@ int ecs_plecs_from_str(
 
     return 0;
 error:
+    ecs_set_scope(world, state.scope[0]);
+    ecs_set_with(world, prev_with);
     ecs_term_fini(&term);
     return -1;
 }
