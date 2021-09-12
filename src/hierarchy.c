@@ -608,12 +608,20 @@ ecs_entity_t ecs_add_path_w_sep(
             name = ecs_os_strdup(elem);
 
             /* If this is the last entity in the path, use the provided id */
-            if (entity && !path_elem(ptr, sep, NULL)) {
+            bool last_elem = false;
+            if (!path_elem(ptr, sep, NULL)) {
                 e = entity;
+                last_elem = true;
             }
 
             if (!e) {
-                e = ecs_new_id(world);
+                if (last_elem) {
+                    ecs_entity_t prev = ecs_set_scope(world, 0);
+                    e = ecs_new(world, 0);
+                    ecs_set_scope(world, prev);
+                } else {
+                    e = ecs_new_id(world);
+                }
             }
 
             ecs_set_name(world, e, name);

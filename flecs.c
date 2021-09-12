@@ -13530,7 +13530,9 @@ void FlecsTimerImport(
 #define STACK_MAX_SIZE (32)
 
 typedef struct {
+    ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
+    ecs_entity_t last_object;
     ecs_entity_t scope[STACK_MAX_SIZE];
     int32_t sp;
 } plecs_state_t;
@@ -13538,7 +13540,8 @@ typedef struct {
 static
 ecs_entity_t ensure_entity(
     ecs_world_t *world,
-    const char *path)
+    const char *path,
+    bool is_subject)
 {
     if (!path) {
         return 0;
@@ -13546,8 +13549,27 @@ ecs_entity_t ensure_entity(
 
     ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, path, NULL, NULL, true);
     if (!e) {
-        e = ecs_new_from_path(world, 0, path);
+        if (!is_subject) {
+            /* If this is not a subject create an existing empty id, which 
+             * ensures that scope & with are not applied */
+            e = ecs_new_id(world);
+        }
+
+        e = ecs_add_path(world, e, 0, path);
         ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        /* If entity exists, make sure it gets the right scope and with */
+        if (is_subject) {
+            ecs_entity_t scope = ecs_get_scope(world);
+            if (scope) {
+                ecs_add_id(world, e, scope);
+            }
+
+            ecs_entity_t with = ecs_get_with(world);
+            if (with) {
+                ecs_add_id(world, e, with);
+            }
+        }
     }
 
     return e;
@@ -13562,6 +13584,10 @@ int create_term(
     int64_t column,
     plecs_state_t *state)
 {
+    state->last_subject = 0;
+    state->last_predicate = 0;
+    state->last_object = 0;
+
     if (!ecs_term_id_is_set(&term->pred)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
         return -1;
@@ -13572,12 +13598,12 @@ int create_term(
         return -1;
     }
 
-    ecs_entity_t pred = ensure_entity(world, term->pred.name);
-    ecs_entity_t subj = ensure_entity(world, term->args[0].name);
+    ecs_entity_t pred = ensure_entity(world, term->pred.name, term->args[0].name == NULL);
+    ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->args[1])) {
-        obj = ensure_entity(world, term->args[1].name);
+        obj = ensure_entity(world, term->args[1].name, false);
     }
 
     if (subj) {
@@ -13585,10 +13611,18 @@ int create_term(
             ecs_add_id(world, subj, pred);
         } else {
             ecs_add_pair(world, subj, pred, obj);
+            state->last_object = obj;
         }
+        state->last_predicate = pred;
         state->last_subject = subj;
     } else {
-        state->last_subject = pred;
+        if (!obj) {
+            /* If no subject or object were provided, use predicate as subj */
+            state->last_subject = pred;
+        } else {
+            state->last_predicate = pred;
+            state->last_object = obj;
+        }
     }
 
     return 0;
@@ -13656,14 +13690,30 @@ const char* parse_stmt(
     ptr = skip_fluff(ptr);
 
     if (ptr[0] == '{') {
-        state->scope[++ state->sp] = state->last_subject;
+        state->sp ++;
+
+        if (state->last_subject) {
+            state->scope[state->sp] = state->last_subject;
+            ecs_set_scope(world, state->last_subject);
+        } else {
+            ecs_id_t pair = ecs_pair(state->last_predicate, state->last_object);
+            state->scope[state->sp] = pair;
+            ecs_set_with(world, pair);
+        }
+
         ptr ++;
-        ecs_set_scope(world, state->last_subject);
     }
-    if (ptr[0] == '}') {
+
+    while (ptr[0] == '}') {
         state->sp --;
-        ptr ++;
-        ecs_set_scope(world, state->scope[state->sp]);
+        ptr = skip_fluff(ptr + 1);
+        ecs_id_t id = state->scope[state->sp];
+        if (!id || ECS_HAS_ROLE(id, PAIR)) {
+            ecs_set_with(world, id);
+        }
+        if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+            ecs_set_scope(world, id);
+        }
     }
 
     return skip_fluff(ptr);
@@ -13681,6 +13731,8 @@ int ecs_plecs_from_str(
     if (!expr) {
         return 0;
     }
+
+    state.scope[0] = ecs_get_scope(world);
 
     do {
         expr = ptr = parse_stmt(world, name, expr, ptr, &state);
@@ -13707,6 +13759,13 @@ int ecs_plecs_from_str(
 
         ecs_term_fini(&term);
     } while (true);
+
+    ecs_set_scope(world, state.scope[0]);
+
+    if (state.sp != 0) {
+        ecs_parser_error(name, expr, 0, "missing end of scope");
+        goto error;
+    }
 
     return 0;
 error:
@@ -30507,12 +30566,20 @@ ecs_entity_t ecs_add_path_w_sep(
             name = ecs_os_strdup(elem);
 
             /* If this is the last entity in the path, use the provided id */
-            if (entity && !path_elem(ptr, sep, NULL)) {
+            bool last_elem = false;
+            if (!path_elem(ptr, sep, NULL)) {
                 e = entity;
+                last_elem = true;
             }
 
             if (!e) {
-                e = ecs_new_id(world);
+                if (last_elem) {
+                    ecs_entity_t prev = ecs_set_scope(world, 0);
+                    e = ecs_new(world, 0);
+                    ecs_set_scope(world, prev);
+                } else {
+                    e = ecs_new_id(world);
+                }
             }
 
             ecs_set_name(world, e, name);
