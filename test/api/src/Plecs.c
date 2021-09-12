@@ -1031,6 +1031,36 @@ void Plecs_pred_scope_inside_with() {
     ecs_fini(world);
 }
 
+void Plecs_pred_scope_nested_w_subj_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    HEAD " Foo() {"
+    LINE "  Hello"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(hello != 0);
+
+    test_assert(!ecs_has_pair(world, hello, EcsChildOf, parent));
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(!ecs_has_id(world, hello, foo));
+
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+
 void Plecs_with_tag() {
     ecs_world_t *world = ecs_init();
 
@@ -1315,4 +1345,3 @@ void Plecs_with_n_tags_2_levels() {
 
     ecs_fini(world);
 }
-

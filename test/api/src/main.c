@@ -390,6 +390,7 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels(void);
 void Plecs_pred_scope(void);
 void Plecs_pred_scope_2_levels(void);
 void Plecs_pred_scope_inside_with(void);
+void Plecs_pred_scope_nested_w_subj_scope(void);
 void Plecs_with_tag(void);
 void Plecs_with_tag_2_entities(void);
 void Plecs_with_tag_same_line(void);
@@ -3479,6 +3480,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "pred_scope_inside_with",
         Plecs_pred_scope_inside_with
+    },
+    {
+        "pred_scope_nested_w_subj_scope",
+        Plecs_pred_scope_nested_w_subj_scope
     },
     {
         "with_tag",
@@ -9675,7 +9680,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        57,
+        58,
         Plecs_testcases
     },
     {

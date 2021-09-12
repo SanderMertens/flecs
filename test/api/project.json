@@ -415,6 +415,7 @@
                 "pred_scope",
                 "pred_scope_2_levels",
                 "pred_scope_inside_with",
+                "pred_scope_nested_w_subj_scope",
                 "with_tag",
                 "with_tag_2_entities",
                 "with_tag_same_line",

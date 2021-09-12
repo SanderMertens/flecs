@@ -13763,11 +13763,12 @@ const char* parse_stmt(
                     ecs_id_t id;
                     if (state->last_object) {
                         id = ecs_pair(state->last_predicate, state->last_object);
+                        ecs_set_with(world, id);
                     } else {
                         id = ecs_pair(EcsChildOf, state->last_predicate);
+                        ecs_set_scope(world, state->last_predicate);
                     }
                     state->scope[state->sp] = id;
-                    ecs_set_with(world, id);
                 }
             }
 
@@ -13785,6 +13786,7 @@ const char* parse_stmt(
             if (!id || ECS_HAS_ROLE(id, PAIR)) {
                 ecs_set_with(world, id);
             }
+
             if (!id || !ECS_HAS_ROLE(id, PAIR)) {
                 ecs_set_scope(world, id);
             }
