@@ -13526,15 +13526,20 @@ void FlecsTimerImport(
 
 
 #define TOK_NEWLINE '\n'
+#define TOK_WITH "with"
 
-#define STACK_MAX_SIZE (32)
+#define STACK_MAX_SIZE (64)
 
 typedef struct {
     ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
     ecs_entity_t last_object;
     ecs_entity_t scope[STACK_MAX_SIZE];
+    ecs_entity_t with[STACK_MAX_SIZE];
+    int32_t with_frames[STACK_MAX_SIZE];
     int32_t sp;
+    int32_t with_frame;
+    bool with_clause;
 } plecs_state_t;
 
 static
@@ -13576,6 +13581,26 @@ ecs_entity_t ensure_entity(
 }
 
 static
+bool pred_is_subj(
+    ecs_term_t *term,
+    plecs_state_t *state)
+{
+    if (term->args[0].name != NULL) {
+        return false;
+    }
+    if (term->args[1].name != NULL) {
+        return false;
+    }
+    if (term->args[0].set.mask == EcsNothing) {
+        return false;
+    }
+    if (state->with_clause) {
+        return false;
+    }
+    return true;
+}
+
+static
 int create_term(
     ecs_world_t *world, 
     ecs_term_t *term,
@@ -13593,7 +13618,8 @@ int create_term(
         return -1;
     }
 
-    ecs_entity_t pred = ensure_entity(world, term->pred.name, term->args[0].name == NULL);
+    bool pred_as_subj = pred_is_subj(term, state);
+    ecs_entity_t pred = ensure_entity(world, term->pred.name, pred_as_subj); 
     ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
     ecs_entity_t obj = 0;
 
@@ -13614,14 +13640,39 @@ int create_term(
         if (!obj) {
             /* If no subject or object were provided, use predicate as subj 
              * unless the expression explictly excluded the subject */
-            if (term->args[0].set.mask != EcsNothing) {
+            if (pred_as_subj) {
                 state->last_subject = pred;
+                subj = pred;
             } else {
                 state->last_predicate = pred;
             }
         } else {
             state->last_predicate = pred;
             state->last_object = obj;
+        }
+    }
+
+    /* If this is a with clause (the list of entities between 'with' and scope
+     * open), add subject to the array of with frames */
+    if (state->with_clause) {
+        ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_id_t id;
+
+        if (obj) {
+            id = ecs_pair(pred, obj);
+        } else {
+            id = pred;
+        }
+
+        state->with[state->with_frame ++] = id;
+
+    /* If this is not a with clause, add with frames to subject */
+    } else {
+        if (subj) {
+            int32_t i, frame_count = state->with_frames[state->sp];
+            for (i = 0; i < frame_count; i ++) {
+                ecs_add_id(world, subj, state->with[i]);
+            }
         }
     }
 
@@ -13687,41 +13738,64 @@ const char* parse_stmt(
     (void)name;
     (void)expr;
 
-    ptr = skip_fluff(ptr);
+    bool stmt_parsed;
 
-    if (ptr[0] == '{') {
-        state->sp ++;
+    do {
+        stmt_parsed = false;
 
-        if (state->last_subject) {
-            state->scope[state->sp] = state->last_subject;
-            ecs_set_scope(world, state->last_subject);
-        } else {
-            ecs_id_t id;
-            if (state->last_object) {
-                id = ecs_pair(state->last_predicate, state->last_object);
-            } else {
-                id = state->last_predicate;
+        ptr = skip_fluff(ptr);
+
+        if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
+            /* Add following expressions to with list */
+            state->with_clause = true;
+            ptr = skip_fluff(ptr + 5);
+            stmt_parsed = true;
+        }
+
+        if (ptr[0] == '{') {
+            state->sp ++;
+
+            if (!state->with_clause) {
+                if (state->last_subject) {
+                    state->scope[state->sp] = state->last_subject;
+                    ecs_set_scope(world, state->last_subject);
+                } else {
+                    ecs_id_t id;
+                    if (state->last_object) {
+                        id = ecs_pair(state->last_predicate, state->last_object);
+                    } else {
+                        id = state->last_predicate;
+                    }
+                    state->scope[state->sp] = id;
+                    ecs_set_with(world, id);
+                }
             }
-            state->scope[state->sp] = id;
-            ecs_set_with(world, id);
+
+            state->with_frames[state->sp] = state->with_frame;
+            state->with_clause = false;
+
+            ptr ++;
+            stmt_parsed = true;
         }
 
-        ptr ++;
-    }
+        while (ptr[0] == '}') {
+            state->sp --;
+            ptr = skip_fluff(ptr + 1);
+            ecs_id_t id = state->scope[state->sp];
+            if (!id || ECS_HAS_ROLE(id, PAIR)) {
+                ecs_set_with(world, id);
+            }
+            if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+                ecs_set_scope(world, id);
+            }
 
-    while (ptr[0] == '}') {
-        state->sp --;
-        ptr = skip_fluff(ptr + 1);
-        ecs_id_t id = state->scope[state->sp];
-        if (!id || ECS_HAS_ROLE(id, PAIR)) {
-            ecs_set_with(world, id);
+            state->with_frame = state->with_frames[state->sp];
+            stmt_parsed = true;
         }
-        if (!id || !ECS_HAS_ROLE(id, PAIR)) {
-            ecs_set_scope(world, id);
-        }
-    }
 
-    return skip_fluff(ptr);
+    } while (stmt_parsed);
+
+    return ptr;
 }
 
 int ecs_plecs_from_str(
@@ -13738,6 +13812,7 @@ int ecs_plecs_from_str(
     }
 
     state.scope[0] = ecs_get_scope(world);
+    ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     do {
         expr = ptr = parse_stmt(world, name, expr, ptr, &state);
@@ -13766,6 +13841,7 @@ int ecs_plecs_from_str(
     } while (true);
 
     ecs_set_scope(world, state.scope[0]);
+    ecs_set_with(world, prev_with);
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");
@@ -13774,6 +13850,8 @@ int ecs_plecs_from_str(
 
     return 0;
 error:
+    ecs_set_scope(world, state.scope[0]);
+    ecs_set_with(world, prev_with);
     ecs_term_fini(&term);
     return -1;
 }
@@ -19842,13 +19920,6 @@ parse_predicate:
 
         goto parse_done;
 
-    } else if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        goto parse_name;
     }
 
     goto parse_done;
@@ -19915,10 +19986,6 @@ parse_singleton:
 
     parse_identifier(token, &term.args[0]);
     goto parse_done;
-
-parse_name:
-    term.name = ecs_os_strdup(token);
-    ptr = skip_space(ptr);
 
 parse_done:
     *term_out = term;

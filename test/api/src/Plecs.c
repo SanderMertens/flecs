@@ -80,6 +80,20 @@ void Plecs_multiple_trailing_newlines() {
     ecs_fini(world);
 }
 
+void Plecs_invalid_2_identifiers_separated_by_space() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo Bar"
+    LINE "Hello";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
 void Plecs_entity() {
     ecs_world_t *world = ecs_init();
 
@@ -983,6 +997,291 @@ void Plecs_single_component_scope_2_levels() {
     test_assert(!ecs_has_pair(world, bar, EcsChildOf, foo));
     test_assert(!ecs_has_id(world, hello, foo));
     test_assert(ecs_has_id(world, hello, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with Tag {"
+    LINE "  Foo"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+
+    test_assert(foo != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag_2_entities() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with Tag {"
+    LINE "  Foo"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+    test_assert(ecs_has_id(world, bar, tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag_same_line() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with Tag { Foo }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+
+    test_assert(foo != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag_2_entities_same_line() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with Tag { Foo, Bar }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+    test_assert(ecs_has_id(world, bar, tag));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with TagA {"
+    HEAD " with TagB {"
+    LINE "  Foo"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+
+    test_assert(foo != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+
+    test_assert(ecs_has_id(world, foo, tag_a));
+    test_assert(ecs_has_id(world, foo, tag_b));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_tag_2_levels_2_subtrees() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with TagA {"
+    HEAD " with TagB {"
+    LINE "  Foo"
+    LINE "  BarA"
+    LINE " }"
+    HEAD " with TagC {"
+    LINE "  Foo"
+    LINE "  BarB"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+    ecs_entity_t tag_c = ecs_lookup_fullpath(world, "TagC");
+    ecs_entity_t bar_a = ecs_lookup_fullpath(world, "BarA");
+    ecs_entity_t bar_b = ecs_lookup_fullpath(world, "BarB");
+
+    test_assert(foo != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+    test_assert(bar_a != 0);
+    test_assert(bar_b != 0);
+
+    test_assert(ecs_has_id(world, foo, tag_a));
+    test_assert(ecs_has_id(world, foo, tag_b));
+    test_assert(ecs_has_id(world, foo, tag_c));
+
+    test_assert(ecs_has_id(world, bar_a, tag_a));
+    test_assert(ecs_has_id(world, bar_b, tag_a));
+
+    test_assert(ecs_has_id(world, bar_a, tag_b));
+    test_assert(ecs_has_id(world, bar_b, tag_c));
+
+    test_assert(!ecs_has_id(world, bar_b, tag_b));
+    test_assert(!ecs_has_id(world, bar_a, tag_c));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_n_tags() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with TagA, TagB {"
+    LINE " Foo"
+    LINE " Bar"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+
+    test_assert(ecs_has_id(world, foo, tag_a));
+    test_assert(ecs_has_id(world, foo, tag_b));
+
+    test_assert(ecs_has_id(world, bar, tag_a));
+    test_assert(ecs_has_id(world, bar, tag_b));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_n_tags_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with TagA, TagB {"
+    LINE " with TagC, TagD, TagE {"
+    LINE "  Foo"
+    LINE " }"
+    LINE " HelloA"
+    LINE " with TagF, TagG, TagH {"
+    LINE "  Bar"
+    LINE " }"
+    LINE " HelloB"
+    LINE "}"
+    LINE "HelloC";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+    ecs_entity_t tag_c = ecs_lookup_fullpath(world, "TagC");
+    ecs_entity_t tag_d = ecs_lookup_fullpath(world, "TagD");
+    ecs_entity_t tag_e = ecs_lookup_fullpath(world, "TagE");
+    ecs_entity_t tag_f = ecs_lookup_fullpath(world, "TagF");
+    ecs_entity_t tag_g = ecs_lookup_fullpath(world, "TagG");
+    ecs_entity_t tag_h = ecs_lookup_fullpath(world, "TagH");
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+
+    ecs_entity_t hello_a = ecs_lookup_fullpath(world, "HelloA");
+    ecs_entity_t hello_b = ecs_lookup_fullpath(world, "HelloB");
+    ecs_entity_t hello_c = ecs_lookup_fullpath(world, "HelloC");
+
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+    test_assert(tag_b != 0);
+    test_assert(tag_b != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello_a != 0);
+    test_assert(hello_b != 0);
+    test_assert(hello_c != 0);
+
+    test_assert(ecs_has_id(world, foo, tag_a));
+    test_assert(ecs_has_id(world, foo, tag_b));
+    test_assert(ecs_has_id(world, foo, tag_c));
+    test_assert(ecs_has_id(world, foo, tag_d));
+    test_assert(ecs_has_id(world, foo, tag_e));
+    test_assert(!ecs_has_id(world, foo, tag_f));
+    test_assert(!ecs_has_id(world, foo, tag_g));
+    test_assert(!ecs_has_id(world, foo, tag_h));
+
+    test_assert(ecs_has_id(world, bar, tag_a));
+    test_assert(ecs_has_id(world, bar, tag_b));
+    test_assert(!ecs_has_id(world, bar, tag_c));
+    test_assert(!ecs_has_id(world, bar, tag_d));
+    test_assert(!ecs_has_id(world, bar, tag_e));
+    test_assert(ecs_has_id(world, bar, tag_f));
+    test_assert(ecs_has_id(world, bar, tag_g));
+    test_assert(ecs_has_id(world, bar, tag_h));
+
+    test_assert(ecs_has_id(world, hello_a, tag_a));
+    test_assert(ecs_has_id(world, hello_a, tag_b));
+    test_assert(!ecs_has_id(world, hello_a, tag_c));
+    test_assert(!ecs_has_id(world, hello_a, tag_d));
+    test_assert(!ecs_has_id(world, hello_a, tag_e));
+    test_assert(!ecs_has_id(world, hello_a, tag_f));
+    test_assert(!ecs_has_id(world, hello_a, tag_g));
+    test_assert(!ecs_has_id(world, hello_a, tag_h));
+
+    test_assert(ecs_has_id(world, hello_b, tag_a));
+    test_assert(ecs_has_id(world, hello_b, tag_b));
+    test_assert(!ecs_has_id(world, hello_b, tag_c));
+    test_assert(!ecs_has_id(world, hello_b, tag_d));
+    test_assert(!ecs_has_id(world, hello_b, tag_e));
+    test_assert(!ecs_has_id(world, hello_b, tag_f));
+    test_assert(!ecs_has_id(world, hello_b, tag_g));
+    test_assert(!ecs_has_id(world, hello_b, tag_h));
+
+    test_assert(!ecs_has_id(world, hello_c, tag_a));
+    test_assert(!ecs_has_id(world, hello_c, tag_b));
+    test_assert(!ecs_has_id(world, hello_c, tag_c));
+    test_assert(!ecs_has_id(world, hello_c, tag_d));
+    test_assert(!ecs_has_id(world, hello_c, tag_e));
+    test_assert(!ecs_has_id(world, hello_c, tag_f));
+    test_assert(!ecs_has_id(world, hello_c, tag_g));
+    test_assert(!ecs_has_id(world, hello_c, tag_h));
 
     ecs_fini(world);
 }

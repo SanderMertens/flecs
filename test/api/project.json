@@ -375,6 +375,7 @@
                 "newline_trailing_space",
                 "newline_trailing_spaces",
                 "multiple_trailing_newlines",
+                "invalid_2_identifiers_separated_by_space",
                 "entity",
                 "entity_w_entity",
                 "entity_w_pair",
@@ -412,7 +413,15 @@
                 "entity_after_hierarchy_custom_relation",
                 "entity_after_hierarchy_custom_relation_2_levels",
                 "single_component_scope",
-                "single_component_scope_2_levels"
+                "single_component_scope_2_levels",
+                "with_tag",
+                "with_tag_2_entities",
+                "with_tag_same_line",
+                "with_tag_2_entities_same_line",
+                "with_tag_2_levels",
+                "with_tag_2_levels_2_subtrees",
+                "with_n_tags",
+                "with_n_tags_2_levels"
             ]            
         }, {
             "id": "GlobalComponentIds",

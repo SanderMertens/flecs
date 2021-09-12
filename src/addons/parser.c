@@ -708,13 +708,6 @@ parse_predicate:
 
         goto parse_done;
 
-    } else if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-
-        goto parse_name;
     }
 
     goto parse_done;
@@ -781,10 +774,6 @@ parse_singleton:
 
     parse_identifier(token, &term.args[0]);
     goto parse_done;
-
-parse_name:
-    term.name = ecs_os_strdup(token);
-    ptr = skip_space(ptr);
 
 parse_done:
     *term_out = term;
