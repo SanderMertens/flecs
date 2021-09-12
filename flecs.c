@@ -13764,7 +13764,7 @@ const char* parse_stmt(
                     if (state->last_object) {
                         id = ecs_pair(state->last_predicate, state->last_object);
                     } else {
-                        id = state->last_predicate;
+                        id = ecs_pair(EcsChildOf, state->last_predicate);
                     }
                     state->scope[state->sp] = id;
                     ecs_set_with(world, id);

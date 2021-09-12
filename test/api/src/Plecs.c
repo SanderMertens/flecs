@@ -949,7 +949,7 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_single_component_scope() {
+void Plecs_pred_scope() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -960,18 +960,18 @@ void Plecs_single_component_scope() {
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
 
     test_assert(foo != 0);
     test_assert(hello != 0);
 
-    test_assert(!ecs_has_pair(world, hello, EcsChildOf, foo));
-    test_assert(ecs_has_id(world, hello, foo));
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(!ecs_has_id(world, hello, foo));
 
     ecs_fini(world);
 }
 
-void Plecs_single_component_scope_2_levels() {
+void Plecs_pred_scope_2_levels() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -985,18 +985,48 @@ void Plecs_single_component_scope_2_levels() {
 
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
     ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
     test_assert(hello != 0);
 
     test_assert(!ecs_has_pair(world, hello, EcsChildOf, foo));
-    test_assert(!ecs_has_pair(world, hello, EcsChildOf, bar));
-    test_assert(!ecs_has_id(world, bar, foo));
-    test_assert(!ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, bar));
     test_assert(!ecs_has_id(world, hello, foo));
-    test_assert(ecs_has_id(world, hello, bar));
+    test_assert(!ecs_has_id(world, hello, bar));
+
+    test_assert(!ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(!ecs_has_id(world, bar, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_pred_scope_inside_with() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with Tag {"
+    HEAD " Foo() {"
+    LINE "  Hello"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+
+    test_assert(foo != 0);
+    test_assert(hello != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(!ecs_has_id(world, hello, foo));
+    test_assert(ecs_has_id(world, hello, tag));
+
+    test_assert(!ecs_has_id(world, foo, tag));
 
     ecs_fini(world);
 }
@@ -1285,3 +1315,4 @@ void Plecs_with_n_tags_2_levels() {
 
     ecs_fini(world);
 }
+
