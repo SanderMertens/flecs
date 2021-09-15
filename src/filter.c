@@ -58,9 +58,6 @@ void finalize_default_substitution(
         ecs_term_id_t *subj = &terms[i].args[0];
         ecs_term_id_t *obj = &terms[i].args[1];
 
-        /* Term predicate must always be set */
-        ecs_assert(ecs_term_id_is_set(pred), ECS_INTERNAL_ERROR, NULL);
-
         bool pred_transitive = false;
         if (pred->set.mask == EcsDefaultSet) {
             ecs_entity_t e = term_id_entity(world, pred);

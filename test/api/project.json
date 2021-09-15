@@ -1034,7 +1034,9 @@
                 "match_prefab",
                 "chain_term_iter",
                 "chain_filter_iter",
-                "chain_query_iter"
+                "chain_query_iter",
+                "chain_rule_iter",
+                "chain_iter_2_levels"
             ]
         }, {
             "id": "FilterDefaultSubstitution",

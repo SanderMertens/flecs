@@ -16439,6 +16439,7 @@ ecs_iter_t ecs_rule_iter(
     ecs_iter_t result = {0};
 
     result.world = rule->world;
+    result.real_world = rule->world;
 
     ecs_rule_iter_t *it = &result.iter.rule;
     it->rule = rule;
@@ -16471,6 +16472,8 @@ ecs_iter_t ecs_rule_iter(
     }
     
     result.term_count = rule->filter.term_count;
+    
+    result.next = ecs_rule_next;
 
     return result;
 }
@@ -17592,6 +17595,7 @@ bool ecs_rule_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_rule_iter_t *iter = &it->iter.rule;
     const ecs_rule_t *rule = iter->rule;
@@ -21841,9 +21845,6 @@ void finalize_default_substitution(
         ecs_term_id_t *pred = &terms[i].pred;
         ecs_term_id_t *subj = &terms[i].args[0];
         ecs_term_id_t *obj = &terms[i].args[1];
-
-        /* Term predicate must always be set */
-        ecs_assert(ecs_term_id_is_set(pred), ECS_INTERNAL_ERROR, NULL);
 
         bool pred_transitive = false;
         if (pred->set.mask == EcsDefaultSet) {

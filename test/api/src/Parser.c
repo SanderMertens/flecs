@@ -2886,6 +2886,8 @@ void Parser_expr_w_newline() {
         .expr = "Foo\n"
     }));
 
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 
