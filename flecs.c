@@ -10465,8 +10465,10 @@ int32_t flecs_switch_next(
  * into the hashing function, but only at word boundaries. This should be safe,
  * but trips up address sanitizers and valgrind.
  * This ensures clean valgrind logs in debug mode & the best perf in release */
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(ADDRESS_SANITIZER)
+#ifndef VALGRIND
 #define VALGRIND
+#endif
 #endif
 
 /*
@@ -23107,7 +23109,8 @@ ecs_iter_t ecs_term_iter(
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
         .terms = term,
-        .term_count = 1
+        .term_count = 1,
+        .next = ecs_term_next
     };
 
     term_iter_init(world, term, &it.iter.term);
@@ -23193,6 +23196,9 @@ ecs_table_record_t* term_iter_next(
 bool ecs_term_next(
     ecs_iter_t *it)
 {
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
+
     ecs_term_iter_t *iter = &it->iter.term;
     ecs_term_t *term = iter->term;
     ecs_world_t *world = it->real_world;
@@ -23240,21 +23246,14 @@ bool ecs_term_next(
     return true;
 }
 
-ecs_iter_t ecs_filter_iter(
-    const ecs_world_t *stage,
+static
+const ecs_filter_t* init_filter_iter(
+    const ecs_world_t *world,
+    ecs_iter_t *it,
     const ecs_filter_t *filter)
 {
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_filter_iter_t *iter = &it->iter.filter;
 
-    const ecs_world_t *world = ecs_get_world(stage);
-
-    ecs_iter_t it = {
-        .real_world = (ecs_world_t*)world,
-        .world = (ecs_world_t*)stage,
-        .terms = filter ? filter->terms : NULL
-    };
-
-    ecs_filter_iter_t *iter = &it.iter.filter;
     if (filter) {
         iter->filter = *filter;
 
@@ -23273,6 +23272,30 @@ ecs_iter_t ecs_filter_iter(
 
         filter = &iter->filter;
     }
+
+    it->term_count = filter->term_count_actual;
+
+    return filter;
+}
+
+ecs_iter_t ecs_filter_iter(
+    const ecs_world_t *stage,
+    const ecs_filter_t *filter)
+{
+    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    ecs_iter_t it = {
+        .real_world = (ecs_world_t*)world,
+        .world = (ecs_world_t*)stage,
+        .terms = filter ? filter->terms : NULL,
+        .next = ecs_filter_next
+    };
+
+    ecs_filter_iter_t *iter = &it.iter.filter;
+
+    filter = init_filter_iter(world, &it, filter);
 
     int32_t i, term_count = filter->term_count;
     ecs_term_t *terms = filter->terms;
@@ -23323,8 +23346,6 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsFilterIterEvalNone;
     }
 
-    it.term_count = filter->term_count_actual;
-
     if (filter->terms == filter->term_cache) {
         /* Because we're returning the iterator by value, the address of the
          * term cache changes. The ecs_filter_next function will set the correct
@@ -23335,12 +23356,42 @@ ecs_iter_t ecs_filter_iter(
     return it;
 }
 
+ecs_iter_t ecs_filter_chain_iter(
+    ecs_iter_t *chain_it,
+    const ecs_filter_t *filter)
+{
+    ecs_iter_t it = {
+        .chain_it = chain_it,
+        .next = ecs_filter_next,
+        .world = chain_it->world,
+        .real_world = chain_it->real_world
+    };
+
+    ecs_filter_iter_t *iter = &it.iter.filter;
+    init_filter_iter(it.world, &it, filter);
+
+    iter->kind = EcsFilterIterEvalChain;
+
+    if (filter->terms == filter->term_cache) {
+        /* See ecs_filter_iter*/
+        iter->filter.terms = NULL;
+    }
+
+    return it;
+}
+
 bool ecs_filter_next(
     ecs_iter_t *it)
 {
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_filter_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
+
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_filter_t *filter = &iter->filter;
     ecs_world_t *world = it->real_world;
+    ecs_table_t *table;
+    bool match;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;
@@ -23350,8 +23401,6 @@ bool ecs_filter_next(
 
     if (iter->kind == EcsFilterIterEvalIndex) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
-        ecs_table_t *table;
-        bool match;
 
         do {
             ecs_entity_t source;
@@ -23362,6 +23411,29 @@ bool ecs_filter_next(
             }
 
             table = tr->table;
+            match = flecs_filter_match_table(world, filter, table, table->type,
+                0, it->ids, it->columns, it->subjects, it->sizes, 
+                it->ptrs);
+        } while (!match);
+
+        populate_from_table(it, table);
+
+        goto yield;
+
+    } else if (iter->kind == EcsFilterIterEvalChain) {
+        ecs_iter_t *chain_it = it->chain_it;
+        ecs_iter_next_action_t next = chain_it->next;
+
+        /* If this is a chain iterator, the input iterator must be set */
+        ecs_assert(chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        do {
+            if (!next(chain_it)) {
+                goto done;
+            }
+
+            table = chain_it->table;
+
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
                 it->ptrs);
@@ -26430,7 +26502,7 @@ ecs_iter_t ecs_query_iter_page(
     if (query->needs_reorder) {
         order_grouped_tables(query);
     }
-    
+
     sort_tables(world, query);
 
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
@@ -26463,7 +26535,8 @@ ecs_iter_t ecs_query_iter_page(
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
-        .iter.query = it
+        .iter.query = it,
+        .next = ecs_query_next
     };
 }
 
@@ -26915,6 +26988,8 @@ bool ecs_query_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_query_t *query = iter->query;

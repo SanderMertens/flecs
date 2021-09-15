@@ -2456,6 +2456,20 @@ ecs_iter_t ecs_filter_iter(
     const ecs_world_t *world,
     const ecs_filter_t *filter);  
 
+/** Return a chained filter iterator.
+ * A chained iterator applies a filter to the results of the input iterator. The
+ * resulting iterator must be iterated with ecs_filter_next.
+ *
+ * 
+ * @param it The input iterator
+ * @param filter The filter to apply to the iterator.
+ * @return The chained iterator. 
+ */
+FLECS_API
+ecs_iter_t ecs_filter_chain_iter(
+    ecs_iter_t *it,
+    const ecs_filter_t *filter);
+
 /** Iterate tables matched by filter.
  * This operation progresses the filter iterator to the next table. The 
  * iterator must have been initialized with `ecs_filter_iter`. This operation 

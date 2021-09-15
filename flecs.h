@@ -2521,6 +2521,7 @@ typedef struct ecs_term_iter_t {
 
 typedef enum ecs_filter_iter_kind_t {
     EcsFilterIterEvalIndex,
+    EcsFilterIterEvalChain,
     EcsFilterIterEvalNone
 } ecs_filter_iter_kind_t;
 
@@ -2714,6 +2715,9 @@ struct ecs_iter_t {
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
+
+    ecs_iter_next_action_t next;  /* Next function to use for iterator */
+    ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 
     union {
         ecs_term_iter_t term;
@@ -5060,6 +5064,20 @@ FLECS_API
 ecs_iter_t ecs_filter_iter(
     const ecs_world_t *world,
     const ecs_filter_t *filter);  
+
+/** Return a chained filter iterator.
+ * A chained iterator applies a filter to the results of the input iterator. The
+ * resulting iterator must be iterated with ecs_filter_next.
+ *
+ * 
+ * @param it The input iterator
+ * @param filter The filter to apply to the iterator.
+ * @return The chained iterator. 
+ */
+FLECS_API
+ecs_iter_t ecs_filter_chain_iter(
+    ecs_iter_t *it,
+    const ecs_filter_t *filter);
 
 /** Iterate tables matched by filter.
  * This operation progresses the filter iterator to the next table. The 

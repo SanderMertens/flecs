@@ -973,6 +973,9 @@ void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
+void Filter_chain_term_iter(void);
+void Filter_chain_filter_iter(void);
+void Filter_chain_query_iter(void);
 
 // Testsuite 'FilterDefaultSubstitution'
 void FilterDefaultSubstitution_final_pred_no_args(void);
@@ -5695,6 +5698,18 @@ bake_test_case Filter_testcases[] = {
     {
         "match_prefab",
         Filter_match_prefab
+    },
+    {
+        "chain_term_iter",
+        Filter_chain_term_iter
+    },
+    {
+        "chain_filter_iter",
+        Filter_chain_filter_iter
+    },
+    {
+        "chain_query_iter",
+        Filter_chain_query_iter
     }
 };
 
@@ -9799,7 +9814,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        73,
+        76,
         Filter_testcases
     },
     {

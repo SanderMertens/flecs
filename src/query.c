@@ -2283,7 +2283,7 @@ ecs_iter_t ecs_query_iter_page(
     if (query->needs_reorder) {
         order_grouped_tables(query);
     }
-    
+
     sort_tables(world, query);
 
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
@@ -2316,7 +2316,8 @@ ecs_iter_t ecs_query_iter_page(
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .inactive_table_count = ecs_vector_count(query->empty_tables),
-        .iter.query = it
+        .iter.query = it,
+        .next = ecs_query_next
     };
 }
 
@@ -2768,6 +2769,8 @@ bool ecs_query_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_query_t *query = iter->query;

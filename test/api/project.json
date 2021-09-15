@@ -1031,7 +1031,10 @@
                 "filter_iter_w_readonly_term",
                 "filter_iter_w_from_nothing_term",
                 "match_disabled",
-                "match_prefab"
+                "match_prefab",
+                "chain_term_iter",
+                "chain_filter_iter",
+                "chain_query_iter"
             ]
         }, {
             "id": "FilterDefaultSubstitution",

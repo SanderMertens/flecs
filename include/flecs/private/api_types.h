@@ -117,6 +117,7 @@ typedef struct ecs_term_iter_t {
 
 typedef enum ecs_filter_iter_kind_t {
     EcsFilterIterEvalIndex,
+    EcsFilterIterEvalChain,
     EcsFilterIterEvalNone
 } ecs_filter_iter_kind_t;
 
@@ -310,6 +311,9 @@ struct ecs_iter_t {
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
+
+    ecs_iter_next_action_t next;  /* Next function to use for iterator */
+    ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 
     union {
         ecs_term_iter_t term;

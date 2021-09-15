@@ -3114,3 +3114,119 @@ void Filter_match_prefab() {
 
     ecs_fini(world);
 }
+
+void Filter_chain_term_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_add_id(world, e_1, TagB);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, TagB);
+
+    ecs_new(world, TagA); /* Matches filter 1, not filter 2 */
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagB }}
+    }));
+
+    ecs_iter_t child_it = ecs_term_iter(world, &(ecs_term_t) { TagA });
+    ecs_iter_t it = ecs_filter_chain_iter(&child_it, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_chain_filter_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_add_id(world, e_1, TagB);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, TagB);
+
+    ecs_new(world, TagA); /* Matches filter 1, not filter 2 */
+
+    ecs_filter_t f_a;
+    test_int(0, ecs_filter_init(world, &f_a, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    ecs_filter_t f_b;
+    test_int(0, ecs_filter_init(world, &f_b, &(ecs_filter_desc_t) {
+        .terms = {{ TagB }}
+    }));
+
+    ecs_iter_t child_it = ecs_filter_iter(world, &f_a);
+    ecs_iter_t it = ecs_filter_chain_iter(&child_it, &f_b);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f_a);
+    ecs_filter_fini(&f_b);
+
+    ecs_fini(world);
+}
+
+void Filter_chain_query_iter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_add_id(world, e_1, TagB);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, TagB);
+
+    ecs_new(world, TagA); /* Matches filter 1, not filter 2 */
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagB }}
+    }));
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ TagA }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t child_it = ecs_query_iter(world, q);
+    ecs_iter_t it = ecs_filter_chain_iter(&child_it, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
