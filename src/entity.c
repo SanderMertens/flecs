@@ -3679,7 +3679,7 @@ ecs_id_t ecs_get_typeid(
         ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
 
         /* If relation is marked as a tag, it never has data. Return relation */
-        if (ecs_has_id(world, rel, EcsTag)) {
+        if (rel == 0 || ecs_has_id(world, rel, EcsTag)) {
             return 0;
         }
 
@@ -3959,6 +3959,8 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
+    if(real_id == 0) return;
+
     const ecs_type_info_t *info = flecs_get_c_info(world, real_id);
     ecs_xtor_t dtor;
     

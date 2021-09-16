@@ -21,7 +21,7 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_iter_init(&user_it);
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, it->offset,
+    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
         user_it.ids, user_it.columns, user_it.types, user_it.subjects, 
         user_it.sizes, user_it.ptrs)) 
     {
@@ -141,6 +141,8 @@ void flecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
+    if(observer == NULL) return;
+
     int i, count = observer->filter.term_count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t trigger = observer->triggers[i];

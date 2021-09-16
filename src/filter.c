@@ -699,7 +699,7 @@ bool populate_from_column(
                     ecs_column_t *col = &data->columns[column];
                     *ptr_out = ecs_vector_first_t(
                         col->data, col->size, col->alignment);
-
+                    
                     if (*ptr_out && offset) {
                         *ptr_out = ECS_OFFSET(*ptr_out, col->size * offset);
                     }
@@ -1156,8 +1156,8 @@ bool ecs_filter_next(
             }
 
             table = tr->table;
-            match = flecs_filter_match_table(world, filter, table, table->type,
-                0, it->ids, it->columns, it->types, it->subjects, it->sizes, 
+            match = flecs_filter_match_table(world, filter, table, table->type, 0,
+                it->ids, it->columns, it->types, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
