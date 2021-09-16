@@ -7063,6 +7063,7 @@ bool ecs_rule_variable_is_entity(
 
 FLECS_API
 ecs_iter_t ecs_rule_iter(
+    const ecs_world_t *world,
     const ecs_rule_t *rule);
 
 FLECS_API

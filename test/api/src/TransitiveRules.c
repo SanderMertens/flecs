@@ -19,7 +19,7 @@ void TransitiveRules_trans_X_X() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));
@@ -51,7 +51,7 @@ void TransitiveRules_trans_X_X_2() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));
@@ -92,7 +92,7 @@ void TransitiveRules_trans_X_Y() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));
@@ -125,7 +125,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));
@@ -175,7 +175,7 @@ void TransitiveRules_trans_pred_This_X__pred_X() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
     char *expect =
@@ -212,7 +212,7 @@ void TransitiveRules_trans_constrained_x_y() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
     char *expect =
@@ -245,7 +245,7 @@ void TransitiveRules_trans_entity_X_non_inclusive() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
     char *expect =
@@ -277,7 +277,7 @@ void TransitiveRules_trans_X_entity_non_inclusive() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_bool(true, ecs_rule_next(&it));
     char *expect =
@@ -310,7 +310,7 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     test_bool(false, ecs_rule_next(&it));
     ecs_rule_fini(r);
 
@@ -319,7 +319,7 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
     });
     test_assert(r != NULL);
 
-    it = ecs_rule_iter(r);
+    it = ecs_rule_iter(world, r);
     test_bool(false, ecs_rule_next(&it));
     ecs_rule_fini(r);
 
@@ -328,7 +328,7 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
     });
     test_assert(r != NULL);
 
-    it = ecs_rule_iter(r);
+    it = ecs_rule_iter(world, r);
     test_bool(true, ecs_rule_next(&it));
     char *expect =
     HEAD "term: (LocatedIn,Universe)"
@@ -361,7 +361,7 @@ void TransitiveRules_trans_this_x_after_tag_this() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     test_bool(true, ecs_rule_next(&it));
     char *expect =
     HEAD "term: Planet,(LocatedIn,Universe)"
@@ -397,7 +397,7 @@ void TransitiveRules_trans_this_x_before_tag_this() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     test_bool(true, ecs_rule_next(&it));
     char *expect =
     HEAD "term: (LocatedIn,Universe),Planet"
@@ -434,7 +434,7 @@ void TransitiveRules_trans_this_x_after_tag_this_2_lvls() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));
@@ -482,7 +482,7 @@ void TransitiveRules_trans_this_x_before_tag_this_2_lvls() {
     });
     test_assert(r != NULL);
 
-    ecs_iter_t it = ecs_rule_iter(r);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
     test_bool(true, ecs_rule_next(&it));

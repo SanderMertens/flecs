@@ -3255,7 +3255,7 @@ void Filter_chain_rule_iter() {
 
     test_assert(r != NULL);
 
-    ecs_iter_t child_it = ecs_rule_iter(r);
+    ecs_iter_t child_it = ecs_rule_iter(world, r);
     ecs_iter_t it = ecs_filter_chain_iter(&child_it, &f);
 
     test_assert(ecs_filter_next(&it));

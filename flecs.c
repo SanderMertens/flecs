@@ -16443,12 +16443,13 @@ ecs_entity_t ecs_rule_variable(
 
 /* Create rule iterator */
 ecs_iter_t ecs_rule_iter(
+    const ecs_world_t *world,
     const ecs_rule_t *rule)
 {
     ecs_iter_t result = {0};
 
-    result.world = rule->world;
-    result.real_world = rule->world;
+    result.world = (ecs_world_t*)world;
+    result.real_world = (ecs_world_t*)ecs_get_world(rule->world);
 
     ecs_rule_iter_t *it = &result.iter.rule;
     it->rule = rule;
