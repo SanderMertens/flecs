@@ -59,17 +59,15 @@ typedef enum ecs_rule_var_kind_t {
     EcsRuleVarKindUnknown
 } ecs_rule_var_kind_t;
 
-typedef struct ecs_rule_table_reg_t {
+typedef struct ecs_rule_reg_t {
+    /* Used for table variable */
     ecs_table_t *table;
     int32_t offset;
     int32_t count;
-} ecs_rule_table_reg_t;
 
-typedef struct ecs_rule_reg_t {
-    union {
-        ecs_entity_t entity;
-        ecs_rule_table_reg_t table;
-    } is;
+    /* Used for entity variable. May also be set for table variable if it needs
+     * to store an empty entity. */
+    ecs_entity_t entity;
 } ecs_rule_reg_t;
  
 /* Operations describe how the rule should be evaluated */
@@ -507,7 +505,7 @@ void entity_reg_set(
     ecs_assert(ecs_is_valid(rule->world, entity), 
         ECS_INVALID_PARAMETER, NULL);
 
-    regs[r].is.entity = entity;
+    regs[r].entity = entity;
 }
 
 static
@@ -517,12 +515,10 @@ ecs_entity_t entity_reg_get(
     int32_t r)
 {
     (void)rule;
-    ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_is_valid(rule->world, regs[r].is.entity), 
-        ECS_INVALID_PARAMETER, NULL);   
-    
-    return regs[r].is.entity;
+    ecs_entity_t e = regs[r].entity;
+    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL); 
+    ecs_assert(ecs_is_valid(rule->world, e), ECS_INVALID_PARAMETER, NULL);   
+    return e;
 }
 
 static
@@ -536,9 +532,10 @@ void table_reg_set(
     ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
-    regs[r].is.table.table = table;
-    regs[r].is.table.offset = 0;
-    regs[r].is.table.count = 0;
+    regs[r].table = table;
+    regs[r].offset = 0;
+    regs[r].count = 0;
+    regs[r].entity = 0;
 }
 
 static 
@@ -551,7 +548,7 @@ ecs_table_t* table_reg_get(
     ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
-    return regs[r].is.table.table;       
+    return regs[r].table;       
 }
 
 static
@@ -573,9 +570,9 @@ ecs_entity_t reg_get_entity(
         return op->subject;
     }
     if (rule->variables[r].kind == EcsRuleVarKindTable) {
-        int32_t offset = regs[r].is.table.offset;
+        int32_t offset = regs[r].offset;
 
-        ecs_assert(regs[r].is.table.count == 1, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(regs[r].count == 1, ECS_INTERNAL_ERROR, NULL);
         ecs_data_t *data = &table_reg_get(rule, regs, r)->storage;
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -632,13 +629,17 @@ void reg_set_entity(
         ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
         ecs_record_t *record = ecs_eis_get(world, entity);
-        if (!record) {
-            rule_error(rule, "failed to store entity %d, has no table", entity);
+        if (!record || !record->table) {
+            regs[r].table = NULL;
+            regs[r].offset = 0;
+            regs[r].count = 0;
+            regs[r].entity = entity;
         } else {
             bool is_monitored;
-            regs[r].is.table.table = record->table;
-            regs[r].is.table.offset = flecs_record_to_row(record->row, &is_monitored);
-            regs[r].is.table.count = 1;
+            regs[r].table = record->table;
+            regs[r].offset = flecs_record_to_row(record->row, &is_monitored);
+            regs[r].count = 1;
+            regs[r].entity = 0;
         }
     } else {
         entity_reg_set(rule, regs, r, entity);
@@ -3307,7 +3308,7 @@ bool eval_each(
     ecs_rule_reg_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
-    int32_t row;
+    ecs_entity_t e;
 
     /* Make sure in/out registers are of the correct kind */
     ecs_assert(iter->rule->variables[r_in].kind == EcsRuleVarKindTable, 
@@ -3318,42 +3319,49 @@ bool eval_each(
     /* Get table, make sure that it contains data. The select operation should
      * ensure that empty tables are never forwarded. */
     ecs_table_t *table = table_reg_get(iter->rule, regs, r_in);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    int32_t count = regs[r_in].is.table.count;
-    int32_t offset = regs[r_in].is.table.offset;
-    if (!count) {
-        count = ecs_table_count(table);
-        ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
-    } else {
-        count += offset;
-    }
+    if (table) {       
+        int32_t row, count = regs[r_in].count;
+        int32_t offset = regs[r_in].offset;
 
-    ecs_entity_t *entities = ecs_vector_first(
-        table->storage.entities, ecs_entity_t);
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!count) {
+            count = ecs_table_count(table);
+            ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+        } else {
+            count += offset;
+        }
 
-    /* If this is is not a redo, start from row 0, otherwise go to the
-     * next entity. */
-    if (!redo) {
-        row = op_ctx->row = offset;
-    } else {
-        row = ++ op_ctx->row;
-    }
+        ecs_entity_t *entities = ecs_vector_first(
+            table->storage.entities, ecs_entity_t);
+        ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* If row exceeds number of entities in table, return false */
-    if (row >= count) {
-        return false;
-    }
+        /* If this is is not a redo, start from row 0, otherwise go to the
+        * next entity. */
+        if (!redo) {
+            row = op_ctx->row = offset;
+        } else {
+            row = ++ op_ctx->row;
+        }
 
-    /* Skip builtin entities that could confuse operations */
-    ecs_entity_t e = entities[row];
-    while (e == EcsWildcard || e == EcsThis) {
-        row ++;
-        if (row == count) {
+        /* If row exceeds number of entities in table, return false */
+        if (row >= count) {
             return false;
         }
-        e = entities[row];      
+
+        /* Skip builtin entities that could confuse operations */
+        e = entities[row];
+        while (e == EcsWildcard || e == EcsThis) {
+            row ++;
+            if (row == count) {
+                return false;
+            }
+            e = entities[row];      
+        }
+    } else {
+        if (!redo) {
+            e = entity_reg_get(iter->rule, regs, r_in);
+        } else {
+            return false;
+        }
     }
 
     /* Assign entity */
@@ -3612,8 +3620,8 @@ void populate_iterator(
 
         if (var->kind == EcsRuleVarKindTable) {
             ecs_table_t *table = table_reg_get(rule, regs, r);
-            int32_t count = regs[r].is.table.count;
-            int32_t offset = regs[r].is.table.offset;
+            int32_t count = regs[r].count;
+            int32_t offset = regs[r].offset;
 
             set_iter_table(iter, table, op->frame, offset);
 
@@ -3627,7 +3635,7 @@ void populate_iterator(
             ecs_assert(var->kind == EcsRuleVarKindEntity, 
                 ECS_INTERNAL_ERROR, NULL);
 
-            ecs_entity_t e = reg->is.entity;
+            ecs_entity_t e = reg->entity;
             ecs_record_t *record = ecs_eis_get(rule->world, e);
             
             bool is_monitored;
@@ -3649,7 +3657,7 @@ void populate_iterator(
 
     for (i = 0; i < variable_count; i ++) {
         if (rule->variables[i].kind == EcsRuleVarKindEntity) {
-            it->variables[i] = regs[i].is.entity;
+            it->variables[i] = regs[i].entity;
         } else {
             it->variables[i] = 0;
         }
@@ -3660,7 +3668,7 @@ void populate_iterator(
         if (v != -1) {
             ecs_rule_var_t *var = &rule->variables[v];
             if (var->kind == EcsRuleVarKindEntity) {
-                iter->subjects[i] = regs[var->id].is.entity;
+                iter->subjects[i] = regs[var->id].entity;
             }
         }
     }

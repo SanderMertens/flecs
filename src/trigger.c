@@ -55,7 +55,7 @@ void register_trigger_for_id(
         if (!evt->triggers) {
             evt->triggers = ecs_map_new(ecs_id_triggers_t, 1);
         }
-        
+
         /* Get triggers for (component) id */
         ecs_id_triggers_t *idt = ecs_map_ensure(
             evt->triggers, ecs_id_triggers_t, id);

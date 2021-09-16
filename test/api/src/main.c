@@ -1189,6 +1189,11 @@ void Rules_invalid_rule_w_only_not_term(void);
 void Rules_invalid_rule_w_not_term_unknown_var(void);
 void Rules_invalid_rule_w_not_term_unknown_pair_var(void);
 void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var(void);
+void Rules_rules_w_desc_id(void);
+void Rules_rules_w_desc_pair(void);
+void Rules_rules_w_desc_pair_empty_rel_obj(void);
+void Rules_rules_w_desc_pair_pred_obj(void);
+void Rules_rules_w_desc_wildcard(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6544,6 +6549,26 @@ bake_test_case Rules_testcases[] = {
     {
         "invalid_rule_w_not_term_unknown_pair_var_subj_var",
         Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var
+    },
+    {
+        "rules_w_desc_id",
+        Rules_rules_w_desc_id
+    },
+    {
+        "rules_w_desc_pair",
+        Rules_rules_w_desc_pair
+    },
+    {
+        "rules_w_desc_pair_empty_rel_obj",
+        Rules_rules_w_desc_pair_empty_rel_obj
+    },
+    {
+        "rules_w_desc_pair_pred_obj",
+        Rules_rules_w_desc_pair_pred_obj
+    },
+    {
+        "rules_w_desc_wildcard",
+        Rules_rules_w_desc_wildcard
     }
 };
 
@@ -9852,7 +9877,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        89,
+        94,
         Rules_testcases
     },
     {
