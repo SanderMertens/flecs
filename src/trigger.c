@@ -415,6 +415,8 @@ void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
+    if(trigger == NULL) return;
+    
     unregister_trigger(world, trigger);
     ecs_term_fini(&trigger->term);
 

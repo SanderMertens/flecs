@@ -428,6 +428,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_type_t *types,
