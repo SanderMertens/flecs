@@ -2370,13 +2370,15 @@ char* ecs_rule_str(
         ecs_entity_t pred = pair.pred.ent;
         ecs_entity_t obj = pair.obj.ent;
         const char *pred_name = NULL, *obj_name = NULL;
+        char *pred_name_alloc = NULL, *obj_name_alloc = NULL;
 
         if (pair.reg_mask & RULE_PAIR_PREDICATE) {
             ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_rule_var_t *type_var = &rule->variables[pair.pred.reg];
             pred_name = type_var->name;
         } else if (pred) {
-            pred_name = ecs_get_name(world, ecs_get_alive(world, pred));
+            pred_name_alloc = ecs_get_fullpath(world, ecs_get_alive(world, pred));
+            pred_name = pred_name_alloc;
         }
 
         if (pair.reg_mask & RULE_PAIR_OBJECT) {
@@ -2384,7 +2386,8 @@ char* ecs_rule_str(
             ecs_rule_var_t *obj_var = &rule->variables[pair.obj.reg];
             obj_name = obj_var->name;
         } else if (obj) {
-            obj_name = ecs_get_name(world, ecs_get_alive(world, obj));
+            obj_name_alloc = ecs_get_fullpath(world, ecs_get_alive(world, obj));
+            obj_name = obj_name_alloc;
         }
 
         ecs_strbuf_append(&buf, "%2d: [S:%2d, P:%2d, F:%2d] ", i, 
@@ -2438,8 +2441,9 @@ char* ecs_rule_str(
                     r_out->kind == EcsRuleVarKindTable ? "t" : "",
                     r_out->name);
             } else if (op->subject) {
-                ecs_strbuf_append(&buf, "O:%s ", 
-                    ecs_get_name(world, op->subject));
+                char *subj_path = ecs_get_fullpath(world, op->subject);
+                ecs_strbuf_append(&buf, "O:%s ", subj_path);
+                ecs_os_free(subj_path);
             }
         }
 
@@ -2450,8 +2454,9 @@ char* ecs_rule_str(
                     r_in->kind == EcsRuleVarKindTable ? "t" : "",
                     r_in->name);
             } else if (op->subject) {
-                ecs_strbuf_append(&buf, "I:%s ", 
-                    ecs_get_name(world, op->subject));
+                char *subj_path = ecs_get_fullpath(world, op->subject);
+                ecs_strbuf_append(&buf, "I:%s ", subj_path);
+                ecs_os_free(subj_path);
             }
         }
 
@@ -2465,6 +2470,9 @@ char* ecs_rule_str(
         }
 
         ecs_strbuf_appendstr(&buf, "\n");
+
+        ecs_os_free(pred_name_alloc);
+        ecs_os_free(obj_name_alloc);
     }
 
     return ecs_strbuf_get(&buf);
