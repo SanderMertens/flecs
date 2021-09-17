@@ -1319,10 +1319,11 @@ ecs_rule_var_t* to_entity(
  * variable is populated. The function will return the most specific, populated
  * variable. */
 static
-ecs_rule_var_t* get_most_specific_var(
+ecs_rule_var_t* most_specific_var(
     ecs_rule_t *rule,
     ecs_rule_var_t *var,
-    bool *written)
+    bool *written,
+    bool create)
 {
     if (!var) {
         return NULL;
@@ -1351,7 +1352,9 @@ ecs_rule_var_t* get_most_specific_var(
          * as an entity, insert an each operation that yields each
          * entity in the table. */
         if (evar) {
-            if (!written[evar->id]) {
+            if (written[evar->id]) {
+                return evar;
+            } else if (create) {
                 ecs_rule_op_t *op = create_operation(rule);
                 op->kind = EcsRuleEach;
                 op->on_pass = rule->operation_count;
@@ -1366,9 +1369,11 @@ ecs_rule_var_t* get_most_specific_var(
                 written[evar->id] = true;
 
                 push_frame(rule);
-            }
 
-            return evar;
+                return evar;
+            } else {
+                return tvar;
+            }
         }
     } else if (evar && written[evar->id]) {
         return evar;
@@ -1376,6 +1381,28 @@ ecs_rule_var_t* get_most_specific_var(
 
     return var;
 }
+
+/* Get most specific known variable */
+static
+ecs_rule_var_t *get_most_specific_var(
+    ecs_rule_t *rule,
+    ecs_rule_var_t *var,
+    bool *written)
+{
+    return most_specific_var(rule, var, written, false);
+}
+
+/* Get or create most specific known variable. This will populate an entity
+ * variable if a table variable is known but the entity variable isn't. */
+static
+ecs_rule_var_t *ensure_most_specific_var(
+    ecs_rule_t *rule,
+    ecs_rule_var_t *var,
+    bool *written)
+{
+    return most_specific_var(rule, var, written, true);
+}
+
 
 /* Ensure that an entity variable is written before using it */
 static
@@ -1389,7 +1416,7 @@ ecs_rule_var_t* ensure_entity_written(
     }
 
     /* Ensure we're working with the most specific version of subj we can get */
-    ecs_rule_var_t *evar = get_most_specific_var(rule, var, written);
+    ecs_rule_var_t *evar = ensure_most_specific_var(rule, var, written);
 
     /* The post condition of this function is that there is an entity variable,
      * and that it is written. Make sure that the result is an entity */
@@ -1667,7 +1694,6 @@ ecs_rule_var_t* store_inclusive_set(
     /* Ensure we're using the most specific version of obj */
     ecs_rule_var_t *obj = pair_obj(rule, pair);
     if (obj) {
-        obj = get_most_specific_var(rule, obj, written);
         pair->obj.reg = obj->id;
     }
 
@@ -1888,49 +1914,35 @@ static
 void insert_term_2(
     ecs_rule_t *rule,
     ecs_term_t *term,
+    ecs_rule_pair_t *filter,
     int32_t c,
     bool *written)
 {
-    ecs_rule_pair_t filter = term_to_pair(rule, term);
-    prepare_predicate(rule, &filter, written);
-
-    ecs_rule_var_t *obj = term_obj(rule, term);
-    obj = get_most_specific_var(rule, obj, written);
-
+    int32_t subj_id = -1, obj_id = -1;
     ecs_rule_var_t *subj = term_subj(rule, term);
-
-    int32_t subj_id = 0;
-    if (subj) {
+    if ((subj = get_most_specific_var(rule, subj, written))) {
         subj_id = subj->id;
     }
 
-    int32_t obj_id;
-    if (obj){
+    ecs_rule_var_t *obj = term_obj(rule, term);
+    if ((obj = get_most_specific_var(rule, obj, written))) {
         obj_id = obj->id;
     }
 
-    /* Ensure we're working with the most specific version of subj we can get */
-    subj = get_most_specific_var(rule, subj, written);
+    if (!filter->transitive) {
+        insert_select_or_with(rule, c, term, subj, filter, written);
 
-    if (!filter.transitive) {
-        insert_select_or_with(rule, c, term, subj, &filter, written);
-
-    } else if (filter.transitive) {
+    } else if (filter->transitive) {
         if (is_known(subj, written)) {
             if (is_known(obj, written)) {
                 ecs_rule_var_t *obj_subsets = store_inclusive_set(
-                    rule, EcsRuleSubSet, &filter, written, true);
+                    rule, EcsRuleSubSet, filter, written, true);
 
                 if (subj) {
                     subj = &rule->variables[subj_id];
-
-                    /* Try to resolve subj as entity again */
-                    if (subj->kind == EcsRuleVarKindTable) {
-                        subj = get_most_specific_var(rule, subj, written);
-                    }
                 }
 
-                ecs_rule_pair_t pair = filter;
+                ecs_rule_pair_t pair = *filter;
                 pair.obj.reg = obj_subsets->id;
                 pair.reg_mask |= RULE_PAIR_OBJECT;
 
@@ -1942,7 +1954,7 @@ void insert_term_2(
                 if (subj == NULL || subj->kind == EcsRuleVarKindEntity) {
                     obj = to_entity(rule, obj);
 
-                    ecs_rule_pair_t set_pair = filter;
+                    ecs_rule_pair_t set_pair = *filter;
                     set_pair.reg_mask &= RULE_PAIR_PREDICATE;
 
                     if (subj) {
@@ -1953,7 +1965,7 @@ void insert_term_2(
                     }
 
                     insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
-                        c, written, filter.inclusive);
+                        c, written, filter->inclusive);
 
                 /* If subject is variable, first find matching pair for the 
                  * evaluated entity(s) and return supersets */
@@ -1965,7 +1977,7 @@ void insert_term_2(
                     obj = &rule->variables[obj_id];
                     obj = to_entity(rule, obj);
 
-                    ecs_rule_pair_t set_pair = filter;
+                    ecs_rule_pair_t set_pair = *filter;
                     set_pair.obj.reg = av->id;
                     set_pair.reg_mask |= RULE_PAIR_OBJECT;
 
@@ -1988,13 +2000,7 @@ void insert_term_2(
             ecs_assert(subj != NULL, ECS_INTERNAL_ERROR, NULL);
 
             if (is_known(obj, written)) {
-                /* Object variable is known, but this does not guarantee that
-                 * we are working with the entity. Make sure that we get (and
-                 * populate) the entity variable, as insert_inclusive_set does
-                 * not do this */
-                obj = get_most_specific_var(rule, obj, written);
-
-                ecs_rule_pair_t set_pair = filter;
+                ecs_rule_pair_t set_pair = *filter;
                 set_pair.reg_mask &= RULE_PAIR_PREDICATE; /* clear object mask */
 
                 if (obj) {
@@ -2005,9 +2011,9 @@ void insert_term_2(
                 }
 
                 insert_inclusive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
-                    written, filter.inclusive);
+                    written, filter->inclusive);
             } else if (subj == obj) {
-                insert_select_or_with(rule, c, term, subj, &filter, written);
+                insert_select_or_with(rule, c, term, subj, filter, written);
             } else {
                 ecs_assert(obj != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2036,9 +2042,9 @@ void insert_term_2(
                 set_output_to_subj(rule, op, term, subj);
 
                 /* Set object to anonymous variable */
-                op->filter.pred = filter.pred;
+                op->filter.pred = filter->pred;
                 op->filter.obj.reg = av->id;
-                op->filter.reg_mask = filter.reg_mask | RULE_PAIR_OBJECT;
+                op->filter.reg_mask = filter->reg_mask | RULE_PAIR_OBJECT;
 
                 written[subj->id] = true;
                 written[av->id] = true;
@@ -2049,7 +2055,6 @@ void insert_term_2(
                 /* Insert superset instruction to find all supersets */
                 insert_inclusive_set(rule, EcsRuleSuperSet, obj, op->filter, c, 
                     written, true);
-
             }
         }
     }
@@ -2059,19 +2064,13 @@ static
 void insert_term_1(
     ecs_rule_t *rule,
     ecs_term_t *term,
+    ecs_rule_pair_t *filter,
     int32_t c,
     bool *written)
 {
-    ecs_rule_pair_t filter = term_to_pair(rule, term);
-    prepare_predicate(rule, &filter, written);
-
-    ecs_rule_var_t *pred = term_pred(rule, term);
-    get_most_specific_var(rule, pred, written);
-
     ecs_rule_var_t *subj = term_subj(rule, term);
     subj = get_most_specific_var(rule, subj, written);
-
-    insert_select_or_with(rule, c, term, subj, &filter, written);
+    insert_select_or_with(rule, c, term, subj, filter, written);
 }
 
 static
@@ -2081,13 +2080,41 @@ void insert_term(
     int32_t c,
     bool *written)
 {
+    ecs_rule_pair_t filter = term_to_pair(rule, term);
+    prepare_predicate(rule, &filter, written);
+    ensure_most_specific_var(rule, term_pred(rule, term), written);
+
+    /* If term has Not operator, prepend Not which turns a fail into a pass */
+    int32_t prev = rule->operation_count;
+    ecs_rule_op_t *not_pre;
+    if (term->oper == EcsNot) {
+        not_pre = insert_operation(rule, -1, written);
+        not_pre->kind = EcsRuleNot;
+        not_pre->has_in = false;
+        not_pre->has_out = false;
+    }
+
     if (subj_is_set(term) && !obj_is_set(term)) {
-        insert_term_1(rule, term, c, written);
+        insert_term_1(rule, term, &filter, c, written);
     } else if (obj_is_set(term)) {
-        insert_term_2(rule, term, c, written);
+        ensure_most_specific_var(rule, term_obj(rule, term), written);
+        insert_term_2(rule, term, &filter, c, written);
     }
 
     push_frame(rule);
+
+    /* If term has Not operator, append Not which turns a pass into a fail */
+    if (term->oper == EcsNot) {
+        ecs_rule_op_t *not_post = insert_operation(rule, -1, written);
+        not_post->kind = EcsRuleNot;
+        not_post->has_in = false;
+        not_post->has_out = false;
+
+        not_post->on_pass = prev - 1;
+        not_post->on_fail = prev - 1;
+        not_pre = &rule->operations[prev];
+        not_pre->on_fail = rule->operation_count;
+    }
 }
 
 /* Create program from operations that will execute the query */
@@ -2153,27 +2180,8 @@ void compile_program(
             continue;
         }
 
-        int32_t prev = rule->operation_count;
-
-        /* Prepend Not which turns a fail into a pass */
-        ecs_rule_op_t *not_pre = insert_operation(rule, -1, written);
-        not_pre->kind = EcsRuleNot;
-        not_pre->has_in = false;
-        not_pre->has_out = false;
-
         /* First insert the operation(s) for the term as usual */
         insert_term(rule, term, c, written);
-
-        /* Append Not which turns a pass into a fail */
-        ecs_rule_op_t *not_post = insert_operation(rule, -1, written);
-        not_post->kind = EcsRuleNot;
-        not_post->has_in = false;
-        not_post->has_out = false;
-
-        not_post->on_pass = prev - 1;
-        not_post->on_fail = prev - 1;
-        not_pre = &rule->operations[prev];
-        not_pre->on_fail = rule->operation_count;
     }
 
     /* Verify all subject variables have been written. Subject variables are of

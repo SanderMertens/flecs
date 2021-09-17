@@ -1185,6 +1185,8 @@ void Rules_2_constrained_vars_by_subject_literal_2_var_terms(void);
 void Rules_term_w_nothing_set(void);
 void Rules_term_w_nothing_set_w_this_term(void);
 void Rules_comp_w_not_term(void);
+void Rules_not_term_w_subj_var(void);
+void Rules_not_term_w_subj_var_match_n_per_type(void);
 void Rules_invalid_rule_w_only_not_term(void);
 void Rules_invalid_rule_w_not_term_unknown_var(void);
 void Rules_invalid_rule_w_not_term_unknown_pair_var(void);
@@ -1209,6 +1211,7 @@ void TransitiveRules_trans_this_x_after_tag_this(void);
 void TransitiveRules_trans_this_x_before_tag_this(void);
 void TransitiveRules_trans_this_x_after_tag_this_2_lvls(void);
 void TransitiveRules_trans_this_x_before_tag_this_2_lvls(void);
+void TransitiveRules_transitive_not_w_var(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6535,6 +6538,14 @@ bake_test_case Rules_testcases[] = {
         Rules_comp_w_not_term
     },
     {
+        "not_term_w_subj_var",
+        Rules_not_term_w_subj_var
+    },
+    {
+        "not_term_w_subj_var_match_n_per_type",
+        Rules_not_term_w_subj_var_match_n_per_type
+    },
+    {
         "invalid_rule_w_only_not_term",
         Rules_invalid_rule_w_only_not_term
     },
@@ -6624,6 +6635,10 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "trans_this_x_before_tag_this_2_lvls",
         TransitiveRules_trans_this_x_before_tag_this_2_lvls
+    },
+    {
+        "transitive_not_w_var",
+        TransitiveRules_transitive_not_w_var
     }
 };
 
@@ -9877,14 +9892,14 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        94,
+        96,
         Rules_testcases
     },
     {
         "TransitiveRules",
         NULL,
         NULL,
-        13,
+        14,
         TransitiveRules_testcases
     },
     {

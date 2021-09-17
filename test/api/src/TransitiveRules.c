@@ -512,3 +512,54 @@ void TransitiveRules_trans_this_x_before_tag_this_2_lvls() {
     ecs_rule_fini(r);
     ecs_fini(world);
 }
+
+void TransitiveRules_transitive_not_w_var() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    HEAD "Transitive(LocatedIn)"
+    LINE "Final(LocatedIn)"
+    LINE "Final(City)"
+    LINE "LocatedIn(SanFrancisco, UnitedStates)"
+    LINE "LocatedIn(Seattle, UnitedStates)"
+    LINE "LocatedIn(Amsterdam, Netherlands)"
+    LINE "LocatedIn(Utrecht, Netherlands)"
+    LINE "City(SanFrancisco)"
+    LINE "City(Seattle)"
+    LINE "City(Amsterdam)"
+    LINE "City(Utrecht)"
+    ;
+
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "City(X), !LocatedIn(X, UnitedStates)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: City,(LocatedIn,UnitedStates)"
+    LINE "subj: Amsterdam,Amsterdam"
+    LINE "vars: X=Amsterdam"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: City,(LocatedIn,UnitedStates)"
+    LINE "subj: Utrecht,Utrecht"
+    LINE "vars: X=Utrecht"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}

@@ -1136,10 +1136,6 @@ bool flecs_term_match_table(
 
     ecs_entity_t source;
 
-    // printf("match(%s, %d, %d)\n", 
-    //     ecs_id_str(world, term->id),
-    //     subj->set.min_depth, subj->set.max_depth);
-
     int32_t column = ecs_type_match(world, match_table, match_type,
         0, term->id, subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source);
