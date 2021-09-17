@@ -949,6 +949,71 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels() {
     ecs_fini(world);
 }
 
+void Plecs_hierarchy_custom_relation_apply_to_object() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "(Rel, ObjA) {"
+    LINE " (Rel, ObjB) {"
+    LINE "   ObjC"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
+    ecs_entity_t obj_c = ecs_lookup_fullpath(world, "ObjC");
+
+    test_assert(rel != 0);
+    test_assert(obj_a != 0);
+    test_assert(obj_b != 0);
+    test_assert(obj_c != 0);
+
+    test_assert(ecs_has_pair(world, obj_b, rel, obj_a));
+    test_assert(ecs_has_pair(world, obj_c, rel, obj_b));
+    test_assert(!ecs_has_pair(world, obj_c, rel, obj_a));
+
+    ecs_fini(world);
+}
+
+void Plecs_hierarchy_custom_relation_apply_to_object_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "(Rel, ObjA) {"
+    LINE " (Rel, ObjB) {"
+    LINE "   (Rel, ObjC) {"
+    LINE "     ObjD"
+    LINE "   }"
+    LINE " }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
+    ecs_entity_t obj_c = ecs_lookup_fullpath(world, "ObjC");
+    ecs_entity_t obj_d = ecs_lookup_fullpath(world, "ObjD");
+
+    test_assert(rel != 0);
+    test_assert(obj_a != 0);
+    test_assert(obj_b != 0);
+    test_assert(obj_c != 0);
+    test_assert(obj_d != 0);
+
+    test_assert(ecs_has_pair(world, obj_b, rel, obj_a));
+    test_assert(ecs_has_pair(world, obj_c, rel, obj_b));
+    test_assert(!ecs_has_pair(world, obj_c, rel, obj_a));
+    test_assert(ecs_has_pair(world, obj_d, rel, obj_c));
+    test_assert(!ecs_has_pair(world, obj_d, rel, obj_b));
+    test_assert(!ecs_has_pair(world, obj_d, rel, obj_a));
+
+    ecs_fini(world);
+}
+
 void Plecs_pred_scope() {
     ecs_world_t *world = ecs_init();
 

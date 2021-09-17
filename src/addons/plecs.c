@@ -103,7 +103,7 @@ int create_term(
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->args[1])) {
-        obj = ensure_entity(world, term->args[1].name, false);
+        obj = ensure_entity(world, term->args[1].name, true);
     }
 
     if (subj) {

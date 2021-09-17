@@ -385,6 +385,8 @@ void Plecs_create_in_scope(void);
 void Plecs_hierarchy_w_pred_subj(void);
 void Plecs_hierarchy_custom_relation(void);
 void Plecs_hierarchy_custom_relation_2_levels(void);
+void Plecs_hierarchy_custom_relation_apply_to_object(void);
+void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void);
 void Plecs_entity_after_hierarchy_custom_relation(void);
 void Plecs_entity_after_hierarchy_custom_relation_2_levels(void);
 void Plecs_pred_scope(void);
@@ -3473,6 +3475,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "hierarchy_custom_relation_2_levels",
         Plecs_hierarchy_custom_relation_2_levels
+    },
+    {
+        "hierarchy_custom_relation_apply_to_object",
+        Plecs_hierarchy_custom_relation_apply_to_object
+    },
+    {
+        "hierarchy_custom_relation_apply_to_object_2_levels",
+        Plecs_hierarchy_custom_relation_apply_to_object_2_levels
     },
     {
         "entity_after_hierarchy_custom_relation",
@@ -9745,7 +9755,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        58,
+        60,
         Plecs_testcases
     },
     {
