@@ -1266,7 +1266,8 @@
                 "rules_w_desc_pair",
                 "rules_w_desc_pair_empty_rel_obj",
                 "rules_w_desc_pair_pred_obj",
-                "rules_w_desc_wildcard"
+                "rules_w_desc_wildcard",
+                "childof_0"
             ]
         }, {
             "id": "TransitiveRules",

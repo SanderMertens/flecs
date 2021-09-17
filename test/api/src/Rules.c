@@ -3455,3 +3455,41 @@ void Rules_rules_w_desc_wildcard() {
 
     ecs_fini(world);
 }
+
+void Rules_childof_0() {
+    test_quarantine("Sep 17 2021");
+    
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_new_w_pair(world, EcsChildOf, e1);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {{ ecs_pair(EcsChildOf, 0) }}
+    });
+
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

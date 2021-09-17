@@ -52,7 +52,11 @@ void SystemMisc_invalid_entity_without_id() {
 }
 
 void SystemMisc_invalid_empty_without_id() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, .);
 

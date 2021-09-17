@@ -43,16 +43,20 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
     for (i = 0; i < count; i ++) {\
         ecs_term_t *term = &terms[i];\
         if (term->oper != EcsOr) {\
-            if (term->args[1].entity) {\
+            if (term->args[1].entity && term->args[1].entity != EcsThis) {\
                 if (term->role) {\
                     test_int(ECS_ROLE_MASK & term->id, term->role);\
                 } else {\
                     test_assert(ECS_HAS_ROLE(term->id, PAIR));\
                 }\
-                test_int(ECS_PAIR_RELATION(term->id), ecs_entity_t_lo(term->pred.entity));\
+                if (term->pred.entity != EcsThis) {\
+                    test_int(ECS_PAIR_RELATION(term->id), ecs_entity_t_lo(term->pred.entity));\
+                }\
                 test_int(ECS_PAIR_OBJECT(term->id), ecs_entity_t_lo(term->args[1].entity));\
             } else {\
-                test_int(ECS_COMPONENT_MASK & term->id, term->pred.entity);\
+                if (term->pred.entity != EcsThis && term->args[1].entity != EcsThis) {\
+                    test_int(ECS_COMPONENT_MASK & term->id, term->pred.entity);\
+                }\
                 test_int(ECS_ROLE_MASK & term->id, term->role);\
             }\
         }\

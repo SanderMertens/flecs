@@ -13945,6 +13945,7 @@ typedef struct ecs_rule_pair_t {
     bool transitive; /* Is predicate transitive */
     bool final;      /* Is predicate final */
     bool inclusive;  /* Is predicate inclusive */
+    bool obj_set;
 } ecs_rule_pair_t;
 
 /* Filter for evaluating & reifing types and variables. Filters are created ad-
@@ -14121,7 +14122,7 @@ static
 bool obj_is_set(
     ecs_term_t *term)
 {
-    return ecs_term_id_is_set(&term->args[1]);
+    return ecs_term_id_is_set(&term->args[1]); // || term->role == ECS_PAIR;
 }
 
 static
@@ -14238,13 +14239,7 @@ static
 bool term_id_is_variable(
     ecs_term_id_t *term_id)
 {
-    if (term_id->var == EcsVarIsVariable) {
-        return true;
-    } else if (term_id->entity == EcsThis) {
-        return true;
-    }
-
-    return false;
+    return term_id->var == EcsVarIsVariable;
 }
 
 static
@@ -14252,11 +14247,14 @@ const char *term_id_variable_name(
     ecs_term_id_t *term_id)
 {
     if (term_id->var == EcsVarIsVariable) {
-        ecs_assert(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
-        return term_id->name;
-    } else if (term_id->entity == EcsThis) {
-        return ".";
+        if (term_id->entity == EcsThis) {
+            return ".";
+        } else {
+            ecs_assert(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
+            return term_id->name;
+        }
     }
+    
     return NULL;
 }
 
@@ -14569,11 +14567,9 @@ ecs_rule_pair_t term_to_pair(
     /* Terms must always have at least one argument (the subject) */
     ecs_assert(subj_is_set(term), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t pred_id = term->pred.entity;
-
     /* If the predicate id is a variable, find the variable and encode its id
      * in the pair so the operation can find it later. */
-    if (!pred_id || pred_id == EcsThis) {
+    if (term->pred.var == EcsVarIsVariable) {
         /* Always lookup the as an entity, as pairs never refer to tables */
         const ecs_rule_var_t *var = find_variable(
             rule, EcsRuleVarKindEntity, term->pred.name);
@@ -14588,6 +14584,7 @@ ecs_rule_pair_t term_to_pair(
         result.final = true;
     } else {
         /* If the predicate is not a variable, simply store its id. */
+        ecs_entity_t pred_id = term->pred.entity;
         result.pred.ent = pred_id;
 
         /* Test if predicate is transitive. When evaluating the predicate, this
@@ -14618,10 +14615,8 @@ ecs_rule_pair_t term_to_pair(
     /* If arguments is higher than 2 this is not a pair but a nested rule */
     ecs_assert(obj_is_set(term), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t obj_id = term->args[1].entity;
-
     /* Same as above, if the object is a variable, store it and flag it */
-    if (!obj_id || obj_id == EcsThis) {
+    if (term->args[1].var == EcsVarIsVariable) {
         const ecs_rule_var_t *var = find_variable(
             rule, EcsRuleVarKindEntity, term->args[1].name);
 
@@ -14633,7 +14628,7 @@ ecs_rule_pair_t term_to_pair(
         result.reg_mask |= RULE_PAIR_OBJECT;
     } else {
         /* If the object is not a variable, simply store its id */
-        result.obj.ent = obj_id;
+        result.obj.ent = term->args[1].entity;
     }
 
     return result;
@@ -15042,23 +15037,23 @@ void ensure_all_variables(
         }
 
         /* If predicate is a variable, make sure it has been registered */
-        if (!term->pred.entity || (term->pred.entity == EcsThis)) {
+        if (term->pred.var == EcsVarIsVariable) {
             ensure_variable(rule, EcsRuleVarKindEntity, term->pred.name);
         }
 
         /* If subject is a variable and it is not This, make sure it is 
          * registered as an entity variable. This ensures that the program will
          * correctly return all permutations */
-        if (!term->args[0].entity) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term->args[0].name);
+        if (term->args[0].var == EcsVarIsVariable) {
+            if (term->args[0].entity != EcsThis) {
+                ensure_variable(rule, EcsRuleVarKindEntity, term->args[0].name);
+            }
         }
 
         /* If object is a variable, make sure it has been registered */
-        if (obj_is_set(term) && (!term->args[1].entity || 
-            term->args[1].entity == EcsThis)) 
-        {
+        if (obj_is_set(term) && (term->args[1].var == EcsVarIsVariable)) {
             ensure_variable(rule, EcsRuleVarKindEntity, term->args[1].name);
-        }        
+        }
     }    
 }
 
@@ -15091,11 +15086,7 @@ int scan_variables(
          * since they never can be elected as root. */
         if (term_id_is_variable(&term->args[0])) {
             const char *subj_name = term_id_variable_name(&term->args[0]);
-
-            if (!subj_name && term->args[0].entity == EcsThis) {
-                subj_name = ".";
-            }
-
+            
             ecs_rule_var_t *subj = find_variable(
                 rule, EcsRuleVarKindTable, subj_name);
             if (!subj) {
@@ -22042,6 +22033,16 @@ int finalize_term_identifiers(
     {
         term->args[0].entity = EcsThis;
     }
+    
+    if (term->pred.entity == EcsThis) {
+        term->pred.var = EcsVarIsVariable;
+    }
+    if (term->args[0].entity == EcsThis) {
+        term->args[0].var = EcsVarIsVariable;
+    }
+    if (term->args[1].entity == EcsThis) {
+        term->args[1].var = EcsVarIsVariable;
+    }
 
     return 0;
 }
@@ -25675,7 +25676,7 @@ void process_signature(
         /* Queries do not support variables */
         ecs_assert(pred->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-        ecs_assert(subj->var != EcsVarIsVariable, 
+        ecs_assert(subj->entity == EcsThis || subj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
         ecs_assert(obj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);

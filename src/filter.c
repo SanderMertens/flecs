@@ -227,6 +227,16 @@ int finalize_term_identifiers(
     {
         term->args[0].entity = EcsThis;
     }
+    
+    if (term->pred.entity == EcsThis) {
+        term->pred.var = EcsVarIsVariable;
+    }
+    if (term->args[0].entity == EcsThis) {
+        term->args[0].var = EcsVarIsVariable;
+    }
+    if (term->args[1].entity == EcsThis) {
+        term->args[1].var = EcsVarIsVariable;
+    }
 
     return 0;
 }

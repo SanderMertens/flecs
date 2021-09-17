@@ -1200,6 +1200,7 @@ void Rules_rules_w_desc_pair(void);
 void Rules_rules_w_desc_pair_empty_rel_obj(void);
 void Rules_rules_w_desc_pair_pred_obj(void);
 void Rules_rules_w_desc_wildcard(void);
+void Rules_childof_0(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6600,6 +6601,10 @@ bake_test_case Rules_testcases[] = {
     {
         "rules_w_desc_wildcard",
         Rules_rules_w_desc_wildcard
+    },
+    {
+        "childof_0",
+        Rules_childof_0
     }
 };
 
@@ -9912,7 +9917,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        96,
+        97,
         Rules_testcases
     },
     {
