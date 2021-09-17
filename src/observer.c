@@ -28,6 +28,7 @@ void observer_callback(ecs_iter_t *it) {
         ecs_data_t *data = flecs_table_get_data(table);
         
         user_it.ids[it->term_index] = it->event_id;
+        user_it.ptrs[it->term_index] = it->ptrs[0];
 
         user_it.system = o->entity;
         user_it.term_index = it->term_index;
