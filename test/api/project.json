@@ -425,7 +425,9 @@
                 "with_tag_2_levels",
                 "with_tag_2_levels_2_subtrees",
                 "with_n_tags",
-                "with_n_tags_2_levels"
+                "with_n_tags_2_levels",
+                "with_after_scope",
+                "with_after_with"
             ]            
         }, {
             "id": "GlobalComponentIds",

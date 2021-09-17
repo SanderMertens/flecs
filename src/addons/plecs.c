@@ -259,6 +259,8 @@ const char* parse_stmt(
         }
 
         while (ptr[0] == '}') {
+            state->scope[state->sp] = 0;
+
             state->sp --;
             ptr = skip_fluff(ptr + 1);
             ecs_id_t id = state->scope[state->sp];

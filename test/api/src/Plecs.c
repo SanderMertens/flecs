@@ -1410,3 +1410,67 @@ void Plecs_with_n_tags_2_levels() {
 
     ecs_fini(world);
 }
+
+void Plecs_with_after_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "E1 { }"
+    HEAD "with E2 {"
+    LINE "  E3() { }"
+    LINE "  E4 { }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
+    ecs_entity_t e3 = ecs_lookup_fullpath(world, "E3");
+    ecs_entity_t e4 = ecs_lookup_fullpath(world, "E4");
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+
+    test_assert(!ecs_has_pair(world, e2, EcsChildOf, e1));
+    test_assert(!ecs_has_pair(world, e3, EcsChildOf, e1));
+    test_assert(!ecs_has_pair(world, e4, EcsChildOf, e1));
+
+    test_assert(!ecs_has_id(world, e3, e2));
+    test_assert(ecs_has_id(world, e4, e2));
+
+    ecs_fini(world);
+}
+
+void Plecs_with_after_with() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "with E1 { }"
+    HEAD "with E2 {"
+    LINE "  E3() { }"
+    LINE "  E4 { }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
+    ecs_entity_t e3 = ecs_lookup_fullpath(world, "E3");
+    ecs_entity_t e4 = ecs_lookup_fullpath(world, "E4");
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+
+    test_assert(!ecs_has_id(world, e2, e1));
+    test_assert(!ecs_has_id(world, e3, e1));
+    test_assert(!ecs_has_id(world, e4, e1));
+
+    test_assert(!ecs_has_id(world, e3, e2));
+    test_assert(ecs_has_id(world, e4, e2));
+
+    ecs_fini(world);
+}
