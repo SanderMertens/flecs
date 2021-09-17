@@ -35,7 +35,7 @@ typedef struct ecs_rule_pair_t {
     bool transitive; /* Is predicate transitive */
     bool final;      /* Is predicate final */
     bool inclusive;  /* Is predicate inclusive */
-    bool obj_set;
+    bool obj_0;
 } ecs_rule_pair_t;
 
 /* Filter for evaluating & reifing types and variables. Filters are created ad-
@@ -212,7 +212,7 @@ static
 bool obj_is_set(
     ecs_term_t *term)
 {
-    return ecs_term_id_is_set(&term->args[1]); // || term->role == ECS_PAIR;
+    return ecs_term_id_is_set(&term->args[1]) || term->role == ECS_PAIR;
 }
 
 static
@@ -333,7 +333,7 @@ bool term_id_is_variable(
 }
 
 static
-const char *term_id_variable_name(
+const char *term_id_var_name(
     ecs_term_id_t *term_id)
 {
     if (term_id->var == EcsVarIsVariable) {
@@ -354,15 +354,10 @@ ecs_rule_var_t* term_id_to_var(
     ecs_rule_t *rule,
     ecs_term_id_t *id)
 {
-    ecs_rule_var_t *result;
-    if (!id->entity) {;
-        result = find_variable(rule, EcsRuleVarKindUnknown, id->name);
-    } else if (id->entity == EcsThis) {
-        result = find_variable(rule, EcsRuleVarKindUnknown, ".");
-    } else {
-        result = NULL;
+    if (id->var == EcsVarIsVariable) {;
+        return find_variable(rule, EcsRuleVarKindUnknown, term_id_var_name(id));
     }
-    return result;
+    return NULL;
 }
 
 /* Get variable from a term predicate */
@@ -719,6 +714,9 @@ ecs_rule_pair_t term_to_pair(
     } else {
         /* If the object is not a variable, simply store its id */
         result.obj.ent = term->args[1].entity;
+        if (!result.obj.ent) {
+            result.obj_0 = true;
+        }
     }
 
     return result;
@@ -778,7 +776,7 @@ ecs_rule_filter_t pair_to_filter(
         }
     }
 
-    if (!obj) {
+    if (!obj && !pair.obj_0) {
         result.mask = pred;
     } else {
         result.mask = ecs_pair(pred, obj);
@@ -1175,7 +1173,7 @@ int scan_variables(
         /* Evaluate the subject. The predicate and object are not evaluated, 
          * since they never can be elected as root. */
         if (term_id_is_variable(&term->args[0])) {
-            const char *subj_name = term_id_variable_name(&term->args[0]);
+            const char *subj_name = term_id_var_name(&term->args[0]);
             
             ecs_rule_var_t *subj = find_variable(
                 rule, EcsRuleVarKindTable, subj_name);
@@ -2387,6 +2385,8 @@ char* ecs_rule_str(
         } else if (obj) {
             obj_name_alloc = ecs_get_fullpath(world, ecs_get_alive(world, obj));
             obj_name = obj_name_alloc;
+        } else if (pair.obj_0) {
+            obj_name = "0";
         }
 
         ecs_strbuf_append(&buf, "%2d: [S:%2d, P:%2d, F:%2d] ", i, 
@@ -2460,7 +2460,7 @@ char* ecs_rule_str(
         }
 
         if (has_filter) {
-            if (!obj) {
+            if (!obj && !pair.obj_0) {
                 ecs_os_sprintf(filter_expr, "(%s)", pred_name);
             } else {
                 ecs_os_sprintf(filter_expr, "(%s, %s)", pred_name, obj_name);
@@ -3152,7 +3152,9 @@ bool eval_select(
         reify_variables(iter, op, &filter, table->type, column);
     }
     
-    set_column(it, op, table->type, column);
+    if (!pair.obj_0) {
+        set_column(it, op, table->type, column);
+    }
 
     return true;
 }
@@ -3292,7 +3294,9 @@ bool eval_with(
         reify_variables(iter, op, &filter, table->type, column);
     }
 
-    set_column(it, op, table->type, column);
+    if (!pair.obj_0) {
+        set_column(it, op, table->type, column);
+    }
     set_source(it, op, regs, r);
 
     return true;
@@ -3730,7 +3734,9 @@ bool ecs_rule_next(
 
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *term = &rule->filter.terms[i];
-            if (term->args[0].set.mask & EcsNothing || term->oper == EcsNot) {
+            if (term->args[0].set.mask & EcsNothing || 
+                term->oper == EcsNot ||
+                term->id == ecs_pair(EcsChildOf, 0)) {
                 it->ids[i] = term->id;
             }
         }
