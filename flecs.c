@@ -13691,6 +13691,7 @@ void register_on_set(
          * of systems when setting a single component. */
         ecs_term_t *terms = query->filter.terms;
         int32_t i, count = query->filter.term_count;
+        ecs_matched_table_t *table_data = ecs_vector_get(query->tables, ecs_matched_table_t, matched_table_index);
         
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
@@ -13707,9 +13708,9 @@ void register_on_set(
                 continue;
             }
 
-            ecs_entity_t comp = term->id;
             int32_t index = -1;
-            while ((index = ecs_type_index_of(table->type, ++index, comp)) != -1) {
+
+            while ((index = ecs_type_index_of(table->type, ++index, table_data->ids[i])) != -1) {
                 ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
                 ecs_id_t actual_comp = ids[index];
 
