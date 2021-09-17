@@ -536,6 +536,8 @@ const char* parse_arguments(
             if (ptr[0] == TOK_AND) {
                 ptr = skip_space(ptr + 1);
 
+                term->role = ECS_PAIR;
+
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
                 ptr = skip_space(ptr + 1);
                 break;
@@ -761,6 +763,8 @@ parse_pair_object:
             "invalid identifier '%s'", token); 
         return NULL;
     }
+
+    term.role = ECS_PAIR;
 
     ptr = skip_space(ptr);
     goto parse_done; 

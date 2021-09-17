@@ -243,6 +243,8 @@
                 "pair_explicit_subject_wildcard_pred",
                 "pair_explicit_subject_wildcard_subj",
                 "pair_explicit_subject_wildcard_obj",
+                "pair_implicit_subject_0_object",
+                "pair_explicit_subject_0_object",
                 "in_component_implicit_subject",
                 "in_component_explicit_subject",
                 "in_pair_implicit_subject",

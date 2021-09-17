@@ -267,6 +267,8 @@ int finalize_term_id(
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
     ecs_id_t role = term->role;
 
+    // printf("finalize term id (%d, %d) role = %d\n", pred, obj, role);
+
     if (ECS_HAS_ROLE(pred, PAIR)) {
         if (obj) {
             term_error(world, term, name, 
@@ -283,7 +285,7 @@ int finalize_term_id(
         finalize_term_identifier(world, term, &term->args[1], name);
     }
 
-    if (!obj) {
+    if (!obj && role != ECS_PAIR) {
         term->id = pred | role;
     } else {
         if (role && role != ECS_PAIR) {

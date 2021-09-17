@@ -220,6 +220,8 @@ void Parser_pair_explicit_subject_this_by_name(void);
 void Parser_pair_explicit_subject_wildcard_pred(void);
 void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
+void Parser_pair_implicit_subject_0_object(void);
+void Parser_pair_explicit_subject_0_object(void);
 void Parser_in_component_implicit_subject(void);
 void Parser_in_component_explicit_subject(void);
 void Parser_in_pair_implicit_subject(void);
@@ -2823,6 +2825,14 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_wildcard_obj",
         Parser_pair_explicit_subject_wildcard_obj
+    },
+    {
+        "pair_implicit_subject_0_object",
+        Parser_pair_implicit_subject_0_object
+    },
+    {
+        "pair_explicit_subject_0_object",
+        Parser_pair_explicit_subject_0_object
     },
     {
         "in_component_implicit_subject",
@@ -9763,7 +9773,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        139,
+        141,
         Parser_testcases
     },
     {
