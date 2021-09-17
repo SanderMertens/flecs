@@ -10,18 +10,18 @@ void Observer_w_value(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 1);
-    test_int(it->column_count, 2);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
     Position *p = ecs_term(it, Position, 1);
-    Velocity *v = ecs_term(it, Velocity, 2);
-    
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    test_int(v->x, 1);
-    test_int(v->y, 2);
+    if (it->column_count > 1) {
+        Velocity *v = ecs_term(it, Velocity, 2);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
 }
 
 static bool dummy_called = false;
@@ -522,6 +522,116 @@ void Observer_2_wildcard_pair_terms_w_on_remove() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(RelA, ObjA));
     test_int(ctx.c[0][1], ecs_pair(RelB, ObjB));
+
+    ecs_fini(world);
+}
+
+void Observer_wildcard_pair_w_pred_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ecs_pair(ecs_id(Position), EcsWildcard)}},
+        .events = {EcsOnSet},
+        .callback = Observer_w_value,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, ObjA, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), ObjA));
+
+    /* Change existing component without triggering OnSet as the callback
+     * expects value {10, 20}, then add a new component with {10, 20} */
+    Position *p = ecs_get_pair(world, e, Position, ObjA);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    p->x = 30;
+    p->y = 40;
+
+    ctx = (Probe){0};
+
+    ecs_set_pair(world, e, Position, ObjB, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), ObjB));
+
+    ecs_fini(world);
+}
+
+void Observer_wildcard_pair_w_obj_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_pair(EcsWildcard, ecs_id(Position)) }},
+        .events = {EcsOnSet},
+        .callback = Observer_w_value,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair_object(world, e, RelA, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ecs_id(Position)));
+
+    /* Change existing component without triggering OnSet as the callback
+     * expects value {10, 20}, then add a new component with {10, 20} */
+    Position *p = ecs_get_pair_object(world, e, RelA, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    p->x = 30;
+    p->y = 40;
+
+    ctx = (Probe){0};
+
+    ecs_set_pair_object(world, e, RelB, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, ecs_id(Position)));
 
     ecs_fini(world);
 }

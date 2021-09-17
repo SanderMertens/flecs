@@ -6,6 +6,19 @@ void Trigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
+static
+void Trigger_w_value(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_term(it, Position, 1);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void TriggerAdd(ecs_iter_t *it) {
     ecs_id_t id = *(ecs_id_t*)it->ctx;
 
@@ -758,6 +771,117 @@ void Trigger_on_remove_pair_wildcard() {
 
     ecs_fini(world);
 }
+
+void Trigger_wildcard_pair_w_pred_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(ecs_id(Position), EcsWildcard),
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair(world, e, Position, ObjA, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), ObjA));
+
+    /* Change existing component without triggering OnSet as the callback
+     * expects value {10, 20}, then add a new component with {10, 20} */
+    Position *p = ecs_get_pair(world, e, Position, ObjA);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    p->x = 30;
+    p->y = 40;
+
+    ctx = (Probe){0};
+
+    ecs_set_pair(world, e, Position, ObjB, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(ecs_id(Position), ObjB));
+
+    ecs_fini(world);
+}
+
+void Trigger_wildcard_pair_w_obj_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, ecs_id(Position)),
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_set_pair_object(world, e, RelA, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, ecs_id(Position)));
+
+    /* Change existing component without triggering OnSet as the callback
+     * expects value {10, 20}, then add a new component with {10, 20} */
+    Position *p = ecs_get_pair_object(world, e, RelA, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    p->x = 30;
+    p->y = 40;
+
+    ctx = (Probe){0};
+
+    ecs_set_pair_object(world, e, RelB, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.column_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, ecs_id(Position)));
+
+    ecs_fini(world);
+}
+
 
 void Trigger_on_set_component() {
     ecs_world_t *world = ecs_init();

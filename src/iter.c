@@ -6,7 +6,7 @@
             it->f = it->cache.f;\
             it->cache.f##_alloc = false;\
         } else {\
-            it->f = ecs_os_malloc(ECS_SIZEOF(*(it->f)) * term_count);\
+            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
             it->cache.f##_alloc = true;\
         }\
     }

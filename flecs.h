@@ -1,3 +1,4 @@
+// Comment out this line when using as DLL
 #define flecs_STATIC
 /**
  * @file flecs.h
