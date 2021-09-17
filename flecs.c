@@ -1813,7 +1813,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
-    void **ptr_out);
+    void **ptr_out,
+    bool first);
 
 /* Match table with filter */
 bool flecs_filter_match_table(
@@ -1826,7 +1827,8 @@ bool flecs_filter_match_table(
     int32_t *columns,
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
-    void **ptrs);
+    void **ptrs,
+    bool first);
 
 bool flecs_query_match(
     const ecs_world_t *world,
@@ -22940,7 +22942,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
-    void **ptr_out)
+    void **ptr_out,
+    bool first)
 {
     const ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t oper = term->oper;
@@ -22964,9 +22967,15 @@ bool flecs_term_match_table(
 
     ecs_entity_t source;
 
-    int32_t column = ecs_type_match(world, match_table, match_type,
-        0, term->id, subj->set.relation, subj->set.min_depth, 
+    int32_t column = 0;
+    if (!first && column_out[0] != 0) {
+        column = column_out[0] - 1;
+    }
+    
+    column = ecs_type_match(world, match_table, match_type,
+        column, term->id, subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source);
+
     bool result = column != -1;
 
     if (oper == EcsNot) {
@@ -23010,7 +23019,8 @@ bool flecs_filter_match_table(
     int32_t *columns,
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
-    void **ptrs)
+    void **ptrs,
+    bool first)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -23066,7 +23076,8 @@ bool flecs_filter_match_table(
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
             sizes ? &sizes[t_i] : NULL,
-            ptrs ? &ptrs[t_i] : NULL);
+            ptrs ? &ptrs[t_i] : NULL,
+            first);
 
         if (is_or) {
             or_result |= result;
@@ -23450,7 +23461,7 @@ bool ecs_filter_next(
             table = tr->table;
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs);
+                it->ptrs, true);
         } while (!match);
 
         populate_from_table(it, table);
@@ -23473,7 +23484,7 @@ bool ecs_filter_next(
 
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs);
+                it->ptrs, true);
         } while (!match);
 
         populate_from_table(it, table);
@@ -23529,9 +23540,15 @@ void observer_callback(ecs_iter_t *it) {
     ecs_type_t type = table->type;
     ecs_type_t prev_type = prev_table->type;
 
+    /* Populate the column for the term that triggered. This will allow the
+     * matching algorithm to pick the right column in case the term is a
+     * wildcard matching multiple columns. */
+    user_it.columns[0] = 0;
+    user_it.columns[it->term_index] = it->columns[0];
+
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
         user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 
-        user_it.ptrs)) 
+        user_it.ptrs, false)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
@@ -23541,7 +23558,7 @@ void observer_callback(ecs_iter_t *it) {
             }
 
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, 0, NULL, NULL, NULL, NULL, NULL)) {
+                prev_type, 0, NULL, NULL, NULL, NULL, NULL, true)) {
                 goto done;
             }
 
@@ -28344,7 +28361,7 @@ ecs_table_t* ecs_table_remove_id(
             it->f = it->cache.f;\
             it->cache.f##_alloc = false;\
         } else {\
-            it->f = ecs_os_malloc(ECS_SIZEOF(*(it->f)) * term_count);\
+            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
             it->cache.f##_alloc = true;\
         }\
     }
@@ -28786,7 +28803,6 @@ ecs_id_triggers_t* flecs_triggers_for_id(
 static
 void init_iter(
     ecs_iter_t *it,
-    ecs_id_t id,
     ecs_entity_t *entity,
     ecs_table_t *table,
     int32_t row,
@@ -28824,7 +28840,7 @@ void init_iter(
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                id, EcsIsA, 0, 0, &subject);
+                it->event_id, EcsIsA, 0, 0, &subject);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
             index ++;
@@ -28925,7 +28941,7 @@ void notify_set_triggers(
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->offset, it->ids, it->columns, it->subjects, it->sizes, 
-            it->ptrs))
+            it->ptrs, true))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */
@@ -28963,11 +28979,11 @@ void notify_triggers_for_id(
     const ecs_id_triggers_t *idt = get_triggers_for_id(evt, event_id);
     if (idt) {
         if (idt->triggers) {
-            init_iter(it, event_id, entity, table, row, count, iter_set);
+            init_iter(it, entity, table, row, count, iter_set);
             notify_self_triggers(it, idt->triggers);
         }
         if (idt->set_triggers) {
-            init_iter(it, event_id, entity, table, row, count, iter_set);
+            init_iter(it, entity, table, row, count, iter_set);
             notify_set_triggers(it, idt->set_triggers);
         }
     }

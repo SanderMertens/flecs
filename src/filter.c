@@ -1124,7 +1124,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
-    void **ptr_out)
+    void **ptr_out,
+    bool first)
 {
     const ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t oper = term->oper;
@@ -1148,9 +1149,15 @@ bool flecs_term_match_table(
 
     ecs_entity_t source;
 
-    int32_t column = ecs_type_match(world, match_table, match_type,
-        0, term->id, subj->set.relation, subj->set.min_depth, 
+    int32_t column = 0;
+    if (!first && column_out[0] != 0) {
+        column = column_out[0] - 1;
+    }
+    
+    column = ecs_type_match(world, match_table, match_type,
+        column, term->id, subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source);
+
     bool result = column != -1;
 
     if (oper == EcsNot) {
@@ -1194,7 +1201,8 @@ bool flecs_filter_match_table(
     int32_t *columns,
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
-    void **ptrs)
+    void **ptrs,
+    bool first)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1250,7 +1258,8 @@ bool flecs_filter_match_table(
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
             sizes ? &sizes[t_i] : NULL,
-            ptrs ? &ptrs[t_i] : NULL);
+            ptrs ? &ptrs[t_i] : NULL,
+            first);
 
         if (is_or) {
             or_result |= result;
@@ -1634,7 +1643,7 @@ bool ecs_filter_next(
             table = tr->table;
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs);
+                it->ptrs, true);
         } while (!match);
 
         populate_from_table(it, table);
@@ -1657,7 +1666,7 @@ bool ecs_filter_next(
 
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs);
+                it->ptrs, true);
         } while (!match);
 
         populate_from_table(it, table);

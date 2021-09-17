@@ -504,7 +504,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
-    void **ptr_out);
+    void **ptr_out,
+    bool first);
 
 /* Match table with filter */
 bool flecs_filter_match_table(
@@ -517,7 +518,8 @@ bool flecs_filter_match_table(
     int32_t *columns,
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
-    void **ptrs);
+    void **ptrs,
+    bool first);
 
 bool flecs_query_match(
     const ecs_world_t *world,

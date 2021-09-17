@@ -219,7 +219,6 @@ ecs_id_triggers_t* flecs_triggers_for_id(
 static
 void init_iter(
     ecs_iter_t *it,
-    ecs_id_t id,
     ecs_entity_t *entity,
     ecs_table_t *table,
     int32_t row,
@@ -257,7 +256,7 @@ void init_iter(
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                id, EcsIsA, 0, 0, &subject);
+                it->event_id, EcsIsA, 0, 0, &subject);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
             index ++;
@@ -358,7 +357,7 @@ void notify_set_triggers(
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->offset, it->ids, it->columns, it->subjects, it->sizes, 
-            it->ptrs))
+            it->ptrs, true))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */
@@ -396,11 +395,11 @@ void notify_triggers_for_id(
     const ecs_id_triggers_t *idt = get_triggers_for_id(evt, event_id);
     if (idt) {
         if (idt->triggers) {
-            init_iter(it, event_id, entity, table, row, count, iter_set);
+            init_iter(it, entity, table, row, count, iter_set);
             notify_self_triggers(it, idt->triggers);
         }
         if (idt->set_triggers) {
-            init_iter(it, event_id, entity, table, row, count, iter_set);
+            init_iter(it, entity, table, row, count, iter_set);
             notify_set_triggers(it, idt->set_triggers);
         }
     }
