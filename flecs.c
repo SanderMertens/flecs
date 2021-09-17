@@ -19780,6 +19780,8 @@ const char* parse_arguments(
             if (ptr[0] == TOK_AND) {
                 ptr = skip_space(ptr + 1);
 
+                term->role = ECS_PAIR;
+
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
                 ptr = skip_space(ptr + 1);
                 break;
@@ -22081,7 +22083,7 @@ int finalize_term_id(
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
     ecs_id_t role = term->role;
 
-    printf("finalize term id (%d, %d) role = %d\n", pred, obj, role);
+    // printf("finalize term id (%d, %d) role = %d\n", pred, obj, role);
 
     if (ECS_HAS_ROLE(pred, PAIR)) {
         if (obj) {
