@@ -1391,6 +1391,9 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
 void TriggerOnSet_on_set_after_snapshot_restore(void);
 void TriggerOnSet_emplace(void);
+void TriggerOnSet_un_set_tag_w_remove(void);
+void TriggerOnSet_un_set_tag_w_clear(void);
+void TriggerOnSet_un_set_tag_w_delete(void);
 
 // Testsuite 'Monitor'
 void Monitor_1_comp(void);
@@ -7339,6 +7342,18 @@ bake_test_case TriggerOnSet_testcases[] = {
     {
         "emplace",
         TriggerOnSet_emplace
+    },
+    {
+        "un_set_tag_w_remove",
+        TriggerOnSet_un_set_tag_w_remove
+    },
+    {
+        "un_set_tag_w_clear",
+        TriggerOnSet_un_set_tag_w_clear
+    },
+    {
+        "un_set_tag_w_delete",
+        TriggerOnSet_un_set_tag_w_delete
     }
 };
 
@@ -9999,7 +10014,7 @@ static bake_test_suite suites[] = {
         "TriggerOnSet",
         NULL,
         NULL,
-        12,
+        15,
         TriggerOnSet_testcases
     },
     {

@@ -627,7 +627,9 @@ void diff_insert_removed(
         }
     }
 
-    ids_append(&diff->un_set, id);
+    if (ecs_get_typeid(world, id) != 0) {
+        ids_append(&diff->un_set, id);
+    }
 }
 
 static
@@ -675,8 +677,10 @@ void compute_table_diff(
     trivial_edge &= (added_count + removed_count) <= 1;
 
     if (trivial_edge) {
-        /* If edge is trivial there's no need to create a diff element for it */
-        edge->diff_index = 0;
+        /* If edge is trivial there's no need to create a diff element for it.
+         * Encode in the id whether the id is a tag or not, so that wen can
+         * still tell whether an UnSet handler should be called or not. */
+        edge->diff_index = -1 * (ecs_get_typeid(world, id) == 0);
         return;
     }
 
@@ -858,7 +862,7 @@ void populate_diff(
 {
     if (out) {
         int32_t di = edge->diff_index;
-        if (di) {
+        if (di > 0) {
             *out = ecs_vector_first(table->node.diffs, ecs_table_diff_t)[di - 1];
         } else {
             out->on_set.count = 0;
@@ -873,8 +877,12 @@ void populate_diff(
             if (remove_ptr) {
                 out->removed.array = remove_ptr;
                 out->removed.count = 1;
-                out->un_set.array = remove_ptr;
-                out->un_set.count = 1;
+                if (di == 0) {
+                    out->un_set.array = remove_ptr;
+                    out->un_set.count = 1;
+                } else {
+                    out->un_set.count = 0;
+                }
             } else {
                 out->removed.count = 0;
                 out->un_set.count = 0;

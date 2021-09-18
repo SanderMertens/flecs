@@ -567,3 +567,75 @@ void TriggerOnSet_emplace() {
 
     ecs_fini(world);
 }
+
+void TriggerOnSet_un_set_tag_w_remove() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsUnSet},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_int(dummy_called, 0);
+
+    ecs_add(world, e, Tag);
+    test_int(dummy_called, 0);
+
+    ecs_remove(world, e, Tag);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+void TriggerOnSet_un_set_tag_w_clear() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsUnSet},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_int(dummy_called, 0);
+
+    ecs_add(world, e, Tag);
+    test_int(dummy_called, 0);
+
+    ecs_clear(world, e);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+void TriggerOnSet_un_set_tag_w_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsUnSet},
+        .callback = Dummy
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+    test_int(dummy_called, 0);
+
+    ecs_add(world, e, Tag);
+    test_int(dummy_called, 0);
+
+    ecs_delete(world, e);
+    test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}

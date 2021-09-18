@@ -1469,7 +1469,10 @@
                 "on_set_after_override_w_new_w_count",
                 "on_set_after_override_1_of_2_overridden",
                 "on_set_after_snapshot_restore",
-                "emplace"
+                "emplace",
+                "un_set_tag_w_remove",
+                "un_set_tag_w_clear",
+                "un_set_tag_w_delete"
             ]
         }, {
             "id": "Monitor",

@@ -1233,6 +1233,9 @@ void Trigger_un_set_pair() {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
+    // UnSet only works on components
+    ecs_set(world, Rel, EcsComponent, {.size = 1});
+
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(Rel, Obj),
@@ -1269,6 +1272,9 @@ void Trigger_un_set_pair_w_obj_wildcard() {
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
+
+    // UnSet only works on components
+    ecs_set(world, Rel, EcsComponent, {.size = 1});
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -1307,6 +1313,9 @@ void Trigger_un_set_pair_pred_wildcard() {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
+    // UnSet only works on components
+    ecs_set(world, Rel, EcsComponent, {.size = 1});
+
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = ecs_pair(EcsWildcard, Obj),
@@ -1343,6 +1352,9 @@ void Trigger_un_set_pair_wildcard() {
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
+
+    // UnSet only works on components
+    ecs_set(world, Rel, EcsComponent, {.size = 1});
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){

@@ -2050,6 +2050,8 @@ void ecs_clear(
             .un_set = flecs_type_to_ids(table->type)
         };
 
+        diff.un_set.count = table->column_count;
+
         delete_entity(world, table, &table->storage, info.row, &diff);
         info.record->table = NULL;
         info.record->row = 0;
@@ -2327,6 +2329,9 @@ void ecs_delete(
                 .removed = flecs_type_to_ids(table->type),
                 .un_set = flecs_type_to_ids(table->type)
             };
+
+            diff.un_set.count = table->column_count;
+
             delete_entity(world, table, info.data, info.row, &diff);
             r->table = NULL;
         }
