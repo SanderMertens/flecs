@@ -19445,7 +19445,7 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_iter_init(&user_it);
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
+    if (flecs_filter_match_table(world, &o->filter, table, type, it->offset,
         user_it.ids, user_it.columns, user_it.types, user_it.subjects, 
         user_it.sizes, user_it.ptrs)) 
     {
@@ -22056,8 +22056,8 @@ bool ecs_filter_next(
             }
 
             table = tr->table;
-            match = flecs_filter_match_table(world, filter, table, table->type, 0,
-                it->ids, it->columns, it->types, it->subjects, it->sizes, 
+            match = flecs_filter_match_table(world, filter, table, table->type,
+                0, it->ids, it->columns, it->types, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
