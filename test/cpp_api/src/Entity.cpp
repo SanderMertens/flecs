@@ -456,6 +456,7 @@ void Entity_get_generic_w_id() {
     flecs::world world;
 
     auto position = world.component<Position>();
+    flecs::id id = position;
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -463,7 +464,27 @@ void Entity_get_generic_w_id() {
     test_assert(entity);
     test_assert(entity.has<Position>());
 
-    const void *void_p = entity.get(position);
+    const void *void_p = entity.get(id);
+    test_assert(void_p != nullptr);
+
+    const Position *p = static_cast<const Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_generic_w_id_t() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id_t id = position;
+
+    auto entity = world.entity()
+        .set<Position>({10, 20});
+
+    test_assert(entity);
+    test_assert(entity.has<Position>());
+
+    const void *void_p = entity.get(id);
     test_assert(void_p != nullptr);
 
     const Position *p = static_cast<const Position*>(void_p);
@@ -475,6 +496,7 @@ void Entity_get_mut_generic_w_id() {
     flecs::world world;
 
     auto position = world.component<Position>();
+    flecs::id id = position;
 
     auto entity = world.entity()
         .set<Position>({10, 20});
@@ -489,14 +511,44 @@ void Entity_get_mut_generic_w_id() {
             invoked = true;
         });
 
-    void *void_p = entity.get_mut(position);
+    void *void_p = entity.get_mut(id);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    entity.modified(position);
+    entity.modified(id);
+    test_bool(invoked, true);
+}
+
+void Entity_get_mut_generic_w_id_t() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id_t id = position;
+
+    auto entity = world.entity()
+        .set<Position>({10, 20});
+
+    test_assert(entity);
+    test_assert(entity.has<Position>());
+
+    bool invoked;
+    world.trigger<Position>()
+        .event(flecs::OnSet)
+        .each([&invoked](flecs::entity e, Position& p) {
+            invoked = true;
+        });
+
+    void *void_p = entity.get_mut(id);
+    test_assert(void_p != nullptr);
+
+    Position *p = static_cast<Position*>(void_p);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    entity.modified(id);
     test_bool(invoked, true);
 }
 
@@ -518,6 +570,44 @@ void Entity_set_generic() {
     test_int(ptr->y, 20);
 }
 
+void Entity_set_generic_w_id() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id id = position;
+
+    Position p = {10, 20};
+
+    auto e = world.entity()
+        .set_ptr(id, sizeof(Position), &p);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(id));
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_set_generic_w_id_t() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id_t id = position;
+
+    Position p = {10, 20};
+
+    auto e = world.entity()
+        .set_ptr(id, sizeof(Position), &p);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(id));
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
 void Entity_set_generic_no_size() {
     flecs::world world;
 
@@ -530,6 +620,44 @@ void Entity_set_generic_no_size() {
 
     test_assert(e.has<Position>());
     test_assert(e.has(position));
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_set_generic_no_size_w_id() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id id = position;
+
+    Position p = {10, 20};
+
+    auto e = world.entity()
+        .set_ptr(id, &p);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(id));
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_set_generic_no_size_w_id_t() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+    flecs::id_t id = position;
+
+    Position p = {10, 20};
+
+    auto e = world.entity()
+        .set_ptr(id, &p);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(id));
 
     const Position *ptr = e.get<Position>();
     test_int(ptr->x, 10);

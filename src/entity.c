@@ -2331,7 +2331,6 @@ void ecs_delete(
             };
 
             diff.un_set.count = table->column_count;
-
             delete_entity(world, table, info.data, info.row, &diff);
             r->table = NULL;
         }

@@ -38,9 +38,15 @@ void Entity_emplace_w_self_ctor(void);
 void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
+void Entity_get_generic_w_id_t(void);
 void Entity_get_mut_generic_w_id(void);
+void Entity_get_mut_generic_w_id_t(void);
 void Entity_set_generic(void);
+void Entity_set_generic_w_id(void);
+void Entity_set_generic_w_id_t(void);
 void Entity_set_generic_no_size(void);
+void Entity_set_generic_no_size_w_id(void);
+void Entity_set_generic_no_size_w_id_t(void);
 void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
@@ -183,6 +189,15 @@ void Pairs_get_relation_from_id(void);
 void Pairs_get_w_object_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
 void Pairs_get_recycled_object_from_id(void);
+void Pairs_get_rel_obj(void);
+void Pairs_get_rel_obj_id(void);
+void Pairs_get_rel_obj_id_t(void);
+void Pairs_get_R_obj(void);
+void Pairs_get_R_obj_id(void);
+void Pairs_get_R_obj_id_t(void);
+void Pairs_get_w_object(void);
+void Pairs_get_w_object_id(void);
+void Pairs_get_w_object_id_t(void);
 void Pairs_each(void);
 void Pairs_each_pair(void);
 void Pairs_each_pair_by_type(void);
@@ -802,16 +817,40 @@ bake_test_case Entity_testcases[] = {
         Entity_get_generic_w_id
     },
     {
+        "get_generic_w_id_t",
+        Entity_get_generic_w_id_t
+    },
+    {
         "get_mut_generic_w_id",
         Entity_get_mut_generic_w_id
+    },
+    {
+        "get_mut_generic_w_id_t",
+        Entity_get_mut_generic_w_id_t
     },
     {
         "set_generic",
         Entity_set_generic
     },
     {
+        "set_generic_w_id",
+        Entity_set_generic_w_id
+    },
+    {
+        "set_generic_w_id_t",
+        Entity_set_generic_w_id_t
+    },
+    {
         "set_generic_no_size",
         Entity_set_generic_no_size
+    },
+    {
+        "set_generic_no_size_w_id",
+        Entity_set_generic_no_size_w_id
+    },
+    {
+        "set_generic_no_size_w_id_t",
+        Entity_set_generic_no_size_w_id_t
     },
     {
         "add_role",
@@ -1375,6 +1414,42 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_recycled_object_from_id",
         Pairs_get_recycled_object_from_id
+    },
+    {
+        "get_rel_obj",
+        Pairs_get_rel_obj
+    },
+    {
+        "get_rel_obj_id",
+        Pairs_get_rel_obj_id
+    },
+    {
+        "get_rel_obj_id_t",
+        Pairs_get_rel_obj_id_t
+    },
+    {
+        "get_R_obj",
+        Pairs_get_R_obj
+    },
+    {
+        "get_R_obj_id",
+        Pairs_get_R_obj_id
+    },
+    {
+        "get_R_obj_id_t",
+        Pairs_get_R_obj_id_t
+    },
+    {
+        "get_w_object",
+        Pairs_get_w_object
+    },
+    {
+        "get_w_object_id",
+        Pairs_get_w_object_id
+    },
+    {
+        "get_w_object_id_t",
+        Pairs_get_w_object_id_t
     },
     {
         "each",
@@ -3279,14 +3354,14 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        152,
+        158,
         Entity_testcases
     },
     {
         "Pairs",
         NULL,
         NULL,
-        45,
+        54,
         Pairs_testcases
     },
     {

@@ -205,11 +205,11 @@ public:
      * @param object the object.
      */
     template<typename R>
-    const R* get(const flecs::entity_view& object) const {
+    const R* get(flecs::id_t object) const {
         auto comp_id = _::cpp_type<R>::id(m_world);
         ecs_assert(_::cpp_type<R>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const R*>(
-            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object.id())));
+            ecs_get_id(m_world, m_id, ecs_pair(comp_id, object)));
     }
 
     /** Get component value (untyped).
@@ -218,8 +218,8 @@ public:
      * @return Pointer to the component value, nullptr if the entity does not
      *         have the component.
      */
-    const void* get(const flecs::entity_view& component) const {
-        return ecs_get_id(m_world, m_id, component.id());
+    const void* get(flecs::id_t comp) const {
+        return ecs_get_id(m_world, m_id, comp);
     }
 
     /** Get a pair (untyped).
@@ -230,8 +230,8 @@ public:
      * @param relation the relation.
      * @param object the object.
      */
-    const void* get(const flecs::entity_view& relation, const flecs::entity_view& object) const {
-        return ecs_get_id(m_world, m_id, ecs_pair(relation.id(), object.id()));
+    const void* get(flecs::entity_t relation, flecs::entity_t object) const {
+        return ecs_get_id(m_world, m_id, ecs_pair(relation, object));
     }
 
     /** Get 1..N components.
@@ -256,11 +256,11 @@ public:
      * @param relation the relation.
      */
     template<typename O>
-    const O* get_w_object(const flecs::entity_view& relation) const {
+    const O* get_w_object(flecs::entity_t relation) const {
         auto comp_id = _::cpp_type<O>::id(m_world);
         ecs_assert(_::cpp_type<O>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const O*>(
-            ecs_get_id(m_world, m_id, ecs_pair(relation.id(), comp_id)));
+            ecs_get_id(m_world, m_id, ecs_pair(relation, comp_id)));
     }
 
     /** Get the object part from a pair.
@@ -284,20 +284,6 @@ public:
      * @param index The index (0 for the first instance of the relation).
      */
     flecs::entity get_object(flecs::entity_t relation, int32_t index = 0) const;
-
-    /** Get parent from an entity.
-     * This operation retrieves the parent entity that has the specified 
-     * component. If no parent with the specified component is found, an entity
-     * with id 0 is returned. If multiple parents have the specified component,
-     * the operation returns the first encountered one.
-     *
-     * @tparam T The component for which to find the parent.
-     * @return The parent entity.
-     */
-    template <typename T>
-    flecs::entity get_parent();
-
-    flecs::entity get_parent(flecs::entity_view e);
 
     /** Lookup an entity by name.
      * Lookup an entity in the scope of this entity. The provided path may
