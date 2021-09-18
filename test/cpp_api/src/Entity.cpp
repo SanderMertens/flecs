@@ -508,7 +508,25 @@ void Entity_set_generic() {
     Position p = {10, 20};
 
     auto e = world.entity()
-        .set(position, sizeof(Position), &p);
+        .set_ptr(position, sizeof(Position), &p);
+
+    test_assert(e.has<Position>());
+    test_assert(e.has(position));
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_set_generic_no_size() {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+
+    Position p = {10, 20};
+
+    auto e = world.entity()
+        .set_ptr(position, &p);
 
     test_assert(e.has<Position>());
     test_assert(e.has(position));

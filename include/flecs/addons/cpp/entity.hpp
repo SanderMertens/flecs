@@ -919,9 +919,19 @@ public:
         return *this;       
     }
 
-    const Base& set(entity_t component, size_t size, void *ptr) {
+    const Base& set_ptr(entity_t component, size_t size, const void *ptr) {
         ecs_set_id(this->base_world(), this->base_id(), component, size, ptr);
         return *this;
+    }
+
+    const Base& set_ptr(entity_t component, const void *ptr) {
+        const flecs::Component *cptr = ecs_get(
+            this->base_world(), component, EcsComponent);
+
+        /* Can't set if it's not a component */
+        ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        return set_ptr(component, cptr->size, ptr);
     }
 
     template<typename T, if_t< 
