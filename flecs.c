@@ -17143,6 +17143,7 @@ static
 bool populate_from_column(
     ecs_world_t *world,
     const ecs_table_t *table,
+    int32_t offset,
     ecs_id_t id,
     int32_t column,
     ecs_entity_t source,
@@ -17192,6 +17193,10 @@ bool populate_from_column(
                     ecs_column_t *col = &data->columns[column];
                     *ptr_out = ecs_vector_first_t(
                         col->data, col->size, col->alignment);
+
+                    if (*ptr_out && offset) {
+                        *ptr_out = ECS_OFFSET(*ptr_out, col->size * offset);
+                    }
                 }
             } else {
                 *ptr_out = NULL;
@@ -17230,6 +17235,7 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
+    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_type_t *types,
@@ -17316,7 +17322,7 @@ bool flecs_filter_match_table(
             int32_t t_i = term->index;
 
             void **ptr = ptrs ? &ptrs[t_i] : NULL;
-            populate_from_column(world, table, term->id, column, 
+            populate_from_column(world, table, offset, term->id, column, 
                 source, &ids[t_i], &types[t_i], &subjects[t_i], &sizes[t_i], 
                 ptr);
 
@@ -17507,7 +17513,7 @@ bool ecs_term_next(
     it->entities = ecs_vector_first(data->entities, ecs_entity_t);
     it->is_valid = true;
 
-    bool has_data = populate_from_column(world, table, term->id, tr->column, 
+    bool has_data = populate_from_column(world, table, 0, term->id, tr->column, 
         source, &iter->id, &iter->type, &iter->subject, &iter->size, 
         &iter->ptr);
 
@@ -17645,7 +17651,7 @@ bool ecs_filter_next(
 
             table = tr->table;
             match = flecs_filter_match_table(world, filter, table, table->type,
-                it->ids, it->columns, it->types, it->subjects, it->sizes, 
+                0, it->ids, it->columns, it->types, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
@@ -17684,7 +17690,7 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_iter_init(&user_it);
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, 
+    if (flecs_filter_match_table(world, &o->filter, table, type, it->offset,
         user_it.ids, user_it.columns, user_it.types, user_it.subjects, 
         user_it.sizes, user_it.ptrs)) 
     {

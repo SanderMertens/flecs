@@ -1156,8 +1156,8 @@ bool ecs_filter_next(
             }
 
             table = tr->table;
-            match = flecs_filter_match_table(world, filter, table, table->type, 0,
-                it->ids, it->columns, it->types, it->subjects, it->sizes, 
+            match = flecs_filter_match_table(world, filter, table, table->type,
+                0, it->ids, it->columns, it->types, it->subjects, it->sizes, 
                 it->ptrs);
         } while (!match);
 
