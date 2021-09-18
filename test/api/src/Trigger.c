@@ -2124,10 +2124,6 @@ void Trigger_trigger_w_named_entity() {
     ecs_fini(world);
 }
 
-typedef struct Self {
-    ecs_entity_t value;
-} Self;
-
 void RemoveSelf(ecs_iter_t *it) {
     Self *s = ecs_term(it, Self, 1);
     ecs_id_t ecs_id(Self) = ecs_term_id(it, 1);

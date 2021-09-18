@@ -57,6 +57,10 @@ typedef struct Color {
     float a;
 } Color;
 
+typedef struct Self {
+    ecs_entity_t value;
+} Self;
+
 void probe_system_w_ctx(
     ecs_iter_t *it,
     Probe *ctx);

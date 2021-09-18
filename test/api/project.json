@@ -1371,6 +1371,8 @@
                 "2_wildcard_pair_terms_w_on_add_2_matching",
                 "2_wildcard_pair_terms_w_on_add_3_matching",                
                 "2_wildcard_pair_terms_w_on_remove",
+                "on_set_n_entities",
+                "on_set_n_entities_2_comp",
                 "wildcard_pair_w_pred_component",
                 "wildcard_pair_w_obj_component",
                 "2_terms_1_not_w_on_add",
