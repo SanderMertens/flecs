@@ -39,6 +39,7 @@ void Entity_get_generic(void);
 void Entity_get_mut_generic(void);
 void Entity_get_generic_w_id(void);
 void Entity_get_mut_generic_w_id(void);
+void Entity_set_generic(void);
 void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
@@ -802,6 +803,10 @@ bake_test_case Entity_testcases[] = {
     {
         "get_mut_generic_w_id",
         Entity_get_mut_generic_w_id
+    },
+    {
+        "set_generic",
+        Entity_set_generic
     },
     {
         "add_role",
@@ -3269,7 +3274,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        150,
+        151,
         Entity_testcases
     },
     {

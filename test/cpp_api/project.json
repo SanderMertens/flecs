@@ -46,6 +46,7 @@
                 "get_mut_generic",
                 "get_generic_w_id",
                 "get_mut_generic_w_id",
+                "set_generic",
                 "add_role",
                 "remove_role",
                 "has_role",

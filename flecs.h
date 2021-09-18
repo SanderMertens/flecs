@@ -11527,6 +11527,11 @@ public:
         return *this;       
     }
 
+    const Base& set(entity_t component, size_t size, void *ptr) {
+        ecs_set_id(this->base_world(), this->base_id(), component, size, ptr);
+        return *this;
+    }
+
     template<typename T, if_t< 
         !is_callable<T>::value && is_actual<T>::value> = 0 >
     const Base& set(T&& value) const {
