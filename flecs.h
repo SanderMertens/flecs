@@ -49,15 +49,6 @@
 #define FLECS_TIMER         /* Timer support */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
-/* Maximum number of components to add/remove in a single operation */
-#define ECS_MAX_ADD_REMOVE (32)
-
-/* Maximum number of terms cached in static arrays */
-#define ECS_TERM_CACHE_SIZE (8)
-
-/* Maximum number of events to set in static array of trigger descriptor */
-#define ECS_TRIGGER_DESC_EVENT_COUNT_MAX (8)
-
 /** @} */
 
 /**
