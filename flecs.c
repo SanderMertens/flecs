@@ -13918,18 +13918,170 @@ error:
 
 #ifdef FLECS_RULES
 
-/* This is the implementation of the rule solver, which for a given rule 
- * expression returns all combinations of variable values that satisfy the
- * constraints of the rule.
+/** Implementation of the rule query engine.
+ * 
+ * A rule (terminology borrowed from prolog) is a list of constraints that 
+ * specify which conditions must be met for an entity to match the rule. While
+ * this description matches any kind of ECS query, the rule engine has features
+ * that go beyond regular (flecs) ECS queries:
+ * 
+ * - query for all components of an entity (vs. all entities for a component)
+ * - query for all relationship pairs of an entity
+ * - support for query variables that are resolved at evaluation time
+ * - automatic traversal of transitive relationships
+ * 
+ * Query terms can have the following forms:
+ * 
+ * - Component(Subject)
+ * - Relation(Subject, Object)
+ * 
+ * Additionally the query parser supports the following shorthand notations:
+ * 
+ * - Component             // short for Component(This)
+ * - (Relation, Object)    // short for Relation(This, Object)
+ * 
+ * The subject, or first arugment of a term represents the entity on which the
+ * component or relation is matched. By default the subject is set to a builtin
+ * This variable, which causes the behavior to match a regular ECS query:
+ * 
+ * - Position, Velocity
+ * 
+ * Is equivalent to
+ * 
+ * - Position(This), Velocity(This)
+ * 
+ * The function of the variable is to ensure that all components are matched on
+ * the same entity. Conceptually the query first populates the This variable
+ * with all entities that have Position. When the query evaluates the Velocity
+ * term, the variable is populated and the entity it contains will be checked
+ * for whether it has velocity.
+ * 
+ * The actual implementation is more efficient and does not check per-entity.
+ * 
+ * Custom variables can be used to join parts of different terms. For example, 
+ * the following query can be used to find entities with a parent that has a
+ * Position component (note that variable names start with a _):
+ * 
+ * - ChildOf(This, _Parent), Component(_Parent)
+ * 
+ * The rule engine uses a backtracking algorithm to find the set of entities
+ * and variables that matches all terms. As soon as the engine finds a term that
+ * does not match with the currently evaluated entity, the entity is discarded.
+ * When an entity is found for which all terms match, the entity is yielded to
+ * the iterator.
+ * 
+ * While a rule is being evaluated, a variable can either contain a single 
+ * entity or a table. The engine will attempt to work with tables as much as
+ * possible so entities can be eliminated/yielded in bulk. A rule may store
+ * both the table and entity version of a variable and only switch from table to
+ * entity when necessary.
+ * 
+ * The rule engine has an algorithm for computing which variables should be 
+ * resolved first. This algorithm works by finding a "root" variable, which is
+ * the subject variable that occurs in the term with the least dependencies. The
+ * remaining variables are then resolved based on their "distance" from the root
+ * with the closest variables being resolved first.
+ * 
+ * This generally results in an ordering that resolves the variables with the 
+ * least dependencies first and the most dependencies last, which is beneficial
+ * for two reasons:
+ * 
+ * - it improves the average performance of all queries
+ * - it makes performance less dependent on how an application orders the terms
+ * 
+ * A possible improvement would be for the query engine to also consider
+ * the number of tables that need to be evaluated for each term, as starting
+ * with the smallest term reduces the amount of work. Other than static variable
+ * analysis however, this can only be determined when the query is executed.
+ * 
+ * Rules are "compiled" into a set of instructions that encode the operations
+ * the query needs to perform in order to find the right set of entities.
+ * Operations can either yield data, which progresses the program, or signal
+ * that there is no (more) matching data, which discards the current variables.
+ * 
+ * An operation can yield multiple times, if there are multiple matches for its
+ * inputs. Operations are called with a redo flag, which can be either true or
+ * false. When redo is true the operation will yield the next result. When redo
+ * is false, the operation will reset its state and start from the first result.
+ * 
+ * Operations can have an input, output and a filter. Most commonly an operation
+ * either matches the filter against an input and yields if it matches, or uses
+ * the filter to find all matching results and store the result in the output.
  *
- * An expression is a list of terms. Each term describes a predicate with 0..N
- * arguments. Both the predicate and arguments can be variables. If a term does
- * not contain any variables it is a fact. Evaluating a fact will always return
- * either true or false.
- *
- * Terms with variables are conceptually evaluated against every possible value 
- * for those variables, and only sets of variable values that meet all 
- * constraints are yielded by the rule solver.
+ * Variables are resolved by matching a filter against the output of an 
+ * operation. When a term contains variables, they are encoded as register ids
+ * in the filter. When the filter is evaluated, the most recent values of the
+ * register are used to match/lookup the output.
+ * 
+ * For example, a filter could be (ChildOf, _Parent). When the program starts,
+ * the _Parent register is initialized with *, so that when this filter is first
+ * evaluated, the operation will find all tables with (ChildOf, *). The _Parent
+ * register is then populated by taking the actual value of the table. If the
+ * table has type [(ChildOf, Sun)], _Parent will be initialized with Sun.
+ * 
+ * It is possible that a filter matches multiple times. Consider the filter
+ * (Likes, _Food), and a table [(Likes, Apples), (Likes, Pears)]. In this case
+ * an operation will yield the table twice, once with _Food=Apples, and once
+ * with _Food=Pears.
+ * 
+ * If a rule contains a term with a transitive relation, it will automatically
+ * substitute the parts of the term to find a fact that matches. The following
+ * examples illustrate how transitivity is resolved:
+ * 
+ * Query:
+ *   LocatedIn(Bob, SanFrancisco)
+ *   
+ * Expands to:
+ *   LocatedIn(Bob, SanFrancisco:self|subset)
+ * 
+ * Explanation:
+ *   "Is Bob located in San Francisco" - This term is true if Bob is either 
+ *   located in San Francisco, or is located in anything that is itself located 
+ *   in (a subset of) San Francisco.
+ * 
+ * 
+ * Query:
+ *   LocatedIn(Bob, X)
+ * 
+ * Expands to:
+ *   LocatedIn(Bob, X:self|superset)
+ * 
+ * Explanation:
+ *   "Where is Bob located?" - This term recursively returns all places that
+ *   Bob is located in, which includes his location and the supersets of his
+ *   location. When Bob is located in San Francisco, he is also located in
+ *   the United States, North America etc.
+ * 
+ * 
+ * Query:
+ *   LocatedIn(X, NorthAmerica)
+ * 
+ * Expands to:
+ *   LocatedIn(X, NorthAmerica:self|subset)
+ * 
+ * Explanation:
+ *   "What is located in North America?" - This term returns everything located
+ *   in United States and its subsets, as something located in San Francisco is
+ *   located in UnitedStates, which is located in NorthAmerica. 
+ * 
+ * 
+ * Query:
+ *   LocatedIn(X, Y)
+ * 
+ * Expands to:
+ *   LocatedIn(X, Y)
+ * 
+ * Explanation:
+ *   "Where is everything located" - This term returns everything that is
+ *   located somewhere. No substitution is performed as this would explode the
+ *   results while not yielding new information.
+ * 
+ * 
+ * In the above terms, the variable indicates the part of the term that is
+ * unknown at evaluation time. In an actual rule the picked strategy depends on
+ * whether the variable is known when the term is evaluated. For example, if
+ * variable X has been resolved by the time Located(X, Y) is evaluated, the
+ * strategy from the LocatedIn(Bob, X) example will be used.
  */
 
 #define ECS_RULE_MAX_VARIABLE_COUNT (256)

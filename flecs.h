@@ -7001,9 +7001,15 @@ char* ecs_parse_term(
 
 /**
  * @file rules.h
- * @brief Rules addon.
- *
- * The rules addon implements a constraint-solver based query language.
+ * @brief Rule query engine addon.
+ * 
+ * Rules are advanced queries that in addition to the capabilities of regular
+ * queries and filters have the folllowing features:
+ * 
+ * - query for all components of an entity (vs. all entities for a component)
+ * - query for all relationship pairs of an entity
+ * - support for query variables that are resolved at evaluation time
+ * - automatic traversal of transitive relationships
  */
 
 #ifdef FLECS_RULES
