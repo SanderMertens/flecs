@@ -38,7 +38,7 @@
  * the same entity. Conceptually the query first populates the This variable
  * with all entities that have Position. When the query evaluates the Velocity
  * term, the variable is populated and the entity it contains will be checked
- * for whether it has velocity.
+ * for whether it has Velocity.
  * 
  * The actual implementation is more efficient and does not check per-entity.
  * 
@@ -49,7 +49,7 @@
  * - ChildOf(This, _Parent), Component(_Parent)
  * 
  * The rule engine uses a backtracking algorithm to find the set of entities
- * and variables that matches all terms. As soon as the engine finds a term that
+ * and variables that match all terms. As soon as the engine finds a term that
  * does not match with the currently evaluated entity, the entity is discarded.
  * When an entity is found for which all terms match, the entity is yielded to
  * the iterator.
@@ -145,7 +145,7 @@
  * 
  * Explanation:
  *   "What is located in North America?" - This term returns everything located
- *   in United States and its subsets, as something located in San Francisco is
+ *   in North America and its subsets, as something located in San Francisco is
  *   located in UnitedStates, which is located in NorthAmerica. 
  * 
  * 
