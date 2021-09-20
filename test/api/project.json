@@ -429,7 +429,8 @@
                 "with_n_tags",
                 "with_n_tags_2_levels",
                 "with_after_scope",
-                "with_after_with"
+                "with_after_with",
+                "with_inside_scope"
             ]            
         }, {
             "id": "GlobalComponentIds",

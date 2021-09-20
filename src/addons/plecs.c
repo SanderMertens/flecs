@@ -234,21 +234,25 @@ const char* parse_stmt(
         if (ptr[0] == '{') {
             state->sp ++;
 
+            ecs_entity_t scope = 0;
+
             if (!state->with_clause) {
                 if (state->last_subject) {
-                    state->scope[state->sp] = state->last_subject;
+                    scope = state->last_subject;
                     ecs_set_scope(world, state->last_subject);
                 } else {
-                    ecs_id_t id;
                     if (state->last_object) {
-                        id = ecs_pair(state->last_predicate, state->last_object);
-                        ecs_set_with(world, id);
+                        scope = ecs_pair(
+                            state->last_predicate, state->last_object);
+                        ecs_set_with(world, scope);
                     } else {
-                        id = ecs_pair(EcsChildOf, state->last_predicate);
+                        scope = ecs_pair(EcsChildOf, state->last_predicate);
                         ecs_set_scope(world, state->last_predicate);
                     }
-                    state->scope[state->sp] = id;
                 }
+                state->scope[state->sp] = scope;
+            } else {
+                state->scope[state->sp] = state->scope[state->sp - 1];
             }
 
             state->with_frames[state->sp] = state->with_frame;

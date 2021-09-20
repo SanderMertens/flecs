@@ -1474,3 +1474,43 @@ void Plecs_with_after_with() {
 
     ecs_fini(world);
 }
+
+void Plecs_with_inside_scope() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Sun {"
+    LINE "  with Planet {"
+    LINE "    Earth {"
+    LINE "      Moon"
+    LINE "    }"
+    LINE "    Mars"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t sun = ecs_lookup_fullpath(world, "Sun");
+    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Sun.Earth");
+    ecs_entity_t moon = ecs_lookup_fullpath(world, "Sun.Earth.Moon");
+    ecs_entity_t mars = ecs_lookup_fullpath(world, "Sun.Mars");
+
+    test_assert(sun != 0);
+    test_assert(planet != 0);
+    test_assert(earth != 0);
+    test_assert(moon != 0);
+    test_assert(mars != 0);
+
+    test_assert(ecs_has_id(world, earth, planet));
+    test_assert(ecs_has_id(world, moon, planet));
+    test_assert(ecs_has_id(world, mars, planet));
+
+    test_assert(ecs_has_pair(world, earth, EcsChildOf, sun));
+    test_assert(ecs_has_pair(world, moon, EcsChildOf, earth));
+    test_assert(ecs_has_pair(world, mars, EcsChildOf, sun));
+
+    test_assert(!ecs_has_pair(world, planet, EcsChildOf, sun));
+
+    ecs_fini(world);
+}

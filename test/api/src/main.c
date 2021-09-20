@@ -405,6 +405,7 @@ void Plecs_with_n_tags(void);
 void Plecs_with_n_tags_2_levels(void);
 void Plecs_with_after_scope(void);
 void Plecs_with_after_with(void);
+void Plecs_with_inside_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3569,6 +3570,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "with_after_with",
         Plecs_with_after_with
+    },
+    {
+        "with_inside_scope",
+        Plecs_with_inside_scope
     }
 };
 
@@ -9825,7 +9830,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        62,
+        63,
         Plecs_testcases
     },
     {
