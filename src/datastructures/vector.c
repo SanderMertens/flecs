@@ -173,7 +173,9 @@ int32_t _ecs_vector_move_index(
     int16_t offset,
     int32_t index)
 {
-    ecs_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    if (dst && *dst) {
+        ecs_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
     ecs_assert(src->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     void *dst_elem = _ecs_vector_add(dst, elem_size, offset);

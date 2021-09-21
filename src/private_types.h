@@ -104,7 +104,6 @@ typedef struct ecs_table_event_t {
 
     /* Query event */
     ecs_query_t *query;
-    int32_t matched_table_index;
 
     /* Component info event */
     ecs_entity_t component;
@@ -226,6 +225,19 @@ struct ecs_table_t {
     int32_t lock;
 };
 
+/** Table cache */
+typedef struct ecs_table_cache_t {
+    ecs_map_t *index; /* <table_id, index> */
+    ecs_vector_t *tables;
+    ecs_vector_t *empty_tables;
+    ecs_size_t payload_size;
+} ecs_table_cache_t;
+
+/** Must appear as first member in payload of table cache */
+typedef struct ecs_table_cache_hdr_t {
+    ecs_table_t *table;
+} ecs_table_cache_hdr_t;
+
 /* Sparse query column */
 typedef struct flecs_sparse_column_t {
     ecs_sw_column_t *sw_column;
@@ -254,6 +266,13 @@ typedef struct ecs_matched_table_t {
     int32_t *monitor;              /* Used to monitor table for changes */
     int32_t rank;                  /* Rank used to sort tables */
 } ecs_matched_table_t;
+
+/** A single table can occur multiple times in the cache when a term matches
+ * multiple table columns. */
+typedef struct ecs_matched_tables_t {
+    ecs_table_cache_hdr_t hdr;
+    ecs_vector_t *tables; /* vector<matched_table_t> */
+} ecs_matched_tables_t;
 
 /** Type used to track location of table in queries' table lists.
  * When a table becomes empty or non-empty a signal is sent to a query, which
@@ -321,6 +340,8 @@ struct ecs_query_t {
     ecs_world_t *world;
 
     /* Tables matched with query */
+    ecs_table_cache_t cache;
+
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
     ecs_map_t *table_indices;
