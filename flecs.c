@@ -14302,6 +14302,16 @@ ecs_rule_op_t* create_operation(
 }
 
 static
+const char* get_var_name(const char *name) {
+    if (name && !ecs_os_strcmp(name, "This")) {
+        /* Make sure that both This and . resolve to the same variable */
+        name = ".";
+    }
+
+    return name;
+}
+
+static
 ecs_rule_var_t* create_variable(
     ecs_rule_t *rule,
     ecs_rule_var_kind_t kind,
@@ -14310,6 +14320,8 @@ ecs_rule_var_t* create_variable(
     int32_t cur = ++ rule->variable_count;
     rule->variables = ecs_os_realloc(
         rule->variables, cur * ECS_SIZEOF(ecs_rule_var_t));
+
+    name = get_var_name(name);
 
     ecs_rule_var_t *var = &rule->variables[cur - 1];
     if (name) {
@@ -14359,12 +14371,14 @@ ecs_rule_var_t* find_variable(
     ecs_assert(rule != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    name = get_var_name(name);
+
     ecs_rule_var_t *variables = rule->variables;
     int32_t i, count = rule->variable_count;
     
     for (i = 0; i < count; i ++) {
         ecs_rule_var_t *variable = &variables[i];
-        if (!strcmp(name, variable->name)) {
+        if (!ecs_os_strcmp(name, variable->name)) {
             if (kind == EcsRuleVarKindUnknown || kind == variable->kind) {
                 return variable;
             }

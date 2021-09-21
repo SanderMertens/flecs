@@ -209,6 +209,8 @@ void Parser_component_explicit_subject(void);
 void Parser_component_explicit_subject_this(void);
 void Parser_component_explicit_subject_this_by_name(void);
 void Parser_component_explicit_subject_wildcard(void);
+void Parser_this_as_predicate(void);
+void Parser_this_as_object(void);
 void Parser_pair_implicit_subject(void);
 void Parser_pair_implicit_subject_wildcard_pred(void);
 void Parser_pair_implicit_subject_wildcard_obj(void);
@@ -1204,6 +1206,8 @@ void Rules_rules_w_desc_pair_empty_rel_obj(void);
 void Rules_rules_w_desc_pair_pred_obj(void);
 void Rules_rules_w_desc_wildcard(void);
 void Rules_childof_0(void);
+void Rules_childof_this(void);
+void Rules_childof_this_as_identifier(void);
 void Rules_optional_term(void);
 void Rules_optional_term_on_entity(void);
 void Rules_optional_term_on_variable(void);
@@ -2796,6 +2800,14 @@ bake_test_case Parser_testcases[] = {
     {
         "component_explicit_subject_wildcard",
         Parser_component_explicit_subject_wildcard
+    },
+    {
+        "this_as_predicate",
+        Parser_this_as_predicate
+    },
+    {
+        "this_as_object",
+        Parser_this_as_object
     },
     {
         "pair_implicit_subject",
@@ -6636,6 +6648,14 @@ bake_test_case Rules_testcases[] = {
         Rules_childof_0
     },
     {
+        "childof_this",
+        Rules_childof_this
+    },
+    {
+        "childof_this_as_identifier",
+        Rules_childof_this_as_identifier
+    },
+    {
         "optional_term",
         Rules_optional_term
     },
@@ -9848,7 +9868,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        141,
+        143,
         Parser_testcases
     },
     {
@@ -10002,7 +10022,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        102,
+        104,
         Rules_testcases
     },
     {
