@@ -432,6 +432,7 @@
                 "with_n_tags_2_levels",
                 "with_after_scope",
                 "with_after_with",
+                "scope_inside_with_inside_scope",
                 "with_inside_scope"
             ]            
         }, {

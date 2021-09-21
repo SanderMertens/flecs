@@ -1475,7 +1475,7 @@ void Plecs_with_after_with() {
     ecs_fini(world);
 }
 
-void Plecs_with_inside_scope() {
+void Plecs_scope_inside_with_inside_scope() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1510,7 +1510,38 @@ void Plecs_with_inside_scope() {
     test_assert(ecs_has_pair(world, moon, EcsChildOf, earth));
     test_assert(ecs_has_pair(world, mars, EcsChildOf, sun));
 
+    test_assert(!ecs_has_id(world, earth, sun));
+    test_assert(!ecs_has_id(world, moon, earth));
+    test_assert(!ecs_has_id(world, mars, sun));
+
     test_assert(!ecs_has_pair(world, planet, EcsChildOf, sun));
 
     ecs_fini(world);
+}
+
+void Plecs_with_inside_scope() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth {"
+    LINE "  with Continent {"
+    LINE "    Europe"
+    LINE "  }"
+    LINE "  Europe"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
+    ecs_entity_t continent = ecs_lookup_fullpath(world, "Continent");
+    ecs_entity_t europe = ecs_lookup_fullpath(world, "Earth.Europe");
+
+    test_assert(earth != 0);
+    test_assert(continent != 0);
+    test_assert(europe != 0);
+
+    test_assert( ecs_has_pair(world, europe, EcsChildOf, earth));
+    test_assert( !ecs_has_pair(world, continent, EcsChildOf, earth));
+    test_assert( !ecs_has_id(world, europe, earth));
+    test_assert( !ecs_has_id(world, continent, earth));
 }

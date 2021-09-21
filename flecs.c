@@ -13575,7 +13575,7 @@ ecs_entity_t ensure_entity(
         if (is_subject) {
             ecs_entity_t scope = ecs_get_scope(world);
             if (scope) {
-                ecs_add_id(world, e, scope);
+                ecs_add_pair(world, e, EcsChildOf, scope);
             }
 
             ecs_entity_t with = ecs_get_with(world);
@@ -13637,6 +13637,7 @@ int create_term(
 
     if (subj) {
         if (!obj) {
+            printf("add pred '%s'\n", ecs_id_str(world, pred));
             ecs_add_id(world, subj, pred);
         } else {
             ecs_add_pair(world, subj, pred, obj);
@@ -13679,6 +13680,7 @@ int create_term(
         if (subj) {
             int32_t i, frame_count = state->with_frames[state->sp];
             for (i = 0; i < frame_count; i ++) {
+                printf("add 'with' %s\n", ecs_id_str(world, state->with[i]));
                 ecs_add_id(world, subj, state->with[i]);
             }
         }
@@ -13773,6 +13775,7 @@ const char* parse_stmt(
                     if (state->last_object) {
                         scope = ecs_pair(
                             state->last_predicate, state->last_object);
+                        printf("} -> set with '%s'\n", ecs_id_str(world, scope));
                         ecs_set_with(world, scope);
                     } else {
                         scope = ecs_pair(EcsChildOf, state->last_predicate);
@@ -13798,14 +13801,17 @@ const char* parse_stmt(
             ptr = skip_fluff(ptr + 1);
             ecs_id_t id = state->scope[state->sp];
             if (!id || ECS_HAS_ROLE(id, PAIR)) {
+                printf("} -> set with '%s'\n", ecs_id_str(world, id));
                 ecs_set_with(world, id);
             }
 
             if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+                printf("} -> set scope '%s'\n", ecs_id_str(world, id));
                 ecs_set_scope(world, id);
             }
 
             state->with_frame = state->with_frames[state->sp];
+            printf("with_frame = %d\n", state->with_frame);
             stmt_parsed = true;
         }
 
