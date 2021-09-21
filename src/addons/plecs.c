@@ -46,7 +46,7 @@ ecs_entity_t ensure_entity(
         if (is_subject) {
             ecs_entity_t scope = ecs_get_scope(world);
             if (scope) {
-                ecs_add_id(world, e, scope);
+                ecs_add_pair(world, e, EcsChildOf, scope);
             }
 
             ecs_entity_t with = ecs_get_with(world);
