@@ -2,6 +2,7 @@
 #define FLECS_PRIVATE_H
 
 #include "private_types.h"
+#include "table_cache.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Core bootstrap functions

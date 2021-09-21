@@ -781,7 +781,6 @@ typedef struct ecs_table_event_t {
 
     /* Query event */
     ecs_query_t *query;
-    int32_t matched_table_index;
 
     /* Component info event */
     ecs_entity_t component;
@@ -903,6 +902,19 @@ struct ecs_table_t {
     int32_t lock;
 };
 
+/** Table cache */
+typedef struct ecs_table_cache_t {
+    ecs_map_t *index; /* <table_id, index> */
+    ecs_vector_t *tables;
+    ecs_vector_t *empty_tables;
+    ecs_size_t payload_size;
+} ecs_table_cache_t;
+
+/** Must appear as first member in payload of table cache */
+typedef struct ecs_table_cache_hdr_t {
+    ecs_table_t *table;
+} ecs_table_cache_hdr_t;
+
 /* Sparse query column */
 typedef struct flecs_sparse_column_t {
     ecs_sw_column_t *sw_column;
@@ -931,6 +943,13 @@ typedef struct ecs_matched_table_t {
     int32_t *monitor;              /* Used to monitor table for changes */
     int32_t rank;                  /* Rank used to sort tables */
 } ecs_matched_table_t;
+
+/** A single table can occur multiple times in the cache when a term matches
+ * multiple table columns. */
+typedef struct ecs_matched_tables_t {
+    ecs_table_cache_hdr_t hdr;
+    ecs_vector_t *tables; /* vector<matched_table_t> */
+} ecs_matched_tables_t;
 
 /** Type used to track location of table in queries' table lists.
  * When a table becomes empty or non-empty a signal is sent to a query, which
@@ -998,6 +1017,8 @@ struct ecs_query_t {
     ecs_world_t *world;
 
     /* Tables matched with query */
+    ecs_table_cache_t cache;
+
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
     ecs_map_t *table_indices;
@@ -1309,6 +1330,56 @@ struct ecs_world_t {
     void *context;               /* Application context */
     ecs_vector_t *fini_actions;  /* Callbacks to execute when world exits */
 };
+
+#endif
+/**
+ * @file table_cache.h
+ * @brief Data structure for fast table iteration/lookups 
+ */
+
+#ifndef FLECS_TABLE_CACHE_H_
+#define FLECS_TABLE_CACHE_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void _ecs_table_cache_init(
+    ecs_table_cache_t *cache,
+    ecs_size_t size);
+
+#define ecs_table_cache_init(cache, T)\
+    _ecs_table_cache_init(cache, ECS_SIZEOF(T))
+
+void ecs_table_cache_fini(
+    ecs_table_cache_t *cache);
+
+void* _ecs_table_cache_insert(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_size_t size);
+
+#define ecs_table_cache_insert(cache, table, T)\
+    ECS_CAST(T*, _ecs_table_cache_insert(cache, table, ECS_SIZEOF(T)))
+
+void _ecs_table_cache_remove(
+    ecs_table_cache_t *cache,
+    ecs_table_t *table);
+
+#define ecs_table_cache_remove(cache, table)\
+    _ecs_table_cache_remove(cache, table)
+
+void _ecs_table_cache_set_empty(
+    ecs_table_cache_t *cache,
+    ecs_table_t *table,
+    bool empty);
+
+#define ecs_table_cache_set_empty(cache, table, empty)\
+    _ecs_table_cache_set_empty(cache, table, empty)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
@@ -8997,7 +9068,9 @@ int32_t _ecs_vector_move_index(
     int16_t offset,
     int32_t index)
 {
-    ecs_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    if (dst && *dst) {
+        ecs_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
     ecs_assert(src->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     void *dst_elem = _ecs_vector_add(dst, elem_size, offset);
@@ -13637,7 +13710,6 @@ int create_term(
 
     if (subj) {
         if (!obj) {
-            printf("add pred '%s'\n", ecs_id_str(world, pred));
             ecs_add_id(world, subj, pred);
         } else {
             ecs_add_pair(world, subj, pred, obj);
@@ -13680,7 +13752,6 @@ int create_term(
         if (subj) {
             int32_t i, frame_count = state->with_frames[state->sp];
             for (i = 0; i < frame_count; i ++) {
-                printf("add 'with' %s\n", ecs_id_str(world, state->with[i]));
                 ecs_add_id(world, subj, state->with[i]);
             }
         }
@@ -13775,7 +13846,6 @@ const char* parse_stmt(
                     if (state->last_object) {
                         scope = ecs_pair(
                             state->last_predicate, state->last_object);
-                        printf("} -> set with '%s'\n", ecs_id_str(world, scope));
                         ecs_set_with(world, scope);
                     } else {
                         scope = ecs_pair(EcsChildOf, state->last_predicate);
@@ -13801,17 +13871,14 @@ const char* parse_stmt(
             ptr = skip_fluff(ptr + 1);
             ecs_id_t id = state->scope[state->sp];
             if (!id || ECS_HAS_ROLE(id, PAIR)) {
-                printf("} -> set with '%s'\n", ecs_id_str(world, id));
                 ecs_set_with(world, id);
             }
 
             if (!id || !ECS_HAS_ROLE(id, PAIR)) {
-                printf("} -> set scope '%s'\n", ecs_id_str(world, id));
                 ecs_set_scope(world, id);
             }
 
             state->with_frame = state->with_frames[state->sp];
-            printf("with_frame = %d\n", state->with_frame);
             stmt_parsed = true;
         }
 
@@ -23996,6 +24063,183 @@ void* ecs_get_observer_binding_ctx(
     }      
 }
 
+/* Move table from empty to non-empty list, or vice versa */
+static
+int32_t move_table(
+    ecs_table_cache_t *cache,
+    ecs_table_t *table,
+    int32_t index,
+    ecs_vector_t **dst_array,
+    ecs_vector_t *src_array,
+    bool empty)
+{
+    (void)table;
+
+    int32_t new_index = 0, old_index = 0;
+    ecs_size_t size = cache->payload_size;
+    int32_t last_src_index = ecs_vector_count(src_array) - 1;
+    ecs_assert(last_src_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_cache_hdr_t *elem = ecs_vector_last_t(src_array, size, 8);
+    
+    /* The last table of the source array will be moved to the location of the
+     * table to move, do some bookkeeping to keep things consistent. */
+    if (last_src_index) {
+        int32_t *old_index_ptr = ecs_map_get(cache->index, 
+            int32_t, elem->table->id);
+        ecs_assert(old_index_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t old_index = old_index_ptr[0];
+        if (!empty) {
+            if (old_index >= 0) {
+                /* old_index should be negative if not empty, since
+                 * we're moving from the empty list to the non-empty list. 
+                 * However, if the last table in the source array is also
+                 * the table being moved, this can happen. */
+                ecs_assert(table == elem->table, ECS_INTERNAL_ERROR, NULL);
+                // continue
+            } else {
+                /* If not empty, src = the empty list, and index should
+                 * be negative. */
+                old_index = old_index * -1 - 1; /* Normalize */
+            }
+        }
+
+        if (old_index == last_src_index) {
+            old_index_ptr[0] = index;
+        }
+    } else {
+        /* If last_src_index is 0, the table to move was the only table in the
+         * src array, so no other administration needs to be updated. */
+    }
+
+    /* Actually move the table. Only move from src to dst if we have a
+     * dst_array, otherwise just remove it from src. */
+    if (dst_array) {
+        if (!empty) {
+            old_index = index * -1 - 1;
+        } else {
+            old_index = index;
+        }
+
+        new_index = ecs_vector_count(*dst_array);
+        ecs_vector_move_index_t(dst_array, src_array, size, 8, old_index);
+
+        /* Make sure table is where we expect it */
+        elem = ecs_vector_last_t(*dst_array, size, 8);
+        ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
+            ECS_INTERNAL_ERROR, NULL);  
+    } else {
+        ecs_vector_remove_t(src_array, size, 8, old_index);
+    }
+
+    /* Ensure that src array has now one element less */
+    ecs_assert(ecs_vector_count(src_array) == last_src_index, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (empty) {
+        /* Table is now empty, index is negative */
+        new_index = new_index * -1 - 1;
+    }
+
+    return new_index;
+}
+
+void _ecs_table_cache_init(
+    ecs_table_cache_t *cache,
+    ecs_size_t size)
+{
+    ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
+        ECS_INTERNAL_ERROR, NULL);
+    cache->index = ecs_map_new(int32_t, 0);
+    cache->empty_tables = NULL;
+    cache->tables = NULL;
+    cache->payload_size = size;
+}
+
+void ecs_table_cache_fini(
+    ecs_table_cache_t *cache)
+{
+    ecs_map_free(cache->index);
+    ecs_vector_free(cache->empty_tables);
+    ecs_vector_free(cache->tables);
+}
+
+void* _ecs_table_cache_insert(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_size_t size)
+{
+    int32_t index;
+    ecs_table_cache_hdr_t *result;
+    bool empty;
+
+    if (!table) {
+        empty = false;
+    } else {
+        empty = ecs_table_count(table) == 0;
+    }
+
+    if (empty) {
+        result = ecs_vector_add_t(&cache->empty_tables, size, 8);
+        index = -ecs_vector_count(cache->empty_tables);
+    } else {
+        index = ecs_vector_count(cache->tables);
+        result = ecs_vector_add_t(&cache->tables, size, 8);
+    }
+
+    if (table) {
+        ecs_map_set(cache->index, table->id, &index);
+    }
+
+    result->table = (ecs_table_t*)table;
+
+    return result;
+}
+
+void _ecs_table_cache_remove(
+    ecs_table_cache_t *cache,
+    ecs_table_t *table)
+{
+    int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
+    if (!index) {
+        return;
+    }
+
+    if (index[0] < 0) {
+        move_table(cache, table, index[0], NULL, cache->empty_tables, false);
+    } else {
+        move_table(cache, table, index[0], NULL, cache->tables, true);
+    }
+}
+
+void _ecs_table_cache_set_empty(
+    ecs_table_cache_t *cache,
+    ecs_table_t *table,
+    bool empty)
+{
+    int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
+    if (!index) {
+        return;
+    }
+
+    /* If table is already in the correct array nothing needs to be done */
+    if (empty && index[0] < 0) {
+        return;
+    } else if (!empty && index[0] >= 0) {
+        return;
+    }
+
+    if (index[0] < 0) {
+        index[0] = move_table(
+            cache, table, index[0], &cache->tables, cache->empty_tables, empty);
+    } else {
+        index[0] = move_table(
+            cache, table, index[0], &cache->empty_tables, cache->tables, empty);
+    }
+}
+
 /* -- Public API -- */
 
 static
@@ -25069,35 +25313,40 @@ void add_table(
     int32_t *table_indices = NULL;
     int32_t table_indices_count = 0;
     int32_t matched_table_index = 0;
-    ecs_matched_table_t table_data;
+    ecs_matched_table_t *table_data;
     ecs_vector_t *references = NULL;
 
+    ecs_matched_tables_t *elem = ecs_table_cache_insert(
+        &query->cache, table, ecs_matched_tables_t);
+    elem->tables = NULL;
+
 add_pair:
-    table_data = (ecs_matched_table_t){ .table = table };
+    table_data = ecs_vector_add(&elem->tables, ecs_matched_table_t);
+    table_data->table = table;
     if (table) {
         table_type = table->type;
     }
 
     /* If grouping is enabled for query, assign the group rank to the table */
-    group_table(world, query, &table_data);
+    group_table(world, query, table_data);
 
     if (term_count) {
         /* Array that contains the system column to table column mapping */
-        table_data.columns = ecs_os_calloc_n(int32_t, query->filter.term_count_actual);
-        ecs_assert(table_data.columns != NULL, ECS_OUT_OF_MEMORY, NULL);
+        table_data->columns = ecs_os_calloc_n(int32_t, query->filter.term_count_actual);
+        ecs_assert(table_data->columns != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Store the components of the matched table. In the case of OR expressions,
          * components may differ per matched table. */
-        table_data.ids = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
-        ecs_assert(table_data.ids != NULL, ECS_OUT_OF_MEMORY, NULL);
+        table_data->ids = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
+        ecs_assert(table_data->ids != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Cache subject (source) entity ids for components */
-        table_data.subjects = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
-        ecs_assert(table_data.subjects != NULL, ECS_OUT_OF_MEMORY, NULL);
+        table_data->subjects = ecs_os_calloc_n(ecs_entity_t, query->filter.term_count_actual);
+        ecs_assert(table_data->subjects != NULL, ECS_OUT_OF_MEMORY, NULL);
 
         /* Cache subject (source) entity ids for components */
-        table_data.sizes = ecs_os_calloc_n(ecs_size_t, query->filter.term_count_actual);
-        ecs_assert(table_data.sizes != NULL, ECS_OUT_OF_MEMORY, NULL);                     
+        table_data->sizes = ecs_os_calloc_n(ecs_size_t, query->filter.term_count_actual);
+        ecs_assert(table_data->sizes != NULL, ECS_OUT_OF_MEMORY, NULL);                     
     }
 
     /* Walk columns parsed from the system signature */
@@ -25130,14 +25379,14 @@ add_pair:
                 }
             }
 
-            table_data.columns[c] = index;
+            table_data->columns[c] = index;
 
             /* If the column is a case, we should only iterate the entities in
              * the column for this specific case. Add a sparse column with the
              * case id so we can find the correct entities when iterating */
             if (ECS_HAS_ROLE(component, CASE)) {
                 flecs_sparse_column_t *sc = ecs_vector_add(
-                    &table_data.sparse_columns, flecs_sparse_column_t);
+                    &table_data->sparse_columns, flecs_sparse_column_t);
                 sc->signature_column_index = t;
                 sc->sw_case = component & ECS_COMPONENT_MASK;
                 sc->sw_column = NULL;
@@ -25153,7 +25402,7 @@ add_pair:
                 int32_t bs_index = ecs_type_index_of(table->type, 0, bs_id);
                 if (bs_index != -1) {
                     flecs_bitset_column_t *elem = ecs_vector_add(
-                        &table_data.bitset_columns, flecs_bitset_column_t);
+                        &table_data->bitset_columns, flecs_bitset_column_t);
                     elem->column_index = bs_index;
                     elem->bs_column = NULL;
                 }
@@ -25165,21 +25414,21 @@ add_pair:
             type_id = component;
         }
 
-        if (entity || table_data.columns[c] == -1 || subj.set.mask & EcsCascade) {
+        if (entity || table_data->columns[c] == -1 || subj.set.mask & EcsCascade) {
             if (type_id) {
                 references = add_ref(world, query, references, term,
                     component, entity);
-                table_data.columns[c] = -ecs_vector_count(references);
+                table_data->columns[c] = -ecs_vector_count(references);
             }
 
-            table_data.subjects[c] = entity;
+            table_data->subjects[c] = entity;
             flecs_set_watch(world, entity);
         }
 
         if (type_id) {
             const EcsComponent *cptr = ecs_get(world, type_id, EcsComponent);
             if (!cptr || !cptr->size) {
-                int32_t column = table_data.columns[c];
+                int32_t column = table_data->columns[c];
                 if (column < 0) {
                     ecs_ref_t *r = ecs_vector_get(
                         references, ecs_ref_t, -column - 1);
@@ -25188,99 +25437,39 @@ add_pair:
             }
 
             if (cptr) {
-                table_data.sizes[c] = cptr->size;
+                table_data->sizes[c] = cptr->size;
             } else {
-                table_data.sizes[c] = 0;
+                table_data->sizes[c] = 0;
             }
         } else {
-            table_data.sizes[c] = 0;
+            table_data->sizes[c] = 0;
         }
 
 
         if (ECS_HAS_ROLE(component, SWITCH)) {
-            table_data.sizes[c] = ECS_SIZEOF(ecs_entity_t);
+            table_data->sizes[c] = ECS_SIZEOF(ecs_entity_t);
         } else if (ECS_HAS_ROLE(component, CASE)) {
-            table_data.sizes[c] = ECS_SIZEOF(ecs_entity_t);
+            table_data->sizes[c] = ECS_SIZEOF(ecs_entity_t);
         }
 
-        table_data.ids[c] = component;
+        table_data->ids[c] = component;
 
         c ++;
     }
 
-    /* Initially always add table to inactive group. If the system is registered
-     * with the table and the table is not empty, the table will send an
-     * activate signal to the system. */
-
-    ecs_matched_table_t *table_elem;
-    if (table) {
-        table_elem = ecs_vector_add(&query->empty_tables, 
-            ecs_matched_table_t);
-
-        /* Store table index */
-        matched_table_index = ecs_vector_count(query->empty_tables);
-        table_indices_count ++;
-        table_indices = ecs_os_realloc(
-            table_indices, table_indices_count * ECS_SIZEOF(int32_t));
-        table_indices[table_indices_count - 1] = -matched_table_index;
-
-        #ifndef NDEBUG
-        char *type_expr = ecs_type_str(world, table->type);
-        ecs_trace_2("query #[green]%s#[reset] matched with table #[green][%s]",
-            query_name(world, query), type_expr);
-        ecs_os_free(type_expr);
-        #endif
-    } else {
-        /* If no table is provided to function, this is a system that contains
-         * no columns that require table matching. In this case, the system will
-         * only have one "dummy" table that caches data from the system columns.
-         * Always add this dummy table to the list of active tables, since it
-         * would never get activated otherwise. */
-        table_elem = ecs_vector_add(&query->tables, ecs_matched_table_t);
-
-        /* If query doesn't automatically activates/inactivates tables, we can 
-         * get the count to determine the current table index. */
-        matched_table_index = ecs_vector_count(query->tables) - 1;
-        ecs_assert(matched_table_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    }
-
     if (references) {
         ecs_size_t ref_size = ECS_SIZEOF(ecs_ref_t) * ecs_vector_count(references);
-        table_data.references = ecs_os_malloc(ref_size);
-        ecs_os_memcpy(table_data.references, 
+        table_data->references = ecs_os_malloc(ref_size);
+        ecs_os_memcpy(table_data->references, 
             ecs_vector_first(references, ecs_ref_t), ref_size);
         ecs_vector_free(references);
         references = NULL;
     }
 
-    *table_elem = table_data;
-
     /* Use tail recursion when adding table for multiple pairs */
     pair_cur ++;
     if (pair_cur < pair_count) {
         goto add_pair;
-    }
-
-    /* Register table indices before sending out the match signal. This signal
-     * can cause table activation, and table indices are needed for that. */
-    if (table_indices) {
-        ecs_table_indices_t *ti = ecs_map_ensure(
-            query->table_indices, ecs_table_indices_t, table->id);
-        if (ti->indices) {
-            ecs_os_free(ti->indices);
-        }
-        ti->indices = table_indices;
-        ti->count = table_indices_count;
-    }
-
-    if (table && !(query->flags & EcsQueryIsSubquery)) {
-        flecs_table_notify(world, table, &(ecs_table_event_t){
-            .kind = EcsTableQueryMatch,
-            .query = query,
-            .matched_table_index = matched_table_index
-        });
-    } else if (table && ecs_table_count(table)) {
-        activate_table(world, query, table, true);
     }
 
     if (pair_offsets) {
@@ -26130,6 +26319,8 @@ void activate_table(
         dst_array = query->empty_tables;
     }
 
+    ecs_table_cache_set_empty(&query->cache, table, !active);
+
     ecs_table_indices_t *ti = ecs_map_get(
         query->table_indices, ecs_table_indices_t, table->id);
 
@@ -26354,6 +26545,8 @@ void remove_table(
      * the memory of mt */
     free_matched_table(mt);  
     move_table(query, mt->table, index, NULL, tables, empty);
+
+    
 }
 
 static
@@ -26382,6 +26575,8 @@ void unmatch_table(
 
     ecs_os_free(ti->indices);
     ecs_map_remove(query->table_indices, table->id);
+
+    ecs_table_cache_remove(&query->cache, table);
 }
 
 static
@@ -26645,6 +26840,8 @@ ecs_query_t* ecs_query_init(
     result->system = desc->system;
     result->prev_match_count = -1;
 
+    ecs_table_cache_init(&result->cache, ecs_matched_tables_t);
+
     if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
     }
@@ -26759,6 +26956,8 @@ void ecs_query_fini(
     while ((ti = ecs_map_next(&it, ecs_table_indices_t, NULL))) {
         ecs_os_free(ti->indices);
     }
+
+    ecs_table_cache_fini(&query->cache);
 
     ecs_map_free(query->table_indices);
     ecs_vector_free(query->subqueries);

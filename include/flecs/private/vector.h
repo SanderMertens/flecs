@@ -255,6 +255,9 @@ int32_t _ecs_vector_move_index(
 #define ecs_vector_move_index(dst, src, T, index) \
     _ecs_vector_move_index(dst, src, ECS_VECTOR_T(T), index)
 
+#define ecs_vector_move_index_t(dst, src, size, alignment, index) \
+    _ecs_vector_move_index(dst, src, ECS_VECTOR_U(size, alignment), index)
+
 /** Remove element at specified index. Moves the last value to the index. */
 FLECS_API
 int32_t _ecs_vector_remove(
