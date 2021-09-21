@@ -1204,6 +1204,11 @@ void Rules_rules_w_desc_pair_empty_rel_obj(void);
 void Rules_rules_w_desc_pair_pred_obj(void);
 void Rules_rules_w_desc_wildcard(void);
 void Rules_childof_0(void);
+void Rules_optional_term(void);
+void Rules_optional_term_on_entity(void);
+void Rules_optional_term_on_variable(void);
+void Rules_optional_term_on_wildcard(void);
+void Rules_optional_term_on_relation_this_obj(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6629,6 +6634,26 @@ bake_test_case Rules_testcases[] = {
     {
         "childof_0",
         Rules_childof_0
+    },
+    {
+        "optional_term",
+        Rules_optional_term
+    },
+    {
+        "optional_term_on_entity",
+        Rules_optional_term_on_entity
+    },
+    {
+        "optional_term_on_variable",
+        Rules_optional_term_on_variable
+    },
+    {
+        "optional_term_on_wildcard",
+        Rules_optional_term_on_wildcard
+    },
+    {
+        "optional_term_on_relation_this_obj",
+        Rules_optional_term_on_relation_this_obj
     }
 };
 
@@ -9977,7 +10002,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        97,
+        102,
         Rules_testcases
     },
     {

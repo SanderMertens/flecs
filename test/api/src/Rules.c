@@ -3493,3 +3493,263 @@ void Rules_childof_0() {
 
     ecs_fini(world);
 }
+
+void Rules_optional_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, Final);
+    ECS_ENTITY(world, TagB, Final);
+    ECS_ENTITY(world, TagC, Final);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "TagA, ?TagB, ?TagC"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_term_id(&it, 3), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_term_is_set(&it, 3));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_term_id(&it, 3), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_term_is_set(&it, 3));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_term_id(&it, 3), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 3));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_optional_term_on_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, Final);
+    ECS_ENTITY(world, TagB, Final);
+
+    ECS_ENTITY(world, E, TagA);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "TagA(\\E), ?TagB(\\E)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_int(it.subjects[0], E);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_optional_term_on_variable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Likes, Final);
+    ECS_ENTITY(world, TagA, Final);
+    ECS_ENTITY(world, TagB, Final);
+    ECS_ENTITY(world, TagC, Final);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t obj_1 = ecs_new(world, TagA);
+    ecs_entity_t obj_2 = ecs_new(world, TagA);
+    ecs_entity_t obj_3 = ecs_new(world, TagA);
+
+    ecs_add(world, obj_2, TagB);
+    ecs_add(world, obj_3, TagC);
+
+    ecs_add_pair(world, e, Likes, obj_1);
+    ecs_add_pair(world, e, Likes, obj_2);
+    ecs_add_pair(world, e, Likes, obj_3);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Likes, X), TagA(X), ?TagB(X), ?TagC(X)"
+    });
+
+    test_assert(r != NULL);
+
+    int32_t x_var = ecs_rule_find_variable(r, "X");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_entity_t var;
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    var = ecs_rule_variable(&it, x_var);
+    test_assert(var != 0);
+    test_assert(var == obj_1);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_1));
+    test_int(ecs_term_id(&it, 2), TagA);
+    test_int(ecs_term_id(&it, 3), TagB);
+    test_int(ecs_term_id(&it, 4), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_term_is_set(&it, 3));
+    test_bool(false, ecs_term_is_set(&it, 4));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    var = ecs_rule_variable(&it, x_var);
+    test_assert(var != 0);
+    test_assert(var == obj_2);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_2));
+    test_int(ecs_term_id(&it, 2), TagA);
+    test_int(ecs_term_id(&it, 3), TagB);
+    test_int(ecs_term_id(&it, 4), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 3));
+    test_bool(false, ecs_term_is_set(&it, 4));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    var = ecs_rule_variable(&it, x_var);
+    test_assert(var != 0);
+    test_assert(var == obj_3);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_3));
+    test_int(ecs_term_id(&it, 2), TagA);
+    test_int(ecs_term_id(&it, 3), TagB);
+    test_int(ecs_term_id(&it, 4), TagC);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_term_is_set(&it, 3));
+    test_bool(true, ecs_term_is_set(&it, 4));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_optional_term_on_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag, Final);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "Tag, ?(ChildOf, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_term_id(&it, 2), ecs_childof(EcsWildcard));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_term_id(&it, 2), ecs_childof(parent));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_optional_term_on_relation_this_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag, Final);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e1);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "Tag, (ChildOf, This)"
+    });
+
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_term_id(&it, 2), ecs_childof(e1));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_term_id(&it, 2), ecs_childof(e2));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

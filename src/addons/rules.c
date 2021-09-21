@@ -1007,6 +1007,9 @@ bool skip_term(ecs_term_t *term) {
     if (term->oper == EcsNot) {
         return true;
     }
+    if (term->oper == EcsOptional) {
+        return true;
+    }
     return false;
 }
 
@@ -2007,6 +2010,12 @@ void insert_select_or_with(
         written[subj->id] = true;
     }
 
+    /* Optional terms cannot discard an entity, so set fail to the same label as
+     * pass */
+    if (term->oper == EcsOptional) {
+        op->on_fail = op->on_pass;
+    }
+
     /* If supersets of subject are being evaluated, and we're looking for a
      * specific filter, stop as soon as the filter has been matched. */
     if (eval_subject_supersets && is_pair_known(rule, &op->filter, written)) {
@@ -2221,9 +2230,15 @@ void insert_term(
     int32_t c,
     bool *written)
 {
+    bool obj_set = obj_is_set(term);
+
+    ensure_most_specific_var(rule, term_pred(rule, term), written);
+    if (obj_set) {
+        ensure_most_specific_var(rule, term_obj(rule, term), written);
+    }
+
     ecs_rule_pair_t filter = term_to_pair(rule, term);
     prepare_predicate(rule, &filter, written);
-    ensure_most_specific_var(rule, term_pred(rule, term), written);
 
     /* If term has Not operator, prepend Not which turns a fail into a pass */
     int32_t prev = rule->operation_count;
@@ -2235,14 +2250,11 @@ void insert_term(
         not_pre->has_out = false;
     }
 
-    if (subj_is_set(term) && !obj_is_set(term)) {
+    if (subj_is_set(term) && !obj_set) {
         insert_term_1(rule, term, &filter, c, written);
-    } else if (obj_is_set(term)) {
-        ensure_most_specific_var(rule, term_obj(rule, term), written);
+    } else if (obj_set) {
         insert_term_2(rule, term, &filter, c, written);
     }
-
-    push_frame(rule);
 
     /* If term has Not operator, append Not which turns a pass into a fail */
     if (term->oper == EcsNot) {
@@ -2256,6 +2268,19 @@ void insert_term(
         not_pre = &rule->operations[prev];
         not_pre->on_fail = rule->operation_count;
     }
+
+    if (term->oper == EcsOptional) {
+        /* Insert jump instruction that ensures that the optional term is only
+         * executed once */
+        ecs_rule_op_t *jump = insert_operation(rule, -1, written);
+        jump->kind = EcsRuleNot;
+        jump->has_in = false;
+        jump->has_out = false;
+        jump->on_pass = rule->operation_count;
+        jump->on_fail = prev - 1;
+    }
+
+    push_frame(rule);
 }
 
 /* Create program from operations that will execute the query */
@@ -2315,13 +2340,25 @@ void compile_program(
         }
     }
 
+    /* Insert terms with Not operators */
     for (c = 0; c < term_count; c ++) {
         ecs_term_t *term = &terms[c];
         if (term->oper != EcsNot) {
             continue;
         }
 
-        /* First insert the operation(s) for the term as usual */
+        insert_term(rule, term, c, written);
+    }
+
+    /* Insert terms with Optional operators last, as optional terms cannot 
+     * eliminate results, and would just add overhead to evaluation of 
+     * non-matching entities. */
+    for (c = 0; c < term_count; c ++) {
+        ecs_term_t *term = &terms[c];
+        if (term->oper != EcsOptional) {
+            continue;
+        }
+        
         insert_term(rule, term, c, written);
     }
 
@@ -3216,10 +3253,15 @@ bool eval_select(
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
     ecs_entity_t pattern = filter.mask;
+    int32_t *columns = rule_get_columns(iter, op);
 
     int32_t column = -1;
     ecs_table_t *table = NULL;
     ecs_map_t *table_set;
+
+    if (!redo && op->term != -1) {
+        columns[op->term] = -1;
+    }
 
     /* If this is a redo, we already looked up the table set */
     if (redo) {
@@ -3244,8 +3286,6 @@ bool eval_select(
     if (!table_set) {
         return false;
     }
-
-    int32_t *columns = rule_get_columns(iter, op);
 
     /* If this is not a redo, start at the beginning */
     if (!redo) {
@@ -3332,6 +3372,7 @@ bool eval_with(
     /* Get queried for id, fill out potential variables */
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
+    int32_t *columns = rule_get_columns(iter, op);
 
     /* If looked for entity is not a wildcard (meaning there are no unknown/
      * unconstrained variables) and this is a redo, nothing more to yield. */
@@ -3342,6 +3383,10 @@ bool eval_with(
     int32_t column = -1;
     ecs_table_t *table = NULL;
     ecs_map_t *table_set;
+
+    if (!redo && op->term != -1) {
+        columns[op->term] = -1;
+    }
 
     /* If this is a redo, we already looked up the table set */
     if (redo) {
@@ -3406,8 +3451,6 @@ bool eval_with(
         return false;
     }
 
-    int32_t *columns = rule_get_columns(iter, op);
-
     table = reg_get_table(rule, op, regs, r);
     if (!table) {
         return false;
@@ -3449,6 +3492,7 @@ bool eval_with(
     if (!pair.obj_0) {
         set_column(it, op, table->type, column);
     }
+
     set_source(it, op, regs, r);
 
     return true;
@@ -3720,7 +3764,7 @@ void push_columns(
 
     int32_t *src_cols = rule_get_columns_frame(it, cur);
     int32_t *dst_cols = rule_get_columns_frame(it, next);
-
+    
     ecs_os_memcpy_n(dst_cols, src_cols, int32_t, it->rule->filter.term_count);
 }
 
@@ -3732,8 +3776,6 @@ void set_iter_table(
     int32_t cur,
     int32_t offset)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
-
     /* Tell the iterator how many entities there are */
     it->count = ecs_table_count(table);
     ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
@@ -3745,19 +3787,10 @@ void set_iter_table(
     it->entities = &entities[offset];
 
     /* Set table parameters */
-    
-    it->columns = rule_get_columns_frame(iter, cur);
     it->table = table;
     it->type = table->type;
 
-    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Iterator expects column indices to start at 1. Can safely
-     * modify the column ids, since the array is private to the
-     * yield operation. */
-    for (int i = 0; i < it->term_count; i ++) {
-        iter->columns[i] ++;
-    }    
+    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);    
 }
 
 /* Populate iterator with data before yielding to application */
@@ -3815,6 +3848,7 @@ void populate_iterator(
     }
 
     int32_t i, variable_count = rule->variable_count;
+    int32_t term_count = rule->filter.term_count;
     iter->variable_count = variable_count;
     iter->variable_names = rule->variable_names;
     iter->variables = it->variables;
@@ -3827,7 +3861,7 @@ void populate_iterator(
         }
     }
 
-    for (i = 0; i < rule->filter.term_count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         int32_t v = rule->subject_variables[i];
         if (v != -1) {
             ecs_rule_var_t *var = &rule->variables[v];
@@ -3835,6 +3869,12 @@ void populate_iterator(
                 iter->subjects[i] = regs[var->id].entity;
             }
         }
+    }
+
+    /* Iterator expects column indices to start at 1 */
+    iter->columns = rule_get_columns_frame(it, op->frame);
+    for (int i = 0; i < term_count; i ++) {
+        iter->columns[i] ++;
     }
 }
 
@@ -3888,6 +3928,7 @@ bool ecs_rule_next(
             ecs_term_t *term = &rule->filter.terms[i];
             if (term->args[0].set.mask & EcsNothing || 
                 term->oper == EcsNot ||
+                term->oper == EcsOptional ||
                 term->id == ecs_pair(EcsChildOf, 0)) {
                 it->ids[i] = term->id;
             }
