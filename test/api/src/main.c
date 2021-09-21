@@ -1134,6 +1134,7 @@ void Rules_1_fact_pair_false(void);
 void Rules_2_fact_pairs_true(void);
 void Rules_2_fact_pairs_1_false(void);
 void Rules_2_fact_pairs_false(void);
+void Rules_wildcard_as_subject(void);
 void Rules_find_1_pair(void);
 void Rules_find_2_pairs(void);
 void Rules_find_w_pred_var(void);
@@ -6360,6 +6361,10 @@ bake_test_case Rules_testcases[] = {
         Rules_2_fact_pairs_false
     },
     {
+        "wildcard_as_subject",
+        Rules_wildcard_as_subject
+    },
+    {
         "find_1_pair",
         Rules_find_1_pair
     },
@@ -10022,7 +10027,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        104,
+        105,
         Rules_testcases
     },
     {

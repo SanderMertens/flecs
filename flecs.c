@@ -14941,9 +14941,7 @@ bool skip_term(ecs_term_t *term) {
     if (term->oper == EcsNot) {
         return true;
     }
-    if (term->oper == EcsOptional) {
-        return true;
-    }
+
     return false;
 }
 
@@ -15868,6 +15866,7 @@ void insert_select_or_with(
 {
     ecs_rule_op_t *op;
     bool eval_subject_supersets = false;
+    bool wildcard_subj = term->args[0].entity == EcsWildcard;
 
     /* Find any entity and/or table variables for subject */
     ecs_rule_var_t *tvar = NULL, *evar = to_entity(rule, subj), *var = evar;
@@ -15886,7 +15885,7 @@ void insert_select_or_with(
         filter = term_to_pair(rule, term);
     }
 
-    if (!var) {
+    if (!var && !wildcard_subj) {
         /* Only insert implicit IsA if filter isn't already an IsA */
         if (!filter.transitive || filter.pred.ent != EcsIsA) {
             ecs_rule_pair_t isa_pair = {
@@ -15930,18 +15929,18 @@ void insert_select_or_with(
         set_input_to_subj(rule, op, term, subj);
 
     /* If subject is neither table nor entitiy, with operates on literal */        
-    } else if (!tvar && !evar) {
+    } else if (!tvar && !evar && !wildcard_subj) {
         op->kind = EcsRuleWith;
         set_input_to_subj(rule, op, term, subj);
 
     /* If subject is table or entity but not known, use select */
     } else {
-        /* Subject must be NULL, since otherwise we would be writing to a
-         * variable that is already known */
-        ecs_assert(subj != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(wildcard_subj || subj != NULL, ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsRuleSelect;
-        set_output_to_subj(rule, op, term, subj);
-        written[subj->id] = true;
+        if (!wildcard_subj) {
+            set_output_to_subj(rule, op, term, subj);
+            written[subj->id] = true;
+        }
     }
 
     /* Optional terms cannot discard an entity, so set fail to the same label as
@@ -16242,8 +16241,16 @@ void compile_program(
             continue;
         }
 
+        if (term->oper == EcsOptional) {
+            continue;
+        }
+
         ecs_rule_var_t* subj = term_subj(rule, term);
         if (subj) {
+            continue;
+        }
+
+        if (term->args[0].entity == EcsWildcard) {
             continue;
         }
 
@@ -16272,6 +16279,17 @@ void compile_program(
 
             var = &rule->variables[v];
         }
+    }
+
+    /* Insert terms with wildcard subject */
+    for (c = 0; c < term_count; c ++) {
+        ecs_term_t *term = &terms[c];
+
+        if (term->args[0].entity != EcsWildcard) {
+            continue;
+        }
+
+        insert_term(rule, term, c, written);
     }
 
     /* Insert terms with Not operators */
@@ -17194,6 +17212,7 @@ bool eval_select(
     ecs_map_t *table_set;
 
     if (!redo && op->term != -1) {
+        it->ids[op->term] = pattern;
         columns[op->term] = -1;
     }
 
@@ -17707,7 +17726,6 @@ static
 void set_iter_table(
     ecs_iter_t *it,
     ecs_table_t *table,
-    int32_t cur,
     int32_t offset)
 {
     /* Tell the iterator how many entities there are */
@@ -17754,7 +17772,7 @@ void populate_iterator(
             int32_t count = regs[r].count;
             int32_t offset = regs[r].offset;
 
-            set_iter_table(iter, table, op->frame, offset);
+            set_iter_table(iter, table, offset);
 
             if (count) {
                 iter->offset = offset;
@@ -17776,7 +17794,7 @@ void populate_iterator(
             /* If an entity is not stored in a table, it could not have
              * been matched by anything */
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-            set_iter_table(iter, record->table, op->frame, offset);
+            set_iter_table(iter, record->table, offset);
             iter->count = 1;
         }
     }
@@ -17807,7 +17825,7 @@ void populate_iterator(
 
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
-    for (int i = 0; i < term_count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         iter->columns[i] ++;
     }
 }
