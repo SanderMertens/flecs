@@ -781,9 +781,9 @@ void Rules_wildcard_as_subject() {
     ECS_ENTITY(world, Tag, Final);
 
     ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_new(world, Tag);
 
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
         .expr = "Tag, ChildOf(*, This)"
