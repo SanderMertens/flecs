@@ -1,6 +1,6 @@
 /**
  * @file table_cache.h
- * @brief Data structure for fast table iteration/lookups 
+ * @brief Data structure for fast table iteration/lookups.
  */
 
 #ifndef FLECS_TABLE_CACHE_H_
@@ -12,10 +12,11 @@ extern "C" {
 
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
-    ecs_size_t size);
+    ecs_size_t size,
+    void(*free_payload)(void*));
 
-#define ecs_table_cache_init(cache, T)\
-    _ecs_table_cache_init(cache, ECS_SIZEOF(T))
+#define ecs_table_cache_init(cache, T, free_payload)\
+    _ecs_table_cache_init(cache, ECS_SIZEOF(T), free_payload)
 
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
@@ -34,6 +35,14 @@ void _ecs_table_cache_remove(
 
 #define ecs_table_cache_remove(cache, table)\
     _ecs_table_cache_remove(cache, table)
+
+void* _ecs_table_cache_get(
+    ecs_table_cache_t *cache,
+    ecs_size_t size,
+    ecs_table_t *table);
+
+#define ecs_table_cache_get(cache, T, table)\
+    ECS_CAST(T*, _ecs_table_cache_get(cache, ECS_SIZEOF(T), table))
 
 void _ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,

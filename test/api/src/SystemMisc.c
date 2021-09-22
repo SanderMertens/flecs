@@ -749,7 +749,7 @@ static int test_table_count_invoked;
 
 static void TestTableCount(ecs_iter_t *it) {
     test_int(it->table_count, 2);
-    test_int(it->inactive_table_count, 1);
+
     test_table_count_invoked ++;
 }
 

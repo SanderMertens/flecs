@@ -49,7 +49,7 @@ void ecs_system_activate(
         if (ecs_has_id(world, system, EcsDisabled) || 
             ecs_has_id(world, system, EcsDisabledIntern)) 
         {
-            if (!ecs_vector_count(system_data->query->tables)) {
+            if (!ecs_query_table_count(system_data->query)) {
                 /* If deactivating a disabled system that isn't matched with
                  * any active tables, there is nothing to deactivate. */
                 return;
@@ -82,7 +82,7 @@ void ecs_enable_system(
         return;
     }
 
-    if (ecs_vector_count(query->tables)) {
+    if (ecs_query_table_count(query)) {
         /* Only (de)activate system if it has non-empty tables. */
         ecs_system_activate(world, system, enabled, system_data);
         system_data = ecs_get_mut(world, system, EcsSystem, NULL);
@@ -342,7 +342,7 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Deactivated action for active systems */
-        if (system->query && ecs_vector_count(system->query->tables)) {
+        if (system->query && ecs_query_table_count(system->query)) {
             invoke_status_action(world, e, ptr, EcsSystemDeactivated);
         }
 
@@ -444,7 +444,7 @@ ecs_entity_t ecs_system_init(
         /* If tables have been matched with this system it is active, and we
          * should activate the in terms, if any. This will ensure that any
          * OnDemand systems get enabled. */
-        if (ecs_vector_count(query->tables)) {
+        if (ecs_query_table_count(query)) {
             ecs_system_activate(world, result, true, system);
         } else {
             /* If system isn't matched with any tables, mark it as inactive. This
@@ -461,7 +461,7 @@ ecs_entity_t ecs_system_init(
 
             /* If column system has active (non-empty) tables, also generate the
             * activate status. */
-            if (ecs_vector_count(system->query->tables)) {
+            if (ecs_query_table_count(system->query)) {
                 invoke_status_action(world, result, system, EcsSystemActivated);
             }
         }

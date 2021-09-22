@@ -13,7 +13,7 @@ int32_t move_table(
     (void)table;
 
     int32_t new_index = 0, old_index = 0;
-    ecs_size_t size = cache->payload_size;
+    ecs_size_t size = cache->size;
     int32_t last_src_index = ecs_vector_count(src_array) - 1;
     ecs_assert(last_src_index >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -85,22 +85,42 @@ int32_t move_table(
 
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
-    ecs_size_t size)
+    ecs_size_t size,
+    void(*free_payload)(void*))
 {
     ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
         ECS_INTERNAL_ERROR, NULL);
     cache->index = ecs_map_new(int32_t, 0);
     cache->empty_tables = NULL;
     cache->tables = NULL;
-    cache->payload_size = size;
+    cache->size = size;
+    cache->free_payload = free_payload;
+}
+
+static
+void free_payload(
+    ecs_table_cache_t *cache,
+    ecs_vector_t *tables)
+{
+    void(*free_payload)(void*) = cache->free_payload;
+    if (free_payload) {
+        ecs_size_t size = cache->size;
+        int32_t i, count = ecs_vector_count(tables);
+        for (i = 0; i < count; i ++) {
+            void *ptr = ecs_vector_get_t(tables, size, 8, i);
+            free_payload(ptr);
+        }
+    }
+
+    ecs_vector_free(tables);
 }
 
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache)
 {
     ecs_map_free(cache->index);
-    ecs_vector_free(cache->empty_tables);
-    ecs_vector_free(cache->tables);
+    free_payload(cache, cache->tables);
+    free_payload(cache, cache->empty_tables);
 }
 
 void* _ecs_table_cache_insert(
@@ -108,6 +128,8 @@ void* _ecs_table_cache_insert(
     const ecs_table_t *table,
     ecs_size_t size)
 {
+    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
+
     int32_t index;
     ecs_table_cache_hdr_t *result;
     bool empty;
@@ -129,7 +151,8 @@ void* _ecs_table_cache_insert(
     if (table) {
         ecs_map_set(cache->index, table->id, &index);
     }
-
+    
+    ecs_os_memset(result, 0, size);
     result->table = (ecs_table_t*)table;
 
     return result;
@@ -144,11 +167,43 @@ void _ecs_table_cache_remove(
         return;
     }
 
+    if (cache->free_payload) {
+        ecs_table_cache_hdr_t *elem = _ecs_table_cache_get(
+            cache, cache->size, table);
+        ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+        cache->free_payload(elem);
+    }
+
     if (index[0] < 0) {
         move_table(cache, table, index[0], NULL, cache->empty_tables, false);
     } else {
         move_table(cache, table, index[0], NULL, cache->tables, true);
     }
+}
+
+void* _ecs_table_cache_get(
+    ecs_table_cache_t *cache,
+    ecs_size_t size,
+    ecs_table_t *table)
+{
+    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
+    if (!index) {
+        return NULL;
+    }
+
+    ecs_table_cache_hdr_t *result;
+    if (index[0] >= 0) {
+        result = ecs_vector_get_t(cache->tables, size, 8, index[0]);
+    } else {
+        result = ecs_vector_get_t(
+            cache->empty_tables, size, 8, index[0] * -1 - 1);
+    }
+
+    ecs_assert(result->table == table, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
 }
 
 void _ecs_table_cache_set_empty(

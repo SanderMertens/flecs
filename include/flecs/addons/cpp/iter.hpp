@@ -285,12 +285,6 @@ public:
      */
     flecs::entity entity(size_t row) const;
 
-    /** Obtain the total number of inactive tables the query is matched with.
-     */
-    int32_t inactive_table_count() const {
-        return m_iter->inactive_table_count;
-    }
-
     /** Returns whether term is owned.
      * 
      * @param index The term index.

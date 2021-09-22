@@ -208,19 +208,19 @@ void ecs_get_query_stats(
 
     int32_t t = s->t = t_next(s->t);
 
-    int32_t i, entity_count = 0, count = ecs_vector_count(query->tables);
-    ecs_matched_table_t *matched_tables = ecs_vector_first(
-        query->tables, ecs_matched_table_t);
+    int32_t i, entity_count = 0, count = ecs_query_table_count(query);
+    ecs_cached_table_node_t *matched_tables = ecs_vector_first(
+        query->cache.tables, ecs_cached_table_node_t);
     for (i = 0; i < count; i ++) {
-        ecs_matched_table_t *matched = &matched_tables[i];
+        ecs_cached_table_node_t *matched = &matched_tables[i];
         if (matched->table) {
             entity_count += ecs_table_count(matched->table);
         }
     }
 
     record_gauge(&s->matched_table_count, t, count);
-    record_gauge(&s->matched_empty_table_count, t, 
-        ecs_vector_count(query->empty_tables));
+    record_gauge(&s->matched_empty_table_count, t,
+        ecs_query_empty_table_count(query));
     record_gauge(&s->matched_entity_count, t, entity_count);
 }
 

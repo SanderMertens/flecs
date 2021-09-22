@@ -2533,7 +2533,8 @@ typedef struct ecs_filter_iter_t {
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
     ecs_page_iter_t page_iter;
-    int32_t index;
+    int32_t cache_index;
+    int32_t table_index;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
@@ -2683,7 +2684,6 @@ struct ecs_iter_t {
 
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
-    int32_t inactive_table_count; /* Inactive table count for query */
     int32_t term_count;           /* Number of terms in query */
     int32_t term_index;           /* Index of term that triggered an event.
                                    * This field will be set to the 'index' field
@@ -7665,6 +7665,14 @@ FLECS_API void ecs_gauge_reduce(
     ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
 
 
+/* -- Queries -- */
+
+#define ecs_query_table_count(query)\
+    ecs_vector_count(query->cache.tables)
+
+#define ecs_query_empty_table_count(query)\
+    ecs_vector_count(query->cache.empty_tables)
+
 /* -- Iterators -- */
 
 #define ecs_term_id(it, index)\
@@ -9335,12 +9343,6 @@ public:
      * @param row Row being iterated over.
      */
     flecs::entity entity(size_t row) const;
-
-    /** Obtain the total number of inactive tables the query is matched with.
-     */
-    int32_t inactive_table_count() const {
-        return m_iter->inactive_table_count;
-    }
 
     /** Returns whether term is owned.
      * 
