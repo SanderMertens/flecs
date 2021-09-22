@@ -49,7 +49,7 @@ typedef struct ecs_id_record_t ecs_id_record_t;
 typedef struct ecs_mixins_t ecs_mixins_t;
 
 /* Cached query table data */
-typedef struct ecs_cached_table_node_t ecs_cached_table_node_t;
+typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -138,7 +138,7 @@ typedef struct ecs_filter_iter_t {
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
     ecs_page_iter_t page_iter;
-    ecs_cached_table_node_t *node;
+    ecs_query_table_node_t *node;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
@@ -294,7 +294,6 @@ struct ecs_iter_t {
                                    * of a trigger/observer term. */
     int32_t variable_count;       /* Number of variables for query */
     
-    void *table_columns;          /* Table component data */
     ecs_entity_t *entities;       /* Entity identifiers */
 
     void *param;                  /* Param passed to ecs_run */

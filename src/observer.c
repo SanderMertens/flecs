@@ -79,7 +79,6 @@ void observer_callback(ecs_iter_t *it) {
         user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
-        user_it.table_columns = table->storage.columns;
 
         o->action(&user_it);
         o->last_event_id = world->event_id;

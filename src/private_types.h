@@ -231,7 +231,8 @@ typedef struct ecs_table_cache_t {
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
     ecs_size_t size;
-    void(*free_payload)(void*);
+    ecs_poly_t *parent;
+    void(*free_payload)(ecs_poly_t*, void*);
 } ecs_table_cache_t;
 
 /** Must appear as first member in payload of table cache */
@@ -252,11 +253,26 @@ typedef struct flecs_bitset_column_t {
     int32_t column_index;
 } flecs_bitset_column_t;
 
-/** Type containing data for a table matched with a query. */
-struct ecs_cached_table_node_t {
-    int32_t *columns;         /* Mapping from query terms to table columns */
+typedef struct ecs_query_table_match_t ecs_query_table_match_t;
+
+/** List node used to iterate tables in a query.
+ * The list of nodes dictates the order in which tables should be iterated by a
+ * query. A single node may refer to the table multiple times with different
+ * offset/count parameters, which enables features such as sorting. */
+typedef struct ecs_query_table_node_t {
+    ecs_query_table_match_t *match;  /* Reference to the match */
+    int32_t offset;                  /* Starting point in table  */
+    int32_t count;                   /* Number of entities to iterate in table */
+    ecs_query_table_node_t *next, *prev;
+} ecs_query_table_node_t;
+
+/** Type containing data for a table matched with a query. 
+ * A single table can have multiple matches, if the query contains wildcards. */
+struct ecs_query_table_match_t {
+    ecs_query_table_node_t node; /* Embedded list node */
+
     ecs_table_t *table;       /* The current table. */
-    ecs_data_t *data;         /* Table component data */
+    int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *subjects;   /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
@@ -264,33 +280,26 @@ struct ecs_cached_table_node_t {
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
-    int32_t *monitor;              /* Used to monitor table for changes */
-    int32_t group_id;              /* Number used to group tables */
 
-    /* List that stores tables in iteration order */
-    struct ecs_cached_table_node_t *next, *prev;
+    uint64_t group_id;        /* Value used to organize tables in groups */
 
-    /* Next record in cache for same table */
-    struct ecs_cached_table_node_t *next_for_table;
+    /* Next match in cache for same table (includes empty tables) */
+    ecs_query_table_match_t *next_match;
 };
 
 /** A single table can occur multiple times in the cache when a term matches
  * multiple table columns. */
-typedef struct ecs_cached_table_t {
-    ecs_table_cache_hdr_t hdr;
-    ecs_cached_table_node_t *first;
-} ecs_cached_table_t;
+typedef struct ecs_query_table_t {
+    ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
+    ecs_query_table_match_t *first;  /* List with matches for table */
+    int32_t *monitor;                /* Used to monitor table for changes */
+} ecs_query_table_t;
 
-/** Type storing an entity range within a table.
- * This type is used for iterating in orer across archetypes. A sorting function
- * constructs a list of the ranges across archetypes that are in order so that
- * when the query iterates over the archetypes, it only needs to iterate the
- * list of ranges. */
-typedef struct ecs_table_slice_t {
-    ecs_cached_table_node_t *table;      /* Reference to the matched table */
-    int32_t start_row;               /* Start of range  */
-    int32_t count;                   /* Number of entities in range */
-} ecs_table_slice_t;
+/** Points to the beginning & ending of a query group */
+typedef struct ecs_query_table_list_t {
+    ecs_query_table_node_t *first;
+    ecs_query_table_node_t *last;
+} ecs_query_table_list_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
@@ -318,11 +327,11 @@ typedef struct ecs_query_event_t {
     ecs_query_t *parent_query;
 } ecs_query_event_t;
 
-/** Query that is automatically matched against active tables */
+/** Query that is automatically matched against tables */
 struct ecs_query_t {
     ecs_header_t hdr;
 
-    /* Signature of query */
+    /* Query filter */
     ecs_filter_t filter;
 
     /* Reference to world */
@@ -331,8 +340,11 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_table_cache_t cache;
 
-    /* Head & tail of matched tables list */
-    ecs_cached_table_node_t *first, *last;
+    /* Linked list with all matched non-empty tables, in iteration order */
+    ecs_query_table_list_t list;
+
+    /* Contains head/tail to nodes of query groups (if group_by is used) */
+    ecs_map_t *groups;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -342,7 +354,7 @@ struct ecs_query_t {
     ecs_order_by_action_t order_by;
     ecs_vector_t *table_slices;     
 
-    /* Used for table sorting */
+    /* Used for grouping */
     ecs_entity_t group_by_id;
     ecs_group_by_action_t group_by;
     void *group_by_ctx;
@@ -352,7 +364,7 @@ struct ecs_query_t {
     ecs_query_t *parent;
     ecs_vector_t *subqueries;
 
-    /* The query kind determines how it is registered with tables */
+    /* Flags for query properties */
     ecs_flags32_t flags;
 
     uint64_t id;                /* Id of query in query storage */

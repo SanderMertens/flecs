@@ -124,7 +124,7 @@ void* ecs_iter_column_w_size(
         return NULL;
     }
 
-    ecs_column_t *columns = it->table_columns;
+    ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[column_index];
     ecs_assert(!size || (ecs_size_t)size == column->size, ECS_INVALID_PARAMETER, NULL);
 
@@ -146,7 +146,7 @@ size_t ecs_iter_column_size(
         return 0;
     }
 
-    ecs_column_t *columns = it->table_columns;
+    ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[column_index];
     
     return flecs_to_size_t(column->size);
