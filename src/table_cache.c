@@ -86,7 +86,8 @@ int32_t move_table(
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
     ecs_size_t size,
-    void(*free_payload)(void*))
+    ecs_poly_t *parent,
+    void(*free_payload)(ecs_poly_t*, void*))
 {
     ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
         ECS_INTERNAL_ERROR, NULL);
@@ -94,6 +95,7 @@ void _ecs_table_cache_init(
     cache->empty_tables = NULL;
     cache->tables = NULL;
     cache->size = size;
+    cache->parent = parent;
     cache->free_payload = free_payload;
 }
 
@@ -102,13 +104,14 @@ void free_payload(
     ecs_table_cache_t *cache,
     ecs_vector_t *tables)
 {
-    void(*free_payload)(void*) = cache->free_payload;
+    void(*free_payload)(ecs_poly_t*, void*) = cache->free_payload;
     if (free_payload) {
+        ecs_poly_t *parent = cache->parent;
         ecs_size_t size = cache->size;
         int32_t i, count = ecs_vector_count(tables);
         for (i = 0; i < count; i ++) {
             void *ptr = ecs_vector_get_t(tables, size, 8, i);
-            free_payload(ptr);
+            free_payload(parent, ptr);
         }
     }
 
@@ -171,7 +174,7 @@ void _ecs_table_cache_remove(
         ecs_table_cache_hdr_t *elem = _ecs_table_cache_get(
             cache, cache->size, table);
         ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-        cache->free_payload(elem);
+        cache->free_payload(cache->parent, elem);
     }
 
     if (index[0] < 0) {

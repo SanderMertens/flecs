@@ -908,7 +908,8 @@ typedef struct ecs_table_cache_t {
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
     ecs_size_t size;
-    void(*free_payload)(void*);
+    ecs_poly_t *parent;
+    void(*free_payload)(ecs_poly_t*, void*);
 } ecs_table_cache_t;
 
 /** Must appear as first member in payload of table cache */
@@ -929,11 +930,26 @@ typedef struct flecs_bitset_column_t {
     int32_t column_index;
 } flecs_bitset_column_t;
 
-/** Type containing data for a table matched with a query. */
-typedef struct ecs_cached_table_node_t {
-    int32_t *columns;         /* Mapping from query terms to table columns */
+typedef struct ecs_query_table_match_t ecs_query_table_match_t;
+
+/** List node used to iterate tables in a query.
+ * The list of nodes dictates the order in which tables should be iterated by a
+ * query. A single node may refer to the table multiple times with different
+ * offset/count parameters, which enables features such as sorting. */
+typedef struct ecs_query_table_node_t {
+    ecs_query_table_match_t *match;  /* Reference to the match */
+    int32_t offset;                  /* Starting point in table  */
+    int32_t count;                   /* Number of entities to iterate in table */
+    ecs_query_table_node_t *next, *prev;
+} ecs_query_table_node_t;
+
+/** Type containing data for a table matched with a query. 
+ * A single table can have multiple matches, if the query contains wildcards. */
+struct ecs_query_table_match_t {
+    ecs_query_table_node_t node; /* Embedded list node */
+
     ecs_table_t *table;       /* The current table. */
-    ecs_data_t *data;         /* Table component data */
+    int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_id_t *ids;            /* Resolved (component) ids for current table */
     ecs_entity_t *subjects;   /* Subjects (sources) of ids */
     ecs_size_t *sizes;        /* Sizes for ids for current table */
@@ -941,30 +957,26 @@ typedef struct ecs_cached_table_node_t {
 
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
-    int32_t *monitor;              /* Used to monitor table for changes */
-    int32_t group_id;              /* Number used to group tables */
 
-    /* List that stores tables in iteration order */
-    struct ecs_cached_table_node_t *next, *prev;
-} ecs_cached_table_node_t;
+    uint64_t group_id;        /* Value used to organize tables in groups */
+
+    /* Next match in cache for same table (includes empty tables) */
+    ecs_query_table_match_t *next_match;
+};
 
 /** A single table can occur multiple times in the cache when a term matches
  * multiple table columns. */
-typedef struct ecs_cached_table_t {
-    ecs_table_cache_hdr_t hdr;
-    ecs_vector_t *tables; /* vector<matched_table_t> */
-} ecs_cached_table_t;
+typedef struct ecs_query_table_t {
+    ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
+    ecs_query_table_match_t *first;  /* List with matches for table */
+    int32_t *monitor;                /* Used to monitor table for changes */
+} ecs_query_table_t;
 
-/** Type storing an entity range within a table.
- * This type is used for iterating in orer across archetypes. A sorting function
- * constructs a list of the ranges across archetypes that are in order so that
- * when the query iterates over the archetypes, it only needs to iterate the
- * list of ranges. */
-typedef struct ecs_table_slice_t {
-    ecs_cached_table_node_t *table;      /* Reference to the matched table */
-    int32_t start_row;               /* Start of range  */
-    int32_t count;                   /* Number of entities in range */
-} ecs_table_slice_t;
+/** Points to the beginning & ending of a query group */
+typedef struct ecs_query_table_list_t {
+    ecs_query_table_node_t *first;
+    ecs_query_table_node_t *last;
+} ecs_query_table_list_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
 #define EcsQueryMatchDisabled (16)   /* Does query match disabled */
@@ -992,11 +1004,11 @@ typedef struct ecs_query_event_t {
     ecs_query_t *parent_query;
 } ecs_query_event_t;
 
-/** Query that is automatically matched against active tables */
+/** Query that is automatically matched against tables */
 struct ecs_query_t {
     ecs_header_t hdr;
 
-    /* Signature of query */
+    /* Query filter */
     ecs_filter_t filter;
 
     /* Reference to world */
@@ -1004,6 +1016,12 @@ struct ecs_query_t {
 
     /* Tables matched with query */
     ecs_table_cache_t cache;
+
+    /* Linked list with all matched non-empty tables, in iteration order */
+    ecs_query_table_list_t list;
+
+    /* Contains head/tail to nodes of query groups (if group_by is used) */
+    ecs_map_t *groups;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
@@ -1013,7 +1031,7 @@ struct ecs_query_t {
     ecs_order_by_action_t order_by;
     ecs_vector_t *table_slices;     
 
-    /* Used for table sorting */
+    /* Used for grouping */
     ecs_entity_t group_by_id;
     ecs_group_by_action_t group_by;
     void *group_by_ctx;
@@ -1023,7 +1041,7 @@ struct ecs_query_t {
     ecs_query_t *parent;
     ecs_vector_t *subqueries;
 
-    /* The query kind determines how it is registered with tables */
+    /* Flags for query properties */
     ecs_flags32_t flags;
 
     uint64_t id;                /* Id of query in query storage */
@@ -1329,10 +1347,11 @@ extern "C" {
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
     ecs_size_t size,
-    void(*free_payload)(void*));
+    ecs_poly_t *parent,
+    void(*free_payload)(ecs_poly_t *parent, void*));
 
-#define ecs_table_cache_init(cache, T, free_payload)\
-    _ecs_table_cache_init(cache, ECS_SIZEOF(T), free_payload)
+#define ecs_table_cache_init(cache, T, parent, free_payload)\
+    _ecs_table_cache_init(cache, ECS_SIZEOF(T), parent, free_payload)
 
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
@@ -18449,10 +18468,10 @@ void ecs_get_query_stats(
     int32_t t = s->t = t_next(s->t);
 
     int32_t i, entity_count = 0, count = ecs_query_table_count(query);
-    ecs_cached_table_node_t *matched_tables = ecs_vector_first(
-        query->cache.tables, ecs_cached_table_node_t);
+    ecs_query_table_match_t *matched_tables = ecs_vector_first(
+        query->cache.tables, ecs_query_table_match_t);
     for (i = 0; i < count; i ++) {
-        ecs_cached_table_node_t *matched = &matched_tables[i];
+        ecs_query_table_match_t *matched = &matched_tables[i];
         if (matched->table) {
             entity_count += ecs_table_count(matched->table);
         }
@@ -18940,7 +18959,6 @@ bool ecs_snapshot_next(
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
         it->table = table;
-        it->table_columns = data->columns;
         it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         it->is_valid = true;
@@ -23225,7 +23243,6 @@ void populate_from_table(
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = &table->storage;
-    it->table_columns = data->columns;
     it->entities = ecs_vector_first(data->entities, ecs_entity_t);
 }
 
@@ -23569,7 +23586,6 @@ bool ecs_term_next(
     it->sizes = &iter->size;
     it->ptrs = &iter->ptr;
 
-    it->table_columns = &table->storage.columns;
     it->count = ecs_table_count(table);
     it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
     it->is_valid = true;
@@ -23877,7 +23893,6 @@ void observer_callback(ecs_iter_t *it) {
         user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
-        user_it.table_columns = table->storage.columns;
 
         o->action(&user_it);
         o->last_event_id = world->event_id;
@@ -24140,7 +24155,8 @@ int32_t move_table(
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
     ecs_size_t size,
-    void(*free_payload)(void*))
+    ecs_poly_t *parent,
+    void(*free_payload)(ecs_poly_t*, void*))
 {
     ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
         ECS_INTERNAL_ERROR, NULL);
@@ -24148,6 +24164,7 @@ void _ecs_table_cache_init(
     cache->empty_tables = NULL;
     cache->tables = NULL;
     cache->size = size;
+    cache->parent = parent;
     cache->free_payload = free_payload;
 }
 
@@ -24156,13 +24173,14 @@ void free_payload(
     ecs_table_cache_t *cache,
     ecs_vector_t *tables)
 {
-    void(*free_payload)(void*) = cache->free_payload;
+    void(*free_payload)(ecs_poly_t*, void*) = cache->free_payload;
     if (free_payload) {
+        ecs_poly_t *parent = cache->parent;
         ecs_size_t size = cache->size;
         int32_t i, count = ecs_vector_count(tables);
         for (i = 0; i < count; i ++) {
             void *ptr = ecs_vector_get_t(tables, size, 8, i);
-            free_payload(ptr);
+            free_payload(parent, ptr);
         }
     }
 
@@ -24205,7 +24223,8 @@ void* _ecs_table_cache_insert(
     if (table) {
         ecs_map_set(cache->index, table->id, &index);
     }
-
+    
+    ecs_os_memset(result, 0, size);
     result->table = (ecs_table_t*)table;
 
     return result;
@@ -24224,7 +24243,7 @@ void _ecs_table_cache_remove(
         ecs_table_cache_hdr_t *elem = _ecs_table_cache_get(
             cache, cache->size, table);
         ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-        cache->free_payload(elem);
+        cache->free_payload(cache->parent, elem);
     }
 
     if (index[0] < 0) {
@@ -24240,7 +24259,7 @@ void* _ecs_table_cache_get(
     ecs_table_t *table)
 {
     ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
-    
+
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
         return NULL;
@@ -24806,45 +24825,302 @@ const char* ecs_os_strerror(int err) {
 #endif
 
 static
-void activate_table(
-    ecs_world_t *world,
+void compute_group_id(
     ecs_query_t *query,
-    ecs_table_t *table,
-    bool active);
+    ecs_query_table_match_t *match)
+{
+    ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-/* Utility for iterating tables in cache */
-typedef struct {
-    ecs_table_cache_t *cache;
-    int32_t cache_index;
-    int32_t table_index;
-} cache_iter_t;
+    if (query->group_by) {
+        ecs_table_t *table = match->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        match->group_id = query->group_by(query->world, table->type, 
+            query->group_by_id, query->group_by_ctx);
+    } else {
+        match->group_id = 0;
+    }
+}
+
+ecs_query_table_list_t* get_group(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    return ecs_map_get(query->groups, ecs_query_table_list_t, group_id);
+}
+
+ecs_query_table_list_t* ensure_group(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    return ecs_map_ensure(query->groups, ecs_query_table_list_t, group_id);
+}
+
+/* Find the last node of the group after which this group should be inserted */
+ecs_query_table_node_t* find_group_insertion_node(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    /* Grouping must be enabled */
+    ecs_assert(query->group_by != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_iter_t it = ecs_map_iter(query->groups);
+    ecs_query_table_list_t *list, *closest_list = NULL;
+    uint64_t id, closest_id = 0;
+
+    /* Find closest smaller group id */
+    while ((list = ecs_map_next(&it, ecs_query_table_list_t, &id))) {
+        if (id >= group_id) {
+            continue;
+        }
+
+        if (!list->last) {
+            ecs_assert(list->first == NULL, ECS_INTERNAL_ERROR, NULL);
+            continue;
+        }
+
+        if ((group_id - id) < (group_id - closest_id)) {
+            closest_id = id;
+            closest_list = list;
+        }
+    }
+
+    if (closest_list) {
+        return closest_list->last;
+    } else {
+        return NULL; /* Group should be first in query */
+    }
+}
+
+/* Initialize group with first node */
+void create_group(
+    ecs_query_t *query,
+    ecs_query_table_node_t *node)
+{
+    ecs_query_table_match_t *match = node->match;
+    uint32_t group_id = match->group_id;
+
+    /* If query has grouping enabled & this is a new/empty group, find
+     * the insertion point for the group */
+    ecs_query_table_node_t *insert_after = find_group_insertion_node(
+        query, group_id);
+
+    if (!insert_after) {
+        /* This group should appear first in the query list */
+        ecs_query_table_node_t *query_first = query->list.first;
+        if (query_first) {
+            /* If this is not the first match for the query, insert before it */
+            node->next = query_first;
+            query_first->prev = node;
+            query->list.first = node;
+        } else {
+            /* If this is the first match of the query, initialize its list */
+            ecs_assert(query->list.last == NULL, ECS_INTERNAL_ERROR, NULL);
+            query->list.first = node;
+            query->list.last = node;
+        }
+    } else {
+        ecs_assert(query->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(query->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* This group should appear after another group */
+        ecs_query_table_node_t *insert_before = insert_after->next;
+        node->prev = insert_after;
+        insert_after->next = node;
+        node->next = insert_before;
+        if (insert_before) {
+            insert_before->prev = node;
+        } else {
+            ecs_assert(query->list.last == insert_after, 
+                ECS_INTERNAL_ERROR, NULL);
+                
+            /* This group should appear last in the query list */
+            query->list.last = node;
+        }
+    }
+}
 
 static
-cache_iter_t cache_iter(ecs_query_t *query) {
-    return (cache_iter_t){&query->cache, 0, 0};
+void remove_group(
+    ecs_query_t *query,
+    uint64_t group_id)
+{
+    ecs_map_remove(query->groups, group_id);
 }
 
-ecs_cached_table_node_t* _cache_next(cache_iter_t *it, ecs_vector_t *tables) {
-    if (it->cache_index >= ecs_vector_count(tables)) {
-        return NULL;
+/* Find the list the node should be part of */
+static
+ecs_query_table_list_t* get_node_list(
+    ecs_query_t *query,
+    ecs_query_table_node_t *node)
+{
+    ecs_query_table_match_t *match = node->match;
+    if (query->group_by) {
+        return get_group(query, match->group_id);
+    } else {
+        return &query->list;
     }
-
-    ecs_cached_table_t *cached_tables = ecs_vector_get(
-        tables, ecs_cached_table_t, it->cache_index);
-    ecs_cached_table_node_t *table = ecs_vector_get(
-        cached_tables->tables, ecs_cached_table_node_t, it->table_index);
-    
-    it->table_index ++;
-    if (it->table_index >= ecs_vector_count(cached_tables->tables)) {
-        it->table_index = 0;
-        it->cache_index ++;
-    }
-
-    return table;
 }
 
-#define cache_next(it) _cache_next(it, (it)->cache->tables)
-#define cache_empty_next(it) _cache_next(it, (it)->cache->empty_tables)
+/* Find or create the list the node should be part of */
+static
+ecs_query_table_list_t* ensure_node_list(
+    ecs_query_t *query,
+    ecs_query_table_node_t *node)
+{
+    ecs_query_table_match_t *match = node->match;
+    if (query->group_by) {
+        return ensure_group(query, match->group_id);
+    } else {
+        return &query->list;
+    }
+}
+
+/* Remove node from list */
+static
+void remove_node(
+    ecs_query_t *query,
+    ecs_query_table_node_t *node)
+{
+    ecs_query_table_node_t *prev = node->prev;
+    ecs_query_table_node_t *next = node->next;
+
+    ecs_query_table_list_t *list = get_node_list(query, node);
+
+    if (!list || !list->first) {
+        /* If list contains no nodes, the node must be empty */
+        ecs_assert(!list || list->last == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(prev == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(next == NULL, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
+    if (prev) {
+        prev->next = next;
+    }
+    if (next) {
+        next->prev = prev;
+    }
+
+    if (query->group_by) {
+        ecs_query_table_match_t *match = node->match;
+        uint64_t group_id = match->group_id;
+
+        /* Make sure query.list is updated if this is the first or last group */
+        if (query->list.first == node) {
+            ecs_assert(prev == NULL, ECS_INTERNAL_ERROR, NULL);
+            query->list.first = next;
+            prev = next;
+        }
+        if (query->list.last == node) {
+            ecs_assert(next == NULL, ECS_INTERNAL_ERROR, NULL);
+            query->list.last = prev;
+            next = prev;
+        }
+
+        /* Make sure group list only contains nodes that belong to the group */
+        if (prev && prev->match->group_id != group_id) {
+            /* The previous node belonged to another group */
+            prev = next;
+        }
+        if (next && next->match->group_id != group_id) {
+            /* The next node belonged to another group */
+            next = prev;
+        }
+
+        /* Do check again, in case both prev & next belonged to another group */
+        if (prev && prev->match->group_id != group_id) {
+            /* There are no more matches left in this group */
+            remove_group(query, group_id);
+            list = NULL;
+        }
+    }
+
+    if (list) {
+        if (list->first == node) {
+            list->first = next;
+        }
+        if (list->last == node) {
+            list->last = prev;
+        }
+    }
+
+    node->prev = NULL;
+    node->next = NULL;
+}
+
+/* Add node to list */
+static
+void insert_node(
+    ecs_query_t *query,
+    ecs_query_table_node_t *node)
+{
+    /* Node should not be part of an existing list */
+    ecs_assert(node->prev == NULL && node->next == NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    compute_group_id(query, node->match);
+
+    ecs_query_table_list_t *list = ensure_node_list(query, node);
+
+    if (list->last) {
+        ecs_assert(query->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(query->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_query_table_node_t *last = list->last;
+        ecs_query_table_node_t *last_next = last->next;
+
+        node->prev = last;
+        node->next = last_next;
+        last->next = node;
+
+        if (last_next) {
+            last_next->prev = node;
+        }
+
+        list->last = node;
+
+        if (query->group_by) {
+            /* Make sure to update query list if this is the last group */
+            if (query->list.last == last) {
+                query->list.last = node;
+            }
+        }
+    } else {
+        ecs_assert(list->first == NULL, ECS_INTERNAL_ERROR, NULL);
+
+        list->first = node;
+        list->last = node;
+
+        if (query->group_by) {
+            /* Initialize group with its first node */
+            create_group(query, node);
+        }
+    }
+
+    ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(list->last != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(list->last == node, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query->list.first->prev == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query->list.last->next == NULL, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_query_table_match_t* cache_add(
+    ecs_query_t *query,
+    ecs_query_table_t *elem)
+{
+    ecs_query_table_match_t *result = ecs_os_calloc_t(ecs_query_table_match_t);
+    ecs_query_table_node_t *node = &result->node;
+
+    node->match = result;
+    result->next_match = elem->first;
+    elem->first = result;
+
+    return result;
+}
 
 /* Builtin group_by callback for Cascade terms.
  * This function traces the hierarchy depth of an entity type by following a
@@ -24906,16 +25182,6 @@ int32_t group_by_cascade(
     }
 
     return result;
-}
-
-static
-int table_compare(
-    const void *t1,
-    const void *t2)
-{
-    const ecs_cached_table_node_t *table_1 = t1;
-    const ecs_cached_table_node_t *table_2 = t2;
-    return table_1->group_id - table_2->group_id;
 }
 
 #ifndef NDEBUG
@@ -25314,23 +25580,18 @@ void add_table(
     }
 
     /* From here we recurse */
-    ecs_cached_table_node_t *table_data;
+    ecs_query_table_match_t *table_data;
     ecs_vector_t *references = NULL;
 
-    ecs_cached_table_t *elem = ecs_table_cache_insert(
-        &query->cache, table, ecs_cached_table_t);
-    elem->tables = NULL;
+    ecs_query_table_t *elem = ecs_table_cache_insert(
+        &query->cache, table, ecs_query_table_t);
 
 add_pair:
-    table_data = ecs_vector_add(&elem->tables, ecs_cached_table_node_t);
-    ecs_os_memset_t(table_data, 0, ecs_cached_table_node_t);
+    table_data = cache_add(query, elem);
     table_data->table = table;
     if (table) {
         table_type = table->type;
     }
-
-    /* If grouping is enabled for query, assign the group rank to the table */
-    // group_table(world, query, table_data);
 
     if (term_count) {
         /* Array that contains the system column to table column mapping */
@@ -25466,6 +25727,11 @@ add_pair:
             ecs_vector_first(references, ecs_ref_t), ref_size);
         ecs_vector_free(references);
         references = NULL;
+    }
+
+    /* Insert match to iteration list if table is not empty */
+    if (!table || ecs_table_count(table) != 0) {
+        insert_node(query, &table_data->node);
     }
 
     /* Use tail recursion when adding table for multiple pairs */
@@ -25733,7 +25999,7 @@ void sort_table(
 
 /* Helper struct for building sorted table ranges */
 // typedef struct sort_helper_t {
-//     ecs_cached_table_node_t *table;
+//     ecs_query_table_match_t *table;
 //     ecs_entity_t *entities;
 //     const void *ptr;
 //     int32_t row;
@@ -25779,12 +26045,12 @@ void sort_table(
 
 //     /* Fetch data from all matched tables */
 //     cache_iter_t it = cache_iter(query);
-//     ecs_cached_table_node_t *table;
+//     ecs_query_table_match_t *table;
 //     sort_helper_t *helper = ecs_os_malloc((end - start) * ECS_SIZEOF(sort_helper_t));
 
 //     int i, to_sort = 0;
 //     for (i = start; i < end; i ++) {
-//         ecs_cached_table_node_t *table_data = &tables[i];
+//         ecs_query_table_match_t *table_data = &tables[i];
 //         ecs_table_t *table = table_data->table;
 //         ecs_data_t *data = &table->storage;
 //         ecs_vector_t *entities;
@@ -25829,7 +26095,7 @@ void sort_table(
 //         to_sort ++;      
 //     }
 
-//     ecs_table_slice_t *cur = NULL;
+//     ecs_query_table_node_t *cur = NULL;
 
 //     bool proceed;
 //     do {
@@ -25866,7 +26132,7 @@ void sort_table(
 
 //         sort_helper_t *cur_helper = &helper[min];
 //         if (!cur || cur->table != cur_helper->table) {
-//             cur = ecs_vector_add(&query->table_slices, ecs_table_slice_t);
+//             cur = ecs_vector_add(&query->table_slices, ecs_query_table_node_t);
 //             ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
 //             cur->table = cur_helper->table;
 //             cur->start_row = cur_helper->row;
@@ -25890,8 +26156,8 @@ void sort_table(
 //     query->table_slices = NULL;
 
 //     int32_t i, count = ecs_vector_count(query->tables);
-//     ecs_cached_table_node_t *tables = ecs_vector_first(query->tables, ecs_cached_table_node_t);
-//     ecs_cached_table_node_t *table = NULL;
+//     ecs_query_table_match_t *tables = ecs_vector_first(query->tables, ecs_query_table_match_t);
+//     ecs_query_table_match_t *table = NULL;
 
 //     int32_t start = 0, rank = 0;
 //     for (i = 0; i < count; i ++) {
@@ -25919,22 +26185,26 @@ bool tables_dirty(
     // }
 
     bool is_dirty = false;
-    cache_iter_t it = cache_iter(query);
-    ecs_cached_table_node_t *table_data;
 
-    while ((table_data = cache_next(&it))) {
-        ecs_table_t *table = table_data->table;
+    ecs_vector_t *vec = query->cache.tables;
+    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
+    int32_t i, count = ecs_vector_count(vec);
 
-        if (!table_data->monitor) {
-            table_data->monitor = flecs_table_get_monitor(table);
+    for (i = 0; i < count; i ++) {
+        ecs_query_table_t *qt = &tables[i];
+        ecs_table_t *table = qt->hdr.table;
+
+        if (!qt->monitor) {
+            qt->monitor = flecs_table_get_monitor(table);
             is_dirty = true;
         }
 
         int32_t *dirty_state = flecs_table_get_dirty_state(table);
         int32_t t, type_count = table->column_count;
         for (t = 0; t < type_count + 1; t ++) {
-            is_dirty = is_dirty || (dirty_state[t] != table_data->monitor[t]);
+            is_dirty = is_dirty || (dirty_state[t] != qt->monitor[t]);
         }
+
     }
 
     is_dirty = is_dirty || (query->match_count != query->prev_match_count);
@@ -25948,13 +26218,15 @@ void tables_reset_dirty(
 {
     query->prev_match_count = query->match_count;
 
-    cache_iter_t it = cache_iter(query);
-    ecs_cached_table_node_t *table_data;
+    ecs_vector_t *vec = query->cache.tables;
+    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
+    int32_t i, count = ecs_vector_count(vec);
 
-    while ((table_data = cache_next(&it))) {
-        ecs_table_t *table = table_data->table;
+    for (i = 0; i < count; i ++) {
+        ecs_query_table_t *qt = &tables[i];
+        ecs_table_t *table = qt->hdr.table;
 
-        if (!table_data->monitor) {
+        if (!qt->monitor) {
             /* If one table doesn't have a monitor, none of the tables will have
              * a monitor, so early out. */
             return;
@@ -25963,7 +26235,7 @@ void tables_reset_dirty(
         int32_t *dirty_state = flecs_table_get_dirty_state(table);
         int32_t t, type_count = table->column_count;
         for (t = 0; t < type_count + 1; t ++) {
-            table_data->monitor[t] = dirty_state[t];
+            qt->monitor[t] = dirty_state[t];
         }
     }
 }
@@ -25980,27 +26252,29 @@ void sort_tables(
     
     ecs_entity_t order_by_component = query->order_by_component;
 
-    /* Iterate over active tables. Don't bother with inactive tables, since
-     * they're empty */
-    bool tables_sorted = false;
-    cache_iter_t it = cache_iter(query);
-    ecs_cached_table_node_t *table_data;
+    /* Iterate over non-empty tables. Don't bother with empty tables as they
+     * have nothing to sort */
 
-    while ((table_data = cache_next(&it))) {
-        ecs_table_t *table = table_data->table;
+    bool tables_sorted = false;
+    ecs_vector_t *vec = query->cache.tables;
+    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
+    int32_t i, count = ecs_vector_count(vec);
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_table_t *qt = &tables[i];
+        ecs_table_t *table = qt->hdr.table;
 
         /* If no monitor had been created for the table yet, create it now */
         bool is_dirty = false;
-        if (!table_data->monitor) {
-            table_data->monitor = flecs_table_get_monitor(table);
+        if (!qt->monitor) {
+            qt->monitor = flecs_table_get_monitor(table);
 
             /* A new table is always dirty */
             is_dirty = true;
         }
 
         int32_t *dirty_state = flecs_table_get_dirty_state(table);
-
-        is_dirty = is_dirty || (dirty_state[0] != table_data->monitor[0]);
+        is_dirty = is_dirty || (dirty_state[0] != qt->monitor[0]);
 
         int32_t index = -1;
         if (order_by_component) {
@@ -26008,8 +26282,9 @@ void sort_tables(
             * sorting on has changed or if entities have been added / re(moved) */
             index = ecs_type_index_of(table->type, 0, order_by_component);
             if (index != -1) {
-                ecs_assert(index < ecs_vector_count(table->type), ECS_INTERNAL_ERROR, NULL); 
-                is_dirty = is_dirty || (dirty_state[index + 1] != table_data->monitor[index + 1]);
+                ecs_assert(index < ecs_vector_count(table->type), 
+                    ECS_INTERNAL_ERROR, NULL); 
+                is_dirty = is_dirty || (dirty_state[index + 1] != qt->monitor[index + 1]);
             } else {
                 /* Table does not contain component which means the sorted
                  * component is shared. Table does not need to be sorted */
@@ -26212,15 +26487,38 @@ bool match_table(
 /** Table activation happens when a table was or becomes empty. Deactivated
  * tables are not considered by the system in the main loop. */
 static
-void activate_table(
+void update_table(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_table_t *table,
-    bool active)
+    bool empty)
 {
     int32_t prev_count = ecs_query_table_count(query);
-    ecs_table_cache_set_empty(&query->cache, table, !active);
+    ecs_table_cache_set_empty(&query->cache, table, empty);
     int32_t cur_count = ecs_query_table_count(query);
+
+    /* If a table becomes empty it needs to be removed from the list of tables
+     * to iterate, and vice versa. */
+    if (prev_count != cur_count) {
+        ecs_query_table_t *qt = ecs_table_cache_get(
+            &query->cache, ecs_query_table_t, table);
+        ecs_assert(qt != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_query_table_match_t *cur, *next;
+
+        for (cur = qt->first; cur != NULL; cur = next) {
+            next = cur->next_match;
+
+            if (empty) {
+                ecs_assert(ecs_table_count(table) == 0, 
+                    ECS_INTERNAL_ERROR, NULL);
+                remove_node(query, &cur->node);
+            } else {
+                ecs_assert(ecs_table_count(table) != 0, 
+                    ECS_INTERNAL_ERROR, NULL);
+                insert_node(query, &cur->node);
+            }
+        }
+    }
 
     if (query->system) {
         if (!prev_count && cur_count) {
@@ -26247,20 +26545,19 @@ void add_subquery(
     ecs_query_t **elem = ecs_vector_add(&parent->subqueries, ecs_query_t*);
     *elem = subquery;
 
-    cache_iter_t it = cache_iter(parent);
-    ecs_cached_table_node_t *table_data;
-    
-    /* Iterate matched tables, match them with subquery */
-    while ((table_data = cache_next(&it))) {
-        ecs_table_t *table = table_data->table;
-        match_table(world, subquery, table);
-        activate_table(world, subquery, table, true);
+    ecs_table_cache_t *cache = &parent->cache;
+    ecs_vector_t *tables = cache->tables, *empty = cache->empty_tables;
+
+    ecs_query_table_t *elems = ecs_vector_first(tables, ecs_query_table_t);
+    int32_t i, count = ecs_vector_count(tables);
+    for (i = 0; i < count; i ++) {
+        match_table(world, subquery, elems[i].hdr.table);
     }
 
-    it = cache_iter(parent);
-    while ((table_data = cache_empty_next(&it))) {
-        ecs_table_t *table = table_data->table;
-        match_table(world, subquery, table);
+    elems = ecs_vector_first(empty, ecs_query_table_t);
+    count = ecs_vector_count(empty);
+    for (i = 0; i < count; i ++) {
+        match_table(world, subquery, elems[i].hdr.table);
     }
 }
 
@@ -26290,7 +26587,7 @@ void resolve_cascade_subject_for_table(
     ecs_query_t *query,
     const ecs_table_t *table,
     ecs_type_t table_type,
-    ecs_cached_table_node_t *table_data)
+    ecs_query_table_match_t *table_data)
 {
     int32_t term_index = query->cascade_by - 1;
     ecs_term_t *term = &query->filter.terms[term_index];
@@ -26328,43 +26625,48 @@ static
 void resolve_cascade_subject(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_cached_table_t *elem,
+    ecs_query_table_t *elem,
     const ecs_table_t *table,
     ecs_type_t table_type)
 {
-    int32_t i, count = ecs_vector_count(elem->tables);
-    ecs_cached_table_node_t *tables = ecs_vector_first(
-        elem->tables, ecs_cached_table_node_t);
-
-    for (i = 0; i < count; i ++) {
+    ecs_query_table_match_t *cur;
+    for (cur = elem->first; cur != NULL; cur = cur->next_match) {
         resolve_cascade_subject_for_table(
-            world, query, table, table_type, &tables[i]);
+            world, query, table, table_type, cur);
     }
 }
 
 /* Remove table */
 static
 void remove_table(
+    ecs_poly_t *poly,
     void *ptr)
 {
-    ecs_cached_table_t *elem = ptr;
-    int32_t i, count = ecs_vector_count(elem->tables);
-    ecs_cached_table_node_t *tables = ecs_vector_first(
-        elem->tables, ecs_cached_table_node_t);
+    ecs_poly_assert(poly, ecs_query_t);
 
-    for (i = 0; i < count; i ++) {
-        ecs_cached_table_node_t *table_data = &tables[i];
-        ecs_os_free(table_data->columns);
-        ecs_os_free(table_data->ids);
-        ecs_os_free(table_data->subjects);
-        ecs_os_free(table_data->sizes);
-        ecs_os_free(table_data->references);
-        ecs_os_free(table_data->sparse_columns);
-        ecs_os_free(table_data->bitset_columns);
-        ecs_os_free(table_data->monitor);
+    ecs_query_t *query = poly;
+    ecs_query_table_t *elem = ptr;
+    ecs_query_table_match_t *cur, *next;
+
+    for (cur = elem->first; cur != NULL; cur = next) {
+        ecs_os_free(cur->columns);
+        ecs_os_free(cur->ids);
+        ecs_os_free(cur->subjects);
+        ecs_os_free(cur->sizes);
+        ecs_os_free(cur->references);
+        ecs_os_free(cur->sparse_columns);
+        ecs_os_free(cur->bitset_columns);
+
+        remove_node(query, &cur->node);
+
+        next = cur->next_match;
+
+        ecs_os_free(cur);
     }
 
-    ecs_vector_free(elem->tables);
+    ecs_os_free(elem->monitor);
+
+    elem->first = NULL;
 }
 
 static
@@ -26381,8 +26683,8 @@ void rematch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    ecs_cached_table_t *match = ecs_table_cache_get(
-        &query->cache, ecs_cached_table_t, table);
+    ecs_query_table_t *match = ecs_table_cache_get(
+        &query->cache, ecs_query_table_t, table);
 
     if (flecs_query_match(world, table, query)) {
         /* If the table matches, and it is not currently matched, add */
@@ -26465,15 +26767,15 @@ void rematch_tables(
     ecs_query_t *parent_query)
 {
     if (parent_query) {
-        ecs_cached_table_t *tables = ecs_vector_first(
-            parent_query->cache.tables, ecs_cached_table_t);
+        ecs_query_table_t *tables = ecs_vector_first(
+            parent_query->cache.tables, ecs_query_table_t);
         int32_t i, count = ecs_vector_count(parent_query->cache.tables);
         for (i = 0; i < count; i ++) {
             rematch_table(world, query, tables[i].hdr.table);
         }
 
         tables = ecs_vector_first(
-            parent_query->cache.empty_tables, ecs_cached_table_t);
+            parent_query->cache.empty_tables, ecs_query_table_t);
         count = ecs_vector_count(parent_query->cache.empty_tables);
         for (i = 0; i < count; i ++) {
             rematch_table(world, query, tables[i].hdr.table);
@@ -26547,11 +26849,11 @@ void flecs_query_notify(
         break;        
     case EcsQueryTableEmpty:
         /* Table is empty, deactivate */
-        activate_table(world, query, event->table, false);
+        update_table(world, query, event->table, true);
         break;
     case EcsQueryTableNonEmpty:
         /* Table is non-empty, activate */
-        activate_table(world, query, event->table, true);
+        update_table(world, query, event->table, false);
         break;
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
@@ -26595,19 +26897,14 @@ void query_group_by(
     ecs_query_t *query,
     ecs_entity_t sort_component,
     ecs_group_by_action_t group_by)
-{
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+{   
+    /* Cannot change grouping once a query has been created */
+    ecs_assert(query->group_by_id == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(query->group_by == 0, ECS_INVALID_OPERATION, NULL);
 
     query->group_by_id = sort_component;
     query->group_by = group_by;
-
-    // group_tables(world, query);
-
-    // order_grouped_tables(query);
-
-    // build_sorted_tables(query);
+    query->groups = ecs_map_new(ecs_query_table_list_t, 16);
 }
 
 
@@ -26634,7 +26931,25 @@ ecs_query_t* ecs_query_init(
     result->system = desc->system;
     result->prev_match_count = -1;
 
-    ecs_table_cache_init(&result->cache, ecs_cached_table_t*, remove_table);
+    ecs_table_cache_init(
+        &result->cache, ecs_query_table_t, result, remove_table);
+
+    /* Group before matching so we won't have to move tables around later */
+    int32_t cascade_by = result->cascade_by;
+    if (cascade_by) {
+        result->group_by = group_by_cascade;
+        result->group_by_id = result->filter.terms[cascade_by - 1].id;
+        result->group_by_ctx = &result->filter.terms[cascade_by - 1];
+    }
+
+    if (desc->group_by) {
+        /* Can't have a cascade term and group by at the same time, as cascade
+         * uses the group_by mechanism */
+        ecs_assert(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
+        query_group_by(world, result, desc->group_by_id, desc->group_by);
+        result->group_by_ctx = desc->group_by_ctx;
+        result->group_by_ctx_free = desc->group_by_ctx_free;
+    }
 
     if (desc->parent != NULL) {
         result->flags |= EcsQueryIsSubquery;
@@ -26674,28 +26989,12 @@ ecs_query_t* ecs_query_init(
         result->parent = desc->parent;
     }
 
-    result->constraints_satisfied = satisfy_constraints(world, &result->filter);
-
-    int32_t cascade_by = result->cascade_by;
-    if (cascade_by) {
-        result->group_by = group_by_cascade;
-        result->group_by_id = result->filter.terms[cascade_by - 1].id;
-        result->group_by_ctx = &result->filter.terms[cascade_by - 1];
-    }
-
     if (desc->order_by) {
         query_order_by(
             world, result, desc->order_by_component, desc->order_by);
     }
 
-    if (desc->group_by) {
-        /* Can't have a cascade term and group by at the same time, as cascade
-         * uses the group_by mechanism */
-        ecs_assert(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
-        query_group_by(world, result, desc->group_by_id, desc->group_by);
-        result->group_by_ctx = desc->group_by_ctx;
-        result->group_by_ctx_free = desc->group_by_ctx_free;
-    }
+    result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
     ecs_log_pop();
 
@@ -26725,7 +27024,7 @@ void ecs_query_fini(
         .kind = EcsQueryOrphan
     });
 
-    ecs_vector_each(query->cache.empty_tables, ecs_cached_table_t, table, {
+    ecs_vector_each(query->cache.empty_tables, ecs_query_table_t, table, {
         if (!(query->flags & EcsQueryIsSubquery)) {
             flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
                 .kind = EcsTableQueryUnmatch,
@@ -26734,7 +27033,7 @@ void ecs_query_fini(
         }    
     });
 
-    ecs_vector_each(query->cache.tables, ecs_cached_table_t, table, {
+    ecs_vector_each(query->cache.tables, ecs_query_table_t, table, {
         if (!(query->flags & EcsQueryIsSubquery)) {
             flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
                 .kind = EcsTableQueryUnmatch,
@@ -26744,6 +27043,7 @@ void ecs_query_fini(
     });
 
     ecs_table_cache_fini(&query->cache);
+    ecs_map_free(query->groups);
 
     ecs_vector_free(query->subqueries);
     ecs_vector_free(query->table_slices);
@@ -26795,6 +27095,7 @@ ecs_iter_t ecs_query_iter_page(
 
     ecs_query_iter_t it = {
         .query = query,
+        .node = query->list.first,
         .page_iter = {
             .offset = offset,
             .limit = limit,
@@ -26924,7 +27225,7 @@ int ecs_page_iter_next(
 static
 int find_smallest_column(
     ecs_table_t *table,
-    ecs_cached_table_node_t *table_data,
+    ecs_query_table_match_t *table_data,
     ecs_vector_t *sparse_columns)
 {
     flecs_sparse_column_t *sparse_column_array = 
@@ -26970,7 +27271,7 @@ int find_smallest_column(
 static
 int sparse_column_next(
     ecs_table_t *table,
-    ecs_cached_table_node_t *matched_table,
+    ecs_query_table_match_t *matched_table,
     ecs_vector_t *sparse_columns,
     ecs_query_iter_t *iter,
     ecs_page_cursor_t *cur)
@@ -27225,7 +27526,7 @@ done:
 static
 void mark_columns_dirty(
     ecs_query_t *query,
-    ecs_cached_table_node_t *table_data)
+    ecs_query_table_match_t *table_data)
 {
     ecs_table_t *table = table_data->table;
 
@@ -27277,55 +27578,32 @@ bool ecs_query_next(
         goto done;
     }
 
-    ecs_table_slice_t *slice = ecs_vector_first(
-        query->table_slices, ecs_table_slice_t);
+    ecs_query_table_node_t *slice = ecs_vector_first(
+        query->table_slices, ecs_query_table_node_t);
 
     ecs_assert(!slice || query->order_by, ECS_INTERNAL_ERROR, NULL);
     
     ecs_page_cursor_t cur;
-    cache_iter_t cache_it = { 
-        .cache = &query->cache, 
-        .cache_index = iter->cache_index, 
-        .table_index = iter->table_index
-    };
-
-    int32_t table_count = it->table_count;
     int32_t prev_count = it->total_count;
 
-    int i;
-    for (i = iter->cache_index; i < table_count; i ++) {
-        ecs_cached_table_node_t *table_data;
-        if (slice) {
-            table_data = slice[i].table;
-            iter->cache_index ++;
-        } else {
-            table_data = cache_next(&cache_it);
-            if (!table_data) {
-                goto done;
-            }
-            
-            iter->cache_index = cache_it.cache_index;
-            iter->table_index = cache_it.table_index;
-        }
-        
-        ecs_table_t *table = table_data->table;
-        ecs_data_t *data = NULL;
+    ecs_query_table_node_t *node, *next;
+    for (node = iter->node; node != NULL; node = next) {     
+        ecs_query_table_match_t *match = node->match;
+        ecs_table_t *table = match->table;
+
+        next = node->next;
 
         if (table) {
-            ecs_vector_t *bitset_columns = table_data->bitset_columns;
-            ecs_vector_t *sparse_columns = table_data->sparse_columns;
-            data = &table->storage;
-            it->table_columns = data->columns;
-            
-            if (slice) {
-                cur.first = slice[i].start_row;
-                cur.count = slice[i].count;                
-            } else {
-                cur.first = 0;
+            cur.first = node->offset;
+            cur.count = node->count;
+            if (!cur.count) {
                 cur.count = ecs_table_count(table);
             }
 
             if (cur.count) {
+                ecs_vector_t *bitset_columns = match->bitset_columns;
+                ecs_vector_t *sparse_columns = match->sparse_columns;
+
                 if (bitset_columns) {
                     if (bitset_column_next(table, bitset_columns, iter, 
                         &cur) == -1) 
@@ -27333,18 +27611,18 @@ bool ecs_query_next(
                         /* No more enabled components for table */
                         continue; 
                     } else {
-                        iter->cache_index = i;
+                        next = node;
                     }
                 }
 
                 if (sparse_columns) {
-                    if (sparse_column_next(table, table_data,
+                    if (sparse_column_next(table, match,
                         sparse_columns, iter, &cur) == -1)
                     {
                         /* No more elements in sparse column */
                         continue;    
                     } else {
-                        iter->cache_index = i;
+                        next = node;
                     }
                 }
 
@@ -27359,22 +27637,23 @@ bool ecs_query_next(
             }
 
             ecs_entity_t *entity_buffer = ecs_vector_first(
-                data->entities, ecs_entity_t); 
+                table->storage.entities, ecs_entity_t); 
             it->entities = &entity_buffer[cur.first];
             it->offset = cur.first;
             it->count = cur.count;
             it->total_count = cur.count;
         }
 
-        it->table = table_data->table;
+        it->table = match->table;
         if (it->table) {
             it->type = it->table->type;
         }
-        it->ids = table_data->ids;
-        it->columns = table_data->columns;
-        it->subjects = table_data->subjects;
-        it->sizes = table_data->sizes;
-        it->references = table_data->references;
+
+        it->ids = match->ids;
+        it->columns = match->columns;
+        it->subjects = match->subjects;
+        it->sizes = match->sizes;
+        it->references = match->references;
         it->frame_offset += prev_count;
 
         flecs_iter_init(it);
@@ -27383,9 +27662,11 @@ bool ecs_query_next(
 
         if (query->flags & EcsQueryHasOutColumns) {
             if (table) {
-                mark_columns_dirty(query, table_data);
+                mark_columns_dirty(query, match);
             }
         }
+
+        iter->node = next;
 
         goto yield;
     }
@@ -28721,7 +29002,7 @@ void* ecs_iter_column_w_size(
         return NULL;
     }
 
-    ecs_column_t *columns = it->table_columns;
+    ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[column_index];
     ecs_assert(!size || (ecs_size_t)size == column->size, ECS_INVALID_PARAMETER, NULL);
 
@@ -28743,7 +29024,7 @@ size_t ecs_iter_column_size(
         return 0;
     }
 
-    ecs_column_t *columns = it->table_columns;
+    ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[column_index];
     
     return flecs_to_size_t(column->size);

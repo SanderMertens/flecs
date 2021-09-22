@@ -209,10 +209,10 @@ void ecs_get_query_stats(
     int32_t t = s->t = t_next(s->t);
 
     int32_t i, entity_count = 0, count = ecs_query_table_count(query);
-    ecs_cached_table_node_t *matched_tables = ecs_vector_first(
-        query->cache.tables, ecs_cached_table_node_t);
+    ecs_query_table_match_t *matched_tables = ecs_vector_first(
+        query->cache.tables, ecs_query_table_match_t);
     for (i = 0; i < count; i ++) {
-        ecs_cached_table_node_t *matched = &matched_tables[i];
+        ecs_query_table_match_t *matched = &matched_tables[i];
         if (matched->table) {
             entity_count += ecs_table_count(matched->table);
         }

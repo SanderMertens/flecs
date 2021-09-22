@@ -1110,7 +1110,6 @@ void populate_from_table(
     it->count = ecs_table_count(table);
 
     const ecs_data_t *data = &table->storage;
-    it->table_columns = data->columns;
     it->entities = ecs_vector_first(data->entities, ecs_entity_t);
 }
 
@@ -1454,7 +1453,6 @@ bool ecs_term_next(
     it->sizes = &iter->size;
     it->ptrs = &iter->ptr;
 
-    it->table_columns = &table->storage.columns;
     it->count = ecs_table_count(table);
     it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
     it->is_valid = true;

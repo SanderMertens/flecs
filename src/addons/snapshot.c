@@ -316,7 +316,6 @@ bool ecs_snapshot_next(
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
         it->table = table;
-        it->table_columns = data->columns;
         it->count = flecs_table_data_count(data);
         it->entities = ecs_vector_first(data->entities, ecs_entity_t);
         it->is_valid = true;

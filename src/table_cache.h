@@ -13,10 +13,11 @@ extern "C" {
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
     ecs_size_t size,
-    void(*free_payload)(void*));
+    ecs_poly_t *parent,
+    void(*free_payload)(ecs_poly_t *parent, void*));
 
-#define ecs_table_cache_init(cache, T, free_payload)\
-    _ecs_table_cache_init(cache, ECS_SIZEOF(T), free_payload)
+#define ecs_table_cache_init(cache, T, parent, free_payload)\
+    _ecs_table_cache_init(cache, ECS_SIZEOF(T), parent, free_payload)
 
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
