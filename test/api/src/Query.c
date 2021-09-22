@@ -348,7 +348,6 @@ void Query_subquery_inactive() {
     table_count = 0, entity_count = 0;
     it = ecs_query_iter(world, sq);
     test_int(it.table_count, 0);
-    test_int(it.inactive_table_count, 1);
 
     table_count = 0, entity_count = 0;
     it = ecs_query_iter(world, sq);

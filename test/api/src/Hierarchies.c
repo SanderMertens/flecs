@@ -1081,7 +1081,6 @@ void Hierarchies_delete_tree_count_tables() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
-    test_int(it.inactive_table_count, 0);
 
     ecs_delete(world, parent);
     
@@ -1091,7 +1090,6 @@ void Hierarchies_delete_tree_count_tables() {
 
     it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
-    test_int(it.inactive_table_count, 1); /* Parent table is still there */
 
     ecs_fini(world);
 }
@@ -1115,7 +1113,6 @@ void Hierarchies_delete_tree_staged() {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_int(it.table_count, 3);
-    test_int(it.inactive_table_count, 0);
 
     ecs_defer_begin(world);
     ecs_delete(world, parent);
@@ -1127,7 +1124,6 @@ void Hierarchies_delete_tree_staged() {
 
     it = ecs_query_iter(world, q);
     test_int(it.table_count, 0);
-    test_int(it.inactive_table_count, 1); /* Parent table is still there */
 
     ecs_fini(world);
 }

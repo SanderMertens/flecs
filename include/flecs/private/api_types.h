@@ -48,6 +48,9 @@ typedef struct ecs_id_record_t ecs_id_record_t;
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
+/* Cached query table data */
+typedef struct ecs_cached_table_node_t ecs_cached_table_node_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +138,7 @@ typedef struct ecs_filter_iter_t {
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
     ecs_page_iter_t page_iter;
-    int32_t index;
+    ecs_cached_table_node_t *node;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
@@ -285,7 +288,6 @@ struct ecs_iter_t {
 
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
-    int32_t inactive_table_count; /* Inactive table count for query */
     int32_t term_count;           /* Number of terms in query */
     int32_t term_index;           /* Index of term that triggered an event.
                                    * This field will be set to the 'index' field

@@ -660,7 +660,7 @@ void ecs_deactivate_systems(
         for (i = 0; i < it.count; i ++) {
             ecs_query_t *query = sys[i].query;
             if (query) {
-                if (!ecs_vector_count(query->tables)) {
+                if (!ecs_query_table_count(query)) {
                     ecs_add_id(world, it.entities[i], EcsInactive);
                 }
             }

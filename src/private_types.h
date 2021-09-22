@@ -230,7 +230,8 @@ typedef struct ecs_table_cache_t {
     ecs_map_t *index; /* <table_id, index> */
     ecs_vector_t *tables;
     ecs_vector_t *empty_tables;
-    ecs_size_t payload_size;
+    ecs_size_t size;
+    void(*free_payload)(void*);
 } ecs_table_cache_t;
 
 /** Must appear as first member in payload of table cache */
@@ -252,7 +253,7 @@ typedef struct flecs_bitset_column_t {
 } flecs_bitset_column_t;
 
 /** Type containing data for a table matched with a query. */
-typedef struct ecs_matched_table_t {
+struct ecs_cached_table_node_t {
     int32_t *columns;         /* Mapping from query terms to table columns */
     ecs_table_t *table;       /* The current table. */
     ecs_data_t *data;         /* Table component data */
@@ -264,33 +265,21 @@ typedef struct ecs_matched_table_t {
     ecs_vector_t *sparse_columns;  /* Column ids of sparse columns */
     ecs_vector_t *bitset_columns;  /* Column ids with disabled flags */
     int32_t *monitor;              /* Used to monitor table for changes */
-    int32_t rank;                  /* Rank used to sort tables */
-} ecs_matched_table_t;
+    int32_t group_id;              /* Number used to group tables */
+
+    /* List that stores tables in iteration order */
+    struct ecs_cached_table_node_t *next, *prev;
+
+    /* Next record in cache for same table */
+    struct ecs_cached_table_node_t *next_for_table;
+};
 
 /** A single table can occur multiple times in the cache when a term matches
  * multiple table columns. */
-typedef struct ecs_matched_tables_t {
+typedef struct ecs_cached_table_t {
     ecs_table_cache_hdr_t hdr;
-    ecs_vector_t *tables; /* vector<matched_table_t> */
-} ecs_matched_tables_t;
-
-/** Type used to track location of table in queries' table lists.
- * When a table becomes empty or non-empty a signal is sent to a query, which
- * moves the table to or from an empty list. While this ensures that when 
- * iterating no time is spent on iterating over empty tables, doing a linear
- * search for the table in either list can take a significant amount of time if
- * a query is matched with many tables.
- *
- * To avoid a linear search, the query has a map with table indices that can
- * return the location of the table in either list in constant time.
- *
- * If a table is matched multiple times by a query, such as can happen when a
- * query matches pairs, a table can occupy multiple indices.
- */
-typedef struct ecs_table_indices_t {
-    int32_t *indices; /* If indices are negative, table is in empty list */
-    int32_t count;
-} ecs_table_indices_t;
+    ecs_cached_table_node_t *first;
+} ecs_cached_table_t;
 
 /** Type storing an entity range within a table.
  * This type is used for iterating in orer across archetypes. A sorting function
@@ -298,7 +287,7 @@ typedef struct ecs_table_indices_t {
  * when the query iterates over the archetypes, it only needs to iterate the
  * list of ranges. */
 typedef struct ecs_table_slice_t {
-    ecs_matched_table_t *table;      /* Reference to the matched table */
+    ecs_cached_table_node_t *table;      /* Reference to the matched table */
     int32_t start_row;               /* Start of range  */
     int32_t count;                   /* Number of entities in range */
 } ecs_table_slice_t;
@@ -342,9 +331,8 @@ struct ecs_query_t {
     /* Tables matched with query */
     ecs_table_cache_t cache;
 
-    ecs_vector_t *tables;
-    ecs_vector_t *empty_tables;
-    ecs_map_t *table_indices;
+    /* Head & tail of matched tables list */
+    ecs_cached_table_node_t *first, *last;
 
     /* Handle to system (optional) */
     ecs_entity_t system;   
