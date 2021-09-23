@@ -22408,8 +22408,6 @@ int finalize_term_id(
     ecs_entity_t obj = entity_from_identifier(&term->args[1]);
     ecs_id_t role = term->role;
 
-    // printf("finalize term id (%d, %d) role = %d\n", pred, obj, role);
-
     if (ECS_HAS_ROLE(pred, PAIR)) {
         if (obj) {
             term_error(world, term, name, 
@@ -25008,7 +25006,7 @@ ecs_query_table_list_t* ensure_node_list(
 
 /* Remove node from list */
 static
-void remove_node(
+void remove_table_node(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
@@ -25104,7 +25102,7 @@ void remove_node(
 
 /* Add node to list */
 static
-void insert_node(
+void insert_table_node(
     ecs_query_t *query,
     ecs_query_table_node_t *node)
 {
@@ -25807,7 +25805,7 @@ add_pair:
     /* Insert match to iteration list if table is not empty */
     if (!table || ecs_table_count(table) != 0) {
         ecs_assert(table == qt->hdr.table, ECS_INTERNAL_ERROR, NULL);
-        insert_node(query, &table_data->node);
+        insert_table_node(query, &table_data->node);
     }
 
     /* Use tail recursion when adding table for multiple pairs */
@@ -26579,11 +26577,11 @@ void update_table(
                 ecs_assert(ecs_table_count(table) == 0, 
                     ECS_INTERNAL_ERROR, NULL);
 
-                remove_node(query, &cur->node);
+                remove_table_node(query, &cur->node);
             } else {
                 ecs_assert(ecs_table_count(table) != 0, 
                     ECS_INTERNAL_ERROR, NULL);
-                insert_node(query, &cur->node);
+                insert_table_node(query, &cur->node);
             }
         }
     }
@@ -26679,8 +26677,8 @@ void resolve_cascade_subject_for_table(
     if (ecs_table_count(table)) {
         /* The subject (or depth of the subject) may have changed, so reinsert
          * the node to make sure it's in the right group */
-        remove_node(query, &table_data->node);
-        insert_node(query, &table_data->node);
+        remove_table_node(query, &table_data->node);
+        insert_table_node(query, &table_data->node);
     }
 }
 
@@ -26721,7 +26719,7 @@ void remove_table(
         ecs_os_free(cur->bitset_columns);
 
         if (!elem->hdr.empty) {
-            remove_node(query, &cur->node);
+            remove_table_node(query, &cur->node);
         }
 
         next = cur->next_match;
