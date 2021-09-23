@@ -160,13 +160,13 @@ void Pairs_type_w_two_pairs() {
     ecs_entity_t hi = ECS_PAIR_RELATION(c);
     ecs_entity_t lo = ECS_PAIR_OBJECT(c);
     test_int(hi, ecs_id(Rel));
-    test_int(lo, ecs_id(Velocity));
+    test_int(lo, ecs_id(Position));
 
     c = ctx.c[1][0];
     hi = ECS_PAIR_RELATION(c);
     lo = ECS_PAIR_OBJECT(c);
     test_int(hi, ecs_id(Rel));
-    test_int(lo, ecs_id(Position));
+    test_int(lo, ecs_id(Velocity));
 
     test_int(ctx.s[0][0], 0);
     test_int(ctx.s[1][0], 0);

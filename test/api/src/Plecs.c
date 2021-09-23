@@ -1544,4 +1544,6 @@ void Plecs_with_inside_scope() {
     test_assert( !ecs_has_pair(world, continent, EcsChildOf, earth));
     test_assert( !ecs_has_id(world, europe, earth));
     test_assert( !ecs_has_id(world, continent, earth));
+
+    ecs_fini(world);
 }

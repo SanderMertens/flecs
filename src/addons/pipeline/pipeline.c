@@ -25,7 +25,7 @@ int compare_entity(
 }
 
 static
-int group_by_phase(
+uint64_t group_by_phase(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_entity_t pipeline,
@@ -61,7 +61,7 @@ int group_by_phase(
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result < INT_MAX, ECS_INTERNAL_ERROR, NULL);
 
-    return (int)result;
+    return result;
 }
 
 typedef enum ComponentWriteState {

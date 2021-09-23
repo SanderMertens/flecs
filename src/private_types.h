@@ -238,6 +238,7 @@ typedef struct ecs_table_cache_t {
 /** Must appear as first member in payload of table cache */
 typedef struct ecs_table_cache_hdr_t {
     ecs_table_t *table;
+    bool empty;
 } ecs_table_cache_hdr_t;
 
 /* Sparse query column */
@@ -259,12 +260,12 @@ typedef struct ecs_query_table_match_t ecs_query_table_match_t;
  * The list of nodes dictates the order in which tables should be iterated by a
  * query. A single node may refer to the table multiple times with different
  * offset/count parameters, which enables features such as sorting. */
-typedef struct ecs_query_table_node_t {
+struct ecs_query_table_node_t {
     ecs_query_table_match_t *match;  /* Reference to the match */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
     ecs_query_table_node_t *next, *prev;
-} ecs_query_table_node_t;
+};
 
 /** Type containing data for a table matched with a query. 
  * A single table can have multiple matches, if the query contains wildcards. */
@@ -292,6 +293,7 @@ struct ecs_query_table_match_t {
 typedef struct ecs_query_table_t {
     ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_table_match_t *first;  /* List with matches for table */
+    ecs_query_table_match_t *last;   /* Last discovered match for table */
     int32_t *monitor;                /* Used to monitor table for changes */
 } ecs_query_table_t;
 
@@ -299,6 +301,7 @@ typedef struct ecs_query_table_t {
 typedef struct ecs_query_table_list_t {
     ecs_query_table_node_t *first;
     ecs_query_table_node_t *last;
+    int32_t count;
 } ecs_query_table_list_t;
 
 #define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
@@ -372,7 +375,6 @@ struct ecs_query_t {
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
 
-    bool needs_reorder;         /* Whether next iteration should reorder */
     bool constraints_satisfied; /* Are all term constraints satisfied */
 };
 

@@ -137,6 +137,7 @@ void* _ecs_vector_add(
     ecs_size_t elem_size,
     int16_t offset)
 {
+    ecs_assert(array_inout != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_vector_t *vector = *array_inout;
     int32_t count, size;
 
