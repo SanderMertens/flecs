@@ -1286,7 +1286,7 @@ void Query_get_filter() {
 }
 
 static
-int32_t group_by_first_id(
+uint64_t group_by_first_id(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_id_t id,

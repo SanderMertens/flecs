@@ -24,30 +24,30 @@ void ecs_table_cache_fini(
 
 void* _ecs_table_cache_insert(
     ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    ecs_size_t size);
+    ecs_size_t size,
+    const ecs_table_t *table);
 
-#define ecs_table_cache_insert(cache, table, T)\
-    ECS_CAST(T*, _ecs_table_cache_insert(cache, table, ECS_SIZEOF(T)))
+#define ecs_table_cache_insert(cache, T, table)\
+    ECS_CAST(T*, _ecs_table_cache_insert(cache, ECS_SIZEOF(T), table))
 
 void _ecs_table_cache_remove(
     ecs_table_cache_t *cache,
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 #define ecs_table_cache_remove(cache, table)\
     _ecs_table_cache_remove(cache, table)
 
 void* _ecs_table_cache_get(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_size_t size,
-    ecs_table_t *table);
+    const ecs_table_t *table);
 
 #define ecs_table_cache_get(cache, T, table)\
     ECS_CAST(T*, _ecs_table_cache_get(cache, ECS_SIZEOF(T), table))
 
 void _ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     bool empty);
 
 #define ecs_table_cache_set_empty(cache, table, empty)\

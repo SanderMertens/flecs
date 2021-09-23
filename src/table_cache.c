@@ -4,7 +4,7 @@
 static
 int32_t move_table(
     ecs_table_cache_t *cache,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     int32_t index,
     ecs_vector_t **dst_array,
     ecs_vector_t *src_array,
@@ -26,7 +26,7 @@ int32_t move_table(
             int32_t, elem->table->id);
         ecs_assert(old_index_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        int32_t old_index = old_index_ptr[0];
+        old_index = old_index_ptr[0];
         if (!empty) {
             if (old_index >= 0) {
                 /* old_index should be negative if not empty, since
@@ -34,7 +34,6 @@ int32_t move_table(
                  * However, if the last table in the source array is also
                  * the table being moved, this can happen. */
                 ecs_assert(table == elem->table, ECS_INTERNAL_ERROR, NULL);
-                // continue
             } else {
                 /* If not empty, src = the empty list, and index should
                  * be negative. */
@@ -50,15 +49,15 @@ int32_t move_table(
          * src array, so no other administration needs to be updated. */
     }
 
+    if (!empty) {
+        old_index = index * -1 - 1;
+    } else {
+        old_index = index;
+    }
+
     /* Actually move the table. Only move from src to dst if we have a
      * dst_array, otherwise just remove it from src. */
     if (dst_array) {
-        if (!empty) {
-            old_index = index * -1 - 1;
-        } else {
-            old_index = index;
-        }
-
         new_index = ecs_vector_count(*dst_array);
         ecs_vector_move_index_t(dst_array, src_array, size, 8, old_index);
 
@@ -66,7 +65,8 @@ int32_t move_table(
         elem = ecs_vector_last_t(*dst_array, size, 8);
         ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(ecs_vector_count(*dst_array) == (new_index + 1), 
-            ECS_INTERNAL_ERROR, NULL);  
+            ECS_INTERNAL_ERROR, NULL);
+        elem->empty = empty;
     } else {
         ecs_vector_remove_t(src_array, size, 8, old_index);
     }
@@ -89,6 +89,7 @@ void _ecs_table_cache_init(
     ecs_poly_t *parent,
     void(*free_payload)(ecs_poly_t*, void*))
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
         ECS_INTERNAL_ERROR, NULL);
     cache->index = ecs_map_new(int32_t, 0);
@@ -104,14 +105,15 @@ void free_payload(
     ecs_table_cache_t *cache,
     ecs_vector_t *tables)
 {
-    void(*free_payload)(ecs_poly_t*, void*) = cache->free_payload;
-    if (free_payload) {
+    void(*free_payload_func)(ecs_poly_t*, void*) = cache->free_payload;
+    if (free_payload_func) {
         ecs_poly_t *parent = cache->parent;
         ecs_size_t size = cache->size;
         int32_t i, count = ecs_vector_count(tables);
+
         for (i = 0; i < count; i ++) {
             void *ptr = ecs_vector_get_t(tables, size, 8, i);
-            free_payload(parent, ptr);
+            free_payload_func(parent, ptr);
         }
     }
 
@@ -121,6 +123,7 @@ void free_payload(
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache)
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_free(cache->index);
     free_payload(cache, cache->tables);
     free_payload(cache, cache->empty_tables);
@@ -128,10 +131,14 @@ void ecs_table_cache_fini(
 
 void* _ecs_table_cache_insert(
     ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    ecs_size_t size)
+    ecs_size_t size,
+    const ecs_table_t *table)
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(!table || (_ecs_table_cache_get(cache, size, table) == NULL), 
+        ECS_INTERNAL_ERROR, NULL);
 
     int32_t index;
     ecs_table_cache_hdr_t *result;
@@ -157,14 +164,18 @@ void* _ecs_table_cache_insert(
     
     ecs_os_memset(result, 0, size);
     result->table = (ecs_table_t*)table;
+    result->empty = empty;
 
     return result;
 }
 
 void _ecs_table_cache_remove(
     ecs_table_cache_t *cache,
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
         return;
@@ -182,13 +193,17 @@ void _ecs_table_cache_remove(
     } else {
         move_table(cache, table, index[0], NULL, cache->tables, true);
     }
+
+    ecs_map_remove(cache->index, table->id);
 }
 
 void* _ecs_table_cache_get(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_size_t size,
-    ecs_table_t *table)
+    const ecs_table_t *table)
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
 
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
@@ -204,16 +219,19 @@ void* _ecs_table_cache_get(
             cache->empty_tables, size, 8, index[0] * -1 - 1);
     }
 
-    ecs_assert(result->table == table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!result || result->table == table, ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
 
 void _ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
-    ecs_table_t *table,
+    const ecs_table_t *table,
     bool empty)
 {
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
         return;

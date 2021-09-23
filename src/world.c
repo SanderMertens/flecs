@@ -1232,8 +1232,13 @@ void flecs_notify_queries(
 
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
-        flecs_query_notify(world, 
-            flecs_sparse_get_dense(world->queries, ecs_query_t, i), event);
+        ecs_query_t *query = flecs_sparse_get_dense(
+            world->queries, ecs_query_t, i);
+        if (query->flags & EcsQueryIsSubquery) {
+            continue;
+        }
+        
+        flecs_query_notify(world, query, event);
     }    
 }
 

@@ -148,7 +148,7 @@ typedef int (*ecs_order_by_action_t)(
     const void *ptr2);
 
 /** Callback used for ranking types */
-typedef int32_t (*ecs_group_by_action_t)(
+typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
     ecs_type_t type,
     ecs_id_t id,

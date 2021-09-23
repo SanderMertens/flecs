@@ -43,6 +43,7 @@ flecs_src = files(
     'src/poly.c',
     'src/query.c',
     'src/stage.c',
+    'src/table_cache.c',
     'src/table_graph.c',
     'src/table.c',
     'src/trigger.c',
