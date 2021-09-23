@@ -9,19 +9,19 @@
 Flecs is a fast and lightweight Entity Component System with a focus on high performance game development and usability ([join the Discord!](https://discord.gg/MRSAZqb)). The highlights of the framework are:
 
 - Zero dependency C99 core, modern type safe C++11 API, no dependencies on STL types
-- Batched iteration with direct access to component arrays
-- SoA/Archetype storage for efficient CPU caching & vectorization
-- Automatic component registration across binaries
-- Runtime tags
-- Hierarchies
-- Prefabs
-- Relationships graphs & graph queries
-- Thread safe, lockless API
-- Systems that are ran manually, every frame or at a time/rate interval
-- Queries that can be iterated from free functions
-- Modules for organizing components & systems
-- Builtin statistics & introspection
-- Modular core with compile-time disabling of optional features
+- SoA/Archetype storage enables efficient CPU caching/vectorization & direct access to component arrays
+- Automatic component registration across binaries and worlds
+- Runtime creation/deletion of components, tags, queries and systems (enables hot reloading)
+- Entity relationships (`Bob.add(Likes, Alice)`) enable creation of entity graphs (no pointer chasing!)
+- Fast query engine that supports graph traversal, joins & various operators (and, not, or, optional)
+- Entity hierarchies (`Earth.child_of(Sun)`)
+- Component sharing through prefab-style inheritance (`Freighter.is_a(SpaceShip)`)
+- Transitive relationships ("if Bob lives in San Francisco and San Francisco is in the US, Bob lives in the US")
+- Lockless command buffer implementation enables asynchronous deferring of operations
+- Observe events for all entities matching a query
+- Untyped plain C APIs for easy bindings with scripting languages & serialization
+- Organize components & systems in reusable packages with flecs modules
+- Ordered access ("sort by Position") and grouped access ("group by platoon")
 - A dashboard module for visualizing statistics:
 
 <img width="942" alt="Screen Shot 2020-12-02 at 1 28 04 AM" src="https://user-images.githubusercontent.com/9919222/100856510-5eebe000-3440-11eb-908e-f4844c335f37.png">
