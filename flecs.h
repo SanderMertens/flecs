@@ -14826,7 +14826,6 @@ public:
 
         ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
 
-        printf("filter = %s\n", ecs_filter_str(m_world, f.c_ptr()));
         m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
     }    
 
