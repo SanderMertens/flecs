@@ -1706,8 +1706,7 @@ bool match_table(
     return false;
 }
 
-/** Table activation happens when a table was or becomes empty. Deactivated
- * tables are not considered by the system in the main loop. */
+/** When a table becomes empty remove it from the query list, or vice versa. */
 static
 void update_table(
     ecs_query_t *query,
@@ -1718,8 +1717,6 @@ void update_table(
     ecs_table_cache_set_empty(&query->cache, table, empty);
     int32_t cur_count = ecs_query_table_count(query);
 
-    /* If a table becomes empty it needs to be removed from the list of tables
-     * to iterate, and vice versa. */
     if (prev_count != cur_count) {
         ecs_query_table_t *qt = ecs_table_cache_get(
             &query->cache, ecs_query_table_t, table);

@@ -947,6 +947,10 @@ void Filter_term_iter_tag(void);
 void Filter_term_iter_pair(void);
 void Filter_term_iter_pair_w_rel_wildcard(void);
 void Filter_term_iter_pair_w_obj_wildcard(void);
+void Filter_term_iter_pair_w_rel_wildcard_n_matches(void);
+void Filter_term_iter_pair_w_rel_wildcard_n_matches_w_data(void);
+void Filter_term_iter_pair_w_obj_wildcard_n_matches(void);
+void Filter_term_iter_pair_w_obj_wildcard_n_matches_w_data(void);
 void Filter_term_iter_w_superset(void);
 void Filter_term_iter_w_superset_childof(void);
 void Filter_term_iter_w_superset_self(void);
@@ -956,6 +960,7 @@ void Filter_term_iter_w_superset_pair(void);
 void Filter_term_iter_w_superset_pair_obj_wildcard(void);
 void Filter_term_iter_in_stage(void);
 void Filter_term_iter_w_readonly_term(void);
+void Filter_term_iter_type_set(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
@@ -977,7 +982,6 @@ void Filter_filter_iter_10_components(void);
 void Filter_filter_iter_20_components(void);
 void Filter_filter_iter_superset(void);
 void Filter_filter_iter_superset_childof(void);
-void Filter_term_iter_type_set(void);
 void Filter_filter_iter_type_set(void);
 void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
@@ -5634,6 +5638,22 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_pair_w_obj_wildcard
     },
     {
+        "term_iter_pair_w_rel_wildcard_n_matches",
+        Filter_term_iter_pair_w_rel_wildcard_n_matches
+    },
+    {
+        "term_iter_pair_w_rel_wildcard_n_matches_w_data",
+        Filter_term_iter_pair_w_rel_wildcard_n_matches_w_data
+    },
+    {
+        "term_iter_pair_w_obj_wildcard_n_matches",
+        Filter_term_iter_pair_w_obj_wildcard_n_matches
+    },
+    {
+        "term_iter_pair_w_obj_wildcard_n_matches_w_data",
+        Filter_term_iter_pair_w_obj_wildcard_n_matches_w_data
+    },
+    {
         "term_iter_w_superset",
         Filter_term_iter_w_superset
     },
@@ -5668,6 +5688,10 @@ bake_test_case Filter_testcases[] = {
     {
         "term_iter_w_readonly_term",
         Filter_term_iter_w_readonly_term
+    },
+    {
+        "term_iter_type_set",
+        Filter_term_iter_type_set
     },
     {
         "filter_iter_1_tag",
@@ -5752,10 +5776,6 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_superset_childof",
         Filter_filter_iter_superset_childof
-    },
-    {
-        "term_iter_type_set",
-        Filter_term_iter_type_set
     },
     {
         "filter_iter_type_set",
@@ -10004,7 +10024,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        78,
+        82,
         Filter_testcases
     },
     {

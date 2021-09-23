@@ -2501,12 +2501,17 @@ typedef struct ecs_page_iter_t {
 
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
-    ecs_term_t *term;
+    ecs_term_t term;
     ecs_id_record_t *self_index;
     ecs_id_record_t *set_index;
     
     ecs_map_iter_t iter;
     bool iter_set;
+    
+    ecs_table_t *table;
+    int32_t cur_match;
+    int32_t match_count;
+    int32_t last_column;
 
     /* Storage */
     ecs_id_t id;
