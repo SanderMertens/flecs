@@ -1148,7 +1148,7 @@ bool flecs_term_match_table(
     ecs_entity_t source;
 
     int32_t column = 0;
-    if (!first && column_out[0] != 0) {
+    if (!first && column_out && column_out[0] != 0) {
         column = column_out[0] - 1;
     }
 

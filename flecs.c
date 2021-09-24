@@ -23293,7 +23293,7 @@ bool flecs_term_match_table(
     ecs_entity_t source;
 
     int32_t column = 0;
-    if (!first && column_out[0] != 0) {
+    if (!first && column_out && column_out[0] != 0) {
         column = column_out[0] - 1;
     }
 
@@ -23419,6 +23419,8 @@ bool flecs_filter_match_table(
             return false;
         }
 
+        /* Match indices is populated with the number of matches for this term.
+         * This is used to determine whether to keep iterating this table. */
         if (first && match_indices && match_indices[t_i]) {
             match_indices[t_i] --;
             match_count += match_indices[t_i];
@@ -23816,19 +23818,20 @@ bool ecs_filter_next(
         int32_t term_index = term->index;
 
         do {
-            bool first_match = true;
-
             ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
+            bool first_match = iter->matches_left == 0;
 
-            if (!iter->matches_left) {
+            if (first_match) {
+                /* Find new match, starting with the leading term */
                 ecs_entity_t source;
-                ecs_table_record_t tr = term_iter_next(world, term_iter, &source, 
-                    filter->match_prefab, filter->match_disabled);
+                ecs_table_record_t tr = term_iter_next(world, term_iter, 
+                    &source, filter->match_prefab, filter->match_disabled);
                 table = tr.table;
                 if (!table) {
                     goto done;
                 }
 
+                /* Populate term data as flecs_filter_match_table skips it */
                 populate_from_column(world, table, 0, term->id, tr.column, source, 
                     &it->ids[term_index], 
                     &it->subjects[term_index],
@@ -23837,10 +23840,10 @@ bool ecs_filter_next(
 
                 it->columns[term_index] = tr.column + 1;
             } else {
+                /* Progress iterator to next match for table, if any */
                 table = it->table;
                 first_match = false;
 
-                /* Progress iterator to next match for table, if any */
                 for (i = filter->term_count_actual - 1; i >= 0; i --) {
                     if (it->match_indices[i] > 0) {
                         it->match_indices[i] --;
@@ -23850,14 +23853,16 @@ bool ecs_filter_next(
                 }
             }
 
+            /* Match the remainder of the terms */
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
                 it->ptrs, it->match_indices, &iter->matches_left, 
                 first_match, term->index);
 
+            /* Check if there are any terms which have more matching columns */
             if (!first_match) {
                 iter->matches_left = 0;
-                for (i = filter->term_count_actual - 1; i >= 0; i --) {
+                for (i = 0; i < filter->term_count_actual; i ++) {
                     if (it->match_indices[i] > 0) {
                         iter->matches_left += it->match_indices[i];
                     }
