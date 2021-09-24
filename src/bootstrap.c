@@ -221,14 +221,8 @@ ecs_table_t* bootstrap_component_table(
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
-    data->columns[0].size = ECS_SIZEOF(EcsComponent);
-    data->columns[0].alignment = ECS_ALIGNOF(EcsComponent);
     data->columns[1].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-    data->columns[1].size = ECS_SIZEOF(EcsIdentifier);
-    data->columns[1].alignment = ECS_ALIGNOF(EcsIdentifier);
     data->columns[2].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-    data->columns[2].size = ECS_SIZEOF(EcsIdentifier);
-    data->columns[2].alignment = ECS_ALIGNOF(EcsIdentifier);
 
     result->column_count = 3;
     

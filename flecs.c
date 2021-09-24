@@ -2596,6 +2596,17 @@ void flecs_table_init_data(
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
 
+            /* Bootstrap components */
+            if (e == ecs_id(EcsComponent)) {
+                storage->columns[i].size = ECS_SIZEOF(EcsComponent);
+                storage->columns[i].alignment = ECS_ALIGNOF(EcsComponent);
+                continue;
+            } else if (ECS_PAIR_RELATION(e) == ecs_id(EcsIdentifier)) {
+                storage->columns[i].size = ECS_SIZEOF(EcsIdentifier);
+                storage->columns[i].alignment = ECS_ALIGNOF(EcsIdentifier);
+                continue;
+            }
+
             /* Is the column a component? */
             const EcsComponent *component = flecs_component_from_id(world, e);
             if (component) {
@@ -2782,25 +2793,17 @@ static
 void table_activate(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_query_t *query,
     bool activate)
 {
-    if (query) {
-        flecs_query_notify(world, query, &(ecs_query_event_t) {
+    ecs_vector_t *queries = table->queries;
+    ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
+    int32_t i, count = ecs_vector_count(queries);
+
+    for (i = 0; i < count; i ++) {
+        flecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
             .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
             .table = table
-        });
-    } else {
-        ecs_vector_t *queries = table->queries;
-        ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
-        int32_t i, count = ecs_vector_count(queries);
-
-        for (i = 0; i < count; i ++) {
-            flecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
-                .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
-                .table = table
-            });                
-        }
+        });                
     }     
 }
 
@@ -2824,10 +2827,6 @@ void register_query(
 
     ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
     if (q) *q = query;
-
-    if (ecs_table_count(table)) {
-        table_activate(world, table, query, true);
-    }
 }
 
 /* This function is called when a query is unmatched with a table. This can
@@ -3074,7 +3073,7 @@ void fini_data(
     data->record_ptrs = NULL;
 
     if (deactivate && count) {
-        table_activate(world, table, 0, false);
+        table_activate(world, table, false);
     }
 }
 
@@ -3449,7 +3448,7 @@ int32_t grow_data(
     mark_table_dirty(table, 0);
 
     if (!world->is_readonly && !cur_count) {
-        table_activate(world, table, 0, true);
+        table_activate(world, table, true);
     }
 
     table->alloc_count ++;
@@ -3514,7 +3513,7 @@ int32_t flecs_table_append(
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
     if (!world->is_readonly && !count) {
-        table_activate(world, table, 0, true);
+        table_activate(world, table, true);
     } 
 
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -3663,7 +3662,7 @@ void flecs_table_delete(
 
     /* If table is empty, deactivate it */
     if (!count) {
-        table_activate(world, table, NULL, false);
+        table_activate(world, table, false);
     }
 
     /* Destruct component data */
@@ -4365,7 +4364,7 @@ void flecs_table_merge(
     new_table->alloc_count ++;
 
     if (!new_count && old_count) {
-        table_activate(world, new_table, NULL, true);
+        table_activate(world, new_table, true);
     }
 }
 
@@ -4392,9 +4391,9 @@ void flecs_table_replace_data(
     int32_t count = ecs_table_count(table);
 
     if (!prev_count && count) {
-        table_activate(world, table, 0, true);
+        table_activate(world, table, true);
     } else if (prev_count && !count) {
-        table_activate(world, table, 0, false);
+        table_activate(world, table, false);
     }
 }
 
@@ -30645,14 +30644,8 @@ ecs_table_t* bootstrap_component_table(
     data->record_ptrs = ecs_vector_new(ecs_record_t*, EcsFirstUserComponentId);
 
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
-    data->columns[0].size = ECS_SIZEOF(EcsComponent);
-    data->columns[0].alignment = ECS_ALIGNOF(EcsComponent);
     data->columns[1].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-    data->columns[1].size = ECS_SIZEOF(EcsIdentifier);
-    data->columns[1].alignment = ECS_ALIGNOF(EcsIdentifier);
     data->columns[2].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-    data->columns[2].size = ECS_SIZEOF(EcsIdentifier);
-    data->columns[2].alignment = ECS_ALIGNOF(EcsIdentifier);
 
     result->column_count = 3;
     

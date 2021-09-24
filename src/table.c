@@ -33,6 +33,17 @@ void flecs_table_init_data(
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
 
+            /* Bootstrap components */
+            if (e == ecs_id(EcsComponent)) {
+                storage->columns[i].size = ECS_SIZEOF(EcsComponent);
+                storage->columns[i].alignment = ECS_ALIGNOF(EcsComponent);
+                continue;
+            } else if (ECS_PAIR_RELATION(e) == ecs_id(EcsIdentifier)) {
+                storage->columns[i].size = ECS_SIZEOF(EcsIdentifier);
+                storage->columns[i].alignment = ECS_ALIGNOF(EcsIdentifier);
+                continue;
+            }
+
             /* Is the column a component? */
             const EcsComponent *component = flecs_component_from_id(world, e);
             if (component) {
