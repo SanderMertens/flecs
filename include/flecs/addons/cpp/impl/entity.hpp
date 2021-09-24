@@ -147,7 +147,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     
     while (-1 != (cur = ecs_type_match(
-        m_world, table, type, cur, pattern, 0, 0, 0, NULL))) 
+        m_world, table, type, cur, pattern, 0, 0, 0, NULL, NULL))) 
     {
         flecs::id ent(m_world, ids[cur]);
         func(ent);

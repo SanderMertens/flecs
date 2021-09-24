@@ -256,7 +256,7 @@ void init_iter(
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                it->event_id, EcsIsA, 0, 0, &subject);
+                it->event_id, EcsIsA, 0, 0, &subject, NULL);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
             index ++;
@@ -357,7 +357,7 @@ void notify_set_triggers(
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->offset, it->ids, it->columns, it->subjects, it->sizes, 
-            it->ptrs, true))
+            it->ptrs, NULL, true))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */

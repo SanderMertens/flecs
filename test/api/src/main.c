@@ -987,6 +987,10 @@ void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
 void Filter_filter_iter_pair_w_rel_wildcard_n_matches(void);
 void Filter_filter_iter_pair_w_obj_wildcard_n_matches(void);
+void Filter_filter_iter_pair_w_2_wildcards_1_match(void);
+void Filter_filter_iter_pair_w_2_wildcards_2x1_matches(void);
+void Filter_filter_iter_pair_w_2_wildcards_2x2_matches(void);
+void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -5800,6 +5804,22 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_pair_w_obj_wildcard_n_matches
     },
     {
+        "filter_iter_pair_w_2_wildcards_1_match",
+        Filter_filter_iter_pair_w_2_wildcards_1_match
+    },
+    {
+        "filter_iter_pair_w_2_wildcards_2x1_matches",
+        Filter_filter_iter_pair_w_2_wildcards_2x1_matches
+    },
+    {
+        "filter_iter_pair_w_2_wildcards_2x2_matches",
+        Filter_filter_iter_pair_w_2_wildcards_2x2_matches
+    },
+    {
+        "filter_iter_pair_w_3_wildcards_2x2x2_matches",
+        Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches
+    },
+    {
         "match_disabled",
         Filter_match_disabled
     },
@@ -10034,7 +10054,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        84,
+        88,
         Filter_testcases
     },
     {

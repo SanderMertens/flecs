@@ -2874,7 +2874,7 @@ bool ecs_has_id(
         }
 
         return ecs_type_match(
-            world, table, table->type, 0, id, EcsIsA, 0, 0, NULL) != -1;
+            world, table, table->type, 0, id, EcsIsA, 0, 0, NULL, NULL) != -1;
     }
 }
 

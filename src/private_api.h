@@ -506,6 +506,7 @@ bool flecs_term_match_table(
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
     void **ptr_out,
+    int32_t *match_indices,
     bool first);
 
 /* Match table with filter */
@@ -520,6 +521,8 @@ bool flecs_filter_match_table(
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs,
+    int32_t *match_indices,
+    int32_t *matches_left,
     bool first,
     int32_t skip_term);
 

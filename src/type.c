@@ -42,7 +42,8 @@ int32_t search_type(
     int32_t min_depth,
     int32_t max_depth,
     int32_t depth,
-    ecs_entity_t *out)
+    ecs_entity_t *subject_out,
+    int32_t *count_out)
 {
     if (!id) {
         return -1;
@@ -63,6 +64,9 @@ int32_t search_type(
         if (table && !offset && !(ECS_HAS_ROLE(id, CASE))) {
             ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
             if (tr) {
+                if (count_out) {
+                    *count_out = tr->count;
+                }
                 return tr->column;
             }
         } else {
@@ -92,10 +96,10 @@ int32_t search_type(
             }
 
             if ((search_type(world, obj_table, obj_table->type, 0, id, 
-                rel, min_depth, max_depth, depth + 1, out) != -1))
+                rel, min_depth, max_depth, depth + 1, subject_out, NULL) != -1))
             {
-                if (out && !*out) {
-                    *out = obj;
+                if (subject_out && !*subject_out) {
+                    *subject_out = obj;
                 }
                 return i;
 
@@ -103,10 +107,10 @@ int32_t search_type(
              * is not IsA, try substituting the object type with IsA */
             } else if (rel != EcsIsA) {
                 if (search_type(world, obj_table, obj_table->type, 0, 
-                    id, EcsIsA, 1, 0, 0, out) != -1) 
+                    id, EcsIsA, 1, 0, 0, subject_out, NULL) != -1) 
                 {
-                    if (out && !*out) {
-                        *out = obj;
+                    if (subject_out && !*subject_out) {
+                        *subject_out = obj;
                     }
                     return i;
                 }
@@ -123,7 +127,7 @@ bool ecs_type_has_id(
     ecs_id_t id,
     bool owned)
 {
-    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL) != -1;
+    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL, NULL) != -1;
 }
 
 int32_t ecs_type_index_of(
@@ -131,7 +135,7 @@ int32_t ecs_type_index_of(
     int32_t offset, 
     ecs_id_t id)
 {
-    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL);
+    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL, NULL);
 }
 
 int32_t ecs_type_match(
@@ -143,12 +147,16 @@ int32_t ecs_type_match(
     ecs_entity_t rel,
     int32_t min_depth,
     int32_t max_depth,
-    ecs_entity_t *out)
+    ecs_entity_t *subject_out,
+    int32_t *count_out)
 {
-    if (out) {
-        *out = 0;
+    if (subject_out) {
+        *subject_out = 0;
     }
-    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, out);
+    if (count_out) {
+        // *count_out = 1;
+    }
+    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, subject_out, count_out);
 }
 
 char* ecs_type_str(

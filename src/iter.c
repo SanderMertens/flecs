@@ -26,6 +26,7 @@ void flecs_iter_init(
     INIT_CACHE(it, subjects, it->term_count);
     INIT_CACHE(it, sizes, it->term_count);
     INIT_CACHE(it, ptrs, it->term_count);
+    INIT_CACHE(it, match_indices, it->term_count);
 
     it->is_valid = true;
 }
@@ -41,6 +42,7 @@ void flecs_iter_fini(
     FINI_CACHE(it, subjects);
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
+    FINI_CACHE(it, match_indices);
 }
 
 /* --- Public API --- */

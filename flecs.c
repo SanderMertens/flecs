@@ -1897,6 +1897,7 @@ bool flecs_term_match_table(
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
     void **ptr_out,
+    int32_t *match_indices,
     bool first);
 
 /* Match table with filter */
@@ -1911,6 +1912,8 @@ bool flecs_filter_match_table(
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs,
+    int32_t *match_indices,
+    int32_t *matches_left,
     bool first,
     int32_t skip_term);
 
@@ -7557,7 +7560,7 @@ bool ecs_has_id(
         }
 
         return ecs_type_match(
-            world, table, table->type, 0, id, EcsIsA, 0, 0, NULL) != -1;
+            world, table, table->type, 0, id, EcsIsA, 0, 0, NULL, NULL) != -1;
     }
 }
 
@@ -23264,6 +23267,7 @@ bool flecs_term_match_table(
     ecs_entity_t *subject_out,
     ecs_size_t *size_out,
     void **ptr_out,
+    int32_t *match_index_out,
     bool first)
 {
     const ecs_term_id_t *subj = &term->args[0];
@@ -23292,10 +23296,10 @@ bool flecs_term_match_table(
     if (!first && column_out[0] != 0) {
         column = column_out[0] - 1;
     }
-    
+
     column = ecs_type_match(world, match_table, match_type,
         column, term->id, subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, &source);
+        subj->set.max_depth, &source, match_index_out);
 
     bool result = column != -1;
 
@@ -23341,6 +23345,8 @@ bool flecs_filter_match_table(
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs,
+    int32_t *match_indices,
+    int32_t *matches_left,
     bool first,
     int32_t skip_term)
 {
@@ -23355,8 +23361,13 @@ bool flecs_filter_match_table(
 
     bool is_or = false;
     bool or_result = false;
+    int32_t match_count = 0;
 
     for (i = 0; i < count; i ++) {
+        if (i == skip_term) {
+            continue;
+        }
+
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
@@ -23378,7 +23389,7 @@ bool flecs_filter_match_table(
         ecs_entity_t subj_entity = subj->entity;
         if (!subj_entity) {
             if (ids) {
-                ids[term->index] = term->id;
+                ids[t_i] = term->id;
             }
             continue;
         }
@@ -23392,23 +23403,30 @@ bool flecs_filter_match_table(
             }
         }
 
-        bool result = true;
-        if (i != skip_term) {
-            result = flecs_term_match_table(world, term, match_table, 
-                match_type, offset,
-                ids ? &ids[t_i] : NULL, 
-                columns ? &columns[t_i] : NULL, 
-                subjects ? &subjects[t_i] : NULL, 
-                sizes ? &sizes[t_i] : NULL,
-                ptrs ? &ptrs[t_i] : NULL,
-                first);
-        }
+        bool result = flecs_term_match_table(world, term, match_table, 
+            match_type, offset,
+            ids ? &ids[t_i] : NULL, 
+            columns ? &columns[t_i] : NULL, 
+            subjects ? &subjects[t_i] : NULL, 
+            sizes ? &sizes[t_i] : NULL,
+            ptrs ? &ptrs[t_i] : NULL,
+            match_indices ? &match_indices[t_i] : NULL,
+            first);
 
         if (is_or) {
             or_result |= result;
         } else if (!result) {
             return false;
         }
+
+        if (first && match_indices && match_indices[t_i]) {
+            match_indices[t_i] --;
+            match_count += match_indices[t_i];
+        }
+    }
+
+    if (matches_left) {
+        *matches_left = match_count;
     }
 
     return !is_or || or_result;
@@ -23556,7 +23574,6 @@ ecs_table_record_t term_iter_next(
         }
 
         if (iter->iter_set) {
-            const ecs_term_t *term = &iter->term;
             const ecs_term_id_t *subj = &term->args[0];
 
             if (iter->self_index) {
@@ -23570,7 +23587,7 @@ ecs_table_record_t term_iter_next(
             /* Test if following the relation finds the id */
             int32_t index = ecs_type_match(world, table, table->type, 0, 
                 term->id, subj->set.relation, subj->set.min_depth, 
-                subj->set.max_depth, &source);
+                subj->set.max_depth, &source, NULL);
             if (index == -1) {
                 continue;
             }
@@ -23785,6 +23802,7 @@ bool ecs_filter_next(
     ecs_world_t *world = it->real_world;
     ecs_table_t *table;
     bool match;
+    int i;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;
@@ -23798,33 +23816,56 @@ bool ecs_filter_next(
         int32_t term_index = term->index;
 
         do {
-            ecs_entity_t source;
-            ecs_table_record_t tr = term_iter_next(world, term_iter, &source, 
-                filter->match_prefab, filter->match_disabled);
-            table = tr.table;
-            if (!table) {
-                goto done;
+            bool first_match = true;
+
+            ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
+
+            if (!iter->matches_left) {
+                ecs_entity_t source;
+                ecs_table_record_t tr = term_iter_next(world, term_iter, &source, 
+                    filter->match_prefab, filter->match_disabled);
+                table = tr.table;
+                if (!table) {
+                    goto done;
+                }
+
+                populate_from_column(world, table, 0, term->id, tr.column, source, 
+                    &it->ids[term_index], 
+                    &it->subjects[term_index],
+                    &it->sizes[term_index], 
+                    &it->ptrs[term_index]);
+
+                it->columns[term_index] = tr.column + 1;
+            } else {
+                table = it->table;
+                first_match = false;
+
+                /* Progress iterator to next match for table, if any */
+                for (i = filter->term_count_actual - 1; i >= 0; i --) {
+                    if (it->match_indices[i] > 0) {
+                        it->match_indices[i] --;
+                        it->columns[i] ++;
+                        break;
+                    }
+                }
             }
-
-            populate_from_column(world, table, 0, term->id, tr.column, source, 
-                &it->ids[term_index], 
-                &it->subjects[term_index],
-                &it->sizes[term_index], 
-                &it->ptrs[term_index]);
-
-            it->table = table;
-            it->type = table->type;
-            it->columns[term_index] = tr.column + 1;
-
-            printf("skip term %d, column = %d\n", term->index, tr.column);
 
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs, true, term->index);
+                it->ptrs, it->match_indices, &iter->matches_left, 
+                first_match, term->index);
+
+            if (!first_match) {
+                iter->matches_left = 0;
+                for (i = filter->term_count_actual - 1; i >= 0; i --) {
+                    if (it->match_indices[i] > 0) {
+                        iter->matches_left += it->match_indices[i];
+                    }
+                }
+            }
         } while (!match);
 
         populate_from_table(it, table);
-
         goto yield;
 
     } else if (iter->kind == EcsFilterIterEvalChain) {
@@ -23843,11 +23884,10 @@ bool ecs_filter_next(
 
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs, true, -1);
+                it->ptrs, it->match_indices, NULL, true, -1);
         } while (!match);
 
         populate_from_table(it, table);
-
         goto yield;
     }
 
@@ -23907,7 +23947,7 @@ void observer_callback(ecs_iter_t *it) {
 
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
         user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 
-        user_it.ptrs, false, -1)) 
+        user_it.ptrs, NULL, NULL, false, -1)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
@@ -23917,7 +23957,9 @@ void observer_callback(ecs_iter_t *it) {
             }
 
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, 0, NULL, NULL, NULL, NULL, NULL, true, -1)) {
+                prev_type, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, 
+                -1)) 
+            {
                 goto done;
             }
 
@@ -24410,7 +24452,8 @@ int32_t search_type(
     int32_t min_depth,
     int32_t max_depth,
     int32_t depth,
-    ecs_entity_t *out)
+    ecs_entity_t *subject_out,
+    int32_t *count_out)
 {
     if (!id) {
         return -1;
@@ -24431,6 +24474,9 @@ int32_t search_type(
         if (table && !offset && !(ECS_HAS_ROLE(id, CASE))) {
             ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
             if (tr) {
+                if (count_out) {
+                    *count_out = tr->count;
+                }
                 return tr->column;
             }
         } else {
@@ -24460,10 +24506,10 @@ int32_t search_type(
             }
 
             if ((search_type(world, obj_table, obj_table->type, 0, id, 
-                rel, min_depth, max_depth, depth + 1, out) != -1))
+                rel, min_depth, max_depth, depth + 1, subject_out, NULL) != -1))
             {
-                if (out && !*out) {
-                    *out = obj;
+                if (subject_out && !*subject_out) {
+                    *subject_out = obj;
                 }
                 return i;
 
@@ -24471,10 +24517,10 @@ int32_t search_type(
              * is not IsA, try substituting the object type with IsA */
             } else if (rel != EcsIsA) {
                 if (search_type(world, obj_table, obj_table->type, 0, 
-                    id, EcsIsA, 1, 0, 0, out) != -1) 
+                    id, EcsIsA, 1, 0, 0, subject_out, NULL) != -1) 
                 {
-                    if (out && !*out) {
-                        *out = obj;
+                    if (subject_out && !*subject_out) {
+                        *subject_out = obj;
                     }
                     return i;
                 }
@@ -24491,7 +24537,7 @@ bool ecs_type_has_id(
     ecs_id_t id,
     bool owned)
 {
-    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL) != -1;
+    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL, NULL) != -1;
 }
 
 int32_t ecs_type_index_of(
@@ -24499,7 +24545,7 @@ int32_t ecs_type_index_of(
     int32_t offset, 
     ecs_id_t id)
 {
-    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL);
+    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL, NULL);
 }
 
 int32_t ecs_type_match(
@@ -24511,12 +24557,16 @@ int32_t ecs_type_match(
     ecs_entity_t rel,
     int32_t min_depth,
     int32_t max_depth,
-    ecs_entity_t *out)
+    ecs_entity_t *subject_out,
+    int32_t *count_out)
 {
-    if (out) {
-        *out = 0;
+    if (subject_out) {
+        *subject_out = 0;
     }
-    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, out);
+    if (count_out) {
+        // *count_out = 1;
+    }
+    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, subject_out, count_out);
 }
 
 char* ecs_type_str(
@@ -25363,8 +25413,7 @@ int get_comp_and_src(
                     ecs_entity_t source = 0;
                     int32_t result = ecs_type_match(world, table, type, 
                         0, term->id, subj->set.relation, subj->set.min_depth, 
-                        subj->set.max_depth, 
-                        &source);
+                        subj->set.max_depth, &source, NULL);
 
                     if (result != -1) {
                         component = term->id;
@@ -25381,7 +25430,7 @@ int get_comp_and_src(
             ecs_entity_t source = 0;
             bool result = ecs_type_match(world, table, type, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
-                &source) != -1;
+                &source, NULL) != -1;
 
             if (op == EcsNot) {
                 result = !result;
@@ -25885,7 +25934,7 @@ bool match_term(
 
     return ecs_type_match(
         world, table, table->type, 0, term->id, subj->set.relation, 
-        subj->set.min_depth, subj->set.max_depth, NULL) != -1;
+        subj->set.min_depth, subj->set.max_depth, NULL, NULL) != -1;
 }
 
 /* Match table with query */
@@ -26182,7 +26231,7 @@ void build_sorted_table_range(
             /* Find component in prefab */
             ecs_entity_t base;
             ecs_type_match(world, table, table->type, 0, component, 
-                EcsIsA, 1, 0, &base);
+                EcsIsA, 1, 0, &base, NULL);
 
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
@@ -26696,7 +26745,7 @@ void resolve_cascade_subject_for_table(
     /* Find source for component */
     ecs_entity_t subject;
     ecs_type_match(world, table, table_type, 0, term->id, 
-        term->args[0].set.relation, 1, 0, &subject);
+        term->args[0].set.relation, 1, 0, &subject, NULL);
 
     /* If container was found, update the reference */
     if (subject) {
@@ -28364,7 +28413,7 @@ void diff_insert_isa(
                 /* We still have to make sure the id isn't overridden by the
                  * current table */
                 if (ecs_type_match(
-                    world, table, type, 0, base_id, 0, 0, 0, NULL) == -1) 
+                    world, table, type, 0, base_id, 0, 0, 0, NULL, NULL) == -1) 
                 {
                     ids_append(append_to, base_id);
                 }
@@ -28382,7 +28431,7 @@ void diff_insert_isa(
             continue;
         }
 
-        if (ecs_type_match(world, table, type, 0, id, 0, 0, 0, NULL) == -1) {
+        if (ecs_type_match(world, table, type, 0, id, 0, 0, 0, NULL, NULL) == -1) {
             ids_append(append_to, id);
         }
     }
@@ -28452,7 +28501,7 @@ void diff_insert_removed(
          * the removed component was an override. Removed overrides reexpose the
          * base component, thus "changing" the value which requires an OnSet. */
         if (ecs_type_match(world, table, table->type, 0, id, EcsIsA,
-            1, 0, NULL) != -1)
+            1, 0, NULL, NULL) != -1)
         {
             ids_append(&diff->on_set, id);
             return;
@@ -28993,6 +29042,7 @@ void flecs_iter_init(
     INIT_CACHE(it, subjects, it->term_count);
     INIT_CACHE(it, sizes, it->term_count);
     INIT_CACHE(it, ptrs, it->term_count);
+    INIT_CACHE(it, match_indices, it->term_count);
 
     it->is_valid = true;
 }
@@ -29008,6 +29058,7 @@ void flecs_iter_fini(
     FINI_CACHE(it, subjects);
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
+    FINI_CACHE(it, match_indices);
 }
 
 /* --- Public API --- */
@@ -29452,7 +29503,7 @@ void init_iter(
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                it->event_id, EcsIsA, 0, 0, &subject);
+                it->event_id, EcsIsA, 0, 0, &subject, NULL);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
             index ++;
@@ -29553,7 +29604,7 @@ void notify_set_triggers(
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->offset, it->ids, it->columns, it->subjects, it->sizes, 
-            it->ptrs, true))
+            it->ptrs, NULL, true))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */

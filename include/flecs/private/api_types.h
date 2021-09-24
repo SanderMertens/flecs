@@ -137,6 +137,7 @@ typedef struct ecs_filter_iter_t {
     /* For EcsFilterIterEvalIndex */ 
     ecs_term_iter_t term_iter;
     int32_t min_term_index;
+    int32_t matches_left;
 } ecs_filter_iter_t;
 
 /** Query-iterator specific data */
@@ -188,12 +189,14 @@ typedef struct ecs_iter_cache_t {
     ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
+    int32_t match_indices[ECS_TERM_CACHE_SIZE];
 
     bool ids_alloc;
     bool columns_alloc;
     bool subjects_alloc;
     bool sizes_alloc;
     bool ptrs_alloc;
+    bool match_indices_alloc;
 } ecs_iter_cache_t;
 
 /** Iterator.
@@ -289,6 +292,8 @@ struct ecs_iter_t {
     char **variable_names;        /* Names of variables (if any) */
     ecs_entity_t *variables;      /* Values of variables (if any) */
 
+    int32_t *match_indices;       /* Indices of current match for term. Allows an iterator to iterate
+                                   * all permutations of wildcards in query. */
     ecs_ref_t *references;
 
     ecs_term_t *terms;            /* Terms of query being evaluated */

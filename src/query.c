@@ -479,8 +479,7 @@ int get_comp_and_src(
                     ecs_entity_t source = 0;
                     int32_t result = ecs_type_match(world, table, type, 
                         0, term->id, subj->set.relation, subj->set.min_depth, 
-                        subj->set.max_depth, 
-                        &source);
+                        subj->set.max_depth, &source, NULL);
 
                     if (result != -1) {
                         component = term->id;
@@ -497,7 +496,7 @@ int get_comp_and_src(
             ecs_entity_t source = 0;
             bool result = ecs_type_match(world, table, type, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
-                &source) != -1;
+                &source, NULL) != -1;
 
             if (op == EcsNot) {
                 result = !result;
@@ -1001,7 +1000,7 @@ bool match_term(
 
     return ecs_type_match(
         world, table, table->type, 0, term->id, subj->set.relation, 
-        subj->set.min_depth, subj->set.max_depth, NULL) != -1;
+        subj->set.min_depth, subj->set.max_depth, NULL, NULL) != -1;
 }
 
 /* Match table with query */
@@ -1298,7 +1297,7 @@ void build_sorted_table_range(
             /* Find component in prefab */
             ecs_entity_t base;
             ecs_type_match(world, table, table->type, 0, component, 
-                EcsIsA, 1, 0, &base);
+                EcsIsA, 1, 0, &base, NULL);
 
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
@@ -1812,7 +1811,7 @@ void resolve_cascade_subject_for_table(
     /* Find source for component */
     ecs_entity_t subject;
     ecs_type_match(world, table, table_type, 0, term->id, 
-        term->args[0].set.relation, 1, 0, &subject);
+        term->args[0].set.relation, 1, 0, &subject, NULL);
 
     /* If container was found, update the reference */
     if (subject) {
