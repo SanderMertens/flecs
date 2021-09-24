@@ -985,6 +985,8 @@ void Filter_filter_iter_superset_childof(void);
 void Filter_filter_iter_type_set(void);
 void Filter_filter_iter_w_readonly_term(void);
 void Filter_filter_iter_w_from_nothing_term(void);
+void Filter_filter_iter_pair_w_rel_wildcard_n_matches(void);
+void Filter_filter_iter_pair_w_obj_wildcard_n_matches(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -5790,6 +5792,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_w_from_nothing_term
     },
     {
+        "filter_iter_pair_w_rel_wildcard_n_matches",
+        Filter_filter_iter_pair_w_rel_wildcard_n_matches
+    },
+    {
+        "filter_iter_pair_w_obj_wildcard_n_matches",
+        Filter_filter_iter_pair_w_obj_wildcard_n_matches
+    },
+    {
         "match_disabled",
         Filter_match_disabled
     },
@@ -10024,7 +10034,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        82,
+        84,
         Filter_testcases
     },
     {

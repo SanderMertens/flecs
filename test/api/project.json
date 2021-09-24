@@ -1044,6 +1044,8 @@
                 "filter_iter_type_set",
                 "filter_iter_w_readonly_term",
                 "filter_iter_w_from_nothing_term",
+                "filter_iter_pair_w_rel_wildcard_n_matches",
+                "filter_iter_pair_w_obj_wildcard_n_matches",
                 "match_disabled",
                 "match_prefab",
                 "chain_term_iter",

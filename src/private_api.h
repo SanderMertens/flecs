@@ -520,7 +520,8 @@ bool flecs_filter_match_table(
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs,
-    bool first);
+    bool first,
+    int32_t skip_term);
 
 bool flecs_query_match(
     const ecs_world_t *world,

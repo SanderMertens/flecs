@@ -1199,7 +1199,8 @@ bool flecs_filter_match_table(
     ecs_entity_t *subjects,
     ecs_size_t *sizes,
     void **ptrs,
-    bool first)
+    bool first,
+    int32_t skip_term)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1249,14 +1250,17 @@ bool flecs_filter_match_table(
             }
         }
 
-        bool result = flecs_term_match_table(world, term, match_table, 
-            match_type, offset,
-            ids ? &ids[t_i] : NULL, 
-            columns ? &columns[t_i] : NULL, 
-            subjects ? &subjects[t_i] : NULL, 
-            sizes ? &sizes[t_i] : NULL,
-            ptrs ? &ptrs[t_i] : NULL,
-            first);
+        bool result = true;
+        if (i != skip_term) {
+            result = flecs_term_match_table(world, term, match_table, 
+                match_type, offset,
+                ids ? &ids[t_i] : NULL, 
+                columns ? &columns[t_i] : NULL, 
+                subjects ? &subjects[t_i] : NULL, 
+                sizes ? &sizes[t_i] : NULL,
+                ptrs ? &ptrs[t_i] : NULL,
+                first);
+        }
 
         if (is_or) {
             or_result |= result;
@@ -1272,7 +1276,7 @@ static
 void term_iter_init_no_data(
     ecs_term_iter_t *iter)
 {
-    iter->term = (ecs_term_t){ 0 };
+    iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = NULL;
     iter->iter = ecs_map_iter(NULL);
 }
@@ -1282,7 +1286,7 @@ void term_iter_init_wildcard(
     const ecs_world_t *world,
     ecs_term_iter_t *iter)
 {
-    iter->term = (ecs_term_t){ 0 };
+    iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = flecs_get_id_record(world, EcsWildcard);
 
     if (iter->self_index) {
@@ -1648,6 +1652,8 @@ bool ecs_filter_next(
 
     if (iter->kind == EcsFilterIterEvalIndex) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
+        ecs_term_t *term = &term_iter->term;
+        int32_t term_index = term->index;
 
         do {
             ecs_entity_t source;
@@ -1658,9 +1664,19 @@ bool ecs_filter_next(
                 goto done;
             }
 
+            populate_from_column(world, table, 0, term->id, tr.column, source, 
+                &it->ids[term_index], 
+                &it->subjects[term_index],
+                &it->sizes[term_index], 
+                &it->ptrs[term_index]);
+
+            it->table = table;
+            it->type = table->type;
+            it->columns[term_index] = tr.column + 1;
+
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs, true);
+                it->ptrs, true, term->index);
         } while (!match);
 
         populate_from_table(it, table);
@@ -1683,7 +1699,7 @@ bool ecs_filter_next(
 
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs, true);
+                it->ptrs, true, -1);
         } while (!match);
 
         populate_from_table(it, table);
