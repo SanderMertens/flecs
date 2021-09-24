@@ -23965,7 +23965,7 @@ void resolve_cascade_subject(
 
 /* Remove table */
 static
-void remove_table(
+int remove_table(
     ecs_query_t *query,
     ecs_table_t *table,
     ecs_vector_t *tables,
@@ -23978,7 +23978,7 @@ void remove_table(
         /* Query was notified of a table it doesn't match with, this can only
          * happen if query is a subquery. */
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
-        return;
+        return index;
     }
     
     ecs_assert(mt->table == table, ECS_INTERNAL_ERROR, NULL);
@@ -23987,7 +23987,7 @@ void remove_table(
     /* Free table before moving, as the move will cause another table to occupy
      * the memory of mt */
     free_matched_table(mt);  
-    move_table(query, mt->table, index, NULL, tables, empty);
+    return move_table(query, mt->table, index, NULL, tables, empty);
 }
 
 static
@@ -24008,9 +24008,9 @@ void unmatch_table(
         int32_t index = ti->indices[i];
         if (index < 0) {
             index = index * -1 - 1;
-            remove_table(query, table, query->empty_tables, index, true);
+            ti->indices[i] = remove_table(query, table, query->empty_tables, index, true);
         } else {
-            remove_table(query, table, query->tables, index, false);
+            ti->indices[i] = remove_table(query, table, query->tables, index, false);
         }
     }
 
