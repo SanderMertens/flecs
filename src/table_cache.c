@@ -193,6 +193,7 @@ void _ecs_table_cache_remove(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
