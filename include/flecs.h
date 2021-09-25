@@ -1911,6 +1911,31 @@ ecs_entity_t ecs_get_object(
     ecs_entity_t rel,
     int32_t index);
 
+/** Get the object of a relation for a given id.
+ * This operation returns the first entity that has the provided id by following
+ * the specified relationship. If the entity itself has the id then entity will
+ * be returned. If the id cannot be found on the entity or by following the
+ * relation, the operation will return 0.
+ * 
+ * This operation can be used to lookup, for example, which prefab is providing
+ * a component by specifying the IsA relation:
+ * 
+ *   // Is Position provided by the entity or one of its base entities?
+ *   ecs_get_object_for_id(world, entity, EcsIsA, ecs_id(Position))
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param rel The relationship to follow.
+ * @param id The id to lookup.
+ * @return The entity for which the object has been found.
+ */
+FLECS_API
+ecs_entity_t ecs_get_object_for_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t rel,
+    ecs_id_t id);
+
 /** Enable or disable an entity.
  * This operation enables or disables an entity by adding or removing the
  * EcsDisabled tag. A disabled entity will not be matched with any systems,

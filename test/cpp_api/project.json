@@ -231,7 +231,12 @@
                 "set_inline_pair_type",
                 "get_pair_type_object",
                 "set_pair_type_object",
-                "set_get_w_object_variants"
+                "set_get_w_object_variants",
+                "get_object_for_type_self",
+                "get_object_for_type_base",
+                "get_object_for_id_self",
+                "get_object_for_id_base",
+                "get_object_for_id_not_found"
             ]
         }, {
             "id": "Switch",

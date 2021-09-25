@@ -208,6 +208,7 @@ static const flecs::entity_t Throw = EcsThrow;
 #include "iter.hpp"
 #include "world.hpp"
 #include "id.hpp"
+#include "entity_view.hpp"
 #include "entity.hpp"
 #include "component.hpp"
 #include "invoker.hpp"

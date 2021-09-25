@@ -223,6 +223,11 @@ void Pairs_set_inline_pair_type(void);
 void Pairs_get_pair_type_object(void);
 void Pairs_set_pair_type_object(void);
 void Pairs_set_get_w_object_variants(void);
+void Pairs_get_object_for_type_self(void);
+void Pairs_get_object_for_type_base(void);
+void Pairs_get_object_for_id_self(void);
+void Pairs_get_object_for_id_base(void);
+void Pairs_get_object_for_id_not_found(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1550,6 +1555,26 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_get_w_object_variants",
         Pairs_set_get_w_object_variants
+    },
+    {
+        "get_object_for_type_self",
+        Pairs_get_object_for_type_self
+    },
+    {
+        "get_object_for_type_base",
+        Pairs_get_object_for_type_base
+    },
+    {
+        "get_object_for_id_self",
+        Pairs_get_object_for_id_self
+    },
+    {
+        "get_object_for_id_base",
+        Pairs_get_object_for_id_base
+    },
+    {
+        "get_object_for_id_not_found",
+        Pairs_get_object_for_id_not_found
     }
 };
 
@@ -3361,7 +3386,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        54,
+        59,
         Pairs_testcases
     },
     {

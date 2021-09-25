@@ -1118,6 +1118,13 @@ void Pairs_tag_pair_w_isa_w_comp(void);
 void Pairs_get_1_object(void);
 void Pairs_get_1_object_not_found(void);
 void Pairs_get_n_objects(void);
+void Pairs_get_object_for_id_from_self(void);
+void Pairs_get_object_for_id_from_base(void);
+void Pairs_get_object_for_id_from_nested_base(void);
+void Pairs_get_object_for_id_not_found(void);
+void Pairs_get_object_for_wildcard_from_self(void);
+void Pairs_get_object_for_wildcard_from_base(void);
+void Pairs_get_object_for_wildcard_from_nested_base(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -6311,6 +6318,34 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_n_objects",
         Pairs_get_n_objects
+    },
+    {
+        "get_object_for_id_from_self",
+        Pairs_get_object_for_id_from_self
+    },
+    {
+        "get_object_for_id_from_base",
+        Pairs_get_object_for_id_from_base
+    },
+    {
+        "get_object_for_id_from_nested_base",
+        Pairs_get_object_for_id_from_nested_base
+    },
+    {
+        "get_object_for_id_not_found",
+        Pairs_get_object_for_id_not_found
+    },
+    {
+        "get_object_for_wildcard_from_self",
+        Pairs_get_object_for_wildcard_from_self
+    },
+    {
+        "get_object_for_wildcard_from_base",
+        Pairs_get_object_for_wildcard_from_base
+    },
+    {
+        "get_object_for_wildcard_from_nested_base",
+        Pairs_get_object_for_wildcard_from_nested_base
     }
 };
 
@@ -10075,7 +10110,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        57,
+        64,
         Pairs_testcases
     },
     {

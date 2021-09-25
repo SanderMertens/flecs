@@ -1979,3 +1979,122 @@ void Pairs_get_n_objects() {
     ecs_fini(world);
 }
 
+
+void Pairs_get_object_for_id_from_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_id(world, e, Tag);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    test_assert(result != 0);
+    test_assert(result == e);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_id_from_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    test_assert(result != 0);
+    test_assert(result == base);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_id_from_nested_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    test_assert(result != 0);
+    test_assert(result == base);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_id_not_found() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, Tag);
+    test_assert(result == 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_wildcard_from_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_id_t pair = ecs_pair(Rel, Obj);
+    ecs_entity_t base = ecs_new_w_id(world, pair);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_id(world, e, pair);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+        ecs_pair(Rel, EcsWildcard));
+    test_assert(result != 0);
+    test_assert(result == e);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_wildcard_from_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_id_t pair = ecs_pair(Rel, Obj);
+    ecs_entity_t base = ecs_new_w_id(world, pair);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+        ecs_pair(Rel, EcsWildcard));
+    test_assert(result != 0);
+    test_assert(result == base);
+
+    ecs_fini(world);
+}
+
+void Pairs_get_object_for_wildcard_from_nested_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_id_t pair = ecs_pair(Rel, Obj);
+    ecs_entity_t base = ecs_new_w_id(world, pair);
+    ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
+    
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+        ecs_pair(Rel, EcsWildcard));
+    test_assert(result != 0);
+    test_assert(result == base);
+
+    ecs_fini(world);
+}

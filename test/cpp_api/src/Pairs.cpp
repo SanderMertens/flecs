@@ -1060,3 +1060,60 @@ void Pairs_set_get_w_object_variants() {
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");            
 }
+
+void Pairs_get_object_for_type_self() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().add<Tag>();
+    auto self = ecs.entity().is_a(base).add<Tag>();
+
+    auto obj = self.get_object_for<Tag>(flecs::IsA);
+    test_assert(obj != 0);
+    test_assert(obj == self);
+}
+
+void Pairs_get_object_for_type_base() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().add<Tag>();
+    auto self = ecs.entity().is_a(base);
+
+    auto obj = self.get_object_for<Tag>(flecs::IsA);
+    test_assert(obj != 0);
+    test_assert(obj == base);
+}
+
+void Pairs_get_object_for_id_self() {
+    flecs::world ecs;
+
+    auto tag = ecs.entity();
+    auto base = ecs.entity().add(tag);
+    auto self = ecs.entity().is_a(base).add(tag);
+
+    auto obj = self.get_object_for(flecs::IsA, tag);
+    test_assert(obj != 0);
+    test_assert(obj == self);
+}
+
+void Pairs_get_object_for_id_base() {
+    flecs::world ecs;
+
+    auto tag = ecs.entity();
+    auto base = ecs.entity().add(tag);
+    auto self = ecs.entity().is_a(base);
+
+    auto obj = self.get_object_for(flecs::IsA, tag);
+    test_assert(obj != 0);
+    test_assert(obj == base);
+}
+
+void Pairs_get_object_for_id_not_found() {
+    flecs::world ecs;
+
+    auto tag = ecs.entity();
+    auto base = ecs.entity();
+    auto self = ecs.entity().is_a(base);
+
+    auto obj = self.get_object_for(flecs::IsA, tag);
+    test_assert(obj == 0);
+}

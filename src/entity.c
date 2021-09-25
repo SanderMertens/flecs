@@ -2902,6 +2902,27 @@ ecs_entity_t ecs_get_object(
     return ecs_pair_object(world, ids[tr->column + index]);
 }
 
+ecs_entity_t ecs_get_object_for_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t rel,
+    ecs_id_t id)
+{
+    ecs_table_t *table = ecs_get_table(world, entity);
+    ecs_entity_t subject = 0;
+    int32_t column = ecs_type_match(
+        world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
+    if (column == -1) {
+        return 0;
+    }
+
+    if (subject == 0) {
+        return entity;
+    } else {
+        return subject;
+    }
+}
+
 const char* ecs_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity)
