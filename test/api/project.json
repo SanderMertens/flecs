@@ -433,7 +433,14 @@
                 "with_after_scope",
                 "with_after_with",
                 "scope_inside_with_inside_scope",
-                "with_inside_scope"
+                "with_inside_scope",
+                "assignment_empty",
+                "assignment_w_1",
+                "assignment_w_2",
+                "assignment_w_pair",
+                "assignment_w_invalid_subject",
+                "assignment_w_invalid_with",
+                "assignment_w_invalid_scope"
             ]            
         }, {
             "id": "GlobalComponentIds",
@@ -1189,7 +1196,8 @@
                 "get_object_for_id_not_found",
                 "get_object_for_wildcard_from_self",
                 "get_object_for_wildcard_from_base",
-                "get_object_for_wildcard_from_nested_base"
+                "get_object_for_wildcard_from_nested_base",
+                "ignore_childof_from_base"
             ]
         }, {
             "id": "Rules",

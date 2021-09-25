@@ -1547,3 +1547,135 @@ void Plecs_with_inside_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_assignment_empty() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
+
+    test_assert(earth != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_1() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  Planet"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
+    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
+
+    test_assert(earth != 0);
+    test_assert(planet != 0);
+
+    test_assert( ecs_has_id(world, earth, planet));
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_2() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  Planet"
+    LINE "  Habitable"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
+    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
+    ecs_entity_t habitable = ecs_lookup_fullpath(world, "Habitable");
+
+    test_assert(earth != 0);
+    test_assert(planet != 0);
+    test_assert(habitable != 0);
+
+    test_assert( ecs_has_id(world, earth, planet));
+    test_assert( ecs_has_id(world, earth, habitable));
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_pair() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  Planet"
+    LINE "  (ChildOf, Sun)"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t earth = ecs_lookup_fullpath(world, "Sun.Earth");
+    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
+    ecs_entity_t sun = ecs_lookup_fullpath(world, "Sun");
+
+    test_assert(earth != 0);
+    test_assert(planet != 0);
+    test_assert(sun != 0);
+
+    test_assert( ecs_has_id(world, earth, planet));
+    test_assert( ecs_has_pair(world, earth, EcsChildOf, sun));
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_invalid_subject() {
+    ecs_tracing_enable(-4);
+
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  Planet(Mars)"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_invalid_with() {
+    ecs_tracing_enable(-4);
+    
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  with Planet { Mars }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_w_invalid_scope() {
+    ecs_tracing_enable(-4);
+    
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Earth = {"
+    LINE "  Europe { Netherlands }"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

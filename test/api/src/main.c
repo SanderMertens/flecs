@@ -409,6 +409,13 @@ void Plecs_with_after_scope(void);
 void Plecs_with_after_with(void);
 void Plecs_scope_inside_with_inside_scope(void);
 void Plecs_with_inside_scope(void);
+void Plecs_assignment_empty(void);
+void Plecs_assignment_w_1(void);
+void Plecs_assignment_w_2(void);
+void Plecs_assignment_w_pair(void);
+void Plecs_assignment_w_invalid_subject(void);
+void Plecs_assignment_w_invalid_with(void);
+void Plecs_assignment_w_invalid_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -1125,6 +1132,7 @@ void Pairs_get_object_for_id_not_found(void);
 void Pairs_get_object_for_wildcard_from_self(void);
 void Pairs_get_object_for_wildcard_from_base(void);
 void Pairs_get_object_for_wildcard_from_nested_base(void);
+void Pairs_ignore_childof_from_base(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -3614,6 +3622,34 @@ bake_test_case Plecs_testcases[] = {
     {
         "with_inside_scope",
         Plecs_with_inside_scope
+    },
+    {
+        "assignment_empty",
+        Plecs_assignment_empty
+    },
+    {
+        "assignment_w_1",
+        Plecs_assignment_w_1
+    },
+    {
+        "assignment_w_2",
+        Plecs_assignment_w_2
+    },
+    {
+        "assignment_w_pair",
+        Plecs_assignment_w_pair
+    },
+    {
+        "assignment_w_invalid_subject",
+        Plecs_assignment_w_invalid_subject
+    },
+    {
+        "assignment_w_invalid_with",
+        Plecs_assignment_w_invalid_with
+    },
+    {
+        "assignment_w_invalid_scope",
+        Plecs_assignment_w_invalid_scope
     }
 };
 
@@ -6346,6 +6382,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_object_for_wildcard_from_nested_base",
         Pairs_get_object_for_wildcard_from_nested_base
+    },
+    {
+        "ignore_childof_from_base",
+        Pairs_ignore_childof_from_base
     }
 };
 
@@ -9970,7 +10010,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        64,
+        71,
         Plecs_testcases
     },
     {
@@ -10110,7 +10150,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        64,
+        65,
         Pairs_testcases
     },
     {

@@ -2098,3 +2098,20 @@ void Pairs_get_object_for_wildcard_from_nested_base() {
 
     ecs_fini(world);
 }
+
+void Pairs_ignore_childof_from_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_entity_t result = ecs_get_object_for_id(world, e, EcsIsA, 
+        ecs_pair(EcsChildOf, parent));
+    test_assert(result == 0);
+
+    ecs_fini(world);
+}

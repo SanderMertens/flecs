@@ -79,7 +79,8 @@ int32_t search_type(
     }
 
     if (rel && id != EcsPrefab && id != EcsDisabled && 
-        id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) 
+        ECS_PAIR_RELATION(id) != ecs_id(EcsIdentifier) &&
+        ECS_PAIR_RELATION(id) != EcsChildOf)
     {
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = ids[i];
@@ -152,9 +153,6 @@ int32_t ecs_type_match(
 {
     if (subject_out) {
         *subject_out = 0;
-    }
-    if (count_out) {
-        // *count_out = 1;
     }
     return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, subject_out, count_out);
 }

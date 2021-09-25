@@ -13,12 +13,14 @@ typedef struct {
     ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
     ecs_entity_t last_object;
+    ecs_entity_t assign_to;
     ecs_entity_t scope[STACK_MAX_SIZE];
     ecs_entity_t with[STACK_MAX_SIZE];
     int32_t with_frames[STACK_MAX_SIZE];
     int32_t sp;
     int32_t with_frame;
     bool with_clause;
+    bool assignment;
 } plecs_state_t;
 
 static
@@ -97,13 +99,26 @@ int create_term(
         return -1;
     }
 
+    if (state->assignment && term->args[0].entity != EcsThis) {
+        ecs_parser_error(name, expr, column, "invalid statement in assignment");
+        return -1;
+    }
+
     bool pred_as_subj = pred_is_subj(term, state);
+    if (state->assignment) {
+        pred_as_subj = false;
+    }
+
     ecs_entity_t pred = ensure_entity(world, term->pred.name, pred_as_subj); 
     ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->args[1])) {
         obj = ensure_entity(world, term->args[1].name, true);
+    }
+
+    if (state->assignment) {
+        subj = state->assign_to;
     }
 
     if (subj) {
@@ -224,7 +239,40 @@ const char* parse_stmt(
 
         ptr = skip_fluff(ptr);
 
+        if (ptr[0] == '=') {
+            if (state->assignment) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "component assignments are not yet supported!");
+                return NULL;
+            }
+
+            if (!state->last_subject) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing entity to assign to");
+                return NULL;
+            }
+
+            state->assignment = true;
+            state->assign_to = state->last_subject;
+
+            ptr = skip_fluff(ptr + 1);
+            if (ptr[0] != '{') {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "expected '{' after assignment");
+                return NULL;
+            }
+
+            ptr = skip_fluff(ptr + 1);
+            stmt_parsed = true;
+        }
+
         if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
+            if (state->assignment) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid with in assignment");
+                return NULL;
+            }
+
             /* Add following expressions to with list */
             state->with_clause = true;
             ptr = skip_fluff(ptr + 5);
@@ -232,6 +280,12 @@ const char* parse_stmt(
         }
 
         if (ptr[0] == '{') {
+            if (state->assignment) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid scope in assignment");
+                return NULL;
+            }
+
             state->sp ++;
 
             ecs_entity_t scope = 0;
@@ -263,21 +317,27 @@ const char* parse_stmt(
         }
 
         while (ptr[0] == '}') {
-            state->scope[state->sp] = 0;
+            if (state->assignment) {
+                state->assignment = false;
+                stmt_parsed = true;
+            } else {
+                state->scope[state->sp] = 0;
+                state->sp --;
 
-            state->sp --;
+                ecs_id_t id = state->scope[state->sp];
+                if (!id || ECS_HAS_ROLE(id, PAIR)) {
+                    ecs_set_with(world, id);
+                }
+
+                if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+                    ecs_set_scope(world, id);
+                }
+
+                state->with_frame = state->with_frames[state->sp];
+                stmt_parsed = true;
+            }
+
             ptr = skip_fluff(ptr + 1);
-            ecs_id_t id = state->scope[state->sp];
-            if (!id || ECS_HAS_ROLE(id, PAIR)) {
-                ecs_set_with(world, id);
-            }
-
-            if (!id || !ECS_HAS_ROLE(id, PAIR)) {
-                ecs_set_scope(world, id);
-            }
-
-            state->with_frame = state->with_frames[state->sp];
-            stmt_parsed = true;
         }
 
     } while (stmt_parsed);

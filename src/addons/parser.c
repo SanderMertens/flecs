@@ -795,7 +795,8 @@ bool is_valid_end_of_term(
         (ptr[0] == '\0') ||       /* end of string */
         (ptr[0] == '/') ||        /* comment (in plecs) */
         (ptr[0] == '{') ||        /* scope (in plecs) */
-        (ptr[0] == '}'))          
+        (ptr[0] == '}') ||
+        (ptr[0] == '='))          /* assignment (in plecs) */
     {
         return true;
     }
