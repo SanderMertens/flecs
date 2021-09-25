@@ -23650,7 +23650,7 @@ ecs_table_record_t term_iter_next(
                 }
 
                 if (!tr) {
-                    return (ecs_table_record_t){0};
+                    return result;
                 }
             }
 
