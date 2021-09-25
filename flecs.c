@@ -23650,6 +23650,7 @@ ecs_table_record_t term_iter_next(
                 }
 
                 if (!tr) {
+                    result.table = NULL;
                     return result;
                 }
             }
@@ -23718,7 +23719,7 @@ bool ecs_term_next(
     ecs_term_t *term = &iter->term;
     ecs_world_t *world = it->real_world;
 
-    ecs_entity_t source;
+    ecs_entity_t source = 0;
     ecs_table_record_t tr = term_iter_next(world, iter, &source, false, false);
     ecs_table_t *table = tr.table;
     if (!table) {
