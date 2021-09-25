@@ -1149,8 +1149,8 @@ void Rules_join_by_object() {
             }},
             {y_var, .entity_names = {
                 "BenSolo", "BenSolo",
-                "Leia", "Luke",
-                "Leia", "Luke",
+                "Luke", "Leia",
+                "Luke", "Leia",
             }}
         }
     }));
@@ -1200,10 +1200,10 @@ void Rules_join_by_predicate() {
                 "Parent", "Parent",
             }},
             {y_var, .entity_names = {
-                "Leia", "Luke",
+                "Luke", "Leia",
                 "Luke", "Yoda",
                 "Luke", "Yoda",
-                "Leia", "Luke",
+                "Luke", "Leia",
             }}
         }
     }));
@@ -1377,12 +1377,12 @@ void Rules_find_transitive_2_branches() {
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SentientMachine)");
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Cyborg");
+    test_str(ecs_get_name(world, it.entities[0]), "Droid");
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SentientMachine)");
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Droid");
+    test_str(ecs_get_name(world, it.entities[0]), "Cyborg");
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,Vehicle)");
@@ -1397,11 +1397,6 @@ void Rules_find_transitive_2_branches() {
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SpaceShip)");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "XWing");
-
-    test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "(IsA,SpaceShip)");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "CorellianLightFreighter");
     test_str(ecs_get_name(world, it.entities[1]), "YWing");
@@ -1410,6 +1405,11 @@ void Rules_find_transitive_2_branches() {
     test_term_id(&it, 1, "(IsA,CorellianLightFreighter)");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "MilleniumFalcon");
+
+    test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "(IsA,SpaceShip)");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "XWing");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -1438,11 +1438,6 @@ void Rules_transitive_subsets() {
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SpaceShip)");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "XWing");
-
-    test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "(IsA,SpaceShip)");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "CorellianLightFreighter");
     test_str(ecs_get_name(world, it.entities[2]), "YWing");
@@ -1451,6 +1446,11 @@ void Rules_transitive_subsets() {
     test_term_id(&it, 1, "(IsA,CorellianLightFreighter)");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "MilleniumFalcon");
+
+    test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "(IsA,SpaceShip)");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "XWing");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -1832,28 +1832,14 @@ void Rules_transitive_instances() {
 
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "BenSolo");
+    test_str(ecs_get_name(world, it.entities[0]), "HanSolo");
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
     test_var(&it, x_var, "Human");
-
-    test_assert(ecs_rule_next(&it));
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Luke");
-    test_term_id(&it, 1, "Human");
-    test_term_id(&it, 2, "(IsA,Character)");
-    test_var(&it, x_var, "Human");    
 
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "Leia");
-    test_term_id(&it, 1, "Human");
-    test_term_id(&it, 2, "(IsA,Character)");
-    test_var(&it, x_var, "Human");
-
-    test_assert(ecs_rule_next(&it));
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "HanSolo");
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
     test_var(&it, x_var, "Human");
@@ -1864,6 +1850,20 @@ void Rules_transitive_instances() {
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
     test_var(&it, x_var, "Human");
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "Luke");
+    test_term_id(&it, 1, "Human");
+    test_term_id(&it, 2, "(IsA,Character)");
+    test_var(&it, x_var, "Human");   
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "BenSolo");
+    test_term_id(&it, 1, "Human");
+    test_term_id(&it, 2, "(IsA,Character)");
+    test_var(&it, x_var, "Human"); 
 
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 1);    
@@ -1941,11 +1941,6 @@ void Rules_transitive_implicit_isa_instances() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "Cyborg");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Grievous");
-
-    test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "Droid");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "R2D2");
@@ -1955,6 +1950,11 @@ void Rules_transitive_implicit_isa_instances() {
     test_term_id(&it, 1, "Droid");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "BB8");
+
+    test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "Cyborg");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "Grievous");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -2270,6 +2270,25 @@ void Rules_transitive_all() {
     /* All permutations of all valid IsA relationships */
 
     ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "CelestialBody");
+    test_var(&it, y_var, "Thing");
+    test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Character");
+    test_var(&it, y_var, "Thing");
+    test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Machine");
+    test_var(&it, y_var, "Thing");
+    test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0);
+
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Planet");
     test_var(&it, y_var, "CelestialBody");
@@ -2341,24 +2360,6 @@ void Rules_transitive_all() {
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
     test_int(it.count, 0);          
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "CelestialBody");
-    test_var(&it, y_var, "Thing");
-    test_term_id(&it, 1, "(IsA,Thing)");
-    test_int(it.count, 0);
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Character");
-    test_var(&it, y_var, "Thing");
-    test_term_id(&it, 1, "(IsA,Thing)");
-    test_int(it.count, 0);    
-
-    test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Machine");
-    test_var(&it, y_var, "Thing");
-    test_term_id(&it, 1, "(IsA,Thing)");
-    test_int(it.count, 0);    
 
     test_assert(!ecs_rule_next(&it));
 
@@ -3156,13 +3157,13 @@ void Rules_comp_w_not_term() {
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 1);
-    test_int(it.entities[0], e_4);
+    test_int(it.entities[0], e_1);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
+    test_int(it.entities[0], e_4);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3202,13 +3203,13 @@ void Rules_not_term_w_subj_var() {
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_variable(&it, x_var) == e_4);
+    test_assert(ecs_rule_variable(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_variable(&it, x_var) == e_1);
+    test_assert(ecs_rule_variable(&it, x_var) == e_4);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3251,18 +3252,6 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_variable(&it, x_var) == e_3);
-
-    test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_int(it.count, 0);
-    test_assert(ecs_rule_variable(&it, x_var) == e_4);
-
-    test_bool(true, ecs_rule_next(&it));
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagB);
-    test_int(it.count, 0);
     test_assert(ecs_rule_variable(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
@@ -3270,6 +3259,18 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
     test_assert(ecs_rule_variable(&it, x_var) == e_2);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(it.count, 0);
+    test_assert(ecs_rule_variable(&it, x_var) == e_3);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagB);
+    test_int(it.count, 0);
+    test_assert(ecs_rule_variable(&it, x_var) == e_4);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3507,12 +3508,12 @@ void Rules_childof_0() {
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], Tag);
+    test_int(it.entities[0], EcsFlecs);
     test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], EcsFlecs);
+    test_int(it.entities[0], Tag);
     test_int(ecs_term_id(&it, 1), ecs_pair(EcsChildOf, 0));
 
     test_bool(true, ecs_rule_next(&it));

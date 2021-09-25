@@ -259,11 +259,8 @@ typedef struct ecs_rule_op_t {
 
 /* With context. Shared with select. */
 typedef struct ecs_rule_with_ctx_t {
-    ecs_map_t *table_set;      /* Currently evaluated table set */
-    ecs_map_iter_t table_iter; /* Table iterator */
-
-    ecs_sparse_t *all_for_pred; /* Table set that blanks out object with a 
-                                 * wildcard. Used for transitive queries */
+    ecs_id_record_t *idr;      /* Currently evaluated table set */
+    int32_t table_index;
 } ecs_rule_with_ctx_t;
 
 /* Subset context */
@@ -289,7 +286,7 @@ typedef struct ecs_rule_superset_frame_t {
 typedef struct ecs_rule_superset_ctx_t {
     ecs_rule_superset_frame_t storage[16]; /* Alloc-free array for small trees */
     ecs_rule_superset_frame_t *stack;
-    ecs_map_t *table_set;
+    ecs_id_record_t *idr;
     int32_t sp;
 } ecs_rule_superset_ctx_t;
 
@@ -2897,43 +2894,46 @@ ecs_table_record_t find_next_table(
     ecs_rule_filter_t *filter,
     ecs_rule_with_ctx_t *op_ctx)
 {
-    ecs_table_record_t *tr;
-    ecs_table_t *table;
-    int32_t column;
+    ecs_id_record_t *idr = op_ctx->idr;
+    const ecs_table_record_t *tables = flecs_id_record_tables(idr);
+    int32_t i = op_ctx->table_index, count = flecs_id_record_count(idr);
+    ecs_table_t *table = NULL;
+    int32_t column = -1;
 
-    /* Find the next non-empty table */
-    do {
-        tr = ecs_map_next(&op_ctx->table_iter, ecs_table_record_t, NULL);
-        if (!tr) {
-            return (ecs_table_record_t){0};
-        }
-
+    for (; i < count && (column == -1); i ++) {
+        const ecs_table_record_t *tr = &tables[i];
         table = tr->table;
-        if (!ecs_table_count(table)) {
-            column = -1;
-            continue;
-        }
+
+        /* Should only iterate non-empty tables */
+        ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
 
         column = tr->column;
         if (filter->same_var) {
             column = find_next_same_var(table->type, column - 1, filter->mask);
         }
-    } while (column == -1);
+    }
+
+    if (column == -1) {
+        table = NULL;
+    }
+
+    op_ctx->table_index = i;
 
     return (ecs_table_record_t){.table = table, .column = column};
 }
 
 static
-ecs_map_t* find_table_index(
+ecs_id_record_t* find_tables(
     ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (idr) {
-        return idr->table_index;
-    } else {
+    if (!flecs_id_record_count(idr)) {
+        /* Skip ids that don't have (non-empty) tables */
         return NULL;
     }
+
+    return idr;
 }
 
 static
@@ -3143,22 +3143,19 @@ bool eval_subset(
     /* Get queried for id, fill out potential variables */
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
-    ecs_map_t *table_set;
+    ecs_id_record_t *idr;
     ecs_table_t *table = NULL;
 
     if (!redo) {
         op_ctx->stack = op_ctx->storage;
         sp = op_ctx->sp = 0;
         frame = &op_ctx->stack[sp];
-        table_set = frame->with_ctx.table_set = find_table_index(
-            world, filter.mask);
-        
-        /* If no table set could be found for expression, yield nothing */
-        if (!table_set) {
+        idr = frame->with_ctx.idr = find_tables(world, filter.mask);
+        if (!idr) {
             return false;
         }
 
-        frame->with_ctx.table_iter = ecs_map_iter(table_set);
+        frame->with_ctx.table_index = 0;
         table_record = find_next_table(&filter, &frame->with_ctx);
         
         /* If first table set has no non-empty table, yield nothing */
@@ -3200,11 +3197,11 @@ bool eval_subset(
                 }
                 frame = &op_ctx->stack[sp];
                 table = frame->table;
-                table_set = frame->with_ctx.table_set;
+                idr = frame->with_ctx.idr;
                 row = ++ frame->row;
 
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(table_set != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             }
         }
 
@@ -3228,13 +3225,13 @@ bool eval_subset(
 
             /* Find table set for expression */
             table = NULL;
-            table_set = find_table_index(world, filter.mask);
+            idr = find_tables(world, filter.mask);
 
             /* If table set is found, find first non-empty table */
-            if (table_set) {
+            if (idr) {
                 ecs_rule_subset_frame_t *new_frame = &op_ctx->stack[sp + 1];
-                new_frame->with_ctx.table_set = table_set;
-                new_frame->with_ctx.table_iter = ecs_map_iter(table_set);
+                new_frame->with_ctx.idr = idr;
+                new_frame->with_ctx.table_index = 0;
                 table_record = find_next_table(&filter, &new_frame->with_ctx);
 
                 /* If set contains non-empty table, push it to stack */
@@ -3289,7 +3286,7 @@ bool eval_select(
 
     int32_t column = -1;
     ecs_table_t *table = NULL;
-    ecs_map_t *table_set;
+    ecs_id_record_t *idr;
 
     if (!redo && op->term != -1) {
         it->ids[op->term] = pattern;
@@ -3298,7 +3295,7 @@ bool eval_select(
 
     /* If this is a redo, we already looked up the table set */
     if (redo) {
-        table_set = op_ctx->table_set;
+        idr = op_ctx->idr;
     
     /* If this is not a redo lookup the table set. Even though this may not be
      * the first time the operation is evaluated, variables may have changed
@@ -3312,17 +3309,17 @@ bool eval_select(
          * table type. Tables are also registered under wildcards, which is why
          * this operation can simply use the look_for variable directly */
 
-        table_set = op_ctx->table_set = find_table_index(world, pattern);
+        idr = op_ctx->idr = find_tables(world, pattern);
     }
 
     /* If no table set was found for queried for entity, there are no results */
-    if (!table_set) {
+    if (!idr) {
         return false;
     }
 
     /* If this is not a redo, start at the beginning */
     if (!redo) {
-        op_ctx->table_iter = ecs_map_iter(table_set);
+        op_ctx->table_index = 0;
 
         /* Return the first table_record in the table set. */
         table_record = find_next_table(&filter, op_ctx);
@@ -3415,7 +3412,7 @@ bool eval_with(
 
     int32_t column = -1;
     ecs_table_t *table = NULL;
-    ecs_map_t *table_set;
+    ecs_id_record_t *idr;
 
     if (!redo && op->term != -1) {
         columns[op->term] = -1;
@@ -3423,7 +3420,7 @@ bool eval_with(
 
     /* If this is a redo, we already looked up the table set */
     if (redo) {
-        table_set = op_ctx->table_set;
+        idr = op_ctx->idr;
     
     /* If this is not a redo lookup the table set. Even though this may not be
      * the first time the operation is evaluated, variables may have changed
@@ -3472,7 +3469,7 @@ bool eval_with(
         /* The With operation finds the table set that belongs to its pair
          * filter. The table set is a sparse set that provides an O(1) operation
          * to check whether the current table has the required expression. */
-        table_set = op_ctx->table_set = find_table_index(world, filter.mask);
+        idr = op_ctx->idr = find_tables(world, filter.mask);
     }
 
     /* If no table set was found for queried for entity, there are no results. 
@@ -3480,7 +3477,7 @@ bool eval_with(
      * be in the returned table set. Regardless, if the filter that contains a
      * transitive predicate does not have any tables associated with it, there
      * can be no transitive matches for the filter.  */
-    if (!table_set) {
+    if (!idr) {
         return false;
     }
 

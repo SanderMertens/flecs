@@ -241,7 +241,9 @@ void table_activate(
             .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
             .table = table
         });                
-    }     
+    }
+
+    flecs_table_set_empty(world, table);
 }
 
 /* This function is called when a query is matched with a table. A table keeps
@@ -253,6 +255,7 @@ void register_query(
     ecs_table_t *table,
     ecs_query_t *query)
 {
+    (void)world;
 #ifndef NDEBUG
     /* Sanity check if query has already been added */
     int32_t i, count = ecs_vector_count(table->queries);

@@ -2505,8 +2505,8 @@ typedef struct ecs_term_iter_t {
     ecs_id_record_t *self_index;
     ecs_id_record_t *set_index;
     
-    ecs_map_iter_t iter;
-    bool iter_set;
+    ecs_id_record_t *cur;
+    int32_t index;
     
     ecs_table_t *table;
     int32_t cur_match;

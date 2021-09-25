@@ -442,15 +442,21 @@ void flecs_notify_tables(
 
     /* If id is specified, only broadcast to tables with id */
     } else {
-        ecs_id_record_t *r = flecs_get_id_record(world, id);
-        if (!r) {
+        ecs_id_record_t *idr = flecs_get_id_record(world, id);
+        if (!idr) {
             return;
         }
 
-        ecs_table_record_t *tr;
-        ecs_map_iter_t it = ecs_map_iter(r->table_index);
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            flecs_table_notify(world, tr->table, event);
+        const ecs_table_record_t *tables = flecs_id_record_tables(idr);
+        int32_t i, count = flecs_id_record_count(idr);
+        for (i = 0; i < count; i ++) {
+            flecs_table_notify(world, tables[i].table, event);
+        }
+
+        tables = flecs_id_record_empty_tables(idr);
+        count = flecs_id_record_empty_count(idr);
+        for (i = 0; i < count; i ++) {
+            flecs_table_notify(world, tables[i].table, event);
         }
     }
 }
@@ -775,11 +781,11 @@ void fini_id_index(
     ecs_world_t *world)
 {
     ecs_map_iter_t it = ecs_map_iter(world->id_index);
-    ecs_id_record_t *r;
-    while ((r = ecs_map_next(&it, ecs_id_record_t, NULL))) {
-        ecs_map_free(r->table_index);
-        ecs_map_free(r->add_refs);
-        ecs_map_free(r->remove_refs);
+    ecs_id_record_t *idr;
+    while ((idr = ecs_map_next(&it, ecs_id_record_t, NULL))) {
+        ecs_table_cache_fini(&idr->cache);
+        ecs_map_free(idr->add_refs);
+        ecs_map_free(idr->remove_refs);
     }
 
     ecs_map_free(world->id_index);
@@ -1267,31 +1273,25 @@ void flecs_delete_table(
 }
 
 static
-void register_table_for_id(
+void register_table(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     int32_t column)
 {
-    ecs_id_record_t *r = flecs_ensure_id_record(world, id);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!r->table_index) {
-        r->table_index = ecs_map_new(ecs_table_record_t, 1);
-    }
-
-    ecs_table_record_t *tr = ecs_map_ensure(
-        r->table_index, ecs_table_record_t, table->id);
-
-    /* A table can be registered for the same entity multiple times if this is
-     * a trait. In that case make sure the column with the first occurrence is
-     * registered with the index */
-    if (!tr->table || column < tr->column) {
+    ecs_table_record_t *tr = ecs_table_cache_get(
+        &idr->cache, ecs_table_record_t, table);
+    if (tr) {
+        /* Tables can be registered multiple times for wildcard caches */
+        tr->count ++;
+    } else {
+        tr = ecs_table_cache_insert(&idr->cache, ecs_table_record_t, table);
         tr->table = table;
         tr->column = column;
         tr->count = 1;
-    } else {
-        tr->count ++;
     }
 
     /* Set flags if triggers are registered for table */
@@ -1310,43 +1310,48 @@ void register_table_for_id(
 }
 
 static
-void unregister_table_for_id(
+void unregister_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_id_t id)
+    ecs_id_t id,
+    int32_t column)
 {
-    ecs_id_record_t *r = flecs_get_id_record(world, id);
-    if (!r || !r->table_index) {
+    (void)column;
+
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
         return;
     }
 
-    ecs_map_remove(r->table_index, table->id);
+    ecs_table_cache_remove(&idr->cache, ecs_table_record_t, table);
 
-    if (!ecs_map_count(r->table_index)) {
+    if (ecs_table_cache_is_empty(&idr->cache)) {
         flecs_clear_id_record(world, id);
     }
 }
 
 static
-void do_register_id(
+void set_empty(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
-    int32_t column,
-    bool unregister)
+    int32_t column)
 {
-    if (unregister) {
-        unregister_table_for_id(world, table, id);
-    } else {
-        register_table_for_id(world, table, id, column);
+    (void)column;
+
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (idr) {
+        ecs_table_cache_set_empty(&idr->cache, table, 
+            ecs_table_count(table) == 0);
     }
 }
 
 static
-void do_register_each_id(
+void for_each_id(
     ecs_world_t *world,
     ecs_table_t *table,
-    bool unregister)
+    void(*action)(ecs_world_t*, ecs_table_t*, ecs_id_t, int32_t),
+    bool set_watch)
 {
     int32_t i, count = ecs_vector_count(table->type);
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
@@ -1360,40 +1365,39 @@ void do_register_each_id(
             has_childof = true;
         } 
 
-        do_register_id(world, table, ecs_strip_generation(id), i, unregister);
-        do_register_id(world, table, EcsWildcard, i, unregister);
+        action(world, table, ecs_strip_generation(id), i);
+        action(world, table, EcsWildcard, i);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
                 ECS_PAIR_RELATION(id), EcsWildcard);       
-            do_register_id(world, table, pred_w_wildcard, i, unregister);
+            action(world, table, pred_w_wildcard, i);
 
             ecs_entity_t obj_w_wildcard = ecs_pair(
                 EcsWildcard, ECS_PAIR_OBJECT(id));
-            do_register_id(world, table, obj_w_wildcard, i, unregister);
+            action(world, table, obj_w_wildcard, i);
 
             ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
-            do_register_id(world, table, all_wildcard, i, unregister);
+            action(world, table, all_wildcard, i);
 
-            if (!unregister) {
+            if (set_watch) {
                 flecs_set_watch(world, ecs_pair_relation(world, id));
                 flecs_set_watch(world, ecs_pair_object(world, id));
             }
         } else {
             if (id & ECS_ROLE_MASK) {
                 id &= ECS_COMPONENT_MASK;
-                do_register_id(world, table, ecs_pair(id, EcsWildcard), 
-                    i, unregister);
+                action(world, table, ecs_pair(id, EcsWildcard), i);
             }
 
-            if (!unregister) {
+            if (set_watch) {
                 flecs_set_watch(world, id);
             }            
         }
     }
 
     if (!has_childof) {
-        do_register_id(world, table, ecs_pair(EcsChildOf, 0), 0, unregister);
+        action(world, table, ecs_pair(EcsChildOf, 0), 0);
     }
 }
 
@@ -1401,17 +1405,15 @@ void flecs_register_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    do_register_each_id(world, table, false);
+    for_each_id(world, table, register_table, true);
 }
 
 void flecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    /* Remove table from id indices */
-    do_register_each_id(world, table, true);
+    for_each_id(world, table, unregister_table, false);
 
-    /* Remove table from table map */
     ecs_ids_t key = {
         .array = ecs_vector_first(table->type, ecs_id_t),
         .count = ecs_vector_count(table->type)
@@ -1420,12 +1422,25 @@ void flecs_unregister_table(
     flecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
+void flecs_table_set_empty(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    for_each_id(world, table, set_empty, false);
+}
+
 ecs_id_record_t* flecs_ensure_id_record(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_ensure(world->id_index, ecs_id_record_t, 
+    ecs_id_record_t *idr = ecs_map_ensure(world->id_index, ecs_id_record_t, 
         ecs_strip_generation(id));
+
+    if (!ecs_table_cache_is_initialized(&idr->cache)) {
+        ecs_table_cache_init(&idr->cache, ecs_table_record_t, world, NULL);
+    }
+
+    return idr;
 }
 
 ecs_id_record_t* flecs_get_id_record(
@@ -1446,7 +1461,7 @@ ecs_table_record_t* flecs_get_table_record(
         return NULL;
     }
 
-    return ecs_map_get(idr->table_index, ecs_table_record_t, table->id);
+    return ecs_table_cache_get(&idr->cache, ecs_table_record_t, table);
 }
 
 void flecs_register_add_ref(
@@ -1487,40 +1502,75 @@ void flecs_clear_id_record(
         return;
     }
     
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr) {
+    ecs_id_record_t *idr_ptr = flecs_get_id_record(world, id);
+    if (!idr_ptr) {
         return;
     }
 
-    /* Delete tables in id record. Because deleting the table updates the
-     * map, remove the map pointer from the id record. This will prevent the
-     * table from removing itself from the map as it is deleted, which
-     * allows for iterating the map without changing it. */
-    ecs_map_t *table_index = idr->table_index;
-    idr->table_index = NULL;
+    ecs_id_record_t idr = *idr_ptr;
 
-    ecs_map_iter_t it = ecs_map_iter(table_index);
-    ecs_table_record_t *tr;
-    while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-        flecs_delete_table(world, tr->table);
-    }
-    ecs_map_free(table_index);
+    ecs_map_remove(world->id_index, ecs_strip_generation(id));
+
+    ecs_table_cache_fini_delete_all(world, &idr.cache, ecs_table_record_t);
 
     /* Remove add & remove references to id from tables */
     ecs_table_t *table;
-    it = ecs_map_iter(idr->add_refs);
+    ecs_map_iter_t it = ecs_map_iter(idr.add_refs);
     while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
         flecs_table_clear_add_edge(table, id);
     }
 
-    it = ecs_map_iter(idr->remove_refs);
+    it = ecs_map_iter(idr.remove_refs);
     while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
         flecs_table_clear_remove_edge(table, id);
     }    
 
-    ecs_map_free(idr->add_refs);
-    ecs_map_free(idr->remove_refs);
+    ecs_map_free(idr.add_refs);
+    ecs_map_free(idr.remove_refs);
+}
 
-    ecs_map_free(idr->table_index);
-    ecs_map_remove(world->id_index, ecs_strip_generation(id));
+const ecs_table_record_t* flecs_id_record_table(
+    ecs_id_record_t *idr,
+    ecs_table_t *table)
+{
+    if (!idr) {
+        return NULL;
+    }
+    return ecs_table_cache_get(&idr->cache, ecs_table_record_t, table);
+}
+
+const ecs_table_record_t* flecs_id_record_tables(
+    const ecs_id_record_t *idr)
+{
+    if (!idr) {
+        return NULL;
+    }
+    return ecs_table_cache_tables(&idr->cache, ecs_table_record_t);
+}
+
+const ecs_table_record_t* flecs_id_record_empty_tables(
+    const ecs_id_record_t *idr)
+{
+    if (!idr) {
+        return NULL;
+    }
+    return ecs_table_cache_empty_tables(&idr->cache, ecs_table_record_t);
+}
+
+int32_t flecs_id_record_count(
+    const ecs_id_record_t *idr)
+{
+    if (!idr) {
+        return 0;
+    }
+    return ecs_table_cache_count(&idr->cache);
+}
+
+int32_t flecs_id_record_empty_count(
+    const ecs_id_record_t *idr)
+{
+    if (!idr) {
+        return 0;
+    }
+    return ecs_table_cache_empty_count(&idr->cache);
 }

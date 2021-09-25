@@ -1295,7 +1295,7 @@ void term_iter_init_no_data(
 {
     iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = NULL;
-    iter->iter = ecs_map_iter(NULL);
+    iter->index = 0;
 }
 
 static
@@ -1305,10 +1305,8 @@ void term_iter_init_wildcard(
 {
     iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = flecs_get_id_record(world, EcsWildcard);
-
-    if (iter->self_index) {
-        iter->iter = ecs_map_iter(iter->self_index->table_index);
-    }
+    iter->cur = iter->self_index;
+    iter->index = 0;
 }
 
 static
@@ -1330,11 +1328,11 @@ void term_iter_init(
             ecs_pair(subj->set.relation, EcsWildcard));
     }
 
+    iter->index = 0;
     if (iter->self_index) {
-        iter->iter = ecs_map_iter(iter->self_index->table_index);
-    } else if (iter->set_index) {
-        iter->iter = ecs_map_iter(iter->set_index->table_index);
-        iter->iter_set = true;
+        iter->cur = iter->self_index;
+    } else {
+        iter->cur = iter->set_index;
     }
 }
 
@@ -1367,6 +1365,19 @@ ecs_iter_t ecs_term_iter(
 }
 
 static
+const ecs_table_record_t *next_table(
+    ecs_term_iter_t *iter)
+{
+    const ecs_table_record_t *tables = flecs_id_record_tables(iter->cur);
+    int32_t count = flecs_id_record_count(iter->cur);
+    if (iter->index >= count) {
+        return NULL;
+    }
+
+    return &tables[iter->index ++];
+}
+
+static
 ecs_table_record_t term_iter_next(
     ecs_world_t *world,
     ecs_term_iter_t *iter,
@@ -1376,7 +1387,8 @@ ecs_table_record_t term_iter_next(
 {
     ecs_table_t *table = iter->table;
     ecs_entity_t source = 0;
-    ecs_table_record_t *tr, result = { .table = NULL };
+    const ecs_table_record_t *tr;
+    ecs_table_record_t result = { .table = NULL };
     ecs_term_t *term = &iter->term;
 
     do {
@@ -1393,14 +1405,11 @@ ecs_table_record_t term_iter_next(
         }
 
         if (!table) {
-            tr = ecs_map_next(&iter->iter, ecs_table_record_t, NULL);
-            if (!tr) {
-                if (!iter->iter_set) {
-                    if (iter->set_index) {
-                        iter->iter = ecs_map_iter(iter->set_index->table_index);
-                        tr = ecs_map_next(&iter->iter, ecs_table_record_t, NULL);
-                        iter->iter_set = true;
-                    }
+            if (!(tr = next_table(iter))) {
+                if (iter->cur != iter->set_index && iter->set_index != NULL) {
+                    iter->cur = iter->set_index;
+                    iter->index = 0;
+                    tr = next_table(iter);
                 }
 
                 if (!tr) {
@@ -1430,11 +1439,11 @@ ecs_table_record_t term_iter_next(
             result = *tr;
         }
 
-        if (iter->iter_set) {
+        if (iter->cur == iter->set_index) {
             const ecs_term_id_t *subj = &term->args[0];
 
             if (iter->self_index) {
-                if (ecs_map_has(iter->self_index->table_index, table->id)) {
+                if (flecs_id_record_table(iter->self_index, table) != NULL) {
                     /* If the table has the id itself and this term matched Self
                      * we already matched it */
                     continue;
@@ -1481,7 +1490,7 @@ bool ecs_term_next(
     }
 
     /* Source must either be 0 (EcsThis) or nonzero in case of substitution */
-    ecs_assert(source || !iter->iter_set, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(source || iter->cur != iter->set_index, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     it->table = table;
@@ -1594,7 +1603,7 @@ ecs_iter_t ecs_filter_iter(
                 return it;
             }
 
-            int32_t table_count = ecs_map_count(idr->table_index);
+            int32_t table_count = flecs_id_record_count(idr);
             if (min_count == -1 || table_count < min_count) {
                 min_count = table_count;
                 min_term_index = i;

@@ -83,6 +83,15 @@ int32_t move_table(
     return new_index;
 }
 
+static
+void ensure_index(
+    ecs_table_cache_t *cache)
+{
+    if (!cache->index) {
+        cache->index = ecs_map_new(int32_t, 0);
+    }
+}
+
 void _ecs_table_cache_init(
     ecs_table_cache_t *cache,
     ecs_size_t size,
@@ -92,7 +101,7 @@ void _ecs_table_cache_init(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
         ECS_INTERNAL_ERROR, NULL);
-    cache->index = ecs_map_new(int32_t, 0);
+    cache->index = NULL;
     cache->empty_tables = NULL;
     cache->tables = NULL;
     cache->size = size;
@@ -129,6 +138,12 @@ void ecs_table_cache_fini(
     free_payload(cache, cache->empty_tables);
 }
 
+bool ecs_table_cache_is_initialized(
+    ecs_table_cache_t *cache)
+{
+    return cache->size != 0;
+}
+
 void* _ecs_table_cache_insert(
     ecs_table_cache_t *cache,
     ecs_size_t size,
@@ -159,6 +174,7 @@ void* _ecs_table_cache_insert(
     }
 
     if (table) {
+        ensure_index(cache);
         ecs_map_set(cache->index, table->id, &index);
     }
     
@@ -171,10 +187,12 @@ void* _ecs_table_cache_insert(
 
 void _ecs_table_cache_remove(
     ecs_table_cache_t *cache,
+    ecs_size_t size,
     const ecs_table_t *table)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
 
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
@@ -195,6 +213,18 @@ void _ecs_table_cache_remove(
     }
 
     ecs_map_remove(cache->index, table->id);
+
+    if (!ecs_map_count(cache->index)) {
+        ecs_assert(ecs_vector_count(cache->tables) == 0, 
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_vector_count(cache->empty_tables) == 0,
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_table_cache_fini(cache);
+
+        cache->index = NULL;
+        cache->tables = NULL;
+        cache->empty_tables = NULL;
+    }
 }
 
 void* _ecs_table_cache_get(
@@ -224,7 +254,7 @@ void* _ecs_table_cache_get(
     return result;
 }
 
-void _ecs_table_cache_set_empty(
+void ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
     bool empty)
@@ -251,4 +281,85 @@ void _ecs_table_cache_set_empty(
         index[0] = move_table(
             cache, table, index[0], &cache->empty_tables, cache->tables, empty);
     }
+}
+
+void* _ecs_table_cache_tables(
+    const ecs_table_cache_t *cache,
+    ecs_size_t size)
+{
+    if (!cache) {
+        return NULL;
+    }
+    return ecs_vector_first_t(cache->tables, size, 8);
+}
+
+void* _ecs_table_cache_empty_tables(
+    const ecs_table_cache_t *cache,
+    ecs_size_t size)
+{
+    if (!cache) {
+        return NULL;
+    }
+    return ecs_vector_first_t(cache->empty_tables, size, 8);
+}
+
+int32_t ecs_table_cache_count(
+    const ecs_table_cache_t *cache)
+{
+    if (!cache) {
+        return 0;
+    }
+    return ecs_vector_count(cache->tables);
+}
+
+int32_t ecs_table_cache_empty_count(
+    const ecs_table_cache_t *cache)
+{
+    if (!cache) {
+        return 0;
+    }
+    return ecs_vector_count(cache->empty_tables);
+}
+
+bool ecs_table_cache_is_empty(
+    const ecs_table_cache_t *cache)
+{
+    if (!cache) {
+        return true;
+    }
+    return ecs_map_count(cache->index) == 0;
+}
+
+void _ecs_table_cache_fini_delete_all(
+    ecs_world_t *world,
+    ecs_table_cache_t *cache,
+    ecs_size_t size)
+{
+    if (!cache || !cache->index) {
+        return;
+    }
+
+    /* Temporarily set index to NULL, so that when the table tries to remove
+     * itself from the cache it won't be able to. This keeps the arrays we're
+     * iterating over consistent */
+    ecs_map_t *index = cache->index;
+    cache->index = NULL;
+
+    int32_t i, count = ecs_vector_count(cache->tables);
+    for (i = 0; i < count; i ++) {
+        ecs_table_cache_hdr_t *ptr = ecs_vector_get_t(
+            cache->tables, size, 8, i);
+        flecs_delete_table(world, ptr->table);
+    }
+
+    count = ecs_vector_count(cache->empty_tables);
+    for (i = 0; i < count; i ++) {
+        ecs_table_cache_hdr_t *ptr = ecs_vector_get_t(
+            cache->empty_tables, size, 8, i);
+        flecs_delete_table(world, ptr->table);
+    }
+
+    cache->index = index;
+
+    ecs_table_cache_fini(cache);
 }

@@ -37,13 +37,7 @@ void* get_component(
     int32_t row,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr) {
-        return NULL;
-    }
-
-    ecs_table_record_t *tr = ecs_map_get(idr->table_index, 
-        ecs_table_record_t, table->id);
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
     if (!tr) {
        return NULL;
     }
@@ -56,8 +50,8 @@ void* get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
-    ecs_map_t *table_index,
-    ecs_map_t *table_index_isa,
+    ecs_id_record_t *table_index,
+    ecs_id_record_t *table_index_isa,
     int32_t recur_depth)
 {
     /* Cycle detected in IsA relation */
@@ -78,13 +72,13 @@ void* get_base_component(
     if (!table_index_isa) {
         ecs_id_record_t *idr = flecs_get_id_record(world, ecs_pair(EcsIsA, EcsWildcard));
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table_index_isa = idr->table_index;
+        table_index_isa = idr;
     }
 
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
-    ecs_table_record_t *tr_isa = ecs_map_get(
-        table_index_isa, ecs_table_record_t, table->id);
+    const ecs_table_record_t *tr_isa = flecs_id_record_table(
+        table_index_isa, table);
     ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = table->type;
@@ -106,8 +100,8 @@ void* get_base_component(
             continue;
         }
 
-        ecs_table_record_t *tr = ecs_map_get(table_index, 
-            ecs_table_record_t, table->id);
+        const ecs_table_record_t *tr = flecs_id_record_table(
+            table_index, table);
         if (!tr) {
             ptr = get_base_component(world, table, id, table_index, 
                 table_index_isa, recur_depth + 1);
@@ -400,16 +394,14 @@ void instantiate(
     int32_t count)
 {    
     /* If base is a parent, instantiate children of base for instances */
-    const ecs_id_record_t *r = flecs_get_id_record(
+    const ecs_id_record_t *idr = flecs_get_id_record(
         world, ecs_pair(EcsChildOf, base));
 
-    if (r && r->table_index) {
-        ecs_table_record_t *tr;
-        ecs_map_iter_t it = ecs_map_iter(r->table_index);
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
-            instantiate_children(
-                world, base, table, data, row, count, tr->table);
-        }
+    const ecs_table_record_t *tables = flecs_id_record_tables(idr);
+    int32_t i, table_count = flecs_id_record_count(idr);
+    for (i = 0; i < table_count; i ++) {
+        instantiate_children(
+            world, base, table, data, row, count, tables[i].table);
     }
 }
 
@@ -2179,12 +2171,11 @@ void on_delete_object_action(
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
-        ecs_map_t *table_index = idr->table_index;
-        ecs_map_iter_t it = ecs_map_iter(table_index);
-        ecs_table_record_t *tr;
+        const ecs_table_record_t *tables = flecs_id_record_tables(idr);
+        int32_t i, count = flecs_id_record_count(idr);
 
-        /* Execute the on delete action */
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+        for (i = 0; i < count; i ++) {
+            const ecs_table_record_t *tr = &tables[i];
             ecs_table_t *table = tr->table;
 
             if (!ecs_table_count(table)) {
@@ -2204,7 +2195,7 @@ void on_delete_object_action(
                 ecs_entity_t action = idrr->on_delete_object;
                 if (!action || action == EcsRemove) {
                     remove_from_table(world, table, id, tr->column, tr->count);
-                    it = ecs_map_iter(table_index);
+                    i = 0; count = flecs_id_record_count(idr);
                 } else if (action == EcsDelete) {
                     delete_objects(world, table);
                 } else if (action == EcsThrow) {
@@ -2214,7 +2205,7 @@ void on_delete_object_action(
                 /* If no record was found for the relation, assume the default
                  * action which is to remove the relationship */
                 remove_from_table(world, table, id, tr->column, tr->count);
-                it = ecs_map_iter(table_index);
+                i = 0; count = flecs_id_record_count(idr);
             }
         }
 
@@ -2228,17 +2219,17 @@ void on_delete_relation_action(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
-
     if (idr) {
         ecs_entity_t on_delete = idr->on_delete;
         if (on_delete == EcsThrow) {
             throw_invalid_delete(world, id);
         }
 
-        ecs_map_t *table_index = idr->table_index;
-        ecs_map_iter_t it = ecs_map_iter(table_index);
-        ecs_table_record_t *tr;
-        while ((tr = ecs_map_next(&it, ecs_table_record_t, NULL))) {
+        const ecs_table_record_t *tables = flecs_id_record_tables(idr);
+        int32_t i, count = flecs_id_record_count(idr);
+
+        for (i = 0; i < count ; i ++) {
+            const ecs_table_record_t *tr = &tables[i];
             ecs_table_t *table = tr->table;
             ecs_entity_t action = idr->on_delete;
 
@@ -2440,10 +2431,9 @@ const void* ecs_get_id(
         return NULL;
     }
 
-    ecs_table_record_t *tr = ecs_map_get(idr->table_index, 
-        ecs_table_record_t, table->id);
+    const ecs_table_record_t *tr = flecs_id_record_table(idr, table);
     if (!tr) {
-       return get_base_component(world, table, id, idr->table_index, NULL, 0);
+       return get_base_component(world, table, id, idr, NULL, 0);
     }
 
     bool is_monitored;

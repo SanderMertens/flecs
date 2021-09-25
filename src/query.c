@@ -1889,7 +1889,7 @@ void unmatch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    ecs_table_cache_remove(&query->cache, table);
+    ecs_table_cache_remove(&query->cache, ecs_query_table_t, table);
 }
 
 static

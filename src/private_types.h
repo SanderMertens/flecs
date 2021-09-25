@@ -481,6 +481,7 @@ typedef struct ecs_relation_monitor_t {
 /* Payload for table index which returns all tables for a given component, with
  * the column of the component in the table. */
 typedef struct ecs_table_record_t {
+    ecs_table_cache_hdr_t hdr;
     ecs_table_t *table;
     int32_t column;
     int32_t count;
@@ -488,8 +489,8 @@ typedef struct ecs_table_record_t {
 
 /* Payload for id index which contains all datastructures for an id. */
 struct ecs_id_record_t {
-    /* All tables that contain the id */
-    ecs_map_t *table_index;         /* map<table_id, ecs_table_record_t> */
+    /* Cache with all tables that contain the id */
+    ecs_table_cache_t cache;
 
     /* All tables for which an outgoing (add) edge to the id was created */
     ecs_map_t *add_refs;

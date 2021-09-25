@@ -115,8 +115,12 @@ void flecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
+void flecs_table_set_empty(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 ecs_id_record_t* flecs_ensure_id_record(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_id_t id);
 
 ecs_id_record_t* flecs_get_id_record(
@@ -127,6 +131,22 @@ ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
+
+const ecs_table_record_t* flecs_id_record_table(
+    ecs_id_record_t *idr,
+    ecs_table_t *table);
+
+const ecs_table_record_t* flecs_id_record_tables(
+    const ecs_id_record_t *idr);
+
+const ecs_table_record_t* flecs_id_record_empty_tables(
+    const ecs_id_record_t *idr);
+
+int32_t flecs_id_record_count(
+    const ecs_id_record_t *idr);
+
+int32_t flecs_id_record_empty_count(
+    const ecs_id_record_t *idr);
 
 void flecs_register_add_ref(
     ecs_world_t *world,

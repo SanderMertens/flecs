@@ -22,6 +22,9 @@ void _ecs_table_cache_init(
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
 
+bool ecs_table_cache_is_initialized(
+    ecs_table_cache_t *cache);
+
 void* _ecs_table_cache_insert(
     ecs_table_cache_t *cache,
     ecs_size_t size,
@@ -32,10 +35,11 @@ void* _ecs_table_cache_insert(
 
 void _ecs_table_cache_remove(
     ecs_table_cache_t *cache,
+    ecs_size_t size,
     const ecs_table_t *table);
 
-#define ecs_table_cache_remove(cache, table)\
-    _ecs_table_cache_remove(cache, table)
+#define ecs_table_cache_remove(cache, T, table)\
+    _ecs_table_cache_remove(cache, ECS_SIZEOF(T), table)
 
 void* _ecs_table_cache_get(
     const ecs_table_cache_t *cache,
@@ -45,13 +49,41 @@ void* _ecs_table_cache_get(
 #define ecs_table_cache_get(cache, T, table)\
     ECS_CAST(T*, _ecs_table_cache_get(cache, ECS_SIZEOF(T), table))
 
-void _ecs_table_cache_set_empty(
+void ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
     bool empty);
 
-#define ecs_table_cache_set_empty(cache, table, empty)\
-    _ecs_table_cache_set_empty(cache, table, empty)
+void* _ecs_table_cache_tables(
+    const ecs_table_cache_t *cache,
+    ecs_size_t size);
+
+#define ecs_table_cache_tables(cache, T)\
+    ECS_CAST(T*, _ecs_table_cache_tables(cache, ECS_SIZEOF(T)))
+
+void* _ecs_table_cache_empty_tables(
+    const ecs_table_cache_t *cache,
+    ecs_size_t size);
+
+#define ecs_table_cache_empty_tables(cache, T)\
+    ECS_CAST(T*, _ecs_table_cache_empty_tables(cache, ECS_SIZEOF(T)))
+
+int32_t ecs_table_cache_count(
+    const ecs_table_cache_t *cache);
+
+int32_t ecs_table_cache_empty_count(
+    const ecs_table_cache_t *cache);
+
+bool ecs_table_cache_is_empty(
+    const ecs_table_cache_t *cache);
+
+void _ecs_table_cache_fini_delete_all(
+    ecs_world_t *world,
+    ecs_table_cache_t *cache,
+    ecs_size_t size);
+
+#define ecs_table_cache_fini_delete_all(world, cache, T)\
+    _ecs_table_cache_fini_delete_all(world, cache, ECS_SIZEOF(T))
 
 #ifdef __cplusplus
 }
