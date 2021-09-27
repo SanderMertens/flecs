@@ -2247,9 +2247,6 @@ void insert_term(
         ensure_most_specific_var(rule, term_obj(rule, term), written);
     }
 
-    ecs_rule_pair_t filter = term_to_pair(rule, term);
-    prepare_predicate(rule, &filter, written);
-
     /* If term has Not operator, prepend Not which turns a fail into a pass */
     int32_t prev = rule->operation_count;
     ecs_rule_op_t *not_pre;
@@ -2259,6 +2256,9 @@ void insert_term(
         not_pre->has_in = false;
         not_pre->has_out = false;
     }
+
+    ecs_rule_pair_t filter = term_to_pair(rule, term);
+    prepare_predicate(rule, &filter, written);
 
     if (subj_is_set(term) && !obj_set) {
         insert_term_1(rule, term, &filter, c, written);
