@@ -1259,6 +1259,8 @@ void TransitiveRules_trans_this_x_after_tag_this_2_lvls(void);
 void TransitiveRules_trans_this_x_before_tag_this_2_lvls(void);
 void TransitiveRules_transitive_not_w_var(void);
 void TransitiveRules_transitive_w_not_nonfinal(void);
+void TransitiveRules_transitive_w_optional_nonfinal(void);
+void TransitiveRules_transitive_w_optional_nonfinal_w_var(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6883,6 +6885,14 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "transitive_w_not_nonfinal",
         TransitiveRules_transitive_w_not_nonfinal
+    },
+    {
+        "transitive_w_optional_nonfinal",
+        TransitiveRules_transitive_w_optional_nonfinal
+    },
+    {
+        "transitive_w_optional_nonfinal_w_var",
+        TransitiveRules_transitive_w_optional_nonfinal_w_var
     }
 };
 
@@ -10179,7 +10189,7 @@ static bake_test_suite suites[] = {
         "TransitiveRules",
         NULL,
         NULL,
-        15,
+        17,
         TransitiveRules_testcases
     },
     {

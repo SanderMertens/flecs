@@ -16159,12 +16159,6 @@ void insert_select_or_with(
         }
     }
 
-    /* Optional terms cannot discard an entity, so set fail to the same label as
-     * pass */
-    if (term->oper == EcsOptional) {
-        op->on_fail = op->on_pass;
-    }
-
     /* If supersets of subject are being evaluated, and we're looking for a
      * specific filter, stop as soon as the filter has been matched. */
     if (eval_subject_supersets && is_pair_known(rule, &op->filter, written)) {
@@ -16427,6 +16421,22 @@ void insert_term(
         jump->has_out = false;
         jump->on_pass = rule->operation_count;
         jump->on_fail = prev - 1;
+
+        /* Find exit instruction for optional term, and make the fail label
+         * point to the Not operation, so that even when the operation fails,
+         * it won't discard the result */
+        int i, min_fail = -1, exit_op = -1;
+        for (i = prev; i < rule->operation_count; i ++) {
+            ecs_rule_op_t *op = &rule->operations[i];
+            if (min_fail == -1 || (op->on_fail >= 0 && op->on_fail < min_fail)){
+                min_fail = op->on_fail;
+                exit_op = i;
+            }
+        }
+
+        ecs_assert(exit_op != -1, ECS_INTERNAL_ERROR, NULL);
+        ecs_rule_op_t *op = &rule->operations[exit_op];
+        op->on_fail = rule->operation_count - 1;
     }
 
     push_frame(rule);
@@ -16899,6 +16909,7 @@ ecs_iter_t ecs_rule_iter(
     const ecs_rule_t *rule)
 {
     ecs_iter_t result = {0};
+    int i;
 
     result.world = (ecs_world_t*)world;
     result.real_world = (ecs_world_t*)ecs_get_world(rule->world);
@@ -16920,11 +16931,14 @@ ecs_iter_t ecs_rule_iter(
             it->columns = ecs_os_malloc_n(int32_t, 
                 rule->operation_count * rule->filter.term_count);
         }
+
+        for (i = 0; i < rule->filter.term_count; i ++) {
+            it->columns[i] = -1;
+        }
     }
 
     it->op = 0;
 
-    int i;
     for (i = 0; i < rule->variable_count; i ++) {
         if (rule->variables[i].kind == EcsRuleVarKindEntity) {
             entity_reg_set(rule, it->registers, i, EcsWildcard);

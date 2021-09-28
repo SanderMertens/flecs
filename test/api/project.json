@@ -1327,7 +1327,9 @@
                 "trans_this_x_after_tag_this_2_lvls",
                 "trans_this_x_before_tag_this_2_lvls",
                 "transitive_not_w_var",
-                "transitive_w_not_nonfinal"
+                "transitive_w_not_nonfinal",
+                "transitive_w_optional_nonfinal",
+                "transitive_w_optional_nonfinal_w_var"
             ]
         }, {
            "id": "Trigger",

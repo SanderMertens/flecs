@@ -598,3 +598,114 @@ void TransitiveRules_transitive_w_not_nonfinal() {
     ecs_rule_fini(r);
     ecs_fini(world);
 }
+
+void TransitiveRules_transitive_w_optional_nonfinal() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    LINE "IsA(RockyPlanet, Planet)"
+    LINE "Final(Foo)"
+    LINE "Foo(Earth)"
+    LINE "Foo(Jupiter)"
+    LINE "Foo(Moon)"
+    LINE "RockyPlanet(Earth)"
+    LINE "Planet(Jupiter)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo, ?Planet"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,Planet"
+    LINE "subj: 0,0"
+    LINE "this:"
+    LINE "    - Moon"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,RockyPlanet"
+    LINE "subj: 0,0"
+    LINE "this:"
+    LINE "    - Earth"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,Planet"
+    LINE "subj: 0,0"
+    LINE "this:"
+    LINE "    - Jupiter"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void TransitiveRules_transitive_w_optional_nonfinal_w_var() {
+    ecs_world_t *world = ecs_init();
+
+    const char *ruleset = 
+    LINE "IsA(Loves, Likes)"
+    LINE "Final(Foo)"
+    LINE "Foo(Alice)"
+    LINE "Foo(Bob)"
+    LINE "Foo(Jane)"
+    LINE "Likes(Alice, Bob)"
+    LINE "Loves(Bob, Alice)";
+    test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo(X), ?Likes(X, Y)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,(Likes,*)"
+    LINE "subj: Jane,Jane"
+    LINE "vars: Y=*,X=Jane"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,(Likes,Bob)"
+    LINE "subj: Alice,Alice"
+    LINE "vars: Y=Bob,X=Alice"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it), expect =
+    HEAD "term: Foo,(Loves,Alice)"
+    LINE "subj: Bob,Bob"
+    LINE "vars: Y=Alice,X=Bob"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
