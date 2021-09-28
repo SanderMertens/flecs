@@ -1611,4 +1611,3 @@ void Hierarchies_long_name_depth_2() {
 
     ecs_fini(world);
 }
-

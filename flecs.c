@@ -31258,11 +31258,17 @@ bool is_number(
 
 static 
 ecs_entity_t name_to_id(
+    const ecs_world_t *world,
     const char *name)
 {
     long int result = atol(name);
     ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
-    return (ecs_entity_t)result;
+    ecs_entity_t alive = ecs_get_alive(world, result);
+    if (alive) {
+        return alive;
+    } else {
+        return result;
+    }
 }
 
 static
@@ -31450,7 +31456,7 @@ ecs_entity_t ecs_lookup_child(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (is_number(name)) {
-        return name_to_id(name);
+        return name_to_id(world, name);
     }
 
     ecs_filter_t f;
@@ -31500,7 +31506,7 @@ ecs_entity_t ecs_lookup(
     }
 
     if (is_number(name)) {
-        return name_to_id(name);
+        return name_to_id(world, name);
     }
 
     e = find_by_name(&world->aliases, name, 0, 0);

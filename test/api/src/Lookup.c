@@ -120,6 +120,30 @@ void Lookup_lookup_by_id() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_recycled_by_id() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    char buf[20];
+    sprintf(buf, "%u", (uint32_t)e);
+    
+    ecs_entity_t l = ecs_lookup(world, buf);
+    test_assert(l != 0);
+    test_assert(l == e);
+
+    ecs_delete(world, e);
+    ecs_entity_t r = ecs_new_id(world);
+    test_assert((uint32_t)r == e);
+    test_assert(r != e);
+
+    l = ecs_lookup(world, buf);
+    test_assert(l == r);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_name_w_digit() {
     ecs_world_t *world = ecs_init();
 

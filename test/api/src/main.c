@@ -684,6 +684,7 @@ void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
 void Lookup_get_name_from_empty(void);
 void Lookup_lookup_by_id(void);
+void Lookup_lookup_recycled_by_id(void);
 void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
 void Lookup_lookup_symbol_w_digit(void);
@@ -4653,6 +4654,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_by_id",
         Lookup_lookup_by_id
+    },
+    {
+        "lookup_recycled_by_id",
+        Lookup_lookup_recycled_by_id
     },
     {
         "lookup_symbol_by_id",
@@ -10085,7 +10090,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        26,
+        27,
         Lookup_testcases
     },
     {
