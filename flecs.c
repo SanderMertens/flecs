@@ -31263,11 +31263,11 @@ ecs_entity_t name_to_id(
 {
     long int result = atol(name);
     ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t alive = ecs_get_alive(world, result);
+    ecs_entity_t alive = ecs_get_alive(world, (ecs_entity_t)result);
     if (alive) {
         return alive;
     } else {
-        return result;
+        return (ecs_entity_t)result;
     }
 }
 
