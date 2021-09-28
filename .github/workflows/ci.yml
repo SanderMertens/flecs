@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   build-linux:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
       CC: ${{ matrix.compiler.cc }}
@@ -65,7 +65,7 @@ jobs:
           bake examples/os_api/bake --strict --cfg release
 
   build-windows:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: windows-latest
 
     strategy:
@@ -127,7 +127,7 @@ jobs:
           bake test
 
   test-windows:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: windows-latest
 
     steps:
@@ -152,7 +152,7 @@ jobs:
           bake/bake run test\collections
 
   analyze-scan-build:
-    timeout-minutes: 10
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     env:
       CC: clang-10
@@ -181,7 +181,7 @@ jobs:
           scan-build --status-bugs bake
 
   analyze-sanitized:
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
