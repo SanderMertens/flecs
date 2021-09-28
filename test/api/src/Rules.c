@@ -3881,3 +3881,58 @@ void Rules_optional_term_on_relation_this_obj() {
 
     ecs_fini(world);
 }
+
+void Rules_optional_w_subj_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Likes, 0);
+
+    const char *expr = 
+    HEAD "Final(Likes)"
+    LINE "Likes(Alice, Bob)"
+    LINE "Likes(Jane, Bob)"
+    LINE "Likes(John, Jane)";
+    test_int(ecs_plecs_from_str(world, NULL, expr), 0);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "Likes(X, Y), ?Likes(Z, X)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    char *result, *expect;
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Likes,Bob),(Likes,Alice)"
+    LINE "subj: Alice,*"
+    LINE "vars: Y=Bob,X=Alice,Z=*"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Likes,Bob),(Likes,Jane)"
+    LINE "subj: Jane,John"
+    LINE "vars: Y=Bob,X=Jane,Z=John"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Likes,Jane),(Likes,John)"
+    LINE "subj: John,*"
+    LINE "vars: Y=Jane,X=John,Z=*"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

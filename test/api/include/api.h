@@ -12,6 +12,10 @@ extern "C" {
 #define MAX_ENTITIES (256)
 #define MAX_INVOCATIONS (1024)
 
+/* Multiline strings */
+#define HEAD
+#define LINE "\n"
+
 typedef struct Probe {
     ecs_entity_t system;
     ecs_entity_t self;

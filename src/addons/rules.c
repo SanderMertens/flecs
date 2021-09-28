@@ -672,7 +672,10 @@ ecs_entity_t entity_reg_get(
 {
     (void)rule;
     ecs_entity_t e = regs[r].entity;
-    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL); 
+    if (!e) {
+        return EcsWildcard;
+    }
+    
     ecs_assert(ecs_is_valid(rule->world, e), ECS_INVALID_PARAMETER, NULL);   
     return e;
 }
@@ -2343,6 +2346,10 @@ void compile_program(
         for (c = 0; c < term_count; c ++) {
             ecs_term_t *term = &terms[c];
             if (skip_term(term)) {
+                continue;
+            }
+
+            if (term->oper == EcsOptional) {
                 continue;
             }
 

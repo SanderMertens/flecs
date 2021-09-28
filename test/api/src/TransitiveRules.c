@@ -1,8 +1,5 @@
 #include <api.h>
 
-#define HEAD
-#define LINE "\n"
-
 /* New set of tests just for transitivity. Transitive tests from Rules suite 
  * will be moved here */
 
