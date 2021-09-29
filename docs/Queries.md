@@ -113,7 +113,8 @@ The query descriptor is a C API to construct queries that follows the struct ini
 This is an example of the query descriptor API:
 
 ```c
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_filter_t f;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
     {ecs_id(Velocity)},
@@ -126,7 +127,8 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 The descriptor API has support for using the DSL:
 
 ```c
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_filter_t f;
+ecs_filter_init(world, &f, &(ecs_filter_desc_t){
   .terms = {
     {ecs_id(Position)},
     {ecs_id(Velocity)}
@@ -792,7 +794,7 @@ which is equivalent to
 // Position(This)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.predicate = ecs_id(Position), .args[0].entity = EcsThis}
+    {.predicate.entity = ecs_id(Position), .args[0].entity = EcsThis}
   }
 });
 ```
@@ -815,7 +817,7 @@ which is equivalent to
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {
-      .predicate = Likes,
+      .predicate.entity = Likes,
       .args[0].entity = EcsThis,
       .args[1].entity = Alice
     }
