@@ -2088,6 +2088,10 @@ int8_t flecs_to_i8(
 int16_t flecs_to_i16(
     int64_t v);
 
+/* Convert 64 bit signed integer to 32 bit */
+int32_t flecs_to_i32(
+    int64_t v);
+
 /* Convert 64 bit unsigned integer to 32 bit */
 uint32_t flecs_to_u32(
     uint64_t v);        
@@ -2472,7 +2476,7 @@ void _ecs_parser_errorv(
     const char *fmt,
     va_list args)
 {
-    int32_t column = column_arg;
+    int32_t column = flecs_to_i32(column_arg);
 
     if (trace_level >= -2) {
         char *msg = ecs_vasprintf(fmt, args);
@@ -30227,6 +30231,13 @@ int16_t flecs_to_i16(
 {
     ecs_assert(v < INT16_MAX, ECS_INTERNAL_ERROR, NULL);
     return (int16_t)v;
+}
+
+int32_t flecs_to_i32(
+    int64_t v)
+{
+    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
+    return (int32_t)v;
 }
 
 uint32_t flecs_to_u32(

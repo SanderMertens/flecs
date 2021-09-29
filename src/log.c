@@ -312,7 +312,7 @@ void _ecs_parser_errorv(
     const char *fmt,
     va_list args)
 {
-    int32_t column = column_arg;
+    int32_t column = flecs_to_i32(column_arg);
 
     if (trace_level >= -2) {
         char *msg = ecs_vasprintf(fmt, args);

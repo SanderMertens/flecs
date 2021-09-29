@@ -664,6 +664,10 @@ int8_t flecs_to_i8(
 int16_t flecs_to_i16(
     int64_t v);
 
+/* Convert 64 bit signed integer to 32 bit */
+int32_t flecs_to_i32(
+    int64_t v);
+
 /* Convert 64 bit unsigned integer to 32 bit */
 uint32_t flecs_to_u32(
     uint64_t v);        
