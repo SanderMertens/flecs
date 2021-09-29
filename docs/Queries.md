@@ -896,7 +896,7 @@ But that does not work, as this query would return all Likes relationships * all
 (Likes, X), (Colleague, X)
 ```
 
-A variable is an identifier that is local to the query. It does not need to be defined in advance. By default identifiers that are all uppercase are automatically parsed as a variable by the DSL.
+A variable is an identifier that is local to the query. It does not need to be defined in advance. By default, identifiers with a single uppercase character or identifiers that start with a _ are treated as variables, where identifiers with a double _ are treated as anonymous variables.
 
 Variables can occur in multiple places. For example, this query returns all the relationships the `This` entity has with each object it likes as `R`:
 
@@ -915,7 +915,7 @@ With variables this can be ensured:
 Variables allow queries to arbitrarily traverse the entity relationship graph. For example, the following query tests whether there exist entities that like objects that like their enemies:
 
 ```
-(Likes, FRIEND), Likes(FRIEND, ENEMY), (Enemy, ENEMY)
+(Likes, _Friend), Likes(_Friend, _Enemy), (Enemy, _Enemy)
 ```
 
 This example shows how to use variables in the C++ API:
@@ -966,6 +966,19 @@ def find_object_w_component(This, Component):
     else
       find_object_w_component(pair.object, Component)
   return 0 '// No match
+```
+
+### Parent components
+Queries may use the `parent` shortcut to select components from a parent entity which is short for `super(ChildOf)` /This query:
+
+```
+Position(parent)
+```
+
+is equivalent to
+
+```
+Position(super(ChildOf))
 ```
 
 #### Inclusive Substitution
