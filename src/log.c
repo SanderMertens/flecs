@@ -308,10 +308,12 @@ void ecs_tracing_color_enable(
 void _ecs_parser_errorv(
     const char *name,
     const char *expr, 
-    int64_t column,
+    int64_t column_arg,
     const char *fmt,
     va_list args)
 {
+    int32_t column = column_arg;
+
     if (trace_level >= -2) {
         char *msg = ecs_vasprintf(fmt, args);
 
