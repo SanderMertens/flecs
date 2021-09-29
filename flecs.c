@@ -29719,7 +29719,7 @@ void unregister_trigger_for_id(
             }
 
             if (!idt->triggers && !idt->set_triggers) {
-                ecs_map_remove(evt->triggers, trigger->term.id);
+                ecs_map_remove(evt->triggers, id);
                 if (!ecs_map_count(evt->triggers)) {
                     ecs_map_free(evt->triggers);
                     evt->triggers = NULL;
@@ -29733,7 +29733,7 @@ static
 void unregister_trigger(
     ecs_observable_t *observable,
     ecs_trigger_t *trigger)
-{
+{    
     ecs_term_t *term = &trigger->term;
     if (term->args[0].set.mask & EcsSelf) {
         unregister_trigger_for_id(observable, trigger, term->id, false);

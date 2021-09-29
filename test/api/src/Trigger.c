@@ -2507,3 +2507,28 @@ void Trigger_trigger_on_disabled() {
 
     ecs_fini(world);
 }
+
+void Trigger_trigger_cleanup_2_w_self_super_id() {
+    ecs_world_t * world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { .id = Tag, .args[0].set.mask = EcsSuperSet },
+        .events = { EcsOnAdd },
+        .callback = Trigger
+    });
+
+    ecs_entity_t t2 = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = { Tag },
+        .events = { EcsOnAdd },
+        .callback = Trigger
+    });
+
+    test_assert(t1 != 0);
+    test_assert(t2 != 0);
+
+    ecs_fini(world);
+
+    /* Ensure two triggers for Tag and Tag(super) are cleaned up correctly */
+}

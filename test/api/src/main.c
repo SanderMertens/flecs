@@ -1326,6 +1326,7 @@ void Trigger_iter_type_set(void);
 void Trigger_readonly_term(void);
 void Trigger_trigger_on_prefab(void);
 void Trigger_trigger_on_disabled(void);
+void Trigger_trigger_cleanup_2_w_self_super_id(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7148,6 +7149,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_on_disabled",
         Trigger_trigger_on_disabled
+    },
+    {
+        "trigger_cleanup_2_w_self_super_id",
+        Trigger_trigger_cleanup_2_w_self_super_id
     }
 };
 
@@ -10196,7 +10201,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        63,
+        64,
         Trigger_testcases
     },
     {
