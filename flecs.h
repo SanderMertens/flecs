@@ -6966,6 +6966,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
+FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 
 /** Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
@@ -6990,7 +6991,8 @@ typedef enum ecs_type_kind_t {
     EcsPrimitiveType,
     EcsBitmaskType,
     EcsEnumType,
-    EcsStructType
+    EcsStructType,
+    EcsArrayType
 } ecs_type_kind_t;
 
 typedef struct EcsMetaType {
@@ -7056,6 +7058,10 @@ typedef struct EcsBitmask {
     ecs_map_t *constants;
 } EcsBitmask;
 
+typedef struct EcsArray {
+    ecs_entity_t type;
+    int32_t count;
+} EcsArray;
 
 /** Serializer utilities */
 
@@ -7102,6 +7108,19 @@ typedef struct EcsMetaTypeSerialized {
 
 
 /** Convenience functions for creating meta types */
+
+/** Used with ecs_array_init. */
+typedef struct ecs_array_desc_t {
+    ecs_entity_desc_t entity;
+    ecs_entity_t type;
+    int32_t count;
+} ecs_array_desc_t;
+
+/** Create a new array type */
+FLECS_API
+ecs_entity_t ecs_array_init(
+    ecs_world_t *world,
+    const ecs_array_desc_t *desc);
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {

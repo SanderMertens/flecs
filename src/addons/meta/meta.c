@@ -336,6 +336,40 @@ void set_member(ecs_iter_t *it) {
     }
 }
 
+static
+void set_array(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsArray *array = ecs_term(it, EcsArray, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t elem_type = array[i].type;
+        int32_t elem_count = array[i].count;
+
+        if (!elem_type) {
+            ecs_err("array '%s' has no element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!elem_count) {
+            ecs_err("array '%s' has size 0", ecs_get_name(world, e));
+            continue;
+        }
+
+        const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
+        if (init_component(
+            world, e, elem_ptr->size * elem_count, elem_ptr->alignment))
+        {
+            continue;
+        }
+
+        if (init_type(world, e, EcsArrayType)) {
+            continue;
+        }
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -350,6 +384,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsBitmask);
     flecs_bootstrap_component(world, EcsMember);
     flecs_bootstrap_component(world, EcsStruct);
+    flecs_bootstrap_component(world, EcsArray);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -367,21 +402,25 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsStruct)
     });
 
-    /* Register triggers for meta components in meta scope */
+    /* Register triggers to finalize type information from component data */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsPrimitive),
         .events = {EcsOnSet},
         .callback = set_primitive
     });
 
-    /* Register triggers for meta components in meta scope */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMember),
         .events = {EcsOnSet},
         .callback = set_member
     });
 
-    /* Update serialized component when type is set */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsArray),
+        .events = {EcsOnSet},
+        .callback = set_array
+    });
+
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMetaType),
         .events = {EcsOnSet},
@@ -416,6 +455,23 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, entity, EcsEntity);
 
     #undef ECS_PRIMITIVE
+}
+
+ecs_entity_t ecs_array_init(
+    ecs_world_t *world,
+    const ecs_array_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsArray, {
+        .type = desc->type,
+        .count = desc->count
+    });
+
+    return t;
 }
 
 ecs_entity_t ecs_struct_init(

@@ -1672,3 +1672,216 @@ void Serialized_ops_struct_array_struct_bool_3_w_i32_after() {
 
     ecs_fini(world);
 }
+
+void Serialized_ops_standalone_array_bool_1() {
+    typedef struct {
+        ecs_bool_t x[1];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 1
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 3);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 3, t);
+    test_mp(s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
+    test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_standalone_array_bool_2() {
+    typedef struct {
+        ecs_bool_t x[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 2
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 3);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 3, t);
+    test_mp(s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
+    test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_standalone_array_bool_3() {
+    typedef struct {
+        ecs_bool_t x[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 3
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 3);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 3, t);
+    test_mp(s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
+    test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_standalone_array_bool_1_w_bool_after() {
+    typedef struct {
+        ecs_bool_t x[1];
+        ecs_bool_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 1
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a},
+            {"y", ecs_id(ecs_bool_t)}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 4);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 4, t);
+    test_mp(s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
+    test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_standalone_array_bool_2_w_bool_after() {
+    typedef struct {
+        ecs_bool_t x[2];
+        ecs_bool_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 2
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a},
+            {"y", ecs_id(ecs_bool_t)}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 4);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 4, t);
+    test_mp(s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
+    test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_standalone_array_bool_3_w_bool_after() {
+    typedef struct {
+        ecs_bool_t x[3];
+        ecs_bool_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 3
+    });
+
+    test_assert(a != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a},
+            {"y", ecs_id(ecs_bool_t)}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vector_count(s->ops), 4);
+
+    test_op(s->ops, 0, EcsOpPush, 1, 4, t);
+    test_mp(s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
+    test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}

@@ -406,6 +406,200 @@ void ArrayTypes_8_arrays_bool_w_padded_member() {
     meta_test_member(world, t, T, p3, ecs_id(ecs_i64_t), 1);
     meta_test_member(world, t, T, h, ecs_id(ecs_bool_t), 8);
 
+    ecs_fini(world);
+}
+
+void ArrayTypes_standaline_array_bool_1() {
+    typedef struct {
+        ecs_bool_t x[1];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 1
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 1);
+
+    ecs_fini(world);
+}
+
+void ArrayTypes_standaline_array_bool_2() {
+    typedef struct {
+        ecs_bool_t x[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 2
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 1);
+
+    ecs_fini(world);
+}
+
+void ArrayTypes_standaline_array_bool_3() {
+    typedef struct {
+        ecs_bool_t x[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 3
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 1);
+
+    ecs_fini(world);
+}
+
+void ArrayTypes_array_of_standaline_array_bool_1() {
+    typedef ecs_bool_t bool_1[1];
+    typedef struct {
+        bool_1 x[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 1
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a, 3}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 3);
+
+    ecs_fini(world);
+}
+
+void ArrayTypes_array_of_standaline_array_bool_2() {
+    typedef ecs_bool_t bool_2[2];
+    typedef struct {
+        bool_2 x[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 2
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a, 3}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 3);
+
+    ecs_fini(world);
+}
+
+void ArrayTypes_array_of_standaline_array_bool_3() {
+    typedef ecs_bool_t bool_2[3];
+    typedef struct {
+        bool_2 x[4];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A",
+        .type = ecs_id(ecs_bool_t),
+        .count = 3
+    });
+
+    test_assert(a != 0);
+    test_str(ecs_get_name(world, a), "A");
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", a, 4}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, a, 4);
 
     ecs_fini(world);
 }

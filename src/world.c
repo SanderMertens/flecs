@@ -35,6 +35,7 @@ const ecs_entity_t ecs_id(EcsEnum) =               18;
 const ecs_entity_t ecs_id(EcsBitmask) =            19;
 const ecs_entity_t ecs_id(EcsMember) =             20;
 const ecs_entity_t ecs_id(EcsStruct) =             21;
+const ecs_entity_t ecs_id(EcsArray) =              22;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;

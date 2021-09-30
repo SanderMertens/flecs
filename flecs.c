@@ -18715,6 +18715,27 @@ ecs_vector_t* serialize_primitive(
 }
 
 static
+ecs_vector_t* serialize_array(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    const EcsArray *ptr = ecs_get(world, type, EcsArray);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t first = ecs_vector_count(ops);
+    ops = serialize_type(world, ptr->type, offset, ops);
+    
+    ecs_meta_type_op_t *op = ops_get(ops, first);
+    op->offset = offset;
+    op->count = ptr->count;
+    op->op_count = ecs_vector_count(ops) - first;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -18739,9 +18760,15 @@ ecs_vector_t* serialize_struct(
         ops = serialize_type(world, member->type, offset + member->offset, ops);
         
         op = ops_get(ops, cur);
-        op->type = member->type;
+        if (!op->type) {
+            op->type = member->type;
+        }
+        
+        if (op->count <= 1) {
+            op->count = member->count;
+        }
+
         op->name = member->name;
-        op->count = member->count;
         op->op_count = ecs_vector_count(ops) - cur;
     }
 
@@ -18775,6 +18802,10 @@ ecs_vector_t* serialize_type(
 
     case EcsStructType:
         ops = serialize_struct(world, type, offset, ops);
+        break;
+
+    case EcsArrayType:
+        ops = serialize_array(world, type, offset, ops);
         break;
     }
 
@@ -19140,6 +19171,40 @@ void set_member(ecs_iter_t *it) {
     }
 }
 
+static
+void set_array(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsArray *array = ecs_term(it, EcsArray, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t elem_type = array[i].type;
+        int32_t elem_count = array[i].count;
+
+        if (!elem_type) {
+            ecs_err("array '%s' has no element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!elem_count) {
+            ecs_err("array '%s' has size 0", ecs_get_name(world, e));
+            continue;
+        }
+
+        const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
+        if (init_component(
+            world, e, elem_ptr->size * elem_count, elem_ptr->alignment))
+        {
+            continue;
+        }
+
+        if (init_type(world, e, EcsArrayType)) {
+            continue;
+        }
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -19154,6 +19219,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsBitmask);
     flecs_bootstrap_component(world, EcsMember);
     flecs_bootstrap_component(world, EcsStruct);
+    flecs_bootstrap_component(world, EcsArray);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -19171,21 +19237,25 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsStruct)
     });
 
-    /* Register triggers for meta components in meta scope */
+    /* Register triggers to finalize type information from component data */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsPrimitive),
         .events = {EcsOnSet},
         .callback = set_primitive
     });
 
-    /* Register triggers for meta components in meta scope */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMember),
         .events = {EcsOnSet},
         .callback = set_member
     });
 
-    /* Update serialized component when type is set */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsArray),
+        .events = {EcsOnSet},
+        .callback = set_array
+    });
+
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMetaType),
         .events = {EcsOnSet},
@@ -19220,6 +19290,23 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, entity, EcsEntity);
 
     #undef ECS_PRIMITIVE
+}
+
+ecs_entity_t ecs_array_init(
+    ecs_world_t *world,
+    const ecs_array_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsArray, {
+        .type = desc->type,
+        .count = desc->count
+    });
+
+    return t;
 }
 
 ecs_entity_t ecs_struct_init(
@@ -21579,6 +21666,7 @@ const ecs_entity_t ecs_id(EcsEnum) =               18;
 const ecs_entity_t ecs_id(EcsBitmask) =            19;
 const ecs_entity_t ecs_id(EcsMember) =             20;
 const ecs_entity_t ecs_id(EcsStruct) =             21;
+const ecs_entity_t ecs_id(EcsArray) =              22;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
