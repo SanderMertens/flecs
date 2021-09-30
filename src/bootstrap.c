@@ -269,6 +269,8 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsTrigger);
     bootstrap_component(world, table, EcsObserver);
 
+    ecs_set_component_actions(world, EcsComponent, { .ctor = ecs_default_ctor });
+
     ecs_set_component_actions(world, EcsIdentifier, {
         .ctor = ecs_ctor(EcsIdentifier),
         .dtor = ecs_dtor(EcsIdentifier),

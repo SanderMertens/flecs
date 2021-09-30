@@ -140,7 +140,7 @@ int flecs_entity_compare_qsort(
 uint64_t flecs_string_hash(
     const void *ptr)
 {
-    const ecs_string_t *str = ptr;
+    const ecs_hashed_string_t *str = ptr;
     ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
     return str->hash;
 }

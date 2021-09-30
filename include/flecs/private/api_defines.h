@@ -113,32 +113,6 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Reserved component ids
-////////////////////////////////////////////////////////////////////////////////
-
-/** Builtin component ids */
-#define FLECS__EEcsComponent (1)
-#define FLECS__EEcsComponentLifecycle (2)
-#define FLECS__EEcsType (3)
-#define FLECS__EEcsIdentifier (4)
-#define FLECS__EEcsTrigger (6)
-#define FLECS__EEcsQuery (7)
-#define FLECS__EEcsObserver (8)
-// #define FLECS__EEcsIterable (9)
-
-/* System module component ids */
-#define FLECS__EEcsSystem (10)
-#define FLECS__EEcsTickSource (11)
-
-/** Pipeline module component ids */
-#define FLECS__EEcsPipelineQuery (12)
-
-/** Timer module component ids */
-#define FLECS__EEcsTimer (13)
-#define FLECS__EEcsRateFilter (14)
-
-
-////////////////////////////////////////////////////////////////////////////////
 //// Entity id macro's
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -76,11 +76,11 @@ extern ecs_mixins_t ecs_query_t_mixins;
 
 
 /** Type used for internal string hashmap */
-typedef struct ecs_string_t {
+typedef struct ecs_hashed_string_t {
     char *value;
     ecs_size_t length;
     uint64_t hash;
-} ecs_string_t;
+} ecs_hashed_string_t;
 
 /** Component-specific data */
 typedef struct ecs_type_info_t {
