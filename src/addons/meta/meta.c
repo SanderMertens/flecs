@@ -1,4 +1,26 @@
-#include "../private_api.h"
+#include "meta.h"
+
+#ifdef FLECS_META
+
+/* EcsMetaTypeSerialized lifecycle */
+
+static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
+    ecs_vector_free(dst->ops);
+    dst->ops = ecs_vector_copy(src->ops, ecs_meta_type_op_t);
+})
+
+static ECS_MOVE(EcsMetaTypeSerialized, dst, src, {
+    ecs_vector_free(dst->ops);
+    dst->ops = src->ops;
+    src->ops = NULL;
+})
+
+static ECS_DTOR(EcsMetaTypeSerialized, ptr, { 
+    ecs_vector_free(ptr->ops); 
+})
+
+
+/* EcsStruct lifecycle */
 
 static void dtor_struct(
     EcsStruct *ptr) 
@@ -81,7 +103,7 @@ int init_component(
 
     component->size = size;
     component->alignment = alignment;
-    ecs_modified(world, type, EcsMetaType);
+    ecs_modified(world, type, EcsComponent);
 
     return 0;
 }
@@ -97,10 +119,6 @@ int add_member_to_struct(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (init_type(world, type, EcsStructType)) {
-        return -1;
-    }
 
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -188,6 +206,11 @@ int add_member_to_struct(
     comp->alignment = alignment;
     ecs_modified(world, type, EcsComponent);
 
+    /* Do this last as it triggers the update of EcsMetaTypeSerialized */
+    if (init_type(world, type, EcsStructType)) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -196,94 +219,94 @@ void set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsPrimitive *type = ecs_term(it, EcsPrimitive, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         switch(type->kind) {
         case EcsBool:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsChar:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(char), ECS_ALIGNOF(char));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsByte:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU8:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint8_t), ECS_ALIGNOF(uint8_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU16:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint16_t), ECS_ALIGNOF(uint16_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint32_t), ECS_ALIGNOF(uint32_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint64_t), ECS_ALIGNOF(uint64_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI8:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int8_t), ECS_ALIGNOF(int8_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI16:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int16_t), ECS_ALIGNOF(int16_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int32_t), ECS_ALIGNOF(int32_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int64_t), ECS_ALIGNOF(int64_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsF32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(float), ECS_ALIGNOF(float));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsF64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(double), ECS_ALIGNOF(double));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsUPtr:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uintptr_t), ECS_ALIGNOF(uintptr_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsIPtr:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(intptr_t), ECS_ALIGNOF(intptr_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsString:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(char*), ECS_ALIGNOF(char*));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsEntity:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(ecs_entity_t), ECS_ALIGNOF(ecs_entity_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         }
     }
@@ -294,8 +317,8 @@ void set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_term(it, EcsMember, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
         if (!parent) {
@@ -315,6 +338,7 @@ void FlecsMetaImport(
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsMetaType);
+    flecs_bootstrap_component(world, EcsMetaTypeSerialized);
     flecs_bootstrap_component(world, EcsPrimitive);
     flecs_bootstrap_component(world, EcsEnum);
     flecs_bootstrap_component(world, EcsBitmask);
@@ -322,6 +346,14 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
+
+    ecs_set_component_actions(world, EcsMetaTypeSerialized, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsMetaTypeSerialized),
+        .copy = ecs_copy(EcsMetaTypeSerialized),
+        .dtor = ecs_dtor(EcsMetaTypeSerialized)
+    });
+
     ecs_set_component_actions(world, EcsStruct, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsStruct),
@@ -341,6 +373,13 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsMember),
         .events = {EcsOnSet},
         .callback = set_member
+    });
+
+    /* Update serialized component when type is set */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsMetaType),
+        .events = {EcsOnSet},
+        .callback = ecs_meta_type_serialized_init
     });
 
     /* Initialize primitive types */
@@ -415,3 +454,5 @@ ecs_entity_t ecs_struct_init(
 
     return t;
 }
+
+#endif
