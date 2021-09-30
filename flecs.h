@@ -6967,6 +6967,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
+FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
 
 /** Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
@@ -6992,7 +6993,8 @@ typedef enum ecs_type_kind_t {
     EcsBitmaskType,
     EcsEnumType,
     EcsStructType,
-    EcsArrayType
+    EcsArrayType,
+    EcsVectorType
 } ecs_type_kind_t;
 
 typedef struct EcsMetaType {
@@ -7063,12 +7065,18 @@ typedef struct EcsArray {
     int32_t count;
 } EcsArray;
 
+typedef struct EcsVector {
+    ecs_entity_t type;
+} EcsVector;
+
+
 /** Serializer utilities */
 
 typedef enum ecs_meta_type_op_kind_t {
     EcsOpHeader,
     EcsOpEnum,
     EcsOpBitmask,
+    EcsOpVector,
     EcsOpPush,
     EcsOpPop,
 
@@ -7121,6 +7129,18 @@ FLECS_API
 ecs_entity_t ecs_array_init(
     ecs_world_t *world,
     const ecs_array_desc_t *desc);
+
+/** Used with ecs_vector_init. */
+typedef struct ecs_vector_desc_t {
+    ecs_entity_desc_t entity;
+    ecs_entity_t type;
+} ecs_vector_desc_t;
+
+/** Create a new vector type */
+FLECS_API
+ecs_entity_t ecs_vector_init(
+    ecs_world_t *world,
+    const ecs_vector_desc_t *desc);
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {

@@ -116,6 +116,13 @@
                 "array_of_standaline_array_bool_3"
             ]
         }, {
+            "id": "VectorTypes",
+            "testcases": [
+                "vector_bool",
+                "vector_i32",
+                "vector_struct"
+            ]
+        }, {
             "id": "Serialized",
             "testcases": [
                 "primitive_constants",
@@ -169,7 +176,11 @@
                 "ops_standalone_array_bool_3",
                 "ops_standalone_array_bool_1_w_bool_after",
                 "ops_standalone_array_bool_2_w_bool_after",
-                "ops_standalone_array_bool_3_w_bool_after"
+                "ops_standalone_array_bool_3_w_bool_after",
+                "ops_vector",
+                "ops_struct_w_vector",
+                "ops_struct_w_vector_w_bool_before",
+                "ops_struct_w_vector_w_bool_after"
             ]
         }]
     }

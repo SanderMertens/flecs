@@ -104,6 +104,11 @@ void ArrayTypes_array_of_standaline_array_bool_1(void);
 void ArrayTypes_array_of_standaline_array_bool_2(void);
 void ArrayTypes_array_of_standaline_array_bool_3(void);
 
+// Testsuite 'VectorTypes'
+void VectorTypes_vector_bool(void);
+void VectorTypes_vector_i32(void);
+void VectorTypes_vector_struct(void);
+
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
 void Serialized_ops_bool(void);
@@ -157,6 +162,10 @@ void Serialized_ops_standalone_array_bool_3(void);
 void Serialized_ops_standalone_array_bool_1_w_bool_after(void);
 void Serialized_ops_standalone_array_bool_2_w_bool_after(void);
 void Serialized_ops_standalone_array_bool_3_w_bool_after(void);
+void Serialized_ops_vector(void);
+void Serialized_ops_struct_w_vector(void);
+void Serialized_ops_struct_w_vector_w_bool_before(void);
+void Serialized_ops_struct_w_vector_w_bool_after(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -522,6 +531,21 @@ bake_test_case ArrayTypes_testcases[] = {
     }
 };
 
+bake_test_case VectorTypes_testcases[] = {
+    {
+        "vector_bool",
+        VectorTypes_vector_bool
+    },
+    {
+        "vector_i32",
+        VectorTypes_vector_i32
+    },
+    {
+        "vector_struct",
+        VectorTypes_vector_struct
+    }
+};
+
 bake_test_case Serialized_testcases[] = {
     {
         "primitive_constants",
@@ -730,6 +754,22 @@ bake_test_case Serialized_testcases[] = {
     {
         "ops_standalone_array_bool_3_w_bool_after",
         Serialized_ops_standalone_array_bool_3_w_bool_after
+    },
+    {
+        "ops_vector",
+        Serialized_ops_vector
+    },
+    {
+        "ops_struct_w_vector",
+        Serialized_ops_struct_w_vector
+    },
+    {
+        "ops_struct_w_vector_w_bool_before",
+        Serialized_ops_struct_w_vector_w_bool_before
+    },
+    {
+        "ops_struct_w_vector_w_bool_after",
+        Serialized_ops_struct_w_vector_w_bool_after
     }
 };
 
@@ -763,15 +803,22 @@ static bake_test_suite suites[] = {
         ArrayTypes_testcases
     },
     {
+        "VectorTypes",
+        NULL,
+        NULL,
+        3,
+        VectorTypes_testcases
+    },
+    {
         "Serialized",
         NULL,
         NULL,
-        52,
+        56,
         Serialized_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 5);
+    return bake_test_run("meta", argc, argv, suites, 6);
 }
