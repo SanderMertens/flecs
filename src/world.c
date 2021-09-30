@@ -29,11 +29,12 @@ const ecs_entity_t ecs_id(EcsRateFilter) =         14;
 
 /** Meta module component ids */
 const ecs_entity_t ecs_id(EcsMetaType) =           15;
-const ecs_entity_t ecs_id(EcsPrimitive) =          16;
-const ecs_entity_t ecs_id(EcsEnum) =               17;
-const ecs_entity_t ecs_id(EcsBitmask) =            18;
-const ecs_entity_t ecs_id(EcsMember) =             19;
-const ecs_entity_t ecs_id(EcsStruct) =             20;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) = 16;
+const ecs_entity_t ecs_id(EcsPrimitive) =          17;
+const ecs_entity_t ecs_id(EcsEnum) =               18;
+const ecs_entity_t ecs_id(EcsBitmask) =            19;
+const ecs_entity_t ecs_id(EcsMember) =             20;
+const ecs_entity_t ecs_id(EcsStruct) =             21;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;

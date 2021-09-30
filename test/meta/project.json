@@ -86,7 +86,52 @@
                 "1_i32_2_i32_i32",
                 "1_i32_i32_2_i32",
                 "1_i32_i32_2_same",
-                "1_i32_i32_2_i32_i32"
+                "1_i32_i32_2_i32_i32",
+                "2_lvls_bool",
+                "2_lvls_bool_bool"
+            ]
+        }, {
+            "id": "Serialized",
+            "testcases": [
+                "primitive_constants",
+                "ops_bool",
+                "ops_byte",
+                "ops_char",
+                "ops_i8",
+                "ops_i16",
+                "ops_i32",
+                "ops_i64",
+                "ops_iptr",
+                "ops_u8",
+                "ops_u16",
+                "ops_u32",
+                "ops_u64",
+                "ops_uptr",
+                "ops_float",
+                "ops_double",
+                "ops_string",
+                "ops_entity",
+                "ops_struct_bool",
+                "ops_struct_bool_bool",
+                "ops_struct_i32",
+                "ops_struct_i32_i32",
+                "ops_struct_i32_bool",
+                "ops_struct_bool_i32",
+                "ops_nested_struct_1_bool",
+                "ops_nested_struct_1_i32",
+                "ops_nested_struct_1_bool_w_bool_member",
+                "ops_nested_struct_1_bool_w_i32_member",
+                "ops_nested_struct_1_bool_2_bool",
+                "ops_nested_struct_1_i32_2_bool",
+                "ops_nested_struct_1_i32_i32_2_bool_bool",
+                "ops_nested_struct_1_bool_bool_2_i32_i32",
+                "ops_nested_struct_1_i32_bool_2_bool_i32",
+                "ops_nested_struct_1_bool_i32_2_i32_bool",
+                "ops_nested_2_lvls_bool",
+                "ops_nested_2_lvls_bool_bool",
+                "ops_nested_2_lvls_i32_i32_w_member_before",
+                "ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before",
+                "ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before"
             ]
         }]
     }

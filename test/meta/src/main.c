@@ -78,6 +78,49 @@ void NestedStructTypes_1_i32_2_i32_i32(void);
 void NestedStructTypes_1_i32_i32_2_i32(void);
 void NestedStructTypes_1_i32_i32_2_same(void);
 void NestedStructTypes_1_i32_i32_2_i32_i32(void);
+void NestedStructTypes_2_lvls_bool(void);
+void NestedStructTypes_2_lvls_bool_bool(void);
+
+// Testsuite 'Serialized'
+void Serialized_primitive_constants(void);
+void Serialized_ops_bool(void);
+void Serialized_ops_byte(void);
+void Serialized_ops_char(void);
+void Serialized_ops_i8(void);
+void Serialized_ops_i16(void);
+void Serialized_ops_i32(void);
+void Serialized_ops_i64(void);
+void Serialized_ops_iptr(void);
+void Serialized_ops_u8(void);
+void Serialized_ops_u16(void);
+void Serialized_ops_u32(void);
+void Serialized_ops_u64(void);
+void Serialized_ops_uptr(void);
+void Serialized_ops_float(void);
+void Serialized_ops_double(void);
+void Serialized_ops_string(void);
+void Serialized_ops_entity(void);
+void Serialized_ops_struct_bool(void);
+void Serialized_ops_struct_bool_bool(void);
+void Serialized_ops_struct_i32(void);
+void Serialized_ops_struct_i32_i32(void);
+void Serialized_ops_struct_i32_bool(void);
+void Serialized_ops_struct_bool_i32(void);
+void Serialized_ops_nested_struct_1_bool(void);
+void Serialized_ops_nested_struct_1_i32(void);
+void Serialized_ops_nested_struct_1_bool_w_bool_member(void);
+void Serialized_ops_nested_struct_1_bool_w_i32_member(void);
+void Serialized_ops_nested_struct_1_bool_2_bool(void);
+void Serialized_ops_nested_struct_1_i32_2_bool(void);
+void Serialized_ops_nested_struct_1_i32_i32_2_bool_bool(void);
+void Serialized_ops_nested_struct_1_bool_bool_2_i32_i32(void);
+void Serialized_ops_nested_struct_1_i32_bool_2_bool_i32(void);
+void Serialized_ops_nested_struct_1_bool_i32_2_i32_bool(void);
+void Serialized_ops_nested_2_lvls_bool(void);
+void Serialized_ops_nested_2_lvls_bool_bool(void);
+void Serialized_ops_nested_2_lvls_i32_i32_w_member_before(void);
+void Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before(void);
+void Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -345,6 +388,173 @@ bake_test_case NestedStructTypes_testcases[] = {
     {
         "1_i32_i32_2_i32_i32",
         NestedStructTypes_1_i32_i32_2_i32_i32
+    },
+    {
+        "2_lvls_bool",
+        NestedStructTypes_2_lvls_bool
+    },
+    {
+        "2_lvls_bool_bool",
+        NestedStructTypes_2_lvls_bool_bool
+    }
+};
+
+bake_test_case Serialized_testcases[] = {
+    {
+        "primitive_constants",
+        Serialized_primitive_constants
+    },
+    {
+        "ops_bool",
+        Serialized_ops_bool
+    },
+    {
+        "ops_byte",
+        Serialized_ops_byte
+    },
+    {
+        "ops_char",
+        Serialized_ops_char
+    },
+    {
+        "ops_i8",
+        Serialized_ops_i8
+    },
+    {
+        "ops_i16",
+        Serialized_ops_i16
+    },
+    {
+        "ops_i32",
+        Serialized_ops_i32
+    },
+    {
+        "ops_i64",
+        Serialized_ops_i64
+    },
+    {
+        "ops_iptr",
+        Serialized_ops_iptr
+    },
+    {
+        "ops_u8",
+        Serialized_ops_u8
+    },
+    {
+        "ops_u16",
+        Serialized_ops_u16
+    },
+    {
+        "ops_u32",
+        Serialized_ops_u32
+    },
+    {
+        "ops_u64",
+        Serialized_ops_u64
+    },
+    {
+        "ops_uptr",
+        Serialized_ops_uptr
+    },
+    {
+        "ops_float",
+        Serialized_ops_float
+    },
+    {
+        "ops_double",
+        Serialized_ops_double
+    },
+    {
+        "ops_string",
+        Serialized_ops_string
+    },
+    {
+        "ops_entity",
+        Serialized_ops_entity
+    },
+    {
+        "ops_struct_bool",
+        Serialized_ops_struct_bool
+    },
+    {
+        "ops_struct_bool_bool",
+        Serialized_ops_struct_bool_bool
+    },
+    {
+        "ops_struct_i32",
+        Serialized_ops_struct_i32
+    },
+    {
+        "ops_struct_i32_i32",
+        Serialized_ops_struct_i32_i32
+    },
+    {
+        "ops_struct_i32_bool",
+        Serialized_ops_struct_i32_bool
+    },
+    {
+        "ops_struct_bool_i32",
+        Serialized_ops_struct_bool_i32
+    },
+    {
+        "ops_nested_struct_1_bool",
+        Serialized_ops_nested_struct_1_bool
+    },
+    {
+        "ops_nested_struct_1_i32",
+        Serialized_ops_nested_struct_1_i32
+    },
+    {
+        "ops_nested_struct_1_bool_w_bool_member",
+        Serialized_ops_nested_struct_1_bool_w_bool_member
+    },
+    {
+        "ops_nested_struct_1_bool_w_i32_member",
+        Serialized_ops_nested_struct_1_bool_w_i32_member
+    },
+    {
+        "ops_nested_struct_1_bool_2_bool",
+        Serialized_ops_nested_struct_1_bool_2_bool
+    },
+    {
+        "ops_nested_struct_1_i32_2_bool",
+        Serialized_ops_nested_struct_1_i32_2_bool
+    },
+    {
+        "ops_nested_struct_1_i32_i32_2_bool_bool",
+        Serialized_ops_nested_struct_1_i32_i32_2_bool_bool
+    },
+    {
+        "ops_nested_struct_1_bool_bool_2_i32_i32",
+        Serialized_ops_nested_struct_1_bool_bool_2_i32_i32
+    },
+    {
+        "ops_nested_struct_1_i32_bool_2_bool_i32",
+        Serialized_ops_nested_struct_1_i32_bool_2_bool_i32
+    },
+    {
+        "ops_nested_struct_1_bool_i32_2_i32_bool",
+        Serialized_ops_nested_struct_1_bool_i32_2_i32_bool
+    },
+    {
+        "ops_nested_2_lvls_bool",
+        Serialized_ops_nested_2_lvls_bool
+    },
+    {
+        "ops_nested_2_lvls_bool_bool",
+        Serialized_ops_nested_2_lvls_bool_bool
+    },
+    {
+        "ops_nested_2_lvls_i32_i32_w_member_before",
+        Serialized_ops_nested_2_lvls_i32_i32_w_member_before
+    },
+    {
+        "ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before",
+        Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before
+    },
+    {
+        "ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before",
+        Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before
     }
 };
 
@@ -367,12 +577,19 @@ static bake_test_suite suites[] = {
         "NestedStructTypes",
         NULL,
         NULL,
-        20,
+        22,
         NestedStructTypes_testcases
+    },
+    {
+        "Serialized",
+        NULL,
+        NULL,
+        39,
+        Serialized_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 3);
+    return bake_test_run("meta", argc, argv, suites, 4);
 }

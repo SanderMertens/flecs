@@ -6924,7 +6924,6 @@ void FlecsTimerImport(
  * The meta addon enables reflecting on component data.
  */
 
-#define FLECS_META
 #ifdef FLECS_META
 
 #ifndef FLECS_META_H
@@ -6956,6 +6955,7 @@ typedef char* ecs_string_t;
 
 /** Meta module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMetaType);
+FLECS_API extern const ecs_entity_t ecs_id(EcsMetaTypeSerialized);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
@@ -6993,7 +6993,7 @@ typedef struct EcsMetaType {
 } EcsMetaType;
 
 typedef enum ecs_primitive_kind_t {
-    EcsBool,
+    EcsBool = 1,
     EcsChar,
     EcsByte,
     EcsU8,
@@ -7043,6 +7043,51 @@ typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
     ecs_map_t *constants;
 } EcsBitmask;
+
+
+/** Serializer utilities */
+
+typedef enum ecs_meta_type_op_kind_t {
+    EcsOpHeader,
+    EcsOpEnum,
+    EcsOpBitmask,
+    EcsOpPush,
+    EcsOpPop,
+
+    EcsOpPrimitive,
+
+    EcsOpBool,
+    EcsOpChar,
+    EcsOpByte,
+    EcsOpU8,
+    EcsOpU16,
+    EcsOpU32,
+    EcsOpU64,
+    EcsOpI8,
+    EcsOpI16,
+    EcsOpI32,
+    EcsOpI64,
+    EcsOpF32,
+    EcsOpF64,
+    EcsOpUPtr,
+    EcsOpIPtr,
+    EcsOpString,
+    EcsOpEntity
+} ecs_meta_type_op_kind_t;
+
+typedef struct ecs_meta_type_op_t {
+    ecs_meta_type_op_kind_t kind;
+    ecs_size_t offset;    /* Offset of current field */
+    int32_t count;        
+    int32_t op_count;     /* Number of operations until next field or end */
+    const char *name;     /* Name of value (only used for struct members) */
+    ecs_entity_t type;
+} ecs_meta_type_op_t;
+
+typedef struct EcsMetaTypeSerialized {
+    ecs_vector_t* ops;
+} EcsMetaTypeSerialized;
+
 
 /** Convenience functions for creating meta types */
 

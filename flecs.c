@@ -18655,6 +18655,173 @@ ecs_entity_t ecs_module_init(
 }
 
 #endif
+#ifndef FLECS_META_PRIVATE_H
+#define FLECS_META_PRIVATE_H
+
+
+void ecs_meta_type_serialized_init(
+    ecs_iter_t *it);
+
+#endif
+
+#ifdef FLECS_META
+
+static
+ecs_vector_t* serialize_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops);
+
+static
+ecs_meta_type_op_kind_t primitive_to_op_kind(ecs_primitive_kind_t kind) {
+    return EcsOpPrimitive + kind;
+}
+
+static
+ecs_meta_type_op_t* ops_add(ecs_vector_t **ops, ecs_meta_type_op_kind_t kind) {
+    ecs_meta_type_op_t *op = ecs_vector_add(ops, ecs_meta_type_op_t);
+    op->kind = kind;
+    op->offset = 0;
+    op->count = 1;
+    op->op_count = 1;
+    op->name = NULL;
+    op->type = 0;
+    return op;
+}
+
+static
+ecs_meta_type_op_t* ops_get(ecs_vector_t *ops, int32_t index) {
+    ecs_meta_type_op_t* op = ecs_vector_get(ops, ecs_meta_type_op_t, index);
+    ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+    return op;
+}
+
+static
+ecs_vector_t* serialize_primitive(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    const EcsPrimitive *ptr = ecs_get(world, type, EcsPrimitive);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_type_op_t *op = ops_add(&ops, primitive_to_op_kind(ptr->kind));
+    op->offset = offset,
+    op->type = type;
+
+    return ops;
+}
+
+static
+ecs_vector_t* serialize_struct(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t cur, first = ecs_vector_count(ops);
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpPush);
+    op->offset = offset;
+    op->type = type;
+
+    ecs_member_t *members = ecs_vector_first(ptr->members, ecs_member_t);
+    int32_t i, count = ecs_vector_count(ptr->members);
+
+    for (i = 0; i < count; i ++) {
+        ecs_member_t *member = &members[i];
+
+        cur = ecs_vector_count(ops);
+        ops = serialize_type(world, member->type, offset + member->offset, ops);
+        ops_get(ops, cur)->type = member->type;
+        ops_get(ops, cur)->name = member->name;
+        ops_get(ops, cur)->op_count = ecs_vector_count(ops) - cur;
+    }
+
+    ops_add(&ops, EcsOpPop);
+    ops_get(ops, first)->op_count = ecs_vector_count(ops) - first;
+
+    return ops;
+}
+
+static
+ecs_vector_t* serialize_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+
+    switch(ptr->kind) {
+    case EcsPrimitiveType:
+        ops = serialize_primitive(world, type, offset, ops);
+        break;
+
+    case EcsEnumType:
+        // ops = serialize_enum(world, type, offset, ops);
+        break;
+
+    case EcsBitmaskType:
+        // ops = serialize_bitmask(world, type, offset, ops);
+        break;
+
+    case EcsStructType:
+        ops = serialize_struct(world, type, offset, ops);
+        break;
+    }
+
+    return ops;
+}
+
+void ecs_meta_type_serialized_init(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_vector_t *ops = serialize_type(world, e, 0, NULL);
+        ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        EcsMetaTypeSerialized *ptr = ecs_get_mut(
+            world, e, EcsMetaTypeSerialized, NULL);
+        if (ptr->ops) {
+            ecs_vector_free(ptr->ops);
+        }
+
+        ptr->ops = ops;
+    }
+}
+
+#endif
+
+#ifdef FLECS_META
+
+/* EcsMetaTypeSerialized lifecycle */
+
+static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
+    ecs_vector_free(dst->ops);
+    dst->ops = ecs_vector_copy(src->ops, ecs_meta_type_op_t);
+})
+
+static ECS_MOVE(EcsMetaTypeSerialized, dst, src, {
+    ecs_vector_free(dst->ops);
+    dst->ops = src->ops;
+    src->ops = NULL;
+})
+
+static ECS_DTOR(EcsMetaTypeSerialized, ptr, { 
+    ecs_vector_free(ptr->ops); 
+})
+
+
+/* EcsStruct lifecycle */
 
 static void dtor_struct(
     EcsStruct *ptr) 
@@ -18737,7 +18904,7 @@ int init_component(
 
     component->size = size;
     component->alignment = alignment;
-    ecs_modified(world, type, EcsMetaType);
+    ecs_modified(world, type, EcsComponent);
 
     return 0;
 }
@@ -18753,10 +18920,6 @@ int add_member_to_struct(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (init_type(world, type, EcsStructType)) {
-        return -1;
-    }
 
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -18844,6 +19007,11 @@ int add_member_to_struct(
     comp->alignment = alignment;
     ecs_modified(world, type, EcsComponent);
 
+    /* Do this last as it triggers the update of EcsMetaTypeSerialized */
+    if (init_type(world, type, EcsStructType)) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -18852,94 +19020,94 @@ void set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsPrimitive *type = ecs_term(it, EcsPrimitive, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         switch(type->kind) {
         case EcsBool:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsChar:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(char), ECS_ALIGNOF(char));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsByte:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU8:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint8_t), ECS_ALIGNOF(uint8_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU16:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint16_t), ECS_ALIGNOF(uint16_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint32_t), ECS_ALIGNOF(uint32_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsU64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uint64_t), ECS_ALIGNOF(uint64_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI8:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int8_t), ECS_ALIGNOF(int8_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI16:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int16_t), ECS_ALIGNOF(int16_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int32_t), ECS_ALIGNOF(int32_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsI64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(int64_t), ECS_ALIGNOF(int64_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsF32:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(float), ECS_ALIGNOF(float));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsF64:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(double), ECS_ALIGNOF(double));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsUPtr:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(uintptr_t), ECS_ALIGNOF(uintptr_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsIPtr:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(intptr_t), ECS_ALIGNOF(intptr_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsString:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(char*), ECS_ALIGNOF(char*));
+            init_type(world, e, EcsPrimitiveType);
             break;
         case EcsEntity:
-            init_type(world, e, EcsPrimitiveType);
             init_component(world, e, 
                 ECS_SIZEOF(ecs_entity_t), ECS_ALIGNOF(ecs_entity_t));
+            init_type(world, e, EcsPrimitiveType);
             break;
         }
     }
@@ -18950,8 +19118,8 @@ void set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_term(it, EcsMember, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
         if (!parent) {
@@ -18971,6 +19139,7 @@ void FlecsMetaImport(
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsMetaType);
+    flecs_bootstrap_component(world, EcsMetaTypeSerialized);
     flecs_bootstrap_component(world, EcsPrimitive);
     flecs_bootstrap_component(world, EcsEnum);
     flecs_bootstrap_component(world, EcsBitmask);
@@ -18978,6 +19147,14 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
+
+    ecs_set_component_actions(world, EcsMetaTypeSerialized, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsMetaTypeSerialized),
+        .copy = ecs_copy(EcsMetaTypeSerialized),
+        .dtor = ecs_dtor(EcsMetaTypeSerialized)
+    });
+
     ecs_set_component_actions(world, EcsStruct, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsStruct),
@@ -18997,6 +19174,13 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsMember),
         .events = {EcsOnSet},
         .callback = set_member
+    });
+
+    /* Update serialized component when type is set */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsMetaType),
+        .events = {EcsOnSet},
+        .callback = ecs_meta_type_serialized_init
     });
 
     /* Initialize primitive types */
@@ -19071,6 +19255,8 @@ ecs_entity_t ecs_struct_init(
 
     return t;
 }
+
+#endif
 
 
 #ifdef FLECS_STATS
@@ -21375,11 +21561,12 @@ const ecs_entity_t ecs_id(EcsRateFilter) =         14;
 
 /** Meta module component ids */
 const ecs_entity_t ecs_id(EcsMetaType) =           15;
-const ecs_entity_t ecs_id(EcsPrimitive) =          16;
-const ecs_entity_t ecs_id(EcsEnum) =               17;
-const ecs_entity_t ecs_id(EcsBitmask) =            18;
-const ecs_entity_t ecs_id(EcsMember) =             19;
-const ecs_entity_t ecs_id(EcsStruct) =             20;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) = 16;
+const ecs_entity_t ecs_id(EcsPrimitive) =          17;
+const ecs_entity_t ecs_id(EcsEnum) =               18;
+const ecs_entity_t ecs_id(EcsBitmask) =            19;
+const ecs_entity_t ecs_id(EcsMember) =             20;
+const ecs_entity_t ecs_id(EcsStruct) =             21;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
