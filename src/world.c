@@ -7,6 +7,34 @@ const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
 const ecs_id_t ECS_OVERRIDE =  (ECS_ROLE | (0x75ull << 56));
 const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
+/** Builtin component ids */
+const ecs_entity_t ecs_id(EcsComponent) =          1;
+const ecs_entity_t ecs_id(EcsComponentLifecycle) = 2;
+const ecs_entity_t ecs_id(EcsType) =               3;
+const ecs_entity_t ecs_id(EcsIdentifier) =         4;
+const ecs_entity_t ecs_id(EcsTrigger) =            5;
+const ecs_entity_t ecs_id(EcsQuery) =              6;
+const ecs_entity_t ecs_id(EcsObserver) =           7;
+
+/* System module component ids */
+const ecs_entity_t ecs_id(EcsSystem) =             10;
+const ecs_entity_t ecs_id(EcsTickSource) =         11;
+
+/** Pipeline module component ids */
+const ecs_entity_t ecs_id(EcsPipelineQuery) =      12;
+
+/** Timer module component ids */
+const ecs_entity_t ecs_id(EcsTimer) =              13;
+const ecs_entity_t ecs_id(EcsRateFilter) =         14;
+
+/** Meta module component ids */
+const ecs_entity_t ecs_id(EcsMetaType) =           15;
+const ecs_entity_t ecs_id(EcsPrimitive) =          16;
+const ecs_entity_t ecs_id(EcsEnum) =               17;
+const ecs_entity_t ecs_id(EcsBitmask) =            18;
+const ecs_entity_t ecs_id(EcsMember) =             19;
+const ecs_entity_t ecs_id(EcsStruct) =             20;
+
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
 const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
@@ -66,6 +94,25 @@ const ecs_entity_t EcsPostUpdate =            ECS_HI_COMPONENT_ID + 71;
 const ecs_entity_t EcsPreStore =              ECS_HI_COMPONENT_ID + 72;
 const ecs_entity_t EcsOnStore =               ECS_HI_COMPONENT_ID + 73;
 const ecs_entity_t EcsPostFrame =             ECS_HI_COMPONENT_ID + 74;
+
+/* Meta primitive components (don't use low ids to save id space) */
+const ecs_entity_t ecs_id(ecs_bool_t) =       ECS_HI_COMPONENT_ID + 80;
+const ecs_entity_t ecs_id(ecs_char_t) =       ECS_HI_COMPONENT_ID + 81;
+const ecs_entity_t ecs_id(ecs_byte_t) =       ECS_HI_COMPONENT_ID + 82;
+const ecs_entity_t ecs_id(ecs_u8_t) =      ECS_HI_COMPONENT_ID + 83;
+const ecs_entity_t ecs_id(ecs_u16_t) =     ECS_HI_COMPONENT_ID + 84;
+const ecs_entity_t ecs_id(ecs_u32_t) =     ECS_HI_COMPONENT_ID + 85;
+const ecs_entity_t ecs_id(ecs_u64_t) =     ECS_HI_COMPONENT_ID + 86;
+const ecs_entity_t ecs_id(ecs_uptr_t) =    ECS_HI_COMPONENT_ID + 87;
+const ecs_entity_t ecs_id(ecs_i8_t) =       ECS_HI_COMPONENT_ID + 88;
+const ecs_entity_t ecs_id(ecs_i16_t) =      ECS_HI_COMPONENT_ID + 89;
+const ecs_entity_t ecs_id(ecs_i32_t) =      ECS_HI_COMPONENT_ID + 90;
+const ecs_entity_t ecs_id(ecs_i64_t) =      ECS_HI_COMPONENT_ID + 91;
+const ecs_entity_t ecs_id(ecs_iptr_t) =     ECS_HI_COMPONENT_ID + 92;
+const ecs_entity_t ecs_id(ecs_f32_t) =        ECS_HI_COMPONENT_ID + 93;
+const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 94;
+const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 95;
+const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 96;
 
 
 /* -- Private functions -- */
@@ -374,6 +421,9 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_TIMER_H
     ECS_IMPORT(world, FlecsTimer);
 #endif
+#ifdef FLECS_META_H
+    ECS_IMPORT(world, FlecsMeta);
+#endif
     ecs_log_pop();
 #endif
 
@@ -459,8 +509,7 @@ void flecs_notify_tables(
     }
 }
 
-static
-void default_ctor(
+void ecs_default_ctor(
     ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
     void *ptr, size_t size, int32_t count, void *ctx)
 {
@@ -603,7 +652,7 @@ void ecs_set_component_actions_w_id(
         if (!lifecycle->ctor && 
             (lifecycle->dtor || lifecycle->copy || lifecycle->move)) 
         {
-            c_info->lifecycle.ctor = default_ctor;   
+            c_info->lifecycle.ctor = ecs_default_ctor;   
         }
 
         /* Set default copy ctor, move ctor and merge */
@@ -795,8 +844,8 @@ void fini_aliases(
     ecs_hashmap_t *map)
 {
     flecs_hashmap_iter_t it = flecs_hashmap_iter(*map);
-    ecs_string_t *key;
-    while (flecs_hashmap_next_w_key(&it, ecs_string_t, &key, ecs_entity_t)) {
+    ecs_hashed_string_t *key;
+    while (flecs_hashmap_next_w_key(&it, ecs_hashed_string_t, &key, ecs_entity_t)) {
         ecs_os_free(key->value);
     }
     

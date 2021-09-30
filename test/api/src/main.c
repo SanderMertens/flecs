@@ -418,6 +418,9 @@ void Plecs_assignment_w_pair(void);
 void Plecs_assignment_w_invalid_subject(void);
 void Plecs_assignment_w_invalid_with(void);
 void Plecs_assignment_w_invalid_scope(void);
+void Plecs_inherit_w_colon(void);
+void Plecs_inherit_w_colon_w_scope(void);
+void Plecs_inherit_w_colon_w_assign(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3668,6 +3671,18 @@ bake_test_case Plecs_testcases[] = {
     {
         "assignment_w_invalid_scope",
         Plecs_assignment_w_invalid_scope
+    },
+    {
+        "inherit_w_colon",
+        Plecs_inherit_w_colon
+    },
+    {
+        "inherit_w_colon_w_scope",
+        Plecs_inherit_w_colon_w_scope
+    },
+    {
+        "inherit_w_colon_w_assign",
+        Plecs_inherit_w_colon_w_assign
     }
 };
 
@@ -10060,7 +10075,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        71,
+        74,
         Plecs_testcases
     },
     {

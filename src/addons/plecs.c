@@ -21,6 +21,7 @@ typedef struct {
     int32_t with_frame;
     bool with_clause;
     bool assignment;
+    bool isa_clause;
 } plecs_state_t;
 
 static
@@ -105,7 +106,7 @@ int create_term(
     }
 
     bool pred_as_subj = pred_is_subj(term, state);
-    if (state->assignment) {
+    if (state->assignment || state->isa_clause) {
         pred_as_subj = false;
     }
 
@@ -117,9 +118,21 @@ int create_term(
         obj = ensure_entity(world, term->args[1].name, true);
     }
 
-    if (state->assignment) {
+    if (state->assignment || state->isa_clause) {
         subj = state->assign_to;
     }
+
+    if (state->isa_clause && obj) {
+        ecs_parser_error(name, expr, column, 
+            "invalid object in inheritance statement");
+        return -1;
+    }
+
+    if (state->isa_clause) {
+        pred = ecs_pair(EcsIsA, pred);
+    }
+
+    state->isa_clause = false;
 
     if (subj) {
         if (!obj) {
@@ -239,7 +252,33 @@ const char* parse_stmt(
 
         ptr = skip_fluff(ptr);
 
+        if (ptr[0] == ':') {
+            if (state->isa_clause) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "cannot nest inheritance");
+                return NULL;
+            }
+
+            if (!state->last_subject) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing entity to assign inheritance to");
+                return NULL;
+            }
+            
+            state->isa_clause = true;
+            state->assign_to = state->last_subject;
+            stmt_parsed = true;
+
+            ptr = skip_fluff(ptr + 1);
+        }
+
         if (ptr[0] == '=') {
+            if (state->isa_clause) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing base for inheritance statement");
+                return NULL;
+            }
+
             if (state->assignment) {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "component assignments are not yet supported!");
@@ -267,6 +306,12 @@ const char* parse_stmt(
         }
 
         if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
+            if (state->isa_clause) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid with after inheritance");
+                return NULL;
+            }
+
             if (state->assignment) {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "invalid with in assignment");
@@ -280,6 +325,12 @@ const char* parse_stmt(
         }
 
         if (ptr[0] == '{') {
+            if (state->isa_clause) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing base for inheritance");
+                return NULL;
+            }
+
             if (state->assignment) {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "invalid scope in assignment");
@@ -317,6 +368,12 @@ const char* parse_stmt(
         }
 
         while (ptr[0] == '}') {
+            if (state->isa_clause) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid '}' after inheritance statement");
+                return NULL;
+            }
+
             if (state->assignment) {
                 state->assignment = false;
                 stmt_parsed = true;

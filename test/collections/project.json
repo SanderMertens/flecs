@@ -3,7 +3,7 @@
     "type": "application",
     "value": {
         "author": "Sander Mertens",
-        "description": "Test project for flecs",
+        "description": "Test project for flecs data structures",
         "public": false,
         "coverage": false,
         "use": [

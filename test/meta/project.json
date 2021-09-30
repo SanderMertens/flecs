@@ -1,0 +1,93 @@
+{
+    "id": "meta",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for flecs.meta",
+        "public": false,
+        "coverage": false,
+        "use": [
+            "flecs"
+        ]
+    },
+    "test": {
+        "testsuites": [{
+            "id": "PrimitiveTypes",
+            "testcases": [
+                "bool",
+                "byte",
+                "char",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "iptr",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "uptr",
+                "float",
+                "double",
+                "string",
+                "entity",
+                "builtin_bool",
+                "builtin_byte",
+                "builtin_char",
+                "builtin_i8",
+                "builtin_i16",
+                "builtin_i32",
+                "builtin_i64",
+                "builtin_iptr",
+                "builtin_u8",
+                "builtin_u16",
+                "builtin_u32",
+                "builtin_u64",
+                "builtin_uptr",
+                "builtin_float",
+                "builtin_double",
+                "builtin_string",
+                "builtin_entity"
+            ]
+        }, {
+            "id": "StructTypes",
+            "testcases": [
+                "i32",
+                "i32_i32",
+                "i32_i32_i32",
+                "bool_i32",
+                "bool_bool_i32",
+                "bool_i32_bool_i32",
+                "i32_bool",
+                "i32_bool_bool",
+                "i32_bool_bool_bool",
+                "i32_i64",
+                "i32_i64_i32"
+            ]
+        }, {
+            "id": "NestedStructTypes",
+            "testcases": [
+                "1_bool",
+                "1_int32",
+                "1_bool_w_bool_member",
+                "1_bool_w_int32_member",
+                "1_int32_w_bool_member",
+                "1_int32_w_int32_member",
+                "1_bool_2_same",
+                "1_bool_2_bool",
+                "1_bool_2_i32",
+                "1_i32_2_bool",
+                "1_bool_2_bool_bool",
+                "1_bool_bool_2_bool",
+                "1_bool_bool_2_same",
+                "1_bool_bool_2_bool_bool",
+                "1_i32_2_same",
+                "1_i32_2_i32",
+                "1_i32_2_i32_i32",
+                "1_i32_i32_2_i32",
+                "1_i32_i32_2_same",
+                "1_i32_i32_2_i32_i32"
+            ]
+        }]
+    }
+}

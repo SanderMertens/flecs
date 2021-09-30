@@ -45,7 +45,7 @@ bool path_append(
 }
 
 static
-ecs_string_t get_string_key(
+ecs_hashed_string_t get_string_key(
     const char *name,
     ecs_size_t length,
     uint64_t hash)
@@ -64,7 +64,7 @@ ecs_string_t get_string_key(
         hash = flecs_hash(name, length);
     }
 
-    return  (ecs_string_t) {
+    return  (ecs_hashed_string_t) {
         .value = (char*)name,
         .length = length,
         .hash = hash
@@ -78,7 +78,7 @@ ecs_entity_t find_by_name(
     ecs_size_t length,
     uint64_t hash)
 {
-    ecs_string_t key = get_string_key(name, length, hash);
+    ecs_hashed_string_t key = get_string_key(name, length, hash);
 
     ecs_entity_t *e = flecs_hashmap_get(*map, &key, ecs_entity_t);
 
@@ -100,7 +100,7 @@ void register_by_name(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_string_t key = get_string_key(name, length, hash);
+    ecs_hashed_string_t key = get_string_key(name, length, hash);
     
     ecs_entity_t existing = find_by_name(map, name, key.length, key.hash);
     if (existing) {
@@ -269,7 +269,7 @@ static
 uint64_t string_hash(
     const void *ptr)
 {
-    const ecs_string_t *str = ptr;
+    const ecs_hashed_string_t *str = ptr;
     ecs_assert(str->hash != 0, ECS_INVALID_PARAMETER, NULL);
     return str->hash;
 }
@@ -279,8 +279,8 @@ int string_compare(
     const void *ptr1, 
     const void *ptr2)
 {
-    const ecs_string_t *str1 = ptr1;
-    const ecs_string_t *str2 = ptr2;
+    const ecs_hashed_string_t *str1 = ptr1;
+    const ecs_hashed_string_t *str2 = ptr2;
     ecs_size_t len1 = str1->length;
     ecs_size_t len2 = str2->length;
     if (len1 != len2) {
@@ -291,7 +291,7 @@ int string_compare(
 }
 
 ecs_hashmap_t flecs_string_hashmap_new(void) {
-    return flecs_hashmap_new(ecs_string_t, ecs_entity_t, 
+    return flecs_hashmap_new(ecs_hashed_string_t, ecs_entity_t, 
         string_hash, 
         string_compare);
 }

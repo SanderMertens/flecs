@@ -1679,3 +1679,64 @@ void Plecs_assignment_w_invalid_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_inherit_w_colon() {    
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Foo : Bar";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert(ecs_has_pair(world, foo, EcsIsA, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_inherit_w_colon_w_scope() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Foo : Bar { Child }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert(ecs_has_pair(world, foo, EcsIsA, bar));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_inherit_w_colon_w_assign() {
+    ecs_world_t *world = ecs_init();
+    
+    const char *expr =
+    HEAD "Foo : Bar = { Comp }";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t comp = ecs_lookup_fullpath(world, "Comp");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert(ecs_has_pair(world, foo, EcsIsA, bar));
+    test_assert(ecs_has_id(world, foo, comp));
+
+    ecs_fini(world);
+}

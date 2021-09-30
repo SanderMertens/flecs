@@ -261,7 +261,6 @@ void* ecs_get_system_binding_ctx(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Pipeline component is empty: components and tags in module are static */
 typedef struct FlecsSystem {
     int32_t dummy; 
 } FlecsSystem;

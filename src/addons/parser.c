@@ -191,7 +191,15 @@ const char* parse_token(
         return NULL;
     }
 
-    return skip_space(ptr);
+    const char *next_ptr = skip_space(ptr);
+    if (next_ptr[0] == ':' && next_ptr != ptr) {
+        /* Whitespace between token and : is significant */
+        ptr = next_ptr - 1;
+    } else {
+        ptr = next_ptr;
+    }
+
+    return ptr;
 }
 
 static
@@ -671,8 +679,6 @@ parse_predicate:
         return NULL;        
     }
 
-    ptr = skip_space(ptr);
-
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
         ptr = skip_space(ptr + 1);
@@ -695,6 +701,8 @@ parse_predicate:
         }
 
         ptr = skip_space(ptr + 1);
+    } else {
+        ptr = skip_space(ptr);
     }
     
     if (ptr[0] == TOK_PAREN_OPEN) {
@@ -796,6 +804,7 @@ bool is_valid_end_of_term(
         (ptr[0] == '/') ||        /* comment (in plecs) */
         (ptr[0] == '{') ||        /* scope (in plecs) */
         (ptr[0] == '}') ||
+        (ptr[0] == ':') ||        /* inheritance (in plecs) */
         (ptr[0] == '='))          /* assignment (in plecs) */
     {
         return true;
