@@ -105,14 +105,21 @@ typedef struct EcsPrimitive {
 
 typedef struct EcsMember {
     ecs_entity_t type;
+    int32_t count;
 } EcsMember;
 
 /* Element type of members vector in EcsStruct */
 typedef struct ecs_member_t {
+    /* Must be set when used with ecs_struct_desc_t */
     char *name;
     ecs_entity_t type;
-    ecs_size_t size;
+
+    /* May be set when used with ecs_struct_desc_t */
+    int32_t count;
     int32_t offset;
+
+    /* Should not be set by ecs_struct_desc_t */
+    ecs_size_t size;
     ecs_entity_t member;
 } ecs_member_t;
 

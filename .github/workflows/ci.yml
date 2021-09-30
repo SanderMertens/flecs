@@ -317,6 +317,11 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PLECS
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PLECS
 
+      - name: FLECS_META
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META
+
   flecs-amalgamated:
     timeout-minutes: 5
     runs-on: ubuntu-latest

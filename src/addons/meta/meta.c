@@ -169,14 +169,20 @@ int add_member_to_struct(
             return -1;
         }
 
-        size = ECS_ALIGN(size, member_alignment);
-        elem->size = member_size;
-        elem->offset = size;
-
         /* Only assign name if this is the new member */
         if (elem->member == member) {
             elem->name = ecs_os_strdup(ecs_get_name(world, member));
+
+            elem->count = m->count;
+            if (!elem->count) {
+                elem->count = 1;
+            }
         }
+
+        member_size *= elem->count;
+        size = ECS_ALIGN(size, member_alignment);
+        elem->size = member_size;
+        elem->offset = size;
 
         size += member_size;
 
@@ -441,7 +447,10 @@ ecs_entity_t ecs_struct_init(
             .name = m_desc->name
         });
 
-        ecs_set(world, m, EcsMember, {.type = m_desc->type});
+        ecs_set(world, m, EcsMember, {
+            .type = m_desc->type, 
+            .count = m_desc->count
+        });
     }
 
     ecs_set_scope(world, old_scope);

@@ -19,13 +19,14 @@ void _meta_test_member(
     ecs_entity_t t, 
     const char *name,
     ecs_entity_t type,
+    int32_t count,
     ecs_size_t offset);
 
 #define meta_test_struct(world, t, T)\
     _meta_test_struct(world, t, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
-#define meta_test_member(world, t, T, name, type)\
-    _meta_test_member(world, t, #name, type, offsetof(T, name))
+#define meta_test_member(world, t, T, name, type, count)\
+    _meta_test_member(world, t, #name, type, count, offsetof(T, name))
 
 #ifdef __cplusplus
 }
