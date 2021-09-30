@@ -18737,9 +18737,12 @@ ecs_vector_t* serialize_struct(
 
         cur = ecs_vector_count(ops);
         ops = serialize_type(world, member->type, offset + member->offset, ops);
-        ops_get(ops, cur)->type = member->type;
-        ops_get(ops, cur)->name = member->name;
-        ops_get(ops, cur)->op_count = ecs_vector_count(ops) - cur;
+        
+        op = ops_get(ops, cur);
+        op->type = member->type;
+        op->name = member->name;
+        op->count = member->count;
+        op->op_count = ecs_vector_count(ops) - cur;
     }
 
     ops_add(&ops, EcsOpPop);
@@ -18970,14 +18973,20 @@ int add_member_to_struct(
             return -1;
         }
 
-        size = ECS_ALIGN(size, member_alignment);
-        elem->size = member_size;
-        elem->offset = size;
-
         /* Only assign name if this is the new member */
         if (elem->member == member) {
             elem->name = ecs_os_strdup(ecs_get_name(world, member));
+
+            elem->count = m->count;
+            if (!elem->count) {
+                elem->count = 1;
+            }
         }
+
+        member_size *= elem->count;
+        size = ECS_ALIGN(size, member_alignment);
+        elem->size = member_size;
+        elem->offset = size;
 
         size += member_size;
 
@@ -19242,7 +19251,10 @@ ecs_entity_t ecs_struct_init(
             .name = m_desc->name
         });
 
-        ecs_set(world, m, EcsMember, {.type = m_desc->type});
+        ecs_set(world, m, EcsMember, {
+            .type = m_desc->type, 
+            .count = m_desc->count
+        });
     }
 
     ecs_set_scope(world, old_scope);

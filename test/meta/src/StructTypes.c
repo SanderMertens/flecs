@@ -21,6 +21,7 @@ void _meta_test_member(
     ecs_entity_t t, 
     const char *name,
     ecs_entity_t type,
+    int32_t elem_count,
     ecs_size_t offset) 
 {
     ecs_entity_t m = ecs_lookup_child(world, t, name);
@@ -49,13 +50,8 @@ void _meta_test_member(
     test_str(members[i].name, name);
     test_assert(members[i].type == type);
     test_int(members[i].offset, offset);
+    test_int(members[i].count, elem_count);
 }
-
-#define meta_test_struct(world, t, T)\
-    _meta_test_struct(world, t, ECS_SIZEOF(T), ECS_ALIGNOF(T))
-
-#define meta_test_member(world, t, T, name, type)\
-    _meta_test_member(world, t, #name, type, offsetof(T, name))
 
 void StructTypes_i32() {
     typedef struct {
@@ -75,7 +71,7 @@ void StructTypes_i32() {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -100,8 +96,8 @@ void StructTypes_i32_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -128,9 +124,9 @@ void StructTypes_i32_i32_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -155,8 +151,8 @@ void StructTypes_bool_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -183,9 +179,9 @@ void StructTypes_bool_bool_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -214,10 +210,10 @@ void StructTypes_bool_i32_bool_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, w, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, w, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -242,8 +238,8 @@ void StructTypes_i32_bool() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t), 1);
 
     ecs_fini(world);
 }
@@ -270,9 +266,9 @@ void StructTypes_i32_bool_bool() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t), 1);
 
     ecs_fini(world);
 }
@@ -301,10 +297,10 @@ void StructTypes_i32_bool_bool_bool() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t));
-    meta_test_member(world, t, T, w, ecs_id(ecs_bool_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, w, ecs_id(ecs_bool_t), 1);
 
     ecs_fini(world);
 }
@@ -329,8 +325,8 @@ void StructTypes_i32_i64() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i64_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i64_t), 1);
 
     ecs_fini(world);
 }
@@ -357,9 +353,9 @@ void StructTypes_i32_i64_i32() {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t));
-    meta_test_member(world, t, T, y, ecs_id(ecs_i64_t));
-    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t));
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i64_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }

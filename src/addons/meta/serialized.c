@@ -73,9 +73,12 @@ ecs_vector_t* serialize_struct(
 
         cur = ecs_vector_count(ops);
         ops = serialize_type(world, member->type, offset + member->offset, ops);
-        ops_get(ops, cur)->type = member->type;
-        ops_get(ops, cur)->name = member->name;
-        ops_get(ops, cur)->op_count = ecs_vector_count(ops) - cur;
+        
+        op = ops_get(ops, cur);
+        op->type = member->type;
+        op->name = member->name;
+        op->count = member->count;
+        op->op_count = ecs_vector_count(ops) - cur;
     }
 
     ops_add(&ops, EcsOpPop);

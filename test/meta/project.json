@@ -91,6 +91,25 @@
                 "2_lvls_bool_bool"
             ]
         }, {
+            "id": "ArrayTypes",
+            "testcases": [
+                "array_bool_1",
+                "array_bool_2",
+                "array_bool_3",
+                "array_bool_1_before_i32_member",
+                "array_bool_2_before_i32_member",
+                "array_bool_3_before_i32_member",
+                "array_i32_3",
+                "array_i32_3_before_i32_member",
+                "array_struct_bool_3",
+                "array_struct_bool_3_before_i32_member",
+                "array_struct_array_bool_3",
+                "2_arrays_1_bool_1_i32",
+                "2_arrays_1_i32_1_bool",
+                "2_arrays_1_i32_1_bool",
+                "8_arrays_bool_w_padded_member"
+            ]
+        }, {
             "id": "Serialized",
             "testcases": [
                 "primitive_constants",
@@ -131,7 +150,14 @@
                 "ops_nested_2_lvls_bool_bool",
                 "ops_nested_2_lvls_i32_i32_w_member_before",
                 "ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before",
-                "ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before"
+                "ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before",
+                "ops_struct_array_bool_1",
+                "ops_struct_array_bool_2",
+                "ops_struct_array_bool_3",
+                "ops_struct_array_bool_1_w_i32_after",
+                "ops_struct_array_bool_2_w_i32_after",
+                "ops_struct_array_bool_3_w_i32_after",
+                "ops_struct_array_struct_bool_3_w_i32_after"
             ]
         }]
     }
