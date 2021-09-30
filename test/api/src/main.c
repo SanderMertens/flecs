@@ -49,6 +49,8 @@ void Entity_is_recycled_valid(void);
 void Entity_is_0_valid(void);
 void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
+void Entity_init_w_name_deferred(void);
+void Entity_init_w_name_staged(void);
 
 // Testsuite 'Event'
 void Event_empty_entity_1_id_w_trigger(void);
@@ -2241,6 +2243,14 @@ bake_test_case Entity_testcases[] = {
     {
         "is_not_alive_valid",
         Entity_is_not_alive_valid
+    },
+    {
+        "init_w_name_deferred",
+        Entity_init_w_name_deferred
+    },
+    {
+        "init_w_name_staged",
+        Entity_init_w_name_staged
     }
 };
 
@@ -9977,7 +9987,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        40,
+        42,
         Entity_testcases
     },
     {

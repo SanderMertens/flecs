@@ -862,3 +862,43 @@ void Entity_is_not_alive_valid() {
 
     ecs_fini(world);
 }
+
+void Entity_init_w_name_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), NULL);
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_name_staged() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_entity_t e = ecs_entity_init(stage, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+
+    test_assert(e != 0);
+    test_str(ecs_get_name(stage, e), NULL);
+
+    ecs_staging_end(world);
+
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}

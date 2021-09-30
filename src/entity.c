@@ -1815,7 +1815,7 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (stage->defer) {
-        deferred_add_remove(world, result, name, desc, 
+        deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
             scope, with, new_entity, name_assigned);
     } else {
         if (traverse_add(world, result, name, desc,
