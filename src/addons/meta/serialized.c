@@ -51,6 +51,27 @@ ecs_vector_t* serialize_primitive(
 }
 
 static
+ecs_vector_t* serialize_array(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    const EcsArray *ptr = ecs_get(world, type, EcsArray);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t first = ecs_vector_count(ops);
+    ops = serialize_type(world, ptr->type, offset, ops);
+    
+    ecs_meta_type_op_t *op = ops_get(ops, first);
+    op->offset = offset;
+    op->count = ptr->count;
+    op->op_count = ecs_vector_count(ops) - first;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -75,9 +96,15 @@ ecs_vector_t* serialize_struct(
         ops = serialize_type(world, member->type, offset + member->offset, ops);
         
         op = ops_get(ops, cur);
-        op->type = member->type;
+        if (!op->type) {
+            op->type = member->type;
+        }
+        
+        if (op->count <= 1) {
+            op->count = member->count;
+        }
+
         op->name = member->name;
-        op->count = member->count;
         op->op_count = ecs_vector_count(ops) - cur;
     }
 
@@ -111,6 +138,10 @@ ecs_vector_t* serialize_type(
 
     case EcsStructType:
         ops = serialize_struct(world, type, offset, ops);
+        break;
+
+    case EcsArrayType:
+        ops = serialize_array(world, type, offset, ops);
         break;
     }
 

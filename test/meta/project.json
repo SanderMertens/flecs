@@ -107,7 +107,13 @@
                 "2_arrays_1_bool_1_i32",
                 "2_arrays_1_i32_1_bool",
                 "2_arrays_1_i32_1_bool",
-                "8_arrays_bool_w_padded_member"
+                "8_arrays_bool_w_padded_member",
+                "standaline_array_bool_1",
+                "standaline_array_bool_2",
+                "standaline_array_bool_3",
+                "array_of_standaline_array_bool_1",
+                "array_of_standaline_array_bool_2",
+                "array_of_standaline_array_bool_3"
             ]
         }, {
             "id": "Serialized",
@@ -157,7 +163,13 @@
                 "ops_struct_array_bool_1_w_i32_after",
                 "ops_struct_array_bool_2_w_i32_after",
                 "ops_struct_array_bool_3_w_i32_after",
-                "ops_struct_array_struct_bool_3_w_i32_after"
+                "ops_struct_array_struct_bool_3_w_i32_after",
+                "ops_standalone_array_bool_1",
+                "ops_standalone_array_bool_2",
+                "ops_standalone_array_bool_3",
+                "ops_standalone_array_bool_1_w_bool_after",
+                "ops_standalone_array_bool_2_w_bool_after",
+                "ops_standalone_array_bool_3_w_bool_after"
             ]
         }]
     }

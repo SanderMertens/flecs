@@ -97,6 +97,12 @@ void ArrayTypes_2_arrays_1_bool_1_i32(void);
 void ArrayTypes_2_arrays_1_i32_1_bool(void);
 void ArrayTypes_2_arrays_1_i32_1_bool(void);
 void ArrayTypes_8_arrays_bool_w_padded_member(void);
+void ArrayTypes_standaline_array_bool_1(void);
+void ArrayTypes_standaline_array_bool_2(void);
+void ArrayTypes_standaline_array_bool_3(void);
+void ArrayTypes_array_of_standaline_array_bool_1(void);
+void ArrayTypes_array_of_standaline_array_bool_2(void);
+void ArrayTypes_array_of_standaline_array_bool_3(void);
 
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
@@ -145,6 +151,12 @@ void Serialized_ops_struct_array_bool_1_w_i32_after(void);
 void Serialized_ops_struct_array_bool_2_w_i32_after(void);
 void Serialized_ops_struct_array_bool_3_w_i32_after(void);
 void Serialized_ops_struct_array_struct_bool_3_w_i32_after(void);
+void Serialized_ops_standalone_array_bool_1(void);
+void Serialized_ops_standalone_array_bool_2(void);
+void Serialized_ops_standalone_array_bool_3(void);
+void Serialized_ops_standalone_array_bool_1_w_bool_after(void);
+void Serialized_ops_standalone_array_bool_2_w_bool_after(void);
+void Serialized_ops_standalone_array_bool_3_w_bool_after(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -483,6 +495,30 @@ bake_test_case ArrayTypes_testcases[] = {
     {
         "8_arrays_bool_w_padded_member",
         ArrayTypes_8_arrays_bool_w_padded_member
+    },
+    {
+        "standaline_array_bool_1",
+        ArrayTypes_standaline_array_bool_1
+    },
+    {
+        "standaline_array_bool_2",
+        ArrayTypes_standaline_array_bool_2
+    },
+    {
+        "standaline_array_bool_3",
+        ArrayTypes_standaline_array_bool_3
+    },
+    {
+        "array_of_standaline_array_bool_1",
+        ArrayTypes_array_of_standaline_array_bool_1
+    },
+    {
+        "array_of_standaline_array_bool_2",
+        ArrayTypes_array_of_standaline_array_bool_2
+    },
+    {
+        "array_of_standaline_array_bool_3",
+        ArrayTypes_array_of_standaline_array_bool_3
     }
 };
 
@@ -670,6 +706,30 @@ bake_test_case Serialized_testcases[] = {
     {
         "ops_struct_array_struct_bool_3_w_i32_after",
         Serialized_ops_struct_array_struct_bool_3_w_i32_after
+    },
+    {
+        "ops_standalone_array_bool_1",
+        Serialized_ops_standalone_array_bool_1
+    },
+    {
+        "ops_standalone_array_bool_2",
+        Serialized_ops_standalone_array_bool_2
+    },
+    {
+        "ops_standalone_array_bool_3",
+        Serialized_ops_standalone_array_bool_3
+    },
+    {
+        "ops_standalone_array_bool_1_w_bool_after",
+        Serialized_ops_standalone_array_bool_1_w_bool_after
+    },
+    {
+        "ops_standalone_array_bool_2_w_bool_after",
+        Serialized_ops_standalone_array_bool_2_w_bool_after
+    },
+    {
+        "ops_standalone_array_bool_3_w_bool_after",
+        Serialized_ops_standalone_array_bool_3_w_bool_after
     }
 };
 
@@ -699,14 +759,14 @@ static bake_test_suite suites[] = {
         "ArrayTypes",
         NULL,
         NULL,
-        15,
+        21,
         ArrayTypes_testcases
     },
     {
         "Serialized",
         NULL,
         NULL,
-        46,
+        52,
         Serialized_testcases
     }
 };
