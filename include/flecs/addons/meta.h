@@ -7,6 +7,12 @@
 
 #ifdef FLECS_META
 
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#include "../addons/module.h"
+
 #ifndef FLECS_META_H
 #define FLECS_META_H
 
