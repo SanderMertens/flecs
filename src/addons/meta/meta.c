@@ -370,6 +370,33 @@ void set_array(ecs_iter_t *it) {
     }
 }
 
+static
+void set_vector(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsVector *array = ecs_term(it, EcsVector, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t elem_type = array[i].type;
+
+        if (!elem_type) {
+            ecs_err("vector '%s' has no element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (init_component(world, e, 
+            ECS_SIZEOF(ecs_vector_t*), ECS_ALIGNOF(ecs_vector_t*)))
+        {
+            continue;
+        }
+
+        if (init_type(world, e, EcsVectorType)) {
+            continue;
+        }
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -385,6 +412,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsMember);
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
+    flecs_bootstrap_component(world, EcsVector);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -419,6 +447,12 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsArray),
         .events = {EcsOnSet},
         .callback = set_array
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsVector),
+        .events = {EcsOnSet},
+        .callback = set_vector
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
@@ -469,6 +503,22 @@ ecs_entity_t ecs_array_init(
     ecs_set(world, t, EcsArray, {
         .type = desc->type,
         .count = desc->count
+    });
+
+    return t;
+}
+
+ecs_entity_t ecs_vector_init(
+    ecs_world_t *world,
+    const ecs_vector_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsVector, {
+        .type = desc->type
     });
 
     return t;

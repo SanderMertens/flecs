@@ -72,6 +72,24 @@ ecs_vector_t* serialize_array(
 }
 
 static
+ecs_vector_t* serialize_vector(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+    
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpVector);
+    op->offset = offset;
+    op->count = 1;
+    op->op_count = 1;
+    op->type = type;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -99,7 +117,7 @@ ecs_vector_t* serialize_struct(
         if (!op->type) {
             op->type = member->type;
         }
-        
+
         if (op->count <= 1) {
             op->count = member->count;
         }
@@ -142,6 +160,10 @@ ecs_vector_t* serialize_type(
 
     case EcsArrayType:
         ops = serialize_array(world, type, offset, ops);
+        break;
+
+    case EcsVectorType:
+        ops = serialize_vector(world, type, offset, ops);
         break;
     }
 
