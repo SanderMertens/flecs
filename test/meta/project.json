@@ -222,6 +222,45 @@
                 "ops_enum",
                 "ops_struct_w_enum"
             ]
+        }, {
+            "id": "Cursor",
+            "testcases": [
+                "set_bool",
+                "set_byte",
+                "set_char",
+                "set_i8",
+                "set_i16",
+                "set_i32",
+                "set_i64",
+                "set_iptr",
+                "set_u8",
+                "set_u16",
+                "set_u32",
+                "set_u64",
+                "set_uptr",
+                "set_float",
+                "set_double",
+                "set_string",
+                "set_entity",
+                "struct_set_i32",
+                "struct_set_i32_i32",
+                "struct_set_i32_i32_i32",
+                "struct_set_bool",
+                "struct_set_bool_bool",
+                "struct_set_bool_bool_bool",
+                "struct_set_bool_bool_i32_bool",
+                "struct_nested_i32",
+                "struct_2_nested_1_i32_2_i32",
+                "struct_2_nested_1_i32_i32_2_i32_i32",
+                "struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members",
+                "struct_set_array_i32_3",
+                "struct_set_2_array_i32_3",
+                "struct_set_2_array_i32_3_w_padding_members",
+                "struct_set_array_w_struct_i32",
+                "struct_set_2_array_w_struct_i32",
+                "struct_set_array_w_struct_w_array_i32",
+                "struct_set_2_array_w_struct_w_array_i32"
+            ]
         }]
     }
 }

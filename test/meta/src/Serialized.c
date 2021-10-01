@@ -1701,7 +1701,7 @@ void Serialized_ops_standalone_array_bool_1() {
     test_int(ecs_vector_count(s->ops), 3);
 
     test_op(s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
@@ -1735,7 +1735,7 @@ void Serialized_ops_standalone_array_bool_2() {
     test_int(ecs_vector_count(s->ops), 3);
 
     test_op(s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
@@ -1769,7 +1769,7 @@ void Serialized_ops_standalone_array_bool_3() {
     test_int(ecs_vector_count(s->ops), 3);
 
     test_op(s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_op(s->ops, 2, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
@@ -1805,7 +1805,7 @@ void Serialized_ops_standalone_array_bool_1_w_bool_after() {
     test_int(ecs_vector_count(s->ops), 4);
 
     test_op(s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
     test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
 
@@ -1842,8 +1842,7 @@ void Serialized_ops_standalone_array_bool_2_w_bool_after() {
     test_int(ecs_vector_count(s->ops), 4);
 
     test_op(s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
@@ -1879,8 +1878,7 @@ void Serialized_ops_standalone_array_bool_3_w_bool_after() {
     test_int(ecs_vector_count(s->ops), 4);
 
     test_op(s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
+    test_mp(s->ops, 1, EcsOpArray, 1, 1, T, x, a);
     test_op(s->ops, 3, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
