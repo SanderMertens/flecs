@@ -285,8 +285,8 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
   ecs_id_t id = ecs_term_id(&it, 1);
-  printf("Entities like %s\n", 
-    ecs_get_name(world, ecs_get_object(world, id)));
+  ecs_entity_t obj = ecs_pair_object(it->world, id);
+  printf("Entities like %s\n", ecs_get_name(world, object));
 }
 ```
 
@@ -769,8 +769,8 @@ This example shows how to explicitly set identifiers with the query descriptor:
 // Position(This), (Likes, Alice)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.predicate.entity = ecs_id(Position), .args[0].entity = EcsThis},
-    {.predicate.entity = Likes, .args[1].entity = Alice}
+    {.pred.entity = ecs_id(Position), .args[0].entity = EcsThis},
+    {.pred.entity = Likes, .args[1].entity = Alice}
   }
 });
 ```
@@ -794,7 +794,7 @@ which is equivalent to
 // Position(This)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.predicate.entity = ecs_id(Position), .args[0].entity = EcsThis}
+    {.pred.entity = ecs_id(Position), .args[0].entity = EcsThis}
   }
 });
 ```
@@ -817,7 +817,7 @@ which is equivalent to
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {
-      .predicate.entity = Likes,
+      .pred.entity = Likes,
       .args[0].entity = EcsThis,
       .args[1].entity = Alice
     }
@@ -933,8 +933,8 @@ This example shows how to use wildcards in the query descriptor:
 // (Likes, X), (Colleague, X)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.predicate.entity = Likes, .args[1].name = "X"}
-    {.predicate.entity = Colleague, .args[1].name = "X"}
+    {.pred.entity = Likes, .args[1].name = "X"}
+    {.pred.entity = Colleague, .args[1].name = "X"}
   }
 });
 ```
