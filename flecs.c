@@ -26652,15 +26652,6 @@ void build_sorted_tables(
     ecs_vector_clear(query->table_slices);
 
     if (query->group_by) {
-        ecs_map_iter_t it = ecs_map_iter(query->groups);
-        ecs_query_table_list_t *list;
-        while ((list = ecs_map_next(&it, ecs_query_table_list_t, NULL))) {
-            build_sorted_table_range(query, list);
-        }
-
-        return;
-
-
         /* Populate sorted node list in grouping order */
         ecs_query_table_node_t *cur = query->list.first;
         if (cur) {
