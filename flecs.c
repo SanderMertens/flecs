@@ -2762,7 +2762,9 @@ void init_storage_table(
         ecs_assert(table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    init_storage_map(table);
+    if (!table->storage_map) {
+        init_storage_map(table);
+    }
 }
 
 void flecs_table_init_data(
