@@ -182,13 +182,15 @@ void Dummy_2(ecs_iter_t *it) { }
 void System_w_FromSystem_auto_add_tag() {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, Hidden(Dummy_1));
-    ECS_SYSTEM(world, Dummy_2, 0, Position, Hidden(Dummy_2));
+    ECS_SYSTEM(world, Dummy_1, EcsOnUpdate, Position, Foo(Dummy_1));
+    ECS_SYSTEM(world, Dummy_2, 0, Position, Foo(Dummy_2));
 
-    test_assert( ecs_has_id(world, Dummy_1, EcsHidden));
-    test_assert( ecs_has_id(world, Dummy_2, EcsHidden));
+    test_assert( ecs_has_id(world, Dummy_1, Foo));
+    test_assert( ecs_has_id(world, Dummy_2, Foo));
 
     ecs_fini(world);
 }

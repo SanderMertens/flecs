@@ -24,7 +24,9 @@ void Tasks_no_components() {
 void Tasks_one_tag() {
     ecs_world_t *world = ecs_init();
 
-    ECS_SYSTEM(world, Task, EcsOnUpdate, Hidden(Task));
+    ECS_TAG(world, Foo);
+
+    ECS_SYSTEM(world, Task, EcsOnUpdate, Foo(Task));
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -34,7 +36,7 @@ void Tasks_one_tag() {
     test_int(ctx.count, 0);
     test_int(ctx.invoked, 1);
     test_int(ctx.term_count, 1);
-    test_int(ctx.c[0][0], EcsHidden);
+    test_int(ctx.c[0][0], Foo);
 
     ecs_fini(world);
 }

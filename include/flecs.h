@@ -768,11 +768,6 @@ FLECS_API extern const ecs_entity_t EcsPrefab;
 /* When this tag is added to an entity it is skipped by all queries/filters */
 FLECS_API extern const ecs_entity_t EcsDisabled;
 
-/* Tag added to builtin/framework entites. This tag can be used to automatically
- * hide components/systems that are part of infrastructure code vs. application
- * code. The tag has no functional implications. */
-FLECS_API extern const ecs_entity_t EcsHidden;
-
 /* Event. Triggers when an id (component, tag, pair) is added to an entity */
 FLECS_API extern const ecs_entity_t EcsOnAdd;
 
@@ -839,7 +834,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsThrow;
 
 /* System module tags */
-FLECS_API extern const ecs_entity_t EcsDisabledIntern;
 FLECS_API extern const ecs_entity_t EcsInactive;
 
 /* Pipeline module tags */

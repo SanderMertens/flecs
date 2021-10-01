@@ -46,9 +46,7 @@ void ecs_system_activate(
     }
 
     if (!activate) {
-        if (ecs_has_id(world, system, EcsDisabled) || 
-            ecs_has_id(world, system, EcsDisabledIntern)) 
-        {
+        if (ecs_has_id(world, system, EcsDisabled)) {
             if (!ecs_query_table_count(system_data->query)) {
                 /* If deactivating a disabled system that isn't matched with
                  * any active tables, there is nothing to deactivate. */
@@ -347,9 +345,7 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_id(world, e, EcsDisabled) && 
-            !ecs_has_id(world, e, EcsDisabledIntern)) 
-        {
+        if (!ecs_has_id(world, e, EcsDisabled)) {
             invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }
 
@@ -551,7 +547,6 @@ void FlecsSystemImport(
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    flecs_bootstrap_tag(world, EcsDisabledIntern);
     flecs_bootstrap_tag(world, EcsInactive);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
@@ -563,8 +558,7 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    ECS_OBSERVER(world, EnableMonitor, EcsMonitor,
-        System, !Disabled, !DisabledIntern);
+    ECS_OBSERVER(world, EnableMonitor, EcsMonitor, System, !Disabled);
 }
 
 #endif

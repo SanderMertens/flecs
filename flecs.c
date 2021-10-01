@@ -884,6 +884,7 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int32_t column_count;            /* Number of data columns in table */
 
+    ecs_table_t *storage_table;      /* Table w/type without tags */
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
 
@@ -2622,6 +2623,51 @@ const char* ecs_strerror(
     return "unknown error code";
 }
 
+static
+void init_storage_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    ecs_ids_t storage_ids = {
+        .array = ecs_os_alloca_n(ecs_id_t, count)
+    };
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+
+        if ((id == ecs_id(EcsComponent)) || 
+            (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier))) 
+        {
+            storage_ids.array[storage_ids.count ++] = id;
+            continue;
+        }
+
+        if (ECS_HAS_ROLE(id, SWITCH)) {
+            storage_ids.array[storage_ids.count ++] = id;
+            continue;
+        }
+
+        const EcsComponent *comp = flecs_component_from_id(world, id);
+        if (!comp || !comp->size) {
+            continue;
+        }
+
+        storage_ids.array[storage_ids.count ++] = id;
+    }
+
+    ecs_table_t *storage_table = NULL; 
+    
+    if (storage_ids.count && storage_ids.count != count) {
+        storage_table = flecs_table_find_or_create(world, &storage_ids);
+        ecs_assert(storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    table->storage_table = storage_table;
+}
+
+
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -2633,6 +2679,8 @@ void flecs_table_init_data(
     bs_count = table->bs_column_count;
 
     ecs_data_t *storage = &table->storage;
+
+    init_storage_table(world, table);
 
     /* Root tables don't have columns */
     if (!count && !sw_count && !bs_count) {
@@ -13163,7 +13211,7 @@ ecs_query_t* build_pipeline_query(
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t type_count = ecs_vector_count(type_ptr->normalized);
-    int32_t term_count = 2;
+    int32_t term_count = 1;
 
     if (with_inactive) {
         term_count ++;
@@ -13182,18 +13230,8 @@ ecs_query_t* build_pipeline_query(
         }
     };
 
-    terms[1] = (ecs_term_t){
-        .inout = EcsIn,
-        .oper = EcsNot,
-        .pred.entity = EcsDisabledIntern,
-        .args[0] = {
-            .entity = EcsThis,
-            .set.mask = EcsSelf | EcsSuperSet
-        }
-    };
-
     if (with_inactive) {
-        terms[2] = (ecs_term_t){
+        terms[1] = (ecs_term_t){
             .inout = EcsIn,
             .oper = EcsNot,
             .pred.entity = EcsInactive,
@@ -19196,9 +19234,7 @@ void ecs_system_activate(
     }
 
     if (!activate) {
-        if (ecs_has_id(world, system, EcsDisabled) || 
-            ecs_has_id(world, system, EcsDisabledIntern)) 
-        {
+        if (ecs_has_id(world, system, EcsDisabled)) {
             if (!ecs_query_table_count(system_data->query)) {
                 /* If deactivating a disabled system that isn't matched with
                  * any active tables, there is nothing to deactivate. */
@@ -19497,9 +19533,7 @@ void ecs_colsystem_dtor(
         }
 
         /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_id(world, e, EcsDisabled) && 
-            !ecs_has_id(world, e, EcsDisabledIntern)) 
-        {
+        if (!ecs_has_id(world, e, EcsDisabled)) {
             invoke_status_action(world, e, ptr, EcsSystemDisabled);
         }
 
@@ -19701,7 +19735,6 @@ void FlecsSystemImport(
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
     ecs_entity_t old_scope = ecs_set_scope(world, EcsFlecsCore);
-    flecs_bootstrap_tag(world, EcsDisabledIntern);
     flecs_bootstrap_tag(world, EcsInactive);
     flecs_bootstrap_tag(world, EcsMonitor);
     ecs_set_scope(world, old_scope);
@@ -19713,8 +19746,7 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    ECS_OBSERVER(world, EnableMonitor, EcsMonitor,
-        System, !Disabled, !DisabledIntern);
+    ECS_OBSERVER(world, EnableMonitor, EcsMonitor, System, !Disabled);
 }
 
 #endif
@@ -20702,7 +20734,6 @@ const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
 const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsHidden =                ECS_HI_COMPONENT_ID + 6;
 
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
@@ -20743,7 +20774,6 @@ const ecs_entity_t EcsThrow =                 ECS_HI_COMPONENT_ID + 52;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsDisabledIntern =        ECS_HI_COMPONENT_ID + 62;
 const ecs_entity_t EcsInactive =              ECS_HI_COMPONENT_ID + 63;
 const ecs_entity_t EcsPipeline =              ECS_HI_COMPONENT_ID + 64;
 const ecs_entity_t EcsPreFrame =              ECS_HI_COMPONENT_ID + 65;
@@ -31031,6 +31061,7 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsComponentLifecycle);
+
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
@@ -31070,7 +31101,6 @@ void flecs_bootstrap(
 
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrefab);
-    flecs_bootstrap_tag(world, EcsHidden);
     flecs_bootstrap_tag(world, EcsDisabled);
 
     /* Initialize scopes */
@@ -31125,10 +31155,15 @@ void flecs_bootstrap(
 
     /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
+    ecs_add_id(world, ecs_id(EcsComponentLifecycle), EcsFinal);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsFinal);
+    ecs_add_id(world, EcsModule, EcsFinal);
+    ecs_add_id(world, EcsDisabled, EcsFinal);
+    ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
+    ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
 

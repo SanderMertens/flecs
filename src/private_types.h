@@ -207,6 +207,7 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int32_t column_count;            /* Number of data columns in table */
 
+    ecs_table_t *storage_table;      /* Table w/type without tags */
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
 

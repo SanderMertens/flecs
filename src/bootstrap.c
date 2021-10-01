@@ -265,6 +265,7 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsIdentifier);
     bootstrap_component(world, table, EcsComponent);
     bootstrap_component(world, table, EcsComponentLifecycle);
+
     bootstrap_component(world, table, EcsType);
     bootstrap_component(world, table, EcsQuery);
     bootstrap_component(world, table, EcsTrigger);
@@ -304,7 +305,6 @@ void flecs_bootstrap(
 
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrefab);
-    flecs_bootstrap_tag(world, EcsHidden);
     flecs_bootstrap_tag(world, EcsDisabled);
 
     /* Initialize scopes */
@@ -359,10 +359,15 @@ void flecs_bootstrap(
 
     /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
+    ecs_add_id(world, ecs_id(EcsComponentLifecycle), EcsFinal);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsFinal);
+    ecs_add_id(world, EcsModule, EcsFinal);
+    ecs_add_id(world, EcsDisabled, EcsFinal);
+    ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
+    ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
 

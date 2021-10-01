@@ -487,7 +487,7 @@ ecs_query_t* build_pipeline_query(
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t type_count = ecs_vector_count(type_ptr->normalized);
-    int32_t term_count = 2;
+    int32_t term_count = 1;
 
     if (with_inactive) {
         term_count ++;
@@ -506,18 +506,8 @@ ecs_query_t* build_pipeline_query(
         }
     };
 
-    terms[1] = (ecs_term_t){
-        .inout = EcsIn,
-        .oper = EcsNot,
-        .pred.entity = EcsDisabledIntern,
-        .args[0] = {
-            .entity = EcsThis,
-            .set.mask = EcsSelf | EcsSuperSet
-        }
-    };
-
     if (with_inactive) {
-        terms[2] = (ecs_term_t){
+        terms[1] = (ecs_term_t){
             .inout = EcsIn,
             .oper = EcsNot,
             .pred.entity = EcsInactive,

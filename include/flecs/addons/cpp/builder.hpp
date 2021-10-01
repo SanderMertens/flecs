@@ -714,13 +714,7 @@ public:
         m_desc->rate = rate;
         return *this;
     }
-
-    /** System is a hidden system */
-    Base& hidden() {
-        m_desc->entity.add[m_add_count ++] = flecs::Hidden;
-        return *this;
-    }
-
+    
     /** Associate system with entity */
     Base& self(flecs::entity self) {
         m_desc->self = self;

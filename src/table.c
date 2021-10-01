@@ -1,5 +1,50 @@
 #include "private_api.h"
 
+static
+void init_storage_table(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    ecs_ids_t storage_ids = {
+        .array = ecs_os_alloca_n(ecs_id_t, count)
+    };
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+
+        if ((id == ecs_id(EcsComponent)) || 
+            (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier))) 
+        {
+            storage_ids.array[storage_ids.count ++] = id;
+            continue;
+        }
+
+        if (ECS_HAS_ROLE(id, SWITCH)) {
+            storage_ids.array[storage_ids.count ++] = id;
+            continue;
+        }
+
+        const EcsComponent *comp = flecs_component_from_id(world, id);
+        if (!comp || !comp->size) {
+            continue;
+        }
+
+        storage_ids.array[storage_ids.count ++] = id;
+    }
+
+    ecs_table_t *storage_table = NULL; 
+    
+    if (storage_ids.count && storage_ids.count != count) {
+        storage_table = flecs_table_find_or_create(world, &storage_ids);
+        ecs_assert(storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    table->storage_table = storage_table;
+}
+
+
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -11,6 +56,8 @@ void flecs_table_init_data(
     bs_count = table->bs_column_count;
 
     ecs_data_t *storage = &table->storage;
+
+    init_storage_table(world, table);
 
     /* Root tables don't have columns */
     if (!count && !sw_count && !bs_count) {
