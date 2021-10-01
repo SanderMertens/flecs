@@ -89,16 +89,11 @@ ecs_vector_t* serialize_array(
     ecs_size_t offset,
     ecs_vector_t *ops)
 {
-    const EcsArray *ptr = ecs_get(world, type, EcsArray);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)world;
 
-    int32_t first = ecs_vector_count(ops);
-    ops = serialize_type(world, ptr->type, offset, ops);
-    
-    ecs_meta_type_op_t *op = ops_get(ops, first);
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpArray);
     op->offset = offset;
-    op->count = ptr->count;
-    op->op_count = ecs_vector_count(ops) - first;
+    op->type = type;
 
     return ops;
 }
@@ -142,7 +137,7 @@ ecs_vector_t* serialize_struct(
 
         cur = ecs_vector_count(ops);
         ops = serialize_type(world, member->type, offset + member->offset, ops);
-        
+
         op = ops_get(ops, cur);
         if (!op->type) {
             op->type = member->type;

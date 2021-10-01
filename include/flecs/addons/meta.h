@@ -178,9 +178,9 @@ typedef struct EcsVector {
 /** Serializer utilities */
 
 typedef enum ecs_meta_type_op_kind_t {
-    EcsOpHeader,
     EcsOpEnum,
     EcsOpBitmask,
+    EcsOpArray,
     EcsOpVector,
     EcsOpPush,
     EcsOpPop,
@@ -220,8 +220,104 @@ typedef struct EcsMetaTypeSerialized {
 } EcsMetaTypeSerialized;
 
 
-/** Convenience functions for creating meta types */
+/** Deserializer utilities */
 
+#define ECS_META_MAX_SCOPE_DEPTH (32) /* >32 levels of nesting is not sane */
+
+typedef struct ecs_meta_scope_t {
+    ecs_entity_t type;        /* The type being iterated */
+    ecs_meta_type_op_t *ops;  /* The type operations (see ecs_meta_type_op_t) */
+    int32_t op_count;         /* Number of operations in ops array to process */
+    int32_t op_cur;           /* Current operation */
+    int32_t elem_cur;         /* Current element (for collections) */
+    void *ptr;                /* Pointer to the value being iterated */
+
+    const EcsComponent *comp; /* Pointer to component, in case size/alignment is needed */
+    ecs_vector_t **vector;    /* Current vector, in case a vector is iterated */
+    bool is_collection;       /* Is the scope iterating elements? */
+    bool is_inline_array;     /* Is the scope iterating an inline array? */
+} ecs_meta_scope_t;
+
+/** Type that enables iterating/populateing a value using reflection data */
+typedef struct ecs_meta_cursor_t {
+    const ecs_world_t *world;
+    ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
+    int32_t depth;
+} ecs_meta_cursor_t;
+
+FLECS_API
+ecs_meta_cursor_t ecs_meta_cursor(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void *ptr);
+
+FLECS_API
+void* ecs_meta_get_ptr(
+    ecs_meta_cursor_t *cursor);
+
+FLECS_API
+int ecs_meta_next(
+    ecs_meta_cursor_t *cursor);
+
+FLECS_API
+int ecs_meta_move(
+    ecs_meta_cursor_t *cursor,
+    int32_t pos);
+
+FLECS_API
+int ecs_meta_move_name(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+FLECS_API
+int ecs_meta_push(
+    ecs_meta_cursor_t *cursor);
+
+FLECS_API
+int ecs_meta_pop(
+    ecs_meta_cursor_t *cursor);
+
+FLECS_API
+int ecs_meta_set_bool(
+    ecs_meta_cursor_t *cursor,
+    bool value);
+
+FLECS_API
+int ecs_meta_set_char(
+    ecs_meta_cursor_t *cursor,
+    char value);
+
+FLECS_API
+int ecs_meta_set_int(
+    ecs_meta_cursor_t *cursor,
+    int64_t value);
+
+FLECS_API
+int ecs_meta_set_uint(
+    ecs_meta_cursor_t *cursor,
+    uint64_t value);
+
+FLECS_API
+int ecs_meta_set_float(
+    ecs_meta_cursor_t *cursor,
+    double value);
+
+FLECS_API
+int ecs_meta_set_string(
+    ecs_meta_cursor_t *cursor,
+    const char *value);
+
+FLECS_API
+int ecs_meta_set_entity(
+    ecs_meta_cursor_t *cursor,
+    ecs_entity_t value);
+
+FLECS_API
+int ecs_meta_set_null(
+    ecs_meta_cursor_t *cursor);
+
+
+/** API functions for creating meta types */
 
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {

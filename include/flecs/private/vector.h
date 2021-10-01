@@ -224,8 +224,11 @@ int32_t _ecs_vector_set_min_count(
     int16_t offset,
     int32_t elem_count);
 
-#define ecs_vector_set_min_count(vector, T, size) \
-    _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), size)
+#define ecs_vector_set_min_count(vector, T, elem_count) \
+    _ecs_vector_set_min_count(vector, ECS_VECTOR_T(T), elem_count)
+
+#define ecs_vector_set_min_count_t(vector, size, alignment, elem_count) \
+    _ecs_vector_set_min_count(vector, ECS_VECTOR_U(size, alignment), elem_count)
 
 /** Remove last element. This operation requires no swapping of values. */
 FLECS_API
