@@ -48,11 +48,10 @@ typedef struct ecs_map_iter_t {
 FLECS_API
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
-    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_map_new(T, elem_count)\
-    _ecs_map_new(sizeof(T), ECS_ALIGNOF(T), elem_count)
+    _ecs_map_new(sizeof(T), elem_count)
 
 /** Get element for key, returns NULL if they key doesn't exist. */
 FLECS_API
@@ -164,6 +163,11 @@ FLECS_API
 void ecs_map_set_size(
     ecs_map_t *map,
     int32_t elem_count);
+
+/** Copy map. */
+FLECS_API
+ecs_map_t* ecs_map_copy(
+    ecs_map_t *map);
 
 /** Return memory occupied by map. */
 FLECS_API

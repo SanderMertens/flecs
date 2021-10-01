@@ -43,6 +43,38 @@ void PrimitiveTypes_builtin_float(void);
 void PrimitiveTypes_builtin_double(void);
 void PrimitiveTypes_builtin_string(void);
 void PrimitiveTypes_builtin_entity(void);
+void PrimitiveTypes_struct_w_bool(void);
+void PrimitiveTypes_struct_w_byte(void);
+void PrimitiveTypes_struct_w_char(void);
+void PrimitiveTypes_struct_w_i8(void);
+void PrimitiveTypes_struct_w_i16(void);
+void PrimitiveTypes_struct_w_i32(void);
+void PrimitiveTypes_struct_w_i64(void);
+void PrimitiveTypes_struct_w_iptr(void);
+void PrimitiveTypes_struct_w_u8(void);
+void PrimitiveTypes_struct_w_u16(void);
+void PrimitiveTypes_struct_w_u32(void);
+void PrimitiveTypes_struct_w_u64(void);
+void PrimitiveTypes_struct_w_uptr(void);
+void PrimitiveTypes_struct_w_float(void);
+void PrimitiveTypes_struct_w_double(void);
+void PrimitiveTypes_struct_w_string(void);
+void PrimitiveTypes_struct_w_entity(void);
+
+// Testsuite 'EnumTypes'
+void EnumTypes_enum_1_constant(void);
+void EnumTypes_enum_2_constants(void);
+void EnumTypes_enum_3_constants(void);
+void EnumTypes_enum_3_constants_manual_values(void);
+void EnumTypes_struct_w_enum(void);
+
+// Testsuite 'BitmaskTypes'
+void BitmaskTypes_bitmask_1_constant(void);
+void BitmaskTypes_bitmask_2_constants(void);
+void BitmaskTypes_bitmask_3_constants(void);
+void BitmaskTypes_bitmask_4_constants(void);
+void BitmaskTypes_bitmask_4_constants_manual_values(void);
+void BitmaskTypes_struct_w_bitmask(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -166,6 +198,10 @@ void Serialized_ops_vector(void);
 void Serialized_ops_struct_w_vector(void);
 void Serialized_ops_struct_w_vector_w_bool_before(void);
 void Serialized_ops_struct_w_vector_w_bool_after(void);
+void Serialized_ops_bitmask(void);
+void Serialized_ops_struct_w_bitmask(void);
+void Serialized_ops_enum(void);
+void Serialized_ops_struct_w_enum(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -303,6 +339,124 @@ bake_test_case PrimitiveTypes_testcases[] = {
     {
         "builtin_entity",
         PrimitiveTypes_builtin_entity
+    },
+    {
+        "struct_w_bool",
+        PrimitiveTypes_struct_w_bool
+    },
+    {
+        "struct_w_byte",
+        PrimitiveTypes_struct_w_byte
+    },
+    {
+        "struct_w_char",
+        PrimitiveTypes_struct_w_char
+    },
+    {
+        "struct_w_i8",
+        PrimitiveTypes_struct_w_i8
+    },
+    {
+        "struct_w_i16",
+        PrimitiveTypes_struct_w_i16
+    },
+    {
+        "struct_w_i32",
+        PrimitiveTypes_struct_w_i32
+    },
+    {
+        "struct_w_i64",
+        PrimitiveTypes_struct_w_i64
+    },
+    {
+        "struct_w_iptr",
+        PrimitiveTypes_struct_w_iptr
+    },
+    {
+        "struct_w_u8",
+        PrimitiveTypes_struct_w_u8
+    },
+    {
+        "struct_w_u16",
+        PrimitiveTypes_struct_w_u16
+    },
+    {
+        "struct_w_u32",
+        PrimitiveTypes_struct_w_u32
+    },
+    {
+        "struct_w_u64",
+        PrimitiveTypes_struct_w_u64
+    },
+    {
+        "struct_w_uptr",
+        PrimitiveTypes_struct_w_uptr
+    },
+    {
+        "struct_w_float",
+        PrimitiveTypes_struct_w_float
+    },
+    {
+        "struct_w_double",
+        PrimitiveTypes_struct_w_double
+    },
+    {
+        "struct_w_string",
+        PrimitiveTypes_struct_w_string
+    },
+    {
+        "struct_w_entity",
+        PrimitiveTypes_struct_w_entity
+    }
+};
+
+bake_test_case EnumTypes_testcases[] = {
+    {
+        "enum_1_constant",
+        EnumTypes_enum_1_constant
+    },
+    {
+        "enum_2_constants",
+        EnumTypes_enum_2_constants
+    },
+    {
+        "enum_3_constants",
+        EnumTypes_enum_3_constants
+    },
+    {
+        "enum_3_constants_manual_values",
+        EnumTypes_enum_3_constants_manual_values
+    },
+    {
+        "struct_w_enum",
+        EnumTypes_struct_w_enum
+    }
+};
+
+bake_test_case BitmaskTypes_testcases[] = {
+    {
+        "bitmask_1_constant",
+        BitmaskTypes_bitmask_1_constant
+    },
+    {
+        "bitmask_2_constants",
+        BitmaskTypes_bitmask_2_constants
+    },
+    {
+        "bitmask_3_constants",
+        BitmaskTypes_bitmask_3_constants
+    },
+    {
+        "bitmask_4_constants",
+        BitmaskTypes_bitmask_4_constants
+    },
+    {
+        "bitmask_4_constants_manual_values",
+        BitmaskTypes_bitmask_4_constants_manual_values
+    },
+    {
+        "struct_w_bitmask",
+        BitmaskTypes_struct_w_bitmask
     }
 };
 
@@ -770,6 +924,22 @@ bake_test_case Serialized_testcases[] = {
     {
         "ops_struct_w_vector_w_bool_after",
         Serialized_ops_struct_w_vector_w_bool_after
+    },
+    {
+        "ops_bitmask",
+        Serialized_ops_bitmask
+    },
+    {
+        "ops_struct_w_bitmask",
+        Serialized_ops_struct_w_bitmask
+    },
+    {
+        "ops_enum",
+        Serialized_ops_enum
+    },
+    {
+        "ops_struct_w_enum",
+        Serialized_ops_struct_w_enum
     }
 };
 
@@ -778,8 +948,22 @@ static bake_test_suite suites[] = {
         "PrimitiveTypes",
         NULL,
         NULL,
-        34,
+        51,
         PrimitiveTypes_testcases
+    },
+    {
+        "EnumTypes",
+        NULL,
+        NULL,
+        5,
+        EnumTypes_testcases
+    },
+    {
+        "BitmaskTypes",
+        NULL,
+        NULL,
+        6,
+        BitmaskTypes_testcases
     },
     {
         "StructTypes",
@@ -813,12 +997,12 @@ static bake_test_suite suites[] = {
         "Serialized",
         NULL,
         NULL,
-        56,
+        60,
         Serialized_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 6);
+    return bake_test_run("meta", argc, argv, suites, 8);
 }

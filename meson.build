@@ -21,6 +21,7 @@ flecs_src = files(
     'src/addons/pipeline/worker.c',
     'src/addons/system/system.c',
     'src/addons/timer.c',    
+    'src/addons/meta/api.c',
     'src/addons/meta/meta.c',
     'src/addons/meta/serialized.c',
     'src/datastructures/bitset.c',

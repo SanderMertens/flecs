@@ -236,11 +236,8 @@ void rehash(
 
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
-    ecs_size_t alignment, 
     int32_t element_count)
 {
-    (void)alignment;
-
     ecs_map_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_map_t) * 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
@@ -496,6 +493,26 @@ void ecs_map_set_size(
     if (bucket_count) {
         rehash(map, bucket_count);
     }
+}
+
+ecs_map_t* ecs_map_copy(
+    ecs_map_t *map)
+{
+    if (!map) {
+        return NULL;
+    }
+
+    ecs_size_t elem_size = map->elem_size;
+    ecs_map_t *result = _ecs_map_new(map->elem_size, ecs_map_count(map));
+
+    ecs_map_iter_t it = ecs_map_iter(map);
+    ecs_map_key_t key;
+    void *ptr;
+    while ((ptr = _ecs_map_next(&it, elem_size, &key))) {
+        _ecs_map_set(result, elem_size, key, ptr);
+    }
+
+    return result;
 }
 
 void ecs_map_memory(

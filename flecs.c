@@ -11955,11 +11955,8 @@ void rehash(
 
 ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
-    ecs_size_t alignment, 
     int32_t element_count)
 {
-    (void)alignment;
-
     ecs_map_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_map_t) * 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
@@ -12215,6 +12212,26 @@ void ecs_map_set_size(
     if (bucket_count) {
         rehash(map, bucket_count);
     }
+}
+
+ecs_map_t* ecs_map_copy(
+    ecs_map_t *map)
+{
+    if (!map) {
+        return NULL;
+    }
+
+    ecs_size_t elem_size = map->elem_size;
+    ecs_map_t *result = _ecs_map_new(map->elem_size, ecs_map_count(map));
+
+    ecs_map_iter_t it = ecs_map_iter(map);
+    ecs_map_key_t key;
+    void *ptr;
+    while ((ptr = _ecs_map_next(&it, elem_size, &key))) {
+        _ecs_map_set(result, elem_size, key, ptr);
+    }
+
+    return result;
 }
 
 void ecs_map_memory(
@@ -18666,6 +18683,175 @@ void ecs_meta_type_serialized_init(
 
 #ifdef FLECS_META
 
+ecs_entity_t ecs_enum_init(
+    ecs_world_t *world,
+    const ecs_enum_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_add(world, t, EcsEnum);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
+
+    int i;
+    for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
+        const ecs_enum_constant_t *m_desc = &desc->constants[i];
+        if (!m_desc->name) {
+            break;
+        }
+
+        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = m_desc->name
+        });
+
+        if (!m_desc->value) {
+            ecs_add_id(world, c, EcsConstant);
+        } else {
+            ecs_set_pair_object(world, c, EcsConstant, ecs_i32_t, 
+                {m_desc->value});
+        }
+    }
+
+    ecs_set_scope(world, old_scope);
+
+    if (i == 0) {
+        ecs_err("enum '%s' has no constants", ecs_get_name(world, t));
+        ecs_delete(world, t);
+        return 0;
+    }
+
+    return t;
+}
+
+ecs_entity_t ecs_bitmask_init(
+    ecs_world_t *world,
+    const ecs_bitmask_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_add(world, t, EcsBitmask);
+
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
+
+    int i;
+    for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
+        const ecs_bitmask_constant_t *m_desc = &desc->constants[i];
+        if (!m_desc->name) {
+            break;
+        }
+
+        ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = m_desc->name
+        });
+
+        if (!m_desc->value) {
+            ecs_add_id(world, c, EcsConstant);
+        } else {
+            ecs_set_pair_object(world, c, EcsConstant, ecs_u32_t, 
+                {m_desc->value});
+        }
+    }
+
+    ecs_set_scope(world, old_scope);
+
+    if (i == 0) {
+        ecs_err("bitmask '%s' has no constants", ecs_get_name(world, t));
+        ecs_delete(world, t);
+        return 0;
+    }
+
+    return t;
+}
+
+ecs_entity_t ecs_array_init(
+    ecs_world_t *world,
+    const ecs_array_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsArray, {
+        .type = desc->type,
+        .count = desc->count
+    });
+
+    return t;
+}
+
+ecs_entity_t ecs_vector_init(
+    ecs_world_t *world,
+    const ecs_vector_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsVector, {
+        .type = desc->type
+    });
+
+    return t;
+}
+
+ecs_entity_t ecs_struct_init(
+    ecs_world_t *world,
+    const ecs_struct_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
+
+    int i;
+    for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
+        const ecs_member_t *m_desc = &desc->members[i];
+        if (!m_desc->type) {
+            break;
+        }
+
+        if (!m_desc->name) {
+            ecs_err("member %d of struct '%s' does not have a name", i, 
+                ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+
+        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = m_desc->name
+        });
+
+        ecs_set(world, m, EcsMember, {
+            .type = m_desc->type, 
+            .count = m_desc->count
+        });
+    }
+
+    ecs_set_scope(world, old_scope);
+
+    if (i == 0) {
+        ecs_err("struct '%s' has no members", ecs_get_name(world, t));
+        ecs_delete(world, t);
+        return 0;
+    }
+
+    return t;
+}
+
+#endif
+
+#ifdef FLECS_META
+
 static
 ecs_vector_t* serialize_type(
     ecs_world_t *world,
@@ -18715,6 +18901,38 @@ ecs_vector_t* serialize_primitive(
 }
 
 static
+ecs_vector_t* serialize_enum(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+    
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpEnum);
+    op->offset = offset,
+    op->type = type;
+
+    return ops;
+}
+
+static
+ecs_vector_t* serialize_bitmask(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+    
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpBitmask);
+    op->offset = offset,
+    op->type = type;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_array(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -18743,11 +18961,9 @@ ecs_vector_t* serialize_vector(
     ecs_vector_t *ops)
 {
     (void)world;
-    
+
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpVector);
     op->offset = offset;
-    op->count = 1;
-    op->op_count = 1;
     op->type = type;
 
     return ops;
@@ -18811,11 +19027,11 @@ ecs_vector_t* serialize_type(
         break;
 
     case EcsEnumType:
-        // ops = serialize_enum(world, type, offset, ops);
+        ops = serialize_enum(world, type, offset, ops);
         break;
 
     case EcsBitmaskType:
-        // ops = serialize_bitmask(world, type, offset, ops);
+        ops = serialize_bitmask(world, type, offset, ops);
         break;
 
     case EcsStructType:
@@ -18910,6 +19126,81 @@ static ECS_MOVE(EcsStruct, dst, src, {
 })
 
 static ECS_DTOR(EcsStruct, ptr, { dtor_struct(ptr); })
+
+
+/* EcsEnum lifecycle */
+
+static void dtor_enum(
+    EcsEnum *ptr) 
+{
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
+    ecs_enum_constant_t *c;
+    while ((c = ecs_map_next(&it, ecs_enum_constant_t, NULL))) {
+        ecs_os_free(c->name);
+    }
+    ecs_map_free(ptr->constants);
+}
+
+static ECS_COPY(EcsEnum, dst, src, {
+    dtor_enum(dst);
+
+    dst->constants = ecs_map_copy(src->constants);
+    ecs_assert(ecs_map_count(dst->constants) == ecs_map_count(src->constants),
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_iter_t it = ecs_map_iter(dst->constants);
+    ecs_enum_constant_t *c;
+    while ((c = ecs_map_next(&it, ecs_enum_constant_t, NULL))) {
+        c->name = ecs_os_strdup(c->name);
+    }
+})
+
+static ECS_MOVE(EcsEnum, dst, src, {
+    dtor_enum(dst);
+    dst->constants = src->constants;
+    src->constants = NULL;
+})
+
+static ECS_DTOR(EcsEnum, ptr, { dtor_enum(ptr); })
+
+
+/* EcsBitmask lifecycle */
+
+static void dtor_bitmask(
+    EcsBitmask *ptr) 
+{
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
+    ecs_bitmask_constant_t *c;
+    while ((c = ecs_map_next(&it, ecs_bitmask_constant_t, NULL))) {
+        ecs_os_free(c->name);
+    }
+    ecs_map_free(ptr->constants);
+}
+
+static ECS_COPY(EcsBitmask, dst, src, {
+    dtor_bitmask(dst);
+
+    dst->constants = ecs_map_copy(src->constants);
+    ecs_assert(ecs_map_count(dst->constants) == ecs_map_count(src->constants),
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_iter_t it = ecs_map_iter(dst->constants);
+    ecs_bitmask_constant_t *c;
+    while ((c = ecs_map_next(&it, ecs_bitmask_constant_t, NULL))) {
+        c->name = ecs_os_strdup(c->name);
+    }
+})
+
+static ECS_MOVE(EcsBitmask, dst, src, {
+    dtor_bitmask(dst);
+    dst->constants = src->constants;
+    src->constants = NULL;
+})
+
+static ECS_DTOR(EcsBitmask, ptr, { dtor_bitmask(ptr); })
+
+
+/* Type initialization */
 
 static
 int init_type(
@@ -19078,6 +19369,136 @@ int add_member_to_struct(
 }
 
 static
+int add_constant_to_enum(
+    ecs_world_t *world, 
+    ecs_entity_t type, 
+    ecs_entity_t e,
+    ecs_id_t constant_id)
+{
+    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum, NULL);
+    
+    /* Remove constant from map if it was already added */
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
+    ecs_enum_constant_t *c;
+    ecs_map_key_t key;
+    while ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
+        if (c->constant == e) {
+            ecs_os_free(c->name);
+            ecs_map_remove(ptr->constants, key);
+        }
+    }
+
+    /* Check if constant sets explicit value */
+    int32_t value = 0;
+    bool value_set = false;
+    if (ecs_id_is_pair(constant_id)) {
+        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_i32_t)) {
+            char *path = ecs_get_fullpath(world, e);
+            ecs_err("expected i32 type for enum constant '%s'", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        const int32_t *value_ptr = ecs_get_pair_object(
+            world, e, EcsConstant, ecs_i32_t);
+        ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        value = *value_ptr;
+        value_set = true;
+    }
+
+    /* Make sure constant value doesn't conflict if set / find the next value */
+    it = ecs_map_iter(ptr->constants);
+    while  ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
+        if (value_set) {
+            if (c->value == value) {
+                char *path = ecs_get_fullpath(world, e);
+                ecs_err("conflicting constant value for '%s' (other is '%s')",
+                    path, c->name);
+                ecs_os_free(path);
+                return -1;
+            }
+        } else {
+            if (c->value >= value) {
+                value = c->value + 1;
+            }
+        }
+    }
+
+    if (!ptr->constants) {
+        ptr->constants = ecs_map_new(ecs_enum_constant_t, 1);
+    }
+
+    c = ecs_map_ensure(ptr->constants, ecs_enum_constant_t, value);
+    c->name = ecs_os_strdup(ecs_get_name(world, e));
+    c->value = value;
+    c->constant = e;
+
+    return 0;
+}
+
+static
+int add_constant_to_bitmask(
+    ecs_world_t *world, 
+    ecs_entity_t type, 
+    ecs_entity_t e,
+    ecs_id_t constant_id)
+{
+    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask, NULL);
+    
+    /* Remove constant from map if it was already added */
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
+    ecs_bitmask_constant_t *c;
+    ecs_map_key_t key;
+    while ((c = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
+        if (c->constant == e) {
+            ecs_os_free(c->name);
+            ecs_map_remove(ptr->constants, key);
+        }
+    }
+
+    /* Check if constant sets explicit value */
+    uint32_t value = 1;
+    if (ecs_id_is_pair(constant_id)) {
+        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_u32_t)) {
+            char *path = ecs_get_fullpath(world, e);
+            ecs_err("expected u32 type for bitmask constant '%s'", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        const uint32_t *value_ptr = ecs_get_pair_object(
+            world, e, EcsConstant, ecs_u32_t);
+        ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        value = *value_ptr;
+    } else {
+        value = 1u << (ecs_u32_t)ecs_map_count(ptr->constants);
+    }
+
+    /* Make sure constant value doesn't conflict */
+    it = ecs_map_iter(ptr->constants);
+    while  ((c = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
+        if (c->value == value) {
+            char *path = ecs_get_fullpath(world, e);
+            ecs_err("conflicting constant value for '%s' (other is '%s')",
+                path, c->name);
+            ecs_os_free(path);
+            return -1;
+        }
+    }
+
+    if (!ptr->constants) {
+        ptr->constants = ecs_map_new(ecs_bitmask_constant_t, 1);
+    }
+
+    c = ecs_map_ensure(ptr->constants, ecs_bitmask_constant_t, value);
+    c->name = ecs_os_strdup(ecs_get_name(world, e));
+    c->value = value;
+    c->constant = e;
+
+    return 0;
+}
+
+static
 void set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsPrimitive *type = ecs_term(it, EcsPrimitive, 1);
@@ -19194,6 +19615,67 @@ void set_member(ecs_iter_t *it) {
 }
 
 static
+void add_enum(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        
+        if (init_component(
+            world, e, ECS_SIZEOF(ecs_i32_t), ECS_ALIGNOF(ecs_i32_t)))
+        {
+            continue;
+        }
+
+        if (init_type(world, e, EcsEnumType)) {
+            continue;
+        }
+    }
+}
+
+static
+void add_bitmask(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        
+        if (init_component(
+            world, e, ECS_SIZEOF(ecs_u32_t), ECS_ALIGNOF(ecs_u32_t)))
+        {
+            continue;
+        }
+
+        if (init_type(world, e, EcsBitmaskType)) {
+            continue;
+        }
+    }
+}
+
+static
+void add_constant(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        if (!parent) {
+            ecs_err("missing parent for constant '%s'", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (ecs_has(world, parent, EcsEnum)) {
+            add_constant_to_enum(world, parent, e, it->event_id);
+        } else if (ecs_has(world, parent, EcsBitmask)) {
+            add_constant_to_bitmask(world, parent, e, it->event_id);
+        }
+    }
+}
+
+static
 void set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsArray *array = ecs_term(it, EcsArray, 1);
@@ -19287,6 +19769,20 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsStruct)
     });
 
+    ecs_set_component_actions(world, EcsEnum, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsEnum),
+        .copy = ecs_copy(EcsEnum),
+        .dtor = ecs_dtor(EcsEnum)
+    });
+
+    ecs_set_component_actions(world, EcsBitmask, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsBitmask),
+        .copy = ecs_copy(EcsBitmask),
+        .dtor = ecs_dtor(EcsBitmask)
+    });
+
     /* Register triggers to finalize type information from component data */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsPrimitive),
@@ -19298,6 +19794,30 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsMember),
         .events = {EcsOnSet},
         .callback = set_member
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsEnum),
+        .events = {EcsOnAdd},
+        .callback = add_enum
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsBitmask),
+        .events = {EcsOnAdd},
+        .callback = add_bitmask
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = EcsConstant,
+        .events = {EcsOnAdd},
+        .callback = add_constant
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_pair(EcsConstant, EcsWildcard),
+        .events = {EcsOnSet},
+        .callback = add_constant
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
@@ -19346,85 +19866,6 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, entity, EcsEntity);
 
     #undef ECS_PRIMITIVE
-}
-
-ecs_entity_t ecs_array_init(
-    ecs_world_t *world,
-    const ecs_array_desc_t *desc)
-{
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
-    if (!t) {
-        return 0;
-    }
-
-    ecs_set(world, t, EcsArray, {
-        .type = desc->type,
-        .count = desc->count
-    });
-
-    return t;
-}
-
-ecs_entity_t ecs_vector_init(
-    ecs_world_t *world,
-    const ecs_vector_desc_t *desc)
-{
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
-    if (!t) {
-        return 0;
-    }
-
-    ecs_set(world, t, EcsVector, {
-        .type = desc->type
-    });
-
-    return t;
-}
-
-ecs_entity_t ecs_struct_init(
-    ecs_world_t *world,
-    const ecs_struct_desc_t *desc)
-{
-    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
-    if (!t) {
-        return 0;
-    }
-
-    ecs_entity_t old_scope = ecs_set_scope(world, t);
-
-    int i;
-    for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
-        const ecs_member_t *m_desc = &desc->members[i];
-        if (!m_desc->type) {
-            break;
-        }
-
-        if (!m_desc->name) {
-            ecs_err("member %d of struct '%s' does not have a name", i, 
-                ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
-        }
-
-        ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
-            .name = m_desc->name
-        });
-
-        ecs_set(world, m, EcsMember, {
-            .type = m_desc->type, 
-            .count = m_desc->count
-        });
-    }
-
-    ecs_set_scope(world, old_scope);
-
-    if (i == 0) {
-        ecs_err("struct '%s' has no members", ecs_get_name(world, t));
-        ecs_delete(world, t);
-        return 0;
-    }
-
-    return t;
 }
 
 #endif
@@ -21802,23 +22243,24 @@ const ecs_entity_t EcsOnStore =               ECS_HI_COMPONENT_ID + 73;
 const ecs_entity_t EcsPostFrame =             ECS_HI_COMPONENT_ID + 74;
 
 /* Meta primitive components (don't use low ids to save id space) */
-const ecs_entity_t ecs_id(ecs_bool_t) =       ECS_HI_COMPONENT_ID + 80;
-const ecs_entity_t ecs_id(ecs_char_t) =       ECS_HI_COMPONENT_ID + 81;
-const ecs_entity_t ecs_id(ecs_byte_t) =       ECS_HI_COMPONENT_ID + 82;
-const ecs_entity_t ecs_id(ecs_u8_t) =      ECS_HI_COMPONENT_ID + 83;
-const ecs_entity_t ecs_id(ecs_u16_t) =     ECS_HI_COMPONENT_ID + 84;
-const ecs_entity_t ecs_id(ecs_u32_t) =     ECS_HI_COMPONENT_ID + 85;
-const ecs_entity_t ecs_id(ecs_u64_t) =     ECS_HI_COMPONENT_ID + 86;
-const ecs_entity_t ecs_id(ecs_uptr_t) =    ECS_HI_COMPONENT_ID + 87;
-const ecs_entity_t ecs_id(ecs_i8_t) =       ECS_HI_COMPONENT_ID + 88;
-const ecs_entity_t ecs_id(ecs_i16_t) =      ECS_HI_COMPONENT_ID + 89;
-const ecs_entity_t ecs_id(ecs_i32_t) =      ECS_HI_COMPONENT_ID + 90;
-const ecs_entity_t ecs_id(ecs_i64_t) =      ECS_HI_COMPONENT_ID + 91;
-const ecs_entity_t ecs_id(ecs_iptr_t) =     ECS_HI_COMPONENT_ID + 92;
-const ecs_entity_t ecs_id(ecs_f32_t) =        ECS_HI_COMPONENT_ID + 93;
-const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 94;
-const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 95;
-const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 96;
+const ecs_entity_t EcsConstant =              ECS_HI_COMPONENT_ID + 80;
+const ecs_entity_t ecs_id(ecs_bool_t) =       ECS_HI_COMPONENT_ID + 81;
+const ecs_entity_t ecs_id(ecs_char_t) =       ECS_HI_COMPONENT_ID + 82;
+const ecs_entity_t ecs_id(ecs_byte_t) =       ECS_HI_COMPONENT_ID + 83;
+const ecs_entity_t ecs_id(ecs_u8_t) =         ECS_HI_COMPONENT_ID + 84;
+const ecs_entity_t ecs_id(ecs_u16_t) =        ECS_HI_COMPONENT_ID + 85;
+const ecs_entity_t ecs_id(ecs_u32_t) =        ECS_HI_COMPONENT_ID + 86;
+const ecs_entity_t ecs_id(ecs_u64_t) =        ECS_HI_COMPONENT_ID + 87;
+const ecs_entity_t ecs_id(ecs_uptr_t) =       ECS_HI_COMPONENT_ID + 88;
+const ecs_entity_t ecs_id(ecs_i8_t) =         ECS_HI_COMPONENT_ID + 89;
+const ecs_entity_t ecs_id(ecs_i16_t) =        ECS_HI_COMPONENT_ID + 90;
+const ecs_entity_t ecs_id(ecs_i32_t) =        ECS_HI_COMPONENT_ID + 91;
+const ecs_entity_t ecs_id(ecs_i64_t) =        ECS_HI_COMPONENT_ID + 92;
+const ecs_entity_t ecs_id(ecs_iptr_t) =       ECS_HI_COMPONENT_ID + 93;
+const ecs_entity_t ecs_id(ecs_f32_t) =        ECS_HI_COMPONENT_ID + 94;
+const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 95;
+const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 96;
+const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 97;
 
 
 /* -- Private functions -- */
