@@ -792,6 +792,7 @@ void Pipeline_system_order_different_phase_after_activate(void);
 void Pipeline_system_order_after_new_system_lower_id(void);
 void Pipeline_system_order_after_new_system_inbetween_id(void);
 void Pipeline_system_order_after_new_system_higher_id(void);
+void Pipeline_system_reverse_order_by_phase_custom_pipeline(void);
 void Pipeline_merge_after_staged_out(void);
 void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
@@ -1061,6 +1062,7 @@ void Query_only_not_from_singleton(void);
 void Query_get_filter(void);
 void Query_group_by(void);
 void Query_group_by_w_ctx(void);
+void Query_group_by_w_sort_reverse_group_creation(void);
 void Query_iter_valid(void);
 void Query_query_optional_tag(void);
 void Query_query_optional_shared_tag(void);
@@ -5066,6 +5068,10 @@ bake_test_case Pipeline_testcases[] = {
         Pipeline_system_order_after_new_system_higher_id
     },
     {
+        "system_reverse_order_by_phase_custom_pipeline",
+        Pipeline_system_reverse_order_by_phase_custom_pipeline
+    },
+    {
         "merge_after_staged_out",
         Pipeline_merge_after_staged_out
     },
@@ -6111,6 +6117,10 @@ bake_test_case Query_testcases[] = {
     {
         "group_by_w_ctx",
         Query_group_by_w_ctx
+    },
+    {
+        "group_by_w_sort_reverse_group_creation",
+        Query_group_by_w_sort_reverse_group_creation
     },
     {
         "iter_valid",
@@ -10148,7 +10158,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        26,
+        27,
         Pipeline_testcases
     },
     {
@@ -10183,7 +10193,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        46,
+        47,
         Query_testcases
     },
     {

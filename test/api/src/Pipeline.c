@@ -881,3 +881,72 @@ void Pipeline_random_in_after_random_inout_after_random_out() {
 
     ecs_fini(world);
 }
+
+static
+void cb_first(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    test_int(count[0], 0);
+    count[0] ++;
+}
+
+static
+void cb_second(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    test_int(count[0], 1);
+    count[0] ++;
+}
+
+static
+void cb_third(ecs_iter_t *it) {
+    int32_t *count = it->ctx;
+    test_int(count[0], 2);
+    count[0] ++;
+}
+
+void Pipeline_system_reverse_order_by_phase_custom_pipeline() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t PreFrame = ecs_new_id(world);
+    ecs_entity_t OnFrame = ecs_new_id(world);
+    ecs_entity_t PostFrame = ecs_new_id(world);
+
+    ecs_entity_t pip = ecs_type_init(world, &(ecs_type_desc_t) {
+        .entity = {
+            .name = "FooPipeline",
+            .add = {EcsPipeline}
+        },
+        .ids = {PreFrame, OnFrame, PostFrame}
+    });
+
+    ecs_add_id(world, pip, EcsPipeline);
+
+    int count = 0;
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .callback = cb_third,
+        .ctx = &count,
+        .entity.add = {PostFrame}
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .callback = cb_second,
+        .ctx = &count,
+        .entity.add = {OnFrame}
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .callback = cb_first,
+        .ctx = &count,
+        .entity.add = {PreFrame}
+    });
+
+    test_int(count, 0);
+
+    ecs_set_pipeline(world, pip);
+
+    ecs_progress(world, 0);
+
+    test_int(count, 3);
+
+    ecs_fini(world);
+}

@@ -1292,12 +1292,21 @@ uint64_t group_by_first_id(
     ecs_id_t id,
     void *ctx)
 {
-    ecs_id_t *second = ecs_vector_get(type, ecs_id_t, 1);
-    if (!second) {
+    ecs_id_t *first = ecs_vector_first(type, ecs_id_t);
+    if (!first) {
         return 0;
     }
 
-    return second[0];
+    return first[0];
+}
+
+int order_by_entity(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
+{
+    return (e1 > e2) - (e1 < e2);
 }
 
 void Query_group_by() {
@@ -1306,16 +1315,16 @@ void Query_group_by() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
-    ECS_COMPONENT(world, Position);    
+    ECS_TAG(world, TagX);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
-        .filter.terms = {{ecs_id(Position)}},
+        .filter.terms = {{TagX}},
         .group_by = group_by_first_id
     });
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, TagX);
+    ecs_entity_t e2 = ecs_new(world, TagX);
+    ecs_entity_t e3 = ecs_new(world, TagX);
 
     ecs_add_id(world, e1, TagC);
     ecs_add_id(world, e2, TagB);
@@ -1353,18 +1362,18 @@ void Query_group_by_w_ctx() {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
-    ECS_COMPONENT(world, Position);    
+    ECS_TAG(world, TagX);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
-        .filter.terms = {{ecs_id(Position)}},
+        .filter.terms = {{TagX}},
         .group_by = group_by_first_id,
         .group_by_ctx = &ctx_value,
         .group_by_ctx_free = ctx_value_free
     });
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new(world, TagX);
+    ecs_entity_t e2 = ecs_new(world, TagX);
+    ecs_entity_t e3 = ecs_new(world, TagX);
 
     ecs_add_id(world, e1, TagC);
     ecs_add_id(world, e2, TagB);
@@ -1388,6 +1397,47 @@ void Query_group_by_w_ctx() {
     ecs_query_fini(q);
 
     test_int(ctx_value_free_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Query_group_by_w_sort_reverse_group_creation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t TagA = ecs_new_id(world);
+    ecs_entity_t TagB = ecs_new_id(world);
+    ecs_entity_t TagC = ecs_new_id(world);
+
+    ecs_entity_t TagX = ecs_new_id(world);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{TagX}},
+        .order_by = order_by_entity,
+        .group_by = group_by_first_id
+    });
+
+    ecs_entity_t e1 = ecs_new_w_id(world, TagX);
+    ecs_entity_t e2 = ecs_new_w_id(world, TagX);
+    ecs_entity_t e3 = ecs_new_w_id(world, TagX);
+
+    ecs_add_id(world, e1, TagC);
+    ecs_add_id(world, e2, TagB);
+    ecs_add_id(world, e3, TagA);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);    
+
+    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }

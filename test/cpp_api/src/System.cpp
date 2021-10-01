@@ -1205,7 +1205,7 @@ void System_custom_pipeline() {
     auto PreFrame = world.entity();
     auto OnFrame = world.entity();
     auto PostFrame = world.entity();
-
+    
     flecs::pipeline pip = world.pipeline("FooPipeline")
         .add(PreFrame)
         .add(OnFrame)
@@ -1237,6 +1237,7 @@ void System_custom_pipeline() {
     test_int(count, 0);
 
     world.set_pipeline(pip);
+
     world.progress();
 
     test_int(count, 3);

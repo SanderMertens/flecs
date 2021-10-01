@@ -1392,10 +1392,24 @@ void build_sorted_tables(
     ecs_vector_clear(query->table_slices);
 
     if (query->group_by) {
-        ecs_map_iter_t it = ecs_map_iter(query->groups);
-        ecs_query_table_list_t *list;
-        while ((list = ecs_map_next(&it, ecs_query_table_list_t, NULL))) {
-            build_sorted_table_range(query, list);
+        /* Populate sorted node list in grouping order */
+        ecs_query_table_node_t *cur = query->list.first;
+        if (cur) {
+            do {
+                /* Find list for current group */
+                ecs_query_table_match_t *match = cur->match;
+                ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
+                uint64_t group_id = match->group_id;
+                ecs_query_table_list_t *list = ecs_map_get(query->groups, 
+                    ecs_query_table_list_t, group_id);
+                ecs_assert(list != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                /* Sort tables in current group */
+                build_sorted_table_range(query, list);
+                
+                /* Find next group to sort */
+                cur = list->last->next;
+            } while (cur);
         }
     } else {
         build_sorted_table_range(query, &query->list);
