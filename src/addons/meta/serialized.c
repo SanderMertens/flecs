@@ -51,6 +51,38 @@ ecs_vector_t* serialize_primitive(
 }
 
 static
+ecs_vector_t* serialize_enum(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+    
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpEnum);
+    op->offset = offset,
+    op->type = type;
+
+    return ops;
+}
+
+static
+ecs_vector_t* serialize_bitmask(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t offset,
+    ecs_vector_t *ops)
+{
+    (void)world;
+    
+    ecs_meta_type_op_t *op = ops_add(&ops, EcsOpBitmask);
+    op->offset = offset,
+    op->type = type;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_array(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -79,11 +111,9 @@ ecs_vector_t* serialize_vector(
     ecs_vector_t *ops)
 {
     (void)world;
-    
+
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpVector);
     op->offset = offset;
-    op->count = 1;
-    op->op_count = 1;
     op->type = type;
 
     return ops;
@@ -147,11 +177,11 @@ ecs_vector_t* serialize_type(
         break;
 
     case EcsEnumType:
-        // ops = serialize_enum(world, type, offset, ops);
+        ops = serialize_enum(world, type, offset, ops);
         break;
 
     case EcsBitmaskType:
-        // ops = serialize_bitmask(world, type, offset, ops);
+        ops = serialize_bitmask(world, type, offset, ops);
         break;
 
     case EcsStructType:

@@ -50,6 +50,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
+FLECS_API extern const ecs_entity_t EcsConstant;
 
 /** Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
@@ -132,10 +133,32 @@ typedef struct EcsStruct {
     ecs_vector_t *members; /* vector<ecs_member_t> */
 } EcsStruct;
 
+typedef struct ecs_enum_constant_t {
+    /* Must be set when used with ecs_enum_desc_t */
+    char *name;
+
+    /* May be set when used with ecs_enum_desc_t */
+    int32_t value;
+
+    /* Should not be set by ecs_enum_desc_t */
+    ecs_entity_t constant;
+} ecs_enum_constant_t;
+
 typedef struct EcsEnum {
     /* Populated from child entities with Constant component */
     ecs_map_t *constants;
 } EcsEnum;
+
+typedef struct ecs_bitmask_constant_t {
+    /* Must be set when used with ecs_bitmask_desc_t */
+    char *name;
+
+    /* May be set when used with ecs_bitmask_desc_t */
+    ecs_flags32_t value;
+
+    /* Should not be set by ecs_bitmask_desc_t */
+    ecs_entity_t constant;
+} ecs_bitmask_constant_t;
 
 typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
@@ -199,6 +222,33 @@ typedef struct EcsMetaTypeSerialized {
 
 /** Convenience functions for creating meta types */
 
+
+/** Used with ecs_enum_init. */
+typedef struct ecs_enum_desc_t {
+    ecs_entity_desc_t entity;
+    ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
+} ecs_enum_desc_t;
+
+/** Create a new enum type */
+FLECS_API
+ecs_entity_t ecs_enum_init(
+    ecs_world_t *world,
+    const ecs_enum_desc_t *desc);
+
+
+/** Used with ecs_bitmask_init. */
+typedef struct ecs_bitmask_desc_t {
+    ecs_entity_desc_t entity;
+    ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
+} ecs_bitmask_desc_t;
+
+/** Create a new enum type */
+FLECS_API
+ecs_entity_t ecs_bitmask_init(
+    ecs_world_t *world,
+    const ecs_bitmask_desc_t *desc);
+
+
 /** Used with ecs_array_init. */
 typedef struct ecs_array_desc_t {
     ecs_entity_desc_t entity;
@@ -212,6 +262,7 @@ ecs_entity_t ecs_array_init(
     ecs_world_t *world,
     const ecs_array_desc_t *desc);
 
+
 /** Used with ecs_vector_init. */
 typedef struct ecs_vector_desc_t {
     ecs_entity_desc_t entity;
@@ -223,6 +274,7 @@ FLECS_API
 ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc);
+
 
 /** Used with ecs_struct_init. */
 typedef struct ecs_struct_desc_t {

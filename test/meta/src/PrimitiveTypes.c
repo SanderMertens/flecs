@@ -369,3 +369,99 @@ void PrimitiveTypes_builtin_entity() {
 
     ecs_fini(world);
 }
+
+#define STRUCT_W_PRIMITIVE_TEST(PrimitiveType)\
+    typedef struct {\
+        ecs_bool_t before;\
+        PrimitiveType v;\
+        ecs_bool_t after;\
+    } T;\
+\
+    ecs_world_t *world = ecs_init();\
+\
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {\
+        .entity.name = "T",\
+        .members = {\
+            {"before", ecs_id(ecs_bool_t)},\
+            {"v", ecs_id(PrimitiveType)},\
+            {"after", ecs_id(ecs_bool_t)}\
+        }\
+    });\
+\
+    test_assert(t != 0);\
+    test_str(ecs_get_name(world, t), "T");\
+\
+    meta_test_struct(world, t, T);\
+    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 1);\
+    meta_test_member(world, t, T, v, ecs_id(PrimitiveType), 1);\
+    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 1);\
+\
+    ecs_fini(world);
+
+void PrimitiveTypes_struct_w_bool() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_bool_t)
+}
+
+void PrimitiveTypes_struct_w_byte() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_byte_t)
+}
+
+void PrimitiveTypes_struct_w_char() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_char_t)
+}
+
+void PrimitiveTypes_struct_w_i8() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_i8_t)
+}
+
+void PrimitiveTypes_struct_w_i16() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_i16_t)
+}
+
+void PrimitiveTypes_struct_w_i32() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_i32_t)
+}
+
+void PrimitiveTypes_struct_w_i64() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_i64_t)
+}
+
+void PrimitiveTypes_struct_w_iptr() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_iptr_t)
+}
+
+void PrimitiveTypes_struct_w_u8() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_u8_t)
+}
+
+void PrimitiveTypes_struct_w_u16() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_u16_t)
+}
+
+void PrimitiveTypes_struct_w_u32() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_u32_t)
+}
+
+void PrimitiveTypes_struct_w_u64() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_u64_t)
+}
+
+void PrimitiveTypes_struct_w_uptr() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_uptr_t)
+}
+
+void PrimitiveTypes_struct_w_float() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_f32_t)
+}
+
+void PrimitiveTypes_struct_w_double() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_f64_t)
+}
+
+void PrimitiveTypes_struct_w_string() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_string_t)
+}
+
+void PrimitiveTypes_struct_w_entity() {
+    STRUCT_W_PRIMITIVE_TEST(ecs_entity_t)
+}

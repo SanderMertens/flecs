@@ -47,7 +47,43 @@
                 "builtin_float",
                 "builtin_double",
                 "builtin_string",
-                "builtin_entity"
+                "builtin_entity",
+                "struct_w_bool",
+                "struct_w_byte",
+                "struct_w_char",
+                "struct_w_i8",
+                "struct_w_i16",
+                "struct_w_i32",
+                "struct_w_i64",
+                "struct_w_iptr",
+                "struct_w_u8",
+                "struct_w_u16",
+                "struct_w_u32",
+                "struct_w_u64",
+                "struct_w_uptr",
+                "struct_w_float",
+                "struct_w_double",
+                "struct_w_string",
+                "struct_w_entity"
+            ]
+        }, {
+            "id": "EnumTypes",
+            "testcases": [
+                "enum_1_constant",
+                "enum_2_constants",
+                "enum_3_constants",
+                "enum_3_constants_manual_values",
+                "struct_w_enum"
+            ]
+        }, {
+            "id": "BitmaskTypes",
+            "testcases": [
+                "bitmask_1_constant",
+                "bitmask_2_constants",
+                "bitmask_3_constants",
+                "bitmask_4_constants",
+                "bitmask_4_constants_manual_values",
+                "struct_w_bitmask"
             ]
         }, {
             "id": "StructTypes",
@@ -180,7 +216,11 @@
                 "ops_vector",
                 "ops_struct_w_vector",
                 "ops_struct_w_vector_w_bool_before",
-                "ops_struct_w_vector_w_bool_after"
+                "ops_struct_w_vector_w_bool_after",
+                "ops_bitmask",
+                "ops_struct_w_bitmask",
+                "ops_enum",
+                "ops_struct_w_enum"
             ]
         }]
     }
