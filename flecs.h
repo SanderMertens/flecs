@@ -6928,7 +6928,54 @@ void FlecsTimerImport(
  * @file meta.h
  * @brief Meta addon.
  *
- * The meta addon enables reflecting on component data.
+ * The meta addon enables reflecting on component data. Types are stored as
+ * entities, with components that store the reflection data. A type has at least
+ * two components:
+ * 
+ * - EcsComponent: core component, contains size & alignment
+ * - EcsMetaType:  component that indicates what kind of type the entity is
+ *
+ * Additionally the type may have an additional component that contains the
+ * reflection data for the type. For example, structs have these components:
+ * 
+ * - EcsComponent
+ * - EcsMetaType
+ * - EcsStruct
+ * 
+ * Structs can be populated by adding child entities with the EcsMember 
+ * component. Adding a child with a Member component to an entity will 
+ * automatically add the EcsStruct component to the parent.
+ * 
+ * Enums/bitmasks can be populated by adding child entities with the Constant
+ * tag. By default constants are automatically assigned values when they are
+ * added to the enum/bitmask. The parent entity must have the EcsEnum or
+ * EcsBitmask component before adding the constants.
+ * 
+ * To create enum constants with a manual value, set (Constant, i32) to the
+ * desired value. To create bitmask constants with a manual value, set
+ * (Constant, u32) to the desired value. Constants with manual values should not
+ * conflict with other constants.
+ * 
+ * The _init APIs are convenience wrappers around creating the entities and
+ * components for the types.
+ * 
+ * When a type is created it automatically receives the EcsComponent and 
+ * EcsMetaType components. The former means that the resulting type can be
+ * used as a regular component:
+ * 
+ * // Create Position type
+ * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t) {
+ *  .entity.name = "Position",
+ *  .members = {
+ *       {"x", ecs_id(ecs_f32_t)},
+ *       {"y", ecs_id(ecs_f32_t)}
+ *   }
+ * });
+ *
+ * // Create entity with Position component
+ * ecs_entity_t e = ecs_new_w_id(world, pos);
+ * 
+ * Type entities do not have to be named.
  */
 
 #ifdef FLECS_META
@@ -6947,7 +6994,13 @@ extern "C" {
 
 #define ECS_MEMBER_DESC_CACHE_SIZE (16)
 
-/** Primitive type definitions */
+/** Primitive type definitions.
+ * These typedefs allow the builtin primitives to be used as regular components:
+ *   ecs_set(world, e, ecs_i32_t, {10});
+ * 
+ * Or a more useful example (create an enum constant with a manual value):
+ *   ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ */
 typedef bool ecs_bool_t;
 typedef char ecs_char_t;
 typedef unsigned char ecs_byte_t;
@@ -6996,6 +7049,7 @@ FLECS_API extern const ecs_entity_t ecs_id(ecs_f64_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_string_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_entity_t);
 
+/** Type kinds supported by reflection type system */
 typedef enum ecs_type_kind_t {
     EcsPrimitiveType,
     EcsBitmaskType,
@@ -7005,6 +7059,7 @@ typedef enum ecs_type_kind_t {
     EcsVectorType
 } ecs_type_kind_t;
 
+/** Component that is automatically added to every type with the right kind. */
 typedef struct EcsMetaType {
     ecs_type_kind_t kind;
 } EcsMetaType;
@@ -7071,7 +7126,7 @@ typedef struct ecs_enum_constant_t {
 
 typedef struct EcsEnum {
     /* Populated from child entities with Constant component */
-    ecs_map_t *constants;
+    ecs_map_t *constants; /* map<i32_t, ecs_enum_constant_t> */
 } EcsEnum;
 
 typedef struct ecs_bitmask_constant_t {
@@ -7087,7 +7142,7 @@ typedef struct ecs_bitmask_constant_t {
 
 typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
-    ecs_map_t *constants;
+    ecs_map_t *constants; /* map<u32_t, ecs_bitmask_constant_t> */
 } EcsBitmask;
 
 typedef struct EcsArray {
@@ -7141,7 +7196,7 @@ typedef struct ecs_meta_type_op_t {
 } ecs_meta_type_op_t;
 
 typedef struct EcsMetaTypeSerialized {
-    ecs_vector_t* ops;
+    ecs_vector_t* ops;    /* vector<ecs_meta_type_op_t> */
 } EcsMetaTypeSerialized;
 
 
@@ -7163,7 +7218,7 @@ typedef struct ecs_meta_scope_t {
     bool is_inline_array;     /* Is the scope iterating an inline array? */
 } ecs_meta_scope_t;
 
-/** Type that enables iterating/populateing a value using reflection data */
+/** Type that enables iterating/populating a value using reflection data */
 typedef struct ecs_meta_cursor_t {
     const ecs_world_t *world;
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
@@ -7176,67 +7231,86 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_entity_t type,
     void *ptr);
 
+/** Get pointer to current field */
 FLECS_API
 void* ecs_meta_get_ptr(
     ecs_meta_cursor_t *cursor);
 
+/** Move cursor to next field */
 FLECS_API
 int ecs_meta_next(
     ecs_meta_cursor_t *cursor);
 
+/** Move cursor to a field */
 FLECS_API
 int ecs_meta_move(
     ecs_meta_cursor_t *cursor,
     int32_t pos);
 
+/** Move cursor to member */
 FLECS_API
-int ecs_meta_move_name(
+int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Push a scope (required/only valid for structs & collections) */
 FLECS_API
 int ecs_meta_push(
     ecs_meta_cursor_t *cursor);
 
+/** Pop a struct or collection scope (must follow a push) */
 FLECS_API
 int ecs_meta_pop(
     ecs_meta_cursor_t *cursor);
 
+
+/** The set functions assign the field with the specified value. If the value
+ * does not have the same type as the field, it will be cased to the field type.
+ * If no valid conversion is available, the operation will fail. */
+
+/** Set field with boolean value */
 FLECS_API
 int ecs_meta_set_bool(
     ecs_meta_cursor_t *cursor,
     bool value);
 
+/** Set field with char value */
 FLECS_API
 int ecs_meta_set_char(
     ecs_meta_cursor_t *cursor,
     char value);
 
+/** Set field with int value */
 FLECS_API
 int ecs_meta_set_int(
     ecs_meta_cursor_t *cursor,
     int64_t value);
 
+/** Set field with uint value */
 FLECS_API
 int ecs_meta_set_uint(
     ecs_meta_cursor_t *cursor,
     uint64_t value);
 
+/** Set field with float value */
 FLECS_API
 int ecs_meta_set_float(
     ecs_meta_cursor_t *cursor,
     double value);
 
+/** Set field with string value */
 FLECS_API
 int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value);
 
+/** Set field with entity value */
 FLECS_API
 int ecs_meta_set_entity(
     ecs_meta_cursor_t *cursor,
     ecs_entity_t value);
 
+/** Set field with null value */
 FLECS_API
 int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor);
@@ -7263,7 +7337,7 @@ typedef struct ecs_bitmask_desc_t {
     ecs_bitmask_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE];
 } ecs_bitmask_desc_t;
 
-/** Create a new enum type */
+/** Create a new bitmask type */
 FLECS_API
 ecs_entity_t ecs_bitmask_init(
     ecs_world_t *world,
