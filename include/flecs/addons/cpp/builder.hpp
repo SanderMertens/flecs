@@ -616,7 +616,7 @@ public:
      * @param rank The rank action.
      */
     template <typename T>
-    Base& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+    Base& group_by(int(*rank)(flecs::world_t*, flecs::type_t type, flecs::entity_t, void*)) {
         ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
         return this->group_by(_::cpp_type<T>::id(this->m_world), rnk);
     }
@@ -627,7 +627,7 @@ public:
      * @param component The component used to determine the group rank.
      * @param rank The rank action.
      */
-    Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
+    Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::type_t type, flecs::entity_t, void*)) {
         m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
         m_desc->group_by_id = component;
         return *this;
