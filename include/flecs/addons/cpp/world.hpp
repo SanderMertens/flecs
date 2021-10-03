@@ -201,6 +201,12 @@ public:
         ecs_quit(m_world);
     }
 
+    /** Register action to be executed when world is destroyed.
+     */
+    void atfini(ecs_fini_action_t action, void *ctx) const {
+        ecs_atfini(m_world, action, ctx);
+    }
+
     /** Test if quit() has been called.
      */
     bool should_quit() {
