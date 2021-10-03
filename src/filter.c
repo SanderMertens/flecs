@@ -1038,8 +1038,7 @@ bool populate_from_column(
     ecs_size_t *size_out,
     void **ptr_out)
 {
-    bool has_data = false;
-
+    ecs_column_t *storage = NULL;
     ecs_size_t size = 0;
 
     if (column != -1) {
@@ -1050,18 +1049,13 @@ bool populate_from_column(
             column = tr->column;
         }
 
-        const ecs_data_t *data = &table->storage;
-        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-
-        /* If there is no data, ensure that iterator won't try to get it */
-        if (table->column_count > column) {
-            ecs_column_t *c = &data->columns[column];
-            if (c->size) {
-                has_data = true;
-                size = c->size;
-            }
+        int32_t storage_column = ecs_table_type_to_storage_index(table, column);
+        if (storage_column != -1) {
+            storage = &table->storage.columns[storage_column];
+            size = storage->size;
         }
 
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
         id = ids[column];
 
         if (subject_out) {
@@ -1069,16 +1063,15 @@ bool populate_from_column(
         }
 
         if (ptr_out) {
-            if (has_data) {
+            if (storage) {
                 if (source) {
                     *ptr_out = (void*)ecs_get_id(world, source, id);
                 } else {
-                    ecs_column_t *col = &data->columns[column];
                     *ptr_out = ecs_vector_first_t(
-                        col->data, col->size, col->alignment);
+                        storage->data, size, storage->alignment);
                     
                     if (*ptr_out && offset) {
-                        *ptr_out = ECS_OFFSET(*ptr_out, col->size * offset);
+                        *ptr_out = ECS_OFFSET(*ptr_out, size * offset);
                     }
                 }
             } else {
@@ -1095,7 +1088,7 @@ bool populate_from_column(
         *size_out = size;
     }
 
-    return has_data;
+    return storage != NULL;
 }
 
 static

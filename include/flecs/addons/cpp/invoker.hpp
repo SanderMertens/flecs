@@ -326,7 +326,7 @@ public:
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_type_t type = ecs_table_get_type(table);
+        ecs_type_t type = ecs_table_get_storage_type(table);
         if (!type) {
             return false;
         }

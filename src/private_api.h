@@ -472,6 +472,7 @@ ecs_table_t *flecs_table_traverse_remove(
     ecs_table_diff_t *diff);
 
 void flecs_table_mark_dirty(
+    ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component);
 

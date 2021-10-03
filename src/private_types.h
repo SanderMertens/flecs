@@ -205,9 +205,14 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
-    int32_t column_count;            /* Number of data columns in table */
 
     ecs_table_t *storage_table;      /* Table w/type without tags */
+    ecs_type_t storage_type;         /* Storage table type (prevents indirection) */
+    int32_t *storage_map;            /* Map type <-> storage type
+                                      *  - 0..count(T):         type -> storage_type
+                                      *  - count(T)..count(S):  storage_type -> type
+                                      */
+
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
 

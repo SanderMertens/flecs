@@ -259,23 +259,19 @@ void init_iter(
                 it->event_id, EcsIsA, 0, 0, &subject, NULL);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+            int32_t storage_index = ecs_table_type_to_storage_index(
+                table, index);
+            
             index ++;
-
             it->columns[0] = index;
             it->sizes[0] = 0;
 
-            /* If there is no data, ensure that system won't try to get it */
-            if (table->column_count < index) {
+            if (storage_index == -1) {
                 it->columns[0] = 0;
-            } else {
-                ecs_column_t *column = &data->columns[index - 1];
-                if (!column->size) {
-                    it->columns[0] = 0;
-                }
             }
 
             if (!subject && it->columns[0] && data && data->columns) {
-                ecs_column_t *col = &data->columns[index - 1];
+                ecs_column_t *col = &data->columns[storage_index];
                 it->ptrs[0] = ecs_vector_get_t(
                     col->data, col->size, col->alignment, row);
                 it->sizes[0] = col->size;
