@@ -538,7 +538,7 @@ void FlecsSystemImport(
 
     flecs_bootstrap_component(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
-
+    
     flecs_bootstrap_tag(world, EcsOnAdd);
     flecs_bootstrap_tag(world, EcsOnRemove);
     flecs_bootstrap_tag(world, EcsOnSet);

@@ -3251,6 +3251,34 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
+/** Get storage type for table.
+ *
+ * @param table The table.
+ * @return The storage type of the table (components only).
+ */
+FLECS_API
+ecs_type_t ecs_table_get_storage_type(
+    const ecs_table_t *table);
+
+/** Get number of storages for table.
+ *
+ * @param table The table.
+ * @return The number of storages (components) in table.
+ */
+FLECS_API
+int32_t ecs_table_storage_count(
+    const ecs_table_t *table);
+
+/** Convert index in table type to index in table storage type. */
+int32_t ecs_table_type_to_storage_index(
+    const ecs_table_t *table,
+    int32_t index);
+
+/** Convert index in table storage type to index in table type. */
+int32_t ecs_table_storage_to_type_index(
+    const ecs_table_t *table,
+    int32_t index);
+
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through
  * the regular (entity) API as well as the number of records that have been

@@ -5875,6 +5875,34 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
+/** Get storage type for table.
+ *
+ * @param table The table.
+ * @return The storage type of the table (components only).
+ */
+FLECS_API
+ecs_type_t ecs_table_get_storage_type(
+    const ecs_table_t *table);
+
+/** Get number of storages for table.
+ *
+ * @param table The table.
+ * @return The number of storages (components) in table.
+ */
+FLECS_API
+int32_t ecs_table_storage_count(
+    const ecs_table_t *table);
+
+/** Convert index in table type to index in table storage type. */
+int32_t ecs_table_type_to_storage_index(
+    const ecs_table_t *table,
+    int32_t index);
+
+/** Convert index in table storage type to index in table type. */
+int32_t ecs_table_storage_to_type_index(
+    const ecs_table_t *table,
+    int32_t index);
+
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through
  * the regular (entity) API as well as the number of records that have been
@@ -13073,7 +13101,7 @@ public:
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_type_t type = ecs_table_get_type(table);
+        ecs_type_t type = ecs_table_get_storage_type(table);
         if (!type) {
             return false;
         }
@@ -13858,7 +13886,7 @@ public:
      * @param rank The rank action.
      */
     template <typename T>
-    Base& group_by(int(*rank)(flecs::world_t*, flecs::type_t type, flecs::entity_t, void*)) {
+    Base& group_by(int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
         return this->group_by(_::cpp_type<T>::id(this->m_world), rnk);
     }
@@ -13869,7 +13897,7 @@ public:
      * @param component The component used to determine the group rank.
      * @param rank The rank action.
      */
-    Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::type_t type, flecs::entity_t, void*)) {
+    Base& group_by(flecs::entity_t component, int(*rank)(flecs::world_t*, flecs::entity_t, flecs::type_t type)) {
         m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
         m_desc->group_by_id = component;
         return *this;

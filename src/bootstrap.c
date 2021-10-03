@@ -223,8 +223,6 @@ ecs_table_t* bootstrap_component_table(
     data->columns[0].data = ecs_vector_new(EcsComponent, EcsFirstUserComponentId);
     data->columns[1].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
     data->columns[2].data = ecs_vector_new(EcsIdentifier, EcsFirstUserComponentId);
-
-    result->column_count = 3;
     
     return result;
 }

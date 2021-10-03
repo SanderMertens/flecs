@@ -17,7 +17,8 @@ void* get_component_w_index(
     int32_t column_index,
     int32_t row)
 {
-    ecs_assert(column_index < table->column_count, ECS_NOT_A_COMPONENT, NULL);
+    ecs_assert(column_index < ecs_table_storage_count(table), 
+        ECS_NOT_A_COMPONENT, NULL);
 
     ecs_column_t *column = &table->storage.columns[column_index];
 
@@ -37,8 +38,17 @@ void* get_component(
     int32_t row,
     ecs_id_t id)
 {
-    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    if (!table->storage_table) {
+        ecs_assert(ecs_type_index_of(table->type, 0, id) == -1, 
+            ECS_NOT_A_COMPONENT, NULL);
+        return NULL;
+    }
+
+    ecs_table_record_t *tr = flecs_get_table_record(
+        world, table->storage_table, id);
     if (!tr) {
+        ecs_assert(ecs_type_index_of(table->type, 0, id) == -1, 
+            ECS_NOT_A_COMPONENT, NULL);
        return NULL;
     }
 
@@ -286,9 +296,8 @@ void instantiate_children(
         return;
     }
 
-    int32_t column_count = child_table->column_count;
-    ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
-    int32_t type_count = ecs_vector_count(type);   
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+    int32_t type_count = ecs_vector_count(type);
 
     /* Instantiate child table for each instance */
 
@@ -297,45 +306,46 @@ void instantiate_children(
         .array = ecs_os_alloca_n(ecs_entity_t, type_count + 1)
     };
 
-    void **c_info = ecs_os_alloca_n(void*, column_count);
+    void **component_data = ecs_os_alloca_n(void*, type_count + 1);
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
-    int j, i, base_index = -1, pos = 0;
+    int j, i, childof_base_index = -1, pos = 0;
     for (i = 0; i < type_count; i ++) {
-        ecs_entity_t c = type_array[i];
+        ecs_id_t id = ids[i];
 
         /* Make sure instances don't have EcsPrefab */
-        if (c == EcsPrefab) {
+        if (id == EcsPrefab) {
             continue;
         }
 
         /* Keep track of the element that creates the ChildOf relationship with
          * the prefab parent. We need to replace this element to make sure the
          * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_RELATION(c, EcsChildOf) && (ecs_entity_t_lo(c) == base)) {
-            base_index = pos;
-        }        
-
-        /* Store pointer to component array. We'll use this component array to
-        * create our new entities in bulk with new_w_data */
-        if (i < column_count) {
-            ecs_column_t *column = &child_data->columns[i];
-            c_info[pos] = ecs_vector_first_t(
-                column->data, column->size, column->alignment);
-        } else if (pos < column_count) {
-            c_info[pos] = NULL;
+        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_OBJECT(id) == base)) {
+            childof_base_index = pos;
         }
 
-        components.array[pos] = c;
+        int32_t storage_index = ecs_table_type_to_storage_index(child_table, i);
+        if (storage_index != -1) {
+            ecs_column_t *column = &child_data->columns[storage_index];
+            component_data[pos] = ecs_vector_first_t(
+                column->data, column->size, column->alignment);
+        } else {
+            component_data[pos] = NULL;
+        }
+
+        components.array[pos] = id;
         pos ++;
     }
 
-    ecs_assert(base_index != -1, ECS_INTERNAL_ERROR, NULL);
+    /* Table must contain children of base */
+    ecs_assert(childof_base_index != -1, ECS_INTERNAL_ERROR, NULL);
 
     /* If children are added to a prefab, make sure they are prefabs too */
     if (table->flags & EcsTableIsPrefab) {
         components.array[pos] = EcsPrefab;
+        component_data[pos] = NULL;
         pos ++;
     }
 
@@ -349,14 +359,18 @@ void instantiate_children(
         ecs_entity_t instance = entities[i];
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         ecs_table_t *i_table = NULL;
-
+ 
         /* Replace ChildOf element in the component array with instance id */
-        components.array[base_index] = ecs_pair(EcsChildOf, instance);
+        components.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
         for (j = 0; j < components.count; j ++) {
             i_table = table_append(world, i_table, components.array[j], &diff);
         }
+
+        ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_vector_count(i_table->type) == components.count,
+            ECS_INTERNAL_ERROR, NULL);
 
         /* The instance is trying to instantiate from a base that is also
          * its parent. This would cause the hierarchy to instantiate itself
@@ -372,7 +386,7 @@ void instantiate_children(
 
         /* Create children */
         int32_t child_row; 
-        new_w_data(world, i_table, NULL, child_count, c_info, &child_row, &diff);
+        new_w_data(world, i_table, &components, child_count, component_data, &child_row, &diff);
         diff_free(&diff);
 
         /* If prefab child table has children itself, recursively instantiate */
@@ -520,7 +534,7 @@ void components_override(
 
     ecs_column_t *columns = data->columns;
     ecs_type_t type = table->type;
-    int32_t column_count = table->column_count;
+    ecs_table_t *storage_table = table->storage_table;
 
     int i;
     for (i = 0; i < added->count; i ++) {
@@ -538,8 +552,13 @@ void components_override(
             instantiate(world, base, table, data, row, count);
         }
 
-        ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
-        if (!tr || tr->column >= column_count) {
+        if (!storage_table) {
+            continue;
+        }
+
+        ecs_table_record_t *tr = flecs_get_table_record(
+            world, storage_table, id);
+        if (!tr) {
             continue;
         }
 
@@ -925,36 +944,28 @@ const ecs_entity_t* new_w_data(
          * call OnSet triggers multiple times for the same component */
         int32_t c_i;
         for (c_i = 0; c_i < component_ids->count; c_i ++) {
-            ecs_entity_t c = component_ids->array[c_i];
-            
-            /* Bulk copy column data into new table */
-            int32_t table_index = ecs_type_index_of(type, 0, c);
-            ecs_assert(table_index >= 0, ECS_INTERNAL_ERROR, NULL);
-            if (table_index >= table->column_count) {
-                continue;
-            }
-
-            ecs_column_t *column = &data->columns[table_index];
-            int16_t size = column->size;
-            if (!size) {
-                continue;
-            }
-
-            int16_t alignment = column->alignment;
-            void *ptr = ecs_vector_first_t(column->data, size, alignment);
-            ptr = ECS_OFFSET(ptr, size * row);
-
-            /* Copy component data */
             void *src_ptr = component_data[c_i];
             if (!src_ptr) {
                 continue;
             }
 
-            const ecs_type_info_t *cdata = get_c_info(world, c);
+            /* Find component in storage type */
+            ecs_entity_t id = component_ids->array[c_i];
+            ecs_column_t *column = ecs_table_column_for_id(world, table, id);
+            ecs_assert(column != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            int16_t size = column->size;
+            ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+
+            int16_t alignment = column->alignment;
+            void *ptr = ecs_vector_first_t(column->data, size, alignment);
+            ptr = ECS_OFFSET(ptr, size * row);
+
+            const ecs_type_info_t *cdata = get_c_info(world, id);
             ecs_copy_t copy;
             if (cdata && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-                copy(world, c, entities, entities, ptr, src_ptr, 
+                copy(world, id, entities, entities, ptr, src_ptr, 
                     flecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
@@ -1069,6 +1080,7 @@ void *get_mutable(
         flecs_get_info(world, entity, info);
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        ecs_assert(info->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = get_component(world, info->table, info->row, component);
 
         if (is_added) {
@@ -1162,8 +1174,8 @@ void flecs_notify_on_set(
 
     ecs_ids_t local_ids;
     if (!ids) {
-        local_ids.array = ecs_vector_first(table->type, ecs_id_t);
-        local_ids.count = table->column_count;
+        local_ids.array = ecs_vector_first(table->storage_type, ecs_id_t);
+        local_ids.count = ecs_vector_count(table->storage_type);
         ids = &local_ids;
     }
 
@@ -1176,9 +1188,7 @@ void flecs_notify_on_set(
             if (info && (on_set = info->lifecycle.on_set)) {
                 ecs_column_t *c = ecs_table_column_for_id(world, table, id);
                 ecs_size_t size = c->size;
-                if (!size) {
-                    continue;
-                }
+                ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
                 void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
                 on_set(world, id, entities, ptr, flecs_to_size_t(size), 
@@ -2039,10 +2049,8 @@ void ecs_clear(
     if (table) {
         ecs_table_diff_t diff = {
             .removed = flecs_type_to_ids(table->type),
-            .un_set = flecs_type_to_ids(table->type)
+            .un_set = flecs_type_to_ids(table->storage_type)
         };
-
-        diff.un_set.count = table->column_count;
 
         delete_entity(world, table, &table->storage, info.row, &diff);
         info.record->table = NULL;
@@ -2318,10 +2326,9 @@ void ecs_delete(
         if (table_id && flecs_sparse_is_alive(world->store.tables, table_id)) {
             ecs_table_diff_t diff = {
                 .removed = flecs_type_to_ids(table->type),
-                .un_set = flecs_type_to_ids(table->type)
+                .un_set = flecs_type_to_ids(table->storage_type)
             };
 
-            diff.un_set.count = table->column_count;
             delete_entity(world, table, info.data, info.row, &diff);
             r->table = NULL;
         }
@@ -2431,7 +2438,16 @@ const void* ecs_get_id(
         return NULL;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_table(idr, table);
+    const ecs_table_record_t *tr = NULL;
+    ecs_table_t *storage_table = table->storage_table;
+    if (storage_table) {
+        tr = flecs_id_record_table(idr, storage_table);
+    } else {
+        /* If the entity does not have a storage table (has no data) but it does
+         * have the id, the id must be a tag, and getting a tag is illegal. */
+        ecs_assert(!ecs_owns_id(world, entity, id), ECS_NOT_A_COMPONENT, NULL);
+    }
+
     if (!tr) {
        return get_base_component(world, table, id, idr, NULL, 0);
     }
@@ -2611,7 +2627,7 @@ void ecs_modified_id(
         flecs_notify_on_set(world, info.table, info.row, 1, &ids, true);
     }
 
-    flecs_table_mark_dirty(info.table, id);
+    flecs_table_mark_dirty(world, info.table, id);
     
     flecs_defer_flush(world, stage);
 }
@@ -2677,7 +2693,7 @@ ecs_entity_t assign_ptr_w_id(
         memset(dst, 0, size);
     }
 
-    flecs_table_mark_dirty(info.table, id);
+    flecs_table_mark_dirty(world, info.table, id);
 
     if (notify) {
         ecs_ids_t ids = { .array = &id, .count = 1 };

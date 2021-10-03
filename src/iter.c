@@ -112,44 +112,41 @@ int32_t ecs_iter_find_column(
 void* ecs_iter_column_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t column_index)
+    int32_t index)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)size;
     
     ecs_table_t *table = it->table;
-    ecs_assert(column_index < ecs_vector_count(table->type), 
-        ECS_INVALID_PARAMETER, NULL);
-    
-    if (table->column_count <= column_index) {
+    int32_t storage_index = ecs_table_type_to_storage_index(table, index);
+    if (storage_index == -1) {
         return NULL;
     }
 
     ecs_column_t *columns = table->storage.columns;
-    ecs_column_t *column = &columns[column_index];
-    ecs_assert(!size || (ecs_size_t)size == column->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_column_t *column = &columns[storage_index];
+    ecs_assert(!size || (ecs_size_t)size == column->size, 
+        ECS_INVALID_PARAMETER, NULL);
 
     return ecs_vector_first_t(column->data, column->size, column->alignment);
 }
 
 size_t ecs_iter_column_size(
     const ecs_iter_t *it,
-    int32_t column_index)
+    int32_t index)
 {
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_table_t *table = it->table;
-    ecs_assert(column_index < ecs_vector_count(table->type), 
-        ECS_INVALID_PARAMETER, NULL);
-
-    if (table->column_count <= column_index) {
+    int32_t storage_index = ecs_table_type_to_storage_index(table, index);
+    if (storage_index == -1) {
         return 0;
     }
 
     ecs_column_t *columns = table->storage.columns;
-    ecs_column_t *column = &columns[column_index];
+    ecs_column_t *column = &columns[storage_index];
     
     return flecs_to_size_t(column->size);
 }

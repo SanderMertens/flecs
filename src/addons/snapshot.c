@@ -28,8 +28,9 @@ ecs_data_t* duplicate_data(
 {
     ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
 
-    int32_t i, column_count = table->column_count;
-    ecs_entity_t *components = ecs_vector_first(table->type, ecs_entity_t);
+    ecs_type_t storage_type = table->storage_type;
+    int32_t i, column_count = ecs_vector_count(storage_type);
+    ecs_entity_t *components = ecs_vector_first(storage_type, ecs_entity_t);
 
     result->columns = ecs_os_memdup(
         main_data->columns, ECS_SIZEOF(ecs_column_t) * column_count);

@@ -1436,8 +1436,8 @@ bool tables_dirty(
         }
 
         int32_t *dirty_state = flecs_table_get_dirty_state(table);
-        int32_t t, type_count = table->column_count;
-        for (t = 0; t < type_count + 1; t ++) {
+        int32_t t, storage_count = ecs_table_storage_count(table);
+        for (t = 0; t < storage_count + 1; t ++) {
             is_dirty = is_dirty || (dirty_state[t] != qt->monitor[t]);
         }
     }
@@ -1468,8 +1468,8 @@ void tables_reset_dirty(
         }
 
         int32_t *dirty_state = flecs_table_get_dirty_state(table);
-        int32_t t, type_count = table->column_count;
-        for (t = 0; t < type_count + 1; t ++) {
+        int32_t t, storage_count = ecs_table_storage_count(table);
+        for (t = 0; t < storage_count + 1; t ++) {
             qt->monitor[t] = dirty_state[t];
         }
     }
@@ -2366,43 +2366,51 @@ void populate_ptrs(
     int c;
     for (c = 0; c < it->term_count; c ++) {
         int32_t c_index = it->columns[c];
+
+        /* Term has no data */
         if (!c_index) {
             it->ptrs[c] = NULL;
             continue;
         }
 
-        if (c_index > 0) {
-            c_index --;
-
-            if (!columns) {
-                continue;
-            }
-
-            if (it->sizes[c] == 0) {
-                continue;
-            }
-
-            ecs_vector_t *vec;
-            ecs_size_t size, align;
-            if (ECS_HAS_ROLE(ids[c_index], SWITCH)) {
-                ecs_switch_t *sw = table->storage.sw_columns[
-                    c_index - table->sw_column_offset].data;
-                vec = flecs_switch_values(sw);
-                size = ECS_SIZEOF(ecs_entity_t);
-                align = ECS_ALIGNOF(ecs_entity_t);
-            } else {
-                ecs_column_t *col = &columns[c_index];
-                vec = col->data;
-                size = col->size;
-                align = col->alignment;
-            }
-
-            it->ptrs[c] = ecs_vector_get_t(vec, size, align, it->offset);
-        } else {
+        /* Term references a component from another entity */
+        if (c_index < 0) {
             ecs_ref_t *ref = &it->references[-c_index - 1];
             it->ptrs[c] = (void*)ecs_get_ref_w_id(
                 world, ref, ref->entity, ref->component);
+            continue;
         }
+
+        /* Term matches component from matched entity */
+        ecs_assert(c_index > 0, ECS_INTERNAL_ERROR, NULL);
+        c_index --;
+
+        ecs_vector_t *vec;
+        ecs_size_t size, align;
+
+        ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (ECS_HAS_ROLE(ids[c_index], SWITCH)) {
+            ecs_switch_t *sw = table->storage.sw_columns[
+                c_index - table->sw_column_offset].data;
+            vec = flecs_switch_values(sw);
+            size = ECS_SIZEOF(ecs_entity_t);
+            align = ECS_ALIGNOF(ecs_entity_t);
+        } else {
+            if (!columns || it->sizes[c] == 0) {
+                continue;
+            }
+
+            int32_t storage_index = ecs_table_type_to_storage_index(
+                table, c_index);
+
+            ecs_column_t *col = &columns[storage_index];
+            vec = col->data;
+            size = col->size;
+            align = col->alignment;
+        }
+
+        it->ptrs[c] = ecs_vector_get_t(vec, size, align, it->offset);
     }    
 }
 
@@ -2765,9 +2773,13 @@ void mark_columns_dirty(
             if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
                 (subj->entity == EcsThis && subj->set.mask == EcsSelf)))
             {
-                int32_t table_column = table_data->columns[c];
-                if (table_column > 0 && table_column <= table->column_count) {
-                    table->dirty_state[table_column] ++;
+                int32_t index = table_data->columns[c];
+                if (index > 0) {
+                    int32_t storage_index = ecs_table_type_to_storage_index(
+                        table, index - 1);
+                    if (storage_index >= 0) {
+                        table->dirty_state[storage_index + 1] ++;
+                    }
                 }
             }
 

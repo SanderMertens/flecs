@@ -80,33 +80,6 @@ const EcsComponent* flecs_component_from_id(
     return component;
 }
 
-/* Count number of columns with data (excluding tags) */
-static
-int32_t data_column_count(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        /* Typically all components will be clustered together at the start of
-         * the type as components are created from a separate id pool, and type
-         * vectors are sorted. 
-         * Explicitly check for EcsComponent and EcsName since the ecs_has check
-         * doesn't work during bootstrap. */
-        if ((component == ecs_id(EcsComponent)) || 
-            (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) || 
-            (component == ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)) || 
-            flecs_component_from_id(world, component) != NULL) 
-        {
-            count = c_ptr_i + 1;
-        }
-    });
-
-    return count;
-}
-
 /* Ensure the ids used in the columns exist */
 static
 int32_t ensure_columns(
@@ -127,46 +100,6 @@ int32_t ensure_columns(
             ecs_ensure(world, e);
         } else {
             ecs_ensure(world, component);
-        }
-    });
-
-    return count;
-}
-
-/* Count number of switch columns */
-static
-int32_t switch_column_count(
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        if (ECS_HAS_ROLE(component, SWITCH)) {
-            if (!count) {
-                table->sw_column_offset = c_ptr_i;
-            }
-            count ++;
-        }
-    });
-
-    return count;
-}
-
-/* Count number of bitset columns */
-static
-int32_t bitset_column_count(
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        if (ECS_HAS_ROLE(component, DISABLED)) {
-            if (!count) {
-                table->bs_column_offset = c_ptr_i;
-            }
-            count ++;
         }
     });
 
@@ -327,9 +260,6 @@ void init_table(
     ensure_columns(world, table);
 
     table->queries = NULL;
-    table->column_count = data_column_count(world, table);
-    table->sw_column_count = switch_column_count(table);
-    table->bs_column_count = bitset_column_count(table);
 
     init_node(&table->node);
     init_flags(world, table);
