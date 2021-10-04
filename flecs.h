@@ -10958,13 +10958,8 @@ public:
     }
 
     /** Delete all entities with specified id. */
-<<<<<<< HEAD
     void delete_with(id_t the_id) const {
         ecs_delete_with(m_world, the_id);
-=======
-    void delete_with(id_t id) const {
-        ecs_delete_with(m_world, id);
->>>>>>> 94c041c3... #496 implement deferred op for delete_with/remove_all, add to c++
     }
 
     /** Delete all entities with specified relation. */
@@ -10985,13 +10980,8 @@ public:
     }
 
     /** Remove all instances of specified id. */
-<<<<<<< HEAD
     void remove_all(id_t the_id) const {
         ecs_remove_all(m_world, the_id);
-=======
-    void remove_all(id_t id) const {
-        ecs_remove_all(m_world, id);
->>>>>>> 94c041c3... #496 implement deferred op for delete_with/remove_all, add to c++
     }
 
     /** Remove all instances of specified relation. */
