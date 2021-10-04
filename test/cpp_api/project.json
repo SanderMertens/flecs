@@ -724,7 +724,15 @@
                 "entity_as_component_2_worlds_implicit_namespaced",
                 "type_as_component",
                 "type_w_name_as_component",
-                "component_as_component"
+                "component_as_component",
+                "delete_with_id",
+                "delete_with_type",
+                "delete_with_pair",
+                "delete_with_pair_type",
+                "remove_all_id",
+                "remove_all_type",
+                "remove_all_pair",
+                "remove_all_pair_type"
             ]
         }, {
             "id": "Singleton",

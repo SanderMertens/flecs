@@ -399,7 +399,7 @@ typedef struct ecs_event_triggers_t {
 } ecs_event_triggers_t;
 
 /** Types for deferred operations */
-typedef enum ecs_op_kind_t {
+typedef enum ecs_defer_op_kind_t {
     EcsOpNew,
     EcsOpClone,
     EcsOpBulkNew,
@@ -410,30 +410,31 @@ typedef enum ecs_op_kind_t {
     EcsOpModified,
     EcsOpDelete,
     EcsOpClear,
+    EcsOpOnDeleteAction,
     EcsOpEnable,
     EcsOpDisable
-} ecs_op_kind_t;
+} ecs_defer_op_kind_t;
 
-typedef struct ecs_op_1_t {
+typedef struct ecs_defer_op_1_t {
     ecs_entity_t entity;        /* Entity id */
     void *value;                /* Value (used for set / get_mut) */
     ecs_size_t size;            /* Size of value */
     bool clone_value;           /* Clone entity with value (used for clone) */ 
-} ecs_op_1_t;
+} ecs_defer_op_1_t;
 
-typedef struct ecs_op_n_t {
+typedef struct ecs_defer_op_n_t {
     ecs_entity_t *entities;  
     int32_t count;
-} ecs_op_n_t;
+} ecs_defer_op_n_t;
 
-typedef struct ecs_op_t {
-    ecs_op_kind_t kind;         /* Operation kind */    
+typedef struct ecs_defer_op_t {
+    ecs_defer_op_kind_t kind;         /* Operation kind */    
     ecs_id_t id;                /* (Component) id */
     union {
-        ecs_op_1_t _1;
-        ecs_op_n_t _n;
+        ecs_defer_op_1_t _1;
+        ecs_defer_op_n_t _n;
     } is;
-} ecs_op_t;
+} ecs_defer_op_t;
 
 /** A stage is a data structure in which delta's are stored until it is safe to
  * merge those delta's with the main world stage. A stage allows flecs systems
@@ -459,8 +460,8 @@ struct ecs_stage_t {
     /* Namespacing */
     ecs_table_t *scope_table;    /* Table for current scope */
     ecs_entity_t scope;          /* Entity of current scope */
-    ecs_entity_t base;           /* Currently instantiated top-level base */
     ecs_entity_t with;           /* Id to add by default to new entities */
+    ecs_entity_t base;           /* Currently instantiated top-level base */
 
     /* Properties */
     bool auto_merge;             /* Should this stage automatically merge? */

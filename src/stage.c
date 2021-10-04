@@ -1,9 +1,9 @@
 #include "private_api.h"
 
 static
-ecs_op_t* new_defer_op(ecs_stage_t *stage) {
-    ecs_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_op_t);
-    ecs_os_memset(result, 0, ECS_SIZEOF(ecs_op_t));
+ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
+    ecs_defer_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_defer_op_t);
+    ecs_os_memset(result, 0, ECS_SIZEOF(ecs_defer_op_t));
     return result;
 }
 
@@ -11,7 +11,7 @@ static
 bool defer_add_remove(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_op_kind_t op_kind,
+    ecs_defer_op_kind_t op_kind,
     ecs_entity_t entity,
     ecs_id_t id)
 {
@@ -20,7 +20,7 @@ bool defer_add_remove(
             return true;
         }
 
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
         op->id = id;
         op->is._1.entity = entity;
@@ -121,7 +121,7 @@ bool flecs_defer_modified(
 {
     (void)world;
     if (stage->defer) {
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpModified;
         op->id = id;
         op->is._1.entity = entity;
@@ -142,7 +142,7 @@ bool flecs_defer_clone(
 {   
     (void)world;
     if (stage->defer) {
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClone;
         op->id = src;
         op->is._1.entity = entity;
@@ -162,7 +162,7 @@ bool flecs_defer_delete(
 {
     (void)world;
     if (stage->defer) {
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpDelete;
         op->is._1.entity = entity;
         world->delete_count ++;
@@ -180,9 +180,29 @@ bool flecs_defer_clear(
 {
     (void)world;
     if (stage->defer) {
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpClear;
         op->is._1.entity = entity;
+        world->clear_count ++;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
+bool flecs_defer_on_delete_action(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_id_t id,
+    ecs_entity_t action)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpOnDeleteAction;
+        op->id = id;
+        op->is._1.entity = action;
         world->clear_count ++;
         return true;
     } else {
@@ -200,7 +220,7 @@ bool flecs_defer_enable(
 {
     (void)world;
     if (stage->defer) {
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = enable ? EcsOpEnable : EcsOpDisable;
         op->is._1.entity = entity;
         op->id = id;
@@ -231,7 +251,7 @@ bool flecs_defer_bulk_new(
         *ids_out = ids;
 
         /* Store data in op */
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = EcsOpBulkNew;
         op->id = id;
         op->is._n.entities = ids;
@@ -275,7 +295,7 @@ bool flecs_defer_remove(
 bool flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_op_kind_t op_kind,
+    ecs_defer_op_kind_t op_kind,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
@@ -291,7 +311,7 @@ bool flecs_defer_set(
             size = cptr->size;
         }
 
-        ecs_op_t *op = new_defer_op(stage);
+        ecs_defer_op_t *op = new_defer_op(stage);
         op->kind = op_kind;
         op->id = id;
         op->is._1.entity = entity;

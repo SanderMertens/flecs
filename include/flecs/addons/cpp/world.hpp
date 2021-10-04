@@ -766,6 +766,50 @@ public:
         ecs_set_scope(m_world, prev);
     }
 
+    /** Delete all entities with specified id. */
+    void delete_with(id_t the_id) const {
+        ecs_delete_with(m_world, the_id);
+    }
+
+    /** Delete all entities with specified relation. */
+    void delete_with(entity_t rel, entity_t obj) const {
+        delete_with(ecs_pair(rel, obj));
+    }
+
+    /** Delete all entities with specified component. */
+    template <typename T>
+    void delete_with() const {
+        delete_with(_::cpp_type<T>::id());
+    }
+
+    /** Delete all entities with specified relation. */
+    template <typename R, typename O>
+    void delete_with() const {
+        delete_with(_::cpp_type<R>::id(), _::cpp_type<O>::id());
+    }
+
+    /** Remove all instances of specified id. */
+    void remove_all(id_t the_id) const {
+        ecs_remove_all(m_world, the_id);
+    }
+
+    /** Remove all instances of specified relation. */
+    void remove_all(entity_t rel, entity_t obj) const {
+        remove_all(ecs_pair(rel, obj));
+    }
+
+    /** Remove all instances of specified component. */
+    template <typename T>
+    void remove_all() const {
+        remove_all(_::cpp_type<T>::id());
+    }
+
+    /** Remove all instances of specified relation. */
+    template <typename R, typename O>
+    void remove_all() const {
+        remove_all(_::cpp_type<R>::id(), _::cpp_type<O>::id());
+    }
+
     /** Defer all operations called in function. If the world is already in
      * deferred mode, do nothing.
      */

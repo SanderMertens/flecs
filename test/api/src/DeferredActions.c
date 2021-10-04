@@ -1791,3 +1791,58 @@ void DeferredActions_defer_disable() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_defer_delete_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add(world, e_1, TagB);
+
+    ecs_defer_begin(world);
+    ecs_delete_with(world, TagA);
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_defer_remove_all() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add(world, e_1, TagB);
+
+    ecs_defer_begin(world);
+    ecs_remove_all(world, TagA);
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    test_assert(!ecs_has_id(world, e_1, TagA));
+    test_assert(!ecs_has_id(world, e_2, TagA));
+    test_assert(!ecs_has_id(world, e_3, TagA));
+    test_assert(ecs_has_id(world, e_1, TagB));
+
+    ecs_fini(world);
+}

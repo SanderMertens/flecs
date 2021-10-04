@@ -993,3 +993,156 @@ void World_type_w_name_as_component() {
 
     test_str(t.name(), "Foo");
 }
+
+void World_delete_with_id() {
+    flecs::world ecs;
+
+    flecs::id tag = ecs.entity();
+    auto e_1 = ecs.entity().add(tag);
+    auto e_2 = ecs.entity().add(tag);
+    auto e_3 = ecs.entity().add(tag);
+
+    ecs.delete_with(tag);
+
+    test_assert(!e_1.is_alive());
+    test_assert(!e_2.is_alive());
+    test_assert(!e_3.is_alive());
+}
+
+void World_delete_with_type() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity().add<Tag>();
+    auto e_2 = ecs.entity().add<Tag>();
+    auto e_3 = ecs.entity().add<Tag>();
+
+    ecs.delete_with<Tag>();
+
+    test_assert(!e_1.is_alive());
+    test_assert(!e_2.is_alive());
+    test_assert(!e_3.is_alive());
+}
+
+void World_delete_with_pair() {
+    flecs::world ecs;
+
+    flecs::id rel = ecs.entity();
+    flecs::id obj = ecs.entity();
+    auto e_1 = ecs.entity().add(rel, obj);
+    auto e_2 = ecs.entity().add(rel, obj);
+    auto e_3 = ecs.entity().add(rel, obj);
+
+    ecs.delete_with(rel, obj);
+
+    test_assert(!e_1.is_alive());
+    test_assert(!e_2.is_alive());
+    test_assert(!e_3.is_alive());
+}
+
+void World_delete_with_pair_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    auto e_1 = ecs.entity().add<Rel, Obj>();
+    auto e_2 = ecs.entity().add<Rel, Obj>();
+    auto e_3 = ecs.entity().add<Rel, Obj>();
+
+    ecs.delete_with<Rel, Obj>();
+
+    test_assert(!e_1.is_alive());
+    test_assert(!e_2.is_alive());
+    test_assert(!e_3.is_alive());
+}
+
+void World_remove_all_id() {
+    flecs::world ecs;
+
+    flecs::id tag_a = ecs.entity();
+    flecs::id tag_b = ecs.entity();
+    auto e_1 = ecs.entity().add(tag_a);
+    auto e_2 = ecs.entity().add(tag_a);
+    auto e_3 = ecs.entity().add(tag_a).add(tag_b);
+
+    ecs.remove_all(tag_a);
+
+    test_assert(e_1.is_alive());
+    test_assert(e_2.is_alive());
+    test_assert(e_3.is_alive());
+
+    test_assert(!e_1.has(tag_a));
+    test_assert(!e_2.has(tag_a));
+    test_assert(!e_3.has(tag_a));
+    
+    test_assert(e_3.has(tag_b));
+}
+
+void World_remove_all_type() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity().add<Position>();
+    auto e_2 = ecs.entity().add<Position>();
+    auto e_3 = ecs.entity().add<Position>().add<Velocity>();
+
+    ecs.remove_all<Position>();
+
+    test_assert(e_1.is_alive());
+    test_assert(e_2.is_alive());
+    test_assert(e_3.is_alive());
+
+    test_assert(!e_1.has<Position>());
+    test_assert(!e_2.has<Position>());
+    test_assert(!e_3.has<Position>());
+    
+    test_assert(e_3.has<Velocity>());
+}
+
+void World_remove_all_pair() {
+    flecs::world ecs;
+
+    flecs::id rel = ecs.entity();
+    flecs::id obj_a = ecs.entity();
+    flecs::id obj_b = ecs.entity();
+    auto e_1 = ecs.entity().add(rel, obj_a);
+    auto e_2 = ecs.entity().add(rel, obj_a);
+    auto e_3 = ecs.entity().add(rel, obj_a).add(rel, obj_b);
+
+    ecs.remove_all(rel, obj_a);
+
+    test_assert(e_1.is_alive());
+    test_assert(e_2.is_alive());
+    test_assert(e_3.is_alive());
+
+    test_assert(!e_1.has(rel, obj_a));
+    test_assert(!e_2.has(rel, obj_a));
+    test_assert(!e_3.has(rel, obj_a));
+    
+    test_assert(e_3.has(rel, obj_b));
+}
+
+void World_remove_all_pair_type() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct ObjA { };
+    struct ObjB { };
+
+    auto e_1 = ecs.entity().add<Rel, ObjA>();
+    auto e_2 = ecs.entity().add<Rel, ObjA>();
+    auto e_3 = ecs.entity().add<Rel, ObjA>().add<Rel, ObjB>();
+
+    ecs.remove_all<Rel, ObjA>();
+
+    test_assert(e_1.is_alive());
+    test_assert(e_2.is_alive());
+    test_assert(e_3.is_alive());
+
+    test_assert((!e_1.has<Rel, ObjA>()));
+    test_assert((!e_2.has<Rel, ObjA>()));
+    test_assert((!e_3.has<Rel, ObjA>()));
+    
+    test_assert((!e_1.has<Rel, ObjB>()));
+    test_assert((!e_2.has<Rel, ObjB>()));
+    test_assert((e_3.has<Rel, ObjB>()));
+}
