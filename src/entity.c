@@ -5,9 +5,11 @@ static
 const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_entity_t *entities,
     ecs_ids_t *component_ids,
     int32_t count,
     void **c_info,
+    bool move,
     int32_t *row_out,
     ecs_table_diff_t *diff);
 
@@ -387,7 +389,8 @@ void instantiate_children(
 
         /* Create children */
         int32_t child_row; 
-        new_w_data(world, i_table, &components, child_count, component_data, &child_row, &diff);
+        new_w_data(world, i_table, NULL, &components, child_count, 
+            component_data, false, &child_row, &diff);
         diff_free(&diff);
 
         /* If prefab child table has children itself, recursively instantiate */
@@ -904,24 +907,32 @@ static
 const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_entity_t *entities,
     ecs_ids_t *component_ids,
     int32_t count,
     void **component_data,
+    bool is_move,
     int32_t *row_out,
     ecs_table_diff_t *diff)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t sparse_count = ecs_eis_count(world);
-    const ecs_entity_t *ids = flecs_sparse_new_ids(
-        world->store.entity_index, count);
-    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_type_t type = table->type;   
+    int32_t sparse_count = 0;
+    if (!entities) {
+        sparse_count = ecs_eis_count(world);
+        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+    }
 
+    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!table) {
+        return entities;
+    }
+
+    ecs_type_t type = table->type;   
     if (!type) {
-        return ids;        
+        return entities;        
     }
 
     ecs_ids_t component_array = { 0 };
@@ -932,13 +943,13 @@ const ecs_entity_t* new_w_data(
     }
 
     ecs_data_t *data = &table->storage;
-    int32_t row = flecs_table_appendn(world, table, data, count, ids);
+    int32_t row = flecs_table_appendn(world, table, data, count, entities);
     
     /* Update entity index. */
     int i;
     ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     for (i = 0; i < count; i ++) { 
-        record_ptrs[row + i] = ecs_eis_set(world, ids[i], 
+        record_ptrs[row + i] = ecs_eis_set(world, entities[i], 
         &(ecs_record_t){
             .table = table,
             .row = row + i + 1
@@ -975,9 +986,14 @@ const ecs_entity_t* new_w_data(
 
             const ecs_type_info_t *cdata = get_c_info(world, id);
             ecs_copy_t copy;
-            if (cdata && (copy = cdata->lifecycle.copy)) {
-                ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-                copy(world, id, entities, entities, ptr, src_ptr, 
+            ecs_move_t move;
+            if (cdata && is_move && (move = cdata->lifecycle.move)) {
+                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
+                move(world, id, eids, eids, ptr, src_ptr, 
+                    flecs_to_size_t(size), count, cdata->lifecycle.ctx);
+            } else if (cdata && !is_move && (copy = cdata->lifecycle.copy)) {
+                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
+                copy(world, id, eids, eids, ptr, src_ptr, 
                     flecs_to_size_t(size), count, cdata->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
@@ -994,9 +1010,12 @@ const ecs_entity_t* new_w_data(
         *row_out = row;
     }
 
-    ids = flecs_sparse_ids(world->store.entity_index);
-
-    return &ids[sparse_count];
+    if (sparse_count) {
+        entities = flecs_sparse_ids(world->store.entity_index);
+        return &entities[sparse_count];
+    } else {
+        return entities;
+    }
 }
 
 static
@@ -1850,6 +1869,58 @@ ecs_entity_t ecs_entity_init(
     return result;
 }
 
+const ecs_entity_t* ecs_bulk_init(
+    ecs_world_t *world,
+    const ecs_bulk_desc_t *desc)
+{
+    const ecs_entity_t *entities = desc->entities;
+    int32_t count = desc->count;
+
+    int32_t sparse_count = 0;
+    if (!entities) {
+        sparse_count = ecs_eis_count(world);
+        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+        ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        int i;
+        for (i = 0; i < count; i ++) {
+            ecs_ensure(world, entities[i]);
+        }
+    }
+
+    ecs_ids_t ids;
+
+    ecs_table_t *table = desc->table;
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+    if (!table) {
+        int32_t i = 0;
+        ecs_id_t id;
+        while ((id = desc->ids[i])) {
+            table = table_append(world, table, id, &diff);
+            i ++;
+        }
+
+        ids.array = (ecs_id_t*)desc->ids;
+        ids.count = i;
+    } else {
+        diff.added.array = ecs_vector_first(table->type, ecs_id_t);
+        diff.added.count = ecs_vector_count(table->type);
+
+        ids = diff.added;
+    }
+
+    new_w_data(
+        world, table, entities, &ids, count, desc->data, true, NULL, &diff);
+
+    if (!sparse_count) {
+        return entities;
+    } else {
+        /* Refetch entity ids, in case the underlying array was reallocated */
+        entities = flecs_sparse_ids(world->store.entity_index);
+        return &entities[sparse_count];
+    }
+}
+
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
@@ -2034,7 +2105,7 @@ const ecs_entity_t* ecs_bulk_new_w_id(
         table = table_append(world, table, id, &diff);
     }
 
-    ids = new_w_data(world, table, NULL, count, NULL, NULL, &diff);
+    ids = new_w_data(world, table, NULL, NULL, count, NULL, false, NULL, &diff);
     flecs_defer_flush(world, stage);
 
     return ids;

@@ -112,7 +112,17 @@
             "testcases": [
                 "empty",
                 "component",
-                "tag"
+                "tag",
+                "bulk_init_empty",
+                "bulk_init_empty_w_entities",
+                "bulk_init_1_tag",
+                "bulk_init_1_tag_w_entities",
+                "bulk_init_2_tags",
+                "bulk_init_1_component",
+                "bulk_init_2_components",
+                "bulk_init_1_component_w_value",
+                "bulk_init_2_components_w_value",
+                "bulk_init_2_components_tag_w_value"
             ]
         }, {
             "id": "Add",

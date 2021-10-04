@@ -100,6 +100,16 @@ void New_new_w_type_w_with_defer_w_scope(void);
 void New_w_Count_empty(void);
 void New_w_Count_component(void);
 void New_w_Count_tag(void);
+void New_w_Count_bulk_init_empty(void);
+void New_w_Count_bulk_init_empty_w_entities(void);
+void New_w_Count_bulk_init_1_tag(void);
+void New_w_Count_bulk_init_1_tag_w_entities(void);
+void New_w_Count_bulk_init_2_tags(void);
+void New_w_Count_bulk_init_1_component(void);
+void New_w_Count_bulk_init_2_components(void);
+void New_w_Count_bulk_init_1_component_w_value(void);
+void New_w_Count_bulk_init_2_components_w_value(void);
+void New_w_Count_bulk_init_2_components_tag_w_value(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -2446,6 +2456,46 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "tag",
         New_w_Count_tag
+    },
+    {
+        "bulk_init_empty",
+        New_w_Count_bulk_init_empty
+    },
+    {
+        "bulk_init_empty_w_entities",
+        New_w_Count_bulk_init_empty_w_entities
+    },
+    {
+        "bulk_init_1_tag",
+        New_w_Count_bulk_init_1_tag
+    },
+    {
+        "bulk_init_1_tag_w_entities",
+        New_w_Count_bulk_init_1_tag_w_entities
+    },
+    {
+        "bulk_init_2_tags",
+        New_w_Count_bulk_init_2_tags
+    },
+    {
+        "bulk_init_1_component",
+        New_w_Count_bulk_init_1_component
+    },
+    {
+        "bulk_init_2_components",
+        New_w_Count_bulk_init_2_components
+    },
+    {
+        "bulk_init_1_component_w_value",
+        New_w_Count_bulk_init_1_component_w_value
+    },
+    {
+        "bulk_init_2_components_w_value",
+        New_w_Count_bulk_init_2_components_w_value
+    },
+    {
+        "bulk_init_2_components_tag_w_value",
+        New_w_Count_bulk_init_2_components_tag_w_value
     }
 };
 
@@ -10098,7 +10148,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        3,
+        13,
         New_w_Count_testcases
     },
     {
