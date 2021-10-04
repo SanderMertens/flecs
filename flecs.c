@@ -6999,7 +6999,9 @@ void ecs_clear(
 static
 void on_delete_action(
     ecs_world_t *world,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t action);
 
 static
 void throw_invalid_delete(
@@ -7099,7 +7101,7 @@ void delete_objects(
                 r->row = (-r->row);
 
                 /* Run delete actions for objects */
-                on_delete_action(world, entities[i]);
+                on_delete_action(world, entities[i], 0, 0);
             }        
         }
 
@@ -7111,7 +7113,8 @@ void delete_objects(
 static
 void on_delete_object_action(
     ecs_world_t *world,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_entity_t action)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
@@ -7134,22 +7137,21 @@ void on_delete_object_action(
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
             /* Get the record for the relation, to find the delete action */
-            ecs_id_record_t *idrr = flecs_get_id_record(world, rel);
-            if (idrr) {
-                ecs_entity_t action = idrr->on_delete_object;
-                if (!action || action == EcsRemove) {
-                    remove_from_table(world, table, id, tr->column, tr->count);
-                    i = 0; count = flecs_id_record_count(idr);
-                } else if (action == EcsDelete) {
-                    delete_objects(world, table);
-                } else if (action == EcsThrow) {
-                    throw_invalid_delete(world, id);
-                }
-            } else {
-                /* If no record was found for the relation, assume the default
-                 * action which is to remove the relationship */
+            ecs_id_record_t *idrr;
+            if (!action) {
+                idrr = flecs_get_id_record(world, rel);
+                if (idrr) {
+                    action =idrr->on_delete_object;
+                } 
+            }
+             
+            if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
                 i = 0; count = flecs_id_record_count(idr);
+            } else if (action == EcsDelete) {
+                delete_objects(world, table);
+            } else if (action == EcsThrow) {
+                throw_invalid_delete(world, id);
             }
         }
 
@@ -7158,14 +7160,18 @@ void on_delete_object_action(
 }
 
 static
-void on_delete_relation_action(
+void on_delete_id_action(
     ecs_world_t *world,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_entity_t action)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
-        ecs_entity_t on_delete = idr->on_delete;
-        if (on_delete == EcsThrow) {
+        if (!action) {
+            action = idr->on_delete;
+        }
+
+        if (action == EcsThrow) {
             throw_invalid_delete(world, id);
         }
 
@@ -7175,7 +7181,6 @@ void on_delete_relation_action(
         for (i = 0; i < count ; i ++) {
             const ecs_table_record_t *tr = &tables[i];
             ecs_table_t *table = tr->table;
-            ecs_entity_t action = idr->on_delete;
 
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
@@ -7191,18 +7196,22 @@ void on_delete_relation_action(
 static
 void on_delete_action(
     ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t action)
 {
-    on_delete_relation_action(world, entity);
-    on_delete_relation_action(world, ecs_pair(entity, EcsWildcard));
-    on_delete_object_action(world, ecs_pair(EcsWildcard, entity));
+    if (!id) {
+        on_delete_id_action(world, entity, action);
+        on_delete_id_action(world, ecs_pair(entity, EcsWildcard), action);
+        on_delete_object_action(world, ecs_pair(EcsWildcard, entity), action);
+    }
 }
 
 void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    on_delete_action(world, parent);
+    on_delete_action(world, parent, 0, 0);
 }
 
 void ecs_delete(
@@ -7236,7 +7245,7 @@ void ecs_delete(
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
-            on_delete_action(world, entity);
+            on_delete_action(world, entity, 0, 0);
 
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
