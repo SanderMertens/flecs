@@ -2293,13 +2293,13 @@ void on_delete_action(
 static
 void on_delete_any_w_entity(
     ecs_world_t *world,
-    ecs_id_t entity,
+    ecs_id_t id,
     ecs_entity_t action)
 {
     /* Make sure any references to the entity are cleaned up */
-    on_delete_action(world, entity, action);
-    on_delete_action(world, ecs_pair(entity, EcsWildcard), action);
-    on_delete_action(world, ecs_pair(EcsWildcard, entity), action);
+    on_delete_action(world, id, action);
+    on_delete_action(world, ecs_pair(id, EcsWildcard), action);
+    on_delete_action(world, ecs_pair(EcsWildcard, id), action);
 }
 
 void ecs_delete_children(
@@ -2307,6 +2307,20 @@ void ecs_delete_children(
     ecs_entity_t parent)
 {
     on_delete_any_w_entity(world, parent, 0);
+}
+
+void ecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    on_delete_action(world, id, EcsDelete);
+}
+
+void ecs_remove_all(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    on_delete_action(world, id, EcsRemove);
 }
 
 void ecs_delete(

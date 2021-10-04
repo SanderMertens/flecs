@@ -1510,6 +1510,30 @@ void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent);
 
+/** Delete all entities with the specified id.
+ * This will delete all entities (tables) that have the specified id. The id 
+ * may be a wildcard and/or a pair.
+ * 
+ * @param world The world.
+ * @param id The id.
+ */
+FLECS_API
+void ecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+/** Remove all instances of the specified id.
+ * This will remove the specified id from all entities (tables). Teh id may be
+ * a wildcard and/or a pair.
+ * 
+ * @param world The world.
+ * @param id The id.
+ */
+FLECS_API
+void ecs_remove_all(
+    ecs_world_t *world,
+    ecs_id_t id);
+
 /** @} */
 
 
