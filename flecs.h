@@ -2978,6 +2978,31 @@ typedef struct ecs_entity_desc_t {
     const char *add_expr;
 } ecs_entity_desc_t;
 
+/** Used with ecs_bulk_init */
+typedef struct ecs_bulk_desc_t { 
+    ecs_entity_t *entities;  /* Entities to bulk insert. Entity ids provided by 
+                         * the application application must be empty (cannot
+                         * have components). If no entity ids are provided, the
+                         * operation will create 'count' new entities. */
+
+    int32_t count;      /* Number of entities to create/populate */
+
+    ecs_id_t ids[ECS_MAX_ADD_REMOVE]; /* Ids to create the entities with */
+
+    void **data;       /* Array with component data to insert. Each element in 
+                        * the array must correspond with an element in the ids
+                        * array. If an element in the ids array is a tag, the
+                        * data array must contain a NULL. An element may be
+                        * set to NULL for a component, in which case the
+                        * component will not be set by the operation. */
+
+    ecs_table_t *table; /* Table to insert the entities into. Should not be set
+                         * at the same time as ids. When 'table' is set at the
+                         * same time as 'data', the elements in the data array
+                         * must correspond with the ids in the table's type. */
+
+} ecs_bulk_desc_t;
+
 
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
@@ -3900,6 +3925,37 @@ ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
 
+/** Bulk create/populate new entities.
+ * This operation bulk inserts a list of new or predefined entities into a
+ * single table.
+ * 
+ * The operation does not take ownership of component arrays provided by the
+ * application. Components that are non-trivially copyable will be moved into
+ * the storage.
+ * 
+ * The operation will emit OnAdd events for each added id, and OnSet events for
+ * each component that has been set.
+ * 
+ * If no entity ids are provided by the application, the returned array of ids
+ * points to an internal datastructure which changes when new entities are
+ * created/deleted.
+ * 
+ * If as a result of the operation triggers are invoked that deletes
+ * entities and no entity ids were provided by the application, the returned
+ * array of identifiers may be incorrect. To avoid this problem, an application
+ * can first call ecs_bulk_init to create empty entities, copy the array to one
+ * that is owned by the application, and then use this array to populate the
+ * entities.
+ * 
+ * @param world. The world.
+ * @param desc Bulk creation parameters.
+ * @return Array with the list of entity ids created/populated.
+ */
+FLECS_API
+const ecs_entity_t* ecs_bulk_init(
+    ecs_world_t *world,
+    const ecs_bulk_desc_t *desc);
+
 /** Find or create a component. 
  * This operation creates a new component, or finds an existing one. The find or
  * create behavior is the same as ecs_entity_init.
@@ -4109,19 +4165,6 @@ FLECS_API
 void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
-
-
-/** Delete children of an entity.
- * This operation deletes all children of a parent entity. If a parent has no
- * children this operation has no effect.
- *
- * @param world The world.
- * @param parent The parent entity.
- */
-FLECS_API
-void ecs_delete_children(
-    ecs_world_t *world,
-    ecs_entity_t parent);
 
 /** Delete all entities with the specified id.
  * This will delete all entities (tables) that have the specified id. The id 
@@ -8089,6 +8132,12 @@ FLECS_API void ecs_gauge_reduce(
     ecs_remove_id(world, subject, ecs_pair(relation, object))
 
 
+/* -- Bulk remove/delete -- */
+
+#define ecs_delete_children(world, parent)\
+    ecs_delete_with(world, ecs_pair(EcsChildOf, parent))
+
+
 /* -- Set -- */
 
 #define ecs_set_ptr(world, entity, component, ptr)\
@@ -10909,8 +10958,13 @@ public:
     }
 
     /** Delete all entities with specified id. */
+<<<<<<< HEAD
     void delete_with(id_t the_id) const {
         ecs_delete_with(m_world, the_id);
+=======
+    void delete_with(id_t id) const {
+        ecs_delete_with(m_world, id);
+>>>>>>> 94c041c3... #496 implement deferred op for delete_with/remove_all, add to c++
     }
 
     /** Delete all entities with specified relation. */
@@ -10931,8 +10985,13 @@ public:
     }
 
     /** Remove all instances of specified id. */
+<<<<<<< HEAD
     void remove_all(id_t the_id) const {
         ecs_remove_all(m_world, the_id);
+=======
+    void remove_all(id_t id) const {
+        ecs_remove_all(m_world, id);
+>>>>>>> 94c041c3... #496 implement deferred op for delete_with/remove_all, add to c++
     }
 
     /** Remove all instances of specified relation. */
