@@ -2303,13 +2303,6 @@ void on_delete_any_w_entity(
     on_delete_action(world, ecs_pair(EcsWildcard, id), action);
 }
 
-void ecs_delete_children(
-    ecs_world_t *world,
-    ecs_entity_t parent)
-{
-    on_delete_any_w_entity(world, parent, 0);
-}
-
 void ecs_delete_with(
     ecs_world_t *world,
     ecs_id_t id)

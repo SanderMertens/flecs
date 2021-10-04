@@ -1497,19 +1497,6 @@ void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-
-/** Delete children of an entity.
- * This operation deletes all children of a parent entity. If a parent has no
- * children this operation has no effect.
- *
- * @param world The world.
- * @param parent The parent entity.
- */
-FLECS_API
-void ecs_delete_children(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-
 /** Delete all entities with the specified id.
  * This will delete all entities (tables) that have the specified id. The id 
  * may be a wildcard and/or a pair.
