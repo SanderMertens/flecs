@@ -1926,6 +1926,8 @@ void DeferredActions_register_component_while_staged(void);
 void DeferredActions_register_component_while_deferred(void);
 void DeferredActions_defer_enable(void);
 void DeferredActions_defer_disable(void);
+void DeferredActions_defer_delete_with(void);
+void DeferredActions_defer_remove_all(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -9430,6 +9432,14 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_disable",
         DeferredActions_defer_disable
+    },
+    {
+        "defer_delete_with",
+        DeferredActions_defer_delete_with
+    },
+    {
+        "defer_remove_all",
+        DeferredActions_defer_remove_all
     }
 };
 
@@ -10438,7 +10448,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        60,
+        62,
         DeferredActions_testcases
     },
     {

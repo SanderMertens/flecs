@@ -257,6 +257,12 @@ bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
+bool flecs_defer_on_delete_action(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_id_t id,
+    ecs_entity_t action);
+
 bool flecs_defer_enable(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -279,7 +285,7 @@ bool flecs_defer_remove(
 bool flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_op_kind_t op_kind,
+    ecs_defer_op_kind_t op_kind,
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,

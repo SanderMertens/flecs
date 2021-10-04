@@ -915,7 +915,8 @@ const ecs_entity_t* new_w_data(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
     
     int32_t sparse_count = ecs_eis_count(world);
-    const ecs_entity_t *ids = flecs_sparse_new_ids(world->store.entity_index, count);
+    const ecs_entity_t *ids = flecs_sparse_new_ids(
+        world->store.entity_index, count);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_t type = table->type;   
 
@@ -2313,14 +2314,28 @@ void ecs_delete_with(
     ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (flecs_defer_on_delete_action(world, stage, id, EcsDelete)) {
+        return;
+    }
+
     on_delete_action(world, id, EcsDelete);
+
+    flecs_defer_flush(world, stage);
 }
 
 void ecs_remove_all(
     ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (flecs_defer_on_delete_action(world, stage, id, EcsRemove)) {
+        return;
+    }
+
     on_delete_action(world, id, EcsRemove);
+
+    flecs_defer_flush(world, stage);
 }
 
 void ecs_delete(
@@ -3442,7 +3457,7 @@ char* ecs_id_str(
 static
 void flush_bulk_new(
     ecs_world_t *world,
-    ecs_op_t *op)
+    ecs_defer_op_t *op)
 {
     ecs_entity_t *entities = op->is._n.entities;
 
@@ -3482,7 +3497,7 @@ void free_value(
 static
 void discard_op(
     ecs_world_t *world,
-    ecs_op_t *op)
+    ecs_defer_op_t *op)
 {
     if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
@@ -3572,11 +3587,11 @@ bool flecs_defer_flush(
         stage->defer_queue = NULL;
 
         if (defer_queue) {
-            ecs_op_t *ops = ecs_vector_first(defer_queue, ecs_op_t);
+            ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
             int32_t i, count = ecs_vector_count(defer_queue);
             
             for (i = 0; i < count; i ++) {
-                ecs_op_t *op = &ops[i];
+                ecs_defer_op_t *op = &ops[i];
                 ecs_entity_t e = op->is._1.entity;
                 if (op->kind == EcsOpBulkNew) {
                     e = 0;
@@ -3629,14 +3644,17 @@ bool flecs_defer_flush(
                     ecs_delete(world, e);
                     break;
                 }
+                case EcsOpClear:
+                    ecs_clear(world, e);
+                    break;
+                case EcsOpOnDeleteAction:
+                    on_delete_action(world, op->id, e);
+                    break;
                 case EcsOpEnable:
                     ecs_enable_component_w_id(world, e, op->id, true);
                     break;
                 case EcsOpDisable:
                     ecs_enable_component_w_id(world, e, op->id, false);
-                    break;
-                case EcsOpClear:
-                    ecs_clear(world, e);
                     break;
                 case EcsOpBulkNew:
                     flush_bulk_new(world, op);
@@ -3676,7 +3694,7 @@ bool flecs_defer_purge(
         stage->defer_queue = NULL;
 
         if (defer_queue) {
-            ecs_op_t *ops = ecs_vector_first(defer_queue, ecs_op_t);
+            ecs_defer_op_t *ops = ecs_vector_first(defer_queue, ecs_defer_op_t);
             int32_t i, count = ecs_vector_count(defer_queue);
             for (i = 0; i < count; i ++) {
                 discard_op(world, &ops[i]);

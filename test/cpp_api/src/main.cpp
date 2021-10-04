@@ -680,6 +680,14 @@ void World_entity_as_component_2_worlds_implicit_namespaced(void);
 void World_type_as_component(void);
 void World_type_w_name_as_component(void);
 void World_component_as_component(void);
+void World_delete_with_id(void);
+void World_delete_with_type(void);
+void World_delete_with_pair(void);
+void World_delete_with_pair_type(void);
+void World_remove_all_id(void);
+void World_remove_all_type(void);
+void World_remove_all_pair(void);
+void World_remove_all_pair_type(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3293,6 +3301,38 @@ bake_test_case World_testcases[] = {
     {
         "component_as_component",
         World_component_as_component
+    },
+    {
+        "delete_with_id",
+        World_delete_with_id
+    },
+    {
+        "delete_with_type",
+        World_delete_with_type
+    },
+    {
+        "delete_with_pair",
+        World_delete_with_pair
+    },
+    {
+        "delete_with_pair_type",
+        World_delete_with_pair_type
+    },
+    {
+        "remove_all_id",
+        World_remove_all_id
+    },
+    {
+        "remove_all_type",
+        World_remove_all_type
+    },
+    {
+        "remove_all_pair",
+        World_remove_all_pair
+    },
+    {
+        "remove_all_pair_type",
+        World_remove_all_pair_type
     }
 };
 
@@ -3512,7 +3552,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        48,
+        56,
         World_testcases
     },
     {

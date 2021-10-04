@@ -1473,6 +1473,10 @@ void OnDelete_remove_childof_entity() {
     test_assert(!ecs_has_pair(world, e_1, EcsChildOf, parent_1));
     test_assert(!ecs_has_pair(world, e_2, EcsChildOf, parent_1));
     test_assert(!ecs_has_pair(world, e_3, EcsChildOf, parent_1));
+    
+    test_assert(!ecs_has_pair(world, e_1, EcsChildOf, parent_2));
+    test_assert(!ecs_has_pair(world, e_2, EcsChildOf, parent_2));
+    test_assert(!ecs_has_pair(world, e_3, EcsChildOf, parent_2));
     test_assert(ecs_has_pair(world, e_4, EcsChildOf, parent_2));
 
     test_assert(ecs_has_id(world, e_3, Tag));
@@ -1524,6 +1528,9 @@ void OnDelete_remove_childof_wildcard() {
     test_assert(!ecs_has_pair(world, e_3, child_of, parent_1));
     test_assert(!ecs_has_pair(world, e_4, child_of, parent_2));
 
+    test_assert(!ecs_has_id(world, e_1, Tag));
+    test_assert(!ecs_has_id(world, e_2, Tag));
+    test_assert(!ecs_has_id(world, e_4, Tag));
     test_assert(ecs_has_id(world, e_3, Tag));
 
     ecs_fini(world);
