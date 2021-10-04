@@ -118,6 +118,18 @@ inline flecs::type entity_view::type() const {
 }
 
 template <typename Func>
+inline void entity_view::children(Func&& func) const {
+    flecs::world world(m_world);
+
+    auto f = world.filter_builder<>()
+        .term(flecs::ChildOf, m_id)
+        .term(flecs::Prefab).oper(flecs::Optional)
+        .build();
+
+    f.each(std::move(func));
+}
+
+template <typename Func>
 inline void entity_view::each(const Func& func) const {
     const ecs_vector_t *type = ecs_get_type(m_world, m_id);
     if (!type) {

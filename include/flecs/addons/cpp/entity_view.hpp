@@ -483,10 +483,7 @@ public:
      * @return Iterator to child entities.
      */
     template <typename Func>
-    void children(Func&& func) const {
-        flecs::world world(m_world);
-        world.each(world.pair(flecs::ChildOf, m_id), std::move(func));
-    }
+    void children(Func&& func) const;
 
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is

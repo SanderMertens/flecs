@@ -459,6 +459,7 @@ struct ecs_stage_t {
     /* Namespacing */
     ecs_table_t *scope_table;    /* Table for current scope */
     ecs_entity_t scope;          /* Entity of current scope */
+    ecs_entity_t base;           /* Currently instantiated top-level base */
     ecs_entity_t with;           /* Id to add by default to new entities */
 
     /* Properties */

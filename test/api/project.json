@@ -1764,7 +1764,8 @@
                 "get_component_from_1st_base_prefab_base",
                 "get_component_from_2nd_base_of_base_prefab_base",
                 "get_component_from_1st_base_of_base_prefab_base",
-                "fail_on_override_final"
+                "fail_on_override_final",
+                "instantiate_tree_once"
             ]
         }, {
             "id": "System_w_FromParent",

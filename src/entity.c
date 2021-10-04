@@ -290,11 +290,12 @@ void instantiate_children(
     int32_t count,
     ecs_table_t *child_table)
 {
-    ecs_type_t type = child_table->type;
-    ecs_data_t *child_data = &child_table->storage;
-    if (!flecs_table_data_count(child_data)) {
+    if (!ecs_table_count(child_table)) {
         return;
     }
+
+    ecs_type_t type = child_table->type;
+    ecs_data_t *child_data = &child_table->storage;
 
     ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t type_count = ecs_vector_count(type);
@@ -406,7 +407,7 @@ void instantiate(
     ecs_data_t *data,
     int32_t row,
     int32_t count)
-{    
+{
     /* If base is a parent, instantiate children of base for instances */
     const ecs_id_record_t *idr = flecs_get_id_record(
         world, ecs_pair(EcsChildOf, base));
@@ -544,12 +545,22 @@ void components_override(
             ecs_entity_t base = ECS_PAIR_OBJECT(id);
 
             /* Cannot inherit from base if base is final */
-            ecs_assert(
-                !ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
+            ecs_assert(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
                 ECS_INVALID_PARAMETER, NULL);
 
             ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
-            instantiate(world, base, table, data, row, count);
+
+            if (!world->stage.base) {
+                /* Setting base prevents instantiating the hierarchy multiple
+                 * times. The instantiate function recursively iterates the
+                 * hierarchy to instantiate children. While this is happening,
+                 * new tables are created which end up calling this function,
+                 * which would call instantiate multiple times for the same
+                 * level in the hierarchy. */
+                world->stage.base = base;
+                instantiate(world, base, table, data, row, count);
+                world->stage.base = 0;
+            }
         }
 
         if (!storage_table) {

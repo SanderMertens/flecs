@@ -2486,18 +2486,21 @@ void Prefab_prefab_instanceof_hierarchy() {
     ECS_PREFAB(world, Base, Position);
         ECS_PREFAB(world, BaseChild, Position, (ChildOf, Base));
 
-    ECS_PREFAB(world, Prefab, (IsA, Base));
+    ECS_PREFAB(world, ThePrefab, (IsA, Base));
 
-    /* Ensure that child has been instantiated for Prefab as a prefab by making
+    /* Ensure that child has not been instantiated by making
      * sure there are no matching entities for Position up to this point */
     ecs_query_t *q = ecs_query_new(world, "Position(self|super)");
-    
+
     ecs_iter_t qit = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&qit));
 
     /* Instantiate the prefab */
-    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, ThePrefab);
     test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, e, "BaseChild");
+    test_assert(child != 0);
 
     qit = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&qit) == true);
@@ -3237,6 +3240,41 @@ void Prefab_fail_on_override_final() {
 
     test_expect_abort();
     ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_fini(world);
+}
+
+static
+int child_count(ecs_world_t *world, ecs_entity_t e) {
+    int32_t count = 0;
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ 
+        ecs_pair(EcsChildOf, e 
+    )});
+
+    while (ecs_term_next(&it)) {
+        count += it.count;
+    }
+    return count;
+}
+
+void Prefab_instantiate_tree_once() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_PREFAB(world, Cannon, 0);
+    ECS_PREFAB(world, Turret, 0);
+    ECS_PREFAB(world, CannonA, (IsA, Cannon), (ChildOf, Turret));
+    ECS_PREFAB(world, CannonB, (IsA, Cannon), (ChildOf, Turret));
+
+    ECS_PREFAB(world, SpaceShip, 0);
+    ECS_PREFAB(world, TurretA, (IsA, Turret), (ChildOf, SpaceShip));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, SpaceShip);
+    test_assert(inst != 0);
+    test_int(1, child_count(world, inst));
+
+    ecs_entity_t turret_a = ecs_lookup_child(world, inst, "TurretA");
+    test_assert(turret_a != 0);
+    test_int(2, child_count(world, turret_a));
 
     ecs_fini(world);
 }

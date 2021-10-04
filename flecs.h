@@ -11639,10 +11639,7 @@ public:
      * @return Iterator to child entities.
      */
     template <typename Func>
-    void children(Func&& func) const {
-        flecs::world world(m_world);
-        world.each(world.pair(flecs::ChildOf, m_id), std::move(func));
-    }
+    void children(Func&& func) const;
 
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is
@@ -16134,6 +16131,18 @@ inline flecs::entity entity_view::set_stage(world_t *stage) {
 
 inline flecs::type entity_view::type() const {
     return flecs::type(m_world, ecs_get_type(m_world, m_id));
+}
+
+template <typename Func>
+inline void entity_view::children(Func&& func) const {
+    flecs::world world(m_world);
+
+    auto f = world.filter_builder<>()
+        .term(flecs::ChildOf, m_id)
+        .term(flecs::Prefab).oper(flecs::Optional)
+        .build();
+
+    f.each(std::move(func));
 }
 
 template <typename Func>
