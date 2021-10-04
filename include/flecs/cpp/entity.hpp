@@ -1208,6 +1208,15 @@ public:
         return result;
     }
 
+    const T* operator->() const {
+        const T* result = static_cast<const T*>(ecs_get_const_ref_w_id(
+            m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
+
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        return result;
+    }
+
     const T* get() {
         if (m_entity) {
             ecs_get_ref_w_id(
@@ -1215,6 +1224,14 @@ public:
         }
 
         return static_cast<T*>(m_ref.ptr);
+    }    
+    
+    const T* get() const{
+        if (m_entity) {
+            return static_cast<const T*>(ecs_get_const_ref_w_id(
+                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));    
+        }
+        return NULL;
     }
 
     flecs::entity entity() const;

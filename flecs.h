@@ -5112,6 +5112,23 @@ const void* ecs_get_ref_w_id(
     ecs_ref_t *ref,
     ecs_entity_t entity,
     ecs_id_t id);
+    
+/** Get an immutable reference to a component.
+ * Same as ecs_get_ref_w_id, but with const ref and thus 
+ * won't update the ref if stale.
+ *
+ * @param world The world.
+ * @param ref Pointer to a ecs_ref_t value. Must be initialized.
+ * @param entity The entity.
+ * @param component The entity id of the component to obtain.
+ * @return The component pointer, NULL if the entity does not have the component.
+ */
+FLECS_API
+const void* ecs_get_const_ref_w_id (
+    const ecs_world_t *world,
+    const ecs_ref_t *ref,
+    ecs_entity_t entity,
+    ecs_id_t id);
 
 /** Get an immutable reference to a component.
  * Same as ecs_get_ref_w_id, but accepts the typename of a component.
@@ -13650,6 +13667,15 @@ public:
         return result;
     }
 
+    const T* operator->() const {
+        const T* result = static_cast<const T*>(ecs_get_const_ref_w_id(
+            m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
+
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        return result;
+    }
+
     const T* get() {
         if (m_entity) {
             ecs_get_ref_w_id(
@@ -13657,6 +13683,14 @@ public:
         }
 
         return static_cast<T*>(m_ref.ptr);
+    }    
+    
+    const T* get() const{
+        if (m_entity) {
+            return static_cast<const T*>(ecs_get_const_ref_w_id(
+                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));    
+        }
+        return NULL;
     }
 
     flecs::entity entity() const;
