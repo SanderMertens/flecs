@@ -1671,6 +1671,7 @@ void Prefab_get_component_from_2nd_base_of_base_prefab_base(void);
 void Prefab_get_component_from_1st_base_of_base_prefab_base(void);
 void Prefab_fail_on_override_final(void);
 void Prefab_instantiate_tree_once(void);
+void Prefab_nested_prefab_w_named_children(void);
 
 // Testsuite 'System_w_FromParent'
 void System_w_FromParent_setup(void);
@@ -8465,6 +8466,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_tree_once",
         Prefab_instantiate_tree_once
+    },
+    {
+        "nested_prefab_w_named_children",
+        Prefab_nested_prefab_w_named_children
     }
 };
 
@@ -10325,7 +10330,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        91,
+        92,
         Prefab_testcases
     },
     {

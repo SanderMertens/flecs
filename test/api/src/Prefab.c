@@ -3278,3 +3278,29 @@ void Prefab_instantiate_tree_once() {
 
     ecs_fini(world);
 }
+
+void Prefab_nested_prefab_w_named_children() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_PREFAB(world, Cannon, 0);
+    
+    ECS_PREFAB(world, Turret, 0);
+    ecs_set_scope(world, Turret);
+        ECS_ENTITY(world, CannonA, (IsA, Cannon));
+    ecs_set_scope(world, 0);
+
+    ECS_PREFAB(world, SpaceShip, 0);
+    ecs_set_scope(world, SpaceShip);
+        ECS_PREFAB(world, TurretA, (IsA, Turret));
+    ecs_set_scope(world, 0);
+
+    test_assert( ecs_has_pair(world, CannonA, EcsChildOf, Turret));
+    test_assert( ecs_has_pair(world, CannonA, EcsIsA, Cannon));
+    test_str("CannonA", ecs_get_name(world, CannonA));
+
+    test_assert( ecs_has_pair(world, TurretA, EcsChildOf, SpaceShip));
+    test_assert( ecs_has_pair(world, TurretA, EcsIsA, Turret));
+    test_str("TurretA", ecs_get_name(world, TurretA));
+
+    ecs_fini(world);
+}
