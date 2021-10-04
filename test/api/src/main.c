@@ -647,6 +647,15 @@ void OnDelete_delete_table_in_on_remove_during_fini(void);
 void OnDelete_delete_other_in_on_remove_during_fini(void);
 void OnDelete_on_delete_remove_id_w_role(void);
 void OnDelete_on_delete_merge_pair_component(void);
+void OnDelete_delete_with_tag(void);
+void OnDelete_delete_with_component(void);
+void OnDelete_delete_with_pair(void);
+void OnDelete_delete_with_object_wildcard(void);
+void OnDelete_delete_with_relation_wildcard(void);
+void OnDelete_delete_all_with_entity(void);
+void OnDelete_remove_childof_entity(void);
+void OnDelete_remove_childof_wildcard(void);
+void OnDelete_delete_child_of_delete_with(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -4533,6 +4542,42 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_merge_pair_component",
         OnDelete_on_delete_merge_pair_component
+    },
+    {
+        "delete_with_tag",
+        OnDelete_delete_with_tag
+    },
+    {
+        "delete_with_component",
+        OnDelete_delete_with_component
+    },
+    {
+        "delete_with_pair",
+        OnDelete_delete_with_pair
+    },
+    {
+        "delete_with_object_wildcard",
+        OnDelete_delete_with_object_wildcard
+    },
+    {
+        "delete_with_relation_wildcard",
+        OnDelete_delete_with_relation_wildcard
+    },
+    {
+        "delete_all_with_entity",
+        OnDelete_delete_all_with_entity
+    },
+    {
+        "remove_childof_entity",
+        OnDelete_remove_childof_entity
+    },
+    {
+        "remove_childof_wildcard",
+        OnDelete_remove_childof_wildcard
+    },
+    {
+        "delete_child_of_delete_with",
+        OnDelete_delete_child_of_delete_with
     }
 };
 
@@ -10141,7 +10186,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        50,
+        59,
         OnDelete_testcases
     },
     {

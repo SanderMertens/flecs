@@ -1229,3 +1229,346 @@ void OnDelete_on_delete_merge_pair_component() {
 
     ecs_fini(world);
 }
+
+void OnDelete_delete_with_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_1 = ecs_new_w_id(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w_id(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w_id(world, TagA);
+
+    ecs_add_id(world, e_3, TagB);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    ecs_delete_with(world, TagA);
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e_1 = ecs_new(world, Position);
+    ecs_entity_t e_2 = ecs_new(world, Position);
+    ecs_entity_t e_3 = ecs_new(world, Position);
+
+    ecs_add(world, e_3, Velocity);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, Obj);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    ecs_delete_with(world, ecs_pair(Rel, Obj));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_object_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, ObjB);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, ObjB);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    ecs_delete_with(world, ecs_pair(Rel, EcsWildcard));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_relation_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, RelA, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, RelB, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, RelB, Obj);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    ecs_delete_with(world, ecs_pair(EcsWildcard, Obj));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_all_with_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, RelA, Obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, RelB, Obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, RelB, Obj);
+    ecs_entity_t e_4 = ecs_new_w_pair(world, Obj, RelA);
+    ecs_entity_t e_5 = ecs_new_w_pair(world, Obj, RelB);
+    ecs_entity_t e_6 = ecs_new_w_id(world, Obj);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+    test_assert(e_4 != 0);
+    test_assert(e_5 != 0);
+    test_assert(e_6 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+    test_assert(ecs_is_alive(world, e_5));
+    test_assert(ecs_is_alive(world, e_6));
+
+    ecs_delete_with(world, Obj);
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+    test_assert(ecs_is_alive(world, e_5));
+    test_assert(!ecs_is_alive(world, e_6));
+
+    ecs_delete_with(world, ecs_pair(Obj, EcsWildcard));
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(!ecs_is_alive(world, e_4));
+    test_assert(!ecs_is_alive(world, e_5));
+    test_assert(!ecs_is_alive(world, e_6));
+
+    ecs_delete_with(world, ecs_pair(EcsWildcard, Obj));
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+    test_assert(!ecs_is_alive(world, e_4));
+    test_assert(!ecs_is_alive(world, e_5));
+    test_assert(!ecs_is_alive(world, e_6));
+
+    ecs_fini(world);
+}
+
+void OnDelete_remove_childof_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t parent_1 = ecs_new_id(world);
+    ecs_entity_t parent_2 = ecs_new_id(world);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, EcsChildOf, parent_1);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, EcsChildOf, parent_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, EcsChildOf, parent_1);
+    ecs_entity_t e_4 = ecs_new_w_pair(world, EcsChildOf, parent_2);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+    test_assert(e_4 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+
+    ecs_remove_all(world, ecs_pair(EcsChildOf, parent_1));
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+
+    test_assert(!ecs_has_pair(world, e_1, EcsChildOf, parent_1));
+    test_assert(!ecs_has_pair(world, e_2, EcsChildOf, parent_1));
+    test_assert(!ecs_has_pair(world, e_3, EcsChildOf, parent_1));
+    test_assert(ecs_has_pair(world, e_4, EcsChildOf, parent_2));
+
+    test_assert(ecs_has_id(world, e_3, Tag));
+
+    ecs_fini(world);
+}
+
+void OnDelete_remove_childof_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* Create custom childof relation so we won't try to remove ChildOf from
+     * builtin entities */
+    ecs_entity_t child_of = ecs_new_id(world);
+
+    /* Simulate same behavior as ChildOf */
+    ecs_add_pair(world, child_of, EcsOnDeleteObject, EcsDelete);
+
+    ecs_entity_t parent_1 = ecs_new_id(world);
+    ecs_entity_t parent_2 = ecs_new_id(world);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, child_of, parent_1);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, child_of, parent_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, child_of, parent_1);
+    ecs_entity_t e_4 = ecs_new_w_pair(world, child_of, parent_2);
+
+    ecs_add_id(world, e_3, Tag);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+    test_assert(e_4 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+
+    ecs_remove_all(world, ecs_pair(child_of, EcsWildcard));
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+
+    test_assert(!ecs_has_pair(world, e_1, child_of, parent_1));
+    test_assert(!ecs_has_pair(world, e_2, child_of, parent_1));
+    test_assert(!ecs_has_pair(world, e_3, child_of, parent_1));
+    test_assert(!ecs_has_pair(world, e_4, child_of, parent_2));
+
+    test_assert(ecs_has_id(world, e_3, Tag));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_child_of_delete_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t obj = ecs_new_id(world);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, obj);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, obj);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, obj);
+
+    ecs_entity_t c_1 = ecs_new_w_pair(world, EcsChildOf, e_1);
+    ecs_entity_t c_2 = ecs_new_w_pair(world, EcsChildOf, e_2);
+    ecs_entity_t c_3 = ecs_new_w_pair(world, EcsChildOf, e_3);
+
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+
+    test_assert(c_1 != 0);
+    test_assert(c_2 != 0);
+    test_assert(c_3 != 0);
+
+    test_assert(ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(ecs_is_alive(world, e_3));
+
+    test_assert(ecs_is_alive(world, c_1));
+    test_assert(ecs_is_alive(world, c_2));
+    test_assert(ecs_is_alive(world, c_3));
+
+    ecs_delete_with(world, ecs_pair(Rel, obj));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(!ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+
+    test_assert(!ecs_is_alive(world, c_1));
+    test_assert(!ecs_is_alive(world, c_2));
+    test_assert(!ecs_is_alive(world, c_3));
+
+    ecs_fini(world);
+}

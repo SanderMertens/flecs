@@ -687,7 +687,16 @@
                 "delete_table_in_on_remove_during_fini",
                 "delete_other_in_on_remove_during_fini",
                 "on_delete_remove_id_w_role",
-                "on_delete_merge_pair_component"
+                "on_delete_merge_pair_component",
+                "delete_with_tag",
+                "delete_with_component",
+                "delete_with_pair",
+                "delete_with_object_wildcard",
+                "delete_with_relation_wildcard",
+                "delete_all_with_entity",
+                "remove_childof_entity",
+                "remove_childof_wildcard",
+                "delete_child_of_delete_with"
             ]
         }, {
             "id": "Set",

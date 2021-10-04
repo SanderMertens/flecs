@@ -6997,10 +6997,9 @@ void ecs_clear(
 }
 
 static
-void on_delete_action(
+void on_delete_any_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id,
     ecs_entity_t action);
 
 static
@@ -7101,7 +7100,7 @@ void delete_objects(
                 r->row = (-r->row);
 
                 /* Run delete actions for objects */
-                on_delete_action(world, entities[i], 0, 0);
+                on_delete_any_w_entity(world, entities[i], 0);
             }        
         }
 
@@ -7196,22 +7195,57 @@ void on_delete_id_action(
 static
 void on_delete_action(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_id_t id,
     ecs_entity_t action)
 {
-    if (!id) {
-        on_delete_id_action(world, entity, action);
-        on_delete_id_action(world, ecs_pair(entity, EcsWildcard), action);
-        on_delete_object_action(world, ecs_pair(EcsWildcard, entity), action);
+    if (ecs_id_is_wildcard(id)) {
+        /* If id is wildcard, check if the relation or object is a wildcard.
+         * Relation wildcard ids are implemented differently as relations
+         * with the same object aren't guaranteed to occupy neighboring
+         * elements in the type, other wildcards with the same relation. */
+        if (ECS_PAIR_RELATION(id) == EcsWildcard) {
+            on_delete_object_action(world, id, action);
+        } else {
+            on_delete_id_action(world, id, action);
+        }
+    } else {
+        /* If the id is not a wildcard it's simple, as a table can only have
+         * at most one instance of the id */
+        on_delete_id_action(world, id, action);
     }
+}
+
+static
+void on_delete_any_w_entity(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t action)
+{
+    /* Make sure any references to the entity are cleaned up */
+    on_delete_action(world, id, action);
+    on_delete_action(world, ecs_pair(id, EcsWildcard), action);
+    on_delete_action(world, ecs_pair(EcsWildcard, id), action);
 }
 
 void ecs_delete_children(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
-    on_delete_action(world, parent, 0, 0);
+    on_delete_any_w_entity(world, parent, 0);
+}
+
+void ecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    on_delete_action(world, id, EcsDelete);
+}
+
+void ecs_remove_all(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    on_delete_action(world, id, EcsRemove);
 }
 
 void ecs_delete(
@@ -7245,7 +7279,7 @@ void ecs_delete(
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
-            on_delete_action(world, entity, 0, 0);
+            on_delete_any_w_entity(world, entity, 0);
 
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
