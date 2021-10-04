@@ -10909,8 +10909,8 @@ public:
     }
 
     /** Delete all entities with specified id. */
-    void delete_with(id_t id) const {
-        ecs_delete_with(m_world, id);
+    void delete_with(id_t the_id) const {
+        ecs_delete_with(m_world, the_id);
     }
 
     /** Delete all entities with specified relation. */
@@ -10931,8 +10931,8 @@ public:
     }
 
     /** Remove all instances of specified id. */
-    void remove_all(id_t id) const {
-        ecs_remove_all(m_world, id);
+    void remove_all(id_t the_id) const {
+        ecs_remove_all(m_world, the_id);
     }
 
     /** Remove all instances of specified relation. */

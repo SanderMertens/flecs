@@ -132,6 +132,12 @@
     ecs_remove_id(world, subject, ecs_pair(relation, object))
 
 
+/* -- Bulk remove/delete -- */
+
+#define ecs_delete_children(world, parent)\
+    ecs_delete_with(world, ecs_pair(EcsChildOf, parent))
+
+
 /* -- Set -- */
 
 #define ecs_set_ptr(world, entity, component, ptr)\
