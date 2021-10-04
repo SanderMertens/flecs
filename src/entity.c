@@ -2987,6 +2987,41 @@ const void* ecs_get_ref_w_id(
     return ref->ptr;
 }
 
+const void* ecs_get_const_ref_w_id(
+    const ecs_world_t * world,
+    const ecs_ref_t * ref,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!entity || !ref->entity || entity == ref->entity, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!id || !ref->component || id == ref->component, ECS_INVALID_PARAMETER, NULL);
+    ecs_record_t *record = ref->record;
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+    entity |= ref->entity;
+    if (!record) {
+        record = ecs_eis_get(world, entity);
+    }
+    if (!record || !record->table) {
+        return NULL;
+    }
+    ecs_table_t *table = record->table;
+    if (ref->record == record &&
+        ref->table == table &&
+        ref->row == record->row &&
+        ref->alloc_count == table->alloc_count)
+    {
+        return ref->ptr;
+    }
+    id |= ref->component;
+    int32_t row = record->row;
+    bool is_monitored;
+    row = flecs_record_to_row(row, &is_monitored);
+    return get_component(world, table, row, id);
+}
+
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
