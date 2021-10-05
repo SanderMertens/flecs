@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+/* Multiline strings */
+#define HEAD
+#define LINE "\n"
+
 void _meta_test_struct(
     ecs_world_t *world, 
     ecs_entity_t t, 
@@ -21,6 +25,12 @@ void _meta_test_member(
     ecs_entity_t type,
     int32_t count,
     ecs_size_t offset);
+
+#define test_ok(expr)\
+    test_int((expr), 0)
+
+#define test_fail(expr)\
+    test_int((expr), -1)
 
 #define meta_test_struct(world, t, T)\
     _meta_test_struct(world, t, ECS_SIZEOF(T), ECS_ALIGNOF(T))

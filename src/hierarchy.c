@@ -44,8 +44,7 @@ bool path_append(
     return cur != 0;
 }
 
-static
-ecs_hashed_string_t get_string_key(
+ecs_hashed_string_t ecs_get_hashed_string(
     const char *name,
     ecs_size_t length,
     uint64_t hash)
@@ -78,7 +77,7 @@ ecs_entity_t find_by_name(
     ecs_size_t length,
     uint64_t hash)
 {
-    ecs_hashed_string_t key = get_string_key(name, length, hash);
+    ecs_hashed_string_t key = ecs_get_hashed_string(name, length, hash);
 
     ecs_entity_t *e = flecs_hashmap_get(*map, &key, ecs_entity_t);
 
@@ -100,7 +99,7 @@ void register_by_name(
     ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_hashed_string_t key = get_string_key(name, length, hash);
+    ecs_hashed_string_t key = ecs_get_hashed_string(name, length, hash);
     
     ecs_entity_t existing = find_by_name(map, name, key.length, key.hash);
     if (existing) {
@@ -290,8 +289,8 @@ int string_compare(
     return ecs_os_memcmp(str1->value, str2->value, len1);
 }
 
-ecs_hashmap_t flecs_string_hashmap_new(void) {
-    return flecs_hashmap_new(ecs_hashed_string_t, ecs_entity_t, 
+ecs_hashmap_t _flecs_string_hashmap_new(ecs_size_t size) {
+    return _flecs_hashmap_new(ECS_SIZEOF(ecs_hashed_string_t), size, 
         string_hash, 
         string_compare);
 }

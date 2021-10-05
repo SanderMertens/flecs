@@ -1740,3 +1740,192 @@ void Plecs_inherit_w_colon_w_assign() {
 
     ecs_fini(world);
 }
+
+void Plecs_assign_component_value() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position(Foo) = {10, 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_2_component_values() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Velocity",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position(Foo) = {10, 20}"
+    LINE "Velocity(Foo) = {1, 2}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    test_assert(ecs_has(world, foo, Velocity));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    {
+    const Velocity *ptr = ecs_get(world, foo, Velocity);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 1);
+    test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_component_value_in_assign_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = {"
+    LINE " Position = {10, 20}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_2_component_values_in_assign_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Velocity",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = {"
+    LINE " Position = {10, 20}"
+    LINE " Velocity = {1, 2}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    test_assert(ecs_has(world, foo, Velocity));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    {
+    const Velocity *ptr = ecs_get(world, foo, Velocity);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 1);
+    test_int(ptr->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_type_and_assign_in_plecs() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Struct(Position) {"
+    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
+    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
+    LINE "}"
+    LINE ""
+    LINE "Position(Foo) = {10, 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(Position) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}

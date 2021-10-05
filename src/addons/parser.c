@@ -6,6 +6,7 @@
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 
+#define TOK_NEWLINE '\n'
 #define TOK_COLON ':'
 #define TOK_AND ','
 #define TOK_OR "||"
@@ -59,8 +60,7 @@ const char *skip_newline_and_space(
 }
 
 /** Skip spaces when parsing signature */
-static
-const char *skip_space(
+const char *ecs_parse_whitespace(
     const char *ptr)
 {
     while ((*ptr != '\n') && isspace(*ptr)) {
@@ -70,10 +70,45 @@ const char *skip_space(
     return ptr;
 }
 
+static
+bool is_newline_comment(
+    const char *ptr)
+{
+    if (ptr[0] == '/' && ptr[1] == '/') {
+        return true;
+    }
+    return false;
+}
+
+const char* ecs_parse_fluff(
+    const char *ptr) 
+{
+    do {
+        /* Skip whitespaces before checking for a comment */
+        ptr = ecs_parse_whitespace(ptr);
+
+        /* Newline comment, skip until newline character */
+        if (is_newline_comment(ptr)) {
+            ptr += 2;
+            while (ptr[0] && ptr[0] != '\n') {
+                ptr ++;
+            }
+        }
+
+        /* If a newline character is found, skip it */
+        if (ptr[0] == TOK_NEWLINE) {
+            ptr ++;
+        }
+
+    } while (isspace(ptr[0]) || is_newline_comment(ptr));
+
+    return ptr;
+}
+
 /* -- Private functions -- */
 
 static
-bool valid_token_start_char(
+bool valid_identifier_start_char(
     char ch)
 {
     if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
@@ -86,10 +121,25 @@ bool valid_token_start_char(
 }
 
 static
+bool valid_token_start_char(
+    char ch)
+{
+    if ((ch == '"') || (ch == '{') || (ch == '}') || (ch == ',') || (ch == '-')
+        || valid_identifier_start_char(ch)) 
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static
 bool valid_token_char(
     char ch)
 {
-    if (ch && (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.')) {
+    if (ch && 
+        (isalpha(ch) || isdigit(ch) || ch == '_' || ch == '.' || ch == '"')) 
+    {
         return true;
     }
 
@@ -115,7 +165,7 @@ const char* parse_digit(
     const char *ptr,
     char *token_out)
 {
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
     char *tptr = token_out, ch = ptr[0];
 
     if (!isdigit(ch)) {
@@ -139,24 +189,23 @@ const char* parse_digit(
 
     tptr[0] = '\0';
 
-    return skip_space(ptr);
+    return ecs_parse_whitespace(ptr);
 }
 
-
-static
-const char* parse_token(
+const char* ecs_parse_token(
     const char *name,
-    const char *sig,
-    int64_t column,
+    const char *expr,
     const char *ptr,
     char *token_out)
 {
-    ptr = skip_space(ptr);
+    int64_t column = ptr - expr;
+
+    ptr = ecs_parse_whitespace(ptr);
     char *tptr = token_out, ch = ptr[0];
 
     if (!valid_token_start_char(ch)) {
-        ecs_parser_error(name, sig, column, 
-            "invalid start of identifier '%s'", ptr);
+        ecs_parser_error(name, expr, column, 
+            "invalid start of token '%s'", ptr);
         return NULL;
     }
 
@@ -164,7 +213,13 @@ const char* parse_token(
     tptr ++;
     ptr ++;
 
+    if (ch == '{' || ch == '}' || ch == ',') {
+        tptr[0] = 0;
+        return ptr;
+    }
+
     int tmpl_nesting = 0;
+    bool in_str = ch == '"';
 
     for (; (ch = *ptr); ptr ++) {
         if (ch == '<') {
@@ -174,8 +229,11 @@ const char* parse_token(
                 break;
             }
             tmpl_nesting --;
-        } else
-        if (!valid_token_char(ch)) {
+        } else if (ch == '"') {
+            in_str = !in_str;
+        }
+
+        if (!valid_token_char(ch) && !in_str) {
             break;
         }
 
@@ -186,17 +244,34 @@ const char* parse_token(
     tptr[0] = '\0';
 
     if (tmpl_nesting != 0) {
-        ecs_parser_error(name, sig, column, 
+        ecs_parser_error(name, expr, column, 
             "identifier '%s' has mismatching < > pairs", ptr);
         return NULL;
     }
 
-    const char *next_ptr = skip_space(ptr);
+    const char *next_ptr = ecs_parse_whitespace(ptr);
     if (next_ptr[0] == ':' && next_ptr != ptr) {
         /* Whitespace between token and : is significant */
         ptr = next_ptr - 1;
     } else {
         ptr = next_ptr;
+    }
+
+    return ptr;
+}
+
+static
+const char* ecs_parse_identifier(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token_out)
+{
+    ptr = ecs_parse_token(name, expr, ptr, token_out);
+    if (!valid_identifier_start_char(token_out[0])) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "invalid start of identifier '%s'", ptr);
+        return NULL;
     }
 
     return ptr;
@@ -278,7 +353,7 @@ const char* parse_annotation(
 {
     char token[ECS_MAX_TOKEN_SIZE];
 
-    ptr = parse_token(name, sig, column, ptr, token);
+    ptr = ecs_parse_identifier(name, sig, ptr, token);
     if (!ptr) {
         return NULL;
     }
@@ -293,7 +368,7 @@ const char* parse_annotation(
         *inout_kind_out = EcsInOut;
     }
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
         ecs_parser_error(name, sig, column, "expected ]");
@@ -338,7 +413,7 @@ const char* parse_set_expr(
     char token_buf[ECS_MAX_TOKEN_SIZE] = {0};
     if (!token) {
         token = token_buf;
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -373,7 +448,7 @@ const char* parse_set_expr(
 
             /* Relationship (overrides IsA default) */
             if (!isdigit(ptr[0]) && valid_token_start_char(ptr[0])) {
-                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+                ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
                     return NULL;
                 }         
@@ -386,7 +461,7 @@ const char* parse_set_expr(
                 }
 
                 if (ptr[0] == TOK_AND) {
-                    ptr = skip_space(ptr + 1);
+                    ptr = ecs_parse_whitespace(ptr + 1);
                 } else if (ptr[0] != TOK_PAREN_CLOSE) {
                     ecs_parser_error(name, expr, column, 
                         "expected ',' or ')'");
@@ -409,7 +484,7 @@ const char* parse_set_expr(
                 }
 
                 if (ptr[0] == ',') {
-                    ptr = skip_space(ptr + 1);
+                    ptr = ecs_parse_whitespace(ptr + 1);
                 }
             }
 
@@ -434,7 +509,7 @@ const char* parse_set_expr(
                     ptr[0]);
                 return NULL;                
             } else {
-                ptr = skip_space(ptr + 1);
+                ptr = ecs_parse_whitespace(ptr + 1);
                 if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
@@ -447,7 +522,7 @@ const char* parse_set_expr(
         if (ptr[0] == TOK_BITWISE_OR) {
             ptr ++;
             if (valid_token_start_char(ptr[0])) {
-                ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+                ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
                     return NULL;
                 }
@@ -498,7 +573,7 @@ const char* parse_arguments(
                 return NULL;
             }
 
-            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+            ptr = ecs_parse_identifier(name, expr, ptr, token);
             if (!ptr) {
                 return NULL;
             }
@@ -512,7 +587,7 @@ const char* parse_arguments(
                     return NULL;
                 }
 
-                ptr = skip_space(ptr + 1);
+                ptr = ecs_parse_whitespace(ptr + 1);
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr,
                     NULL, &term->args[arg], TOK_PAREN_CLOSE);
                 if (!ptr) {
@@ -542,12 +617,12 @@ const char* parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
-                ptr = skip_space(ptr + 1);
+                ptr = ecs_parse_whitespace(ptr + 1);
 
                 term->role = ECS_PAIR;
 
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
-                ptr = skip_space(ptr + 1);
+                ptr = ecs_parse_whitespace(ptr + 1);
                 break;
 
             } else {
@@ -580,7 +655,7 @@ const char* parse_term(
     char token[ECS_MAX_TOKEN_SIZE] = {0};
     ecs_term_t term = { .move = true /* parser never owns resources */ };
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
 
     /* Inout specifiers always come first */
     if (ptr[0] == TOK_BRACKET_OPEN) {
@@ -588,18 +663,18 @@ const char* parse_term(
         if (!ptr) {
             return NULL;
         }
-        ptr = skip_space(ptr);
+        ptr = ecs_parse_whitespace(ptr);
     }
 
     if (valid_operator_char(ptr[0])) {
         term.oper = parse_operator(ptr[0]);
-        ptr = skip_space(ptr + 1);
+        ptr = ecs_parse_whitespace(ptr + 1);
     }
 
     /* If next token is the start of an identifier, it could be either a type
      * role, source or component identifier */
     if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -622,7 +697,7 @@ const char* parse_term(
     } else if (ptr[0] == TOK_SINGLETON) {
         ptr ++;
         if (valid_token_start_char(ptr[0])) {
-            ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+            ptr = ecs_parse_identifier(name, expr, ptr, token);
             if (!ptr) {
                 return NULL;
             }
@@ -652,11 +727,11 @@ parse_role:
         return NULL;
     }
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
 
     /* If next token is the source token, this is an empty source */
     if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -681,14 +756,14 @@ parse_predicate:
 
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
-        ptr = skip_space(ptr + 1);
+        ptr = ecs_parse_whitespace(ptr + 1);
         ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, NULL, 
             &term.pred, TOK_COLON);
         if (!ptr) {
             return NULL;
         }
 
-        ptr = skip_space(ptr);
+        ptr = ecs_parse_whitespace(ptr);
 
         if (ptr[0] == TOK_AND || !ptr[0]) {
             goto parse_done;
@@ -700,9 +775,9 @@ parse_predicate:
             return NULL;
         }
 
-        ptr = skip_space(ptr + 1);
+        ptr = ecs_parse_whitespace(ptr + 1);
     } else {
-        ptr = skip_space(ptr);
+        ptr = ecs_parse_whitespace(ptr);
     }
     
     if (ptr[0] == TOK_PAREN_OPEN) {
@@ -710,7 +785,7 @@ parse_predicate:
         if (ptr[0] == TOK_PAREN_CLOSE) {
             term.args[0].set.mask = EcsNothing;
             ptr ++;
-            ptr = skip_space(ptr);
+            ptr = ecs_parse_whitespace(ptr);
         } else {
             ptr = parse_arguments(
                 world, name, expr, (ptr - expr), ptr, token, &term);
@@ -723,7 +798,7 @@ parse_predicate:
     goto parse_done;
 
 parse_pair:
-    ptr = parse_token(name, expr, (ptr - expr), ptr + 1, token);
+    ptr = ecs_parse_identifier(name, expr, ptr + 1, token);
     if (!ptr) {
         return NULL;
     }
@@ -745,9 +820,9 @@ parse_pair_predicate:
         return NULL;            
     }
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
     if (valid_token_start_char(ptr[0])) {
-        ptr = parse_token(name, expr, (ptr - expr), ptr, token);
+        ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
             return NULL;
         }
@@ -774,7 +849,7 @@ parse_pair_object:
 
     term.role = ECS_PAIR;
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
     goto parse_done; 
 
 parse_singleton:
@@ -972,7 +1047,7 @@ char* ecs_parse_term(
         }
     }
 
-    ptr = skip_space(ptr);
+    ptr = ecs_parse_whitespace(ptr);
 
     return (char*)ptr;
 }

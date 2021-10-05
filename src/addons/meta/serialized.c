@@ -22,6 +22,7 @@ ecs_meta_type_op_t* ops_add(ecs_vector_t **ops, ecs_meta_type_op_kind_t kind) {
     op->count = 1;
     op->op_count = 1;
     op->name = NULL;
+    op->members = NULL;
     op->type = 0;
     return op;
 }
@@ -132,6 +133,13 @@ ecs_vector_t* serialize_struct(
     ecs_member_t *members = ecs_vector_first(ptr->members, ecs_member_t);
     int32_t i, count = ecs_vector_count(ptr->members);
 
+    ecs_hashmap_t *member_index = NULL;
+    if (count) {
+        member_index = ecs_os_malloc_t(ecs_hashmap_t);
+        *member_index = flecs_string_hashmap_new(int32_t);
+        op->members = member_index;
+    }
+
     for (i = 0; i < count; i ++) {
         ecs_member_t *member = &members[i];
 
@@ -146,9 +154,17 @@ ecs_vector_t* serialize_struct(
         if (op->count <= 1) {
             op->count = member->count;
         }
-
-        op->name = member->name;
+        
+        const char *member_name = member->name;
+        op->name = member_name;
         op->op_count = ecs_vector_count(ops) - cur;
+
+        ecs_size_t len = ecs_os_strlen(member_name);
+
+        ecs_hashed_string_t key = ecs_get_hashed_string(member_name, len, 0);
+        flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
+            *member_index, &key, int32_t);
+        *((int32_t*)hmr.value) = cur - first - 1;
     }
 
     ops_add(&ops, EcsOpPop);
@@ -209,7 +225,7 @@ void ecs_meta_type_serialized_init(
         EcsMetaTypeSerialized *ptr = ecs_get_mut(
             world, e, EcsMetaTypeSerialized, NULL);
         if (ptr->ops) {
-            ecs_vector_free(ptr->ops);
+            ecs_meta_dtor_serialized(ptr);
         }
 
         ptr->ops = ops;

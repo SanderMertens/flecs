@@ -13,6 +13,7 @@ typedef struct {
     ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
     ecs_entity_t last_object;
+    ecs_id_t last_assign_id;
     ecs_entity_t assign_to;
     ecs_entity_t scope[STACK_MAX_SIZE];
     ecs_entity_t with[STACK_MAX_SIZE];
@@ -94,6 +95,7 @@ int create_term(
     state->last_subject = 0;
     state->last_predicate = 0;
     state->last_object = 0;
+    state->last_assign_id = 0;
 
     if (!ecs_term_id_is_set(&term->pred)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
@@ -132,14 +134,14 @@ int create_term(
         pred = ecs_pair(EcsIsA, pred);
     }
 
-    state->isa_clause = false;
-
     if (subj) {
         if (!obj) {
             ecs_add_id(world, subj, pred);
+            state->last_assign_id = pred;
         } else {
             ecs_add_pair(world, subj, pred, obj);
             state->last_object = obj;
+            state->last_assign_id = ecs_pair(pred, obj);
         }
         state->last_predicate = pred;
         state->last_subject = subj;
@@ -183,54 +185,12 @@ int create_term(
         }
     }
 
+    if (state->isa_clause) {
+        state->last_assign_id = 0;
+        state->isa_clause = false;
+    }
+
     return 0;
-}
-
-static
-const char *plecs_skip_space(
-    const char *ptr)
-{
-    while ((*ptr != '\n') && isspace(*ptr)) {
-        ptr ++;
-    }
-
-    return ptr;
-}
-
-static
-bool is_newline_comment(
-    const char *ptr)
-{
-    if (ptr[0] == '/' && ptr[1] == '/') {
-        return true;
-    }
-    return false;
-}
-
-static 
-const char* skip_fluff(
-    const char *ptr) 
-{
-    do {
-        /* Skip whitespaces before checking for a comment */
-        ptr = plecs_skip_space(ptr);
-
-        /* Newline comment, skip until newline character */
-        if (is_newline_comment(ptr)) {
-            ptr += 2;
-            while (ptr[0] && ptr[0] != '\n') {
-                ptr ++;
-            }
-        }
-
-        /* If a newline character is found, skip it */
-        if (ptr[0] == TOK_NEWLINE) {
-            ptr ++;
-        }
-
-    } while (isspace(ptr[0]) || is_newline_comment(ptr));
-
-    return ptr;
 }
 
 static
@@ -250,7 +210,7 @@ const char* parse_stmt(
     do {
         stmt_parsed = false;
 
-        ptr = skip_fluff(ptr);
+        ptr = ecs_parse_fluff(ptr);
 
         if (ptr[0] == ':') {
             if (state->isa_clause) {
@@ -269,7 +229,7 @@ const char* parse_stmt(
             state->assign_to = state->last_subject;
             stmt_parsed = true;
 
-            ptr = skip_fluff(ptr + 1);
+            ptr = ecs_parse_fluff(ptr + 1);
         }
 
         if (ptr[0] == '=') {
@@ -279,30 +239,65 @@ const char* parse_stmt(
                 return NULL;
             }
 
-            if (state->assignment) {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "component assignments are not yet supported!");
+            ecs_id_t assign_id = state->last_assign_id;
+            if (state->assignment || assign_id) {
+                /* Component value assignment */
+#ifndef FLECS_EXPR
+                ecs_parser_error(
+                    "cannot parse component value, missing FLECS_EXPR addon");
                 return NULL;
+#endif
+                ecs_entity_t assign_to = state->assign_to;
+                if (!assign_to) {
+                    assign_to = state->last_subject;
+                }
+
+                if (!assign_to) {
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "missing entity to assign to");
+                    return NULL;
+                }
+
+                ecs_entity_t type = ecs_get_typeid(world, assign_id);
+                if (!type) {
+                    char *id_str = ecs_id_str(world, assign_id);
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "cannot assign to non-component id '%s'", id_str);
+                    ecs_os_free(id_str);
+                }
+
+                void *value_ptr = ecs_get_mut_id(
+                    world, assign_to, assign_id, NULL);
+
+                ptr = ecs_parse_expr(
+                    world, name, expr, ptr + 1, type, value_ptr);
+                if (!ptr) {
+                    return NULL;
+                }
+
+                ecs_modified_id(world, assign_to, assign_id);
+
+            } else {
+                /* Component scope (add components to entity) */
+                if (!state->last_subject) {
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "missing entity to assign to");
+                    return NULL;
+                }
+
+                state->assignment = true;
+                state->assign_to = state->last_subject;
+
+                ptr = ecs_parse_fluff(ptr + 1);
+                if (ptr[0] != '{') {
+                    ecs_parser_error(name, expr, ptr - expr, 
+                        "expected '{' after assignment");
+                    return NULL;
+                }
+
+                ptr = ecs_parse_fluff(ptr + 1);
+                stmt_parsed = true;
             }
-
-            if (!state->last_subject) {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "missing entity to assign to");
-                return NULL;
-            }
-
-            state->assignment = true;
-            state->assign_to = state->last_subject;
-
-            ptr = skip_fluff(ptr + 1);
-            if (ptr[0] != '{') {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "expected '{' after assignment");
-                return NULL;
-            }
-
-            ptr = skip_fluff(ptr + 1);
-            stmt_parsed = true;
         }
 
         if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
@@ -320,7 +315,7 @@ const char* parse_stmt(
 
             /* Add following expressions to with list */
             state->with_clause = true;
-            ptr = skip_fluff(ptr + 5);
+            ptr = ecs_parse_fluff(ptr + 5);
             stmt_parsed = true;
         }
 
@@ -394,7 +389,7 @@ const char* parse_stmt(
                 stmt_parsed = true;
             }
 
-            ptr = skip_fluff(ptr + 1);
+            ptr = ecs_parse_fluff(ptr + 1);
         }
 
     } while (stmt_parsed);

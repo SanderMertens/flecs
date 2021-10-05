@@ -4,19 +4,48 @@
 
 /* EcsMetaTypeSerialized lifecycle */
 
+void ecs_meta_dtor_serialized(
+    EcsMetaTypeSerialized *ptr) 
+{
+    int32_t i, count = ecs_vector_count(ptr->ops);
+    ecs_meta_type_op_t *ops = ecs_vector_first(ptr->ops, ecs_meta_type_op_t);
+    
+    for (i = 0; i < count; i ++) {
+        ecs_meta_type_op_t *op = &ops[i];
+        if (op->members) {
+            flecs_hashmap_free(*op->members);
+            ecs_os_free(op->members);
+        }
+    }
+
+    ecs_vector_free(ptr->ops); 
+}
+
 static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
-    ecs_vector_free(dst->ops);
+    ecs_meta_dtor_serialized(dst);
+
     dst->ops = ecs_vector_copy(src->ops, ecs_meta_type_op_t);
+
+    int32_t o, count = ecs_vector_count(src->ops);
+    ecs_meta_type_op_t *ops = ecs_vector_first(src->ops, ecs_meta_type_op_t);
+    
+    for (o = 0; o < count; o ++) {
+        ecs_meta_type_op_t *op = &ops[o];
+        if (op->members) {
+            op->members = ecs_os_memdup_t(op->members, ecs_hashmap_t);
+            *op->members = flecs_hashmap_copy(*op->members);
+        }
+    }
 })
 
 static ECS_MOVE(EcsMetaTypeSerialized, dst, src, {
-    ecs_vector_free(dst->ops);
+    ecs_meta_dtor_serialized(dst);
     dst->ops = src->ops;
     src->ops = NULL;
 })
 
 static ECS_DTOR(EcsMetaTypeSerialized, ptr, { 
-    ecs_vector_free(ptr->ops); 
+    ecs_meta_dtor_serialized(ptr);
 })
 
 
@@ -696,6 +725,10 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(EcsStruct)
     });
 
+    ecs_set_component_actions(world, EcsMember, { 
+        .ctor = ecs_default_ctor
+    });
+
     ecs_set_component_actions(world, EcsEnum, { 
         .ctor = ecs_default_ctor,
         .move = ecs_move(EcsEnum),
@@ -793,6 +826,15 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, entity, EcsEntity);
 
     #undef ECS_PRIMITIVE
+
+    /* Initialize reflection data for meta components */
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsMember),
+        .members = {
+            {"type", ecs_id(ecs_entity_t)},
+            {"count", ecs_id(ecs_i32_t)}
+        }
+    });
 }
 
 #endif

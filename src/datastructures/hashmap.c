@@ -51,6 +51,22 @@ void flecs_hashmap_free(
     ecs_map_free(map.impl);
 }
 
+ecs_hashmap_t flecs_hashmap_copy(
+    const ecs_hashmap_t src)
+{
+    ecs_hashmap_t result = src;
+    result.impl = ecs_map_copy(result.impl);
+
+    ecs_map_iter_t it = ecs_map_iter(result.impl);
+    ecs_hm_bucket_t *bucket;
+    while ((bucket = ecs_map_next(&it, ecs_hm_bucket_t, NULL))) {
+        bucket->keys = ecs_vector_copy_t(bucket->keys, result.key_size, 8);
+        bucket->values = ecs_vector_copy_t(bucket->values, result.value_size, 8);
+    }
+
+    return result;
+}
+
 void* _flecs_hashmap_get(
     const ecs_hashmap_t map,
     ecs_size_t key_size,

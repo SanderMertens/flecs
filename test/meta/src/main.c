@@ -220,7 +220,23 @@ void Cursor_set_uptr(void);
 void Cursor_set_float(void);
 void Cursor_set_double(void);
 void Cursor_set_string(void);
+void Cursor_set_string_literal(void);
+void Cursor_set_string_to_null(void);
 void Cursor_set_entity(void);
+void Cursor_set_entity_to_number(void);
+void Cursor_set_entity_to_0(void);
+void Cursor_set_str_to_bool(void);
+void Cursor_set_str_to_char(void);
+void Cursor_set_str_literal_to_char(void);
+void Cursor_set_str_to_i8(void);
+void Cursor_set_str_to_i16(void);
+void Cursor_set_str_to_i32(void);
+void Cursor_set_str_to_i64(void);
+void Cursor_set_str_to_f32(void);
+void Cursor_set_str_to_f64(void);
+void Cursor_set_str_to_entity(void);
+void Cursor_set_str_to_invalid_bool(void);
+void Cursor_set_str_to_invalid_entity(void);
 void Cursor_struct_set_i32(void);
 void Cursor_struct_set_i32_i32(void);
 void Cursor_struct_set_i32_i32_i32(void);
@@ -239,6 +255,45 @@ void Cursor_struct_set_array_w_struct_i32(void);
 void Cursor_struct_set_2_array_w_struct_i32(void);
 void Cursor_struct_set_array_w_struct_w_array_i32(void);
 void Cursor_struct_set_2_array_w_struct_w_array_i32(void);
+void Cursor_struct_member_i32(void);
+void Cursor_struct_member_i32_i32(void);
+void Cursor_struct_member_i32_i32_reverse(void);
+void Cursor_struct_member_nested_i32_i32(void);
+void Cursor_struct_member_2_nested_i32_i32(void);
+void Cursor_struct_member_2_nested_i32_i32_reverse(void);
+
+// Testsuite 'Expr'
+void Expr_bool(void);
+void Expr_byte(void);
+void Expr_char(void);
+void Expr_char_literal(void);
+void Expr_i8(void);
+void Expr_i16(void);
+void Expr_i32(void);
+void Expr_i64(void);
+void Expr_iptr(void);
+void Expr_u8(void);
+void Expr_u16(void);
+void Expr_u32(void);
+void Expr_u64(void);
+void Expr_uptr(void);
+void Expr_float(void);
+void Expr_double(void);
+void Expr_negative_int(void);
+void Expr_negative_float(void);
+void Expr_string(void);
+void Expr_struct_i32(void);
+void Expr_struct_i32_i32(void);
+void Expr_struct_entity(void);
+void Expr_struct_nested_i32(void);
+void Expr_struct_nested_i32_i32(void);
+void Expr_struct_2_nested_i32_i32(void);
+void Expr_struct_member_i32(void);
+void Expr_struct_member_i32_i32(void);
+void Expr_struct_member_nested_i32(void);
+void Expr_struct_member_nested_i32_i32(void);
+void Expr_struct_member_2_nested_i32_i32(void);
+void Expr_struct_member_2_nested_i32_i32_reverse(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1046,8 +1101,72 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_string
     },
     {
+        "set_string_literal",
+        Cursor_set_string_literal
+    },
+    {
+        "set_string_to_null",
+        Cursor_set_string_to_null
+    },
+    {
         "set_entity",
         Cursor_set_entity
+    },
+    {
+        "set_entity_to_number",
+        Cursor_set_entity_to_number
+    },
+    {
+        "set_entity_to_0",
+        Cursor_set_entity_to_0
+    },
+    {
+        "set_str_to_bool",
+        Cursor_set_str_to_bool
+    },
+    {
+        "set_str_to_char",
+        Cursor_set_str_to_char
+    },
+    {
+        "set_str_literal_to_char",
+        Cursor_set_str_literal_to_char
+    },
+    {
+        "set_str_to_i8",
+        Cursor_set_str_to_i8
+    },
+    {
+        "set_str_to_i16",
+        Cursor_set_str_to_i16
+    },
+    {
+        "set_str_to_i32",
+        Cursor_set_str_to_i32
+    },
+    {
+        "set_str_to_i64",
+        Cursor_set_str_to_i64
+    },
+    {
+        "set_str_to_f32",
+        Cursor_set_str_to_f32
+    },
+    {
+        "set_str_to_f64",
+        Cursor_set_str_to_f64
+    },
+    {
+        "set_str_to_entity",
+        Cursor_set_str_to_entity
+    },
+    {
+        "set_str_to_invalid_bool",
+        Cursor_set_str_to_invalid_bool
+    },
+    {
+        "set_str_to_invalid_entity",
+        Cursor_set_str_to_invalid_entity
     },
     {
         "struct_set_i32",
@@ -1120,6 +1239,157 @@ bake_test_case Cursor_testcases[] = {
     {
         "struct_set_2_array_w_struct_w_array_i32",
         Cursor_struct_set_2_array_w_struct_w_array_i32
+    },
+    {
+        "struct_member_i32",
+        Cursor_struct_member_i32
+    },
+    {
+        "struct_member_i32_i32",
+        Cursor_struct_member_i32_i32
+    },
+    {
+        "struct_member_i32_i32_reverse",
+        Cursor_struct_member_i32_i32_reverse
+    },
+    {
+        "struct_member_nested_i32_i32",
+        Cursor_struct_member_nested_i32_i32
+    },
+    {
+        "struct_member_2_nested_i32_i32",
+        Cursor_struct_member_2_nested_i32_i32
+    },
+    {
+        "struct_member_2_nested_i32_i32_reverse",
+        Cursor_struct_member_2_nested_i32_i32_reverse
+    }
+};
+
+bake_test_case Expr_testcases[] = {
+    {
+        "bool",
+        Expr_bool
+    },
+    {
+        "byte",
+        Expr_byte
+    },
+    {
+        "char",
+        Expr_char
+    },
+    {
+        "char_literal",
+        Expr_char_literal
+    },
+    {
+        "i8",
+        Expr_i8
+    },
+    {
+        "i16",
+        Expr_i16
+    },
+    {
+        "i32",
+        Expr_i32
+    },
+    {
+        "i64",
+        Expr_i64
+    },
+    {
+        "iptr",
+        Expr_iptr
+    },
+    {
+        "u8",
+        Expr_u8
+    },
+    {
+        "u16",
+        Expr_u16
+    },
+    {
+        "u32",
+        Expr_u32
+    },
+    {
+        "u64",
+        Expr_u64
+    },
+    {
+        "uptr",
+        Expr_uptr
+    },
+    {
+        "float",
+        Expr_float
+    },
+    {
+        "double",
+        Expr_double
+    },
+    {
+        "negative_int",
+        Expr_negative_int
+    },
+    {
+        "negative_float",
+        Expr_negative_float
+    },
+    {
+        "string",
+        Expr_string
+    },
+    {
+        "struct_i32",
+        Expr_struct_i32
+    },
+    {
+        "struct_i32_i32",
+        Expr_struct_i32_i32
+    },
+    {
+        "struct_entity",
+        Expr_struct_entity
+    },
+    {
+        "struct_nested_i32",
+        Expr_struct_nested_i32
+    },
+    {
+        "struct_nested_i32_i32",
+        Expr_struct_nested_i32_i32
+    },
+    {
+        "struct_2_nested_i32_i32",
+        Expr_struct_2_nested_i32_i32
+    },
+    {
+        "struct_member_i32",
+        Expr_struct_member_i32
+    },
+    {
+        "struct_member_i32_i32",
+        Expr_struct_member_i32_i32
+    },
+    {
+        "struct_member_nested_i32",
+        Expr_struct_member_nested_i32
+    },
+    {
+        "struct_member_nested_i32_i32",
+        Expr_struct_member_nested_i32_i32
+    },
+    {
+        "struct_member_2_nested_i32_i32",
+        Expr_struct_member_2_nested_i32_i32
+    },
+    {
+        "struct_member_2_nested_i32_i32_reverse",
+        Expr_struct_member_2_nested_i32_i32_reverse
     }
 };
 
@@ -1184,12 +1454,19 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        35,
+        57,
         Cursor_testcases
+    },
+    {
+        "Expr",
+        NULL,
+        NULL,
+        31,
+        Expr_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 9);
+    return bake_test_run("meta", argc, argv, suites, 10);
 }

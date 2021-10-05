@@ -59,6 +59,7 @@
 #endif
 
 #include "../addons/module.h"
+#include "../private/hashmap.h"
 
 #ifndef FLECS_META_H
 #define FLECS_META_H
@@ -263,15 +264,16 @@ typedef enum ecs_meta_type_op_kind_t {
 
 typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
-    ecs_size_t offset;    /* Offset of current field */
+    ecs_size_t offset;      /* Offset of current field */
     int32_t count;        
-    int32_t op_count;     /* Number of operations until next field or end */
-    const char *name;     /* Name of value (only used for struct members) */
+    int32_t op_count;       /* Number of operations until next field or end */
+    const char *name;       /* Name of value (only used for struct members) */
     ecs_entity_t type;
+    ecs_hashmap_t *members; /* string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
 typedef struct EcsMetaTypeSerialized {
-    ecs_vector_t* ops;    /* vector<ecs_meta_type_op_t> */
+    ecs_vector_t* ops;     /* vector<ecs_meta_type_op_t> */
 } EcsMetaTypeSerialized;
 
 
@@ -298,6 +300,7 @@ typedef struct ecs_meta_cursor_t {
     const ecs_world_t *world;
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
+    bool valid;
 } ecs_meta_cursor_t;
 
 FLECS_API
@@ -376,6 +379,12 @@ int ecs_meta_set_float(
 /** Set field with string value */
 FLECS_API
 int ecs_meta_set_string(
+    ecs_meta_cursor_t *cursor,
+    const char *value);
+
+/** Set field with string literal value (has enclosing "") */
+FLECS_API
+int ecs_meta_set_string_literal(
     ecs_meta_cursor_t *cursor,
     const char *value);
 

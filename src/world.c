@@ -386,8 +386,8 @@ ecs_world_t *ecs_mini(void) {
     world->observers = flecs_sparse_new(ecs_observer_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
 
-    world->aliases = flecs_string_hashmap_new();
-    world->symbols = flecs_string_hashmap_new();
+    world->aliases = flecs_string_hashmap_new(ecs_entity_t);
+    world->symbols = flecs_string_hashmap_new(ecs_entity_t);
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
 
     world->stats.time_scale = 1.0;

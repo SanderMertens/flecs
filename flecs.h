@@ -48,6 +48,7 @@
 #define FLECS_PIPELINE      /* Pipeline support */
 #define FLECS_TIMER         /* Timer support */
 #define FLECS_META          /* Reflection support */
+#define FLECS_EXPR          /* Parsing strings to/from component values */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -7051,6 +7052,134 @@ void FlecsTimerImport(
 #define FLECS_MODULE
 #endif
 
+/**
+ * @file hashmap.h
+ * @brief Hashmap datastructure.
+ *
+ * Datastructure that computes a hash to store & retrieve values. Similar to
+ * ecs_map_t, but allows for arbitrary keytypes.
+ */
+
+#ifndef FLECS_HASHMAP_H
+#define FLECS_HASHMAP_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct {
+    ecs_hash_value_action_t hash;
+    ecs_compare_action_t compare;
+    ecs_size_t key_size;
+    ecs_size_t value_size;
+    ecs_map_t *impl;
+} ecs_hashmap_t;
+
+typedef struct {
+    ecs_map_iter_t it;
+    struct ecs_hm_bucket_t *bucket;
+    int32_t index;
+} flecs_hashmap_iter_t;
+
+typedef struct {
+    void *key;
+    void *value;
+    uint64_t hash;
+} flecs_hashmap_result_t;
+
+FLECS_DBG_API
+ecs_hashmap_t _flecs_hashmap_new(
+    ecs_size_t key_size,
+    ecs_size_t value_size,
+    ecs_hash_value_action_t hash,
+    ecs_compare_action_t compare);
+
+#define flecs_hashmap_new(K, V, compare, hash)\
+    _flecs_hashmap_new(ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
+
+FLECS_DBG_API
+void flecs_hashmap_free(
+    ecs_hashmap_t map);
+
+FLECS_DBG_API
+void* _flecs_hashmap_get(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_get(map, key, V)\
+    (V*)_flecs_hashmap_get(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+flecs_hashmap_result_t _flecs_hashmap_ensure(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_ensure(map, key, V)\
+    _flecs_hashmap_ensure(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _flecs_hashmap_set(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    void *key,
+    ecs_size_t value_size,
+    const void *value);
+
+#define flecs_hashmap_set(map, key, value)\
+    _flecs_hashmap_set(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
+
+FLECS_DBG_API
+void _flecs_hashmap_remove(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_remove(map, key, V)\
+    _flecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _flecs_hashmap_remove_w_hash(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size,
+    uint64_t hash);
+
+#define flecs_hashmap_remove_w_hash(map, key, V, hash)\
+    _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
+
+FLECS_DBG_API
+ecs_hashmap_t flecs_hashmap_copy(
+    const ecs_hashmap_t src);
+
+FLECS_DBG_API
+flecs_hashmap_iter_t flecs_hashmap_iter(
+    ecs_hashmap_t map);
+
+FLECS_DBG_API
+void* _flecs_hashmap_next(
+    flecs_hashmap_iter_t *it,
+    ecs_size_t key_size,
+    void *key_out,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_next(map, V)\
+    (V*)_flecs_hashmap_next(map, 0, NULL, ECS_SIZEOF(V))
+
+#define flecs_hashmap_next_w_key(map, K, key, V)\
+    (V*)_flecs_hashmap_next(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 
 #ifndef FLECS_META_H
 #define FLECS_META_H
@@ -7255,15 +7384,16 @@ typedef enum ecs_meta_type_op_kind_t {
 
 typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
-    ecs_size_t offset;    /* Offset of current field */
+    ecs_size_t offset;      /* Offset of current field */
     int32_t count;        
-    int32_t op_count;     /* Number of operations until next field or end */
-    const char *name;     /* Name of value (only used for struct members) */
+    int32_t op_count;       /* Number of operations until next field or end */
+    const char *name;       /* Name of value (only used for struct members) */
     ecs_entity_t type;
+    ecs_hashmap_t *members; /* string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
 typedef struct EcsMetaTypeSerialized {
-    ecs_vector_t* ops;    /* vector<ecs_meta_type_op_t> */
+    ecs_vector_t* ops;     /* vector<ecs_meta_type_op_t> */
 } EcsMetaTypeSerialized;
 
 
@@ -7290,6 +7420,7 @@ typedef struct ecs_meta_cursor_t {
     const ecs_world_t *world;
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
+    bool valid;
 } ecs_meta_cursor_t;
 
 FLECS_API
@@ -7368,6 +7499,12 @@ int ecs_meta_set_float(
 /** Set field with string value */
 FLECS_API
 int ecs_meta_set_string(
+    ecs_meta_cursor_t *cursor,
+    const char *value);
+
+/** Set field with string literal value (has enclosing "") */
+FLECS_API
+int ecs_meta_set_string_literal(
     ecs_meta_cursor_t *cursor,
     const char *value);
 
@@ -7462,6 +7599,40 @@ void FlecsMetaImport(
     ecs_world_t *world);
 
 #define FlecsMetaImportHandles(handles)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_META
+/**
+ * @file expr.h
+ * @brief Expression parser addon.
+ *
+ * Simple API for parsing string expressions into (component) values.
+ */
+
+#ifdef FLECS_EXPR
+
+#ifndef FLECS_EXPR_H
+#define FLECS_EXPR_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+const char* ecs_parse_expr(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    ecs_entity_t type,
+    void *data_out);
 
 #ifdef __cplusplus
 }
@@ -7572,6 +7743,44 @@ int ecs_plecs_from_file(
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define ECS_MAX_TOKEN_SIZE (256)
+
+/** Skip whitespace characters.
+ * This function skips whitespace characters. Does not skip newlines.
+ * 
+ * @param expr pointer to (potential) whitespaces to skip.
+ * @return pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_whitespace(
+    const char *ptr);
+
+/** Skip whitespaces and comments.
+ * This function skips whitespace characters and comments (single line, //).
+ * 
+ * @param expr pointer to (potential) whitespaces/comments to skip.
+ * @return pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_fluff(
+    const char *ptr);
+
+/** Parse a single token.
+ * This function can be used as simple tokenizer by other parsers.
+ * 
+ * @param name of program (used for logging).
+ * @param expr pointer to token to parse.
+ * @param ptr pointer to first character to parse.
+ * @param token_out Parsed token (buffer should be ECS_MAX_TOKEN_SIZE large)
+ * @return Pointer to the next token, or NULL if error occurred.
+ */
+FLECS_API
+const char* ecs_parse_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token_out);
 
 /** Parse term in expression.
  * This operation parses a single term in an expression and returns a pointer
