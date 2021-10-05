@@ -87,7 +87,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_iter_t *iter,
     ecs_iter_next_action_t next)
 {
-    ecs_snapshot_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_snapshot_t));
+    ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     result->world = (ecs_world_t*)world;
@@ -114,6 +114,11 @@ ecs_snapshot_t* snapshot_create(
         result->entity_index = NULL;
     }
 
+    int32_t table_count = flecs_sparse_count(world->store.tables);
+    result->tables = ecs_vector_new(ecs_table_leaf_t, table_count);
+    ecs_table_leaf_t *arr = ecs_vector_first(result->tables, ecs_table_leaf_t);
+    ecs_os_memset_n(arr, 0, ecs_table_leaf_t, table_count);
+
     /* Iterate tables in iterator */
     while (next(iter)) {
         ecs_table_t *t = iter->table;
@@ -126,7 +131,10 @@ ecs_snapshot_t* snapshot_create(
             continue;
         }
 
-        ecs_table_leaf_t *l = ecs_vector_add(&result->tables, ecs_table_leaf_t);
+        ecs_table_leaf_t *l = ecs_vector_get(
+            result->tables, ecs_table_leaf_t, t->id);
+        ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
+        
         l->table = t;
         l->type = t->type;
         l->data = duplicate_data(world, t, &t->storage);
@@ -191,6 +199,9 @@ void ecs_snapshot_restore(
     ecs_table_leaf_t *leafs = ecs_vector_first(snapshot->tables, ecs_table_leaf_t);
     int32_t l = 0, count = ecs_vector_count(snapshot->tables);
     int32_t t, table_count = flecs_sparse_count(world->store.tables);
+
+
+
 
     for (t = 0; t < table_count; t ++) {
         ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, t);

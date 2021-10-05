@@ -455,7 +455,12 @@
                 "assignment_w_invalid_scope",
                 "inherit_w_colon",
                 "inherit_w_colon_w_scope",
-                "inherit_w_colon_w_assign"
+                "inherit_w_colon_w_assign",
+                "assign_component_value",
+                "assign_2_component_values",
+                "assign_component_value_in_assign_scope",
+                "assign_2_component_values_in_assign_scope",
+                "type_and_assign_in_plecs"
             ]            
         }, {
             "id": "GlobalComponentIds",

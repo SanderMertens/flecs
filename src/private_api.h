@@ -735,7 +735,15 @@ uint64_t flecs_string_hash(
     const void *ptr);
 
 ecs_hashmap_t flecs_table_hashmap_new(void);
-ecs_hashmap_t flecs_string_hashmap_new(void);
+ecs_hashmap_t _flecs_string_hashmap_new(ecs_size_t size);
+
+#define flecs_string_hashmap_new(T)\
+    _flecs_string_hashmap_new(ECS_SIZEOF(T))
+
+ecs_hashed_string_t ecs_get_hashed_string(
+    const char *name,
+    ecs_size_t length,
+    uint64_t hash);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

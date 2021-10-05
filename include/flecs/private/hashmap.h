@@ -102,6 +102,10 @@ void _flecs_hashmap_remove_w_hash(
     _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
 
 FLECS_DBG_API
+ecs_hashmap_t flecs_hashmap_copy(
+    const ecs_hashmap_t src);
+
+FLECS_DBG_API
 flecs_hashmap_iter_t flecs_hashmap_iter(
     ecs_hashmap_t map);
 

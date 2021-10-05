@@ -11,7 +11,17 @@ ecs_meta_scope_t* get_scope(
     return &cursor->scope[cursor->depth];
 }
 
-/* Get current scope */
+/* Get previous scope */
+static
+ecs_meta_scope_t* get_prev_scope(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_assert(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(cursor->depth > 0, ECS_INVALID_PARAMETER, NULL);
+    return &cursor->scope[cursor->depth - 1];
+}
+
+/* Get current operation for scope */
 static
 ecs_meta_type_op_t* get_op(
     ecs_meta_scope_t *scope)
@@ -83,7 +93,7 @@ ecs_meta_type_op_t* get_ptr(
 }
 
 static
-void push_type(
+int push_type(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope,
     ecs_entity_t type,
@@ -91,7 +101,12 @@ void push_type(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
-    ecs_assert(ser != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (ser == NULL) {
+        char *str = ecs_id_str(world, type);
+        ecs_err("cannot open scope for entity '%s' which is not a type", str);
+        ecs_os_free(str);
+        return -1;
+    }
 
     scope[0] = (ecs_meta_scope_t) {
         .type = type,
@@ -99,6 +114,8 @@ void push_type(
         .op_count = ecs_vector_count(ser->ops),
         .ptr = ptr
     };
+
+    return 0;
 }
 
 ecs_meta_cursor_t ecs_meta_cursor(
@@ -111,10 +128,13 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_cursor_t result = {
-        .world = world
+        .world = world,
+        .valid = true
     };
 
-    push_type(world, result.scope, type, ptr);
+    if (push_type(world, result.scope, type, ptr) != 0) {
+        result.valid = false;
+    }
 
     return result;
 }
@@ -147,6 +167,42 @@ int ecs_meta_next(
         ecs_err("out of bounds");
         return -1;
     }
+
+    return 0;
+}
+
+int ecs_meta_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    if (cursor->depth == 0) {
+        ecs_err("cannot move to member in root scope");
+        return -1;
+    }
+
+    ecs_meta_scope_t *prev_scope = get_prev_scope(cursor);
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *push_op = get_op(prev_scope);
+    const ecs_world_t *world = cursor->world;
+
+    ecs_assert(push_op->kind == EcsOpPush, ECS_INTERNAL_ERROR, NULL);
+    
+    if (!push_op->members) {
+        ecs_err("cannot move to member '%s' for non-struct type", name);
+        return -1;
+    }
+
+    ecs_hashed_string_t key = ecs_get_hashed_string(
+        name, ecs_os_strlen(name), 0);
+    int32_t *cur = flecs_hashmap_get(*push_op->members, &key, int32_t);
+    if (!cur) {
+        char *path = ecs_get_fullpath(world, scope->type);
+        ecs_err("unknown member '%s' for type '%s'", name, path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    scope->op_cur = *cur;
 
     return 0;
 }
@@ -197,12 +253,16 @@ int ecs_meta_push(
         break;
 
     case EcsOpArray:
-        push_type(world, next_scope, op->type, ptr);
+        if (push_type(world, next_scope, op->type, ptr) != 0) {
+            return -1;
+        }
         break;
 
     case EcsOpVector:
         next_scope->vector = ptr;
-        push_type(world, next_scope, op->type, NULL);
+        if (push_type(world, next_scope, op->type, NULL) != 0) {
+            return -1;
+        }
         break;
 
     default: {
@@ -350,6 +410,9 @@ int ecs_meta_set_uint(
     cases_T_bool(ptr, value);
     cases_T_unsigned(ptr, value);
     cases_T_float(ptr, value);
+    case EcsOpEntity:
+        set_T(ecs_entity_t, ptr, value);
+        break;
     default:
         ecs_err("unsupported conversion from uint");
         return -1;
@@ -388,13 +451,97 @@ int ecs_meta_set_string(
     void *ptr = get_ptr(cursor->world, scope);
 
     switch(op->kind) {
-    case EcsOpString:
-        ecs_os_free(*(char**)ptr);
-        *(char**)ptr = ecs_os_strdup(value);
+    case EcsOpBool:
+        if (!ecs_os_strcmp(value, "true")) {
+            set_T(ecs_bool_t, ptr, true);
+        } else if (!ecs_os_strcmp(value, "false")) {
+            set_T(ecs_bool_t, ptr, false);
+        } else {
+            ecs_err("invalid value for boolean '%s'", value);
+            return -1;
+        }
         break;
+    case EcsOpI8:
+    case EcsOpU8:
+    case EcsOpChar:
+    case EcsOpByte:
+        set_T(ecs_i8_t, ptr, atol(value));
+        break;
+    case EcsOpI16:
+    case EcsOpU16:
+        set_T(ecs_i16_t, ptr, atol(value));
+        break;
+    case EcsOpI32:
+    case EcsOpU32:
+        set_T(ecs_i32_t, ptr, atol(value));
+        break;
+    case EcsOpI64:
+    case EcsOpU64:
+        set_T(ecs_i64_t, ptr, atol(value));
+        break;
+    case EcsOpIPtr:
+    case EcsOpUPtr:
+        set_T(ecs_iptr_t, ptr, atol(value));
+        break;
+    case EcsOpF32:
+        set_T(ecs_f32_t, ptr, atof(value));
+        break;
+    case EcsOpF64:
+        set_T(ecs_f64_t, ptr, atof(value));
+        break;
+    case EcsOpString: {
+        ecs_os_free(*(char**)ptr);
+        char *result = ecs_os_strdup(value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
+    case EcsOpEntity: {
+        ecs_entity_t e = ecs_lookup_path(cursor->world, 0, value);
+        if (!e) {
+            ecs_err("unresolved entity identifier '%s'", value);
+            return -1;
+        }
+        set_T(ecs_entity_t, ptr, e);
+        break;
+    }
     default:
         ecs_err("unsupported conversion from string");
         return -1;
+    }
+
+    return 0;
+}
+
+int ecs_meta_set_string_literal(
+    ecs_meta_cursor_t *cursor,
+    const char *value)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    void *ptr = get_ptr(cursor->world, scope);
+
+    ecs_size_t len = ecs_os_strlen(value);
+    if (value[0] != '\"' || value[len - 1] != '\"') {
+        ecs_err("invalid string literal '%s'", value);
+        return -1;
+    }
+
+    switch(op->kind) {
+    case EcsOpChar:
+        set_T(ecs_char_t, ptr, value[1]);
+        break;
+    case EcsOpString:
+        len -= 2;
+
+        ecs_os_free(*(char**)ptr);
+        char *result = ecs_os_malloc(len + 1);
+        ecs_os_memcpy(result, value + 1, len);
+        result[len] = '\0';
+
+        set_T(ecs_string_t, ptr, result);    
+        break;
+    default:
+        return ecs_meta_set_string(cursor, value + 1);
     }
 
     return 0;
@@ -411,6 +558,25 @@ int ecs_meta_set_entity(
     switch(op->kind) {
     case EcsOpEntity:
         set_T(ecs_entity_t, ptr, value);
+        break;
+    default:
+        ecs_err("unsupported conversion from entity");
+        return -1;
+    }
+
+    return 0;
+}
+
+int ecs_meta_set_null(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    void *ptr = get_ptr(cursor->world, scope);
+    switch (op->kind) {
+    case EcsOpString:
+        ecs_os_free(*(char**)ptr);
+        set_T(ecs_string_t, ptr, NULL);
         break;
     default:
         ecs_err("unsupported conversion from entity");
