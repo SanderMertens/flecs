@@ -243,10 +243,10 @@ const char* parse_stmt(
             if (state->assignment || assign_id) {
                 /* Component value assignment */
 #ifndef FLECS_EXPR
-                ecs_parser_error(
+                ecs_parser_error(name, expr, ptr - expr,
                     "cannot parse component value, missing FLECS_EXPR addon");
                 return NULL;
-#endif
+#else
                 ecs_entity_t assign_to = state->assign_to;
                 if (!assign_to) {
                     assign_to = state->last_subject;
@@ -276,7 +276,7 @@ const char* parse_stmt(
                 }
 
                 ecs_modified_id(world, assign_to, assign_id);
-
+#endif
             } else {
                 /* Component scope (add components to entity) */
                 if (!state->last_subject) {

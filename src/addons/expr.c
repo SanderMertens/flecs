@@ -1,9 +1,7 @@
 
-#include "flecs.h"
+#include "../private_api.h"
 
 #ifdef FLECS_EXPR
-
-#include "../private_api.h"
 
 const char* ecs_parse_expr(
     const ecs_world_t *world,

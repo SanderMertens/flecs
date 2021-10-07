@@ -3513,7 +3513,7 @@ void* ecs_record_get_column(
 #ifdef FLECS_META
 #include "flecs/addons/meta.h"
 #endif
-#ifdef FLECS_META
+#ifdef FLECS_EXPR
 #include "flecs/addons/expr.h"
 #endif
 #ifdef FLECS_MODULE

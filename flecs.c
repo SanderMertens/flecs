@@ -14200,10 +14200,10 @@ const char* parse_stmt(
             if (state->assignment || assign_id) {
                 /* Component value assignment */
 #ifndef FLECS_EXPR
-                ecs_parser_error(
+                ecs_parser_error(name, expr, ptr - expr,
                     "cannot parse component value, missing FLECS_EXPR addon");
                 return NULL;
-#endif
+#else
                 ecs_entity_t assign_to = state->assign_to;
                 if (!assign_to) {
                     assign_to = state->last_subject;
@@ -14233,7 +14233,7 @@ const char* parse_stmt(
                 }
 
                 ecs_modified_id(world, assign_to, assign_id);
-
+#endif
             } else {
                 /* Component scope (add components to entity) */
                 if (!state->last_subject) {
@@ -18739,11 +18739,15 @@ ecs_entity_t ecs_module_init(
 #define FLECS_META_PRIVATE_H
 
 
+#ifdef FLECS_META
+
 void ecs_meta_type_serialized_init(
     ecs_iter_t *it);
 
 void ecs_meta_dtor_serialized(
     EcsMetaTypeSerialized *ptr);
+
+#endif
     
 #endif
 
@@ -23021,7 +23025,6 @@ char* ecs_parse_term(
 
 
 #ifdef FLECS_EXPR
-
 
 const char* ecs_parse_expr(
     const ecs_world_t *world,
