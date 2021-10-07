@@ -12,6 +12,7 @@ flecs_deps = dependency('threads')
 
 flecs_src = files(
     'src/addons/deprecated.c',
+    'src/addons/expr.c',
     'src/addons/module.c',
     'src/addons/parser.c',
     'src/addons/plecs.c',
