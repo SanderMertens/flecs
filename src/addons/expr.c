@@ -1,7 +1,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_PARSER
+#ifdef FLECS_EXPR
 
 #include "../private_api.h"
 

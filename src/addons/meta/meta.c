@@ -241,6 +241,7 @@ int add_member_to_struct(
         ecs_member_t *elem = ecs_vector_add(&s->members, ecs_member_t);
         elem->member = member;
         elem->type = m->type;
+        elem->name = NULL;
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vector_first(s->members, ecs_member_t);
@@ -275,7 +276,7 @@ int add_member_to_struct(
 
         /* Only assign name if this is the new member */
         if (elem->member == member) {
-            elem->name = ecs_os_strdup(ecs_get_name(world, member));
+            ecs_os_strset(&elem->name, ecs_get_name(world, member));
 
             elem->count = m->count;
             if (!elem->count) {
@@ -831,8 +832,8 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsMember),
         .members = {
-            {"type", ecs_id(ecs_entity_t)},
-            {"count", ecs_id(ecs_i32_t)}
+            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)}
         }
     });
 }
