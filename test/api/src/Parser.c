@@ -3712,3 +3712,30 @@ void Parser_2_trailing_spaces() {
 
     ecs_fini(world);
 }
+
+void Parser_template_type() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Pred = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Template<int>"
+    });
+    test_assert(Pred != 0);
+    test_str(ecs_get_name(world, Pred), "Template<int>");
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Template<int>"
+    }));
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
