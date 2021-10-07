@@ -355,6 +355,7 @@ void Parser_trailing_newline(void);
 void Parser_2_trailing_newlines(void);
 void Parser_trailing_space(void);
 void Parser_2_trailing_spaces(void);
+void Parser_template_type(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -3452,6 +3453,10 @@ bake_test_case Parser_testcases[] = {
     {
         "2_trailing_spaces",
         Parser_2_trailing_spaces
+    },
+    {
+        "template_type",
+        Parser_template_type
     }
 };
 
@@ -10208,7 +10213,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        143,
+        144,
         Parser_testcases
     },
     {

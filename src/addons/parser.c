@@ -231,8 +231,7 @@ const char* ecs_parse_token(
             tmpl_nesting --;
         } else if (ch == '"') {
             in_str = !in_str;
-        }
-
+        } else
         if (!valid_token_char(ch) && !in_str) {
             break;
         }

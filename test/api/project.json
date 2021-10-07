@@ -377,7 +377,8 @@
                 "trailing_newline",
                 "2_trailing_newlines",
                 "trailing_space",
-                "2_trailing_spaces"
+                "2_trailing_spaces",
+                "template_type"
             ]
         }, {
             "id": "Plecs",
