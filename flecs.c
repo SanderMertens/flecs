@@ -22232,12 +22232,13 @@ const char* ecs_parse_identifier(
     const char *ptr,
     char *token_out)
 {
-    ptr = ecs_parse_token(name, expr, ptr, token_out);
-    if (!valid_identifier_start_char(token_out[0])) {
+    if (!valid_identifier_start_char(ptr[0])) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid start of identifier '%s'", ptr);
         return NULL;
     }
+
+    ptr = ecs_parse_token(name, expr, ptr, token_out);
 
     return ptr;
 }
