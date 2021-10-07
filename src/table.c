@@ -1963,6 +1963,8 @@ void flecs_table_replace_data(
     } else if (prev_count && !count) {
         table_activate(world, table, false);
     }
+
+    table->alloc_count ++;
 }
 
 int32_t* flecs_table_get_dirty_state(
