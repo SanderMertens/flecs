@@ -802,3 +802,7 @@ void DeserializeFromExpr_struct_struct_i32_i32_array_3() {
 
     ecs_fini(world);
 }
+
+void DeserializeFromExpr_entity() {
+    // Implement testcase
+}

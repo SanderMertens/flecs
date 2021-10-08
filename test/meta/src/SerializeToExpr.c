@@ -719,3 +719,7 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
 
     ecs_fini(world);
 }
+
+void SerializeToExpr_entity() {
+    // Implement testcase
+}
