@@ -33194,7 +33194,10 @@ void* ecs_iter_column_w_size(
     ecs_assert(!size || (ecs_size_t)size == column->size, 
         ECS_INVALID_PARAMETER, NULL);
 
-    return ecs_vector_first_t(column->data, column->size, column->alignment);
+    void *ptr = ecs_vector_first_t(
+        column->data, column->size, column->alignment);
+
+    return ECS_OFFSET(ptr, column->size * it->offset);
 }
 
 size_t ecs_iter_column_size(

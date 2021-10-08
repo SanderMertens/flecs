@@ -518,6 +518,9 @@ void Observer_2_terms_un_set(void);
 void Observer_observer_w_self(void);
 void Observer_10_terms(void);
 void Observer_20_terms(void);
+void Observer_2_entities_iter(void);
+void Observer_2_entities_table_column(void);
+void Observer_2_entities_each(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2695,6 +2698,18 @@ bake_test_case Observer_testcases[] = {
     {
         "20_terms",
         Observer_20_terms
+    },
+    {
+        "2_entities_iter",
+        Observer_2_entities_iter
+    },
+    {
+        "2_entities_table_column",
+        Observer_2_entities_table_column
+    },
+    {
+        "2_entities_each",
+        Observer_2_entities_each
     }
 };
 
@@ -3506,7 +3521,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        7,
+        10,
         Observer_testcases
     },
     {

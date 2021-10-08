@@ -226,3 +226,114 @@ void Observer_20_terms() {
 
     test_int(count, 1);
 }
+
+void Observer_2_entities_iter() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+    auto e2 = ecs.entity();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer<const Position>()
+        .event(flecs::OnSet)
+        .iter([&](flecs::iter& it, const Position *p) {
+            for (auto i : it) {
+                count ++;
+                if (it.entity(i) == e1) {
+                    test_int(p[i].x, 10);
+                    test_int(p[i].y, 20);
+                } else if (it.entity(i) == e2) {
+                    test_int(p[i].x, 30);
+                    test_int(p[i].y, 40);
+                } else {
+                    test_assert(false);
+                }
+
+                last = it.entity(i);
+            }
+        });
+
+    e1.set<Position>({ 10, 20 });
+    test_int(count, 1);
+    test_assert(last == e1);
+
+    e2.set<Position>({ 30, 40 }); 
+    test_int(count, 2);
+    test_assert(last == e2);
+}
+
+void Observer_2_entities_table_column() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+    auto e2 = ecs.entity();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer<const Position>()
+        .event(flecs::OnSet)
+        .iter([&](flecs::iter& it) {
+            auto p = it.table_column<Position>();
+
+            for (auto i : it) {
+                count ++;
+                if (it.entity(i) == e1) {
+                    test_int(p[i].x, 10);
+                    test_int(p[i].y, 20);
+                } else if (it.entity(i) == e2) {
+                    test_int(p[i].x, 30);
+                    test_int(p[i].y, 40);
+                } else {
+                    test_assert(false);
+                }
+
+                last = it.entity(i);
+            }
+        });
+
+    e1.set<Position>({ 10, 20 });
+    test_int(count, 1);
+    test_assert(last == e1);
+
+    e2.set<Position>({ 30, 40 }); 
+    test_int(count, 2);
+    test_assert(last == e2);
+}
+
+void Observer_2_entities_each() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+    auto e2 = ecs.entity();
+
+    int32_t count = 0;
+    flecs::entity last;
+
+    ecs.observer<const Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, const Position& p) {
+            count ++;
+            if (e == e1) {
+                test_int(p.x, 10);
+                test_int(p.y, 20);
+            } else if (e == e2) {
+                test_int(p.x, 30);
+                test_int(p.y, 40);
+            } else {
+                test_assert(false);
+            }
+
+            last = e;
+        });
+
+    e1.set<Position>({ 10, 20 });
+    test_int(count, 1);
+    test_assert(last == e1);
+
+    e2.set<Position>({ 30, 40 }); 
+    test_int(count, 2);
+    test_assert(last == e2);
+}

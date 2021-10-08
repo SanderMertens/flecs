@@ -546,7 +546,10 @@
                 "2_terms_un_set",
                 "observer_w_self",
                 "10_terms",
-                "20_terms"
+                "20_terms",
+                "2_entities_iter",
+                "2_entities_table_column",
+                "2_entities_each"
             ]
         }, {
             "id": "Filter",
