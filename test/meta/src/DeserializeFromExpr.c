@@ -499,7 +499,7 @@ void DeserializeFromExpr_struct_member_i32() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{x = 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{x: 10}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -526,7 +526,7 @@ void DeserializeFromExpr_struct_member_i32_i32() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{x = 10, y = 20}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{x: 10, y: 20}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -563,7 +563,7 @@ void DeserializeFromExpr_struct_member_nested_i32() {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{n_1 = {x = 10}}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{n_1: {x: 10}}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -601,7 +601,7 @@ void DeserializeFromExpr_struct_member_nested_i32_i32() {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{n_1 = {x = 10, y = 20}}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{n_1: {x: 10, y: 20}}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -644,8 +644,8 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32() {
 
     const char *expr = 
     HEAD "{"
-    LINE " n_1 = {x = 10, y = 20},"
-    LINE " n_2 = {x = 30, y = 40}"
+    LINE " n_1: {x: 10, y: 20},"
+    LINE " n_2: {x: 30, y: 40}"
     LINE "}";
 
     const char *ptr = ecs_parse_expr(world, NULL, expr, NULL, t, &value);
@@ -693,8 +693,8 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse() {
 
     const char *expr = 
     HEAD "{"
-    LINE " n_2 = {x = 30, y = 40},"
-    LINE " n_1 = {x = 10, y = 20}"
+    LINE " n_2: {x: 30, y: 40},"
+    LINE " n_1: {x: 10, y: 20}"
     LINE "}";
 
     const char *ptr = ecs_parse_expr(world, NULL, expr, NULL, t, &value);
@@ -725,7 +725,7 @@ void DeserializeFromExpr_struct_i32_array_3() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{x = [10, 20, 30]}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{x: [10, 20, 30]}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -763,7 +763,7 @@ void DeserializeFromExpr_struct_struct_i32_array_3() {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{n_1 = [{x = 10}, {x = 20}, {x = 30}]}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{n_1: [{x: 10}, {x: 20}, {x: 30}]}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -803,7 +803,7 @@ void DeserializeFromExpr_struct_struct_i32_i32_array_3() {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_expr(world, NULL, "{n_1 = [{x = 10, y = 20}, {x = 30, y = 40}, {x = 50, y = 60}]}", NULL, t, &value);
+    const char *ptr = ecs_parse_expr(world, NULL, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}, {x: 50, y: 60}]}", NULL, t, &value);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 

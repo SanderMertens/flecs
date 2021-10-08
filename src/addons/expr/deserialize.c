@@ -98,7 +98,7 @@ const char* ecs_parse_expr(
         }
 
         else {
-            if (ptr[0] == '=') {
+            if (ptr[0] == ':') {
                 /* Member assignment */
                 ptr ++;
                 if (ecs_meta_member(&cur, token) != 0) {

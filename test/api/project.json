@@ -461,7 +461,8 @@
                 "assign_2_component_values",
                 "assign_component_value_in_assign_scope",
                 "assign_2_component_values_in_assign_scope",
-                "type_and_assign_in_plecs"
+                "type_and_assign_in_plecs",
+                "type_and_assign_in_plecs_w_members"
             ]            
         }, {
             "id": "GlobalComponentIds",
