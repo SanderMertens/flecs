@@ -1,5 +1,5 @@
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 #ifdef FLECS_EXPR
 
@@ -34,10 +34,46 @@ const char* ecs_parse_expr(
             if (ecs_meta_push(&cur) != 0) {
                 goto error;
             }
+
+            if (ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, ptr - expr, "expected '['");
+                return NULL;
+            }
         }
 
         else if (!ecs_os_strcmp(token, "}")) {
             depth --;
+
+            if (ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, ptr - expr, "expected ']'");
+                return NULL;
+            }
+
+            if (ecs_meta_pop(&cur) != 0) {
+                goto error;
+            }
+        }
+
+        else if (!ecs_os_strcmp(token, "[")) {
+            depth ++;
+            if (ecs_meta_push(&cur) != 0) {
+                goto error;
+            }
+
+            if (!ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+                return NULL;
+            }
+        }
+
+        else if (!ecs_os_strcmp(token, "]")) {
+            depth --;
+
+            if (!ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, ptr - expr, "expected '}'");
+                return NULL;
+            }
+
             if (ecs_meta_pop(&cur) != 0) {
                 goto error;
             }

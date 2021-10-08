@@ -262,38 +262,67 @@ void Cursor_struct_member_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32_reverse(void);
 
-// Testsuite 'Expr'
-void Expr_bool(void);
-void Expr_byte(void);
-void Expr_char(void);
-void Expr_char_literal(void);
-void Expr_i8(void);
-void Expr_i16(void);
-void Expr_i32(void);
-void Expr_i64(void);
-void Expr_iptr(void);
-void Expr_u8(void);
-void Expr_u16(void);
-void Expr_u32(void);
-void Expr_u64(void);
-void Expr_uptr(void);
-void Expr_float(void);
-void Expr_double(void);
-void Expr_negative_int(void);
-void Expr_negative_float(void);
-void Expr_string(void);
-void Expr_struct_i32(void);
-void Expr_struct_i32_i32(void);
-void Expr_struct_entity(void);
-void Expr_struct_nested_i32(void);
-void Expr_struct_nested_i32_i32(void);
-void Expr_struct_2_nested_i32_i32(void);
-void Expr_struct_member_i32(void);
-void Expr_struct_member_i32_i32(void);
-void Expr_struct_member_nested_i32(void);
-void Expr_struct_member_nested_i32_i32(void);
-void Expr_struct_member_2_nested_i32_i32(void);
-void Expr_struct_member_2_nested_i32_i32_reverse(void);
+// Testsuite 'DeserializeFromExpr'
+void DeserializeFromExpr_bool(void);
+void DeserializeFromExpr_byte(void);
+void DeserializeFromExpr_char(void);
+void DeserializeFromExpr_char_literal(void);
+void DeserializeFromExpr_i8(void);
+void DeserializeFromExpr_i16(void);
+void DeserializeFromExpr_i32(void);
+void DeserializeFromExpr_i64(void);
+void DeserializeFromExpr_iptr(void);
+void DeserializeFromExpr_u8(void);
+void DeserializeFromExpr_u16(void);
+void DeserializeFromExpr_u32(void);
+void DeserializeFromExpr_u64(void);
+void DeserializeFromExpr_uptr(void);
+void DeserializeFromExpr_float(void);
+void DeserializeFromExpr_double(void);
+void DeserializeFromExpr_negative_int(void);
+void DeserializeFromExpr_negative_float(void);
+void DeserializeFromExpr_string(void);
+void DeserializeFromExpr_struct_i32(void);
+void DeserializeFromExpr_struct_i32_i32(void);
+void DeserializeFromExpr_struct_entity(void);
+void DeserializeFromExpr_struct_nested_i32(void);
+void DeserializeFromExpr_struct_nested_i32_i32(void);
+void DeserializeFromExpr_struct_2_nested_i32_i32(void);
+void DeserializeFromExpr_struct_member_i32(void);
+void DeserializeFromExpr_struct_member_i32_i32(void);
+void DeserializeFromExpr_struct_member_nested_i32(void);
+void DeserializeFromExpr_struct_member_nested_i32_i32(void);
+void DeserializeFromExpr_struct_member_2_nested_i32_i32(void);
+void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse(void);
+void DeserializeFromExpr_struct_i32_array_3(void);
+void DeserializeFromExpr_struct_struct_i32_array_3(void);
+void DeserializeFromExpr_struct_struct_i32_i32_array_3(void);
+
+// Testsuite 'SerializeToExpr'
+void SerializeToExpr_bool(void);
+void SerializeToExpr_byte(void);
+void SerializeToExpr_char(void);
+void SerializeToExpr_i8(void);
+void SerializeToExpr_i16(void);
+void SerializeToExpr_i32(void);
+void SerializeToExpr_i64(void);
+void SerializeToExpr_iptr(void);
+void SerializeToExpr_u8(void);
+void SerializeToExpr_u16(void);
+void SerializeToExpr_u32(void);
+void SerializeToExpr_u64(void);
+void SerializeToExpr_uptr(void);
+void SerializeToExpr_float(void);
+void SerializeToExpr_double(void);
+void SerializeToExpr_string(void);
+void SerializeToExpr_struct_i32(void);
+void SerializeToExpr_struct_i32_i32(void);
+void SerializeToExpr_struct_entity(void);
+void SerializeToExpr_struct_nested_i32(void);
+void SerializeToExpr_struct_nested_i32_i32(void);
+void SerializeToExpr_struct_2_nested_i32_i32(void);
+void SerializeToExpr_struct_struct_i32_array_3(void);
+void SerializeToExpr_struct_struct_i32_i32_array_3(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1266,130 +1295,241 @@ bake_test_case Cursor_testcases[] = {
     }
 };
 
-bake_test_case Expr_testcases[] = {
+bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "bool",
-        Expr_bool
+        DeserializeFromExpr_bool
     },
     {
         "byte",
-        Expr_byte
+        DeserializeFromExpr_byte
     },
     {
         "char",
-        Expr_char
+        DeserializeFromExpr_char
     },
     {
         "char_literal",
-        Expr_char_literal
+        DeserializeFromExpr_char_literal
     },
     {
         "i8",
-        Expr_i8
+        DeserializeFromExpr_i8
     },
     {
         "i16",
-        Expr_i16
+        DeserializeFromExpr_i16
     },
     {
         "i32",
-        Expr_i32
+        DeserializeFromExpr_i32
     },
     {
         "i64",
-        Expr_i64
+        DeserializeFromExpr_i64
     },
     {
         "iptr",
-        Expr_iptr
+        DeserializeFromExpr_iptr
     },
     {
         "u8",
-        Expr_u8
+        DeserializeFromExpr_u8
     },
     {
         "u16",
-        Expr_u16
+        DeserializeFromExpr_u16
     },
     {
         "u32",
-        Expr_u32
+        DeserializeFromExpr_u32
     },
     {
         "u64",
-        Expr_u64
+        DeserializeFromExpr_u64
     },
     {
         "uptr",
-        Expr_uptr
+        DeserializeFromExpr_uptr
     },
     {
         "float",
-        Expr_float
+        DeserializeFromExpr_float
     },
     {
         "double",
-        Expr_double
+        DeserializeFromExpr_double
     },
     {
         "negative_int",
-        Expr_negative_int
+        DeserializeFromExpr_negative_int
     },
     {
         "negative_float",
-        Expr_negative_float
+        DeserializeFromExpr_negative_float
     },
     {
         "string",
-        Expr_string
+        DeserializeFromExpr_string
     },
     {
         "struct_i32",
-        Expr_struct_i32
+        DeserializeFromExpr_struct_i32
     },
     {
         "struct_i32_i32",
-        Expr_struct_i32_i32
+        DeserializeFromExpr_struct_i32_i32
     },
     {
         "struct_entity",
-        Expr_struct_entity
+        DeserializeFromExpr_struct_entity
     },
     {
         "struct_nested_i32",
-        Expr_struct_nested_i32
+        DeserializeFromExpr_struct_nested_i32
     },
     {
         "struct_nested_i32_i32",
-        Expr_struct_nested_i32_i32
+        DeserializeFromExpr_struct_nested_i32_i32
     },
     {
         "struct_2_nested_i32_i32",
-        Expr_struct_2_nested_i32_i32
+        DeserializeFromExpr_struct_2_nested_i32_i32
     },
     {
         "struct_member_i32",
-        Expr_struct_member_i32
+        DeserializeFromExpr_struct_member_i32
     },
     {
         "struct_member_i32_i32",
-        Expr_struct_member_i32_i32
+        DeserializeFromExpr_struct_member_i32_i32
     },
     {
         "struct_member_nested_i32",
-        Expr_struct_member_nested_i32
+        DeserializeFromExpr_struct_member_nested_i32
     },
     {
         "struct_member_nested_i32_i32",
-        Expr_struct_member_nested_i32_i32
+        DeserializeFromExpr_struct_member_nested_i32_i32
     },
     {
         "struct_member_2_nested_i32_i32",
-        Expr_struct_member_2_nested_i32_i32
+        DeserializeFromExpr_struct_member_2_nested_i32_i32
     },
     {
         "struct_member_2_nested_i32_i32_reverse",
-        Expr_struct_member_2_nested_i32_i32_reverse
+        DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse
+    },
+    {
+        "struct_i32_array_3",
+        DeserializeFromExpr_struct_i32_array_3
+    },
+    {
+        "struct_struct_i32_array_3",
+        DeserializeFromExpr_struct_struct_i32_array_3
+    },
+    {
+        "struct_struct_i32_i32_array_3",
+        DeserializeFromExpr_struct_struct_i32_i32_array_3
+    }
+};
+
+bake_test_case SerializeToExpr_testcases[] = {
+    {
+        "bool",
+        SerializeToExpr_bool
+    },
+    {
+        "byte",
+        SerializeToExpr_byte
+    },
+    {
+        "char",
+        SerializeToExpr_char
+    },
+    {
+        "i8",
+        SerializeToExpr_i8
+    },
+    {
+        "i16",
+        SerializeToExpr_i16
+    },
+    {
+        "i32",
+        SerializeToExpr_i32
+    },
+    {
+        "i64",
+        SerializeToExpr_i64
+    },
+    {
+        "iptr",
+        SerializeToExpr_iptr
+    },
+    {
+        "u8",
+        SerializeToExpr_u8
+    },
+    {
+        "u16",
+        SerializeToExpr_u16
+    },
+    {
+        "u32",
+        SerializeToExpr_u32
+    },
+    {
+        "u64",
+        SerializeToExpr_u64
+    },
+    {
+        "uptr",
+        SerializeToExpr_uptr
+    },
+    {
+        "float",
+        SerializeToExpr_float
+    },
+    {
+        "double",
+        SerializeToExpr_double
+    },
+    {
+        "string",
+        SerializeToExpr_string
+    },
+    {
+        "struct_i32",
+        SerializeToExpr_struct_i32
+    },
+    {
+        "struct_i32_i32",
+        SerializeToExpr_struct_i32_i32
+    },
+    {
+        "struct_entity",
+        SerializeToExpr_struct_entity
+    },
+    {
+        "struct_nested_i32",
+        SerializeToExpr_struct_nested_i32
+    },
+    {
+        "struct_nested_i32_i32",
+        SerializeToExpr_struct_nested_i32_i32
+    },
+    {
+        "struct_2_nested_i32_i32",
+        SerializeToExpr_struct_2_nested_i32_i32
+    },
+    {
+        "struct_struct_i32_array_3",
+        SerializeToExpr_struct_struct_i32_array_3
+    },
+    {
+        "struct_struct_i32_i32_array_3",
+        SerializeToExpr_struct_struct_i32_i32_array_3
     }
 };
 
@@ -1458,15 +1598,22 @@ static bake_test_suite suites[] = {
         Cursor_testcases
     },
     {
-        "Expr",
+        "DeserializeFromExpr",
         NULL,
         NULL,
-        31,
-        Expr_testcases
+        34,
+        DeserializeFromExpr_testcases
+    },
+    {
+        "SerializeToExpr",
+        NULL,
+        NULL,
+        24,
+        SerializeToExpr_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 10);
+    return bake_test_run("meta", argc, argv, suites, 11);
 }

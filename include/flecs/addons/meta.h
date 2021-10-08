@@ -266,8 +266,9 @@ typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
     ecs_size_t offset;      /* Offset of current field */
     int32_t count;        
-    int32_t op_count;       /* Number of operations until next field or end */
     const char *name;       /* Name of value (only used for struct members) */
+    int32_t op_count;       /* Number of operations until next field or end */
+    ecs_size_t size;        /* Size of type of operation */
     ecs_entity_t type;
     ecs_hashmap_t *members; /* string -> member index (structs only) */
 } ecs_meta_type_op_t;
@@ -341,6 +342,10 @@ FLECS_API
 int ecs_meta_pop(
     ecs_meta_cursor_t *cursor);
 
+/** Is the current scope a collection? */
+FLECS_API
+int ecs_meta_is_collection(
+    ecs_meta_cursor_t *cursor);
 
 /** The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.

@@ -7386,8 +7386,9 @@ typedef struct ecs_meta_type_op_t {
     ecs_meta_type_op_kind_t kind;
     ecs_size_t offset;      /* Offset of current field */
     int32_t count;        
-    int32_t op_count;       /* Number of operations until next field or end */
     const char *name;       /* Name of value (only used for struct members) */
+    int32_t op_count;       /* Number of operations until next field or end */
+    ecs_size_t size;        /* Size of type of operation */
     ecs_entity_t type;
     ecs_hashmap_t *members; /* string -> member index (structs only) */
 } ecs_meta_type_op_t;
@@ -7461,6 +7462,10 @@ FLECS_API
 int ecs_meta_pop(
     ecs_meta_cursor_t *cursor);
 
+/** Is the current scope a collection? */
+FLECS_API
+int ecs_meta_is_collection(
+    ecs_meta_cursor_t *cursor);
 
 /** The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
@@ -7732,6 +7737,23 @@ extern "C" {
 #endif
 
 FLECS_API
+char* ecs_chresc(
+    char *out, 
+    char in, 
+    char delimiter);
+
+const char* ecs_chrparse(
+    const char *in, 
+    char *out);
+
+FLECS_API
+ecs_size_t ecs_stresc(
+    char *out, 
+    ecs_size_t n, 
+    char delimiter, 
+    const char *in);
+
+FLECS_API
 const char* ecs_parse_expr(
     const ecs_world_t *world,
     const char *name,
@@ -7739,6 +7761,12 @@ const char* ecs_parse_expr(
     const char *ptr,
     ecs_entity_t type,
     void *data_out);
+
+FLECS_API
+char* ecs_ptr_to_expr(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
 
 #ifdef __cplusplus
 }

@@ -284,7 +284,7 @@
                 "struct_member_2_nested_i32_i32_reverse"
             ]
         }, {
-            "id": "Expr",
+            "id": "DeserializeFromExpr",
             "testcases": [
                 "bool",
                 "byte",
@@ -316,7 +316,38 @@
                 "struct_member_nested_i32",
                 "struct_member_nested_i32_i32",
                 "struct_member_2_nested_i32_i32",
-                "struct_member_2_nested_i32_i32_reverse"
+                "struct_member_2_nested_i32_i32_reverse",
+                "struct_i32_array_3",
+                "struct_struct_i32_array_3",
+                "struct_struct_i32_i32_array_3"
+            ]
+        }, {
+            "id": "SerializeToExpr",
+            "testcases": [
+                "bool",
+                "byte",
+                "char",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "iptr",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "uptr",
+                "float",
+                "double",
+                "string",
+                "struct_i32",
+                "struct_i32_i32",
+                "struct_entity",
+                "struct_nested_i32",
+                "struct_nested_i32_i32",
+                "struct_2_nested_i32_i32",
+                "struct_struct_i32_array_3",
+                "struct_struct_i32_i32_array_3"
             ]
         }]
     }
