@@ -19558,6 +19558,11 @@ int add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
+    ecs_i32_t *cptr = ecs_get_mut_pair_object(
+        world, e, EcsConstant, ecs_i32_t, NULL);
+    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    cptr[0] = value;
+
     return 0;
 }
 
@@ -19619,6 +19624,11 @@ int add_constant_to_bitmask(
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
+
+    ecs_u32_t *cptr = ecs_get_mut_pair_object(
+        world, e, EcsConstant, ecs_u32_t, NULL);
+    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    cptr[0] = value;
 
     return 0;
 }
@@ -20457,6 +20467,74 @@ int ecs_meta_set_float(
     return 0;
 }
 
+static
+int add_bitmask_constant(
+    ecs_meta_cursor_t *cursor, 
+    ecs_meta_scope_t *scope,
+    ecs_meta_type_op_t *op,
+    void *out, 
+    const char *value)
+{
+    ecs_assert(scope->type != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ecs_os_strcmp(value, "0")) {
+        return 0;
+    }
+
+    ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
+    if (!c) {
+        char *path = ecs_get_fullpath(cursor->world, op->type);
+        ecs_err("unresolved bitmask constant '%s' for type '%s'", value, path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    const ecs_u32_t *v = ecs_get_pair_object(
+        cursor->world, c, EcsConstant, ecs_u32_t);
+    if (v == NULL) {
+        char *path = ecs_get_fullpath(cursor->world, op->type);
+        ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    *(ecs_u32_t*)out |= v[0];
+
+    return 0;
+}
+
+static
+int parse_bitmask(
+    ecs_meta_cursor_t *cursor, 
+    ecs_meta_scope_t *scope,
+    ecs_meta_type_op_t *op,
+    void *out, 
+    const char *value)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+
+    const char *prev = value, *ptr = value;
+
+    *(ecs_u32_t*)out = 0;
+
+    while ((ptr = strchr(ptr, '|'))) {
+        ecs_os_memcpy(token, prev, ptr - prev);
+        token[ptr - prev] = '\0';
+        if (add_bitmask_constant(cursor, scope, op, out, token) != 0) {
+            return -1;
+        }
+
+        ptr ++;
+        prev = ptr;
+    }
+
+    if (add_bitmask_constant(cursor, scope, op, out, prev) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
@@ -20510,6 +20588,33 @@ int ecs_meta_set_string(
         set_T(ecs_string_t, ptr, result);
         break;
     }
+    case EcsOpEnum: {
+        ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
+        if (!c) {
+            char *path = ecs_get_fullpath(cursor->world, op->type);
+            ecs_err("unresolved enum constant '%s' for type '%s'", value, path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        const ecs_i32_t *v = ecs_get_pair_object(
+            cursor->world, c, EcsConstant, ecs_i32_t);
+        if (v == NULL) {
+            char *path = ecs_get_fullpath(cursor->world, op->type);
+            ecs_err("'%s' is not an enum constant for type '%s'", value, path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        set_T(ecs_i32_t, ptr, v[0]);
+        break;
+    }
+    case EcsOpBitmask: 
+        if (parse_bitmask(cursor, scope, op, ptr, value) != 0) {
+            return -1;
+        }
+        break;
     case EcsOpEntity: {
         ecs_entity_t e = ecs_lookup_path(cursor->world, 0, value);
         if (!e) {
@@ -20545,18 +20650,20 @@ int ecs_meta_set_string_literal(
     case EcsOpChar:
         set_T(ecs_char_t, ptr, value[1]);
         break;
+    
+    default:
     case EcsOpEntity:
     case EcsOpString:
         len -= 2;
 
-        ecs_os_free(*(char**)ptr);
         char *result = ecs_os_malloc(len + 1);
         ecs_os_memcpy(result, value + 1, len);
         result[len] = '\0';
 
         if (op->kind == EcsOpString) {
+            ecs_os_free(*(char**)ptr);
             set_T(ecs_string_t, ptr, result);    
-        } else {
+        } else if (op->kind == EcsOpEntity) {
             ecs_assert(op->kind == EcsOpEntity, ECS_INTERNAL_ERROR, NULL);
             ecs_entity_t ent = ecs_lookup_fullpath(cursor->world, result);
             if (!ent) {
@@ -20567,10 +20674,15 @@ int ecs_meta_set_string_literal(
 
             set_T(ecs_entity_t, ptr, ent);
             ecs_os_free(result);
+        } else {
+            if (ecs_meta_set_string(cursor, result)) {
+                ecs_os_free(result);
+                return -1;
+            }
+
+            ecs_os_free(result);
         }
         break;
-    default:
-        return ecs_meta_set_string(cursor, value + 1);
     }
 
     return 0;
@@ -20643,7 +20755,7 @@ int expr_ser_type_op(
     ecs_strbuf_t *str);
 
 static
-ecs_primitive_kind_t op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+ecs_primitive_kind_t expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
@@ -20675,7 +20787,7 @@ int expr_ser_primitive(
         break;
     }
     case EcsByte:
-        ecs_strbuf_append(str, "0x%x", *(uint8_t*)base);
+        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
         break;
     case EcsU8:
         ecs_strbuf_append(str, "%u", *(uint8_t*)base);
@@ -20736,13 +20848,14 @@ int expr_ser_primitive(
     }
     case EcsEntity: {
         ecs_entity_t e = *(ecs_entity_t*)base;
-        const char *name;
-        if (e && (name = ecs_get_name(world, e))) {
-            ecs_strbuf_appendstr(str, name);
+        if (!e) {
+            ecs_strbuf_appendstr(str, "0");
         } else {
-            ecs_strbuf_append(str, "%u", e);
+            char *path = ecs_get_fullpath(world, e);
+            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(str, path);
+            ecs_os_free(path);
         }
-
         break;
     }
     default:
@@ -20767,13 +20880,13 @@ int expr_ser_enum(
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
-    ecs_entity_t *constant = ecs_map_get(
-        enum_type->constants, ecs_entity_t, value);
+    ecs_enum_constant_t *constant = ecs_map_get(
+        enum_type->constants, ecs_enum_constant_t, value);
     if (!constant) {
         return -1;
     }
 
-    ecs_strbuf_appendstr(str, ecs_get_name(world, *constant));
+    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
 
     return 0;
 }
@@ -20791,19 +20904,26 @@ int expr_ser_bitmask(
 
     uint32_t value = *(uint32_t*)ptr;
     ecs_map_key_t key;
-    ecs_entity_t *constant;
+    ecs_bitmask_constant_t *constant;
     int count = 0;
 
-    ecs_strbuf_list_push(str, "", " | ");
+    ecs_strbuf_list_push(str, "", "|");
 
     /* Multiple flags can be set at a given time. Iterate through all the flags
      * and append the ones that are set. */
     ecs_map_iter_t it = ecs_map_iter(bitmask_type->constants);
-    while ((constant = ecs_map_next(&it, ecs_entity_t, &key))) {
+    while ((constant = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
         if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, ecs_get_name(world, *constant));
+            ecs_strbuf_list_appendstr(str, 
+                ecs_get_name(world, constant->constant));
             count ++;
+            value -= (uint32_t)key;
         }
+    }
+
+    if (value != 0) {
+        /* All bits must have been matched by a constant */
+        return -1;
     }
 
     if (!count) {
@@ -20943,7 +21063,7 @@ int expr_ser_type_op(
         }
         break;
     default:
-        if (expr_ser_primitive(world, op_to_primitive_kind(op->kind), 
+        if (expr_ser_primitive(world, expr_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
@@ -20971,7 +21091,7 @@ int expr_ser_type_ops(
         if (op != ops) {
             if (op->name) {
                 ecs_strbuf_list_next(str);
-                ecs_strbuf_append(str, "%s = ", op->name);
+                ecs_strbuf_append(str, "%s: ", op->name);
             }
 
             int32_t elem_count = op->count;
@@ -21217,6 +21337,33 @@ ecs_size_t ecs_stresc(
 
 #ifdef FLECS_EXPR
 
+const char *ecs_parse_expr_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token)
+{
+    const char *start = ptr;
+    char *token_ptr = token;
+
+    while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr))) {
+        ptr = ecs_parse_fluff(ptr);
+
+        if (ptr[0] == '|') {
+            token_ptr = &token_ptr[ptr - start];
+            token_ptr[0] = '|';
+            token_ptr[1] = '\0';
+            token_ptr ++;
+            ptr ++;
+            start = ptr;
+        } else {
+            break;
+        }
+    }
+
+    return ptr;
+}
+
 const char* ecs_parse_expr(
     const ecs_world_t *world,
     const char *name,
@@ -21239,7 +21386,7 @@ const char* ecs_parse_expr(
         return NULL;
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token))) {
+    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         ptr = ecs_parse_fluff(ptr);
 
@@ -21312,7 +21459,7 @@ const char* ecs_parse_expr(
         }
 
         else {
-            if (ptr[0] == '=') {
+            if (ptr[0] == ':') {
                 /* Member assignment */
                 ptr ++;
                 if (ecs_meta_member(&cur, token) != 0) {
@@ -22752,7 +22899,7 @@ int json_ser_type_op(
     ecs_strbuf_t *str);
 
 static
-ecs_primitive_kind_t op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+ecs_primitive_kind_t json_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
@@ -22771,13 +22918,15 @@ int json_ser_enum(
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
-    ecs_entity_t *constant = ecs_map_get(
-        enum_type->constants, ecs_entity_t, value);
+    ecs_enum_constant_t *constant = ecs_map_get(
+        enum_type->constants, ecs_enum_constant_t, value);
     if (!constant) {
         return -1;
     }
 
-    ecs_strbuf_appendstr(str, ecs_get_name(world, *constant));
+    ecs_strbuf_appendstr(str, "\"");
+    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
+    ecs_strbuf_appendstr(str, "\"");
 
     return 0;
 }
@@ -22795,26 +22944,32 @@ int json_ser_bitmask(
 
     uint32_t value = *(uint32_t*)ptr;
     ecs_map_key_t key;
-    ecs_entity_t *constant;
-    int count = 0;
+    ecs_bitmask_constant_t *constant;
 
-    ecs_strbuf_list_push(str, "", " | ");
+    if (!value) {
+        ecs_strbuf_appendstr(str, "0");
+        return 0;
+    }
+
+    ecs_strbuf_list_push(str, "\"", "|");
 
     /* Multiple flags can be set at a given time. Iterate through all the flags
      * and append the ones that are set. */
     ecs_map_iter_t it = ecs_map_iter(bitmask_type->constants);
-    while ((constant = ecs_map_next(&it, ecs_entity_t, &key))) {
+    while ((constant = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
         if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, ecs_get_name(world, *constant));
-            count ++;
+            ecs_strbuf_list_appendstr(str, 
+                ecs_get_name(world, constant->constant));
+            value -= (uint32_t)key;
         }
     }
 
-    if (!count) {
-        ecs_strbuf_list_appendstr(str, "0");
+    if (value != 0) {
+        /* All bits must have been matched by a constant */
+        return -1;
     }
 
-    ecs_strbuf_list_pop(str, "");
+    ecs_strbuf_list_pop(str, "\"");
 
     return 0;
 }
@@ -22946,8 +23101,21 @@ int json_ser_type_op(
             return -1;
         }
         break;
+    case EcsOpEntity: {
+        ecs_entity_t e = *(ecs_entity_t*)ptr;
+        if (!e) {
+            ecs_strbuf_appendstr(str, "0");
+        } else {
+            char *path = ecs_get_fullpath(world, e);
+            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_append(str, "\"%s\"", path);
+            ecs_os_free(path);
+        }
+        break;
+    }
+
     default:
-        if (ecs_primitive_to_expr_buf(world, op_to_primitive_kind(op->kind), 
+        if (ecs_primitive_to_expr_buf(world, json_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
@@ -23084,7 +23252,7 @@ const char* ecs_parse_json(
         return NULL;
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token))) {
+    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         ptr = ecs_parse_fluff(ptr);
 

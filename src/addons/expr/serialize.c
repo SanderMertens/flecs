@@ -26,7 +26,7 @@ int expr_ser_type_op(
     ecs_strbuf_t *str);
 
 static
-ecs_primitive_kind_t op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+ecs_primitive_kind_t expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
@@ -151,13 +151,13 @@ int expr_ser_enum(
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
-    ecs_entity_t *constant = ecs_map_get(
-        enum_type->constants, ecs_entity_t, value);
+    ecs_enum_constant_t *constant = ecs_map_get(
+        enum_type->constants, ecs_enum_constant_t, value);
     if (!constant) {
         return -1;
     }
 
-    ecs_strbuf_appendstr(str, ecs_get_name(world, *constant));
+    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
 
     return 0;
 }
@@ -175,19 +175,26 @@ int expr_ser_bitmask(
 
     uint32_t value = *(uint32_t*)ptr;
     ecs_map_key_t key;
-    ecs_entity_t *constant;
+    ecs_bitmask_constant_t *constant;
     int count = 0;
 
-    ecs_strbuf_list_push(str, "", " | ");
+    ecs_strbuf_list_push(str, "", "|");
 
     /* Multiple flags can be set at a given time. Iterate through all the flags
      * and append the ones that are set. */
     ecs_map_iter_t it = ecs_map_iter(bitmask_type->constants);
-    while ((constant = ecs_map_next(&it, ecs_entity_t, &key))) {
+    while ((constant = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
         if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, ecs_get_name(world, *constant));
+            ecs_strbuf_list_appendstr(str, 
+                ecs_get_name(world, constant->constant));
             count ++;
+            value -= (uint32_t)key;
         }
+    }
+
+    if (value != 0) {
+        /* All bits must have been matched by a constant */
+        return -1;
     }
 
     if (!count) {
@@ -327,7 +334,7 @@ int expr_ser_type_op(
         }
         break;
     default:
-        if (expr_ser_primitive(world, op_to_primitive_kind(op->kind), 
+        if (expr_ser_primitive(world, expr_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */

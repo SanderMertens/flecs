@@ -542,6 +542,139 @@ void DeserializeFromJson_struct_entity() {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_enum() {
+    typedef enum {
+        Red, Blue, Green
+    } E;
+
+    typedef struct {
+        E v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(e != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"v", e}
+        }
+    });
+
+    test_assert(t != 0);
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Red\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_int(value.v, Red);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Blue\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_int(value.v, Blue);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Green\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_int(value.v, Green);
+    }
+
+    {
+    ecs_tracing_enable(-4);
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Black\"}", NULL, t, &value);
+    test_assert(ptr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_bitmask() {
+    uint32_t Lettuce = 0x1;
+    uint32_t Bacon =   0x1 << 1;
+    uint32_t Tomato =  0x1 << 2;
+    uint32_t Cheese =  0x1 << 3;
+
+    typedef struct {
+        ecs_u32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t) {
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}, {"Cheese"}, {"BLT", Bacon | Lettuce | Tomato}
+        }
+    });
+
+    test_assert(b != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"v", b}
+        }
+    });
+
+    test_assert(t != 0);
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_uint(value.v, Lettuce);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce|Bacon\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_uint(value.v, Lettuce|Bacon);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce|Bacon|Tomato|Cheese\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_uint(value.v, Lettuce|Bacon|Tomato|Cheese);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"BLT\"}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_uint(value.v, Lettuce|Bacon|Tomato);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":0}", NULL, t, &value);
+    test_assert(ptr != NULL);
+    test_uint(value.v, 0);
+    }
+
+    {
+    ecs_tracing_enable(-4);
+    T value = {0};
+    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Foo\"}", NULL, t, &value);
+    test_assert(ptr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_i32_i32() {
     typedef struct {
         ecs_i32_t x;

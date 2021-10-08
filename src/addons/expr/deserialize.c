@@ -3,6 +3,33 @@
 
 #ifdef FLECS_EXPR
 
+const char *ecs_parse_expr_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token)
+{
+    const char *start = ptr;
+    char *token_ptr = token;
+
+    while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr))) {
+        ptr = ecs_parse_fluff(ptr);
+
+        if (ptr[0] == '|') {
+            token_ptr = &token_ptr[ptr - start];
+            token_ptr[0] = '|';
+            token_ptr[1] = '\0';
+            token_ptr ++;
+            ptr ++;
+            start = ptr;
+        } else {
+            break;
+        }
+    }
+
+    return ptr;
+}
+
 const char* ecs_parse_expr(
     const ecs_world_t *world,
     const char *name,
@@ -25,7 +52,7 @@ const char* ecs_parse_expr(
         return NULL;
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token))) {
+    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         ptr = ecs_parse_fluff(ptr);
 

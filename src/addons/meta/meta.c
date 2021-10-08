@@ -390,6 +390,11 @@ int add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
+    ecs_i32_t *cptr = ecs_get_mut_pair_object(
+        world, e, EcsConstant, ecs_i32_t, NULL);
+    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    cptr[0] = value;
+
     return 0;
 }
 
@@ -451,6 +456,11 @@ int add_constant_to_bitmask(
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
+
+    ecs_u32_t *cptr = ecs_get_mut_pair_object(
+        world, e, EcsConstant, ecs_u32_t, NULL);
+    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    cptr[0] = value;
 
     return 0;
 }

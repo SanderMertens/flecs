@@ -401,6 +401,145 @@ void SerializeToJson_struct_entity() {
     ecs_fini(world);
 }
 
+void SerializeToJson_struct_enum() {
+    typedef enum {
+        Red, Blue, Green
+    } E;
+
+    typedef struct {
+        E x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(e != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", e}
+        }
+    });
+
+    test_assert(t != 0);
+
+    {
+    T value = {Red};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Red\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Blue};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Blue\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Green};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Green\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {10};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_bitmask() {
+    typedef struct {
+        uint32_t x;
+    } T;
+
+    uint32_t Lettuce = 0x1;
+    uint32_t Bacon =   0x1 << 1;
+    uint32_t Tomato =  0x1 << 2;
+    uint32_t Cheese =  0x1 << 3;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t) {
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}, {"Cheese"}, {"BLT", Bacon | Lettuce | Tomato}
+        }
+    });
+
+    test_assert(b != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", b}
+        }
+    });
+
+    test_assert(t != 0);
+
+    {
+    T value = {0};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": 0}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Lettuce};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Lettuce\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Bacon};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Bacon\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Lettuce | Bacon};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Lettuce|Bacon\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {Lettuce | Bacon | Tomato | Cheese};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\": \"Cheese|Lettuce|Bacon|Tomato\"}");
+    ecs_os_free(expr);
+    }
+
+    {
+    T value = {16};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_struct_i32_i32() {
     typedef struct {
         ecs_i32_t x;

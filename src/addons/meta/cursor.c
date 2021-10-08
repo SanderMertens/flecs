@@ -449,6 +449,74 @@ int ecs_meta_set_float(
     return 0;
 }
 
+static
+int add_bitmask_constant(
+    ecs_meta_cursor_t *cursor, 
+    ecs_meta_scope_t *scope,
+    ecs_meta_type_op_t *op,
+    void *out, 
+    const char *value)
+{
+    ecs_assert(scope->type != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ecs_os_strcmp(value, "0")) {
+        return 0;
+    }
+
+    ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
+    if (!c) {
+        char *path = ecs_get_fullpath(cursor->world, op->type);
+        ecs_err("unresolved bitmask constant '%s' for type '%s'", value, path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    const ecs_u32_t *v = ecs_get_pair_object(
+        cursor->world, c, EcsConstant, ecs_u32_t);
+    if (v == NULL) {
+        char *path = ecs_get_fullpath(cursor->world, op->type);
+        ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    *(ecs_u32_t*)out |= v[0];
+
+    return 0;
+}
+
+static
+int parse_bitmask(
+    ecs_meta_cursor_t *cursor, 
+    ecs_meta_scope_t *scope,
+    ecs_meta_type_op_t *op,
+    void *out, 
+    const char *value)
+{
+    char token[ECS_MAX_TOKEN_SIZE];
+
+    const char *prev = value, *ptr = value;
+
+    *(ecs_u32_t*)out = 0;
+
+    while ((ptr = strchr(ptr, '|'))) {
+        ecs_os_memcpy(token, prev, ptr - prev);
+        token[ptr - prev] = '\0';
+        if (add_bitmask_constant(cursor, scope, op, out, token) != 0) {
+            return -1;
+        }
+
+        ptr ++;
+        prev = ptr;
+    }
+
+    if (add_bitmask_constant(cursor, scope, op, out, prev) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
@@ -502,6 +570,33 @@ int ecs_meta_set_string(
         set_T(ecs_string_t, ptr, result);
         break;
     }
+    case EcsOpEnum: {
+        ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
+        if (!c) {
+            char *path = ecs_get_fullpath(cursor->world, op->type);
+            ecs_err("unresolved enum constant '%s' for type '%s'", value, path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        const ecs_i32_t *v = ecs_get_pair_object(
+            cursor->world, c, EcsConstant, ecs_i32_t);
+        if (v == NULL) {
+            char *path = ecs_get_fullpath(cursor->world, op->type);
+            ecs_err("'%s' is not an enum constant for type '%s'", value, path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        set_T(ecs_i32_t, ptr, v[0]);
+        break;
+    }
+    case EcsOpBitmask: 
+        if (parse_bitmask(cursor, scope, op, ptr, value) != 0) {
+            return -1;
+        }
+        break;
     case EcsOpEntity: {
         ecs_entity_t e = ecs_lookup_path(cursor->world, 0, value);
         if (!e) {
@@ -537,18 +632,20 @@ int ecs_meta_set_string_literal(
     case EcsOpChar:
         set_T(ecs_char_t, ptr, value[1]);
         break;
+    
+    default:
     case EcsOpEntity:
     case EcsOpString:
         len -= 2;
 
-        ecs_os_free(*(char**)ptr);
         char *result = ecs_os_malloc(len + 1);
         ecs_os_memcpy(result, value + 1, len);
         result[len] = '\0';
 
         if (op->kind == EcsOpString) {
+            ecs_os_free(*(char**)ptr);
             set_T(ecs_string_t, ptr, result);    
-        } else {
+        } else if (op->kind == EcsOpEntity) {
             ecs_assert(op->kind == EcsOpEntity, ECS_INTERNAL_ERROR, NULL);
             ecs_entity_t ent = ecs_lookup_fullpath(cursor->world, result);
             if (!ent) {
@@ -559,10 +656,15 @@ int ecs_meta_set_string_literal(
 
             set_T(ecs_entity_t, ptr, ent);
             ecs_os_free(result);
+        } else {
+            if (ecs_meta_set_string(cursor, result)) {
+                ecs_os_free(result);
+                return -1;
+            }
+
+            ecs_os_free(result);
         }
         break;
-    default:
-        return ecs_meta_set_string(cursor, value + 1);
     }
 
     return 0;
