@@ -444,7 +444,9 @@
                 "2_subsequent_args",
                 "optional_tag_is_set",
                 "10_terms",
-                "20_terms"
+                "20_terms",
+                "group_by_raw",
+                "group_by_template"
             ]         
         }, {
             "id": "FilterBuilder",
