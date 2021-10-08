@@ -537,6 +537,7 @@ int ecs_meta_set_string_literal(
     case EcsOpChar:
         set_T(ecs_char_t, ptr, value[1]);
         break;
+    case EcsOpEntity:
     case EcsOpString:
         len -= 2;
 
@@ -545,7 +546,20 @@ int ecs_meta_set_string_literal(
         ecs_os_memcpy(result, value + 1, len);
         result[len] = '\0';
 
-        set_T(ecs_string_t, ptr, result);    
+        if (op->kind == EcsOpString) {
+            set_T(ecs_string_t, ptr, result);    
+        } else {
+            ecs_assert(op->kind == EcsOpEntity, ECS_INTERNAL_ERROR, NULL);
+            ecs_entity_t ent = ecs_lookup_fullpath(cursor->world, result);
+            if (!ent) {
+                ecs_err("unresolved entity identifier '%s'", result);
+                ecs_os_free(result);
+                return -1;
+            }
+
+            set_T(ecs_entity_t, ptr, ent);
+            ecs_os_free(result);
+        }
         break;
     default:
         return ecs_meta_set_string(cursor, value + 1);

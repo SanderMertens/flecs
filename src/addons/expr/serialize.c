@@ -397,16 +397,30 @@ int expr_ser_type(
     return expr_ser_type_ops(world, ops, count, base, str);
 }
 
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf_out)
+{
+    const EcsMetaTypeSerialized *ser = ecs_get(
+        world, type, EcsMetaTypeSerialized);
+
+    if (expr_ser_type(world, ser->ops, ptr, buf_out)) {
+        return -1;
+    }
+
+    return 0;
+}
+
 char* ecs_ptr_to_expr(
     const ecs_world_t *world, 
     ecs_entity_t type, 
     const void* ptr)
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
 
-    if (expr_ser_type(world, ser->ops, ptr, &str)) {
+    if (ecs_ptr_to_expr_buf(world, type, ptr, &str) != 0) {
         ecs_strbuf_reset(&str);
         return NULL;
     }

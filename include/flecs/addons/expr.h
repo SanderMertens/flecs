@@ -57,6 +57,13 @@ char* ecs_ptr_to_expr(
     ecs_entity_t type,
     const void *data);
 
+FLECS_API
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf_out);
+
 #ifdef __cplusplus
 }
 #endif
