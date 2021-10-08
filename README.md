@@ -11,15 +11,14 @@ Flecs is a fast and lightweight Entity Component System with a focus on high per
 - Zero dependency C99 core, modern type safe C++11 API, no dependencies on STL types
 - SoA/Archetype storage enables efficient CPU caching/vectorization & direct access to component arrays
 - Automatic component registration across binaries and worlds
-- Runtime creation/deletion of components, tags, queries and systems (enables hot reloading)
-- Entity relationships (`Bob.add(Likes, Alice)`) enable creation of entity graphs (no pointer chasing!)
-- Fast query engine that supports graph traversal, joins & various operators (and, not, or, optional)
-- Entity hierarchies (`Earth.child_of(Sun)`)
-- Component sharing through prefab-style inheritance (`Freighter.is_a(SpaceShip)`)
+- Runtime creation/deletion of components, tags, queries and systems
+- Optional reflection addons, including JSON (de)serializers & scripting language support APIs
+- Entity relationships (`Bob.add(Likes, Alice)`) enable creation of entity graphs
+- Fast query engine that supports graph traversal, joins & various operators
+- Builtin support for hierarchies, prefabs and component sharing
 - Transitive relationships ("if Bob lives in San Francisco and San Francisco is in the US, Bob lives in the US")
 - Lockless command buffer implementation enables asynchronous deferring of operations
-- Observe events for all entities matching a query
-- Untyped plain C APIs for easy bindings with scripting languages & serialization
+- Reactive systems for listening to component add/remove events (amongst others)
 - Organize components & systems in reusable packages with flecs modules
 - Ordered access ("sort by Position") and grouped access ("group by platoon")
 - A dashboard module for visualizing statistics:
@@ -210,8 +209,6 @@ The following modules are available in [flecs-hub](https://github.com/flecs-hub)
 
 Module      | Description      
 ------------|------------------
-[flecs.meta](https://github.com/flecs-hub/flecs-meta) | Reflection for Flecs components
-[flecs.json](https://github.com/flecs-hub/flecs-json) | JSON serializer for Flecs components
 [flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
 [flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
 [flecs.monitor](https://github.com/flecs-hub/flecs-monitor) | Web-based monitoring of statistics
