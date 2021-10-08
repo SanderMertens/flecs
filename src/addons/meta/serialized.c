@@ -15,12 +15,20 @@ ecs_meta_type_op_kind_t primitive_to_op_kind(ecs_primitive_kind_t kind) {
 }
 
 static
+ecs_size_t type_size(ecs_world_t *world, ecs_entity_t type) {
+    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+    return comp->size;
+}
+
+static
 ecs_meta_type_op_t* ops_add(ecs_vector_t **ops, ecs_meta_type_op_kind_t kind) {
     ecs_meta_type_op_t *op = ecs_vector_add(ops, ecs_meta_type_op_t);
     op->kind = kind;
     op->offset = 0;
     op->count = 1;
     op->op_count = 1;
+    op->size = 0;
     op->name = NULL;
     op->members = NULL;
     op->type = 0;
@@ -47,6 +55,7 @@ ecs_vector_t* serialize_primitive(
     ecs_meta_type_op_t *op = ops_add(&ops, primitive_to_op_kind(ptr->kind));
     op->offset = offset,
     op->type = type;
+    op->size = type_size(world, type);
 
     return ops;
 }
@@ -63,6 +72,7 @@ ecs_vector_t* serialize_enum(
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpEnum);
     op->offset = offset,
     op->type = type;
+    op->size = ECS_SIZEOF(ecs_i32_t);
 
     return ops;
 }
@@ -79,6 +89,7 @@ ecs_vector_t* serialize_bitmask(
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpBitmask);
     op->offset = offset,
     op->type = type;
+    op->size = ECS_SIZEOF(ecs_u32_t);
 
     return ops;
 }
@@ -95,6 +106,7 @@ ecs_vector_t* serialize_array(
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpArray);
     op->offset = offset;
     op->type = type;
+    op->size = type_size(world, type);
 
     return ops;
 }
@@ -111,6 +123,7 @@ ecs_vector_t* serialize_vector(
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpVector);
     op->offset = offset;
     op->type = type;
+    op->size = type_size(world, type);
 
     return ops;
 }
@@ -129,6 +142,7 @@ ecs_vector_t* serialize_struct(
     ecs_meta_type_op_t *op = ops_add(&ops, EcsOpPush);
     op->offset = offset;
     op->type = type;
+    op->size = type_size(world, type);
 
     ecs_member_t *members = ecs_vector_first(ptr->members, ecs_member_t);
     int32_t i, count = ecs_vector_count(ptr->members);

@@ -306,6 +306,13 @@ int ecs_meta_pop(
     return 0;
 }
 
+int ecs_meta_is_collection(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    return scope->is_collection;
+}
+
 /* Utility macro's to let the compiler do the conversion work for us */
 #define set_T(T, ptr, value)\
     ((T*)ptr)[0] = ((T)value)
