@@ -20470,12 +20470,11 @@ int ecs_meta_set_float(
 static
 int add_bitmask_constant(
     ecs_meta_cursor_t *cursor, 
-    ecs_meta_scope_t *scope,
     ecs_meta_type_op_t *op,
     void *out, 
     const char *value)
 {
-    ecs_assert(scope->type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_os_strcmp(value, "0")) {
         return 0;
@@ -20506,7 +20505,6 @@ int add_bitmask_constant(
 static
 int parse_bitmask(
     ecs_meta_cursor_t *cursor, 
-    ecs_meta_scope_t *scope,
     ecs_meta_type_op_t *op,
     void *out, 
     const char *value)
@@ -20520,7 +20518,7 @@ int parse_bitmask(
     while ((ptr = strchr(ptr, '|'))) {
         ecs_os_memcpy(token, prev, ptr - prev);
         token[ptr - prev] = '\0';
-        if (add_bitmask_constant(cursor, scope, op, out, token) != 0) {
+        if (add_bitmask_constant(cursor, op, out, token) != 0) {
             return -1;
         }
 
@@ -20528,7 +20526,7 @@ int parse_bitmask(
         prev = ptr;
     }
 
-    if (add_bitmask_constant(cursor, scope, op, out, prev) != 0) {
+    if (add_bitmask_constant(cursor, op, out, prev) != 0) {
         return -1;
     }
 
@@ -20611,7 +20609,7 @@ int ecs_meta_set_string(
         break;
     }
     case EcsOpBitmask: 
-        if (parse_bitmask(cursor, scope, op, ptr, value) != 0) {
+        if (parse_bitmask(cursor, op, ptr, value) != 0) {
             return -1;
         }
         break;
