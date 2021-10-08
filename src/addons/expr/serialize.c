@@ -25,21 +25,26 @@ int expr_ser_type_op(
     const void *base,
     ecs_strbuf_t *str);
 
+static
+ecs_primitive_kind_t op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+    return kind - EcsOpPrimitive;
+}
+
 /* Serialize a primitive value */
 static
 int expr_ser_primitive(
     const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
+    ecs_primitive_kind_t kind,
     const void *base, 
     ecs_strbuf_t *str) 
 {
     const char *bool_str[] = { "false", "true" };
 
-    switch(op->kind) {
-    case EcsOpBool:
+    switch(kind) {
+    case EcsBool:
         ecs_strbuf_appendstr(str, bool_str[(int)*(bool*)base]);
         break;
-    case EcsOpChar: {
+    case EcsChar: {
         char chbuf[3];
         char ch = *(char*)base;
         if (ch) {
@@ -52,46 +57,46 @@ int expr_ser_primitive(
         }
         break;
     }
-    case EcsOpByte:
-        ecs_strbuf_append(str, "0x%x", *(uint8_t*)base);
-        break;
-    case EcsOpU8:
+    case EcsByte:
         ecs_strbuf_append(str, "%u", *(uint8_t*)base);
         break;
-    case EcsOpU16:
+    case EcsU8:
+        ecs_strbuf_append(str, "%u", *(uint8_t*)base);
+        break;
+    case EcsU16:
         ecs_strbuf_append(str, "%u", *(uint16_t*)base);
         break;
-    case EcsOpU32:
+    case EcsU32:
         ecs_strbuf_append(str, "%u", *(uint32_t*)base);
         break;
-    case EcsOpU64:
+    case EcsU64:
         ecs_strbuf_append(str, "%llu", *(uint64_t*)base);
         break;
-    case EcsOpI8:
+    case EcsI8:
         ecs_strbuf_append(str, "%d", *(int8_t*)base);
         break;
-    case EcsOpI16:
+    case EcsI16:
         ecs_strbuf_append(str, "%d", *(int16_t*)base);
         break;
-    case EcsOpI32:
+    case EcsI32:
         ecs_strbuf_append(str, "%d", *(int32_t*)base);
         break;
-    case EcsOpI64:
+    case EcsI64:
         ecs_strbuf_append(str, "%lld", *(int64_t*)base);
         break;
-    case EcsOpF32:
+    case EcsF32:
         ecs_strbuf_append(str, "%f", (double)*(float*)base);
         break;
-    case EcsOpF64:
+    case EcsF64:
         ecs_strbuf_append(str, "%f", *(double*)base);
         break;
-    case EcsOpIPtr:
+    case EcsIPtr:
         ecs_strbuf_append(str, "%i", *(intptr_t*)base);
         break;
-    case EcsOpUPtr:
+    case EcsUPtr:
         ecs_strbuf_append(str, "%u", *(uintptr_t*)base);
         break;
-    case EcsOpString: {
+    case EcsString: {
         char *value = *(char**)base;
         if (value) {
             ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
@@ -112,15 +117,16 @@ int expr_ser_primitive(
         }
         break;
     }
-    case EcsOpEntity: {
+    case EcsEntity: {
         ecs_entity_t e = *(ecs_entity_t*)base;
-        const char *name;
-        if (e && (name = ecs_get_name(world, e))) {
-            ecs_strbuf_appendstr(str, name);
+        if (!e) {
+            ecs_strbuf_appendstr(str, "0");
         } else {
-            ecs_strbuf_append(str, "%u", e);
+            char *path = ecs_get_fullpath(world, e);
+            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(str, path);
+            ecs_os_free(path);
         }
-
         break;
     }
     default:
@@ -321,7 +327,9 @@ int expr_ser_type_op(
         }
         break;
     default:
-        if (expr_ser_primitive(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (expr_ser_primitive(world, op_to_primitive_kind(op->kind), 
+            ECS_OFFSET(ptr, op->offset), str)) 
+        {
             /* Unknown operation */
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
             return -1;
@@ -428,5 +436,13 @@ char* ecs_ptr_to_expr(
     return ecs_strbuf_get(&str);
 }
 
-#endif
+int ecs_primitive_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_primitive_kind_t kind,
+    const void *base, 
+    ecs_strbuf_t *str)
+{
+    return expr_ser_primitive(world, kind, base, str);
+}
 
+#endif

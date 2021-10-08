@@ -7776,6 +7776,13 @@ int ecs_ptr_to_expr_buf(
     const void *data,
     ecs_strbuf_t *buf_out);
 
+FLECS_API
+int ecs_primitive_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_primitive_kind_t kind,
+    const void *base, 
+    ecs_strbuf_t *str);
+
 #ifdef __cplusplus
 }
 #endif

@@ -29,7 +29,7 @@ void SerializeToExpr_byte() {
     ecs_byte_t value = 0;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_byte_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0x0");
+    test_str(expr, "0");
     ecs_os_free(expr);
     }
 
@@ -37,7 +37,7 @@ void SerializeToExpr_byte() {
     ecs_byte_t value = 10;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_byte_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0xa");
+    test_str(expr, "10");
     ecs_os_free(expr);
     }
 
@@ -45,7 +45,7 @@ void SerializeToExpr_byte() {
     ecs_byte_t value = 11;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_byte_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0xb");
+    test_str(expr, "11");
     ecs_os_free(expr);
     }
 
@@ -448,6 +448,28 @@ void SerializeToExpr_string() {
     ecs_fini(world);
 }
 
+void SerializeToExpr_entity() {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_entity_t value = 0;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_entity_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "0");
+    ecs_os_free(expr);
+    }
+
+    {
+    ecs_entity_t value = EcsFlecsCore;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_entity_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "flecs.core");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
 void SerializeToExpr_struct_i32() {
     typedef struct {
         int32_t x;
@@ -513,7 +535,7 @@ void SerializeToExpr_struct_entity() {
     T value = {EcsFlecsCore};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{e = core}");
+    test_str(expr, "{e = flecs.core}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -720,6 +742,3 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_entity() {
-    // Implement testcase
-}

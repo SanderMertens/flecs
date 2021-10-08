@@ -355,6 +355,32 @@ void DeserializeFromJson_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
 
+// Testsuite 'SerializeToJson'
+void SerializeToJson_struct_bool(void);
+void SerializeToJson_struct_byte(void);
+void SerializeToJson_struct_char(void);
+void SerializeToJson_struct_i8(void);
+void SerializeToJson_struct_i16(void);
+void SerializeToJson_struct_i32(void);
+void SerializeToJson_struct_i64(void);
+void SerializeToJson_struct_iptr(void);
+void SerializeToJson_struct_u8(void);
+void SerializeToJson_struct_u16(void);
+void SerializeToJson_struct_u32(void);
+void SerializeToJson_struct_u64(void);
+void SerializeToJson_struct_uptr(void);
+void SerializeToJson_struct_float(void);
+void SerializeToJson_struct_double(void);
+void SerializeToJson_struct_string(void);
+void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_i32_i32(void);
+void SerializeToJson_struct_nested_i32(void);
+void SerializeToJson_struct_nested_i32_i32(void);
+void SerializeToJson_struct_2_nested_i32_i32(void);
+void SerializeToJson_struct_i32_array_3(void);
+void SerializeToJson_struct_struct_i32_array_3(void);
+void SerializeToJson_struct_struct_i32_i32_array_3(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -1683,6 +1709,105 @@ bake_test_case DeserializeFromJson_testcases[] = {
     }
 };
 
+bake_test_case SerializeToJson_testcases[] = {
+    {
+        "struct_bool",
+        SerializeToJson_struct_bool
+    },
+    {
+        "struct_byte",
+        SerializeToJson_struct_byte
+    },
+    {
+        "struct_char",
+        SerializeToJson_struct_char
+    },
+    {
+        "struct_i8",
+        SerializeToJson_struct_i8
+    },
+    {
+        "struct_i16",
+        SerializeToJson_struct_i16
+    },
+    {
+        "struct_i32",
+        SerializeToJson_struct_i32
+    },
+    {
+        "struct_i64",
+        SerializeToJson_struct_i64
+    },
+    {
+        "struct_iptr",
+        SerializeToJson_struct_iptr
+    },
+    {
+        "struct_u8",
+        SerializeToJson_struct_u8
+    },
+    {
+        "struct_u16",
+        SerializeToJson_struct_u16
+    },
+    {
+        "struct_u32",
+        SerializeToJson_struct_u32
+    },
+    {
+        "struct_u64",
+        SerializeToJson_struct_u64
+    },
+    {
+        "struct_uptr",
+        SerializeToJson_struct_uptr
+    },
+    {
+        "struct_float",
+        SerializeToJson_struct_float
+    },
+    {
+        "struct_double",
+        SerializeToJson_struct_double
+    },
+    {
+        "struct_string",
+        SerializeToJson_struct_string
+    },
+    {
+        "struct_entity",
+        SerializeToJson_struct_entity
+    },
+    {
+        "struct_i32_i32",
+        SerializeToJson_struct_i32_i32
+    },
+    {
+        "struct_nested_i32",
+        SerializeToJson_struct_nested_i32
+    },
+    {
+        "struct_nested_i32_i32",
+        SerializeToJson_struct_nested_i32_i32
+    },
+    {
+        "struct_2_nested_i32_i32",
+        SerializeToJson_struct_2_nested_i32_i32
+    },
+    {
+        "struct_i32_array_3",
+        SerializeToJson_struct_i32_array_3
+    },
+    {
+        "struct_struct_i32_array_3",
+        SerializeToJson_struct_struct_i32_array_3
+    },
+    {
+        "struct_struct_i32_i32_array_3",
+        SerializeToJson_struct_struct_i32_i32_array_3
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -1767,10 +1892,17 @@ static bake_test_suite suites[] = {
         NULL,
         27,
         DeserializeFromJson_testcases
+    },
+    {
+        "SerializeToJson",
+        NULL,
+        NULL,
+        24,
+        SerializeToJson_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 12);
+    return bake_test_run("meta", argc, argv, suites, 13);
 }
