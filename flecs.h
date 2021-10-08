@@ -2829,6 +2829,9 @@ extern "C" {
  * cycle detected error */
 #define ECS_MAX_RECURSION (512)
 
+/** Maximum length of a parser token (used by parser-related addons) */
+#define ECS_MAX_TOKEN_SIZE (256)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
@@ -7671,8 +7674,6 @@ void FlecsMetaImport(
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define ECS_MAX_TOKEN_SIZE (256)
 
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.

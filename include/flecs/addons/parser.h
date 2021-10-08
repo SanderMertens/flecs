@@ -15,8 +15,6 @@
 extern "C" {
 #endif
 
-#define ECS_MAX_TOKEN_SIZE (256)
-
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.
  * 
