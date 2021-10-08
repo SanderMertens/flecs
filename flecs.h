@@ -7617,9 +7617,32 @@ void FlecsMetaImport(
 #ifdef FLECS_EXPR
 /**
  * @file expr.h
- * @brief Expression parser addon.
+ * @brief Flecs expression parser addon.
  *
- * Simple API for parsing string expressions into (component) values.
+ * Parse expression strings into component values. The notation is similar to
+ * JSON but with a smaller footprint, native support for (large) integer types,
+ * character types, enumerations, bitmasks and entity identifiers.
+ * 
+ * Examples:
+ * 
+ * Member names:
+ *   {x: 10, y: 20}
+ * 
+ * No member names (uses member ordering):
+ *   {10, 20}
+ * 
+ * Enum values:
+ *   {color: Red}
+ * 
+ * Bitmask values:
+ *   {toppings: Lettuce|Tomato}
+ * 
+ * Collections:
+ *   {points: [10, 20, 30]}
+ * 
+ * Nested objects:
+ *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
+ * 
  */
 
 #ifdef FLECS_EXPR
@@ -7737,23 +7760,62 @@ char* ecs_parse_term(
 extern "C" {
 #endif
 
+/** Write an escaped character.
+ * Write a character to an output string, insert escape character if necessary.
+ * 
+ * @param out The string to write the character to.
+ * @param in The input character.
+ * @param delimiter The delimiiter used (for example '"')
+ * @return Pointer to the character after the last one written.
+ */
 FLECS_API
 char* ecs_chresc(
     char *out, 
     char in, 
     char delimiter);
 
+/** Parse an escaped character.
+ * Parse a character with a potential escape sequence.
+ * 
+ * @param in Pointer to character in input string.
+ * @param out Output string.
+ * @return Pointer to the character after the last one read.
+ */ 
 const char* ecs_chrparse(
     const char *in, 
     char *out);
 
+/** Write an escaped string.
+ * Write an input string to an output string, escape characters where necessary.
+ * To determine the size of the output string, call the operation with a NULL
+ * argument for 'out', and use the returned size to allocate a string that is
+ * large enough.
+ * 
+ * @param out Pointer to output string (msut be).
+ * @param size Maximum number of characters written to output.
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return The number of characters that (would) have been written.
+ */
 FLECS_API
 ecs_size_t ecs_stresc(
     char *out, 
-    ecs_size_t n, 
+    ecs_size_t size, 
     char delimiter, 
     const char *in);
 
+/** Parse expression into value.
+ * This operation parses a flecs expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * @param world The world.
+ * @param name The name of the expression (used for debug logs).
+ * @param expr The full expression (used for debug logs).
+ * @param ptr The pointer to the expression to parse.
+ * @param type The type of the expression to parse.
+ * @param data_out Pointer to the memory to write to.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
 FLECS_API
 const char* ecs_parse_expr(
     const ecs_world_t *world,
@@ -7763,12 +7825,30 @@ const char* ecs_parse_expr(
     ecs_entity_t type,
     void *data_out);
 
+/** Serialize value into expression string.
+ * This operation serializes a value of the provided type to a string. The 
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with expression, or NULL if failed.
+ */
 FLECS_API
 char* ecs_ptr_to_expr(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *data);
 
+/** Serialize value into string buffer.
+ * Same as ecs_ptr_to_expr, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
 FLECS_API
 int ecs_ptr_to_expr_buf(
     const ecs_world_t *world,
@@ -7776,12 +7856,40 @@ int ecs_ptr_to_expr_buf(
     const void *data,
     ecs_strbuf_t *buf_out);
 
+/** Serialize primitive value into string buffer.
+ * Serializes a primitive value to an ecs_strbuf_t instance. This operation can
+ * be reused by other serializers to avoid having to write boilerplate code that
+ * serializes primitive values to a string.
+ * 
+ * @param world The world.
+ * @param kind The kind of primitive value.
+ * @param data The value ot serialize
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
 FLECS_API
 int ecs_primitive_to_expr_buf(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
-    const void *base, 
+    const void *data, 
     ecs_strbuf_t *str);
+
+/** Parse expression token.
+ * Expression tokens can contain more characters (such as '|') than tokens
+ * parsed by the query (term) parser.
+ * 
+ * @param name The name of the expression (used for debug logs).
+ * @param expr The full expression (used for debug logs).
+ * @param ptr The pointer to the expression to parse.
+ * @param token The buffer to write to (must have size ECS_MAX_TOKEN_SIZE)
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char *ecs_parse_expr_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token);
 
 #ifdef __cplusplus
 }
@@ -7796,7 +7904,8 @@ int ecs_primitive_to_expr_buf(
  * @file json.h
  * @brief JSON parser addon.
  *
- * Simple API for parsing JSON string expressions into (component) values.
+ * Parse expression strings into component values. Entity identifiers, 
+ * enumerations and bitmasks are encoded as strings.
  */
 
 #ifdef FLECS_JSON
@@ -7813,6 +7922,18 @@ int ecs_primitive_to_expr_buf(
 extern "C" {
 #endif
 
+/** Parse JSON string into value.
+ * This operation parses a JSON expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * @param world The world.
+ * @param name The name of the expression (used for debug logs).
+ * @param expr The full expression (used for debug logs).
+ * @param ptr The pointer to the expression to parse.
+ * @param type The type of the expression to parse.
+ * @param data_out Pointer to the memory to write to.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
 FLECS_API
 const char* ecs_parse_json(
     const ecs_world_t *world,
@@ -7822,12 +7943,30 @@ const char* ecs_parse_json(
     ecs_entity_t type,
     void *data_out);
 
+/** Serialize value into JSON string.
+ * This operation serializes a value of the provided type to a JSON string. The 
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with JSON expression, or NULL if failed.
+ */
 FLECS_API
 char* ecs_ptr_to_json(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *data);
 
+/** Serialize value into JSON string buffer.
+ * Same as ecs_ptr_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
 FLECS_API
 int ecs_ptr_to_json_buf(
     const ecs_world_t *world,

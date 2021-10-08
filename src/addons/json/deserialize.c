@@ -25,7 +25,7 @@ const char* ecs_parse_json(
         return NULL;
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token))) {
+    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         ptr = ecs_parse_fluff(ptr);
 

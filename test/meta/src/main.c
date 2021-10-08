@@ -283,6 +283,10 @@ void DeserializeFromExpr_negative_int(void);
 void DeserializeFromExpr_negative_float(void);
 void DeserializeFromExpr_string(void);
 void DeserializeFromExpr_entity(void);
+void DeserializeFromExpr_enum(void);
+void DeserializeFromExpr_bitmask(void);
+void DeserializeFromExpr_struct_enum(void);
+void DeserializeFromExpr_struct_bitmask(void);
 void DeserializeFromExpr_struct_i32(void);
 void DeserializeFromExpr_struct_i32_i32(void);
 void DeserializeFromExpr_struct_entity(void);
@@ -317,6 +321,10 @@ void SerializeToExpr_float(void);
 void SerializeToExpr_double(void);
 void SerializeToExpr_string(void);
 void SerializeToExpr_entity(void);
+void SerializeToExpr_enum(void);
+void SerializeToExpr_bitmask(void);
+void SerializeToExpr_struct_enum(void);
+void SerializeToExpr_struct_bitmask(void);
 void SerializeToExpr_struct_i32(void);
 void SerializeToExpr_struct_i32_i32(void);
 void SerializeToExpr_struct_entity(void);
@@ -347,6 +355,8 @@ void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
 void DeserializeFromJson_struct_entity(void);
+void DeserializeFromJson_struct_enum(void);
+void DeserializeFromJson_struct_bitmask(void);
 void DeserializeFromJson_struct_i32_i32(void);
 void DeserializeFromJson_struct_nested_i32(void);
 void DeserializeFromJson_struct_nested_i32_i32(void);
@@ -373,6 +383,8 @@ void SerializeToJson_struct_float(void);
 void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_enum(void);
+void SerializeToJson_struct_bitmask(void);
 void SerializeToJson_struct_i32_i32(void);
 void SerializeToJson_struct_nested_i32(void);
 void SerializeToJson_struct_nested_i32_i32(void);
@@ -1434,6 +1446,22 @@ bake_test_case DeserializeFromExpr_testcases[] = {
         DeserializeFromExpr_entity
     },
     {
+        "enum",
+        DeserializeFromExpr_enum
+    },
+    {
+        "bitmask",
+        DeserializeFromExpr_bitmask
+    },
+    {
+        "struct_enum",
+        DeserializeFromExpr_struct_enum
+    },
+    {
+        "struct_bitmask",
+        DeserializeFromExpr_struct_bitmask
+    },
+    {
         "struct_i32",
         DeserializeFromExpr_struct_i32
     },
@@ -1565,6 +1593,22 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_entity
     },
     {
+        "enum",
+        SerializeToExpr_enum
+    },
+    {
+        "bitmask",
+        SerializeToExpr_bitmask
+    },
+    {
+        "struct_enum",
+        SerializeToExpr_struct_enum
+    },
+    {
+        "struct_bitmask",
+        SerializeToExpr_struct_bitmask
+    },
+    {
         "struct_i32",
         SerializeToExpr_struct_i32
     },
@@ -1680,6 +1724,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_entity
     },
     {
+        "struct_enum",
+        DeserializeFromJson_struct_enum
+    },
+    {
+        "struct_bitmask",
+        DeserializeFromJson_struct_bitmask
+    },
+    {
         "struct_i32_i32",
         DeserializeFromJson_struct_i32_i32
     },
@@ -1779,6 +1831,14 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_entity
     },
     {
+        "struct_enum",
+        SerializeToJson_struct_enum
+    },
+    {
+        "struct_bitmask",
+        SerializeToJson_struct_bitmask
+    },
+    {
         "struct_i32_i32",
         SerializeToJson_struct_i32_i32
     },
@@ -1876,28 +1936,28 @@ static bake_test_suite suites[] = {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        35,
+        39,
         DeserializeFromExpr_testcases
     },
     {
         "SerializeToExpr",
         NULL,
         NULL,
-        25,
+        29,
         SerializeToExpr_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        27,
+        29,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        24,
+        26,
         SerializeToJson_testcases
     }
 };
