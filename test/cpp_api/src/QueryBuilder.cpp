@@ -1446,6 +1446,15 @@ uint64_t group_by_first_id(
     return 0;
 }
 
+uint64_t group_by_first_id_negated(
+    flecs::world_t *m_world,
+    flecs::type_t m_type,
+    flecs::entity_t id,
+    void *ctx)
+{
+    return ~group_by_first_id(m_world, m_type, id, ctx);
+}
+
 void QueryBuilder_group_by_raw() {
     flecs::world ecs;
 
@@ -1454,14 +1463,24 @@ void QueryBuilder_group_by_raw() {
     struct TagC { };
     struct TagX { };
 
+    ecs.component<TagA>();
+    ecs.component<TagB>();
+    ecs.component<TagC>();
+    ecs.component<TagX>();
+
     auto q = ecs.query_builder()
         .term<TagX>()
         .group_by(flecs::type_id<TagX>(), group_by_first_id)
         .build();
 
-    auto e1 = ecs.entity().add<TagX>().add<TagA>();
-    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto q_reverse = ecs.query_builder()
+        .term<TagX>()
+        .group_by(flecs::type_id<TagX>(), group_by_first_id_negated)
+        .build();
+
     auto e3 = ecs.entity().add<TagX>().add<TagC>();
+    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto e1 = ecs.entity().add<TagX>().add<TagA>();
 
     int count = 0;
 
@@ -1479,6 +1498,22 @@ void QueryBuilder_group_by_raw() {
         count++;
     });
     test_int(count, 3);
+    
+    count = 0;
+    q_reverse.iter([&](flecs::iter& it){
+        test_int(it.count(), 1);
+        if(count == 0){
+            test_bool(it.entity(0) == e3, true);
+        }else if(count == 1){
+            test_bool(it.entity(0) == e2, true);
+        }else if(count == 2){
+            test_bool(it.entity(0) == e1, true);
+        }else{
+            test_assert(false);
+        }
+        count++;
+    });
+    test_int(count, 3);
 }
 
 void QueryBuilder_group_by_template() {
@@ -1489,14 +1524,24 @@ void QueryBuilder_group_by_template() {
     struct TagC { };
     struct TagX { };
 
+    ecs.component<TagA>();
+    ecs.component<TagB>();
+    ecs.component<TagC>();
+    ecs.component<TagX>();
+
     auto q = ecs.query_builder()
         .term<TagX>()
         .group_by<TagX>(group_by_first_id)
         .build();
 
-    auto e1 = ecs.entity().add<TagX>().add<TagA>();
-    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto q_reverse = ecs.query_builder()
+        .term<TagX>()
+        .group_by<TagX>( group_by_first_id_negated)
+        .build();
+
     auto e3 = ecs.entity().add<TagX>().add<TagC>();
+    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto e1 = ecs.entity().add<TagX>().add<TagA>();
 
     int count = 0;
 
@@ -1508,6 +1553,22 @@ void QueryBuilder_group_by_template() {
             test_bool(it.entity(0) == e2, true);
         }else if(count == 2){
             test_bool(it.entity(0) == e3, true);
+        }else{
+            test_assert(false);
+        }
+        count++;
+    });
+    test_int(count, 3);
+    
+    count = 0;
+    q_reverse.iter([&](flecs::iter& it){
+        test_int(it.count(), 1);
+        if(count == 0){
+            test_bool(it.entity(0) == e3, true);
+        }else if(count == 1){
+            test_bool(it.entity(0) == e2, true);
+        }else if(count == 2){
+            test_bool(it.entity(0) == e1, true);
         }else{
             test_assert(false);
         }
