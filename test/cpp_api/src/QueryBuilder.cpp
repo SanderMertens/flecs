@@ -1431,3 +1431,87 @@ void QueryBuilder_20_terms() {
 
     test_int(count, 1);
 }
+
+uint64_t group_by_first_id(
+    flecs::world_t *m_world,
+    flecs::type_t m_type,
+    flecs::entity_t id,
+    void *ctx)
+{
+    flecs::type TableType(m_world, m_type);
+    for(auto ColId : TableType.vector())
+    {
+        return ColId;
+    }
+    return 0;
+}
+
+void QueryBuilder_group_by_raw() {
+    flecs::world ecs;
+
+    struct TagA { };
+    struct TagB { };
+    struct TagC { };
+    struct TagX { };
+
+    auto q = ecs.query_builder()
+        .term<TagX>()
+        .group_by(flecs::type_id<TagX>(), group_by_first_id)
+        .build();
+
+    auto e1 = ecs.entity().add<TagX>().add<TagA>();
+    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto e3 = ecs.entity().add<TagX>().add<TagC>();
+
+    int count = 0;
+
+    q.iter([&](flecs::iter& it){
+        test_int(it.count(), 1);
+        if(count == 0){
+            test_bool(it.entity(0) == e1, true);
+        }else if(count == 1){
+            test_bool(it.entity(0) == e2, true);
+        }else if(count == 2){
+            test_bool(it.entity(0) == e3, true);
+        }else{
+            test_assert(false);
+        }
+        count++;
+    });
+    test_int(count, 3);
+}
+
+void QueryBuilder_group_by_template() {
+    flecs::world ecs;
+
+    struct TagA { };
+    struct TagB { };
+    struct TagC { };
+    struct TagX { };
+
+    auto q = ecs.query_builder()
+        .term<TagX>()
+        .group_by<TagX>(group_by_first_id)
+        .build();
+
+    auto e1 = ecs.entity().add<TagX>().add<TagA>();
+    auto e2 = ecs.entity().add<TagX>().add<TagB>();
+    auto e3 = ecs.entity().add<TagX>().add<TagC>();
+
+    int count = 0;
+
+    q.iter([&](flecs::iter& it){
+        test_int(it.count(), 1);
+        if(count == 0){
+            test_bool(it.entity(0) == e1, true);
+        }else if(count == 1){
+            test_bool(it.entity(0) == e2, true);
+        }else if(count == 2){
+            test_bool(it.entity(0) == e3, true);
+        }else{
+            test_assert(false);
+        }
+        count++;
+    });
+    test_int(count, 3);
+}
