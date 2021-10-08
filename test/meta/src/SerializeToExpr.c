@@ -487,7 +487,7 @@ void SerializeToExpr_struct_i32() {
     T value = {10};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{x = 10}");
+    test_str(expr, "{x: 10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -512,7 +512,7 @@ void SerializeToExpr_struct_i32_i32() {
     T value = {10, 20};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{x = 10, y = 20}");
+    test_str(expr, "{x: 10, y: 20}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -535,7 +535,7 @@ void SerializeToExpr_struct_entity() {
     T value = {EcsFlecsCore};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{e = flecs.core}");
+    test_str(expr, "{e: flecs.core}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -569,7 +569,7 @@ void SerializeToExpr_struct_nested_i32() {
     T value = {{10}};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{n_1 = {x = 10}}");
+    test_str(expr, "{n_1: {x: 10}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -605,7 +605,7 @@ void SerializeToExpr_struct_nested_i32_i32() {
     T value = {{10, 20}};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{n_1 = {x = 10, y = 20}}");
+    test_str(expr, "{n_1: {x: 10, y: 20}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -643,7 +643,7 @@ void SerializeToExpr_struct_2_nested_i32_i32() {
     T value = {{10, 20}, {30, 40}};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{n_1 = {x = 10, y = 20}, n_2 = {x = 30, y = 40}}");
+    test_str(expr, "{n_1: {x: 10, y: 20}, n_2: {x: 30, y: 40}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -666,7 +666,7 @@ void SerializeToExpr_struct_i32_array_3() {
     T value = {{10, 20, 30}};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{x = [10, 20, 30]}");
+    test_str(expr, "{x: [10, 20, 30]}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -700,7 +700,7 @@ void SerializeToExpr_struct_struct_i32_array_3() {
     T value = {{ {10}, {20}, {30} }};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{n_1 = [{x = 10}, {x = 20}, {x = 30}]}");
+    test_str(expr, "{n_1: [{x: 10}, {x: 20}, {x: 30}]}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -736,7 +736,7 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
     T value = {{ {10, 20}, {30, 40}, {50, 60} }};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{n_1 = [{x = 10, y = 20}, {x = 30, y = 40}, {x = 50, y = 60}]}");
+    test_str(expr, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}, {x: 50, y: 60}]}");
     ecs_os_free(expr);
 
     ecs_fini(world);

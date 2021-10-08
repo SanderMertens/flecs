@@ -355,7 +355,7 @@ int expr_ser_type_ops(
         if (op != ops) {
             if (op->name) {
                 ecs_strbuf_list_next(str);
-                ecs_strbuf_append(str, "%s = ", op->name);
+                ecs_strbuf_append(str, "%s: ", op->name);
             }
 
             int32_t elem_count = op->count;

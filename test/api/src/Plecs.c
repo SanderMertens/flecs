@@ -1929,3 +1929,33 @@ void Plecs_type_and_assign_in_plecs() {
 
     ecs_fini(world);
 }
+
+void Plecs_type_and_assign_in_plecs_w_members() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Struct(Position) {"
+    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
+    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
+    LINE "}"
+    LINE ""
+    LINE "Position(Foo) = {x: 10, y: 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(Position) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}

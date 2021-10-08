@@ -437,6 +437,7 @@ void Plecs_assign_2_component_values(void);
 void Plecs_assign_component_value_in_assign_scope(void);
 void Plecs_assign_2_component_values_in_assign_scope(void);
 void Plecs_type_and_assign_in_plecs(void);
+void Plecs_type_and_assign_in_plecs_w_members(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3776,6 +3777,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "type_and_assign_in_plecs",
         Plecs_type_and_assign_in_plecs
+    },
+    {
+        "type_and_assign_in_plecs_w_members",
+        Plecs_type_and_assign_in_plecs_w_members
     }
 };
 
@@ -10220,7 +10225,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        79,
+        80,
         Plecs_testcases
     },
     {
