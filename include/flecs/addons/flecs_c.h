@@ -306,9 +306,6 @@
 #define ecs_term_size(it, index)\
     ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
 
-#define ecs_term_is_set(it, index)\
-    ((it)->columns[(index) - 1] != 0)
-
 #define ecs_term_is_owned(it, index)\
     ((it)->subjects == NULL || (it)->subjects[(index) - 1] == 0)
 

@@ -2940,6 +2940,17 @@ bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
 
+/** Test whether term is set.
+ * 
+ * @param it The iterator.
+ * @param index The index of the term in the query.
+ * @param Whether the term is set.
+ */
+FLECS_API
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t index); 
+
 /** Test whether the term is owned
  * This operation returns whether the term is owned by the currently iterated
  * entity. This function will return false when the term is owned by another

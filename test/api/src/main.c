@@ -1100,6 +1100,8 @@ void Query_query_iter_20_tags(void);
 void Query_query_iter_10_components(void);
 void Query_query_iter_20_components(void);
 void Query_iter_type_set(void);
+void Query_only_optional_from_entity(void);
+void Query_only_optional_from_entity_no_match(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6302,6 +6304,14 @@ bake_test_case Query_testcases[] = {
     {
         "iter_type_set",
         Query_iter_type_set
+    },
+    {
+        "only_optional_from_entity",
+        Query_only_optional_from_entity
+    },
+    {
+        "only_optional_from_entity_no_match",
+        Query_only_optional_from_entity_no_match
     }
 };
 
@@ -10358,7 +10368,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        47,
+        49,
         Query_testcases
     },
     {

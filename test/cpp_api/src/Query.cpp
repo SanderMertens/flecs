@@ -74,7 +74,7 @@ void Query_action_shared() {
     q.iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
 
-            if (v.is_shared()) {
+            if (!it.is_owned(2)) {
                 for (auto i : it) {
                     p[i].x += v->x;
                     p[i].y += v->y;
@@ -366,7 +366,7 @@ void Query_signature_shared() {
         auto p = it.term<Position>(1);
         auto v = it.term<const Velocity>(2);
 
-        if (v.is_shared()) {
+        if (!it.is_owned(2)) {
             for (auto i : it) {
                 p[i].x += v->x;
                 p[i].y += v->y;
@@ -418,7 +418,7 @@ void Query_signature_optional() {
         auto v = it.term<const Velocity>(2);
         auto m = it.term<const Mass>(3);
 
-        if (v.is_set() && m.is_set()) {
+        if (it.is_set(2) && it.is_set(3)) {
             for (auto i : it) {
                 p[i].x += v[i].x * m[i].value;
                 p[i].y += v[i].y * m[i].value;

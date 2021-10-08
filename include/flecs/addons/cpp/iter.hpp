@@ -26,24 +26,6 @@ public:
         return ECS_OFFSET(m_array, m_size * index);
     }
 
-    /** Return whether component is set.
-     * If the column is optional, this method may return false.
-     * 
-     * @return True if component is set, false if component is not set.
-     */
-    bool is_set() const {
-        return m_array != nullptr;
-    }
-
-    /** Return whether component is shared.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_shared() const {
-        return m_is_shared;
-    }
-
 protected:
     void* m_array;
     size_t m_size;
@@ -111,33 +93,6 @@ public:
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array;
     }
-
-    /** Return whether component is set.
-     * If the column is optional, this method may return false.
-     * 
-     * @return True if component is set, false if component is not set.
-     */
-    bool is_set() const {
-        return m_array != nullptr;
-    }
-
-    /** Return whether component is shared.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_shared() const {
-        return m_is_shared;
-    }
-
-    /** Return whether component is owned.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_owned() const {
-        return !m_is_shared;
-    }    
 
 protected:
     T* m_array;

@@ -109,6 +109,24 @@ int32_t ecs_iter_find_column(
     return ecs_type_index_of(it->table->type, 0, component);
 }
 
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t index)
+{
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t column = it->columns[index - 1];
+    if (!column) {
+        return false;
+    } else if (column < 0) {
+        column = -column - 1;
+        ecs_ref_t *ref = &it->references[column];
+        return ref->entity != 0;
+    }
+
+    return true;
+}
+
 void* ecs_iter_column_w_size(
     const ecs_iter_t *it,
     size_t size,

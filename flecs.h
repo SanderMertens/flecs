@@ -5556,6 +5556,17 @@ bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
 
+/** Test whether term is set.
+ * 
+ * @param it The iterator.
+ * @param index The index of the term in the query.
+ * @param Whether the term is set.
+ */
+FLECS_API
+bool ecs_term_is_set(
+    const ecs_iter_t *it,
+    int32_t index); 
+
 /** Test whether the term is owned
  * This operation returns whether the term is owned by the currently iterated
  * entity. This function will return false when the term is owned by another
@@ -8759,9 +8770,6 @@ FLECS_API void ecs_gauge_reduce(
 #define ecs_term_size(it, index)\
     ((index) == 0 ? sizeof(ecs_entity_t) : ECS_CAST(size_t, (it)->sizes[(index) - 1]))
 
-#define ecs_term_is_set(it, index)\
-    ((it)->columns[(index) - 1] != 0)
-
 #define ecs_term_is_owned(it, index)\
     ((it)->subjects == NULL || (it)->subjects[(index) - 1] == 0)
 
@@ -10159,24 +10167,6 @@ public:
         return ECS_OFFSET(m_array, m_size * index);
     }
 
-    /** Return whether component is set.
-     * If the column is optional, this method may return false.
-     * 
-     * @return True if component is set, false if component is not set.
-     */
-    bool is_set() const {
-        return m_array != nullptr;
-    }
-
-    /** Return whether component is shared.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_shared() const {
-        return m_is_shared;
-    }
-
 protected:
     void* m_array;
     size_t m_size;
@@ -10244,33 +10234,6 @@ public:
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array;
     }
-
-    /** Return whether component is set.
-     * If the column is optional, this method may return false.
-     * 
-     * @return True if component is set, false if component is not set.
-     */
-    bool is_set() const {
-        return m_array != nullptr;
-    }
-
-    /** Return whether component is shared.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_shared() const {
-        return m_is_shared;
-    }
-
-    /** Return whether component is owned.
-     * If the column is shared, this method returns true.
-     * 
-     * @return True if component is shared, false if component is owned.
-     */
-    bool is_owned() const {
-        return !m_is_shared;
-    }    
 
 protected:
     T* m_array;

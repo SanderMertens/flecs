@@ -387,7 +387,7 @@ void QueryBuilder_singleton_term() {
 
     q.iter([&](flecs::iter& it, Self *s) {
         auto o = it.term<const Other>(2);
-        test_assert(!o.is_owned());
+        test_assert(!it.is_owned(2));
         test_int(o->value, 10);
         
         const Other& o_ref = *o;
@@ -420,7 +420,7 @@ void QueryBuilder_isa_superset_term() {
 
     q.iter([&](flecs::iter& it, Self *s) {
         auto o = it.term<const Other>(2);
-        test_assert(!o.is_owned());
+        test_assert(!it.is_owned(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -454,7 +454,7 @@ void QueryBuilder_isa_self_superset_term() {
     q.iter([&](flecs::iter& it, Self *s) {
         auto o = it.term<const Other>(2);
 
-        if (!o.is_owned()) {
+        if (!it.is_owned(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -491,7 +491,7 @@ void QueryBuilder_childof_superset_term() {
 
     q.iter([&](flecs::iter& it, Self *s) {
         auto o = it.term<const Other>(2);
-        test_assert(!o.is_owned());
+        test_assert(!it.is_owned(2));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -525,7 +525,7 @@ void QueryBuilder_childof_self_superset_term() {
     q.iter([&](flecs::iter& it, Self *s) {
         auto o = it.term<const Other>(2);
 
-        if (!o.is_owned()) {
+        if (!it.is_owned(2)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {

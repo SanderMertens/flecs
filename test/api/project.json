@@ -1162,7 +1162,9 @@
                 "query_iter_20_tags",
                 "query_iter_10_components",
                 "query_iter_20_components",
-                "iter_type_set"
+                "iter_type_set",
+                "only_optional_from_entity",
+                "only_optional_from_entity_no_match"
             ]
         }, {
             "id": "Pairs",

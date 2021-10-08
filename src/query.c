@@ -438,7 +438,8 @@ int get_comp_and_src(
     int32_t t,
     ecs_table_t *table_arg,
     ecs_entity_t *component_out,
-    ecs_entity_t *entity_out)
+    ecs_entity_t *entity_out,
+    bool *match_out)
 {
     ecs_entity_t component = 0, entity = 0;
 
@@ -447,6 +448,8 @@ int get_comp_and_src(
     ecs_term_t *term = &terms[t];
     ecs_term_id_t *subj = &term->args[0];
     ecs_oper_kind_t op = term->oper;
+
+    *match_out = true;
 
     if (op == EcsNot) {
         entity = subj->entity;
@@ -497,6 +500,8 @@ int get_comp_and_src(
             bool result = ecs_type_match(world, table, type, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
                 &source, NULL) != -1;
+
+            *match_out = result;
 
             if (op == EcsNot) {
                 result = !result;
@@ -853,7 +858,8 @@ add_pair:
         }
 
         /* Get actual component and component source for current column */
-        t = get_comp_and_src(world, query, t, table, &component, &entity);
+        bool match;
+        t = get_comp_and_src(world, query, t, table, &component, &entity, &match);
 
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
@@ -914,6 +920,11 @@ add_pair:
 
             table_data->subjects[c] = entity;
             flecs_set_watch(world, entity);
+
+            if (!match) {
+                ecs_ref_t *ref = ecs_vector_last(references, ecs_ref_t);
+                ref->entity = 0;
+            }
         }
 
         if (type_id) {
@@ -1969,6 +1980,10 @@ bool satisfy_constraints(
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *subj = &term->args[0];
         ecs_oper_kind_t oper = term->oper;
+
+        if (oper == EcsOptional) {
+            continue;
+        }
 
         if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
             ecs_type_t type = ecs_get_type(world, subj->entity);

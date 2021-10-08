@@ -348,7 +348,7 @@ void SystemBuilder_singleton_term() {
         .term<Singleton>().singleton()
         .iter([&](flecs::iter& it, Entity *e) {
             auto s = it.term<const Singleton>(2);
-            test_assert(!s.is_owned());
+            test_assert(!it.is_owned(2));
             test_int(s->value, 10);
             
             const Singleton& s_ref = *s;

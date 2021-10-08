@@ -2030,3 +2030,52 @@ void Query_iter_type_set() {
 
     ecs_fini(world);
 }
+
+void Query_only_optional_from_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Ent, Position);
+
+    ecs_set(world, Ent, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_only_optional_from_entity_no_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Ent, 0);
+
+    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), false);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
