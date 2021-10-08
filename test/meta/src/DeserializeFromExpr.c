@@ -271,6 +271,20 @@ void DeserializeFromExpr_string() {
     ecs_fini(world);
 }
 
+void DeserializeFromExpr_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = 0;
+
+    const char *ptr = ecs_parse_expr(
+        world, NULL, "flecs.core", NULL, ecs_id(ecs_entity_t), &value);
+    test_assert(ptr != NULL);
+
+    test_uint(value, EcsFlecsCore);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromExpr_struct_i32() {
     typedef struct {
         int32_t x;
@@ -803,6 +817,3 @@ void DeserializeFromExpr_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_entity() {
-    // Implement testcase
-}

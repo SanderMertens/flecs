@@ -105,7 +105,6 @@ const char* ecs_parse_json(
                     token[len - 1] = '\0';
                 }
 
-
                 if (ecs_meta_member(&cur, token + 1) != 0) {
                     goto error;
                 }
