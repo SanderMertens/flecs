@@ -443,6 +443,7 @@ const char* parse_stmt(
                 state->scope[state->sp] = state->scope[state->sp - 1];
             }
 
+            state->using_frames[state->sp] = state->using_frame;
             state->with_frames[state->sp] = state->with_frame;
             state->with_clause = false;
 

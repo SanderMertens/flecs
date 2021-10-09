@@ -774,7 +774,7 @@ void SerializeToJson_serialize_entity_empty() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, \"path\": \"416\", \"type\": []}");
+    test_str(json, "{\"valid\": true, \"path\": \"445\", \"type\": []}");
     ecs_os_free(json);
 
     ecs_fini(world);

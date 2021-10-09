@@ -2375,6 +2375,46 @@ void Plecs_using_nested_in_scope() {
     ecs_fini(world);
 }
 
+void Plecs_using_with_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE ""
+    LINE "Scope {"
+    LINE ""
+    LINE "Foo {}"
+    LINE ""
+    LINE "Struct(Bar) {"
+    LINE "  Member(x) = {f32}"
+    LINE "}"
+    LINE ""
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t scope = ecs_lookup_fullpath(world, "Scope");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Scope.Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Scope.Bar");
+    ecs_entity_t x = ecs_lookup_fullpath(world, "Scope.Bar.x");
+
+    test_assert(ecs_lookup_fullpath(world, "Foo") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Bar") == 0);
+    test_assert(ecs_lookup_fullpath(world, "x") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Member") == 0);
+
+    test_assert(scope != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(x != 0);
+
+    test_assert(ecs_has_pair(world, foo, EcsChildOf, scope));
+    test_assert(ecs_has_pair(world, bar, EcsChildOf, scope));
+    test_assert(ecs_has_pair(world, x, EcsChildOf, bar));
+
+    ecs_fini(world);
+}
+
 void Plecs_using_w_entity_ref_in_value_2_members() {
     ecs_world_t *world = ecs_init();
 

@@ -474,6 +474,7 @@
                 "using_scope",
                 "using_nested_scope",
                 "using_nested_in_scope",
+                "using_with_scope",
                 "using_w_entity_ref_in_value_2_members",
                 "using_w_entity_ref_in_value_3_members",
                 "assignment_to_non_component",

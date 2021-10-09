@@ -14400,6 +14400,7 @@ const char* parse_stmt(
                 state->scope[state->sp] = state->scope[state->sp - 1];
             }
 
+            state->using_frames[state->sp] = state->using_frame;
             state->with_frames[state->sp] = state->with_frame;
             state->with_clause = false;
 
@@ -19315,7 +19316,7 @@ static void dtor_struct(
     ecs_member_t *members = ecs_vector_first(ptr->members, ecs_member_t);
     int32_t i, count = ecs_vector_count(ptr->members);
     for (i = 0; i < count; i ++) {
-        ecs_os_free(members[i].name);
+        ecs_os_free((char*)members[i].name);
     }
     ecs_vector_free(ptr->members);
 }
@@ -19350,7 +19351,7 @@ static void dtor_enum(
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     ecs_enum_constant_t *c;
     while ((c = ecs_map_next(&it, ecs_enum_constant_t, NULL))) {
-        ecs_os_free(c->name);
+        ecs_os_free((char*)c->name);
     }
     ecs_map_free(ptr->constants);
 }
@@ -19386,7 +19387,7 @@ static void dtor_bitmask(
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     ecs_bitmask_constant_t *c;
     while ((c = ecs_map_next(&it, ecs_bitmask_constant_t, NULL))) {
-        ecs_os_free(c->name);
+        ecs_os_free((char*)c->name);
     }
     ecs_map_free(ptr->constants);
 }
@@ -19486,7 +19487,7 @@ void set_struct_member(
         member->count = 1;
     }
 
-    ecs_os_strset(&member->name, name);
+    ecs_os_strset((char**)&member->name, name);
 }
 
 static
@@ -19634,7 +19635,7 @@ int add_constant_to_enum(
     ecs_map_key_t key;
     while ((c = ecs_map_next(&it, ecs_enum_constant_t, &key))) {
         if (c->constant == e) {
-            ecs_os_free(c->name);
+            ecs_os_free((char*)c->name);
             ecs_map_remove(ptr->constants, key);
         }
     }
@@ -19707,7 +19708,7 @@ int add_constant_to_bitmask(
     ecs_map_key_t key;
     while ((c = ecs_map_next(&it, ecs_bitmask_constant_t, &key))) {
         if (c->constant == e) {
-            ecs_os_free(c->name);
+            ecs_os_free((char*)c->name);
             ecs_map_remove(ptr->constants, key);
         }
     }
@@ -20162,11 +20163,69 @@ void FlecsMetaImport(
     #undef ECS_PRIMITIVE
 
     /* Initialize reflection data for meta components */
+    ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .entity.name = "TypeKind",
+        .constants = {
+            {.name = "PrimitiveType"},
+            {.name = "BitmaskType"},
+            {.name = "EnumType"},
+            {.name = "StructType"},
+            {.name = "ArrayType"},
+            {.name = "VectorType"}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsMetaType),
+        .members = {
+            {.name = (char*)"kind", .type = type_kind}
+        }
+    });
+
+    ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .entity.name = "PrimitiveKind",
+        .constants = {
+            {.name = "Bool", 1}, 
+            {.name = "Char"}, 
+            {.name = "Byte"}, 
+            {.name = "U8"}, 
+            {.name = "U16"}, 
+            {.name = "U32"}, 
+            {.name = "U64"},
+            {.name = "I8"}, 
+            {.name = "I16"}, 
+            {.name = "I32"}, 
+            {.name = "I64"}, 
+            {.name = "F32"}, 
+            {.name = "F64"}, 
+            {.name = "UPtr"},
+            {.name = "IPtr"}, 
+            {.name = "String"}, 
+            {.name = "Entity"}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsPrimitive),
+        .members = {
+            {.name = (char*)"kind", .type = primitive_kind}
+        }
+    });
+
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsMember),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
+    /* Initialize metadata for core components */
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsComponent),
+        .members = {
+            {.name = (char*)"size", .type = ecs_id(ecs_iptr_t)},
+            {.name = (char*)"alignment", .type = ecs_id(ecs_iptr_t)}
         }
     });
 }

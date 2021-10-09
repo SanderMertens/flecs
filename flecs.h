@@ -7203,7 +7203,7 @@ void* _flecs_hashmap_next(
 extern "C" {
 #endif
 
-#define ECS_MEMBER_DESC_CACHE_SIZE (16)
+#define ECS_MEMBER_DESC_CACHE_SIZE (32)
 
 /** Primitive type definitions.
  * These typedefs allow the builtin primitives to be used as regular components:
@@ -7307,7 +7307,7 @@ typedef struct EcsMember {
 /* Element type of members vector in EcsStruct */
 typedef struct ecs_member_t {
     /* Must be set when used with ecs_struct_desc_t */
-    char *name;
+    const char *name;
     ecs_entity_t type;
 
     /* May be set when used with ecs_struct_desc_t */
@@ -7326,7 +7326,7 @@ typedef struct EcsStruct {
 
 typedef struct ecs_enum_constant_t {
     /* Must be set when used with ecs_enum_desc_t */
-    char *name;
+    const char *name;
 
     /* May be set when used with ecs_enum_desc_t */
     int32_t value;
@@ -7342,7 +7342,7 @@ typedef struct EcsEnum {
 
 typedef struct ecs_bitmask_constant_t {
     /* Must be set when used with ecs_bitmask_desc_t */
-    char *name;
+    const char *name;
 
     /* May be set when used with ecs_bitmask_desc_t */
     ecs_flags32_t value;

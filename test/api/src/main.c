@@ -449,6 +449,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id(void);
 void Plecs_using_scope(void);
 void Plecs_using_nested_scope(void);
 void Plecs_using_nested_in_scope(void);
+void Plecs_using_with_scope(void);
 void Plecs_using_w_entity_ref_in_value_2_members(void);
 void Plecs_using_w_entity_ref_in_value_3_members(void);
 void Plecs_assignment_to_non_component(void);
@@ -3843,6 +3844,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "using_nested_in_scope",
         Plecs_using_nested_in_scope
+    },
+    {
+        "using_with_scope",
+        Plecs_using_with_scope
     },
     {
         "using_w_entity_ref_in_value_2_members",
@@ -10315,7 +10320,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        96,
+        97,
         Plecs_testcases
     },
     {
