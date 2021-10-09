@@ -348,10 +348,12 @@ int add_member_to_struct(
     ecs_modified(world, type, EcsStruct);
 
     /* Overwrite component size & alignment */
-    EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
-    comp->size = size;
-    comp->alignment = alignment;
-    ecs_modified(world, type, EcsComponent);
+    if (type != ecs_id(EcsComponent)) {
+        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
+        comp->size = size;
+        comp->alignment = alignment;
+        ecs_modified(world, type, EcsComponent);
+    }
 
     /* Do this last as it triggers the update of EcsMetaTypeSerialized */
     if (init_type(world, type, EcsStructType)) {
@@ -965,8 +967,8 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsComponent),
         .members = {
-            {.name = (char*)"size", .type = ecs_id(ecs_iptr_t)},
-            {.name = (char*)"alignment", .type = ecs_id(ecs_iptr_t)}
+            {.name = (char*)"size", .type = ecs_id(ecs_i32_t)},
+            {.name = (char*)"alignment", .type = ecs_id(ecs_i32_t)}
         }
     });
 }

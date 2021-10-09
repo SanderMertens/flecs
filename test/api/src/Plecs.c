@@ -2464,7 +2464,7 @@ void Plecs_using_w_entity_ref_in_value_3_members() {
     LINE "  Member(y) = {f32}"
     LINE "  Member(z) = {f32}"
     LINE "}"
-    LINE ""
+    LINE
     LINE "Position(Foo) = {x: 10, y: 20, z: 30}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2483,6 +2483,127 @@ void Plecs_using_w_entity_ref_in_value_3_members() {
     test_int(ptr->y, 20);
     test_int(ptr->z, 30);
     }
+
+    ecs_fini(world);
+}
+
+void Plecs_2_using_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using Foo"
+    LINE "using Bar"
+    LINE
+    LINE "Foo {"
+    LINE "  Hello"
+    LINE "}"
+    LINE
+    LINE "Bar {"
+    LINE "  TheWorld"
+    LINE "}"
+    LINE
+    LINE "Hello(E1)"
+    LINE "TheWorld(E2)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t _world = ecs_lookup_fullpath(world, "Bar.TheWorld");
+
+    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    test_assert(ecs_lookup_fullpath(world, "Hello") == 0);
+    test_assert(ecs_lookup_fullpath(world, "TheWorld") == 0);
+
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(ecs_has_pair(world, _world, EcsChildOf, bar));
+    test_assert(ecs_has_id(world, e1, hello));
+    test_assert(ecs_has_id(world, e2, _world));
+
+    ecs_fini(world);
+}
+
+void Plecs_2_using_in_different_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "Foo {"
+    LINE "  Hello"
+    LINE "}"
+    LINE
+    LINE "Bar {"
+    LINE "  TheWorld"
+    LINE "}"
+    LINE
+    LINE "E1 {"
+    LINE "  using Foo"
+    LINE
+    LINE "  Hello(Child)"
+    LINE "  TheWorld(Child)"
+    LINE "}"
+    LINE
+    LINE "E2 {"
+    LINE "  using Bar"
+    LINE
+    LINE "  Hello(Child)"
+    LINE "  TheWorld(Child)"
+    LINE "}"
+    LINE
+    LINE "Hello(RootChild)"
+    LINE "TheWorld(RootChild)"
+    LINE;
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t _world = ecs_lookup_fullpath(world, "Bar.TheWorld");
+
+    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
+    ecs_entity_t e1_child = ecs_lookup_fullpath(world, "E1.Child");
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
+    ecs_entity_t e2_child = ecs_lookup_fullpath(world, "E2.Child");
+
+    ecs_entity_t root_hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t root_world = ecs_lookup_fullpath(world, "TheWorld");
+
+    ecs_entity_t root_child = ecs_lookup_fullpath(world, "RootChild");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e1_child != 0);
+    test_assert(e2_child != 0);
+    test_assert(root_hello != 0);
+    test_assert(root_world != 0);
+    test_assert(root_world != 0);
+
+    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
+    test_assert(ecs_has_pair(world, _world, EcsChildOf, bar));
+
+    test_assert(ecs_has_pair(world, e1_child, EcsChildOf, e1));
+    test_assert(ecs_has_pair(world, e2_child, EcsChildOf, e2));
+
+    test_assert(ecs_has_id(world, e1_child, hello));
+    test_assert(ecs_has_id(world, e1_child, root_world));
+
+    test_assert(ecs_has_id(world, e2_child, root_hello));
+    test_assert(ecs_has_id(world, e2_child, _world));
+
+    test_assert(ecs_has_id(world, root_child, root_hello));
+    test_assert(ecs_has_id(world, root_child, root_world));
 
     ecs_fini(world);
 }
@@ -2526,3 +2647,4 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
 
     ecs_fini(world);
 }
+

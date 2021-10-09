@@ -477,6 +477,8 @@
                 "using_with_scope",
                 "using_w_entity_ref_in_value_2_members",
                 "using_w_entity_ref_in_value_3_members",
+                "2_using_scope",
+                "2_using_in_different_scope",
                 "assignment_to_non_component",
                 "struct_w_member_w_assignment_to_nothing",
                 "struct_w_member_w_assignment_to_empty_scope"

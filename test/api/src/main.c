@@ -452,6 +452,8 @@ void Plecs_using_nested_in_scope(void);
 void Plecs_using_with_scope(void);
 void Plecs_using_w_entity_ref_in_value_2_members(void);
 void Plecs_using_w_entity_ref_in_value_3_members(void);
+void Plecs_2_using_scope(void);
+void Plecs_2_using_in_different_scope(void);
 void Plecs_assignment_to_non_component(void);
 void Plecs_struct_w_member_w_assignment_to_nothing(void);
 void Plecs_struct_w_member_w_assignment_to_empty_scope(void);
@@ -3856,6 +3858,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "using_w_entity_ref_in_value_3_members",
         Plecs_using_w_entity_ref_in_value_3_members
+    },
+    {
+        "2_using_scope",
+        Plecs_2_using_scope
+    },
+    {
+        "2_using_in_different_scope",
+        Plecs_2_using_in_different_scope
     },
     {
         "assignment_to_non_component",
@@ -10320,7 +10330,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        97,
+        99,
         Plecs_testcases
     },
     {
