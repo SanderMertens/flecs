@@ -773,6 +773,7 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     }
 }
 
+static
 void member_on_set(
     ecs_world_t *world,
     ecs_entity_t component,

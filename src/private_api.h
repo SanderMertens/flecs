@@ -30,7 +30,8 @@ ecs_type_t flecs_bootstrap_type(
 #define flecs_bootstrap_tag(world, name)\
     ecs_set_name(world, name, (char*)&#name[ecs_os_strlen("Ecs")]);\
     ecs_set_symbol(world, name, #name);\
-    ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world))
+    ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
+    ecs_set(world, name, EcsComponent, {.size = 0})
 
 
 /* Bootstrap functions for other parts in the code */

@@ -316,6 +316,7 @@ void flecs_bootstrap(
     world->stats.min_id = 0;
     world->stats.max_id = 0;
 
+    /* Populate core module */
     ecs_set_scope(world, EcsFlecsCore);
 
     flecs_bootstrap_tag(world, EcsName);
@@ -325,7 +326,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsDisabled);
 
-    /* Initialize scopes */
+    /* Initialize builtin modules */
     ecs_set_name(world, EcsFlecs, "flecs");
     ecs_add_id(world, EcsFlecs, EcsModule);
     ecs_set_name(world, EcsFlecsCore, "core");
@@ -336,20 +337,26 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
-    bootstrap_entity(world, EcsTransitive, "Transitive", EcsFlecsCore);
-    bootstrap_entity(world, EcsInclusive, "Inclusive", EcsFlecsCore);
-    bootstrap_entity(world, EcsFinal, "Final", EcsFlecsCore);
-    bootstrap_entity(world, EcsTag, "Tag", EcsFlecsCore);
+    flecs_bootstrap_tag(world, EcsTransitive);
+    flecs_bootstrap_tag(world, EcsInclusive);
+    flecs_bootstrap_tag(world, EcsFinal);
+    flecs_bootstrap_tag(world, EcsTag);
 
-    bootstrap_entity(world, EcsIsA, "IsA", EcsFlecsCore);
-    bootstrap_entity(world, EcsChildOf, "ChildOf", EcsFlecsCore);
+    flecs_bootstrap_tag(world, EcsIsA);
+    flecs_bootstrap_tag(world, EcsChildOf);
 
+    /* Relation/component cleanup policies */
+    flecs_bootstrap_tag(world, EcsOnDelete);
+    flecs_bootstrap_tag(world, EcsOnDeleteObject);
+    flecs_bootstrap_tag(world, EcsRemove);
+    flecs_bootstrap_tag(world, EcsDelete);
+    flecs_bootstrap_tag(world, EcsThrow);
+
+    /* Builtin events */
     bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
     bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
     bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
     bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
-
-    bootstrap_entity(world, EcsOnDelete, "OnDelete", EcsFlecsCore);
 
     // bootstrap_entity(world, EcsOnCreateTable, "OnCreateTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteTable, "OnDeleteTable", EcsFlecsCore);
@@ -359,13 +366,6 @@ void flecs_bootstrap(
     // bootstrap_entity(world, EcsOnDeleteTrigger, "OnDeleteTrigger", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteObservable, "OnDeleteObservable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnComponentLifecycle, "OnComponentLifecycle", EcsFlecsCore);
-    
-    bootstrap_entity(world, EcsOnDeleteObject, "OnDeleteObject", EcsFlecsCore);
-
-    bootstrap_entity(world, EcsRemove, "Remove", EcsFlecsCore);
-    bootstrap_entity(world, EcsDelete, "Delete", EcsFlecsCore);
-    bootstrap_entity(world, EcsThrow, "Throw", EcsFlecsCore);
-
 
     /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
