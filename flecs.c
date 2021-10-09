@@ -13996,12 +13996,14 @@ ecs_entity_t plecs_lookup(
 {
     ecs_entity_t e = 0;
 
-    int using_scope = state->using_frame - 1;
-    for (; using_scope >= 0; using_scope--) {
-        e = ecs_lookup_path_w_sep(
-            world, state->using[using_scope], path, NULL, NULL, false);
-        if (e) {
-            break;
+    if (!is_subject) {
+        int using_scope = state->using_frame - 1;
+        for (; using_scope >= 0; using_scope--) {
+            e = ecs_lookup_path_w_sep(
+                world, state->using[using_scope], path, NULL, NULL, false);
+            if (e) {
+                break;
+            }
         }
     }
 

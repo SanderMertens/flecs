@@ -446,6 +446,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void);
 void Plecs_open_scope_no_parent(void);
 void Plecs_create_subject_in_root_scope_w_resolvable_id(void);
 void Plecs_create_subject_in_scope_w_resolvable_id(void);
+void Plecs_create_subject_in_scope_w_resolvable_id_using(void);
 void Plecs_using_scope(void);
 void Plecs_using_nested_scope(void);
 void Plecs_using_nested_in_scope(void);
@@ -3836,6 +3837,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "create_subject_in_scope_w_resolvable_id",
         Plecs_create_subject_in_scope_w_resolvable_id
+    },
+    {
+        "create_subject_in_scope_w_resolvable_id_using",
+        Plecs_create_subject_in_scope_w_resolvable_id_using
     },
     {
         "using_scope",
@@ -10340,7 +10345,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        99,
+        100,
         Plecs_testcases
     },
     {

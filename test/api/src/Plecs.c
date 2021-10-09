@@ -2262,6 +2262,37 @@ void Plecs_create_subject_in_scope_w_resolvable_id() {
     ecs_fini(world);
 }
 
+void Plecs_create_subject_in_scope_w_resolvable_id_using() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Bar"
+    LINE "}"
+    LINE
+    LINE "using Foo"
+    LINE
+    LINE "Hello(Bar)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t root_bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(root_bar != 0);
+    test_assert(hello != 0);
+
+    test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
+
+    test_assert(ecs_has_id(world, root_bar, hello));
+    test_assert(!ecs_has_id(world, bar, hello));
+
+    ecs_fini(world);
+}
+
 void Plecs_using_scope() {
     ecs_world_t *world = ecs_init();
 
