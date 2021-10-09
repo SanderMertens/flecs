@@ -87,45 +87,63 @@ static ECS_MOVE(EcsObserver, dst, src, {
 
 static
 void register_on_delete(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        r = flecs_ensure_id_record(it->world, ecs_pair(e, EcsWildcard));
+        r = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(it->world, e);
+        flecs_set_watch(world, e);
     }
 }
 
 static
 void register_on_delete_object(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    int i;
-    for (i = 0; i < it->count; i ++) {
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete_object = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(it->world, e);
+        flecs_set_watch(world, e);
     }    
 }
 
 static
-void on_set_component_lifecycle( ecs_iter_t *it) {
-    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
+void on_set_component_lifecycle(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_set_component_actions_w_id(world, e, &cl[i]);   
+    }
+}
+
+static
+void ensure_module_tag(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        if (parent) {
+            ecs_add_id(world, parent, EcsModule);
+        }
     }
 }
 
@@ -382,6 +400,14 @@ void flecs_bootstrap(
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });
+
+    /* Define trigger to make sure that adding a module to a child entity also
+     * adds it to the parent. */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsModule},
+        .callback = ensure_module_tag,
         .events = {EcsOnAdd}
     });
 

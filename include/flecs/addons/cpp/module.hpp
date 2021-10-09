@@ -28,7 +28,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // Initialize module component type & don't allow it to be registered as a
     // tag, as this would prevent calling emplace()
     auto m_c = component<T>(world, nullptr, false);
-    ecs_add_module_tag(world, m_c);
+    ecs_add_id(world, m_c, EcsModule);
 
     world.emplace<T>(world);
 

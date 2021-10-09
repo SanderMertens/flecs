@@ -2113,6 +2113,8 @@ void Modules_name_prefix_underscore(void);
 void Modules_lookup_by_symbol(void);
 void Modules_nested_module(void);
 void Modules_module_tag_on_namespace(void);
+void Modules_module_tag_on_namespace_on_add(void);
+void Modules_module_tag_on_namespace_on_add_2_levels(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -10177,6 +10179,14 @@ bake_test_case Modules_testcases[] = {
     {
         "module_tag_on_namespace",
         Modules_module_tag_on_namespace
+    },
+    {
+        "module_tag_on_namespace_on_add",
+        Modules_module_tag_on_namespace_on_add
+    },
+    {
+        "module_tag_on_namespace_on_add_2_levels",
+        Modules_module_tag_on_namespace_on_add_2_levels
     }
 };
 
@@ -10673,7 +10683,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        18,
+        20,
         Modules_testcases
     },
     {

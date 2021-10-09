@@ -18770,29 +18770,6 @@ ecs_entity_t ecs_import_from_library(
     return result;
 }
 
-void ecs_add_module_tag(
-    ecs_world_t *world,
-    ecs_entity_t module)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(module != 0, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t e = module;
-    do {
-        ecs_add_id(world, e, EcsModule);
-        ecs_type_t type = ecs_get_type(world, e);
-        int32_t index = ecs_type_index_of(type, 0, 
-            ecs_pair(EcsChildOf, EcsWildcard));
-        if (index == -1) {
-            return;
-        }
-
-        ecs_entity_t *pair = ecs_vector_get(type, ecs_id_t, index);
-        ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
-        e = ecs_pair_object(world, *pair);
-    } while (true);
-}
-
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
@@ -18814,9 +18791,6 @@ ecs_entity_t ecs_module_init(
     ecs_entity_t result = ecs_component_init(world, &private_desc);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
-
-    /* Add module tag */
-    ecs_add_module_tag(world, result);
 
     /* Add module to itself. This way we have all the module information stored
      * in a single contained entity that we can use for namespacing */
@@ -35007,45 +34981,63 @@ static ECS_MOVE(EcsObserver, dst, src, {
 
 static
 void register_on_delete(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        r = flecs_ensure_id_record(it->world, ecs_pair(e, EcsWildcard));
+        r = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(it->world, e);
+        flecs_set_watch(world, e);
     }
 }
 
 static
 void register_on_delete_object(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    int i;
-    for (i = 0; i < it->count; i ++) {
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = flecs_ensure_id_record(it->world, e);
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete_object = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(it->world, e);
+        flecs_set_watch(world, e);
     }    
 }
 
 static
-void on_set_component_lifecycle( ecs_iter_t *it) {
-    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
+void on_set_component_lifecycle(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
+    EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_set_component_actions_w_id(world, e, &cl[i]);   
+    }
+}
+
+static
+void ensure_module_tag(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        if (parent) {
+            ecs_add_id(world, parent, EcsModule);
+        }
     }
 }
 
@@ -35302,6 +35294,14 @@ void flecs_bootstrap(
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });
+
+    /* Define trigger to make sure that adding a module to a child entity also
+     * adds it to the parent. */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsModule},
+        .callback = ensure_module_tag,
         .events = {EcsOnAdd}
     });
 

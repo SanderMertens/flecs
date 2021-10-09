@@ -366,3 +366,39 @@ void Modules_module_tag_on_namespace() {
 
     ecs_fini(world);
 }
+
+void Modules_module_tag_on_namespace_on_add() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_new_id(world);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(child != 0);
+
+    ecs_add_id(world, child, EcsModule);
+    test_assert( ecs_has_id(world, child, EcsModule));
+    test_assert( ecs_has_id(world, parent, EcsModule));
+
+    ecs_fini(world);
+}
+
+void Modules_module_tag_on_namespace_on_add_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t root = ecs_new_id(world);
+    test_assert(root != 0);
+
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_assert(child != 0);
+
+    ecs_add_id(world, child, EcsModule);
+    test_assert( ecs_has_id(world, child, EcsModule));
+    test_assert( ecs_has_id(world, parent, EcsModule));
+    test_assert( ecs_has_id(world, root, EcsModule));
+
+    ecs_fini(world);
+}
