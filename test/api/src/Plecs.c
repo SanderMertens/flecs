@@ -2197,6 +2197,59 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
     ecs_fini(world);
 }
 
+void Plecs_type_and_assign_in_plecs_nested_member() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        struct {
+            float x;
+            float y;
+        } start;
+
+        struct {
+            float x;
+            float y;
+        } stop;
+    } Line;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Line) {"
+    LINE "  Member(start) {"
+    LINE "    Member(x) = {f32}"
+    LINE "    Member(y) = {f32}"
+    LINE "  }"
+    LINE "  Member(stop) {"
+    LINE "    Member(x) = {f32}"
+    LINE "    Member(y) = {f32}"
+    LINE "  }"
+    LINE "}"
+    LINE
+    LINE "Line(l) = {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
+    ecs_entity_t l = ecs_lookup_fullpath(world, "l");
+
+    test_assert(ecs_id(Line) != 0);
+    test_assert(l != 0);
+
+    test_assert( ecs_has(world, ecs_id(Line), EcsComponent));
+    test_assert( ecs_has(world, ecs_id(Line), EcsStruct));
+    test_assert( ecs_has(world, l, Line));
+
+    const Line *ptr = ecs_get(world, l, Line);
+    test_assert(ptr != NULL);
+    test_int(ptr->start.x, 10);
+    test_int(ptr->start.y, 20);
+    test_int(ptr->stop.x, 30);
+    test_int(ptr->stop.y, 40);
+    
+    
+    ecs_fini(world);
+}
+
 void Plecs_open_scope_no_parent() {
     ecs_world_t *world = ecs_init();
 
@@ -2675,6 +2728,43 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
 
     ecs_tracing_enable(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+
+void Plecs_scope_after_assign() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position(Foo) = {10, 20} {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_lookup_fullpath(world, "Bar") == 0);
+
+    test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
 
     ecs_fini(world);
 }

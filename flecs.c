@@ -19595,6 +19595,17 @@ int add_member_to_struct(
         return -1;
     }
 
+    /* If current struct is also a member, assign to itself */
+    if (ecs_has(world, type, EcsMember)) {
+        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember, NULL);
+        ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        type_mbr->type = type;
+        type_mbr->count = 1;
+
+        ecs_modified(world, type, EcsMember);
+    }
+
     return 0;
 }
 
