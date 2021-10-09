@@ -773,6 +773,28 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     }
 }
 
+void member_on_set(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entity_ptr,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)world;
+    (void)component;
+    (void)entity_ptr;
+    (void)size;
+    (void)count;
+    (void)ctx;
+
+    EcsMember *mbr = ptr;
+    if (!mbr->count) {
+        mbr->count = 1;
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -809,7 +831,8 @@ void FlecsMetaImport(
     });
 
     ecs_set_component_actions(world, EcsMember, { 
-        .ctor = ecs_default_ctor
+        .ctor = ecs_default_ctor,
+        .on_set = member_on_set
     });
 
     ecs_set_component_actions(world, EcsEnum, { 
