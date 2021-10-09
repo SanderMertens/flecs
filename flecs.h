@@ -8001,6 +8001,14 @@ int ecs_ptr_to_json_buf(
     ecs_strbuf_t *buf_out);
 
 /** Serialize entity into JSON string.
+ * This creates a JSON object with the entity's (path) name, which components
+ * and tags the entity has, and the component values.
+ * 
+ * The operation may fail if the entity contains components with invalid values.
+ * 
+ * @param world The world.
+ * @param entity The entity to serialize to JSON.
+ * @return A JSON string with the serialized entity data, or NULL if failed.
  */
 FLECS_API
 char* ecs_entity_to_json(

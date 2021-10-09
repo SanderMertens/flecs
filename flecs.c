@@ -14013,6 +14013,7 @@ ecs_entity_t plecs_lookup(
 }
 
 /* Lookup action used for deserializing entity refs in component values */
+#ifdef FLECS_EXPR
 static
 ecs_entity_t plecs_lookup_action(
     const ecs_world_t *world,
@@ -14021,6 +14022,7 @@ ecs_entity_t plecs_lookup_action(
 {
     return plecs_lookup(world, path, ctx, false);
 }
+#endif
 
 static
 ecs_entity_t ensure_entity(
