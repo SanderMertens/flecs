@@ -286,6 +286,10 @@ int ecs_meta_pop(
 {
     ecs_meta_scope_t *scope = get_scope(cursor);
     cursor->depth --;
+    if (cursor->depth < 0) {
+        ecs_err("unexpected end of scope");
+        return -1;
+    }
 
     ecs_meta_scope_t *next_scope = get_scope(cursor);
     ecs_meta_type_op_t *op = get_op(next_scope);
@@ -596,17 +600,23 @@ int ecs_meta_set_string(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e;
-        if (cursor->lookup_action) {
-            e = cursor->lookup_action(cursor->world, value, cursor->lookup_ctx);
-        } else {
-            e = ecs_lookup_path(cursor->world, 0, value);
+        ecs_entity_t e = 0;
+
+        if (ecs_os_strcmp(value, "0")) {
+            if (cursor->lookup_action) {
+                e = cursor->lookup_action(
+                    cursor->world, value, 
+                    cursor->lookup_ctx);
+            } else {
+                e = ecs_lookup_path(cursor->world, 0, value);
+            }
+
+            if (!e) {
+                ecs_err("unresolved entity identifier '%s'", value);
+                return -1;
+            }
         }
 
-        if (!e) {
-            ecs_err("unresolved entity identifier '%s'", value);
-            return -1;
-        }
         set_T(ecs_entity_t, ptr, e);
         break;
     }
@@ -646,28 +656,13 @@ int ecs_meta_set_string_literal(
         ecs_os_memcpy(result, value + 1, len);
         result[len] = '\0';
 
-        if (op->kind == EcsOpString) {
-            ecs_os_free(*(char**)ptr);
-            set_T(ecs_string_t, ptr, result);    
-        } else if (op->kind == EcsOpEntity) {
-            ecs_assert(op->kind == EcsOpEntity, ECS_INTERNAL_ERROR, NULL);
-            ecs_entity_t ent = ecs_lookup_fullpath(cursor->world, result);
-            if (!ent) {
-                ecs_err("unresolved entity identifier '%s'", result);
-                ecs_os_free(result);
-                return -1;
-            }
-
-            set_T(ecs_entity_t, ptr, ent);
+        if (ecs_meta_set_string(cursor, result)) {
             ecs_os_free(result);
-        } else {
-            if (ecs_meta_set_string(cursor, result)) {
-                ecs_os_free(result);
-                return -1;
-            }
-
-            ecs_os_free(result);
+            return -1;
         }
+
+        ecs_os_free(result);
+
         break;
     }
 

@@ -73,7 +73,8 @@
                 "enum_2_constants",
                 "enum_3_constants",
                 "enum_3_constants_manual_values",
-                "struct_w_enum"
+                "struct_w_enum",
+                "zero_initialized"
             ]
         }, {
             "id": "BitmaskTypes",
@@ -98,7 +99,8 @@
                 "i32_bool_bool",
                 "i32_bool_bool_bool",
                 "i32_i64",
-                "i32_i64_i32"
+                "i32_i64_i32",
+                "incomplete_member"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -420,7 +422,20 @@
                 "struct_2_nested_i32_i32",
                 "struct_i32_array_3",
                 "struct_struct_i32_array_3",
-                "struct_struct_i32_i32_array_3"
+                "struct_struct_i32_i32_array_3",
+                "serialize_entity_empty",
+                "serialize_entity_w_name",
+                "serialize_entity_w_name_1_tag",
+                "serialize_entity_w_name_2_tags",
+                "serialize_entity_w_name_1_pair",
+                "serialize_entity_w_base",
+                "serialize_entity_w_base_override",
+                "serialize_entity_w_1_component",
+                "serialize_entity_w_2_components",
+                "serialize_entity_w_primitive_component",
+                "serialize_entity_w_enum_component",
+                "serialize_entity_w_struct_and_enum_component",
+                "serialize_entity_w_invalid_enum_component"
             ]
         }]
     }

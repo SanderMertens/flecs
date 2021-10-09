@@ -1930,7 +1930,7 @@ void Plecs_type_and_assign_in_plecs() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_members() {
+void Plecs_type_and_assign_in_plecs_w_2_members() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1960,6 +1960,242 @@ void Plecs_type_and_assign_in_plecs_w_members() {
     ecs_fini(world);
 }
 
+void Plecs_type_and_assign_in_plecs_w_3_members() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        float x;
+        float y;
+        float z;
+    } Position3D;
+
+    const char *expr =
+    HEAD "flecs.meta.Struct(Position) {"
+    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
+    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
+    LINE "  flecs.meta.Member(z) = {flecs.meta.f32}"
+    LINE "}"
+    LINE ""
+    LINE "Position(Foo) = {x: 10, y: 20, z: 30}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(Position3D) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position3D));
+
+    {
+    const Position3D *ptr = ecs_get(world, foo, Position3D);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_type_and_assign_in_plecs_w_enum() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    typedef struct {
+        Color value;
+    } SomeType;
+
+    const char *expr =
+    HEAD "flecs.meta.Enum(Color) {"
+    LINE "  flecs.meta.Constant(Red)"
+    LINE "  flecs.meta.Constant(Green)"
+    LINE "  flecs.meta.Constant(Blue)"
+    LINE "}"
+    LINE ""
+    LINE "flecs.meta.Struct(SomeType) {"
+    LINE "  flecs.meta.Member(value) = {Color}"
+    LINE "}"
+    LINE ""
+    LINE "SomeType(Foo) = {value: Blue}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(SomeType) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, SomeType));
+
+    {
+    const SomeType *ptr = ecs_get(world, foo, SomeType);
+    test_assert(ptr != NULL);
+    test_int(ptr->value, Blue);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_type_and_assign_in_plecs_w_enum_using_meta() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    typedef struct {
+        Color value;
+    } SomeType;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "Enum(Color) {"
+    LINE "  Constant(Red)"
+    LINE "  Constant(Green)"
+    LINE "  Constant(Blue)"
+    LINE "}"
+    LINE ""
+    LINE "Struct(SomeType) {"
+    LINE "  Member(value) = {Color}"
+    LINE "}"
+    LINE ""
+    LINE "SomeType(Foo) = {value: Blue}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    /* Make sure no meta entities were created in the root */
+    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+
+    test_assert(ecs_id(SomeType) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, SomeType));
+
+    {
+    const SomeType *ptr = ecs_get(world, foo, SomeType);
+    test_assert(ptr != NULL);
+    test_int(ptr->value, Blue);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "Enum(Color) {"
+    LINE "  Constant(Red)"
+    LINE "  Constant(Green)"
+    LINE "  Constant(Blue)"
+    LINE "}"
+    LINE ""
+    LINE "Color(Foo) = Blue";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    /* Make sure no meta entities were created in the root */
+    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+
+    test_assert(ecs_id(Color) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Color));
+
+    {
+    const Color *ptr = ecs_get(world, foo, Color);
+    test_assert(ptr != NULL);
+    test_int(*ptr, Blue);
+    }
+
+    ecs_fini(world);
+}
+
+
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE ""
+    LINE "Struct(Position) {"
+    LINE "  Member(x) = {f32}"
+    LINE "  Member(y) = {f32}"
+    LINE "}"
+    LINE ""
+    LINE "Enum(Color) {"
+    LINE "  Constant(Red)"
+    LINE "  Constant(Green)"
+    LINE "  Constant(Blue)"
+    LINE "}"
+    LINE ""
+    LINE "Foo = {"
+    LINE "  Position = {x: 10, y: 20}"
+    LINE "  Color = Green"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    /* Make sure no meta entities were created in the root */
+    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+
+    test_assert(ecs_id(Position) != 0);
+    test_assert(ecs_id(Color) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    test_assert(ecs_has(world, foo, Color));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    {
+    const Color *ptr = ecs_get(world, foo, Color);
+    test_assert(ptr != NULL);
+    test_int(*ptr, Green);
+    }
+
+    ecs_fini(world);
+}
 
 void Plecs_open_scope_no_parent() {
     ecs_world_t *world = ecs_init();
@@ -1990,7 +2226,6 @@ void Plecs_open_scope_no_parent() {
 
     ecs_fini(world);
 }
-
 
 void Plecs_create_subject_in_root_scope_w_resolvable_id() {
     ecs_world_t *world = ecs_init();
@@ -2140,7 +2375,7 @@ void Plecs_using_nested_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_using_w_entity_ref_in_value() {
+void Plecs_using_w_entity_ref_in_value_2_members() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2172,12 +2407,81 @@ void Plecs_using_w_entity_ref_in_value() {
     ecs_fini(world);
 }
 
+void Plecs_using_w_entity_ref_in_value_3_members() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        float x;
+        float y;
+        float z;
+    } Position3D;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  Member(x) = {f32}" // member type is looked up in flecs.meta
+    LINE "  Member(y) = {f32}"
+    LINE "  Member(z) = {f32}"
+    LINE "}"
+    LINE ""
+    LINE "Position(Foo) = {x: 10, y: 20, z: 30}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(Position3D) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position3D));
+
+    {
+    const Position3D *ptr = ecs_get(world, foo, Position3D);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 30);
+    }
+
+    ecs_fini(world);
+}
+
 void Plecs_assignment_to_non_component() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Position(Foo) = {x: 10, y: 20}";
 
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_struct_w_member_w_assignment_to_nothing() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Struct(Position) {"
+    LINE "  flecs.meta.Member(x) = "
+    LINE "}";
+
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_struct_w_member_w_assignment_to_empty_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Struct(Position) {"
+    LINE "  flecs.meta.Member(x) = {"
+    LINE "}";
+
+    ecs_tracing_enable(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);

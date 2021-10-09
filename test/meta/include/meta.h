@@ -38,6 +38,14 @@ void _meta_test_member(
 #define meta_test_member(world, t, T, name, type, count)\
     _meta_test_member(world, t, #name, type, count, offsetof(T, name))
 
+typedef struct {
+    int32_t x, y;
+} Position;
+
+typedef struct {
+    int32_t value;
+} Mass;
+
 #ifdef __cplusplus
 }
 #endif

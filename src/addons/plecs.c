@@ -233,6 +233,7 @@ int create_term(
         ecs_assert(obj == 0, ECS_INTERNAL_ERROR, NULL);
 
         state->using[state->using_frame ++] = pred;
+        state->using_frames[state->sp] = state->using_frame;
 
     /* If this is not a with/using clause, add with frames to subject */
     } else {
@@ -441,7 +442,6 @@ const char* parse_stmt(
             }
 
             state->with_frames[state->sp] = state->with_frame;
-            state->using_frames[state->sp] = state->using_frame;
             state->with_clause = false;
 
             ptr ++;

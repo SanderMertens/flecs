@@ -213,6 +213,25 @@ int init_component(
 }
 
 static
+void set_struct_member(
+    ecs_member_t *member,
+    ecs_entity_t entity,
+    const char *name,
+    ecs_entity_t type,
+    int32_t count)
+{
+    member->member = entity;
+    member->type = type;
+    member->count = count;
+
+    if (!count) {
+        member->count = 1;
+    }
+
+    ecs_os_strset(&member->name, name);
+}
+
+static
 int add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -224,6 +243,30 @@ int add_member_to_struct(
     ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    const char *name = ecs_get_name(world, member);
+    if (!name) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("member for struct '%s' does not have a name", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    if (!m->type) {
+        char *path = ecs_get_fullpath(world, member);
+        ecs_err("member '%s' does not have a type", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    if (ecs_get_typeid(world, m->type) == 0) {
+        char *path = ecs_get_fullpath(world, member);
+        char *ent_path = ecs_get_fullpath(world, m->type);
+        ecs_err("member '%s.type' is '%s' which is not a type", path, ent_path);
+        ecs_os_free(path);
+        ecs_os_free(ent_path);
+        return -1;
+    }
+
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -232,16 +275,16 @@ int add_member_to_struct(
     int32_t i, count = ecs_vector_count(s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            members[i].type = m->type;
+            set_struct_member(&members[i], member, name, m->type, m->count);
+            break;
         }
     }
 
     /* If member wasn't added yet, add a new element to vector */
     if (i == count) {
         ecs_member_t *elem = ecs_vector_add(&s->members, ecs_member_t);
-        elem->member = member;
-        elem->type = m->type;
         elem->name = NULL;
+        set_struct_member(elem, member, name, m->type, m->count);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vector_first(s->members, ecs_member_t);
@@ -254,6 +297,9 @@ int add_member_to_struct(
 
     for (i = 0; i < count; i ++) {
         ecs_member_t *elem = &members[i];
+
+        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
@@ -272,16 +318,6 @@ int add_member_to_struct(
             ecs_err("member '%s' has 0 size/alignment");
             ecs_os_free(path);
             return -1;
-        }
-
-        /* Only assign name if this is the new member */
-        if (elem->member == member) {
-            ecs_os_strset(&elem->name, ecs_get_name(world, member));
-
-            elem->count = m->count;
-            if (!elem->count) {
-                elem->count = 1;
-            }
         }
 
         member_size *= elem->count;
@@ -703,6 +739,27 @@ void set_vector(ecs_iter_t *it) {
     }
 }
 
+static
+void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t type = it->entities[i];
+
+        /* If component has no component actions (which is typical if a type is
+         * created with reflection data) make sure its values are always 
+         * initialized with zero. This prevents the injection of invalid data 
+         * through generic APIs after adding a component without setting it. */
+        if (!ecs_component_has_actions(world, type)) {
+            ecs_set_component_actions_w_id(world, type, 
+                &(EcsComponentLifecycle){ 
+                    .ctor = ecs_default_ctor
+                });
+        }
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -719,6 +776,8 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
+
+    flecs_bootstrap_tag(world, EcsConstant);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -807,6 +866,12 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsMetaType),
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsMetaType),
+        .events = {EcsOnSet},
+        .callback = ecs_meta_type_init_default_ctor
     });
 
     /* Initialize primitive types */

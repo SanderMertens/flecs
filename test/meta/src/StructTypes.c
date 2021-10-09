@@ -360,3 +360,38 @@ void StructTypes_i32_i64_i32() {
     ecs_fini(world);
 }
 
+void StructTypes_incomplete_member() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_new_id(world);
+
+    ecs_entity_t m_x = ecs_new_w_pair(world, EcsChildOf, t);
+    ecs_set_name(world, m_x, "x");
+    ecs_set(world, m_x, EcsMember, {.type = ecs_id(ecs_i32_t)});
+
+    ecs_entity_t m_y = ecs_new_w_pair(world, EcsChildOf, t);
+    ecs_set_name(world, m_y, "y");
+    ecs_set(world, m_y, EcsMember, {.type = ecs_id(ecs_i32_t)});
+
+    ecs_entity_t m_z = ecs_new_w_pair(world, EcsChildOf, t);
+    ecs_set_name(world, m_z, "z");
+
+    ecs_tracing_enable(-4);
+    ecs_set(world, m_z, EcsMember, {.type = 0});
+
+    const EcsStruct *ptr = ecs_get(world, t, EcsStruct);
+    test_assert(ptr != NULL);
+    test_assert(ptr->members != NULL);
+    test_int(ecs_vector_count(ptr->members), 2);
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+
+    ecs_fini(world);
+}

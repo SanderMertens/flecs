@@ -14190,6 +14190,7 @@ int create_term(
         ecs_assert(obj == 0, ECS_INTERNAL_ERROR, NULL);
 
         state->using[state->using_frame ++] = pred;
+        state->using_frames[state->sp] = state->using_frame;
 
     /* If this is not a with/using clause, add with frames to subject */
     } else {
@@ -14284,6 +14285,7 @@ const char* parse_stmt(
                     ecs_parser_error(name, expr, ptr - expr, 
                         "cannot assign to non-component id '%s'", id_str);
                     ecs_os_free(id_str);
+                    return NULL;
                 }
 
                 void *value_ptr = ecs_get_mut_id(
@@ -14397,7 +14399,6 @@ const char* parse_stmt(
             }
 
             state->with_frames[state->sp] = state->with_frame;
-            state->using_frames[state->sp] = state->using_frame;
             state->with_clause = false;
 
             ptr ++;
@@ -19468,6 +19469,25 @@ int init_component(
 }
 
 static
+void set_struct_member(
+    ecs_member_t *member,
+    ecs_entity_t entity,
+    const char *name,
+    ecs_entity_t type,
+    int32_t count)
+{
+    member->member = entity;
+    member->type = type;
+    member->count = count;
+
+    if (!count) {
+        member->count = 1;
+    }
+
+    ecs_os_strset(&member->name, name);
+}
+
+static
 int add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -19479,6 +19499,30 @@ int add_member_to_struct(
     ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    const char *name = ecs_get_name(world, member);
+    if (!name) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("member for struct '%s' does not have a name", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    if (!m->type) {
+        char *path = ecs_get_fullpath(world, member);
+        ecs_err("member '%s' does not have a type", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    if (ecs_get_typeid(world, m->type) == 0) {
+        char *path = ecs_get_fullpath(world, member);
+        char *ent_path = ecs_get_fullpath(world, m->type);
+        ecs_err("member '%s.type' is '%s' which is not a type", path, ent_path);
+        ecs_os_free(path);
+        ecs_os_free(ent_path);
+        return -1;
+    }
+
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -19487,16 +19531,16 @@ int add_member_to_struct(
     int32_t i, count = ecs_vector_count(s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            members[i].type = m->type;
+            set_struct_member(&members[i], member, name, m->type, m->count);
+            break;
         }
     }
 
     /* If member wasn't added yet, add a new element to vector */
     if (i == count) {
         ecs_member_t *elem = ecs_vector_add(&s->members, ecs_member_t);
-        elem->member = member;
-        elem->type = m->type;
         elem->name = NULL;
+        set_struct_member(elem, member, name, m->type, m->count);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vector_first(s->members, ecs_member_t);
@@ -19509,6 +19553,9 @@ int add_member_to_struct(
 
     for (i = 0; i < count; i ++) {
         ecs_member_t *elem = &members[i];
+
+        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
@@ -19527,16 +19574,6 @@ int add_member_to_struct(
             ecs_err("member '%s' has 0 size/alignment");
             ecs_os_free(path);
             return -1;
-        }
-
-        /* Only assign name if this is the new member */
-        if (elem->member == member) {
-            ecs_os_strset(&elem->name, ecs_get_name(world, member));
-
-            elem->count = m->count;
-            if (!elem->count) {
-                elem->count = 1;
-            }
         }
 
         member_size *= elem->count;
@@ -19958,6 +19995,27 @@ void set_vector(ecs_iter_t *it) {
     }
 }
 
+static
+void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t type = it->entities[i];
+
+        /* If component has no component actions (which is typical if a type is
+         * created with reflection data) make sure its values are always 
+         * initialized with zero. This prevents the injection of invalid data 
+         * through generic APIs after adding a component without setting it. */
+        if (!ecs_component_has_actions(world, type)) {
+            ecs_set_component_actions_w_id(world, type, 
+                &(EcsComponentLifecycle){ 
+                    .ctor = ecs_default_ctor
+                });
+        }
+    }
+}
+
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -19974,6 +20032,8 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
+
+    flecs_bootstrap_tag(world, EcsConstant);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -20062,6 +20122,12 @@ void FlecsMetaImport(
         .term.id = ecs_id(EcsMetaType),
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsMetaType),
+        .events = {EcsOnSet},
+        .callback = ecs_meta_type_init_default_ctor
     });
 
     /* Initialize primitive types */
@@ -20391,6 +20457,10 @@ int ecs_meta_pop(
 {
     ecs_meta_scope_t *scope = get_scope(cursor);
     cursor->depth --;
+    if (cursor->depth < 0) {
+        ecs_err("unexpected end of scope");
+        return -1;
+    }
 
     ecs_meta_scope_t *next_scope = get_scope(cursor);
     ecs_meta_type_op_t *op = get_op(next_scope);
@@ -20701,17 +20771,23 @@ int ecs_meta_set_string(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e;
-        if (cursor->lookup_action) {
-            e = cursor->lookup_action(cursor->world, value, cursor->lookup_ctx);
-        } else {
-            e = ecs_lookup_path(cursor->world, 0, value);
+        ecs_entity_t e = 0;
+
+        if (ecs_os_strcmp(value, "0")) {
+            if (cursor->lookup_action) {
+                e = cursor->lookup_action(
+                    cursor->world, value, 
+                    cursor->lookup_ctx);
+            } else {
+                e = ecs_lookup_path(cursor->world, 0, value);
+            }
+
+            if (!e) {
+                ecs_err("unresolved entity identifier '%s'", value);
+                return -1;
+            }
         }
 
-        if (!e) {
-            ecs_err("unresolved entity identifier '%s'", value);
-            return -1;
-        }
         set_T(ecs_entity_t, ptr, e);
         break;
     }
@@ -20751,28 +20827,13 @@ int ecs_meta_set_string_literal(
         ecs_os_memcpy(result, value + 1, len);
         result[len] = '\0';
 
-        if (op->kind == EcsOpString) {
-            ecs_os_free(*(char**)ptr);
-            set_T(ecs_string_t, ptr, result);    
-        } else if (op->kind == EcsOpEntity) {
-            ecs_assert(op->kind == EcsOpEntity, ECS_INTERNAL_ERROR, NULL);
-            ecs_entity_t ent = ecs_lookup_fullpath(cursor->world, result);
-            if (!ent) {
-                ecs_err("unresolved entity identifier '%s'", result);
-                ecs_os_free(result);
-                return -1;
-            }
-
-            set_T(ecs_entity_t, ptr, ent);
+        if (ecs_meta_set_string(cursor, result)) {
             ecs_os_free(result);
-        } else {
-            if (ecs_meta_set_string(cursor, result)) {
-                ecs_os_free(result);
-                return -1;
-            }
-
-            ecs_os_free(result);
+            return -1;
         }
+
+        ecs_os_free(result);
+
         break;
     }
 
@@ -23321,8 +23382,201 @@ char* ecs_ptr_to_json(
     return ecs_strbuf_get(&str);
 }
 
-#endif
+static
+int append_type(
+    const ecs_world_t *world, 
+    ecs_strbuf_t *buf_out, 
+    ecs_entity_t ent, 
+    ecs_entity_t inst) 
+{
+    ecs_type_t type = ecs_get_type(world, ent);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
 
+    ecs_strbuf_list_appendstr(buf_out, "\"type\": ");
+    ecs_strbuf_list_push(buf_out, "[", ", ");
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_entity_t pred = 0, obj = 0, role = 0;
+
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            /* Skip IsA as they are already added in "inherits" */
+            continue;
+        }
+
+        if (ent != inst) {
+            /* If not serializing the top level entity, skip components that are
+             * never inherited from a base entity */
+            if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName) ||
+                ECS_PAIR_RELATION(id) == EcsChildOf ||
+                id == EcsPrefab)
+            {
+                continue;
+            }
+        }
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            pred = ecs_pair_relation(world, id);
+            obj = ecs_pair_object(world, id);
+        } else {
+            pred = id & ECS_COMPONENT_MASK;
+            if (id & ECS_ROLE_MASK) {
+                role = id & ECS_ROLE_MASK;
+            }
+        }
+
+        ecs_strbuf_list_next(buf_out);
+        ecs_strbuf_list_push(buf_out, "{", ", ");
+
+        if (pred) {
+            char *str = ecs_get_fullpath(world, pred);
+            ecs_strbuf_list_append(buf_out, "\"pred\":\"%s\"", str);
+            ecs_os_free(str);
+        }
+        if (obj) {
+            char *str = ecs_get_fullpath(world, obj);
+            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", str);
+            ecs_os_free(str);
+        }
+        if (role) {
+            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", 
+                ecs_role_str(role));
+        }
+
+        bool hidden = false;
+
+        if (ent != inst) {
+            if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
+                hidden = true;
+                ecs_strbuf_list_append(buf_out, "\"hidden\": true", 
+                    ecs_role_str(role));
+            }
+        }
+
+        if (!hidden) {
+            ecs_entity_t typeid = ecs_get_typeid(world, id);
+            if (typeid) {
+                const EcsMetaTypeSerialized *ser = ecs_get(
+                    world, typeid, EcsMetaTypeSerialized);
+                if (ser) {
+                    const void *ptr = ecs_get_id(world, ent, id);
+                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_strbuf_list_appendstr(buf_out, "\"data\": ");
+                    if (json_ser_type(world, ser->ops, ptr, buf_out) != 0) {
+                        /* Entity contains invalid value */
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        ecs_strbuf_list_pop(buf_out, "}");
+    }
+
+    ecs_strbuf_list_pop(buf_out, "]");
+    
+    return 0;
+}
+
+static
+int append_base(
+    const ecs_world_t *world, 
+    ecs_strbuf_t *buf_out, 
+    ecs_entity_t ent, 
+    ecs_entity_t inst) 
+{
+    ecs_type_t type = ecs_get_type(world, ent);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            if (append_base(world, buf_out, ecs_pair_object(world, id), inst)) {
+                return -1;
+            }
+        }
+    }
+
+    char *path = ecs_get_fullpath(world, ent);
+    ecs_strbuf_list_append(buf_out, "\"%s\": ", path);
+    ecs_os_free(path);
+
+    ecs_strbuf_list_push(buf_out, "{", ", ");
+    if (append_type(world, buf_out, ent, inst)) {
+        return -1;
+    }
+    ecs_strbuf_list_pop(buf_out, "}");
+
+    return 0;
+}
+
+int ecs_entity_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_strbuf_t *buf_out)
+{
+    ecs_strbuf_list_push(buf_out, "{", ", ");
+
+    if (!entity || !ecs_is_valid(world, entity)) {
+        ecs_strbuf_list_appendstr(buf_out, "\"valid\": false");
+    } else {
+        ecs_strbuf_list_appendstr(buf_out, "\"valid\": true");
+
+        char *path = ecs_get_fullpath(world, entity);
+        ecs_strbuf_list_append(buf_out, "\"path\": \"%s\"", path);
+        ecs_os_free(path);
+
+        ecs_type_t type = ecs_get_type(world, entity);
+        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t i, count = ecs_vector_count(type);
+
+        if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
+            ecs_strbuf_list_appendstr(buf_out, "\"is_a\": ");
+            ecs_strbuf_list_push(buf_out, "{", ", ");
+
+            for (i = 0; i < count; i ++) {
+                ecs_id_t id = ids[i];
+                if (ECS_HAS_RELATION(id, EcsIsA)) {
+                    if (append_base(
+                        world, buf_out, ecs_pair_object(world, id), entity)) 
+                    {
+                        return -1;
+                    }
+                }
+            }
+
+            ecs_strbuf_list_pop(buf_out, "}");
+        }
+
+        if (append_type(world, buf_out, entity, entity)) {
+            goto error;
+        }
+    }
+
+    ecs_strbuf_list_pop(buf_out, "}");
+
+    return 0;
+error:
+    return -1;
+}
+
+char* ecs_entity_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (ecs_entity_to_json_buf(world, entity, &buf) != 0) {
+        ecs_strbuf_reset(&buf);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+#endif
 
 
 #ifdef FLECS_JSON

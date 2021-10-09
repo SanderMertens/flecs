@@ -437,15 +437,23 @@ void Plecs_assign_2_component_values(void);
 void Plecs_assign_component_value_in_assign_scope(void);
 void Plecs_assign_2_component_values_in_assign_scope(void);
 void Plecs_type_and_assign_in_plecs(void);
-void Plecs_type_and_assign_in_plecs_w_members(void);
+void Plecs_type_and_assign_in_plecs_w_2_members(void);
+void Plecs_type_and_assign_in_plecs_w_3_members(void);
+void Plecs_type_and_assign_in_plecs_w_enum(void);
+void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void);
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void);
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void);
 void Plecs_open_scope_no_parent(void);
 void Plecs_create_subject_in_root_scope_w_resolvable_id(void);
 void Plecs_create_subject_in_scope_w_resolvable_id(void);
 void Plecs_using_scope(void);
 void Plecs_using_nested_scope(void);
 void Plecs_using_nested_in_scope(void);
-void Plecs_using_w_entity_ref_in_value(void);
+void Plecs_using_w_entity_ref_in_value_2_members(void);
+void Plecs_using_w_entity_ref_in_value_3_members(void);
 void Plecs_assignment_to_non_component(void);
+void Plecs_struct_w_member_w_assignment_to_nothing(void);
+void Plecs_struct_w_member_w_assignment_to_empty_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3789,8 +3797,28 @@ bake_test_case Plecs_testcases[] = {
         Plecs_type_and_assign_in_plecs
     },
     {
-        "type_and_assign_in_plecs_w_members",
-        Plecs_type_and_assign_in_plecs_w_members
+        "type_and_assign_in_plecs_w_2_members",
+        Plecs_type_and_assign_in_plecs_w_2_members
+    },
+    {
+        "type_and_assign_in_plecs_w_3_members",
+        Plecs_type_and_assign_in_plecs_w_3_members
+    },
+    {
+        "type_and_assign_in_plecs_w_enum",
+        Plecs_type_and_assign_in_plecs_w_enum
+    },
+    {
+        "type_and_assign_in_plecs_w_enum_using_meta",
+        Plecs_type_and_assign_in_plecs_w_enum_using_meta
+    },
+    {
+        "type_and_assign_in_plecs_w_enum_primitive_using_meta",
+        Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta
+    },
+    {
+        "type_and_assign_in_plecs_w_enum_primitive_and_struct",
+        Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct
     },
     {
         "open_scope_no_parent",
@@ -3817,12 +3845,24 @@ bake_test_case Plecs_testcases[] = {
         Plecs_using_nested_in_scope
     },
     {
-        "using_w_entity_ref_in_value",
-        Plecs_using_w_entity_ref_in_value
+        "using_w_entity_ref_in_value_2_members",
+        Plecs_using_w_entity_ref_in_value_2_members
+    },
+    {
+        "using_w_entity_ref_in_value_3_members",
+        Plecs_using_w_entity_ref_in_value_3_members
     },
     {
         "assignment_to_non_component",
         Plecs_assignment_to_non_component
+    },
+    {
+        "struct_w_member_w_assignment_to_nothing",
+        Plecs_struct_w_member_w_assignment_to_nothing
+    },
+    {
+        "struct_w_member_w_assignment_to_empty_scope",
+        Plecs_struct_w_member_w_assignment_to_empty_scope
     }
 };
 
@@ -10275,7 +10315,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        88,
+        96,
         Plecs_testcases
     },
     {

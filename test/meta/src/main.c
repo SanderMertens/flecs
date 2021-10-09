@@ -67,6 +67,7 @@ void EnumTypes_enum_2_constants(void);
 void EnumTypes_enum_3_constants(void);
 void EnumTypes_enum_3_constants_manual_values(void);
 void EnumTypes_struct_w_enum(void);
+void EnumTypes_zero_initialized(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -88,6 +89,7 @@ void StructTypes_i32_bool_bool(void);
 void StructTypes_i32_bool_bool_bool(void);
 void StructTypes_i32_i64(void);
 void StructTypes_i32_i64_i32(void);
+void StructTypes_incomplete_member(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -392,6 +394,19 @@ void SerializeToJson_struct_2_nested_i32_i32(void);
 void SerializeToJson_struct_i32_array_3(void);
 void SerializeToJson_struct_struct_i32_array_3(void);
 void SerializeToJson_struct_struct_i32_i32_array_3(void);
+void SerializeToJson_serialize_entity_empty(void);
+void SerializeToJson_serialize_entity_w_name(void);
+void SerializeToJson_serialize_entity_w_name_1_tag(void);
+void SerializeToJson_serialize_entity_w_name_2_tags(void);
+void SerializeToJson_serialize_entity_w_name_1_pair(void);
+void SerializeToJson_serialize_entity_w_base(void);
+void SerializeToJson_serialize_entity_w_base_override(void);
+void SerializeToJson_serialize_entity_w_1_component(void);
+void SerializeToJson_serialize_entity_w_2_components(void);
+void SerializeToJson_serialize_entity_w_primitive_component(void);
+void SerializeToJson_serialize_entity_w_enum_component(void);
+void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
+void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -620,6 +635,10 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "struct_w_enum",
         EnumTypes_struct_w_enum
+    },
+    {
+        "zero_initialized",
+        EnumTypes_zero_initialized
     }
 };
 
@@ -694,6 +713,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "i32_i64_i32",
         StructTypes_i32_i64_i32
+    },
+    {
+        "incomplete_member",
+        StructTypes_incomplete_member
     }
 };
 
@@ -1865,6 +1888,58 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_struct_i32_i32_array_3",
         SerializeToJson_struct_struct_i32_i32_array_3
+    },
+    {
+        "serialize_entity_empty",
+        SerializeToJson_serialize_entity_empty
+    },
+    {
+        "serialize_entity_w_name",
+        SerializeToJson_serialize_entity_w_name
+    },
+    {
+        "serialize_entity_w_name_1_tag",
+        SerializeToJson_serialize_entity_w_name_1_tag
+    },
+    {
+        "serialize_entity_w_name_2_tags",
+        SerializeToJson_serialize_entity_w_name_2_tags
+    },
+    {
+        "serialize_entity_w_name_1_pair",
+        SerializeToJson_serialize_entity_w_name_1_pair
+    },
+    {
+        "serialize_entity_w_base",
+        SerializeToJson_serialize_entity_w_base
+    },
+    {
+        "serialize_entity_w_base_override",
+        SerializeToJson_serialize_entity_w_base_override
+    },
+    {
+        "serialize_entity_w_1_component",
+        SerializeToJson_serialize_entity_w_1_component
+    },
+    {
+        "serialize_entity_w_2_components",
+        SerializeToJson_serialize_entity_w_2_components
+    },
+    {
+        "serialize_entity_w_primitive_component",
+        SerializeToJson_serialize_entity_w_primitive_component
+    },
+    {
+        "serialize_entity_w_enum_component",
+        SerializeToJson_serialize_entity_w_enum_component
+    },
+    {
+        "serialize_entity_w_struct_and_enum_component",
+        SerializeToJson_serialize_entity_w_struct_and_enum_component
+    },
+    {
+        "serialize_entity_w_invalid_enum_component",
+        SerializeToJson_serialize_entity_w_invalid_enum_component
     }
 };
 
@@ -1880,7 +1955,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        5,
+        6,
         EnumTypes_testcases
     },
     {
@@ -1894,7 +1969,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        11,
+        12,
         StructTypes_testcases
     },
     {
@@ -1957,7 +2032,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        26,
+        39,
         SerializeToJson_testcases
     }
 };

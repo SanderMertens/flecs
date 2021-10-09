@@ -256,11 +256,13 @@ void DeserializeFromExpr_entity() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
-
     const char *ptr = ecs_parse_expr(world, "flecs.core", ecs_id(ecs_entity_t), &value, NULL);
     test_assert(ptr != NULL);
-
     test_uint(value, EcsFlecsCore);
+
+    ptr = ecs_parse_expr(world, "0", ecs_id(ecs_entity_t), &value, NULL);
+    test_assert(ptr != NULL);
+    test_uint(value, 0);
 
     ecs_fini(world);
 }

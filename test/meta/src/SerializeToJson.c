@@ -1,5 +1,6 @@
 #include <meta.h>
 
+
 void SerializeToJson_struct_bool() {
     typedef struct {
         ecs_bool_t x;
@@ -762,6 +763,329 @@ void SerializeToJson_struct_struct_i32_i32_array_3() {
     test_assert(expr != NULL);
     test_str(expr, "{\"n_1\": [{\"x\": 10, \"y\": 20}, {\"x\": 30, \"y\": 40}, {\"x\": 50, \"y\": 60}]}");
     ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, \"path\": \"416\", \"type\": []}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_name_1_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add(world, e, Tag);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Tag\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_name_2_tags() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, 
+        "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_name_1_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add_pair(world, e, Rel, Obj);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, 
+        "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Identifier\", \"obj\":\"Name\"}, {\"pred\":\"Rel\", \"obj\":\"Obj\"}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base = ecs_set_name(world, 0, "Base");
+    ecs_add(world, base, TagA);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagB);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"is_a\": {\"Base\": {\"type\": ["
+            "{\"pred\":\"TagA\"}"
+        "]}}, "
+        "\"type\": ["
+            "{\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_base_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base = ecs_set_name(world, 0, "Base");
+    ecs_add(world, base, TagA);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"is_a\": {\"Base\": {\"type\": ["
+            "{\"pred\":\"TagA\", \"hidden\": true}"
+        "]}}, "
+        "\"type\": ["
+            "{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_1_component() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, Position, {10, 20});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"type\": ["
+            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_2_components() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "Mass",
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Mass, {1234});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"type\": ["
+            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, "
+            "{\"pred\":\"Mass\", \"data\": {\"value\": 1234}}, "
+            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_primitive_component() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, ecs_i32_t, {10});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"type\": ["
+            "{\"pred\":\"flecs.meta.i32\", \"data\": 10}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_enum_component() {
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Color) = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .entity.name = "Color",
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(ecs_id(Color) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, Color, {1});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"type\": ["
+            "{\"pred\":\"Color\", \"data\": \"Blue\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_struct_and_enum_component() {
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(ecs_id(Position) != 0);
+
+    ecs_entity_t ecs_id(Color) = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .entity.name = "Color",
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(ecs_id(Color) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, Color, {1});
+    ecs_set(world, e, Position, {10, 20});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json != NULL);
+    test_str(json, "{\"valid\": true, "
+        "\"path\": \"Foo\", "
+        "\"type\": ["
+            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, "
+            "{\"pred\":\"Color\", \"data\": \"Blue\"}, "
+            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_invalid_enum_component() {
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Color) = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .entity.name = "Color",
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(ecs_id(Color) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, Color, {100});
+
+    char *json = ecs_entity_to_json(world, e);
+    test_assert(json == NULL);
 
     ecs_fini(world);
 }

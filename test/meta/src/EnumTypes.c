@@ -169,3 +169,25 @@ void EnumTypes_struct_w_enum() {
 
     ecs_fini(world);
 }
+
+void EnumTypes_zero_initialized() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, EcsComponent));
+
+    ecs_entity_t ent = ecs_new_id(world);
+    ecs_add_id(world, ent, e);
+
+    const int32_t *ptr = ecs_get_id(world, ent, e);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 0);
+
+    ecs_fini(world);
+}

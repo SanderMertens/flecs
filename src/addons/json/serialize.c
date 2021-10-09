@@ -352,5 +352,198 @@ char* ecs_ptr_to_json(
     return ecs_strbuf_get(&str);
 }
 
-#endif
+static
+int append_type(
+    const ecs_world_t *world, 
+    ecs_strbuf_t *buf_out, 
+    ecs_entity_t ent, 
+    ecs_entity_t inst) 
+{
+    ecs_type_t type = ecs_get_type(world, ent);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
 
+    ecs_strbuf_list_appendstr(buf_out, "\"type\": ");
+    ecs_strbuf_list_push(buf_out, "[", ", ");
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_entity_t pred = 0, obj = 0, role = 0;
+
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            /* Skip IsA as they are already added in "inherits" */
+            continue;
+        }
+
+        if (ent != inst) {
+            /* If not serializing the top level entity, skip components that are
+             * never inherited from a base entity */
+            if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName) ||
+                ECS_PAIR_RELATION(id) == EcsChildOf ||
+                id == EcsPrefab)
+            {
+                continue;
+            }
+        }
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            pred = ecs_pair_relation(world, id);
+            obj = ecs_pair_object(world, id);
+        } else {
+            pred = id & ECS_COMPONENT_MASK;
+            if (id & ECS_ROLE_MASK) {
+                role = id & ECS_ROLE_MASK;
+            }
+        }
+
+        ecs_strbuf_list_next(buf_out);
+        ecs_strbuf_list_push(buf_out, "{", ", ");
+
+        if (pred) {
+            char *str = ecs_get_fullpath(world, pred);
+            ecs_strbuf_list_append(buf_out, "\"pred\":\"%s\"", str);
+            ecs_os_free(str);
+        }
+        if (obj) {
+            char *str = ecs_get_fullpath(world, obj);
+            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", str);
+            ecs_os_free(str);
+        }
+        if (role) {
+            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", 
+                ecs_role_str(role));
+        }
+
+        bool hidden = false;
+
+        if (ent != inst) {
+            if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
+                hidden = true;
+                ecs_strbuf_list_append(buf_out, "\"hidden\": true", 
+                    ecs_role_str(role));
+            }
+        }
+
+        if (!hidden) {
+            ecs_entity_t typeid = ecs_get_typeid(world, id);
+            if (typeid) {
+                const EcsMetaTypeSerialized *ser = ecs_get(
+                    world, typeid, EcsMetaTypeSerialized);
+                if (ser) {
+                    const void *ptr = ecs_get_id(world, ent, id);
+                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_strbuf_list_appendstr(buf_out, "\"data\": ");
+                    if (json_ser_type(world, ser->ops, ptr, buf_out) != 0) {
+                        /* Entity contains invalid value */
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        ecs_strbuf_list_pop(buf_out, "}");
+    }
+
+    ecs_strbuf_list_pop(buf_out, "]");
+    
+    return 0;
+}
+
+static
+int append_base(
+    const ecs_world_t *world, 
+    ecs_strbuf_t *buf_out, 
+    ecs_entity_t ent, 
+    ecs_entity_t inst) 
+{
+    ecs_type_t type = ecs_get_type(world, ent);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        if (ECS_HAS_RELATION(id, EcsIsA)) {
+            if (append_base(world, buf_out, ecs_pair_object(world, id), inst)) {
+                return -1;
+            }
+        }
+    }
+
+    char *path = ecs_get_fullpath(world, ent);
+    ecs_strbuf_list_append(buf_out, "\"%s\": ", path);
+    ecs_os_free(path);
+
+    ecs_strbuf_list_push(buf_out, "{", ", ");
+    if (append_type(world, buf_out, ent, inst)) {
+        return -1;
+    }
+    ecs_strbuf_list_pop(buf_out, "}");
+
+    return 0;
+}
+
+int ecs_entity_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_strbuf_t *buf_out)
+{
+    ecs_strbuf_list_push(buf_out, "{", ", ");
+
+    if (!entity || !ecs_is_valid(world, entity)) {
+        ecs_strbuf_list_appendstr(buf_out, "\"valid\": false");
+    } else {
+        ecs_strbuf_list_appendstr(buf_out, "\"valid\": true");
+
+        char *path = ecs_get_fullpath(world, entity);
+        ecs_strbuf_list_append(buf_out, "\"path\": \"%s\"", path);
+        ecs_os_free(path);
+
+        ecs_type_t type = ecs_get_type(world, entity);
+        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t i, count = ecs_vector_count(type);
+
+        if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
+            ecs_strbuf_list_appendstr(buf_out, "\"is_a\": ");
+            ecs_strbuf_list_push(buf_out, "{", ", ");
+
+            for (i = 0; i < count; i ++) {
+                ecs_id_t id = ids[i];
+                if (ECS_HAS_RELATION(id, EcsIsA)) {
+                    if (append_base(
+                        world, buf_out, ecs_pair_object(world, id), entity)) 
+                    {
+                        return -1;
+                    }
+                }
+            }
+
+            ecs_strbuf_list_pop(buf_out, "}");
+        }
+
+        if (append_type(world, buf_out, entity, entity)) {
+            goto error;
+        }
+    }
+
+    ecs_strbuf_list_pop(buf_out, "}");
+
+    return 0;
+error:
+    return -1;
+}
+
+char* ecs_entity_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (ecs_entity_to_json_buf(world, entity, &buf) != 0) {
+        ecs_strbuf_reset(&buf);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+#endif
