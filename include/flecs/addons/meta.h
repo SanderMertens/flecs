@@ -302,6 +302,10 @@ typedef struct ecs_meta_cursor_t {
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
     bool valid;
+
+    /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
+    ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
+    void *lookup_ctx;
 } ecs_meta_cursor_t;
 
 FLECS_API

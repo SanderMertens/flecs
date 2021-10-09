@@ -1959,3 +1959,226 @@ void Plecs_type_and_assign_in_plecs_w_members() {
 
     ecs_fini(world);
 }
+
+
+void Plecs_open_scope_no_parent() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Bar"
+    LINE "}"
+    LINE "{"
+    LINE "  Zoo"
+    LINE "}"
+    LINE "Hello";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(zoo != 0);
+    test_assert(hello != 0);
+
+    test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(!ecs_has_pair(world, zoo, EcsChildOf, EcsWildcard));
+    test_assert(!ecs_has_pair(world, hello, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+
+void Plecs_create_subject_in_root_scope_w_resolvable_id() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Tag";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t tag = ecs_lookup_child(world, 0, "Tag");
+    test_assert(tag != 0);
+    test_assert(tag != EcsTag);
+
+    ecs_fini(world);
+}
+
+void Plecs_create_subject_in_scope_w_resolvable_id() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Tag"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Foo.Tag");
+    test_assert(tag != 0);
+    test_assert(tag != EcsTag);
+
+    test_assert(ecs_has_pair(world, tag, EcsChildOf, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_using_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Bar"
+    LINE "}"
+    LINE ""
+    LINE "using Foo"
+    LINE "Bar(Hello)"
+    LINE "Foo.Bar(World)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(not_bar == 0);
+
+    test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
+
+    test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert(ecs_has_id(world, hello, bar));
+    test_assert(ecs_has_id(world, _world, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_using_nested_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Bar {"
+    LINE "    Zoo"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "using Foo.Bar"
+    LINE "Zoo(Hello)"
+    LINE "Foo.Bar.Zoo(World)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Foo.Bar.Zoo");
+    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t not_zoo = ecs_lookup_fullpath(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(zoo != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(not_bar == 0);
+    test_assert(not_zoo == 0);
+
+    test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
+
+    test_assert(ecs_has_id(world, hello, zoo));
+    test_assert(ecs_has_id(world, _world, zoo));
+
+    ecs_fini(world);
+}
+
+void Plecs_using_nested_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Bar {"
+    LINE "    Zoo"
+    LINE "  }"
+    LINE "}"
+    LINE "{"
+    LINE "  using Foo.Bar"
+    LINE "  Zoo(Hello)"
+    LINE "}"
+    LINE "Zoo(World)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Foo.Bar.Zoo");
+    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t zoo_root = ecs_lookup_fullpath(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(zoo != 0);
+    test_assert(hello != 0);
+    test_assert(_world != 0);
+    test_assert(not_bar == 0);
+    test_assert(zoo_root != 0);
+
+    test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
+
+    test_assert(ecs_has_id(world, hello, zoo));
+    test_assert(ecs_has_id(world, _world, zoo_root));
+
+    ecs_fini(world);
+}
+
+void Plecs_using_w_entity_ref_in_value() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  Member(x) = {f32}" // member type is looked up in flecs.meta
+    LINE "  Member(y) = {f32}"
+    LINE "}"
+    LINE ""
+    LINE "Position(Foo) = {x: 10, y: 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+
+    test_assert(ecs_id(Position) != 0);
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    {
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Plecs_assignment_to_non_component() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Position(Foo) = {x: 10, y: 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

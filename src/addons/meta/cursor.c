@@ -596,7 +596,13 @@ int ecs_meta_set_string(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e = ecs_lookup_path(cursor->world, 0, value);
+        ecs_entity_t e;
+        if (cursor->lookup_action) {
+            e = cursor->lookup_action(cursor->world, value, cursor->lookup_ctx);
+        } else {
+            e = ecs_lookup_path(cursor->world, 0, value);
+        }
+
         if (!e) {
             ecs_err("unresolved entity identifier '%s'", value);
             return -1;

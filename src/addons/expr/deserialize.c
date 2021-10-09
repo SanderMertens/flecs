@@ -32,24 +32,30 @@ const char *ecs_parse_expr_token(
 
 const char* ecs_parse_expr(
     const ecs_world_t *world,
-    const char *name,
-    const char *expr,
     const char *ptr,
     ecs_entity_t type,
-    void *data_out)
+    void *data_out,
+    const ecs_expr_desc_t *desc)
 {
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
 
-    if (!ptr) {
-        ptr = expr;
-    }
+    const char *name = NULL;
+    const char *expr = NULL;
 
     ptr = ecs_parse_fluff(ptr);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
         return NULL;
+    }
+
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
+        cur.lookup_action = desc->lookup_action;
+        cur.lookup_ctx = desc->lookup_ctx;
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {

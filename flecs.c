@@ -13963,6 +13963,7 @@ void FlecsTimerImport(
 
 #define TOK_NEWLINE '\n'
 #define TOK_WITH "with"
+#define TOK_USING "using"
 
 #define STACK_MAX_SIZE (64)
 
@@ -13974,17 +13975,57 @@ typedef struct {
     ecs_entity_t assign_to;
     ecs_entity_t scope[STACK_MAX_SIZE];
     ecs_entity_t with[STACK_MAX_SIZE];
+    ecs_entity_t using[STACK_MAX_SIZE];
     int32_t with_frames[STACK_MAX_SIZE];
+    int32_t using_frames[STACK_MAX_SIZE];
     int32_t sp;
     int32_t with_frame;
+    int32_t using_frame;
     bool with_clause;
+    bool using_clause;
     bool assignment;
     bool isa_clause;
 } plecs_state_t;
 
 static
+ecs_entity_t plecs_lookup(
+    const ecs_world_t *world,
+    const char *path,
+    plecs_state_t *state,
+    bool is_subject)
+{
+    ecs_entity_t e = 0;
+
+    int using_scope = state->using_frame - 1;
+    for (; using_scope >= 0; using_scope--) {
+        e = ecs_lookup_path_w_sep(
+            world, state->using[using_scope], path, NULL, NULL, false);
+        if (e) {
+            break;
+        }
+    }
+
+    if (!e) {
+        e = ecs_lookup_path_w_sep(world, 0, path, NULL, NULL, !is_subject);
+    }
+
+    return e;
+}
+
+/* Lookup action used for deserializing entity refs in component values */
+static
+ecs_entity_t plecs_lookup_action(
+    const ecs_world_t *world,
+    const char *path,
+    void *ctx)
+{
+    return plecs_lookup(world, path, ctx, false);
+}
+
+static
 ecs_entity_t ensure_entity(
     ecs_world_t *world,
+    plecs_state_t *state,
     const char *path,
     bool is_subject)
 {
@@ -13992,7 +14033,7 @@ ecs_entity_t ensure_entity(
         return 0;
     }
 
-    ecs_entity_t e = ecs_lookup_path_w_sep(world, 0, path, NULL, NULL, true);
+    ecs_entity_t e = plecs_lookup(world, path, state, is_subject);
     if (!e) {
         if (!is_subject) {
             /* If this is not a subject create an existing empty id, which 
@@ -14037,6 +14078,15 @@ bool pred_is_subj(
     if (state->with_clause) {
         return false;
     }
+    if (state->assignment) {
+        return false;
+    }
+    if (state->isa_clause) {
+        return false;
+    }
+    if (state->using_clause) {
+        return false;
+    }
     return true;
 }
 
@@ -14065,16 +14115,13 @@ int create_term(
     }
 
     bool pred_as_subj = pred_is_subj(term, state);
-    if (state->assignment || state->isa_clause) {
-        pred_as_subj = false;
-    }
 
-    ecs_entity_t pred = ensure_entity(world, term->pred.name, pred_as_subj); 
-    ecs_entity_t subj = ensure_entity(world, term->args[0].name, true);
+    ecs_entity_t pred = ensure_entity(world, state, term->pred.name, pred_as_subj); 
+    ecs_entity_t subj = ensure_entity(world, state, term->args[0].name, true);
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->args[1])) {
-        obj = ensure_entity(world, term->args[1].name, true);
+        obj = ensure_entity(world, state, term->args[1].name, true);
     }
 
     if (state->assignment || state->isa_clause) {
@@ -14084,6 +14131,12 @@ int create_term(
     if (state->isa_clause && obj) {
         ecs_parser_error(name, expr, column, 
             "invalid object in inheritance statement");
+        return -1;
+    }
+
+    if (state->using_clause && (obj || subj)) {
+        ecs_parser_error(name, expr, column, 
+            "invalid predicate/object in using statement");
         return -1;
     }
 
@@ -14131,8 +14184,14 @@ int create_term(
         }
 
         state->with[state->with_frame ++] = id;
+    
+    } else if (state->using_clause) {
+        ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(obj == 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* If this is not a with clause, add with frames to subject */
+        state->using[state->using_frame ++] = pred;
+
+    /* If this is not a with/using clause, add with frames to subject */
     } else {
         if (subj) {
             int32_t i, frame_count = state->with_frames[state->sp];
@@ -14164,11 +14223,14 @@ const char* parse_stmt(
 
     bool stmt_parsed;
 
+    state->using_clause = false;
+
     do {
         stmt_parsed = false;
 
         ptr = ecs_parse_fluff(ptr);
 
+        /* Inheritance (IsA shorthand) statement */
         if (ptr[0] == ':') {
             if (state->isa_clause) {
                 ecs_parser_error(name, expr, ptr - expr, 
@@ -14189,6 +14251,7 @@ const char* parse_stmt(
             ptr = ecs_parse_fluff(ptr + 1);
         }
 
+        /* Assignment statement */
         if (ptr[0] == '=') {
             if (state->isa_clause) {
                 ecs_parser_error(name, expr, ptr - expr, 
@@ -14226,8 +14289,13 @@ const char* parse_stmt(
                 void *value_ptr = ecs_get_mut_id(
                     world, assign_to, assign_id, NULL);
 
-                ptr = ecs_parse_expr(
-                    world, name, expr, ptr + 1, type, value_ptr);
+                ptr = ecs_parse_expr(world, ptr + 1, type, value_ptr, 
+                    &(ecs_expr_desc_t) {
+                        .name = name,
+                        .expr = expr,
+                        .lookup_action = plecs_lookup_action,
+                        .lookup_ctx = state
+                    });
                 if (!ptr) {
                     return NULL;
                 }
@@ -14257,6 +14325,21 @@ const char* parse_stmt(
             }
         }
 
+        /* Using statement */
+        if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
+            if (state->isa_clause || state->assignment) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid usage of using keyword");
+                return NULL;
+            }
+
+            /* Add following expressions to using list */
+            state->using_clause = true;
+            ptr = ecs_parse_fluff(ptr + 5);
+            stmt_parsed = true;
+        }
+
+        /* With statement */
         if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
             if (state->isa_clause) {
                 ecs_parser_error(name, expr, ptr - expr, 
@@ -14276,6 +14359,7 @@ const char* parse_stmt(
             stmt_parsed = true;
         }
 
+        /* With / ChildOf scope */
         if (ptr[0] == '{') {
             if (state->isa_clause) {
                 ecs_parser_error(name, expr, ptr - expr, 
@@ -14313,6 +14397,7 @@ const char* parse_stmt(
             }
 
             state->with_frames[state->sp] = state->with_frame;
+            state->using_frames[state->sp] = state->using_frame;
             state->with_clause = false;
 
             ptr ++;
@@ -14343,6 +14428,8 @@ const char* parse_stmt(
                 }
 
                 state->with_frame = state->with_frames[state->sp];
+                state->using_frame = state->using_frames[state->sp];
+                state->last_subject = 0;
                 stmt_parsed = true;
             }
 
@@ -20614,7 +20701,13 @@ int ecs_meta_set_string(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e = ecs_lookup_path(cursor->world, 0, value);
+        ecs_entity_t e;
+        if (cursor->lookup_action) {
+            e = cursor->lookup_action(cursor->world, value, cursor->lookup_ctx);
+        } else {
+            e = ecs_lookup_path(cursor->world, 0, value);
+        }
+
         if (!e) {
             ecs_err("unresolved entity identifier '%s'", value);
             return -1;
@@ -21364,24 +21457,30 @@ const char *ecs_parse_expr_token(
 
 const char* ecs_parse_expr(
     const ecs_world_t *world,
-    const char *name,
-    const char *expr,
     const char *ptr,
     ecs_entity_t type,
-    void *data_out)
+    void *data_out,
+    const ecs_expr_desc_t *desc)
 {
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
 
-    if (!ptr) {
-        ptr = expr;
-    }
+    const char *name = NULL;
+    const char *expr = NULL;
 
     ptr = ecs_parse_fluff(ptr);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
         return NULL;
+    }
+
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
+        cur.lookup_action = desc->lookup_action;
+        cur.lookup_ctx = desc->lookup_ctx;
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {

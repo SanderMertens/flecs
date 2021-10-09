@@ -7437,6 +7437,10 @@ typedef struct ecs_meta_cursor_t {
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
     bool valid;
+
+    /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
+    ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
+    void *lookup_ctx;
 } ecs_meta_cursor_t;
 
 FLECS_API
@@ -7816,6 +7820,17 @@ ecs_size_t ecs_stresc(
     char delimiter, 
     const char *in);
 
+/** Used with ecs_parse_expr. */
+typedef struct ecs_expr_desc_t {
+    const char *name;
+    const char *expr;
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*, 
+        const char *value, 
+        void *ctx);
+    void *lookup_ctx;
+} ecs_expr_desc_t;
+
 /** Parse expression into value.
  * This operation parses a flecs expression into the provided pointer. The
  * memory pointed to must be large enough to contain a value of the used type.
@@ -7831,11 +7846,10 @@ ecs_size_t ecs_stresc(
 FLECS_API
 const char* ecs_parse_expr(
     const ecs_world_t *world,
-    const char *name,
-    const char *expr,
     const char *ptr,
     ecs_entity_t type,
-    void *data_out);
+    void *data_out,
+    const ecs_expr_desc_t *desc);
 
 /** Serialize value into expression string.
  * This operation serializes a value of the provided type to a string. The 

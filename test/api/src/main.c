@@ -438,6 +438,14 @@ void Plecs_assign_component_value_in_assign_scope(void);
 void Plecs_assign_2_component_values_in_assign_scope(void);
 void Plecs_type_and_assign_in_plecs(void);
 void Plecs_type_and_assign_in_plecs_w_members(void);
+void Plecs_open_scope_no_parent(void);
+void Plecs_create_subject_in_root_scope_w_resolvable_id(void);
+void Plecs_create_subject_in_scope_w_resolvable_id(void);
+void Plecs_using_scope(void);
+void Plecs_using_nested_scope(void);
+void Plecs_using_nested_in_scope(void);
+void Plecs_using_w_entity_ref_in_value(void);
+void Plecs_assignment_to_non_component(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3783,6 +3791,38 @@ bake_test_case Plecs_testcases[] = {
     {
         "type_and_assign_in_plecs_w_members",
         Plecs_type_and_assign_in_plecs_w_members
+    },
+    {
+        "open_scope_no_parent",
+        Plecs_open_scope_no_parent
+    },
+    {
+        "create_subject_in_root_scope_w_resolvable_id",
+        Plecs_create_subject_in_root_scope_w_resolvable_id
+    },
+    {
+        "create_subject_in_scope_w_resolvable_id",
+        Plecs_create_subject_in_scope_w_resolvable_id
+    },
+    {
+        "using_scope",
+        Plecs_using_scope
+    },
+    {
+        "using_nested_scope",
+        Plecs_using_nested_scope
+    },
+    {
+        "using_nested_in_scope",
+        Plecs_using_nested_in_scope
+    },
+    {
+        "using_w_entity_ref_in_value",
+        Plecs_using_w_entity_ref_in_value
+    },
+    {
+        "assignment_to_non_component",
+        Plecs_assignment_to_non_component
     }
 };
 
@@ -10235,7 +10275,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        80,
+        88,
         Plecs_testcases
     },
     {
