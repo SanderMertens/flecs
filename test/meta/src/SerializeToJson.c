@@ -772,9 +772,13 @@ void SerializeToJson_serialize_entity_empty() {
 
     ecs_entity_t e = ecs_new_id(world);
 
+    char *str = ecs_os_strdup("{\"valid\": true, \"path\": \"446\", \"type\": []}");
+    ecs_os_sprintf(
+        str, "{\"valid\": true, \"path\": \"%u\", \"type\": []}", (uint32_t)e);
+
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, \"path\": \"446\", \"type\": []}");
+    test_str(json, str);
     ecs_os_free(json);
 
     ecs_fini(world);

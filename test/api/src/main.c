@@ -469,6 +469,10 @@ void GlobalComponentIds_declare_tag(void);
 void GlobalComponentIds_declare_tag_w_entity(void);
 void GlobalComponentIds_declare_entity(void);
 
+// Testsuite 'Doc'
+void Doc_get_set_brief(void);
+void Doc_get_set_detail(void);
+
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
@@ -3922,6 +3926,17 @@ bake_test_case GlobalComponentIds_testcases[] = {
     {
         "declare_entity",
         GlobalComponentIds_declare_entity
+    }
+};
+
+bake_test_case Doc_testcases[] = {
+    {
+        "get_set_brief",
+        Doc_get_set_brief
+    },
+    {
+        "get_set_detail",
+        Doc_get_set_detail
     }
 };
 
@@ -10366,6 +10381,13 @@ static bake_test_suite suites[] = {
         GlobalComponentIds_testcases
     },
     {
+        "Doc",
+        NULL,
+        NULL,
+        2,
+        Doc_testcases
+    },
+    {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
@@ -10719,5 +10741,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 61);
+    return bake_test_run("api", argc, argv, suites, 62);
 }

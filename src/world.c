@@ -118,6 +118,9 @@ const ecs_entity_t ecs_id(ecs_f64_t) =        ECS_HI_COMPONENT_ID + 95;
 const ecs_entity_t ecs_id(ecs_string_t) =     ECS_HI_COMPONENT_ID + 96;
 const ecs_entity_t ecs_id(ecs_entity_t) =     ECS_HI_COMPONENT_ID + 97;
 
+const ecs_entity_t ecs_id(EcsDescription) =   ECS_HI_COMPONENT_ID + 100;
+const ecs_entity_t EcsBrief =                 ECS_HI_COMPONENT_ID + 101;
+const ecs_entity_t EcsDetail =                ECS_HI_COMPONENT_ID + 102;
 
 /* -- Private functions -- */
 
@@ -427,6 +430,9 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_META_H
     ECS_IMPORT(world, FlecsMeta);
+#endif
+#ifdef FLECS_DOC_H
+    ECS_IMPORT(world, FlecsDoc);
 #endif
     ecs_log_pop();
 #endif

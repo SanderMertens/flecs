@@ -28,6 +28,7 @@ flecs_src = files(
     'src/addons/meta/meta.c',
     'src/addons/meta/serialized.c',
     'src/addons/meta/cursor.c',
+    'src/addons/doc.c',
     'src/datastructures/bitset.c',
     'src/datastructures/hash.c',
     'src/datastructures/hashmap.c',
