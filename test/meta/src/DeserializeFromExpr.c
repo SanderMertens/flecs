@@ -232,7 +232,7 @@ void DeserializeFromExpr_negative_float() {
     const char *ptr = ecs_parse_expr(world, "-10.5", ecs_id(ecs_f32_t), &value, NULL);
     test_assert(ptr != NULL);
 
-    test_int(value, -10.5);
+    test_flt(value, -10.5);
 
     ecs_fini(world);
 }

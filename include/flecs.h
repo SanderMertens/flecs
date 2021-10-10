@@ -48,6 +48,7 @@
 #define FLECS_META          /* Reflection support */
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
+#define FLECS_DOC           /* Document entities & components */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3521,6 +3522,9 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_TIMER
 #include "flecs/addons/timer.h"
+#endif
+#ifdef FLECS_DOC
+#include "flecs/addons/doc.h"
 #endif
 #ifdef FLECS_META
 #include "flecs/addons/meta.h"

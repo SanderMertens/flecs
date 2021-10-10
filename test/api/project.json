@@ -497,6 +497,12 @@
                 "declare_entity"
             ]
         }, {
+            "id": "Doc",
+            "testcases": [
+                "get_set_brief",
+                "get_set_detail"
+            ]
+        }, {
             "id": "Hierarchies",
             "setup": true,
             "testcases": [
