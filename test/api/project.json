@@ -500,7 +500,8 @@
             "id": "Doc",
             "testcases": [
                 "get_set_brief",
-                "get_set_detail"
+                "get_set_detail",
+                "get_set_link"
             ]
         }, {
             "id": "Hierarchies",

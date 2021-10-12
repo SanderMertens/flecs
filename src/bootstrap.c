@@ -274,6 +274,8 @@ void flecs_bootstrap(
     ecs_trace_1("bootstrap core components");
     ecs_log_push();
 
+    ecs_set_name_prefix(world, "Ecs");
+
     /* Create table for initial components */
     ecs_table_t *table = bootstrap_component_table(world);
     assert(table != NULL);
