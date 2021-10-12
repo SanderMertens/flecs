@@ -287,11 +287,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
 
-      - name: FLECS_BULK
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_BULK
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_BULK
-
       - name: FLECS_MODULE
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
@@ -336,6 +331,11 @@ jobs:
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DOC
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DOC
+
+      - name: FLECS_COREDOC
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_COREDOC
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_COREDOC
 
   flecs-amalgamated:
     timeout-minutes: 5

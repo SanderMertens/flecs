@@ -10,26 +10,27 @@
 
 #ifdef FLECS_DOC
 
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
 #ifndef FLECS_DOC_H
 #define FLECS_DOC_H
 
-#include "meta.h"
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#include "module.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-FLECS_API extern const ecs_entity_t ecs_id(EcsDescription);
-FLECS_API extern const ecs_entity_t EcsBrief;
-FLECS_API extern const ecs_entity_t EcsDetail;
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
+FLECS_API extern const ecs_entity_t EcsDocBrief;
+FLECS_API extern const ecs_entity_t EcsDocDetail;
+FLECS_API extern const ecs_entity_t EcsDocLink;
 
-typedef struct EcsDescription {
+typedef struct EcsDocDescription {
     const char *value;
-} EcsDescription;
+} EcsDocDescription;
 
 /** Add brief description to entity.
  * 
@@ -55,6 +56,18 @@ void ecs_doc_set_detail(
     ecs_entity_t entity,
     const char *description);
 
+/** Add link to external documentation to entity.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the link.
+ * @param description The link to add.
+ */
+FLECS_API
+void ecs_doc_set_link(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *link);
+
 /** Get brief description from entity.
  * 
  * @param world The world.
@@ -74,6 +87,17 @@ const char* ecs_doc_get_brief(
  */
 FLECS_API
 const char* ecs_doc_get_detail(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get link to external documentation from entity.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the link.
+ * @return The link.
+ */
+FLECS_API
+const char* ecs_doc_get_link(
     const ecs_world_t *world,
     ecs_entity_t entity);
 

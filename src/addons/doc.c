@@ -3,18 +3,18 @@
 
 #ifdef FLECS_DOC
 
-static ECS_COPY(EcsDescription, dst, src, {
+static ECS_COPY(EcsDocDescription, dst, src, {
     ecs_os_strset((char**)&dst->value, src->value);
 
 })
 
-static ECS_MOVE(EcsDescription, dst, src, {
+static ECS_MOVE(EcsDocDescription, dst, src, {
     ecs_os_free((char*)dst->value);
     dst->value = src->value;
     src->value = NULL;
 })
 
-static ECS_DTOR(EcsDescription, ptr, { 
+static ECS_DTOR(EcsDocDescription, ptr, { 
     ecs_os_free((char*)ptr->value);
 })
 
@@ -23,7 +23,7 @@ void ecs_doc_set_brief(
     ecs_entity_t entity,
     const char *description)
 {
-    ecs_set_pair(world, entity, EcsDescription, EcsBrief, {
+    ecs_set_pair(world, entity, EcsDocDescription, EcsDocBrief, {
         .value = description
     });
 }
@@ -33,8 +33,18 @@ void ecs_doc_set_detail(
     ecs_entity_t entity,
     const char *description)
 {
-    ecs_set_pair(world, entity, EcsDescription, EcsDetail, {
+    ecs_set_pair(world, entity, EcsDocDescription, EcsDocDetail, {
         .value = description
+    });
+}
+
+void ecs_doc_set_link(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *link)
+{
+    ecs_set_pair(world, entity, EcsDocDescription, EcsDocLink, {
+        .value = link
     });
 }
 
@@ -42,7 +52,8 @@ const char* ecs_doc_get_brief(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDescription *ptr = ecs_get_pair(world, entity, EcsDescription, EcsBrief);
+    EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsDocBrief);
     if (ptr) {
         return ptr->value;
     } else {
@@ -54,8 +65,21 @@ const char* ecs_doc_get_detail(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    EcsDescription *ptr = ecs_get_pair(
-        world, entity, EcsDescription, EcsDetail);
+    EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsDocDetail);
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return NULL;
+    }
+}
+
+const char* ecs_doc_get_link(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsDocLink);
     if (ptr) {
         return ptr->value;
     } else {
@@ -68,25 +92,18 @@ void FlecsDocImport(
 {    
     ECS_MODULE(world, FlecsDoc);
 
-    ecs_set_name_prefix(world, "Ecs");
+    ecs_set_name_prefix(world, "EcsDoc");
 
-    flecs_bootstrap_component(world, EcsDescription);
-    flecs_bootstrap_tag(world, EcsBrief);
-    flecs_bootstrap_tag(world, EcsDetail);
+    flecs_bootstrap_component(world, EcsDocDescription);
+    flecs_bootstrap_tag(world, EcsDocBrief);
+    flecs_bootstrap_tag(world, EcsDocDetail);
+    flecs_bootstrap_tag(world, EcsDocLink);
 
-    ecs_set_component_actions(world, EcsDescription, { 
+    ecs_set_component_actions(world, EcsDocDescription, { 
         .ctor = ecs_default_ctor,
-        .move = ecs_move(EcsDescription),
-        .copy = ecs_copy(EcsDescription),
-        .dtor = ecs_dtor(EcsDescription)
-    });
-
-    /* Initialize reflection data for Description component */
-    ecs_struct_init(world, &(ecs_struct_desc_t) {
-        .entity.entity = ecs_id(EcsDescription),
-        .members = {
-            {.name = "value", .type = ecs_id(ecs_string_t)}
-        }
+        .move = ecs_move(EcsDocDescription),
+        .copy = ecs_copy(EcsDocDescription),
+        .dtor = ecs_dtor(EcsDocDescription)
     });
 }
 

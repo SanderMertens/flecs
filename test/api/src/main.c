@@ -472,6 +472,7 @@ void GlobalComponentIds_declare_entity(void);
 // Testsuite 'Doc'
 void Doc_get_set_brief(void);
 void Doc_get_set_detail(void);
+void Doc_get_set_link(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -3937,6 +3938,10 @@ bake_test_case Doc_testcases[] = {
     {
         "get_set_detail",
         Doc_get_set_detail
+    },
+    {
+        "get_set_link",
+        Doc_get_set_link
     }
 };
 
@@ -10384,7 +10389,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        2,
+        3,
         Doc_testcases
     },
     {

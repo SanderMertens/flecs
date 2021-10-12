@@ -49,6 +49,7 @@
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
+#define FLECS_COREDOC       /* Documentation for core entities & components */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3525,6 +3526,9 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_DOC
 #include "flecs/addons/doc.h"
+#endif
+#ifdef FLECS_COREDOC
+#include "flecs/addons/coredoc.h"
 #endif
 #ifdef FLECS_META
 #include "flecs/addons/meta.h"

@@ -51,6 +51,7 @@
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
+#define FLECS_COREDOC       /* Documentation for core entities & components */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -7015,12 +7016,137 @@ void FlecsTimerImport(
 
 #ifdef FLECS_DOC
 
+#ifndef FLECS_DOC_H
+#define FLECS_DOC_H
+
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
+FLECS_API extern const ecs_entity_t EcsDocBrief;
+FLECS_API extern const ecs_entity_t EcsDocDetail;
+FLECS_API extern const ecs_entity_t EcsDocLink;
+
+typedef struct EcsDocDescription {
+    const char *value;
+} EcsDocDescription;
+
+/** Add brief description to entity.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the description.
+ * @param description The description to add.
+ */
+FLECS_API
+void ecs_doc_set_brief(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *description);
+
+/** Add detailed description to entity.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the description.
+ * @param description The description to add.
+ */
+FLECS_API
+void ecs_doc_set_detail(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *description);
+
+/** Add link to external documentation to entity.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the link.
+ * @param description The link to add.
+ */
+FLECS_API
+void ecs_doc_set_link(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *link);
+
+/** Get brief description from entity.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the description.
+ * @return The description.
+ */
+FLECS_API
+const char* ecs_doc_get_brief(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get detailed description from entity.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the description.
+ * @return The description.
+ */
+FLECS_API
+const char* ecs_doc_get_detail(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get link to external documentation from entity.
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the link.
+ * @return The link.
+ */
+FLECS_API
+const char* ecs_doc_get_link(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/* Module import boilerplate */
+
+typedef struct FlecsDoc {
+    int32_t dummy; 
+} FlecsDoc;
+
+FLECS_API
+void FlecsDocImport(
+    ecs_world_t *world);
+
+#define FlecsDocImportHandles(handles)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_COREDOC
+/**
+ * @file coredoc.h
+ * @brief Core doc module.
+ *
+ * The core doc module imports documentation and reflection data for core
+ * components, tags and systems.
+ */
+
+#ifdef FLECS_COREDOC
+
+#ifndef FLECS_DOC
+#define FLECS_DOC
+#endif
+
 #ifndef FLECS_META
 #define FLECS_META
 #endif
 
-#ifndef FLECS_DOC_H
-#define FLECS_DOC_H
+#ifndef FLECS_COREDOC_H
+#define FLECS_COREDOC_H
 
 /**
  * @file meta.h
@@ -7651,71 +7777,17 @@ void FlecsMetaImport(
 extern "C" {
 #endif
 
-FLECS_API extern const ecs_entity_t ecs_id(EcsDescription);
-FLECS_API extern const ecs_entity_t EcsBrief;
-FLECS_API extern const ecs_entity_t EcsDetail;
-
-typedef struct EcsDescription {
-    const char *value;
-} EcsDescription;
-
-/** Add brief description to entity.
- * 
- * @param world The world.
- * @param entity The entity to which to add the description.
- * @param description The description to add.
- */
-FLECS_API
-void ecs_doc_set_brief(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *description);
-
-/** Add detailed description to entity.
- * 
- * @param world The world.
- * @param entity The entity to which to add the description.
- * @param description The description to add.
- */
-FLECS_API
-void ecs_doc_set_detail(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *description);
-
-/** Get brief description from entity.
- * 
- * @param world The world.
- * @param entity The entity from which to get the description.
- * @return The description.
- */
-FLECS_API
-const char* ecs_doc_get_brief(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get detailed description from entity.
- * 
- * @param world The world.
- * @param entity The entity from which to get the description.
- * @return The description.
- */
-FLECS_API
-const char* ecs_doc_get_detail(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
 /* Module import boilerplate */
 
-typedef struct FlecsDoc {
+typedef struct FlecsCoreDoc {
     int32_t dummy; 
-} FlecsDoc;
+} FlecsCoreDoc;
 
 FLECS_API
-void FlecsDocImport(
+void FlecsCoreDocImport(
     ecs_world_t *world);
 
-#define FlecsDocImportHandles(handles)
+#define FlecsCoreDocImportHandles(handles)
 
 #ifdef __cplusplus
 }
