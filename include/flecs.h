@@ -1914,7 +1914,7 @@ ecs_entity_t ecs_set_name(
  * This will set or overwrite the symbol of an entity. If no entity is provided,
  * a new entity will be created.
  *
- * The symbol will be stored in the EcsName component.
+ * The symbol will be stored in the EcsSymbol component.
  *
  * @param world The world.
  * @param entity The entity.
