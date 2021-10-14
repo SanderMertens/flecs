@@ -5230,6 +5230,12 @@ void instantiate(
     int32_t row,
     int32_t count)
 {
+    ecs_table_t *base_table = ecs_get_table(world, ecs_get_alive(world, base));
+    if (!base_table || !(base_table->flags & EcsTableIsPrefab)) {
+        /* Don't instantiate children from base entities that aren't prefabs */
+        return;
+    }
+
     /* If base is a parent, instantiate children of base for instances */
     const ecs_id_record_t *idr = flecs_get_id_record(
         world, ecs_pair(EcsChildOf, base));

@@ -2677,7 +2677,7 @@ void Prefab_child_of_instance() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t e = ecs_new_id(world);
 
     ecs_add_pair(world, e, EcsChildOf, base);
@@ -2942,7 +2942,7 @@ void Prefab_instantiate_tree_from_recycled_base() {
     
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     test_assert(base != 0);
 
     ecs_delete(world, base);
@@ -2950,6 +2950,7 @@ void Prefab_instantiate_tree_from_recycled_base() {
 
     base = ecs_set(world, 0, Position, {10, 20});
     test_assert(base != 0);
+    ecs_add_id(world, base, EcsPrefab);
 
     ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
     test_assert(base_child != 0);
@@ -3302,5 +3303,22 @@ void Prefab_nested_prefab_w_named_children() {
     test_assert( ecs_has_pair(world, TurretA, EcsIsA, Turret));
     test_str("TurretA", ecs_get_name(world, TurretA));
 
+    ecs_fini(world);
+}
+
+void Prefab_dont_copy_children_for_non_prefab_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Base, Position);
+    ECS_ENTITY(world, Child, (ChildOf, Base));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
+    test_assert(e != 0);
+    test_assert(ecs_get(world, e, Position) != NULL);
+
+    test_assert(ecs_lookup_child(world, e, "Child") == 0);
+    
     ecs_fini(world);
 }
