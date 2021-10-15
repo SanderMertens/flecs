@@ -281,11 +281,10 @@ The name of an entity can be retrieved with the `ecs_get_name` function:
 printf("Name = %s\n", ecs_get_name(world, e));
 ```
 
-The entity name is stored in the `EcsName` component, which can be retrieved like any component with `ecs_get`:
-
+The entity name is stored in `(EcsIdentifier, EcsName)`. Alternatively, the name can be retrieved with `ecs_get_pair`:
 ```c
-const EcsName *name = ecs_get(world, e, EcsName);
-printf("Name = %s\n", name->value);
+const EcsIdentifier *ptr = ecs_get_pair(world, e, EcsIdentifier, EcsName);
+printf("Name = %s\n", ptr->value);
 ```
 
 Names can be used to lookup entities:
@@ -535,7 +534,7 @@ Printing the contents of the type of `e` now would produce something similar to:
 256, 257
 ```
 
-When the type contained components the names of the components were printed. This is because the component entities contained an `EcsName` component. The following  example sets the names for `tag_1` and `tag_2`:
+When the type contained components the names of the components were printed. This is because the component entities have a name. The following  example sets the names for `tag_1` and `tag_2`:
 
 ```c
 ecs_set_name(world, tag_1, "tag_1");

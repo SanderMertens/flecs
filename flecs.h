@@ -4483,7 +4483,7 @@ ecs_entity_t ecs_get_typeid(
     ecs_id_t e);
 
 /** Get the name of an entity.
- * This will return the name as specified in the EcsName component.
+ * This will return the name stored in (EcsIdentifier, EcsName).
  *
  * @param world The world.
  * @param entity The entity.
@@ -4495,7 +4495,7 @@ const char* ecs_get_name(
     ecs_entity_t entity);
 
 /** Get the symbol of an entity.
- * This will return the name as specified in the EcsSymbol component.
+ * This will return the symbol stored in (EcsIdentifier, EcsSymbol).
  *
  * @param world The world.
  * @param entity The entity.
@@ -4510,7 +4510,7 @@ const char* ecs_get_symbol(
  * This will set or overwrite the name of an entity. If no entity is provided,
  * a new entity will be created.
  *
- * The name will be stored in the EcsName component.
+ * The name is stored in (EcsIdentifier, EcsName).
  *
  * @param world The world.
  * @param entity The entity.
@@ -4527,7 +4527,7 @@ ecs_entity_t ecs_set_name(
  * This will set or overwrite the symbol of an entity. If no entity is provided,
  * a new entity will be created.
  *
- * The symbol will be stored in the EcsName component.
+ * The symbol is stored in (EcsIdentifier, EcsSymbol).
  *
  * @param world The world.
  * @param entity The entity.
@@ -4724,9 +4724,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     bool recursive);
 
 /** Lookup an entity by its symbol name.
- * This looks up an entity by the symbol name that was provided in EcsName. The
- * operation does not take into account scoping, which means it will search all
- * entities that have an EcsName.
+ * This looks up an entity by symbol stored in (EcsIdentifier, EcsSymbol). The
+ * operation does not take into account hierarchies.
  *
  * This operation can be useful to resolve, for example, a type by its C 
  * identifier, which does not include the Flecs namespacing.
