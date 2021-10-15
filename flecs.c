@@ -14215,6 +14215,7 @@ int create_term(
 
     if (state->isa_clause) {
         state->last_assign_id = 0;
+        state->assign_to = 0;
         state->isa_clause = false;
     }
 

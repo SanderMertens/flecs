@@ -484,7 +484,8 @@
                 "assignment_to_non_component",
                 "struct_w_member_w_assignment_to_nothing",
                 "struct_w_member_w_assignment_to_empty_scope",
-                "scope_after_assign"
+                "scope_after_assign",
+                "assign_after_inherit"
             ]            
         }, {
             "id": "GlobalComponentIds",

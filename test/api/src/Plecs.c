@@ -2769,3 +2769,40 @@ void Plecs_scope_after_assign() {
     ecs_fini(world);
 }
 
+
+void Plecs_assign_after_inherit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo : Position"
+    LINE "Position(Bar) = {10, 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert( ecs_has_pair(world, foo, EcsIsA, ecs_id(Position)));
+    test_assert( !ecs_has(world, foo, Position));
+
+    test_assert( !ecs_has_pair(world, bar, EcsIsA, ecs_id(Position)));
+    test_assert( ecs_has(world, bar, Position));
+
+    const Position *ptr = ecs_get(world, bar, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
