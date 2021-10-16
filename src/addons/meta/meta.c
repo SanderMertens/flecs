@@ -853,60 +853,70 @@ void FlecsMetaImport(
     /* Register triggers to finalize type information from component data */
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsPrimitive),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = set_primitive
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMember),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = set_member
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsEnum),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnAdd},
         .callback = add_enum
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsBitmask),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnAdd},
         .callback = add_bitmask
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = EcsConstant,
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnAdd},
         .callback = add_constant
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_pair(EcsConstant, EcsWildcard),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = add_constant
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsArray),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = set_array
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsVector),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = set_vector
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMetaType),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMetaType),
+        .term.args[0].set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
     });
