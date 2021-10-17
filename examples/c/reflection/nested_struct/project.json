@@ -1,0 +1,12 @@
+{
+    "id": "nested_struct",
+    "type": "application",
+    "value": {
+        "author": "Jane Doe",
+        "description": "A simple hello world flecs application",
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

@@ -57,7 +57,7 @@ void iterate_components(flecs::entity e) {
     std::cout << "\n\n";
 }
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
     flecs::world ecs;
 
     auto bob = ecs.entity()
