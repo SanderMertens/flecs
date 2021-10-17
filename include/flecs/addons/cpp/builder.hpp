@@ -386,33 +386,33 @@ public:
             this->id(r, o);
         }
 
-    term(const term& obj) : term_builder_i<term>(&value) {
-        m_world = obj.m_world;
-        value = ecs_term_copy(&obj.value);
+    term(const term& t) : term_builder_i<term>(&value) {
+        m_world = t.m_world;
+        value = ecs_term_copy(&t.value);
         this->set_term(&value);
     }
 
-    term(term&& obj) : term_builder_i<term>(&value) {
-        m_world = obj.m_world;
-        value = ecs_term_move(&obj.value);
-        obj.reset();
+    term(term&& t) : term_builder_i<term>(&value) {
+        m_world = t.m_world;
+        value = ecs_term_move(&t.value);
+        t.reset();
         this->set_term(&value);
     }
 
-    term& operator=(const term& obj) {
-        ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
+    term& operator=(const term& t) {
+        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
-        value = ecs_term_copy(&obj.value);
+        value = ecs_term_copy(&t.value);
         this->set_term(&value);
         return *this;
     }
 
-    term& operator=(term&& obj) {
-        ecs_assert(m_world == obj.m_world, ECS_INVALID_PARAMETER, NULL);
+    term& operator=(term&& t) {
+        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
-        value = obj.value;
+        value = t.value;
         this->set_term(&value);
-        obj.reset();
+        t.reset();
         return *this;
     }   
 
@@ -907,18 +907,18 @@ public:
         this->populate_filter_from_pack();
     }
 
-    filter_builder_base(const filter_builder_base& obj) 
-        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    filter_builder_base(const filter_builder_base& f) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
     {
-        m_world = obj.m_world;
-        m_desc = obj.m_desc;
+        m_world = f.m_world;
+        m_desc = f.m_desc;
     }
 
-    filter_builder_base(filter_builder_base&& obj) 
-        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    filter_builder_base(filter_builder_base&& f) 
+        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
     {
-        m_world = obj.m_world;
-        m_desc = obj.m_desc;
+        m_world = f.m_world;
+        m_desc = f.m_desc;
     }
 
     operator filter<Components ...>() const;
@@ -971,18 +971,18 @@ public:
         this->populate_filter_from_pack();
     }
 
-    query_builder_base(const query_builder_base& obj) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    query_builder_base(const query_builder_base& f) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
     {
-        m_world = obj.m_world;
-        m_desc = obj.m_desc;
+        m_world = f.m_world;
+        m_desc = f.m_desc;
     }
 
-    query_builder_base(query_builder_base&& obj) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, obj.m_term_index)
+    query_builder_base(query_builder_base&& f) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
     {
-        m_world = obj.m_world;
-        m_desc = obj.m_desc;
+        m_world = f.m_world;
+        m_desc = f.m_desc;
     }
 
     operator query<Components ...>() const;
