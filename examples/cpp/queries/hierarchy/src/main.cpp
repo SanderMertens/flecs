@@ -13,7 +13,6 @@ int main(int, char *[]) {
     flecs::world ecs;
 
     // Create a hierarchy. For an explanation see the entities/hierarchy example
-
     auto sun = ecs.entity("Sun")
         .add<Position, World>()
         .set<Position, Local>({1, 1});
@@ -50,7 +49,7 @@ int main(int, char *[]) {
         .arg(2)
             // Get from the parent, in breadth-first order (cascade)
             .set(flecs::Parent | flecs::Cascade)
-            // Make parent component optional so we also match the root (sun)
+            // Make term component optional so we also match the root (sun)
             .oper(flecs::Optional)
         // Finalize the query
         .build();
