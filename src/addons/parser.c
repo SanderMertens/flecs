@@ -578,10 +578,18 @@ const char* parse_arguments(
                 return NULL;
             }
 
+            ecs_term_id_t *term_id;
+
+            if (arg == 0) {
+                term_id = &term->subj;
+            } else if (arg == 1) {
+                term_id = &term->obj;
+            }
+
             /* If token is a colon, the token is an identifier followed by a
              * set expression. */
             if (ptr[0] == TOK_COLON) {
-                if (parse_identifier(token, &term->args[arg])) {
+                if (parse_identifier(token, term_id)) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "invalid identifier '%s'", token);
                     return NULL;
@@ -589,7 +597,7 @@ const char* parse_arguments(
 
                 ptr = ecs_parse_whitespace(ptr + 1);
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr,
-                    NULL, &term->args[arg], TOK_PAREN_CLOSE);
+                    NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
                 }
@@ -604,13 +612,13 @@ const char* parse_arguments(
                 !(ecs_os_strcmp(token, TOK_PARENT)))
             {
                 ptr = parse_set_expr(world, name, expr, (ptr - expr), ptr, 
-                    token, &term->args[arg], TOK_PAREN_CLOSE);
+                    token, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
                     return NULL;
                 }
 
             /* Regular identifier */
-            } else if (parse_identifier(token, &term->args[arg])) {
+            } else if (parse_identifier(token, term_id)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid identifier '%s'", token);
                 return NULL;
@@ -783,7 +791,7 @@ parse_predicate:
     if (ptr[0] == TOK_PAREN_OPEN) {
         ptr ++;
         if (ptr[0] == TOK_PAREN_CLOSE) {
-            term.args[0].set.mask = EcsNothing;
+            term.subj.set.mask = EcsNothing;
             ptr ++;
             ptr = ecs_parse_whitespace(ptr);
         } else {
@@ -805,7 +813,7 @@ parse_pair:
 
     if (ptr[0] == TOK_AND) {
         ptr ++;
-        term.args[0].entity = EcsThis;
+        term.subj.entity = EcsThis;
         goto parse_pair_predicate;
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
@@ -841,7 +849,7 @@ parse_pair_predicate:
     }
 
 parse_pair_object:
-    if (parse_identifier(token, &term.args[1])) {
+    if (parse_identifier(token, &term.obj)) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "invalid identifier '%s'", token); 
         return NULL;
@@ -859,7 +867,7 @@ parse_singleton:
         return NULL;        
     }
 
-    parse_identifier(token, &term.args[0]);
+    parse_identifier(token, &term.subj);
     goto parse_done;
 
 parse_done:
@@ -898,7 +906,7 @@ char* ecs_parse_term(
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_term_id_t *subj = &term->args[0];
+    ecs_term_id_t *subj = &term->subj;
 
     bool prev_or = false;
     if (ptr != expr) {

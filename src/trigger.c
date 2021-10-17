@@ -93,11 +93,11 @@ void register_trigger(
     ecs_trigger_t *trigger)
 {
     ecs_term_t *term = &trigger->term;
-    if (term->args[0].set.mask & EcsSelf) {
+    if (term->subj.set.mask & EcsSelf) {
         register_trigger_for_id(world, observable, trigger, term->id, false);
     }
-    if (trigger->term.args[0].set.mask & EcsSuperSet) {
-        ecs_id_t pair = ecs_pair(term->args[0].set.relation, EcsWildcard);
+    if (trigger->term.subj.set.mask & EcsSuperSet) {
+        ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         register_trigger_for_id(world, observable, trigger, pair, true);
     }
 }
@@ -162,10 +162,10 @@ void unregister_trigger(
     ecs_trigger_t *trigger)
 {    
     ecs_term_t *term = &trigger->term;
-    if (term->args[0].set.mask & EcsSelf) {
+    if (term->subj.set.mask & EcsSelf) {
         unregister_trigger_for_id(observable, trigger, term->id, false);
     } else {
-        ecs_id_t pair = ecs_pair(term->args[0].set.relation, EcsWildcard);
+        ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         unregister_trigger_for_id(observable, trigger, pair, true);
     }
 }
@@ -547,7 +547,7 @@ ecs_entity_t ecs_trigger_init(
         }
 
         /* Currently triggers are not supported for specific entities */
-        ecs_assert(term.args[0].entity == EcsThis, ECS_UNSUPPORTED, NULL);
+        ecs_assert(term.subj.entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
         trigger->id = flecs_sparse_last_id(world->triggers);

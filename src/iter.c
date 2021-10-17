@@ -82,7 +82,7 @@ bool ecs_term_is_readonly(
     if (term->inout == EcsIn) {
         return true;
     } else {
-        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *subj = &term->subj;
 
         if (term->inout == EcsInOutDefault) {
             if (subj->entity != EcsThis) {

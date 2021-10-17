@@ -5,12 +5,12 @@
     test_int(column.pred.set.mask, isa);
 
 #define test_subj(column, e, isa)\
-    test_int(column.args[0].entity, e);\
-    test_int(column.args[0].set.mask, isa);
+    test_int(column.subj.entity, e);\
+    test_int(column.subj.set.mask, isa);
 
 #define test_obj(column, e, isa)\
-    test_int(column.args[1].entity, e);\
-    test_int(column.args[1].set.mask, isa);
+    test_int(column.obj.entity, e);\
+    test_int(column.obj.set.mask, isa);
 
 #define test_pred_var(column, e, isa, str)\
     test_pred(column, e, isa);\
@@ -19,13 +19,13 @@
 
 #define test_subj_var(column, e, isa, str)\
     test_subj(column, e, isa);\
-    test_assert(column.args[1].var == EcsVarIsVariable);\
-    test_str(column.args[0].name, str);
+    test_assert(column.obj.var == EcsVarIsVariable);\
+    test_str(column.subj.name, str);
 
 #define test_obj_var(column, e, isa, str)\
     test_obj(column, e, isa);\
-    test_assert(column.args[1].var == EcsVarIsVariable);\
-    test_str(column.args[1].name, str);
+    test_assert(column.obj.var == EcsVarIsVariable);\
+    test_str(column.obj.name, str);
 
 void FilterDefaultSubstitution_final_pred_no_args() {
     ecs_world_t *world = ecs_init();
@@ -43,7 +43,7 @@ void FilterDefaultSubstitution_final_pred_no_args() {
     ecs_term_t *terms = f.terms;
     test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -69,7 +69,7 @@ void FilterDefaultSubstitution_nonfinal_pred_no_args() {
     test_pred(terms[0], Pred, EcsSelf|EcsSuperSet);
     test_int(terms[0].pred.set.relation, EcsIsA);
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -96,10 +96,10 @@ void FilterDefaultSubstitution_final_transitive_pred() {
     test_pred(terms[0], Pred, EcsSelf);
     
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
-    test_int(terms[0].args[1].set.relation, EcsIsA);
+    test_int(terms[0].obj.set.relation, EcsIsA);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -127,10 +127,10 @@ void FilterDefaultSubstitution_nonfinal_transitive_pred() {
     test_int(terms[0].pred.set.relation, EcsIsA);
     
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
     
     test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
-    test_int(terms[0].args[1].set.relation, EcsIsA);
+    test_int(terms[0].obj.set.relation, EcsIsA);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -157,7 +157,7 @@ void FilterDefaultSubstitution_final_transitive_pred_final_obj() {
     test_pred(terms[0], Pred, EcsSelf);
     
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
@@ -187,7 +187,7 @@ void FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj() {
     test_int(terms[0].pred.set.relation, EcsIsA);
     
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_obj(terms[0], Obj, EcsSelf|EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
@@ -216,7 +216,7 @@ void FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj() {
     test_int(terms[0].pred.set.relation, EcsIsA);
     
     test_subj_var(terms[0], EcsThis, EcsSelf|EcsSuperSet, NULL);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_obj_var(terms[0], 0, EcsSelf|EcsSuperSet, "X");
     test_int(terms[0].oper, EcsAnd);
@@ -243,7 +243,7 @@ void FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred() {
     ecs_term_t *terms = f.terms;
     test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -317,7 +317,7 @@ void FilterDefaultSubstitution_transitive_pred_w_self_obj() {
     ecs_term_t *terms = f.terms;
     test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
     test_obj(terms[0], Obj, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);

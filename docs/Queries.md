@@ -746,7 +746,7 @@ This example shows how to add a singleton with the query descriptor. Note that t
 // Game(Game)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Game), .args[0].entity = ecs_id(Game)}
+    {ecs_id(Game), .subj.entity = ecs_id(Game)}
   }
 });
 ```
@@ -759,7 +759,7 @@ This example shows how to explicitly set identifiers with the builder API:
 ```cpp
 // Position(This), (Likes, Alice)
 auto qb = world.query_builder<>()
-  .term<Position>().subject(flecs::This)
+  .term<Position>().subj(flecs::This)
   .term(Likes).object(Alice);
 ```
 
@@ -769,8 +769,8 @@ This example shows how to explicitly set identifiers with the query descriptor:
 // Position(This), (Likes, Alice)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = ecs_id(Position), .args[0].entity = EcsThis},
-    {.pred.entity = Likes, .args[1].entity = Alice}
+    {.pred.entity = ecs_id(Position), .subj.entity = EcsThis},
+    {.pred.entity = Likes, .obj.entity = Alice}
   }
 });
 ```
@@ -794,7 +794,7 @@ which is equivalent to
 // Position(This)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = ecs_id(Position), .args[0].entity = EcsThis}
+    {.pred.entity = ecs_id(Position), .subj.entity = EcsThis}
   }
 });
 ```
@@ -818,8 +818,8 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
     {
       .pred.entity = Likes,
-      .args[0].entity = EcsThis,
-      .args[1].entity = Alice
+      .subj.entity = EcsThis,
+      .obj.entity = Alice
     }
   }
 });
@@ -933,8 +933,8 @@ This example shows how to use wildcards in the query descriptor:
 // (Likes, X), (Colleague, X)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = Likes, .args[1].name = "X"}
-    {.pred.entity = Colleague, .args[1].name = "X"}
+    {.pred.entity = Likes, .obj.name = "X"}
+    {.pred.entity = Colleague, .obj.name = "X"}
   }
 });
 ```
@@ -1074,7 +1074,7 @@ This example shows how to use wildcards in the query descriptor:
 // Position(super(ChildOf))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Position), .args[0].set = {
+    {ecs_id(Position), .subj.set = {
       .mask = EcsSuperSet,
       .relation = EcsChildOf
     }}
@@ -1084,7 +1084,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
 // Position(self|super(ChildOf, 3))
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Position), .args[0].set = {
+    {ecs_id(Position), .subj.set = {
       .mask = EcsSelf | EcsSuperSet,
       .relation = EcsChildOf,
       .max_depth = 3

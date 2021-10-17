@@ -354,14 +354,14 @@ static
 bool subj_is_set(
     ecs_term_t *term)
 {
-    return ecs_term_id_is_set(&term->args[0]);
+    return ecs_term_id_is_set(&term->subj);
 }
 
 static
 bool obj_is_set(
     ecs_term_t *term)
 {
-    return ecs_term_id_is_set(&term->args[1]) || term->role == ECS_PAIR;
+    return ecs_term_id_is_set(&term->obj) || term->role == ECS_PAIR;
 }
 
 static
@@ -538,7 +538,7 @@ ecs_rule_var_t* term_subj(
     ecs_rule_t *rule,
     ecs_term_t *term)
 {
-    return term_id_to_var(rule, &term->args[0]);
+    return term_id_to_var(rule, &term->subj);
 }
 
 /* Get variable from a term object */
@@ -548,7 +548,7 @@ ecs_rule_var_t* term_obj(
     ecs_term_t *term)
 {
     if (obj_is_set(term)) {
-        return term_id_to_var(rule, &term->args[1]);
+        return term_id_to_var(rule, &term->obj);
     } else {
         return NULL;
     }
@@ -867,9 +867,9 @@ ecs_rule_pair_t term_to_pair(
     ecs_assert(obj_is_set(term), ECS_INTERNAL_ERROR, NULL);
 
     /* Same as above, if the object is a variable, store it and flag it */
-    if (term->args[1].var == EcsVarIsVariable) {
+    if (term->obj.var == EcsVarIsVariable) {
         const ecs_rule_var_t *var = find_variable(
-            rule, EcsRuleVarKindEntity, term->args[1].name);
+            rule, EcsRuleVarKindEntity, term->obj.name);
 
         /* Variables should have been declared */
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -879,7 +879,7 @@ ecs_rule_pair_t term_to_pair(
         result.reg_mask |= RULE_PAIR_OBJECT;
     } else {
         /* If the object is not a variable, simply store its id */
-        result.obj.ent = term->args[1].entity;
+        result.obj.ent = term->obj.entity;
         if (!result.obj.ent) {
             result.obj_0 = true;
         }
@@ -1015,7 +1015,7 @@ bool is_subject(
 
 static
 bool skip_term(ecs_term_t *term) {
-    if (term->args[0].set.mask & EcsNothing) {
+    if (term->subj.set.mask & EcsNothing) {
         return true;
     }
     if (term->oper == EcsNot) {
@@ -1299,15 +1299,15 @@ void ensure_all_variables(
         /* If subject is a variable and it is not This, make sure it is 
          * registered as an entity variable. This ensures that the program will
          * correctly return all permutations */
-        if (term->args[0].var == EcsVarIsVariable) {
-            if (term->args[0].entity != EcsThis) {
-                ensure_variable(rule, EcsRuleVarKindEntity, term->args[0].name);
+        if (term->subj.var == EcsVarIsVariable) {
+            if (term->subj.entity != EcsThis) {
+                ensure_variable(rule, EcsRuleVarKindEntity, term->subj.name);
             }
         }
 
         /* If object is a variable, make sure it has been registered */
-        if (obj_is_set(term) && (term->args[1].var == EcsVarIsVariable)) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term->args[1].name);
+        if (obj_is_set(term) && (term->obj.var == EcsVarIsVariable)) {
+            ensure_variable(rule, EcsRuleVarKindEntity, term->obj.name);
         }
     }    
 }
@@ -1339,8 +1339,8 @@ int scan_variables(
 
         /* Evaluate the subject. The predicate and object are not evaluated, 
          * since they never can be elected as root. */
-        if (term_id_is_variable(&term->args[0])) {
-            const char *subj_name = term_id_var_name(&term->args[0]);
+        if (term_id_is_variable(&term->subj)) {
+            const char *subj_name = term_id_var_name(&term->subj);
             
             ecs_rule_var_t *subj = find_variable(
                 rule, EcsRuleVarKindTable, subj_name);
@@ -1371,7 +1371,7 @@ int scan_variables(
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
-        if (term->args[0].var == EcsVarIsEntity) {
+        if (term->subj.var == EcsVarIsEntity) {
             ecs_rule_var_t 
             *pred = term_pred(rule, term),
             *obj = term_obj(rule, term);
@@ -1427,9 +1427,9 @@ int scan_variables(
                 term->pred.name);
             goto error;
         }
-        if (!obj && term_id_is_variable(&term->args[1])) {
+        if (!obj && term_id_is_variable(&term->obj)) {
             rule_error(rule, "missing object variable '%s'", 
-                term->args[1].name);
+                term->obj.name);
             goto error;
         }
     }
@@ -1903,7 +1903,7 @@ void set_input_to_subj(
     op->has_in = true;
     if (!var) {
         op->r_in = UINT8_MAX;
-        op->subject = term->args[0].entity;
+        op->subject = term->subj.entity;
 
         /* Invalid entities should have been caught during parsing */
         ecs_assert(ecs_is_valid(rule->world, op->subject), 
@@ -1925,7 +1925,7 @@ void set_output_to_subj(
     op->has_out = true;
     if (!var) {
         op->r_out = UINT8_MAX;
-        op->subject = term->args[0].entity;
+        op->subject = term->subj.entity;
 
         /* Invalid entities should have been caught during parsing */
         ecs_assert(ecs_is_valid(rule->world, op->subject), 
@@ -1946,7 +1946,7 @@ void insert_select_or_with(
 {
     ecs_rule_op_t *op;
     bool eval_subject_supersets = false;
-    bool wildcard_subj = term->args[0].entity == EcsWildcard;
+    bool wildcard_subj = term->subj.entity == EcsWildcard;
 
     /* Find any entity and/or table variables for subject */
     ecs_rule_var_t *tvar = NULL, *evar = to_entity(rule, subj), *var = evar;
@@ -1970,7 +1970,7 @@ void insert_select_or_with(
         if (!filter.transitive || filter.pred.ent != EcsIsA) {
             ecs_rule_pair_t isa_pair = {
                 .pred.ent = EcsIsA,
-                .obj.ent = term->args[0].entity
+                .obj.ent = term->subj.entity
             };
             evar = subj = store_inclusive_set(
                 rule, EcsRuleSuperSet, &isa_pair, written, true);
@@ -2118,7 +2118,7 @@ void insert_term_2(
                         set_pair.obj.reg = subj->id;
                         set_pair.reg_mask |= RULE_PAIR_OBJECT;
                     } else {
-                        set_pair.obj.ent = term->args[0].entity;
+                        set_pair.obj.ent = term->subj.entity;
                     }
 
                     insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
@@ -2164,7 +2164,7 @@ void insert_term_2(
                     set_pair.obj.reg = obj->id;
                     set_pair.reg_mask |= RULE_PAIR_OBJECT;
                 } else {
-                    set_pair.obj.ent = term->args[1].entity;
+                    set_pair.obj.ent = term->obj.entity;
                 }
 
                 insert_inclusive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
@@ -2340,7 +2340,7 @@ void compile_program(
             continue;
         }
 
-        if (term->args[0].entity == EcsWildcard) {
+        if (term->subj.entity == EcsWildcard) {
             continue;
         }
 
@@ -2379,7 +2379,7 @@ void compile_program(
     for (c = 0; c < term_count; c ++) {
         ecs_term_t *term = &terms[c];
 
-        if (term->args[0].entity != EcsWildcard) {
+        if (term->subj.entity != EcsWildcard) {
             continue;
         }
 
@@ -3968,7 +3968,7 @@ bool ecs_rule_next(
         int32_t i;
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *t = &rule->filter.terms[i];
-            ecs_term_id_t *subj = &t->args[0];
+            ecs_term_id_t *subj = &t->subj;
             if (subj->var == EcsVarIsEntity && subj->entity != EcsThis) {
                 it->subjects[i] = subj->entity;
             }
@@ -3976,7 +3976,7 @@ bool ecs_rule_next(
 
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *term = &rule->filter.terms[i];
-            if (term->args[0].set.mask & EcsNothing || 
+            if (term->subj.set.mask & EcsNothing || 
                 term->oper == EcsNot ||
                 term->oper == EcsOptional ||
                 term->id == ecs_pair(EcsChildOf, 0)) {

@@ -61,18 +61,18 @@ ecs_vector_t* expr_to_ids(
             goto error;
         }
 
-        if (term.args[0].entity == 0) {
+        if (term.subj.entity == 0) {
             /* Empty term */
             goto done;
         }
 
-        if (term.args[0].set.mask != EcsSelf) {
+        if (term.subj.set.mask != EcsSelf) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "source modifiers not supported for type expressions");
             goto error;
         }
 
-        if (term.args[0].entity != EcsThis) {
+        if (term.subj.entity != EcsThis) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "subject other than this not supported in type expression");
             goto error;

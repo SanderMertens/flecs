@@ -157,7 +157,7 @@ ecs_entity_t ecs_observer_init(
             const ecs_term_t *terms = filter->terms;
             const ecs_term_t *t = &terms[i];
 
-            if (terms[i].args[0].entity != EcsThis) {
+            if (terms[i].subj.entity != EcsThis) {
                 observer->triggers[i] = 0;
                 continue;
             }

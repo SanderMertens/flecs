@@ -113,13 +113,13 @@ bool pred_is_subj(
     ecs_term_t *term,
     plecs_state_t *state)
 {
-    if (term->args[0].name != NULL) {
+    if (term->subj.name != NULL) {
         return false;
     }
-    if (term->args[1].name != NULL) {
+    if (term->obj.name != NULL) {
         return false;
     }
-    if (term->args[0].set.mask == EcsNothing) {
+    if (term->subj.set.mask == EcsNothing) {
         return false;
     }
     if (state->with_clause) {
@@ -156,7 +156,7 @@ int create_term(
         return -1;
     }
 
-    if (state->assignment && term->args[0].entity != EcsThis) {
+    if (state->assignment && term->subj.entity != EcsThis) {
         ecs_parser_error(name, expr, column, "invalid statement in assignment");
         return -1;
     }
@@ -164,11 +164,11 @@ int create_term(
     bool pred_as_subj = pred_is_subj(term, state);
 
     ecs_entity_t pred = ensure_entity(world, state, term->pred.name, pred_as_subj); 
-    ecs_entity_t subj = ensure_entity(world, state, term->args[0].name, true);
+    ecs_entity_t subj = ensure_entity(world, state, term->subj.name, true);
     ecs_entity_t obj = 0;
 
-    if (ecs_term_id_is_set(&term->args[1])) {
-        obj = ensure_entity(world, state, term->args[1].name, true);
+    if (ecs_term_id_is_set(&term->obj)) {
+        obj = ensure_entity(world, state, term->obj.name, true);
     }
 
     if (state->assignment || state->isa_clause) {

@@ -368,13 +368,13 @@ uint64_t group_by_cascade(
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     ecs_term_t *term = ctx;
-    ecs_entity_t relation = term->args[0].set.relation;
+    ecs_entity_t relation = term->subj.set.relation;
 
     /* Cascade needs a relation to calculate depth from */
     ecs_assert(relation != 0, ECS_INVALID_PARAMETER, NULL);
 
     /* Should only be used with cascade terms */
-    ecs_assert(term->args[0].set.mask & EcsCascade, 
+    ecs_assert(term->subj.set.mask & EcsCascade, 
         ECS_INVALID_PARAMETER, NULL);
 
     /* Iterate back to front as relations are more likely to occur near the
@@ -446,7 +446,7 @@ int get_comp_and_src(
     ecs_term_t *terms = query->filter.terms;
     int32_t term_count = query->filter.term_count;
     ecs_term_t *term = &terms[t];
-    ecs_term_id_t *subj = &term->args[0];
+    ecs_term_id_t *subj = &term->subj;
     ecs_oper_kind_t op = term->oper;
 
     *match_out = true;
@@ -685,7 +685,7 @@ ecs_vector_t* add_ref(
     ecs_entity_t entity)
 {    
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
-    ecs_term_id_t *subj = &term->args[0];
+    ecs_term_id_t *subj = &term->subj;
 
     if (!(subj->set.mask & EcsCascade)) {
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
@@ -741,7 +741,7 @@ int32_t count_pairs(
             continue;
         }
 
-        if (term->args[0].entity != EcsThis) {
+        if (term->subj.entity != EcsThis) {
             continue;
         }
 
@@ -849,7 +849,7 @@ add_pair:
     c = 0;
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
-        ecs_term_id_t subj = term->args[0];
+        ecs_term_id_t subj = term->subj;
         ecs_entity_t entity = 0, component = 0;
         ecs_oper_kind_t op = term->oper;
 
@@ -998,14 +998,14 @@ bool match_term(
     const ecs_table_t *table,
     ecs_term_t *term)
 {
-    ecs_term_id_t *subj = &term->args[0];
+    ecs_term_id_t *subj = &term->subj;
 
     /* If term has no subject, there's nothing to match */
     if (!subj->entity) {
         return true;
     }
 
-    if (term->args[0].entity != EcsThis) {
+    if (term->subj.entity != EcsThis) {
         table = ecs_get_table(world, subj->entity);
     }
 
@@ -1562,7 +1562,7 @@ bool has_refs(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *subj = &term->subj;
 
         if (term->oper == EcsNot && !subj->entity) {
             /* Special case: if oper kind is Not and the query contained a
@@ -1605,7 +1605,7 @@ void register_monitors(
 
     for (i = 0; i < count; i++) {
         ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *subj = &term->subj;
 
         /* If component is requested with EcsCascade register component as a
          * parent monitor. Parent monitors keep track of whether an entity moved
@@ -1618,9 +1618,9 @@ void register_monitors(
             subj->set.relation != EcsIsA) 
         {
             if (term->oper != EcsOr) {
-                if (term->args[0].set.relation != EcsIsA) {
+                if (term->subj.set.relation != EcsIsA) {
                     flecs_monitor_register(
-                        world, term->args[0].set.relation, term->id, query);
+                        world, term->subj.set.relation, term->id, query);
                 }
                 flecs_monitor_register(world, 0, term->id, query);
             }
@@ -1647,8 +1647,8 @@ void process_signature(
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
         ecs_term_id_t *pred = &term->pred;
-        ecs_term_id_t *subj = &term->args[0];
-        ecs_term_id_t *obj = &term->args[1];
+        ecs_term_id_t *subj = &term->subj;
+        ecs_term_id_t *obj = &term->obj;
         ecs_oper_kind_t op = term->oper; 
         ecs_inout_kind_t inout = term->inout;
 
@@ -1705,7 +1705,7 @@ void process_signature(
         if (subj->entity && subj->entity != EcsThis && 
             subj->set.mask == EcsSelf) 
         {
-            flecs_set_watch(world, term->args[0].entity);
+            flecs_set_watch(world, term->subj.entity);
         }
     }
 
@@ -1836,7 +1836,7 @@ void resolve_cascade_subject_for_table(
     /* Find source for component */
     ecs_entity_t subject;
     ecs_type_match(world, table, table_type, 0, term->id, 
-        term->args[0].set.relation, 1, 0, &subject, NULL);
+        term->subj.set.relation, 1, 0, &subject, NULL);
 
     /* If container was found, update the reference */
     if (subject) {
@@ -1978,7 +1978,7 @@ bool satisfy_constraints(
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->args[0];
+        ecs_term_id_t *subj = &term->subj;
         ecs_oper_kind_t oper = term->oper;
 
         if (oper == EcsOptional) {
@@ -2205,7 +2205,7 @@ ecs_query_t* ecs_query_init(
 
         for (t = 0; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];
-            if (term->args[0].entity == desc->system) {
+            if (term->subj.entity == desc->system) {
                 ecs_add_id(world, desc->system, term->id);
             }
         }        
@@ -2783,7 +2783,7 @@ void mark_columns_dirty(
         int32_t c = 0, i, count = query->filter.term_count;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            ecs_term_id_t *subj = &term->args[0];
+            ecs_term_id_t *subj = &term->subj;
 
             if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
                 (subj->entity == EcsThis && subj->set.mask == EcsSelf)))

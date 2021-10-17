@@ -138,7 +138,7 @@ bool check_term_component(
 {
     int32_t state = get_write_state(write_state->components, component);
 
-    ecs_term_id_t *subj = &term->args[0];
+    ecs_term_id_t *subj = &term->subj;
 
     if ((subj->set.mask & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
@@ -468,7 +468,7 @@ void add_pipeline_tags_to_sig(
             .inout = EcsIn,
             .oper = EcsOr,
             .pred.entity = entities[i],
-            .args[0] = {
+            .subj = {
                 .entity = EcsThis,
                 .set.mask = EcsSelf | EcsSuperSet
             }
@@ -500,7 +500,7 @@ ecs_query_t* build_pipeline_query(
         .inout = EcsIn,
         .oper = EcsAnd,
         .pred.entity = ecs_id(EcsSystem),
-        .args[0] = {
+        .subj = {
             .entity = EcsThis,
             .set.mask = EcsSelf | EcsSuperSet
         }
@@ -511,7 +511,7 @@ ecs_query_t* build_pipeline_query(
             .inout = EcsIn,
             .oper = EcsNot,
             .pred.entity = EcsInactive,
-            .args[0] = {
+            .subj = {
                 .entity = EcsThis,
                 .set.mask = EcsSelf | EcsSuperSet
             }

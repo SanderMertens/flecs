@@ -3439,7 +3439,7 @@ void Rules_rules_w_desc_pair_pred_obj() {
     ECS_TAG(world, Obj);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .terms = {{ .pred.entity = Rel, .args[1].entity = Obj }}
+        .terms = {{ .pred.entity = Rel, .obj.entity = Obj }}
     });
 
     test_assert(r != NULL);

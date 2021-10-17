@@ -17,12 +17,12 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
     test_int(column.pred.set.mask, isa);
 
 #define test_subj(column, e, isa)\
-    test_int(column.args[0].entity, e);\
-    test_int(column.args[0].set.mask, isa);
+    test_int(column.subj.entity, e);\
+    test_int(column.subj.set.mask, isa);
 
 #define test_obj(column, e, isa)\
-    test_int(column.args[1].entity, e);\
-    test_int(column.args[1].set.mask, isa);
+    test_int(column.obj.entity, e);\
+    test_int(column.obj.set.mask, isa);
 
 #define test_pred_var(column, e, isa, str)\
     test_pred(column, e, isa);\
@@ -30,11 +30,11 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
 
 #define test_subj_var(column, e, isa, str)\
     test_subj(column, e, isa);\
-    test_str(column.args[0].name, str);
+    test_str(column.subj.name, str);
 
 #define test_obj_var(column, e, isa, str)\
     test_obj(column, e, isa);\
-    test_str(column.args[1].name, str);
+    test_str(column.obj.name, str);
 
 #define test_legacy(f)\
 {\
@@ -43,7 +43,7 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
     for (i = 0; i < count; i ++) {\
         ecs_term_t *term = &terms[i];\
         if (term->oper != EcsOr) {\
-            if (term->role == ECS_PAIR && term->args[1].entity != EcsThis) {\
+            if (term->role == ECS_PAIR && term->obj.entity != EcsThis) {\
                 if (term->role) {\
                     test_int(ECS_ROLE_MASK & term->id, term->role);\
                 } else {\
@@ -52,9 +52,9 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
                 if (term->pred.entity != EcsThis) {\
                     test_int(ECS_PAIR_RELATION(term->id), ecs_entity_t_lo(term->pred.entity));\
                 }\
-                test_int(ECS_PAIR_OBJECT(term->id), ecs_entity_t_lo(term->args[1].entity));\
+                test_int(ECS_PAIR_OBJECT(term->id), ecs_entity_t_lo(term->obj.entity));\
             } else {\
-                if (term->pred.entity != EcsThis && term->args[1].entity != EcsThis) {\
+                if (term->pred.entity != EcsThis && term->obj.entity != EcsThis) {\
                     test_int(ECS_COMPONENT_MASK & term->id, term->pred.entity);\
                 }\
                 test_int(ECS_ROLE_MASK & term->id, term->role);\
@@ -2411,7 +2411,7 @@ void Parser_pred_implicit_subject_superset() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2436,7 +2436,7 @@ void Parser_pred_implicit_subject_subset() {
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2461,7 +2461,7 @@ void Parser_pred_implicit_subject_superset_inclusive() {
     test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2486,7 +2486,7 @@ void Parser_pred_implicit_subject_subset_inclusive() {
     test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2511,7 +2511,7 @@ void Parser_pred_implicit_subject_superset_cascade() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2536,7 +2536,7 @@ void Parser_pred_implicit_subject_subset_cascade() {
     test_subj(terms[0], EcsThis, EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2561,7 +2561,7 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade() {
     test_subj(terms[0], EcsThis, EcsSelf | EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2586,7 +2586,7 @@ void Parser_pred_implicit_subject_subset_inclusive_cascade() {
     test_subj(terms[0], EcsThis, EcsSelf | EcsSubSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2611,7 +2611,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2636,7 +2636,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsSelf | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, EcsIsA);
+    test_int(terms[0].subj.set.relation, EcsIsA);
 
     test_legacy(f);
 
@@ -2662,7 +2662,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, Rel);
+    test_int(terms[0].subj.set.relation, Rel);
 
     test_legacy(f);
 
@@ -2688,7 +2688,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsSelf | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, Rel);
+    test_int(terms[0].subj.set.relation, Rel);
 
     test_legacy(f);
 
@@ -2714,7 +2714,7 @@ void Parser_pred_implicit_subject_superset_depth_1_digit() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.max_depth, 2);
+    test_int(terms[0].subj.set.max_depth, 2);
 
     test_legacy(f);
 
@@ -2739,7 +2739,7 @@ void Parser_pred_implicit_subject_subset_depth_1_digit() {
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.max_depth, 2);
+    test_int(terms[0].subj.set.max_depth, 2);
 
     test_legacy(f);
 
@@ -2764,7 +2764,7 @@ void Parser_pred_implicit_subject_superset_depth_2_digits() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.max_depth, 20);
+    test_int(terms[0].subj.set.max_depth, 20);
 
     test_legacy(f);
 
@@ -2789,7 +2789,7 @@ void Parser_pred_implicit_subject_subset_depth_2_digits() {
     test_subj(terms[0], EcsThis, EcsSubSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.max_depth, 20);
+    test_int(terms[0].subj.set.max_depth, 20);
 
     test_legacy(f);
 
@@ -2814,8 +2814,8 @@ void Parser_pred_implicit_superset_min_max_depth() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.min_depth, 2);
-    test_int(terms[0].args[0].set.max_depth, 3);
+    test_int(terms[0].subj.set.min_depth, 2);
+    test_int(terms[0].subj.set.max_depth, 3);
 
     test_legacy(f);
 
@@ -2840,9 +2840,9 @@ void Parser_pred_implicit_superset_childof_min_max_depth() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
-    test_int(terms[0].args[0].set.min_depth, 2);
-    test_int(terms[0].args[0].set.max_depth, 3);
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.min_depth, 2);
+    test_int(terms[0].subj.set.max_depth, 3);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2868,7 +2868,7 @@ void Parser_pred_implicit_subject_superset_childof() {
     test_subj(terms[0], EcsThis, EcsSuperSet);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2893,7 +2893,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2918,7 +2918,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -2943,7 +2943,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
     test_subj(terms[0], EcsThis, EcsSuperSet | EcsCascade);
     test_int(terms[0].oper, EcsOptional);
     test_int(terms[0].inout, EcsInOutDefault);  
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
 
     test_legacy(f);
 
@@ -3066,7 +3066,7 @@ void Parser_subj_entity_w_explicit_superset_relation() {
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], Subj, EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 
@@ -3093,7 +3093,7 @@ void Parser_subj_entity_w_explicit_self_superset_relation() {
     ecs_term_t *terms = filter_terms(&f);
     test_pred(terms[0], Pred, EcsSelf);
     test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
-    test_int(terms[0].args[0].set.relation, EcsChildOf);
+    test_int(terms[0].subj.set.relation, EcsChildOf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 

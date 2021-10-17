@@ -254,7 +254,8 @@ typedef struct ecs_term_t {
     
     ecs_inout_kind_t inout;     /* Access to contents matched with term */
     ecs_term_id_t pred;         /* Predicate of term */
-    ecs_term_id_t args[2];      /* Subject (0), object (1) of term */
+    ecs_term_id_t subj;         /* Subject of term */
+    ecs_term_id_t obj;          /* Object of term */
     ecs_oper_kind_t oper;       /* Operator of term */
     ecs_id_t role;              /* Role of term */
     char *name;                 /* Name of term */

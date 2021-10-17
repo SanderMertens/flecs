@@ -1471,7 +1471,7 @@ void Trigger_on_add_superset() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set.mask = EcsSuperSet,
+        .term.subj.set.mask = EcsSuperSet,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1517,7 +1517,7 @@ void Trigger_on_remove_superset() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set.mask = EcsSuperSet,
+        .term.subj.set.mask = EcsSuperSet,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -1566,7 +1566,7 @@ void Trigger_on_add_superset_childof() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set = {
+        .term.subj.set = {
             .relation = EcsChildOf,
             .mask = EcsSuperSet,
         },
@@ -1615,7 +1615,7 @@ void Trigger_on_remove_superset_childof() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set = {
+        .term.subj.set = {
             .relation = EcsChildOf,
             .mask = EcsSuperSet,
         },
@@ -1667,7 +1667,7 @@ void Trigger_on_add_self_superset() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set.mask = EcsSelf | EcsSuperSet,
+        .term.subj.set.mask = EcsSelf | EcsSuperSet,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1740,7 +1740,7 @@ void Trigger_on_remove_self_superset() {
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term.id = TagA,
-        .term.args[0].set.mask = EcsSelf | EcsSuperSet,
+        .term.subj.set.mask = EcsSelf | EcsSuperSet,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2514,7 +2514,7 @@ void Trigger_trigger_cleanup_2_w_self_super_id() {
     ECS_TAG(world, Tag);
 
     ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
-        .term = { .id = Tag, .args[0].set.mask = EcsSuperSet },
+        .term = { .id = Tag, .subj.set.mask = EcsSuperSet },
         .events = { EcsOnAdd },
         .callback = Trigger
     });

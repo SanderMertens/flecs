@@ -385,7 +385,7 @@ void FilterBuilder_isa_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subject().set(flecs::SuperSet)
+        .term<Other>().subj().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -415,7 +415,7 @@ void FilterBuilder_isa_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subject().set(flecs::Self | flecs::SuperSet)
+        .term<Other>().subj().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -456,7 +456,7 @@ void FilterBuilder_childof_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subject().set(flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().subj().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -486,7 +486,7 @@ void FilterBuilder_childof_self_superset_term() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
-        .term<Other>().subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .term<Other>().subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -527,7 +527,7 @@ void FilterBuilder_isa_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subject().set(flecs::SuperSet)
+        .arg(2).subj().set(flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -552,7 +552,7 @@ void FilterBuilder_isa_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subject().set(flecs::Self | flecs::SuperSet)
+        .arg(2).subj().set(flecs::Self | flecs::SuperSet)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -579,7 +579,7 @@ void FilterBuilder_childof_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subject().set(flecs::SuperSet, flecs::ChildOf)
+        .arg(2).subj().set(flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -604,7 +604,7 @@ void FilterBuilder_childof_self_superset_term_w_each() {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
-        .arg(2).subject().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
+        .arg(2).subj().set(flecs::Self | flecs::SuperSet, flecs::ChildOf)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -1037,7 +1037,7 @@ void FilterBuilder_explicit_subject_w_type() {
     ecs.set<Position>({10, 20});
 
     auto q = ecs.filter_builder<Position>()
-        .term<Position>().subject<Position>()
+        .term<Position>().subj<Position>()
         .build();
 
     int32_t count = 0;
@@ -1059,7 +1059,7 @@ void FilterBuilder_explicit_object_w_id() {
     auto Bob = ecs.entity();
 
     auto q = ecs.filter_builder<>()
-        .term(Likes).object(Alice)
+        .term(Likes).obj(Alice)
         .build();
 
     auto e1 = ecs.entity().add(Likes, Alice);
@@ -1082,7 +1082,7 @@ void FilterBuilder_explicit_object_w_type() {
     auto Bob = ecs.entity();
 
     auto q = ecs.filter_builder<>()
-        .term(Likes).object<Alice>()
+        .term(Likes).obj<Alice>()
         .build();
 
     auto e1 = ecs.entity().add(Likes, ecs.id<Alice>());
@@ -1229,7 +1229,7 @@ void FilterBuilder_2_subsequent_args() {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .arg(1).object(flecs::Wildcard)
+        .arg(1).obj(flecs::Wildcard)
         .arg(2).singleton()
         .iter([&](flecs::iter it){
             count += it.count();
@@ -1575,7 +1575,7 @@ void FilterBuilder_term_after_arg() {
         .add<TagB>();
 
     auto f = ecs.filter_builder<TagA, TagB>()
-        .arg(1).subject(flecs::This) // dummy
+        .arg(1).subj(flecs::This) // dummy
         .term<TagC>()
         .build();
 
