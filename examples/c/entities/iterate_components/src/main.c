@@ -8,19 +8,17 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
     // First get the entity's type, which is a vector of (component) ids.
     ecs_type_t type = ecs_get_type(ecs, e);
 
-    // The easiest way to print the components is to use ecs_type_str
+    // 1. The easiest way to print the components is to use ecs_type_str
     char *type_str = ecs_type_str(ecs, type);
     printf("ecs_type_str: %s\n\n", type_str);
     ecs_os_free(type_str);
 
-    // To get individual component ids, iterate the array of the vector
+    // 2. To print individual ids, iterate the type array with ecs_id_str
     ecs_id_t *type_ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
         ecs_id_t id = type_ids[i];
-
-        // The easiest way to convert an id to a string is to use ecs_id_str:
         char *id_str = ecs_id_str(ecs, id);
         printf("%d: %s\n", i, id_str);
         ecs_os_free(id_str);
@@ -28,7 +26,7 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
 
     printf("\n");
 
-    // Alternatively we can inspect and print the ids in our own way. This is a
+    // 3. we can also inspect and print the ids in our own way. This is a
     // bit more complicated as we need to handle the edge cases of what can be
     // encoded in an id, but provides the most flexibility.
     for (i = 0; i < count; i ++) {
@@ -36,26 +34,25 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
 
         printf("%d: ", i);
         
-        // Print the role mask, if the id has any
         ecs_id_t role = id & ECS_ROLE_MASK;
         if (role) {
             printf("role: %s, ", ecs_role_str(role));
         }
 
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            // If id is a pair, extract & print both parts of the pair
+        if (ECS_HAS_ROLE(id, PAIR)) { // See relations
             ecs_entity_t rel = ecs_pair_relation(ecs, id);
-            ecs_entity_t obj = ecs_pair_relation(ecs, id);
+            ecs_entity_t obj = ecs_pair_object(ecs, id);
             printf("rel: %s, obj: %s",
                 ecs_get_name(ecs, rel), ecs_get_name(ecs, obj));
         } else {
-            // Id contains a regular entity. Strip role before printing.
             ecs_entity_t comp = id & ECS_COMPONENT_MASK;
             printf("entity: %s", ecs_get_name(ecs, comp));
         }
 
         printf("\n");
     }
+
+    printf("\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +80,6 @@ int main(int argc, char *argv[]) {
     // Iterate & components of Bob
     printf("Bob's components:\n");
     iterate_components(ecs, Bob);
-    printf("\n\n");
 
     // We can use the same function to iterate the components of a component
     printf("Position's components:\n");
@@ -92,8 +88,8 @@ int main(int argc, char *argv[]) {
     return ecs_fini(ecs);
 }
 
-// The output of the program is:
-//
+// Output:
+
 // Bob's components:
 // ecs_type_str: Position,Velocity,Human,(Eats,Apples)
 
