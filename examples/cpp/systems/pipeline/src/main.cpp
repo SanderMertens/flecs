@@ -36,10 +36,6 @@ int main(int, char *[]) {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    // This entity will not match as it does not have Position, Velocity
-    ecs.entity("e3")
-        .set<Position>({10, 20});
-
     // Run the default pipeline. This will run all systems ordered by their
     // phase. Systems within the same phase are ran in declaration order. This
     // function is usually called in a loop.

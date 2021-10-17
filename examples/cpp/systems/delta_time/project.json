@@ -1,5 +1,5 @@
 {
-    "id": "pipeline",
+    "id": "delta_time",
     "type": "application",
     "value": {
         "author": "Jane Doe",
@@ -7,6 +7,7 @@
         "use": [
             "flecs"
         ],
+        "language": "c++",
         "public": false
     }
 }

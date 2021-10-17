@@ -6,18 +6,11 @@ typedef struct {
 
 void Move(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
-    const Velocity *v = ecs_term(it, const Velocity, 2);
+    const Velocity *v = ecs_term(it, Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
-    }
-}
-
-void PrintPosition(ecs_iter_t *it) {
-    const Position *p = ecs_term(it, const Position, 1);
-
-    for (int i = 0; i < it->count; i ++) {
         printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 
             p[i].x, p[i].y);
     }
@@ -29,11 +22,18 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    // Create system for moving an entity in the EcsOnUpdate phase
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
+    // Create a system for Position, Velocity. Systems are like queries (see
+    // queries) with a function that can be ran or scheduled (see pipeline).
+    ecs_entity_t move = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .inout = EcsIn }
+        },
+        .callback = Move
+    });
 
-    // Create system for printing a Position in the EcsPostUpdate phase
-    ECS_SYSTEM(world, PrintPosition, EcsPostUpdate, [in] Position);
+    // C applications can also use the ECS_SYSTEM convenience macro:
+    // ECS_SYSTEM(world, Move, 0, Position, [in] Velocity);
 
     // Create a few test entities for a Position, Velocity query
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
@@ -44,10 +44,12 @@ int main(int argc, char *argv[]) {
     ecs_set(world, e2, Position, {10, 20});
     ecs_set(world, e2, Velocity, {3, 4});
 
-    // Run the default pipeline. This will run all systems ordered by their
-    // phase. Systems within the same phase are ran in declaration order. This
-    // function is usually called in a loop.
-    ecs_progress(world, 0.0f);
+    // This entity will not match as it does not have Position, Velocity
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_set(world, e3, Position, {10, 20});
+
+    // Run the system
+    ecs_run(world, move, 0.0f, NULL);
 
     return ecs_fini(world);
 }

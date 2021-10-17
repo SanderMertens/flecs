@@ -15,26 +15,26 @@ int main(int argc, char *argv[]) {
     ECS_TAG(world, World);
 
     // Create a hierarchy. For an explanation see the entities/hierarchy example
-    ecs_entity_t sun = ecs_set_name(world, 0, "Sun");
+    ecs_entity_t sun = ecs_new_entity(world, "Sun");
     ecs_add_pair(world, sun, ecs_id(Position), World);
     ecs_set_pair(world, sun, Position, Local, {1, 1});
 
-        ecs_entity_t mercury = ecs_set_name(world, 0, "Mercury");
+        ecs_entity_t mercury = ecs_new_entity(world, "Mercury");
         ecs_add_pair(world, mercury, EcsChildOf, sun);
         ecs_add_pair(world, mercury, ecs_id(Position), World);
         ecs_set_pair(world, mercury, Position, Local, {1, 1});
 
-        ecs_entity_t venus = ecs_set_name(world, 0, "Venus");
+        ecs_entity_t venus = ecs_new_entity(world, "Venus");
         ecs_add_pair(world, venus, EcsChildOf, sun);
         ecs_add_pair(world, venus, ecs_id(Position), World);
         ecs_set_pair(world, venus, Position, Local, {2, 2});
 
-        ecs_entity_t earth = ecs_set_name(world, 0, "Earth");
+        ecs_entity_t earth = ecs_new_entity(world, "Earth");
         ecs_add_pair(world, earth, EcsChildOf, sun);
         ecs_add_pair(world, earth, ecs_id(Position), World);
         ecs_set_pair(world, earth, Position, Local, {3, 3});
 
-            ecs_entity_t moon = ecs_set_name(world, 0, "Moon");
+            ecs_entity_t moon = ecs_new_entity(world, "Moon");
             ecs_add_pair(world, moon, EcsChildOf, earth);
             ecs_add_pair(world, moon, ecs_id(Position), World);
             ecs_set_pair(world, moon, Position, Local, {0.1, 0.1});

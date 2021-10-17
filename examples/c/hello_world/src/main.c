@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG(world, Pears);
 
     /* Create an entity with name Bob, add Position and food preference */
-    ecs_entity_t Bob = ecs_set_name(world, 0, "Bob");
+    ecs_entity_t Bob = ecs_new_entity(world, "Bob");
     ecs_set(world, Bob, Position, {0, 0});
     ecs_set(world, Bob, Velocity, {1, 2});
     ecs_add_pair(world, Bob, Eats, Apples);
