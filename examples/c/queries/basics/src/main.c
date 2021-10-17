@@ -6,14 +6,14 @@ typedef struct {
 } Position, Velocity;
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init_w_args(argc, argv);
+    ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
 
     // Create a query for Position, Velocity. Queries are the fastest way to
     // iterate entities as they cache results.
-    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t) {
         .filter.terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
@@ -21,20 +21,20 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a few test entities for a Position, Velocity query
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_set(world, e1, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_set(ecs, e1, Position, {10, 20});
+    ecs_set(ecs, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_set(world, e2, Position, {10, 20});
-    ecs_set(world, e2, Velocity, {3, 4});
+    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_set(ecs, e2, Position, {10, 20});
+    ecs_set(ecs, e2, Velocity, {3, 4});
 
     // This entity will not match as it does not have Position, Velocity
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_set(world, e3, Position, {10, 20});
+    ecs_entity_t e3 = ecs_new_entity(ecs, "e3");
+    ecs_set(ecs, e3, Position, {10, 20});
 
     // Iterate entities matching the query
-    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(ecs, q);
 
     // Outer loop, iterates archetypes
     while (ecs_query_next(&it)) {
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
-            printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]), 
+            printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]), 
                 p[i].x, p[i].y);
         }
     }
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     // Filters are uncached queries. They are a bit slower to iterate but faster
     // to create & have lower overhead as they don't have to maintain a cache.
     ecs_filter_t f;
-    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+    ecs_filter_init(ecs, &f, &(ecs_filter_desc_t) {
         .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Filter iteration looks the same as query iteration
-    it = ecs_filter_iter(world, &f);
+    it = ecs_filter_iter(ecs, &f);
 
     while (ecs_filter_next(&it)) {
         Position *p = ecs_term(&it, Position, 1);
@@ -70,10 +70,10 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < it.count; i ++) {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
-            printf("%s: {%f, %f}\n", ecs_get_name(world, it.entities[i]), 
+            printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]), 
                 p[i].x, p[i].y);
         }
     }
 
-    return ecs_fini(world);
+    return ecs_fini(ecs);
 }

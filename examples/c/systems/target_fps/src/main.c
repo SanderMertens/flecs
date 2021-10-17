@@ -6,15 +6,15 @@ void PrintDeltaTime(ecs_iter_t *it) {
 }
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init_w_args(argc, argv);
+    ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // Create system that prints delta_time. This system doesn't query for any
     // components which means it won't match any entities, but will still be ran
     // once for each call to ecs_progress.
-    ECS_SYSTEM(world, PrintDeltaTime, EcsOnUpdate, 0);
+    ECS_SYSTEM(ecs, PrintDeltaTime, EcsOnUpdate, 0);
 
     // Set target FPS to 1 frame per second
-    ecs_set_target_fps(world, 1);
+    ecs_set_target_fps(ecs, 1);
 
     // Run 5 frames
     for (int i = 0; i < 5; i ++) {
@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
         // If a value other than 0 is provided to the delta_time argument of
         // ecs_progress, this value will be used to calculate the length of
         // the sleep to insert.
-        ecs_progress(world, 0);
+        ecs_progress(ecs, 0);
     }
 
-    return ecs_fini(world);
+    return ecs_fini(ecs);
 }

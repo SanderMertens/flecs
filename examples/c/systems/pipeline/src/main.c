@@ -24,30 +24,30 @@ void PrintPosition(ecs_iter_t *it) {
 }
 
 int main(int argc, char *argv[]) {
-    ecs_world_t *world = ecs_init_w_args(argc, argv);
+    ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
 
     // Create system for moving an entity in the EcsOnUpdate phase
-    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
+    ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, [in] Velocity);
 
     // Create system for printing a Position in the EcsPostUpdate phase
-    ECS_SYSTEM(world, PrintPosition, EcsPostUpdate, [in] Position);
+    ECS_SYSTEM(ecs, PrintPosition, EcsPostUpdate, [in] Position);
 
     // Create a few test entities for a Position, Velocity query
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_set(world, e1, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_set(ecs, e1, Position, {10, 20});
+    ecs_set(ecs, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_set(world, e2, Position, {10, 20});
-    ecs_set(world, e2, Velocity, {3, 4});
+    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_set(ecs, e2, Position, {10, 20});
+    ecs_set(ecs, e2, Velocity, {3, 4});
 
     // Run the default pipeline. This will run all systems ordered by their
     // phase. Systems within the same phase are ran in declaration order. This
     // function is usually called in a loop.
-    ecs_progress(world, 0.0f);
+    ecs_progress(ecs, 0.0f);
 
-    return ecs_fini(world);
+    return ecs_fini(ecs);
 }
