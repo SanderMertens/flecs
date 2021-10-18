@@ -993,3 +993,63 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
 
     ecs_fini(world);
 }
+
+void SerializeToExpr_escape_simple_string() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World");
+    test_str(str, "Hello World");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_newline() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\n");
+    test_str(str, "\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_2_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\n\n");
+    test_str(str, "\\n\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_trailing_newline() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World\n");
+    test_str(str, "Hello World\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_2_trailing_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World\n\n");
+    test_str(str, "Hello World\\n\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_delim() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\"Hello World\"");
+    test_str(str, "\\\"Hello World\\\"");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

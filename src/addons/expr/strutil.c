@@ -162,6 +162,7 @@ char* ecs_astresc(
     ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
     char *out = ecs_os_malloc_n(char, len + 1);
     ecs_stresc(out, len, delimiter, in);
+    out[len] = '\0';
     return out;
 }
 

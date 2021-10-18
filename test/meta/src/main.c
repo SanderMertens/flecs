@@ -335,6 +335,12 @@ void SerializeToExpr_struct_nested_i32_i32(void);
 void SerializeToExpr_struct_2_nested_i32_i32(void);
 void SerializeToExpr_struct_struct_i32_array_3(void);
 void SerializeToExpr_struct_struct_i32_i32_array_3(void);
+void SerializeToExpr_escape_simple_string(void);
+void SerializeToExpr_escape_newline(void);
+void SerializeToExpr_escape_2_newlines(void);
+void SerializeToExpr_escape_string_w_trailing_newline(void);
+void SerializeToExpr_escape_string_w_2_trailing_newlines(void);
+void SerializeToExpr_escape_string_w_delim(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_struct_bool(void);
@@ -1662,6 +1668,30 @@ bake_test_case SerializeToExpr_testcases[] = {
     {
         "struct_struct_i32_i32_array_3",
         SerializeToExpr_struct_struct_i32_i32_array_3
+    },
+    {
+        "escape_simple_string",
+        SerializeToExpr_escape_simple_string
+    },
+    {
+        "escape_newline",
+        SerializeToExpr_escape_newline
+    },
+    {
+        "escape_2_newlines",
+        SerializeToExpr_escape_2_newlines
+    },
+    {
+        "escape_string_w_trailing_newline",
+        SerializeToExpr_escape_string_w_trailing_newline
+    },
+    {
+        "escape_string_w_2_trailing_newlines",
+        SerializeToExpr_escape_string_w_2_trailing_newlines
+    },
+    {
+        "escape_string_w_delim",
+        SerializeToExpr_escape_string_w_delim
     }
 };
 
@@ -2018,7 +2048,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        29,
+        35,
         SerializeToExpr_testcases
     },
     {
