@@ -2696,7 +2696,6 @@ struct ecs_iter_t {
     void *binding_ctx;            /* Binding context */
     FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
-    FLECS_FLOAT world_time;       /* Time elapsed since start of simulation */
 
     int32_t frame_offset;         /* Offset relative to frame */
     int32_t offset;               /* Offset relative to current table */
@@ -10553,10 +10552,6 @@ public:
 
     FLECS_FLOAT delta_system_time() const {
         return m_iter->delta_system_time;
-    }
-
-    FLECS_FLOAT world_time() const {
-        return m_iter->world_time;
     }
 
     flecs::type type() const;

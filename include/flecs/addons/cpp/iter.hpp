@@ -204,10 +204,6 @@ public:
         return m_iter->delta_system_time;
     }
 
-    FLECS_FLOAT world_time() const {
-        return m_iter->world_time;
-    }
-
     flecs::type type() const;
 
     /** Is current type a module or does it contain module contents? */

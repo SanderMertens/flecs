@@ -173,7 +173,6 @@ ecs_entity_t ecs_run_intern(
     it.self = system_data->self;
     it.delta_time = delta_time;
     it.delta_system_time = time_elapsed;
-    it.world_time = world->stats.world_time_total;
     it.frame_offset = offset;
     it.param = param;
     it.ctx = system_data->ctx;
