@@ -291,6 +291,8 @@ const char* parse_assign_stmt(
     const char *ptr,
     plecs_state_t *state) 
 {
+    (void)world;
+    
     if (state->isa_clause) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing base for inheritance statement");

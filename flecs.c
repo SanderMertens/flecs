@@ -14255,6 +14255,8 @@ const char* parse_assign_stmt(
     const char *ptr,
     plecs_state_t *state) 
 {
+    (void)world;
+    
     if (state->isa_clause) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing base for inheritance statement");
@@ -14419,7 +14421,7 @@ const char* parse_scope_open(
     state->with_frames[state->sp] = state->with_frame;
     state->with_clause = false;
 
-    return ptr + 1;
+    return ecs_parse_fluff(ptr + 1);
 }
 
 static
@@ -14483,41 +14485,61 @@ const char* parse_stmt(
 
         /* Inheritance (IsA shorthand) statement */
         if (ptr[0] == ':') {
-            ptr = parse_inherit_stmt(name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_inherit_stmt(name, expr, ptr, state))) {
+                return NULL;
+            }
+            
+            stmt_parsed = true;
         }
 
         /* Assignment statement */
         if (ptr[0] == '=') {
-            ptr = parse_assign_stmt(world, name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_assign_stmt(world, name, expr, ptr, state))) {
+                return NULL;
+            }
+            stmt_parsed = true;
         }
 
         /* Using statement */
         if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
-            ptr = parse_using_stmt(name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_using_stmt(name, expr, ptr, state))) {
+                return NULL;
+            }
+            stmt_parsed = true;
         }
 
         /* With statement */
         if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
-            ptr = parse_with_stmt(name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_with_stmt(name, expr, ptr, state))) {
+                return NULL;
+            }
+            stmt_parsed = true;
         }
 
         /* With / ChildOf scope */
         if (ptr[0] == '{') {
-            ptr = parse_scope_open(world, name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_scope_open(world, name, expr, ptr, state))) {
+                return NULL;
+            }
+            stmt_parsed = true;
         }
 
         while (ptr[0] == '}') {
-            ptr = parse_scope_close(world, name, expr, ptr, state);
-            continue;
+            if (!(ptr = parse_scope_close(world, name, expr, ptr, state))) {
+                return NULL;
+            }
+            stmt_parsed = true;
         }
 
-        break;
-    } while (ptr);
+        if (ptr[0] == ',') {
+            if (!stmt_parsed) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "invalid comma after empty statement");
+                return NULL;
+            }
+            ptr ++;
+        }
+    } while (stmt_parsed);
 
     return ptr;
 }
@@ -21616,6 +21638,8 @@ ecs_size_t ecs_stresc(
     ecs_size_t written = 0;
     while ((ch = *ptr++)) {
         if ((written += (ecs_size_t)(ecs_chresc(buff, ch, delimiter) - buff)) <= n) {
+            /* If size != 0, an out buffer must be provided. */
+            ecs_assert(out != NULL, ECS_INVALID_PARAMETER, NULL);
             *bptr++ = buff[0];
             if ((ch = buff[1])) {
                 *bptr = ch;
@@ -21641,7 +21665,7 @@ char* ecs_astresc(
     if (!in) {
         return NULL;
     }
-    
+
     ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
     char *out = ecs_os_malloc_n(char, len + 1);
     ecs_stresc(out, len, delimiter, in);
