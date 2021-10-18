@@ -21567,6 +21567,16 @@ ecs_size_t ecs_stresc(
     return written;
 }
 
+char* ecs_astresc(
+    char delimiter, 
+    const char *in)
+{
+    ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
+    char *out = ecs_os_malloc_n(char, len + 1);
+    ecs_stresc(out, len, delimiter, in);
+    return out;
+}
+
 #endif
 
 

@@ -7986,6 +7986,19 @@ ecs_size_t ecs_stresc(
     char delimiter, 
     const char *in);
 
+/** Return escaped string.
+ * Return escaped version of input string. Same as ecs_stresc, but returns an
+ * allocated string of the right size.
+ * 
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return Escaped string.
+ */
+FLECS_API
+char* ecs_astresc(
+    char delimiter, 
+    const char *in);
+
 /** Used with ecs_parse_expr. */
 typedef struct ecs_expr_desc_t {
     const char *name;
