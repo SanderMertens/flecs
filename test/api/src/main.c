@@ -461,6 +461,7 @@ void Plecs_struct_w_member_w_assignment_to_nothing(void);
 void Plecs_struct_w_member_w_assignment_to_empty_scope(void);
 void Plecs_scope_after_assign(void);
 void Plecs_assign_after_inherit(void);
+void Plecs_multiple_assignments_single_line(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3906,6 +3907,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_after_inherit",
         Plecs_assign_after_inherit
+    },
+    {
+        "multiple_assignments_single_line",
+        Plecs_multiple_assignments_single_line
     }
 };
 
@@ -10385,7 +10390,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        103,
+        104,
         Plecs_testcases
     },
     {
