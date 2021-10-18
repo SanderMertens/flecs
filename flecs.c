@@ -14256,7 +14256,7 @@ const char* parse_assign_stmt(
     plecs_state_t *state) 
 {
     (void)world;
-    
+
     if (state->isa_clause) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing base for inheritance statement");
@@ -14408,7 +14408,9 @@ const char* parse_scope_open(
                     state->last_predicate, state->last_object);
                 ecs_set_with(world, scope);
             } else {
-                scope = ecs_pair(EcsChildOf, state->last_predicate);
+                if (state->last_predicate) {
+                    scope = ecs_pair(EcsChildOf, state->last_predicate);
+                }
                 ecs_set_scope(world, state->last_predicate);
             }
         }

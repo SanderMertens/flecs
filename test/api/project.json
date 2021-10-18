@@ -486,7 +486,8 @@
                 "struct_w_member_w_assignment_to_empty_scope",
                 "scope_after_assign",
                 "assign_after_inherit",
-                "multiple_assignments_single_line"
+                "multiple_assignments_single_line",
+                "2_stmts_in_scope_w_no_parent"
             ]            
         }, {
             "id": "GlobalComponentIds",

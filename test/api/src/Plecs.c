@@ -2852,3 +2852,29 @@ void Plecs_multiple_assignments_single_line() {
 
     ecs_fini(world);
 }
+
+void Plecs_2_stmts_in_scope_w_no_parent() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "{"
+    LINE "Bar { }"
+    LINE "Foo"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert( !ecs_has_id(world, foo, bar));
+    test_assert( !ecs_has_pair(world, foo, EcsChildOf, bar));
+
+    test_assert( !ecs_has_id(world, bar, foo));
+    test_assert( !ecs_has_pair(world, bar, EcsChildOf, foo));
+
+    ecs_fini(world);
+}
