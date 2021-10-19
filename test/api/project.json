@@ -492,7 +492,9 @@
                 "invalid_nested_assignment",
                 "invalid_partial_pair_assignment",
                 "empty_assignment",
-                "empty_assignment_before_end_of_scope"
+                "empty_assignment_before_end_of_scope",
+                "assign_pair_w_new_entities_in_scope",
+                "assign_pair_w_existing_entities_in_scope"
             ]            
         }, {
             "id": "GlobalComponentIds",

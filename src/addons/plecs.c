@@ -172,7 +172,8 @@ int create_term(
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->obj)) {
-        obj = ensure_entity(world, state, term->obj.name, true);
+        obj = ensure_entity(world, state, term->obj.name, 
+            state->assign_stmt == false);
     }
 
     if (state->assign_stmt || state->isa_stmt) {

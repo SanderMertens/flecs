@@ -468,6 +468,8 @@ void Plecs_invalid_nested_assignment(void);
 void Plecs_invalid_partial_pair_assignment(void);
 void Plecs_empty_assignment(void);
 void Plecs_empty_assignment_before_end_of_scope(void);
+void Plecs_assign_pair_w_new_entities_in_scope(void);
+void Plecs_assign_pair_w_existing_entities_in_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3941,6 +3943,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "empty_assignment_before_end_of_scope",
         Plecs_empty_assignment_before_end_of_scope
+    },
+    {
+        "assign_pair_w_new_entities_in_scope",
+        Plecs_assign_pair_w_new_entities_in_scope
+    },
+    {
+        "assign_pair_w_existing_entities_in_scope",
+        Plecs_assign_pair_w_existing_entities_in_scope
     }
 };
 
@@ -10420,7 +10430,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        110,
+        112,
         Plecs_testcases
     },
     {

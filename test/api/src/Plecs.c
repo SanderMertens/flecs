@@ -2964,3 +2964,54 @@ void Plecs_empty_assignment_before_end_of_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_assign_pair_w_new_entities_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  =(Rel, Obj)"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
+    ecs_entity_t obj = ecs_lookup_fullpath(world, "Obj");
+
+    test_assert(foo != 0);
+    test_assert(rel != 0);
+    test_assert(obj != 0);
+
+    test_assert( ecs_has_pair(world, foo, rel, obj));
+    test_assert( !ecs_has_pair(world, rel, EcsChildOf, EcsWildcard));
+    test_assert( !ecs_has_pair(world, obj, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_pair_w_existing_entities_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Rel, Obj"
+    LINE "Foo {"
+    LINE "  =(Rel, Obj)"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
+    ecs_entity_t obj = ecs_lookup_fullpath(world, "Obj");
+
+    test_assert(foo != 0);
+    test_assert(rel != 0);
+    test_assert(obj != 0);
+
+    test_assert( ecs_has_pair(world, foo, rel, obj));
+    test_assert( !ecs_has_pair(world, rel, EcsChildOf, EcsWildcard));
+    test_assert( !ecs_has_pair(world, obj, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
