@@ -106,6 +106,15 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(ecs_f64_t), "64 bit floating point component");
     ecs_doc_set_brief(world, ecs_id(ecs_string_t), "string component");
     ecs_doc_set_brief(world, ecs_id(ecs_entity_t), "entity component");
+
+    /* Initialize documentation for doc components */
+    ecs_entity_t doc = ecs_lookup_fullpath(world, "flecs.doc");
+    ecs_doc_set_brief(world, doc, "Flecs module with documentation components");
+
+    ecs_doc_set_brief(world, ecs_id(EcsDocDescription), "Component used to add documentation");
+    ecs_doc_set_brief(world, EcsDocBrief, "Used as (Description, Brief) to add a brief description");
+    ecs_doc_set_brief(world, EcsDocDetail, "Used as (Description, Detail) to add a detailed description");
+    ecs_doc_set_brief(world, EcsDocLink, "Used as (Description, Link) to add a link");
 }
 
 #endif

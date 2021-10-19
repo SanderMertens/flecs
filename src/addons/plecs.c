@@ -295,6 +295,8 @@ const char* parse_assign_expr(
     const char *ptr,
     plecs_state_t *state) 
 {
+    (void)world;
+    
     if (!state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr,
             "unexpected expression outside of assignment statement");
