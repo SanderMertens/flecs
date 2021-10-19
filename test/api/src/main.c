@@ -422,13 +422,11 @@ void Plecs_with_after_scope(void);
 void Plecs_with_after_with(void);
 void Plecs_scope_inside_with_inside_scope(void);
 void Plecs_with_inside_scope(void);
-void Plecs_assignment_empty(void);
 void Plecs_assignment_w_1(void);
 void Plecs_assignment_w_2(void);
 void Plecs_assignment_w_pair(void);
 void Plecs_assignment_w_invalid_subject(void);
 void Plecs_assignment_w_invalid_with(void);
-void Plecs_assignment_w_invalid_scope(void);
 void Plecs_inherit_w_colon(void);
 void Plecs_inherit_w_colon_w_scope(void);
 void Plecs_inherit_w_colon_w_assign(void);
@@ -456,6 +454,7 @@ void Plecs_using_w_entity_ref_in_value_2_members(void);
 void Plecs_using_w_entity_ref_in_value_3_members(void);
 void Plecs_2_using_scope(void);
 void Plecs_2_using_in_different_scope(void);
+void Plecs_empty_scope_after_using(void);
 void Plecs_assignment_to_non_component(void);
 void Plecs_struct_w_member_w_assignment_to_nothing(void);
 void Plecs_struct_w_member_w_assignment_to_empty_scope(void);
@@ -463,6 +462,12 @@ void Plecs_scope_after_assign(void);
 void Plecs_assign_after_inherit(void);
 void Plecs_multiple_assignments_single_line(void);
 void Plecs_2_stmts_in_scope_w_no_parent(void);
+void Plecs_scope_after_assign_1_tag(void);
+void Plecs_scope_after_assign_2_tags(void);
+void Plecs_invalid_nested_assignment(void);
+void Plecs_invalid_partial_pair_assignment(void);
+void Plecs_empty_assignment(void);
+void Plecs_empty_assignment_before_end_of_scope(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3754,10 +3759,6 @@ bake_test_case Plecs_testcases[] = {
         Plecs_with_inside_scope
     },
     {
-        "assignment_empty",
-        Plecs_assignment_empty
-    },
-    {
         "assignment_w_1",
         Plecs_assignment_w_1
     },
@@ -3776,10 +3777,6 @@ bake_test_case Plecs_testcases[] = {
     {
         "assignment_w_invalid_with",
         Plecs_assignment_w_invalid_with
-    },
-    {
-        "assignment_w_invalid_scope",
-        Plecs_assignment_w_invalid_scope
     },
     {
         "inherit_w_colon",
@@ -3890,6 +3887,10 @@ bake_test_case Plecs_testcases[] = {
         Plecs_2_using_in_different_scope
     },
     {
+        "empty_scope_after_using",
+        Plecs_empty_scope_after_using
+    },
+    {
         "assignment_to_non_component",
         Plecs_assignment_to_non_component
     },
@@ -3916,6 +3917,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "2_stmts_in_scope_w_no_parent",
         Plecs_2_stmts_in_scope_w_no_parent
+    },
+    {
+        "scope_after_assign_1_tag",
+        Plecs_scope_after_assign_1_tag
+    },
+    {
+        "scope_after_assign_2_tags",
+        Plecs_scope_after_assign_2_tags
+    },
+    {
+        "invalid_nested_assignment",
+        Plecs_invalid_nested_assignment
+    },
+    {
+        "invalid_partial_pair_assignment",
+        Plecs_invalid_partial_pair_assignment
+    },
+    {
+        "empty_assignment",
+        Plecs_empty_assignment
+    },
+    {
+        "empty_assignment_before_end_of_scope",
+        Plecs_empty_assignment_before_end_of_scope
     }
 };
 
@@ -10395,7 +10420,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        105,
+        110,
         Plecs_testcases
     },
     {

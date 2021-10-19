@@ -7509,14 +7509,17 @@ typedef struct EcsVector {
 /** Serializer utilities */
 
 typedef enum ecs_meta_type_op_kind_t {
-    EcsOpEnum,
-    EcsOpBitmask,
     EcsOpArray,
     EcsOpVector,
     EcsOpPush,
     EcsOpPop,
 
-    EcsOpPrimitive,
+    EcsOpScope, /* Marks last constant that can open/close a scope */
+
+    EcsOpEnum,
+    EcsOpBitmask,
+
+    EcsOpPrimitive, /* Marks first constant that's a primitive */
 
     EcsOpBool,
     EcsOpChar,
@@ -7577,6 +7580,7 @@ typedef struct ecs_meta_cursor_t {
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH];
     int32_t depth;
     bool valid;
+    bool is_primitive_scope;  /* If in root scope, this allows for a push for primitive types */
 
     /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
     ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);

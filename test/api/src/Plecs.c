@@ -1548,29 +1548,11 @@ void Plecs_with_inside_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_empty() {
-    ecs_world_t *world = ecs_init();
-    
-    const char *expr =
-    HEAD "Earth = {"
-    LINE "}";
-
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
-
-    test_assert(earth != 0);
-
-    ecs_fini(world);
-}
-
 void Plecs_assignment_w_1() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Earth = {"
-    LINE "  Planet"
-    LINE "}";
+    HEAD "Earth = Planet";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -1589,10 +1571,7 @@ void Plecs_assignment_w_2() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Earth = {"
-    LINE "  Planet"
-    LINE "  Habitable"
-    LINE "}";
+    HEAD "Earth = Planet, Habitable";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -1614,10 +1593,7 @@ void Plecs_assignment_w_pair() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Earth = {"
-    LINE "  Planet"
-    LINE "  (ChildOf, Sun)"
-    LINE "}";
+    HEAD "Earth = Planet, (ChildOf, Sun)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -1641,9 +1617,7 @@ void Plecs_assignment_w_invalid_subject() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Earth = {"
-    LINE "  Planet(Mars)"
-    LINE "}";
+    HEAD "Earth = Planet(Mars)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
@@ -1656,24 +1630,7 @@ void Plecs_assignment_w_invalid_with() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Earth = {"
-    LINE "  with Planet { Mars }"
-    LINE "}";
-
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Plecs_assignment_w_invalid_scope() {
-    ecs_tracing_enable(-4);
-    
-    ecs_world_t *world = ecs_init();
-    
-    const char *expr =
-    HEAD "Earth = {"
-    LINE "  Europe { Netherlands }"
-    LINE "}";
+    HEAD "Earth = with Planet { Mars }";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
@@ -1724,7 +1681,7 @@ void Plecs_inherit_w_colon_w_assign() {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
-    HEAD "Foo : Bar = { Comp }";
+    HEAD "Foo : Bar = Comp";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -1753,7 +1710,7 @@ void Plecs_assign_component_value() {
     });
 
     const char *expr =
-    HEAD "Position(Foo) = {10, 20}";
+    HEAD "Foo = Position{10, 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
@@ -1790,8 +1747,8 @@ void Plecs_assign_2_component_values() {
     });
 
     const char *expr =
-    HEAD "Position(Foo) = {10, 20}"
-    LINE "Velocity(Foo) = {1, 2}";
+    HEAD "Foo = Position{10, 20}"
+    LINE "Foo = Velocity{1, 2}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
@@ -1830,8 +1787,8 @@ void Plecs_assign_component_value_in_assign_scope() {
     });
 
     const char *expr =
-    HEAD "Foo = {"
-    LINE " Position = {10, 20}"
+    HEAD "Foo {"
+    LINE " = Position{10, 20}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -1870,9 +1827,9 @@ void Plecs_assign_2_component_values_in_assign_scope() {
     });
 
     const char *expr =
-    HEAD "Foo = {"
-    LINE " Position = {10, 20}"
-    LINE " Velocity = {1, 2}"
+    HEAD "Foo {"
+    LINE " = Position{10, 20}"
+    LINE " = Velocity{1, 2}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -1905,11 +1862,11 @@ void Plecs_type_and_assign_in_plecs() {
 
     const char *expr =
     HEAD "flecs.meta.Struct(Position) {"
-    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
-    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
+    LINE "  x = flecs.meta.Member{flecs.meta.f32}"
+    LINE "  y = flecs.meta.Member{flecs.meta.f32}"
     LINE "}"
-    LINE ""
-    LINE "Position(Foo) = {10, 20}";
+    LINE
+    LINE "Foo = Position{10, 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
@@ -1935,11 +1892,11 @@ void Plecs_type_and_assign_in_plecs_w_2_members() {
 
     const char *expr =
     HEAD "flecs.meta.Struct(Position) {"
-    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
-    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
+    LINE "  x = flecs.meta.Member{flecs.meta.f32}"
+    LINE "  y = flecs.meta.Member{flecs.meta.f32}"
     LINE "}"
     LINE ""
-    LINE "Position(Foo) = {x: 10, y: 20}";
+    LINE "Foo = Position{x: 10, y: 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
@@ -1971,12 +1928,12 @@ void Plecs_type_and_assign_in_plecs_w_3_members() {
 
     const char *expr =
     HEAD "flecs.meta.Struct(Position) {"
-    LINE "  flecs.meta.Member(x) = {flecs.meta.f32}"
-    LINE "  flecs.meta.Member(y) = {flecs.meta.f32}"
-    LINE "  flecs.meta.Member(z) = {flecs.meta.f32}"
+    LINE "  x = flecs.meta.Member{flecs.meta.f32}"
+    LINE "  y = flecs.meta.Member{flecs.meta.f32}"
+    LINE "  z = flecs.meta.Member{flecs.meta.f32}"
     LINE "}"
     LINE ""
-    LINE "Position(Foo) = {x: 10, y: 20, z: 30}";
+    LINE "Foo = Position{x: 10, y: 20, z: 30}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
@@ -2017,10 +1974,10 @@ void Plecs_type_and_assign_in_plecs_w_enum() {
     LINE "}"
     LINE ""
     LINE "flecs.meta.Struct(SomeType) {"
-    LINE "  flecs.meta.Member(value) = {Color}"
+    LINE "  value = flecs.meta.Member{Color}"
     LINE "}"
     LINE ""
-    LINE "SomeType(Foo) = {value: Blue}";
+    LINE "Foo = SomeType{value: Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
@@ -2053,17 +2010,18 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta() {
 
     const char *expr =
     HEAD "using flecs.meta"
+    LINE
     LINE "Enum(Color) {"
     LINE "  Constant(Red)"
     LINE "  Constant(Green)"
     LINE "  Constant(Blue)"
     LINE "}"
-    LINE ""
+    LINE
     LINE "Struct(SomeType) {"
-    LINE "  Member(value) = {Color}"
+    LINE "  value = Member{Color}"
     LINE "}"
-    LINE ""
-    LINE "SomeType(Foo) = {value: Blue}";
+    LINE
+    LINE "Foo = SomeType{value: Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
@@ -2106,7 +2064,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta() {
     LINE "  Constant(Blue)"
     LINE "}"
     LINE ""
-    LINE "Color(Foo) = Blue";
+    LINE "Foo = Color{Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
@@ -2144,21 +2102,21 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
 
     const char *expr =
     HEAD "using flecs.meta"
-    LINE ""
+    LINE 
     LINE "Struct(Position) {"
-    LINE "  Member(x) = {f32}"
-    LINE "  Member(y) = {f32}"
+    LINE "  x = Member{f32}"
+    LINE "  y = Member{f32}"
     LINE "}"
-    LINE ""
+    LINE 
     LINE "Enum(Color) {"
     LINE "  Constant(Red)"
     LINE "  Constant(Green)"
     LINE "  Constant(Blue)"
     LINE "}"
-    LINE ""
-    LINE "Foo = {"
-    LINE "  Position = {x: 10, y: 20}"
-    LINE "  Color = Green"
+    LINE 
+    LINE "Foo {"
+    LINE "  = Position{x: 10, y: 20}"
+    LINE "  = Color{Green}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2217,16 +2175,16 @@ void Plecs_type_and_assign_in_plecs_nested_member() {
     LINE
     LINE "Struct(Line) {"
     LINE "  Member(start) {"
-    LINE "    Member(x) = {f32}"
-    LINE "    Member(y) = {f32}"
+    LINE "    x = Member{f32}"
+    LINE "    y = Member{f32}"
     LINE "  }"
     LINE "  Member(stop) {"
-    LINE "    Member(x) = {f32}"
-    LINE "    Member(y) = {f32}"
+    LINE "    x = Member{f32}"
+    LINE "    y = Member{f32}"
     LINE "  }"
     LINE "}"
     LINE
-    LINE "Line(l) = {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}";
+    LINE "l = Line{start: {x: 10, y: 20}, stop: {x: 30, y: 40}}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
@@ -2470,7 +2428,7 @@ void Plecs_using_with_scope() {
     LINE "Foo {}"
     LINE ""
     LINE "Struct(Bar) {"
-    LINE "  Member(x) = {f32}"
+    LINE "  x = Member{f32}"
     LINE "}"
     LINE ""
     LINE "}";
@@ -2506,11 +2464,11 @@ void Plecs_using_w_entity_ref_in_value_2_members() {
     HEAD "using flecs.meta"
     LINE
     LINE "Struct(Position) {"
-    LINE "  Member(x) = {f32}" // member type is looked up in flecs.meta
-    LINE "  Member(y) = {f32}"
+    LINE "  x = Member{f32}" // member type is looked up in flecs.meta
+    LINE "  y = Member{f32}"
     LINE "}"
     LINE ""
-    LINE "Position(Foo) = {x: 10, y: 20}";
+    LINE "Foo = Position{x: 10, y: 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
@@ -2544,12 +2502,12 @@ void Plecs_using_w_entity_ref_in_value_3_members() {
     HEAD "using flecs.meta"
     LINE
     LINE "Struct(Position) {"
-    LINE "  Member(x) = {f32}" // member type is looked up in flecs.meta
-    LINE "  Member(y) = {f32}"
-    LINE "  Member(z) = {f32}"
+    LINE "  x = Member{f32}" // member type is looked up in flecs.meta
+    LINE "  y = Member{f32}"
+    LINE "  z = Member{f32}"
     LINE "}"
     LINE
-    LINE "Position(Foo) = {x: 10, y: 20, z: 30}";
+    LINE "Foo = Position{x: 10, y: 20, z: 30}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
@@ -2696,7 +2654,7 @@ void Plecs_assignment_to_non_component() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "Position(Foo) = {x: 10, y: 20}";
+    HEAD "Foo = Position{x: 10, y: 20}";
 
     ecs_tracing_enable(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
@@ -2723,7 +2681,7 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
 
     const char *expr =
     HEAD "flecs.meta.Struct(Position) {"
-    LINE "  flecs.meta.Member(x) = {"
+    LINE "  x = flecs.meta.Member{"
     LINE "}";
 
     ecs_tracing_enable(-4);
@@ -2731,7 +2689,6 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
 
     ecs_fini(world);
 }
-
 
 void Plecs_scope_after_assign() {
     ecs_world_t *world = ecs_init();
@@ -2745,7 +2702,7 @@ void Plecs_scope_after_assign() {
     });
 
     const char *expr =
-    HEAD "Position(Foo) = {10, 20} {"
+    HEAD "Foo = Position{10, 20} {"
     LINE "  Bar"
     LINE "}";
 
@@ -2783,7 +2740,7 @@ void Plecs_assign_after_inherit() {
 
     const char *expr =
     HEAD "Foo : Position"
-    LINE "Position(Bar) = {10, 20}";
+    LINE "Bar = Position{10, 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -2827,9 +2784,7 @@ void Plecs_multiple_assignments_single_line() {
     });
 
     const char *expr =
-    HEAD "Foo = {"
-    LINE "  Position = {10, 20}, Velocity = {1, 2}"
-    LINE "}";
+    HEAD "Foo = Position{10, 20}, Velocity{1, 2}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
@@ -2875,6 +2830,137 @@ void Plecs_2_stmts_in_scope_w_no_parent() {
 
     test_assert( !ecs_has_id(world, bar, foo));
     test_assert( !ecs_has_pair(world, bar, EcsChildOf, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_scope_after_assign_1_tag() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo = TagA {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(tag_a != 0);
+
+    test_assert( ecs_has_id(world, foo, tag_a));
+    test_assert( !ecs_has_id(world, bar, tag_a));
+
+    test_assert( ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+
+    test_assert( !ecs_has_pair(world, tag_a, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_scope_after_assign_2_tags() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo = TagA, TagB {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
+    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(tag_a != 0);
+    test_assert(tag_b != 0);
+
+    test_assert( ecs_has_id(world, foo, tag_a));
+    test_assert( ecs_has_id(world, foo, tag_b));
+
+    test_assert( !ecs_has_id(world, bar, tag_a));
+    test_assert( !ecs_has_id(world, bar, tag_b));
+
+    test_assert( ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+
+    test_assert( !ecs_has_pair(world, tag_a, EcsChildOf, EcsWildcard));
+    test_assert( !ecs_has_pair(world, tag_b, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_empty_scope_after_using() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "{"
+    LINE "  Foo"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert( foo != 0);
+    test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_invalid_nested_assignment() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo ="
+    LINE "Bar = Hello";
+
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_invalid_partial_pair_assignment() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo = (Hello, ";
+
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_empty_assignment() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo =";
+
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_empty_assignment_before_end_of_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "{Foo =}";
+
+    ecs_tracing_enable(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }

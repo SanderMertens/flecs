@@ -2,6 +2,40 @@
 
 #ifdef FLECS_META
 
+static
+const char* op_kind_str(
+    ecs_meta_type_op_kind_t kind) 
+{
+    switch(kind) {
+
+    case EcsOpEnum: return "Enum";
+    case EcsOpBitmask: return "Bitmask";
+    case EcsOpArray: return "Array";
+    case EcsOpVector: return "Vector";
+    case EcsOpPush: return "Push";
+    case EcsOpPop: return "Pop";
+    case EcsOpPrimitive: return "Primitive";
+    case EcsOpBool: return "Bool";
+    case EcsOpChar: return "Char";
+    case EcsOpByte: return "Byte";
+    case EcsOpU8: return "U8";
+    case EcsOpU16: return "U16";
+    case EcsOpU32: return "U32";
+    case EcsOpU64: return "U64";
+    case EcsOpI8: return "I8";
+    case EcsOpI16: return "I16";
+    case EcsOpI32: return "I32";
+    case EcsOpI64: return "I64";
+    case EcsOpF32: return "F32";
+    case EcsOpF64: return "F64";
+    case EcsOpUPtr: return "UPtr";
+    case EcsOpIPtr: return "IPtr";
+    case EcsOpString: return "String";
+    case EcsOpEntity: return "Entity";
+    default: return "<< invalid kind >>";
+    }
+}
+
 /* Get current scope */
 static
 ecs_meta_scope_t* get_scope(
@@ -214,6 +248,15 @@ int ecs_meta_push(
     ecs_meta_type_op_t *op = get_op(scope);
     const ecs_world_t *world = cursor->world;
 
+    if (cursor->depth == 0) {
+        if (!cursor->is_primitive_scope) {
+            if (op->kind > EcsOpScope) {
+                cursor->is_primitive_scope = true;
+                return 0;
+            }
+        }
+    }
+
     void *ptr = get_ptr(world, scope);
     cursor->depth ++;
     ecs_assert(cursor->depth < ECS_META_MAX_SCOPE_DEPTH, 
@@ -284,6 +327,11 @@ int ecs_meta_push(
 int ecs_meta_pop(
     ecs_meta_cursor_t *cursor)
 {
+    if (cursor->is_primitive_scope) {
+        cursor->is_primitive_scope = false;
+        return 0;
+    }
+
     ecs_meta_scope_t *scope = get_scope(cursor);
     cursor->depth --;
     if (cursor->depth < 0) {
@@ -620,8 +668,12 @@ int ecs_meta_set_string(
         set_T(ecs_entity_t, ptr, e);
         break;
     }
+    case EcsOpPop:
+        ecs_err("excess element '%s' in scope", value);
+        return -1;
     default:
-        ecs_err("unsupported conversion from string");
+        ecs_err("unsupported conversion from string '%s' to '%s'", 
+            value, op_kind_str(op->kind));
         return -1;
     }
 

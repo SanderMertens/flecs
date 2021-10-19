@@ -800,7 +800,6 @@ parse_predicate:
         }
 
         goto parse_done;
-
     }
 
     goto parse_done;
@@ -846,6 +845,10 @@ parse_pair_predicate:
     } else if (ptr[0] == TOK_PAREN_CLOSE) {
         /* No object */
         goto parse_done;
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "expected pair object or ')'");
+        return NULL;
     }
 
 parse_pair_object:
@@ -910,33 +913,17 @@ char* ecs_parse_term(
 
     bool prev_or = false;
     if (ptr != expr) {
-        /* If this is not the start of the expression, scan back to check if
-         * previous token was an OR */
-        const char *bptr = ptr - 1;
-        do {
-            char ch = bptr[0];
-
-            if (isspace(ch)) {
-                bptr --;
-                continue;
-            }
-
-            /* Previous token was not an OR */
-            if (ch == TOK_AND) {
-                break;
-            }
-
-            /* Previous token was an OR */
-            if (ch == TOK_OR[0]) {
+        if (ptr[0]) {
+            if (ptr[0] == ',') {
+                ptr ++;
+            } else if (ptr[0] == '|') {
+                ptr += 2;
                 prev_or = true;
-                break;
+            } else {
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "invalid preceding token");
             }
-
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid preceding token");
-
-            return NULL;
-        } while (true);
+        }
     }
 
     ptr = skip_newline_and_space(ptr);
@@ -1045,14 +1032,6 @@ char* ecs_parse_term(
     } else if (term->role == ECS_NOT) {
         term->oper = EcsNotFrom;
         term->role = 0;
-    }
-
-    if (ptr[0]) {
-        if (ptr[0] == ',') {
-            ptr ++;
-        } else if (ptr[0] == '|') {
-            ptr += 2;
-        }
     }
 
     ptr = ecs_parse_whitespace(ptr);

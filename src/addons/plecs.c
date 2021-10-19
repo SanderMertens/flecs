@@ -14,8 +14,10 @@ typedef struct {
     ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
     ecs_entity_t last_object;
+
     ecs_id_t last_assign_id;
     ecs_entity_t assign_to;
+
     ecs_entity_t scope[STACK_MAX_SIZE];
     ecs_entity_t with[STACK_MAX_SIZE];
     ecs_entity_t using[STACK_MAX_SIZE];
@@ -24,10 +26,11 @@ typedef struct {
     int32_t sp;
     int32_t with_frame;
     int32_t using_frame;
-    bool with_clause;
-    bool using_clause;
-    bool assignment;
-    bool isa_clause;
+
+    bool with_stmt;
+    bool using_stmt;
+    bool assign_stmt;
+    bool isa_stmt;
 } plecs_state_t;
 
 static
@@ -122,16 +125,16 @@ bool pred_is_subj(
     if (term->subj.set.mask == EcsNothing) {
         return false;
     }
-    if (state->with_clause) {
+    if (state->with_stmt) {
         return false;
     }
-    if (state->assignment) {
+    if (state->assign_stmt) {
         return false;
     }
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         return false;
     }
-    if (state->using_clause) {
+    if (state->using_stmt) {
         return false;
     }
     return true;
@@ -156,8 +159,9 @@ int create_term(
         return -1;
     }
 
-    if (state->assignment && term->subj.entity != EcsThis) {
-        ecs_parser_error(name, expr, column, "invalid statement in assignment");
+    if (state->assign_stmt && term->subj.entity != EcsThis) {
+        ecs_parser_error(name, expr, column, 
+            "invalid statement in assign statement");
         return -1;
     }
 
@@ -171,23 +175,23 @@ int create_term(
         obj = ensure_entity(world, state, term->obj.name, true);
     }
 
-    if (state->assignment || state->isa_clause) {
+    if (state->assign_stmt || state->isa_stmt) {
         subj = state->assign_to;
     }
 
-    if (state->isa_clause && obj) {
+    if (state->isa_stmt && obj) {
         ecs_parser_error(name, expr, column, 
             "invalid object in inheritance statement");
         return -1;
     }
 
-    if (state->using_clause && (obj || subj)) {
+    if (state->using_stmt && (obj || subj)) {
         ecs_parser_error(name, expr, column, 
             "invalid predicate/object in using statement");
         return -1;
     }
 
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         pred = ecs_pair(EcsIsA, pred);
     }
 
@@ -220,7 +224,7 @@ int create_term(
 
     /* If this is a with clause (the list of entities between 'with' and scope
      * open), add subject to the array of with frames */
-    if (state->with_clause) {
+    if (state->with_stmt) {
         ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_id_t id;
 
@@ -232,7 +236,7 @@ int create_term(
 
         state->with[state->with_frame ++] = id;
     
-    } else if (state->using_clause) {
+    } else if (state->using_stmt) {
         ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(obj == 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -249,10 +253,10 @@ int create_term(
         }
     }
 
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         state->last_assign_id = 0;
         state->assign_to = 0;
-        state->isa_clause = false;
+        state->isa_stmt = false;
     }
 
     return 0;
@@ -265,7 +269,7 @@ const char* parse_inherit_stmt(
     const char *ptr,
     plecs_state_t *state)
 {
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "cannot nest inheritance");
         return NULL;
@@ -277,10 +281,76 @@ const char* parse_inherit_stmt(
         return NULL;
     }
     
-    state->isa_clause = true;
+    state->isa_stmt = true;
     state->assign_to = state->last_subject;
 
-    return ecs_parse_fluff(ptr + 1);
+    return ptr;
+}
+
+static
+const char* parse_assign_expr(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state) 
+{
+    if (!state->assign_stmt) {
+        ecs_parser_error(name, expr, ptr - expr,
+            "unexpected expression outside of assignment statement");
+        return NULL;
+    }
+
+    ecs_id_t assign_id = state->last_assign_id;
+    if (!assign_id) {
+        ecs_parser_error(name, expr, ptr - expr,
+            "unexpected expression outside of assignment statement");
+        return NULL;
+    }
+
+#ifndef FLECS_EXPR
+    ecs_parser_error(name, expr, ptr - expr,
+        "cannot parse component value, missing FLECS_EXPR addon");
+    return NULL;
+#else
+    ecs_entity_t assign_to = state->assign_to;
+    if (!assign_to) {
+        assign_to = state->last_subject;
+    }
+
+    if (!assign_to) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing entity to assign to");
+        return NULL;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, assign_id);
+    if (!type) {
+        char *id_str = ecs_id_str(world, assign_id);
+        ecs_parser_error(name, expr, ptr - expr, 
+            "cannot assign to non-component id '%s'", id_str);
+        ecs_os_free(id_str);
+        return NULL;
+    }
+
+    void *value_ptr = ecs_get_mut_id(
+        world, assign_to, assign_id, NULL);
+
+    ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
+        &(ecs_expr_desc_t) {
+            .name = name,
+            .expr = expr,
+            .lookup_action = plecs_lookup_action,
+            .lookup_ctx = state
+        });
+    if (!ptr) {
+        return NULL;
+    }
+
+    ecs_modified_id(world, assign_to, assign_id);
+#endif
+
+    return ptr;
 }
 
 static
@@ -293,76 +363,27 @@ const char* parse_assign_stmt(
 {
     (void)world;
 
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing base for inheritance statement");
         return NULL;
     }
 
-    ecs_id_t assign_id = state->last_assign_id;
-    if (state->assignment || assign_id) {
-        /* Component value assignment */
-#ifndef FLECS_EXPR
-        ecs_parser_error(name, expr, ptr - expr,
-            "cannot parse component value, missing FLECS_EXPR addon");
+    /* Component scope (add components to entity) */
+    if (!state->last_subject) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "missing entity to assign to");
         return NULL;
-#else
-        ecs_entity_t assign_to = state->assign_to;
-        if (!assign_to) {
-            assign_to = state->last_subject;
-        }
-
-        if (!assign_to) {
-            ecs_parser_error(name, expr, ptr - expr, 
-                "missing entity to assign to");
-            return NULL;
-        }
-
-        ecs_entity_t type = ecs_get_typeid(world, assign_id);
-        if (!type) {
-            char *id_str = ecs_id_str(world, assign_id);
-            ecs_parser_error(name, expr, ptr - expr, 
-                "cannot assign to non-component id '%s'", id_str);
-            ecs_os_free(id_str);
-            return NULL;
-        }
-
-        void *value_ptr = ecs_get_mut_id(
-            world, assign_to, assign_id, NULL);
-
-        ptr = ecs_parse_expr(world, ptr + 1, type, value_ptr, 
-            &(ecs_expr_desc_t) {
-                .name = name,
-                .expr = expr,
-                .lookup_action = plecs_lookup_action,
-                .lookup_ctx = state
-            });
-        if (!ptr) {
-            return NULL;
-        }
-
-        ecs_modified_id(world, assign_to, assign_id);
-#endif
-    } else {
-        /* Component scope (add components to entity) */
-        if (!state->last_subject) {
-            ecs_parser_error(name, expr, ptr - expr, 
-                "missing entity to assign to");
-            return NULL;
-        }
-
-        state->assignment = true;
-        state->assign_to = state->last_subject;
-
-        ptr = ecs_parse_fluff(ptr + 1);
-        if (ptr[0] != '{') {
-            ecs_parser_error(name, expr, ptr - expr, 
-                "expected '{' after assignment");
-            return NULL;
-        }
-
-        ptr = ecs_parse_fluff(ptr + 1);
     }
+
+    if (state->assign_stmt) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "invalid assign statement in assign statement");
+        return NULL;
+    }
+
+    state->assign_stmt = true;
+    state->assign_to = state->last_subject;
     
     return ptr;
 }
@@ -374,14 +395,14 @@ const char* parse_using_stmt(
     const char *ptr,
     plecs_state_t *state) 
 {
-    if (state->isa_clause || state->assignment) {
+    if (state->isa_stmt || state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid usage of using keyword");
         return NULL;
     }
 
     /* Add following expressions to using list */
-    state->using_clause = true;
+    state->using_stmt = true;
 
     return ecs_parse_fluff(ptr + 5);
 }
@@ -393,20 +414,20 @@ const char* parse_with_stmt(
     const char *ptr,
     plecs_state_t *state) 
 {
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid with after inheritance");
         return NULL;
     }
 
-    if (state->assignment) {
+    if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
-            "invalid with in assignment");
+            "invalid with in assign_stmt");
         return NULL;
     }
 
     /* Add following expressions to with list */
-    state->with_clause = true;
+    state->with_stmt = true;
     return ecs_parse_fluff(ptr + 5);
 }
 
@@ -418,15 +439,15 @@ const char* parse_scope_open(
     const char *ptr,
     plecs_state_t *state) 
 {
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing base for inheritance");
         return NULL;
     }
 
-    if (state->assignment) {
+    if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
-            "invalid scope in assignment");
+            "invalid scope in assign_stmt");
         return NULL;
     }
 
@@ -434,7 +455,7 @@ const char* parse_scope_open(
 
     ecs_entity_t scope = 0;
 
-    if (!state->with_clause) {
+    if (!state->with_stmt) {
         if (state->last_subject) {
             scope = state->last_subject;
             ecs_set_scope(world, state->last_subject);
@@ -457,9 +478,9 @@ const char* parse_scope_open(
 
     state->using_frames[state->sp] = state->using_frame;
     state->with_frames[state->sp] = state->with_frame;
-    state->with_clause = false;
+    state->with_stmt = false;
 
-    return ecs_parse_fluff(ptr + 1);
+    return ptr;
 }
 
 static
@@ -470,34 +491,71 @@ const char* parse_scope_close(
     const char *ptr,
     plecs_state_t *state) 
 {
-    if (state->isa_clause) {
+    if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid '}' after inheritance statement");
         return NULL;
     }
 
-    if (state->assignment) {
-        state->assignment = false;
-    } else {
-        state->scope[state->sp] = 0;
-        state->sp --;
-
-        ecs_id_t id = state->scope[state->sp];
-
-        if (!id || ECS_HAS_ROLE(id, PAIR)) {
-            ecs_set_with(world, id);
-        }
-
-        if (!id || !ECS_HAS_ROLE(id, PAIR)) {
-            ecs_set_scope(world, id);
-        }
-
-        state->with_frame = state->with_frames[state->sp];
-        state->using_frame = state->using_frames[state->sp];
-        state->last_subject = 0;
+    if (state->assign_stmt) {
+        ecs_parser_error(name, expr, ptr - expr, 
+            "unfinished assignment before }");
+        return NULL;
     }
 
-    return ecs_parse_fluff(ptr + 1);
+    state->scope[state->sp] = 0;
+    state->sp --;
+
+    if (state->sp < 0) {
+        ecs_parser_error(name, expr, ptr - expr, "invalid } without a {");
+        return NULL;
+    }
+
+    ecs_id_t id = state->scope[state->sp];
+
+    if (!id || ECS_HAS_ROLE(id, PAIR)) {
+        ecs_set_with(world, id);
+    }
+
+    if (!id || !ECS_HAS_ROLE(id, PAIR)) {
+        ecs_set_scope(world, id);
+    }
+
+    state->with_frame = state->with_frames[state->sp];
+    state->using_frame = state->using_frames[state->sp];
+    state->last_subject = 0;
+    state->assign_stmt = false;
+
+    return ptr;
+}
+
+static
+const char *parse_plecs_term(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    ecs_term_t term = {0};
+
+    ptr = ecs_parse_term(world, name, expr, ptr, &term);
+    if (!ptr) {
+        return NULL;
+    }
+
+    if (!ecs_term_is_initialized(&term)) {
+        ecs_parser_error(name, expr, ptr - expr, "expected term expression");
+        return NULL; /* No term found */
+    }
+
+    if (create_term(world, &term, name, expr, (ptr - expr), state)) {
+        return NULL; /* Failed to create term */
+    }
+
+    ecs_term_fini(&term);
+
+    return ptr;
 }
 
 static
@@ -508,78 +566,130 @@ const char* parse_stmt(
     const char *ptr,
     plecs_state_t *state)
 {
-    (void)world;
-    (void)name;
-    (void)expr;
+    state->assign_stmt = false;
+    state->isa_stmt = false;
+    state->with_stmt = false;
+    state->using_stmt = false;
+    state->last_subject = 0;
+    state->last_predicate = 0;
+    state->last_object = 0;
 
-    bool stmt_parsed;
+    ptr = ecs_parse_fluff(ptr);
 
-    state->using_clause = false;
+    char ch = ptr[0];
 
-    do {
-        stmt_parsed = false;
+    if (!ch) {
+        goto done;
+    } else if (ch == '{') {
+        ptr = ecs_parse_fluff(ptr + 1);
+        goto scope_open;
+    } else if (ch == '}') {
+        ptr = ecs_parse_fluff(ptr + 1);
+        goto scope_close;
+    } else if (ch == '=') {
+        ptr = ecs_parse_fluff(ptr + 1);
+        goto assign_to_scope_stmt;
+    } else if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
+        ptr = parse_using_stmt(name, expr, ptr, state);
+        if (!ptr) goto error;
+        goto term_expr;
+    } else if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
+        ptr = parse_with_stmt(name, expr, ptr, state);
+        if (!ptr) goto error;
+        goto term_expr;
+    } else {
+        goto term_expr;
+    }
 
-        ptr = ecs_parse_fluff(ptr);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    goto done;
 
-        /* Inheritance (IsA shorthand) statement */
+term_expr:
+    if (!ptr[0]) {
+        goto done;
+    }
+
+    if (!(ptr = parse_plecs_term(world, name, ptr, ptr, state))) {
+        goto error;
+    }
+
+    ptr = ecs_parse_fluff(ptr);
+
+    if (ptr[0] == '{' && !isspace(ptr[-1])) {
+        /* A '{' directly after an identifier (no whitespace) is a literal */
+        goto assign_expr;
+    }
+
+    if (!state->using_stmt) {
         if (ptr[0] == ':') {
-            if (!(ptr = parse_inherit_stmt(name, expr, ptr, state))) {
-                return NULL;
-            }
-            
-            stmt_parsed = true;
+            ptr = ecs_parse_fluff(ptr + 1);
+            goto inherit_stmt;
+        } else if (ptr[0] == '=') {
+            ptr = ecs_parse_fluff(ptr + 1);
+            goto assign_stmt;
+        } else if (ptr[0] == ',') {
+            ptr = ecs_parse_fluff(ptr + 1);
+            goto term_expr;
+        } else if (ptr[0] == '{') {
+            state->assign_stmt = false;
+            ptr = ecs_parse_fluff(ptr + 1);
+            goto scope_open;
         }
+    }
 
-        /* Assignment statement */
-        if (ptr[0] == '=') {
-            if (!(ptr = parse_assign_stmt(world, name, expr, ptr, state))) {
-                return NULL;
-            }
-            stmt_parsed = true;
-        }
+    state->assign_stmt = false;
+    goto done;
 
-        /* Using statement */
-        if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
-            if (!(ptr = parse_using_stmt(name, expr, ptr, state))) {
-                return NULL;
-            }
-            stmt_parsed = true;
-        }
+inherit_stmt:
+    ptr = parse_inherit_stmt(name, expr, ptr, state);
+    if (!ptr) goto error;
 
-        /* With statement */
-        if (!ecs_os_strncmp(ptr, TOK_WITH " ", 5)) {
-            if (!(ptr = parse_with_stmt(name, expr, ptr, state))) {
-                return NULL;
-            }
-            stmt_parsed = true;
-        }
+    /* Expect base identifier */
+    goto term_expr;
 
-        /* With / ChildOf scope */
-        if (ptr[0] == '{') {
-            if (!(ptr = parse_scope_open(world, name, expr, ptr, state))) {
-                return NULL;
-            }
-            stmt_parsed = true;
-        }
+assign_to_scope_stmt:
+    state->last_subject = ecs_get_scope(world);
+    goto assign_stmt;
 
-        while (ptr[0] == '}') {
-            if (!(ptr = parse_scope_close(world, name, expr, ptr, state))) {
-                return NULL;
-            }
-            stmt_parsed = true;
-        }
+assign_stmt:
+    ptr = parse_assign_stmt(world, name, expr, ptr, state);
+    if (!ptr) goto error;
 
-        if (ptr[0] == ',') {
-            if (!stmt_parsed) {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "invalid comma after empty statement");
-                return NULL;
-            }
-            ptr ++;
-        }
-    } while (stmt_parsed);
+    /* Expect component identifiers */
+    goto term_expr;
 
+assign_expr:
+    ptr = parse_assign_expr(world, name, expr, ptr, state);
+    if (!ptr) goto error;
+
+    ptr = ecs_parse_fluff(ptr);
+    if (ptr[0] == ',') {
+        ptr ++;
+        goto term_expr;
+    } else if (ptr[0] == '{') {
+        state->assign_stmt = false;
+        ptr ++;
+        goto scope_open;
+    } else {
+        state->assign_stmt = false;
+        goto done;
+    }
+
+scope_open:
+    ptr = parse_scope_open(world, name, expr, ptr, state);
+    if (!ptr) goto error;
+    goto done;
+
+scope_close:
+    ptr = parse_scope_close(world, name, expr, ptr, state);
+    if (!ptr) goto error;
+    goto done;
+
+done:
     return ptr;
+error:
+    return NULL;
 }
 
 int ecs_plecs_from_str(
@@ -607,21 +717,6 @@ int ecs_plecs_from_str(
         if (!ptr[0]) {
             break; /* End of expression */
         }
-
-        ptr = ecs_parse_term(world, name, expr, ptr, &term);
-        if (!ptr) {
-            goto error; /* Error occurred */
-        }
-
-        if (!ecs_term_is_initialized(&term)) {
-            goto error; /* No term found */
-        }
-
-        if (create_term(world, &term, name, expr, (ptr - expr), &state)) {
-            goto error; /* Failed to create term */
-        }
-
-        ecs_term_fini(&term);
     } while (true);
 
     ecs_set_scope(world, state.scope[0]);
@@ -629,6 +724,11 @@ int ecs_plecs_from_str(
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");
+        goto error;
+    }
+
+    if (state.assign_stmt) {
+        ecs_parser_error(name, expr, 0, "unfinished assignment");
         goto error;
     }
 
