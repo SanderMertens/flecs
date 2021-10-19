@@ -268,7 +268,7 @@ const char* ecs_parse_identifier(
 {
     if (!valid_identifier_start_char(ptr[0])) {
         ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid start of identifier '%s'", ptr);
+            "expected start of identifier");
         return NULL;
     }
 

@@ -3065,10 +3065,29 @@ ecs_entity_t ecs_get_object_for_id(
 {
     ecs_table_t *table = ecs_get_table(world, entity);
     ecs_entity_t subject = 0;
-    int32_t column = ecs_type_match(
-        world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
-    if (column == -1) {
-        return 0;
+
+    if (rel) {
+        int32_t column = ecs_type_match(
+            world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
+        if (column == -1) {
+            return 0;
+        }
+    } else {
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+        int32_t i, count = ecs_vector_count(table->type);
+
+        for (i = 0; i < count; i ++) {
+            ecs_id_t ent = ids[i];
+            if (ent & ECS_ROLE_MASK) {
+                /* Skip ids with pairs, roles since 0 was provided for rel */
+                break;
+            }
+
+            if (ecs_has_id(world, ent, id)) {
+                subject = ent;
+                break;
+            }
+        }
     }
 
     if (subject == 0) {

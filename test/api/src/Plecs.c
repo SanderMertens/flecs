@@ -2965,7 +2965,72 @@ void Plecs_empty_assignment_before_end_of_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_w_new_entities_in_scope() {
+void Plecs_assign_tag_to_parent() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  =Tag"
+    LINE "  Child"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+
+    test_assert(foo != 0);
+    test_assert(tag != 0);
+    test_assert(child != 0);
+
+    test_assert( ecs_has_id(world, foo, tag));
+    test_assert( !ecs_has_id(world, child, tag));
+    test_assert( !ecs_has_pair(world, tag, EcsChildOf, foo));
+    test_assert( ecs_has_pair(world, child, EcsChildOf, foo));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_component_to_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  =Position{10, 20}"
+    LINE "  Child"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+
+    test_assert(foo != 0);
+    test_assert(child != 0);
+
+    test_assert( ecs_has(world, foo, Position));
+    test_assert( !ecs_has(world, child, Position));
+    test_assert( !ecs_has_pair(world, ecs_id(Position), EcsChildOf, foo));
+    test_assert( ecs_has_pair(world, child, EcsChildOf, foo));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_to_parent_pair_w_new_entities_in_scope() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2990,7 +3055,7 @@ void Plecs_assign_pair_w_new_entities_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_w_existing_entities_in_scope() {
+void Plecs_assign_to_parent_pair_w_existing_entities_in_scope() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3012,6 +3077,199 @@ void Plecs_assign_pair_w_existing_entities_in_scope() {
     test_assert( ecs_has_pair(world, foo, rel, obj));
     test_assert( !ecs_has_pair(world, rel, EcsChildOf, EcsWildcard));
     test_assert( !ecs_has_pair(world, obj, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Plecs_default_child_component() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "DefaultChildComponent(Foo, Bar)"
+    LINE "Foo(Parent) {"
+    LINE "  ChildA"
+    LINE "  ChildB"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(parent != 0);
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+
+    test_assert( ecs_has_pair(world, foo, EcsDefaultChildComponent, bar));
+    test_assert( ecs_has_id(world, parent, foo));
+    test_assert( ecs_has_pair(world, child_a, EcsChildOf, parent));
+    test_assert( ecs_has_pair(world, child_b, EcsChildOf, parent));
+    
+    test_assert(ecs_has_id(world, child_a, bar));
+    test_assert(ecs_has_id(world, child_b, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_default_child_component_w_assign() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent(Foo, Position)"
+    LINE "Foo(Parent) {"
+    LINE "  ChildA = {10, 20}"
+    LINE "  ChildB = {10, 20}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+
+    test_assert(foo != 0);
+    test_assert(parent != 0);
+    test_assert(child_a != 0);
+    test_assert(child_b != 0);
+
+    test_assert( ecs_has_pair(world, foo, EcsDefaultChildComponent, ecs_id(Position)));
+    test_assert( ecs_has_id(world, parent, foo));
+    test_assert( ecs_has_pair(world, child_a, EcsChildOf, parent));
+    test_assert( ecs_has_pair(world, child_b, EcsChildOf, parent));
+    
+    test_assert(ecs_has(world, child_a, Position));
+    test_assert(ecs_has(world, child_b, Position));
+
+    ecs_fini(world);
+}
+
+void Plecs_struct_type_w_default_child_component() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  x = {f32}"
+    LINE "  y = {f32}"
+    LINE "}"
+    LINE
+    LINE "Foo = Position{x: 10, y: 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+
+    test_assert(foo != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_struct_type_w_default_child_component_nested_member() {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        struct {
+            float x;
+            float y;
+        } start;
+
+        struct {
+            float x;
+            float y;
+        } stop;
+    } Line;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Line) {"
+    LINE "  start {"
+    LINE "    x = {f32}"
+    LINE "    y = {f32}"
+    LINE "  }"
+    LINE "  stop {"
+    LINE "    x = {f32}"
+    LINE "    y = {f32}"
+    LINE "  }"
+    LINE "}"
+    LINE
+    LINE "Foo = Line{start: {10, 20}, stop: {30, 40}}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
+
+    test_assert(foo != 0);
+    test_assert(ecs_id(Line) != 0);
+
+    test_assert( ecs_has(world, foo, Line));
+
+    const Line *ptr = ecs_get(world, foo, Line);
+    test_assert(ptr != NULL);
+    test_int(ptr->start.x, 10);
+    test_int(ptr->start.y, 20);
+    test_int(ptr->stop.x, 30);
+    test_int(ptr->stop.y, 40);
+
+    ecs_fini(world);
+}
+
+void Plecs_enum_type_w_default_child_component() {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Enum(Color) {"
+    LINE "  Red, Green, Blue"
+    LINE "}"
+    LINE
+    LINE "Foo = Color{Green}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
+
+    test_assert(foo != 0);
+    test_assert(ecs_id(Color) != 0);
+
+    test_assert( ecs_has(world, foo, Color));
+
+    const Color *ptr = ecs_get(world, foo, Color);
+    test_assert(ptr != NULL);
+    test_int(*ptr, Green);
 
     ecs_fini(world);
 }

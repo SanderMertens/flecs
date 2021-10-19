@@ -34,6 +34,8 @@ void FlecsCoreDocImport(
 
     /* Initialize documentation data for core components */
     ecs_doc_set_brief(world, EcsFlecs, "Flecs root module");
+    ecs_doc_set_link(world, EcsFlecs, "https://github.com/SanderMertens/flecs");
+
     ecs_doc_set_brief(world, EcsFlecsCore, "Flecs module with builtin components");
 
     ecs_doc_set_brief(world, EcsWorld, "Entity associated with world");
@@ -53,6 +55,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
     ecs_doc_set_brief(world, EcsOnDeleteObject, "OnDeleteObject relation cleanup property");
+    ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
     ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
     ecs_doc_set_brief(world, EcsThrow, "Throw relation cleanup property");

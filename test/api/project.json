@@ -492,10 +492,17 @@
                 "invalid_nested_assignment",
                 "invalid_partial_pair_assignment",
                 "empty_assignment",
+                "assign_tag_to_parent",
+                "assign_component_to_parent",
                 "empty_assignment_before_end_of_scope",
-                "assign_pair_w_new_entities_in_scope",
-                "assign_pair_w_existing_entities_in_scope"
-            ]            
+                "assign_to_parent_pair_w_new_entities_in_scope",
+                "assign_to_parent_pair_w_existing_entities_in_scope",
+                "default_child_component",
+                "default_child_component_w_assign",
+                "struct_type_w_default_child_component",
+                "struct_type_w_default_child_component_nested_member",
+                "enum_type_w_default_child_component"
+            ]
         }, {
             "id": "GlobalComponentIds",
             "testcases": [

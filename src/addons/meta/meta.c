@@ -950,6 +950,19 @@ void FlecsMetaImport(
 
     #undef ECS_PRIMITIVE
 
+    /* Set default child components */
+    ecs_add_pair(world, ecs_id(EcsStruct), 
+        EcsDefaultChildComponent, ecs_id(EcsMember));
+
+    ecs_add_pair(world, ecs_id(EcsMember), 
+        EcsDefaultChildComponent, ecs_id(EcsMember));
+
+    ecs_add_pair(world, ecs_id(EcsEnum), 
+        EcsDefaultChildComponent, EcsConstant);
+
+    ecs_add_pair(world, ecs_id(EcsBitmask), 
+        EcsDefaultChildComponent, EcsConstant);
+
     /* Initialize reflection data for meta components */
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
         .entity.name = "TypeKind",

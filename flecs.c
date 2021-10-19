@@ -2383,9 +2383,9 @@ void _ecs_parser_errorv(
 
         if (column != -1) {
             if (name) {
-                ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
+                ecs_os_err("%s: error: %s", name, msg);
             } else {
-                ecs_os_err("%d: error: %s", column + 1, msg);
+                ecs_os_err("error: %s", msg);
             }
         } else {
             if (name) {
@@ -2394,8 +2394,17 @@ void _ecs_parser_errorv(
                 ecs_os_err("error: %s", msg);
             }            
         }
-        
-        ecs_os_err("    %s", expr);
+
+        char *newline_ptr = strchr(expr, '\n');
+        if (newline_ptr) {
+            /* Strip newline from expr */
+            char *expr_tmp = ecs_os_strdup(expr);
+            expr_tmp[newline_ptr - expr] = '\0';
+            ecs_os_err("    %s", expr_tmp);
+            ecs_os_free(expr_tmp);
+        } else {
+            ecs_os_err("    %s", expr);
+        }
 
         if (column != -1) {
             ecs_os_err("    %*s^", column, "");
@@ -7884,10 +7893,29 @@ ecs_entity_t ecs_get_object_for_id(
 {
     ecs_table_t *table = ecs_get_table(world, entity);
     ecs_entity_t subject = 0;
-    int32_t column = ecs_type_match(
-        world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
-    if (column == -1) {
-        return 0;
+
+    if (rel) {
+        int32_t column = ecs_type_match(
+            world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
+        if (column == -1) {
+            return 0;
+        }
+    } else {
+        ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+        int32_t i, count = ecs_vector_count(table->type);
+
+        for (i = 0; i < count; i ++) {
+            ecs_id_t ent = ids[i];
+            if (ent & ECS_ROLE_MASK) {
+                /* Skip ids with pairs, roles since 0 was provided for rel */
+                break;
+            }
+
+            if (ecs_has_id(world, ent, id)) {
+                subject = ent;
+                break;
+            }
+        }
     }
 
     if (subject == 0) {
@@ -13983,6 +14011,7 @@ typedef struct {
     ecs_entity_t assign_to;
 
     ecs_entity_t scope[STACK_MAX_SIZE];
+    ecs_entity_t default_scope_type[STACK_MAX_SIZE];
     ecs_entity_t with[STACK_MAX_SIZE];
     ecs_entity_t using[STACK_MAX_SIZE];
     int32_t with_frames[STACK_MAX_SIZE];
@@ -14136,7 +14165,8 @@ int create_term(
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->obj)) {
-        obj = ensure_entity(world, state, term->obj.name, true);
+        obj = ensure_entity(world, state, term->obj.name, 
+            state->assign_stmt == false);
     }
 
     if (state->assign_stmt || state->isa_stmt) {
@@ -14170,6 +14200,8 @@ int create_term(
         }
         state->last_predicate = pred;
         state->last_subject = subj;
+
+        pred_as_subj = false;
     } else {
         if (!obj) {
             /* If no subject or object were provided, use predicate as subj 
@@ -14179,10 +14211,12 @@ int create_term(
                 subj = pred;
             } else {
                 state->last_predicate = pred;
+                pred_as_subj = false;
             }
         } else {
             state->last_predicate = pred;
             state->last_object = obj;
+            pred_as_subj = false;
         }
     }
 
@@ -14215,6 +14249,12 @@ int create_term(
                 ecs_add_id(world, subj, state->with[i]);
             }
         }
+    }
+
+    /* If an id was provided by itself, add default scope type to it */
+    ecs_entity_t default_scope_type = state->default_scope_type[state->sp];
+    if (pred_as_subj && default_scope_type) {
+        ecs_add_id(world, subj, default_scope_type);
     }
 
     if (state->isa_stmt) {
@@ -14270,7 +14310,7 @@ const char* parse_assign_expr(
     ecs_id_t assign_id = state->last_assign_id;
     if (!assign_id) {
         ecs_parser_error(name, expr, ptr - expr,
-            "unexpected expression outside of assignment statement");
+            "missing component for assignment statement");
         return NULL;
     }
 
@@ -14420,11 +14460,21 @@ const char* parse_scope_open(
     state->sp ++;
 
     ecs_entity_t scope = 0;
+    ecs_entity_t default_scope_type = 0;
 
     if (!state->with_stmt) {
         if (state->last_subject) {
             scope = state->last_subject;
             ecs_set_scope(world, state->last_subject);
+
+            /* Check if scope has a default child component */
+            ecs_entity_t def_type_src = ecs_get_object_for_id(world, scope, 
+                0, ecs_pair(EcsDefaultChildComponent, EcsWildcard));
+
+            if (def_type_src) {
+                default_scope_type = ecs_get_object(
+                    world, def_type_src, EcsDefaultChildComponent, 0);
+            }
         } else {
             if (state->last_object) {
                 scope = ecs_pair(
@@ -14437,9 +14487,13 @@ const char* parse_scope_open(
                 ecs_set_scope(world, state->last_predicate);
             }
         }
+
         state->scope[state->sp] = scope;
+        state->default_scope_type[state->sp] = default_scope_type;
     } else {
         state->scope[state->sp] = state->scope[state->sp - 1];
+        state->default_scope_type[state->sp] = 
+            state->default_scope_type[state->sp - 1];
     }
 
     state->using_frames[state->sp] = state->using_frame;
@@ -14470,6 +14524,7 @@ const char* parse_scope_close(
     }
 
     state->scope[state->sp] = 0;
+    state->default_scope_type[state->sp] = 0;
     state->sp --;
 
     if (state->sp < 0) {
@@ -14621,6 +14676,21 @@ assign_to_scope_stmt:
 assign_stmt:
     ptr = parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
+
+    ptr = ecs_parse_fluff(ptr);
+
+    if (ptr[0] == '{') {
+        /* Assignment without a preceding component */
+        ecs_entity_t type = state->default_scope_type[state->sp];
+        if (!type) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "missing type for assignment");
+            return NULL;
+        }
+
+        state->last_assign_id = type;
+        goto assign_expr;
+    }
 
     /* Expect component identifiers */
     goto term_expr;
@@ -20386,6 +20456,19 @@ void FlecsMetaImport(
 
     #undef ECS_PRIMITIVE
 
+    /* Set default child components */
+    ecs_add_pair(world, ecs_id(EcsStruct), 
+        EcsDefaultChildComponent, ecs_id(EcsMember));
+
+    ecs_add_pair(world, ecs_id(EcsMember), 
+        EcsDefaultChildComponent, ecs_id(EcsMember));
+
+    ecs_add_pair(world, ecs_id(EcsEnum), 
+        EcsDefaultChildComponent, EcsConstant);
+
+    ecs_add_pair(world, ecs_id(EcsBitmask), 
+        EcsDefaultChildComponent, EcsConstant);
+
     /* Initialize reflection data for meta components */
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
         .entity.name = "TypeKind",
@@ -24089,6 +24172,8 @@ void FlecsCoreDocImport(
 
     /* Initialize documentation data for core components */
     ecs_doc_set_brief(world, EcsFlecs, "Flecs root module");
+    ecs_doc_set_link(world, EcsFlecs, "https://github.com/SanderMertens/flecs");
+
     ecs_doc_set_brief(world, EcsFlecsCore, "Flecs module with builtin components");
 
     ecs_doc_set_brief(world, EcsWorld, "Entity associated with world");
@@ -24108,6 +24193,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
     ecs_doc_set_brief(world, EcsOnDeleteObject, "OnDeleteObject relation cleanup property");
+    ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
     ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
     ecs_doc_set_brief(world, EcsThrow, "Throw relation cleanup property");
@@ -24550,7 +24636,7 @@ const char* ecs_parse_identifier(
 {
     if (!valid_identifier_start_char(ptr[0])) {
         ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid start of identifier '%s'", ptr);
+            "expected start of identifier");
         return NULL;
     }
 
@@ -25405,6 +25491,9 @@ const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
 const ecs_entity_t EcsDelete =                ECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsThrow =                 ECS_HI_COMPONENT_ID + 52;
+
+/* Misc */
+const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
@@ -35781,6 +35870,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsThrow);
 
+    flecs_bootstrap_tag(world, EcsDefaultChildComponent);
+
     /* Builtin events */
     bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
     bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
@@ -35800,9 +35891,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsInclusive);
 
-    /* Tag relations (relations that cannot have data) */
+    /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
+    ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
 
     /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
@@ -35817,7 +35909,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
-
+    ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){

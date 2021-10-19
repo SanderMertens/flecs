@@ -319,9 +319,9 @@ void _ecs_parser_errorv(
 
         if (column != -1) {
             if (name) {
-                ecs_os_err("%s:%d: error: %s", name, column + 1, msg);
+                ecs_os_err("%s: error: %s", name, msg);
             } else {
-                ecs_os_err("%d: error: %s", column + 1, msg);
+                ecs_os_err("error: %s", msg);
             }
         } else {
             if (name) {
@@ -330,8 +330,17 @@ void _ecs_parser_errorv(
                 ecs_os_err("error: %s", msg);
             }            
         }
-        
-        ecs_os_err("    %s", expr);
+
+        char *newline_ptr = strchr(expr, '\n');
+        if (newline_ptr) {
+            /* Strip newline from expr */
+            char *expr_tmp = ecs_os_strdup(expr);
+            expr_tmp[newline_ptr - expr] = '\0';
+            ecs_os_err("    %s", expr_tmp);
+            ecs_os_free(expr_tmp);
+        } else {
+            ecs_os_err("    %s", expr);
+        }
 
         if (column != -1) {
             ecs_os_err("    %*s^", column, "");

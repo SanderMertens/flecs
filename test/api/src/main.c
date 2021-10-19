@@ -467,9 +467,16 @@ void Plecs_scope_after_assign_2_tags(void);
 void Plecs_invalid_nested_assignment(void);
 void Plecs_invalid_partial_pair_assignment(void);
 void Plecs_empty_assignment(void);
+void Plecs_assign_tag_to_parent(void);
+void Plecs_assign_component_to_parent(void);
 void Plecs_empty_assignment_before_end_of_scope(void);
-void Plecs_assign_pair_w_new_entities_in_scope(void);
-void Plecs_assign_pair_w_existing_entities_in_scope(void);
+void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void);
+void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void);
+void Plecs_default_child_component(void);
+void Plecs_default_child_component_w_assign(void);
+void Plecs_struct_type_w_default_child_component(void);
+void Plecs_struct_type_w_default_child_component_nested_member(void);
+void Plecs_enum_type_w_default_child_component(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3941,16 +3948,44 @@ bake_test_case Plecs_testcases[] = {
         Plecs_empty_assignment
     },
     {
+        "assign_tag_to_parent",
+        Plecs_assign_tag_to_parent
+    },
+    {
+        "assign_component_to_parent",
+        Plecs_assign_component_to_parent
+    },
+    {
         "empty_assignment_before_end_of_scope",
         Plecs_empty_assignment_before_end_of_scope
     },
     {
-        "assign_pair_w_new_entities_in_scope",
-        Plecs_assign_pair_w_new_entities_in_scope
+        "assign_to_parent_pair_w_new_entities_in_scope",
+        Plecs_assign_to_parent_pair_w_new_entities_in_scope
     },
     {
-        "assign_pair_w_existing_entities_in_scope",
-        Plecs_assign_pair_w_existing_entities_in_scope
+        "assign_to_parent_pair_w_existing_entities_in_scope",
+        Plecs_assign_to_parent_pair_w_existing_entities_in_scope
+    },
+    {
+        "default_child_component",
+        Plecs_default_child_component
+    },
+    {
+        "default_child_component_w_assign",
+        Plecs_default_child_component_w_assign
+    },
+    {
+        "struct_type_w_default_child_component",
+        Plecs_struct_type_w_default_child_component
+    },
+    {
+        "struct_type_w_default_child_component_nested_member",
+        Plecs_struct_type_w_default_child_component_nested_member
+    },
+    {
+        "enum_type_w_default_child_component",
+        Plecs_enum_type_w_default_child_component
     }
 };
 
@@ -10430,7 +10465,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        112,
+        119,
         Plecs_testcases
     },
     {

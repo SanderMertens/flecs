@@ -83,6 +83,9 @@ const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
 const ecs_entity_t EcsDelete =                ECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsThrow =                 ECS_HI_COMPONENT_ID + 52;
 
+/* Misc */
+const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
+
 /* Systems */
 const ecs_entity_t EcsMonitor =               ECS_HI_COMPONENT_ID + 61;
 const ecs_entity_t EcsInactive =              ECS_HI_COMPONENT_ID + 63;

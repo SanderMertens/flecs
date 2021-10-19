@@ -354,6 +354,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsThrow);
 
+    flecs_bootstrap_tag(world, EcsDefaultChildComponent);
+
     /* Builtin events */
     bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
     bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
@@ -373,9 +375,10 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsInclusive);
 
-    /* Tag relations (relations that cannot have data) */
+    /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
+    ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
 
     /* Final components/relations */
     ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
@@ -390,7 +393,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
-
+    ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){

@@ -3494,6 +3494,13 @@ FLECS_API extern const ecs_entity_t EcsDelete;
  * EcsOnDeleteObject. */
 FLECS_API extern const ecs_entity_t EcsThrow;
 
+/* Used like (EcsDefaultChildComponent, Component). When added to an entity,
+ * this informs serialization formats which component to use when a value is
+ * assigned to an entity without specifying the component. This is intended as
+ * a hint, serialization formats are not required to use it. Adding this 
+ * component does not change the behavior of core ECS operations. */
+FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
+
 /* System module tags */
 FLECS_API extern const ecs_entity_t EcsInactive;
 
