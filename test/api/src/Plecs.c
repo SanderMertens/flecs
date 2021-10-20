@@ -3273,3 +3273,155 @@ void Plecs_enum_type_w_default_child_component() {
 
     ecs_fini(world);
 }
+
+void Plecs_comment_as_brief_doc() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "// Foo entity"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    const char *brief = ecs_doc_get_brief(world, foo);
+    test_assert(brief != NULL);
+    test_str(brief, "Foo entity");
+
+    ecs_fini(world);
+}
+
+void Plecs_comment_as_brief_doc_after_using() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "// Foo entity"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    const char *brief = ecs_doc_get_brief(world, foo);
+    test_assert(brief != NULL);
+    test_str(brief, "Foo entity");
+
+    ecs_fini(world);
+}
+
+void Plecs_comment_as_brief_doc_2_stmts() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "// Foo entity"
+    LINE "Foo"
+    LINE "// Bar entity"
+    LINE "Bar";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+    test_assert( ecs_has_pair(world, bar, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    const char *brief = ecs_doc_get_brief(world, foo);
+    test_assert(brief != NULL);
+    test_str(brief, "Foo entity");
+
+    brief = ecs_doc_get_brief(world, bar);
+    test_assert(brief != NULL);
+    test_str(brief, "Bar entity");
+
+    ecs_fini(world);
+}
+
+void Plecs_empty_comment() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "//"
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert( !ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    ecs_fini(world);
+}
+
+void Plecs_comment_type() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "// Position component"
+    LINE "Struct(Position) {"
+    LINE "  // x member"
+    LINE "  x = {f32}"
+    LINE
+    LINE "  // y member"
+    LINE "  y = {f32}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t pos = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    test_assert(pos != 0);
+    test_assert(x != 0);
+    test_assert(y != 0);
+
+    test_assert( ecs_has_pair(world, pos, ecs_id(EcsDocDescription), EcsDocBrief));
+    test_assert( ecs_has_pair(world, x, ecs_id(EcsDocDescription), EcsDocBrief));
+    test_assert( ecs_has_pair(world, y, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    const char *brief = ecs_doc_get_brief(world, pos);
+    test_assert(brief != NULL);
+    test_str(brief, "Position component");
+
+    brief = ecs_doc_get_brief(world, x);
+    test_assert(brief != NULL);
+    test_str(brief, "x member");
+
+    brief = ecs_doc_get_brief(world, y);
+    test_assert(brief != NULL);
+    test_str(brief, "y member");
+
+    ecs_fini(world);
+}
+
+void Plecs_newline_after_comment_no_brief() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "// Foo entity"
+    LINE
+    LINE "Foo";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    test_assert(foo != 0);
+
+    test_assert( !ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+
+    ecs_fini(world);
+}

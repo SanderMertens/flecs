@@ -18,7 +18,7 @@ const char* ecs_parse_json(
         ptr = expr;
     }
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = ecs_parse_fluff(ptr, NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
@@ -27,7 +27,7 @@ const char* ecs_parse_json(
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
-        ptr = ecs_parse_fluff(ptr);
+        ptr = ecs_parse_fluff(ptr, NULL);
 
         if (!ecs_os_strcmp(token, "{")) {
             depth ++;

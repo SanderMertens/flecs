@@ -478,6 +478,12 @@ void Plecs_default_child_component_w_assign(void);
 void Plecs_struct_type_w_default_child_component(void);
 void Plecs_struct_type_w_default_child_component_nested_member(void);
 void Plecs_enum_type_w_default_child_component(void);
+void Plecs_comment_as_brief_doc(void);
+void Plecs_comment_as_brief_doc_after_using(void);
+void Plecs_comment_as_brief_doc_2_stmts(void);
+void Plecs_comment_type(void);
+void Plecs_empty_comment(void);
+void Plecs_newline_after_comment_no_brief(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -3991,6 +3997,30 @@ bake_test_case Plecs_testcases[] = {
     {
         "enum_type_w_default_child_component",
         Plecs_enum_type_w_default_child_component
+    },
+    {
+        "comment_as_brief_doc",
+        Plecs_comment_as_brief_doc
+    },
+    {
+        "comment_as_brief_doc_after_using",
+        Plecs_comment_as_brief_doc_after_using
+    },
+    {
+        "comment_as_brief_doc_2_stmts",
+        Plecs_comment_as_brief_doc_2_stmts
+    },
+    {
+        "comment_type",
+        Plecs_comment_type
+    },
+    {
+        "empty_comment",
+        Plecs_empty_comment
+    },
+    {
+        "newline_after_comment_no_brief",
+        Plecs_newline_after_comment_no_brief
     }
 };
 
@@ -10470,7 +10500,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        119,
+        125,
         Plecs_testcases
     },
     {
