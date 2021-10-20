@@ -33,7 +33,8 @@ const char* ecs_parse_whitespace(
  */
 FLECS_API
 const char* ecs_parse_fluff(
-    const char *ptr);
+    const char *ptr,
+    char **last_comment);
 
 /** Parse a single token.
  * This function can be used as simple tokenizer by other parsers.

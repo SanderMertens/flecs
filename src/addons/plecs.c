@@ -28,6 +28,8 @@ typedef struct {
     int32_t with_frame;
     int32_t using_frame;
 
+    char *comment;
+
     bool with_stmt;
     bool using_stmt;
     bool assign_stmt;
@@ -72,6 +74,50 @@ ecs_entity_t plecs_lookup_action(
     return plecs_lookup(world, path, ctx, false);
 }
 #endif
+
+static
+const char* parse_fluff(
+    const char *ptr,
+    plecs_state_t *state)
+{
+    char *comment;
+    const char *next = ecs_parse_fluff(ptr, &comment);
+
+    if (comment) {
+        comment = (char*)ecs_parse_fluff(comment, NULL);
+        int32_t len = (ecs_size_t)(next - comment);
+        int32_t newline_count = 0;
+
+        /* Trim trailing whitespaces */
+        while (len >= 0 && (isspace(comment[len - 1]))) {            
+            if (comment[len - 1] == '\n') {
+                newline_count ++;
+                if (newline_count > 1) {
+                    /* If newline separates comment from statement, discard */
+                    len = -1; 
+                    break;
+                }
+            }
+            len --;
+        }
+
+        if (len > 0) {
+            if (state->comment) {
+                ecs_os_free(state->comment);
+            }
+
+            state->comment = ecs_os_calloc_n(char, len + 1);
+            ecs_os_strncpy(state->comment, comment, len);
+        }
+    } else {
+        if (ptr != next && state->comment) {
+            ecs_os_free(state->comment);
+            state->comment = NULL;
+        }
+    }
+
+    return next;
+}
 
 static
 ecs_entity_t ensure_entity(
@@ -265,6 +311,15 @@ int create_term(
         ecs_add_id(world, subj, default_scope_type);
     }
 
+    /* If a comment preceded the statement, add it as a brief description */
+#ifdef FLECS_DOC
+    if (subj && state->comment) {
+        ecs_doc_set_brief(world, subj, state->comment);
+        ecs_os_free(state->comment);
+        state->comment = NULL;
+    }
+#endif
+
     if (state->isa_stmt) {
         state->last_assign_id = 0;
         state->assign_to = 0;
@@ -418,7 +473,7 @@ const char* parse_using_stmt(
     /* Add following expressions to using list */
     state->using_stmt = true;
 
-    return ecs_parse_fluff(ptr + 5);
+    return ptr + 5;
 }
 
 static
@@ -442,7 +497,7 @@ const char* parse_with_stmt(
 
     /* Add following expressions to with list */
     state->with_stmt = true;
-    return ecs_parse_fluff(ptr + 5);
+    return ptr + 5;
 }
 
 static
@@ -579,6 +634,7 @@ const char *parse_plecs_term(
     }
 
     if (create_term(world, &term, name, expr, (ptr - expr), state)) {
+        ecs_term_fini(&term);
         return NULL; /* Failed to create term */
     }
 
@@ -603,17 +659,17 @@ const char* parse_stmt(
     state->last_predicate = 0;
     state->last_object = 0;
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = parse_fluff(ptr, state);
 
     char ch = ptr[0];
 
     if (!ch) {
         goto done;
     } else if (ch == '{') {
-        ptr = ecs_parse_fluff(ptr + 1);
+        ptr = parse_fluff(ptr + 1, state);
         goto scope_open;
     } else if (ch == '}') {
-        ptr = ecs_parse_fluff(ptr + 1);
+        ptr = parse_fluff(ptr + 1, state);
         goto scope_close;
     } else if (ch == '(') {
         if (ecs_get_scope(world) != 0) {
@@ -646,7 +702,7 @@ term_expr:
         goto error;
     }
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = parse_fluff(ptr, state);
 
     if (ptr[0] == '{' && !isspace(ptr[-1])) {
         /* A '{' directly after an identifier (no whitespace) is a literal */
@@ -655,17 +711,17 @@ term_expr:
 
     if (!state->using_stmt) {
         if (ptr[0] == ':') {
-            ptr = ecs_parse_fluff(ptr + 1);
+            ptr = parse_fluff(ptr + 1, state);
             goto inherit_stmt;
         } else if (ptr[0] == '=') {
-            ptr = ecs_parse_fluff(ptr + 1);
+            ptr = parse_fluff(ptr + 1, state);
             goto assign_stmt;
         } else if (ptr[0] == ',') {
-            ptr = ecs_parse_fluff(ptr + 1);
+            ptr = parse_fluff(ptr + 1, state);
             goto term_expr;
         } else if (ptr[0] == '{') {
             state->assign_stmt = false;
-            ptr = ecs_parse_fluff(ptr + 1);
+            ptr = parse_fluff(ptr + 1, state);
             goto scope_open;
         }
     }
@@ -688,7 +744,7 @@ assign_stmt:
     ptr = parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = parse_fluff(ptr, state);
 
     if (ptr[0] == '{') {
         /* Assignment without a preceding component */
@@ -710,7 +766,7 @@ assign_expr:
     ptr = parse_assign_expr(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = parse_fluff(ptr, state);
     if (ptr[0] == ',') {
         ptr ++;
         goto term_expr;
@@ -768,6 +824,11 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
+
+    if (state.comment) {
+        ecs_os_free(state.comment);
+        state.comment = NULL;
+    }
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");

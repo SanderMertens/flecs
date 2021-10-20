@@ -13,8 +13,6 @@ const char *ecs_parse_expr_token(
     char *token_ptr = token;
 
     while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr))) {
-        ptr = ecs_parse_fluff(ptr);
-
         if (ptr[0] == '|') {
             token_ptr = &token_ptr[ptr - start];
             token_ptr[0] = '|';
@@ -44,7 +42,7 @@ const char* ecs_parse_expr(
     const char *name = NULL;
     const char *expr = NULL;
 
-    ptr = ecs_parse_fluff(ptr);
+    ptr = ecs_parse_fluff(ptr, NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
@@ -59,8 +57,6 @@ const char* ecs_parse_expr(
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
-
-        ptr = ecs_parse_fluff(ptr);
 
         if (!ecs_os_strcmp(token, "{")) {
             depth ++;
@@ -131,6 +127,8 @@ const char* ecs_parse_expr(
         }
 
         else {
+            ptr = ecs_parse_fluff(ptr, NULL);
+
             if (ptr[0] == ':') {
                 /* Member assignment */
                 ptr ++;
@@ -147,6 +145,8 @@ const char* ecs_parse_expr(
         if (!depth) {
             break;
         }
+
+        ptr = ecs_parse_fluff(ptr, NULL);
     }
 
     return ptr;

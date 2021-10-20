@@ -502,7 +502,13 @@
                 "default_child_component_w_assign",
                 "struct_type_w_default_child_component",
                 "struct_type_w_default_child_component_nested_member",
-                "enum_type_w_default_child_component"
+                "enum_type_w_default_child_component",
+                "comment_as_brief_doc",
+                "comment_as_brief_doc_after_using",
+                "comment_as_brief_doc_2_stmts",
+                "comment_type",
+                "empty_comment",
+                "newline_after_comment_no_brief"
             ]
         }, {
             "id": "GlobalComponentIds",
