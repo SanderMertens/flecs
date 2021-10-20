@@ -414,6 +414,21 @@ void SerializeToJson_serialize_entity_w_enum_component(void);
 void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
 void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 
+// Testsuite 'MetaUtils'
+void MetaUtils_struct_w_2_i32(void);
+void MetaUtils_struct_w_2_bool(void);
+void MetaUtils_struct_w_2_char(void);
+void MetaUtils_struct_w_2_string(void);
+void MetaUtils_struct_w_2_f32(void);
+void MetaUtils_struct_w_2_f64(void);
+void MetaUtils_struct_w_3_enum(void);
+void MetaUtils_struct_w_3_enum_multiline(void);
+void MetaUtils_struct_w_3_enum_w_assignment(void);
+void MetaUtils_struct_w_4_bitmask(void);
+void MetaUtils_struct_w_3_entities(void);
+void MetaUtils_struct_w_2_array_3_i32(void);
+void MetaUtils_struct_w_nested(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -1973,6 +1988,61 @@ bake_test_case SerializeToJson_testcases[] = {
     }
 };
 
+bake_test_case MetaUtils_testcases[] = {
+    {
+        "struct_w_2_i32",
+        MetaUtils_struct_w_2_i32
+    },
+    {
+        "struct_w_2_bool",
+        MetaUtils_struct_w_2_bool
+    },
+    {
+        "struct_w_2_char",
+        MetaUtils_struct_w_2_char
+    },
+    {
+        "struct_w_2_string",
+        MetaUtils_struct_w_2_string
+    },
+    {
+        "struct_w_2_f32",
+        MetaUtils_struct_w_2_f32
+    },
+    {
+        "struct_w_2_f64",
+        MetaUtils_struct_w_2_f64
+    },
+    {
+        "struct_w_3_enum",
+        MetaUtils_struct_w_3_enum
+    },
+    {
+        "struct_w_3_enum_multiline",
+        MetaUtils_struct_w_3_enum_multiline
+    },
+    {
+        "struct_w_3_enum_w_assignment",
+        MetaUtils_struct_w_3_enum_w_assignment
+    },
+    {
+        "struct_w_4_bitmask",
+        MetaUtils_struct_w_4_bitmask
+    },
+    {
+        "struct_w_3_entities",
+        MetaUtils_struct_w_3_entities
+    },
+    {
+        "struct_w_2_array_3_i32",
+        MetaUtils_struct_w_2_array_3_i32
+    },
+    {
+        "struct_w_nested",
+        MetaUtils_struct_w_nested
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -2064,10 +2134,17 @@ static bake_test_suite suites[] = {
         NULL,
         39,
         SerializeToJson_testcases
+    },
+    {
+        "MetaUtils",
+        NULL,
+        NULL,
+        13,
+        MetaUtils_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 13);
+    return bake_test_run("meta", argc, argv, suites, 14);
 }

@@ -48,7 +48,7 @@
 #define FLECS_PIPELINE      /* Pipeline support */
 #define FLECS_TIMER         /* Timer support */
 #define FLECS_META          /* Reflection support */
-#define FLECS_META_UTILS    /* Utilities for populating reflection data */
+#define FLECS_META_C    /* Utilities for populating reflection data */
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
@@ -7724,105 +7724,13 @@ void FlecsCoreDocImport(
 #endif
 #ifdef FLECS_META
 #endif
-#ifdef FLECS_META_UTILS
+#ifdef FLECS_META_C
 /**
- * @file meta.h
- * @brief Meta utilities addon.
+ * @file meta_c.h
+ * @brief Utility macro's for populating reflection data in C.
  */
 
-#ifdef FLECS_META_UTILS
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-
-#ifndef FLECS_META_UTILS_H
-#define FLECS_META_UTILS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* Public macro's */
-
-/* Control import behavior by setting to IMPORT or EXPORT. Not setting the macro
- * is equivalent to IMPORT */
-// #define ECS_META_IMPL IMPORT
-
-/* Declare component with descriptor */
-#define ECS_META_COMPONENT(world, name)\
-    ECS_COMPONENT_DEFINE(world, name)
-
-/* ECS_STRUCT(name, body) */
-#define ECS_STRUCT(name, ...)\
-    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
-
-
-/* Private macro's */
-
-/* Utilities to switch beteen IMPORT and EXPORT variants */
-#define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
-    base ## impl(name, type_desc)
-
-#define ECS_META_IMPL_CALL(base, impl, name, type_desc)\
-    ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)
-
-/* ECS_STRUCT implementation */
-#define ECS_STRUCT_TYPE(name, ...)\
-    typedef struct __VA_ARGS__ name
-
-#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPORT
-
-#define ECS_STRUCT_IMPORT(name, type_desc)\
-    static const char *FLECS__##name##_desc = type_desc;\
-    ECS_COMPONENT_DECLARE(name)
-
-#define ECS_STRUCT_EXPORT(name, type_desc)\
-    extern ECS_COMPONENT_DECLARE(name)
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // FLECS_META_UTILS_H
-
-#endif // FLECS_META_UTILS
-#endif
-#ifdef FLECS_EXPR
-/**
- * @file expr.h
- * @brief Flecs expression parser addon.
- *
- * Parse expression strings into component values. The notation is similar to
- * JSON but with a smaller footprint, native support for (large) integer types,
- * character types, enumerations, bitmasks and entity identifiers.
- * 
- * Examples:
- * 
- * Member names:
- *   {x: 10, y: 20}
- * 
- * No member names (uses member ordering):
- *   {10, 20}
- * 
- * Enum values:
- *   {color: Red}
- * 
- * Bitmask values:
- *   {toppings: Lettuce|Tomato}
- * 
- * Collections:
- *   {points: [10, 20, 30]}
- * 
- * Nested objects:
- *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
- * 
- */
-
-#ifdef FLECS_EXPR
+#ifdef FLECS_META_C
 
 #ifndef FLECS_META
 #define FLECS_META
@@ -7852,12 +7760,35 @@ extern "C" {
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.
  * 
- * @param expr pointer to (potential) whitespaces to skip.
- * @return pointer to the next non-whitespace character.
+ * @param expr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
 const char* ecs_parse_whitespace(
     const char *ptr);
+
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ * 
+ * @param expr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_eol_and_whitespace(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ * 
+ * @param expr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* ecs_parse_digit(
+    const char *ptr,
+    char *token);
 
 /** Skip whitespaces and comments.
  * This function skips whitespace characters and comments (single line, //).
@@ -7928,6 +7859,150 @@ char* ecs_parse_term(
 #endif // FLECS_PARSER_H
 
 #endif // FLECS_PARSER
+
+#ifndef FLECS_META_C_H
+#define FLECS_META_C_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Public API */
+
+/* Control import behavior by setting to IMPORT or EXPORT. Not setting the macro
+ * is equivalent to IMPORT */
+/* #define ECS_META_IMPL IMPORT */
+
+/** Declare component with descriptor */
+#define ECS_META_COMPONENT(world, name)\
+    ECS_COMPONENT_DEFINE(world, name);\
+    ecs_meta_from_desc(world, ecs_id(name),\
+        FLECS__##name##_kind, FLECS__##name##_desc)
+
+/** ECS_STRUCT(name, body) */
+#define ECS_STRUCT(name, ...)\
+    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** ECS_ENUM(name, body) */
+#define ECS_ENUM(name, ...)\
+    ECS_ENUM_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** ECS_BITMASK(name, body) */
+#define ECS_BITMASK(name, ...)\
+    ECS_ENUM_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** Populate meta information from type descriptor. */
+FLECS_API
+int ecs_meta_from_desc(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_type_kind_t kind,
+    const char *desc);
+
+
+/* Private API */
+
+/* Utilities to switch beteen IMPORT and EXPORT variants */
+#define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
+    base ## impl(name, type_desc)
+
+#define ECS_META_IMPL_CALL(base, impl, name, type_desc)\
+    ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)
+
+/* ECS_STRUCT implementation */
+#define ECS_STRUCT_TYPE(name, ...)\
+    typedef struct __VA_ARGS__ name
+
+#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPORT
+
+#define ECS_STRUCT_IMPORT(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
+    ECS_COMPONENT_DECLARE(name);\
+
+#define ECS_STRUCT_EXPORT(name, type_desc)\
+    extern ECS_COMPONENT_DECLARE(name)
+
+/* ECS_ENUM implementation */
+#define ECS_ENUM_TYPE(name, ...)\
+    typedef enum __VA_ARGS__ name
+
+#define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPORT
+
+#define ECS_ENUM_IMPORT(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
+    ECS_COMPONENT_DECLARE(name);\
+
+#define ECS_ENUM_EXPORT(name, type_desc)\
+    extern ECS_COMPONENT_DECLARE(name)
+
+/* ECS_BITMASK implementation */
+#define ECS_BITMASK_TYPE(name, ...)\
+    typedef enum __VA_ARGS__ name
+
+#define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPORT
+
+#define ECS_BITMASK_IMPORT(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
+    ECS_COMPONENT_DECLARE(name);\
+
+#define ECS_BITMASK_EXPORT(name, type_desc)\
+    extern ECS_COMPONENT_DECLARE(name)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // FLECS_META_C_H
+
+#endif // FLECS_META_C
+#endif
+#ifdef FLECS_EXPR
+/**
+ * @file expr.h
+ * @brief Flecs expression parser addon.
+ *
+ * Parse expression strings into component values. The notation is similar to
+ * JSON but with a smaller footprint, native support for (large) integer types,
+ * character types, enumerations, bitmasks and entity identifiers.
+ * 
+ * Examples:
+ * 
+ * Member names:
+ *   {x: 10, y: 20}
+ * 
+ * No member names (uses member ordering):
+ *   {10, 20}
+ * 
+ * Enum values:
+ *   {color: Red}
+ * 
+ * Bitmask values:
+ *   {toppings: Lettuce|Tomato}
+ * 
+ * Collections:
+ *   {points: [10, 20, 30]}
+ * 
+ * Nested objects:
+ *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
+ * 
+ */
+
+#ifdef FLECS_EXPR
+
+#ifndef FLECS_META
+#define FLECS_META
+#endif
+
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
+
 
 #ifndef FLECS_EXPR_H
 #define FLECS_EXPR_H

@@ -195,6 +195,12 @@ ecs_vector_t* serialize_type(
     ecs_vector_t *ops)
 {
     const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+    if (!ptr) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("missing EcsMetaType for type %s'", path);
+        ecs_os_free(path);
+        return NULL;
+    }
 
     switch(ptr->kind) {
     case EcsPrimitiveType:

@@ -48,8 +48,7 @@
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
 
-static
-const char *skip_newline_and_space(
+const char* ecs_parse_eol_and_whitespace(
     const char *ptr)
 {
     while (isspace(*ptr)) {
@@ -60,13 +59,43 @@ const char *skip_newline_and_space(
 }
 
 /** Skip spaces when parsing signature */
-const char *ecs_parse_whitespace(
+const char* ecs_parse_whitespace(
     const char *ptr)
 {
     while ((*ptr != '\n') && isspace(*ptr)) {
         ptr ++;
     }
 
+    return ptr;
+}
+
+const char* ecs_parse_digit(
+    const char *ptr,
+    char *token)
+{
+    char *tptr = token;
+    char ch = ptr[0];
+
+    if (!isdigit(ch) && ch != '-') {
+        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch)) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+    
     return ptr;
 }
 
@@ -168,36 +197,11 @@ bool valid_operator_char(
 
 static
 const char* parse_digit(
-    const char *name,
-    const char *sig,
-    int64_t column,
     const char *ptr,
     char *token_out)
 {
     ptr = ecs_parse_whitespace(ptr);
-    char *tptr = token_out, ch = ptr[0];
-
-    if (!isdigit(ch)) {
-        ecs_parser_error(name, sig, column, 
-            "invalid start of number '%s'", ptr);
-        return NULL;
-    }
-
-    tptr[0] = ch;
-    tptr ++;
-    ptr ++;
-
-    for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch)) {
-            break;
-        }
-
-        tptr[0] = ch;
-        tptr ++;
-    }
-
-    tptr[0] = '\0';
-
+    ptr = ecs_parse_digit(ptr, token_out);
     return ecs_parse_whitespace(ptr);
 }
 
@@ -480,7 +484,7 @@ const char* parse_set_expr(
 
             /* Max depth of search */
             if (isdigit(ptr[0])) {
-                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
+                ptr = parse_digit(ptr, token);
                 if (!ptr) {
                     return NULL;
                 }
@@ -499,7 +503,7 @@ const char* parse_set_expr(
 
             /* If another digit is found, previous depth was min depth */
             if (isdigit(ptr[0])) {
-                ptr = parse_digit(name, expr, (ptr - expr), ptr, token);
+                ptr = parse_digit(ptr, token);
                 if (!ptr) {
                     return NULL;
                 }
@@ -941,8 +945,8 @@ char* ecs_parse_term(
             }
         }
     }
-
-    ptr = skip_newline_and_space(ptr);
+    
+    ptr = ecs_parse_eol_and_whitespace(ptr);
     if (!ptr[0]) {
         *term = (ecs_term_t){0};
         return (char*)ptr;
