@@ -18,12 +18,35 @@ extern "C" {
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.
  * 
- * @param expr pointer to (potential) whitespaces to skip.
- * @return pointer to the next non-whitespace character.
+ * @param expr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
 const char* ecs_parse_whitespace(
     const char *ptr);
+
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ * 
+ * @param expr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_eol_and_whitespace(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ * 
+ * @param expr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* ecs_parse_digit(
+    const char *ptr,
+    char *token);
 
 /** Skip whitespaces and comments.
  * This function skips whitespace characters and comments (single line, //).

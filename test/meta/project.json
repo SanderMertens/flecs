@@ -443,6 +443,23 @@
                 "serialize_entity_w_struct_and_enum_component",
                 "serialize_entity_w_invalid_enum_component"
             ]
+        }, {
+            "id": "MetaUtils",
+            "testcases": [
+                "struct_w_2_i32",
+                "struct_w_2_bool",
+                "struct_w_2_char",
+                "struct_w_2_string",
+                "struct_w_2_f32",
+                "struct_w_2_f64",
+                "struct_w_3_enum",
+                "struct_w_3_enum_multiline",
+                "struct_w_3_enum_w_assignment",
+                "struct_w_4_bitmask",
+                "struct_w_3_entities",
+                "struct_w_2_array_3_i32",
+                "struct_w_nested"
+            ]
         }]
     }
 }

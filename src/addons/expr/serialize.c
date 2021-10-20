@@ -130,6 +130,7 @@ int expr_ser_primitive(
         break;
     }
     default:
+        ecs_err("invalid primitive kind");
         return -1;
     }
 
@@ -154,6 +155,9 @@ int expr_ser_enum(
     ecs_enum_constant_t *constant = ecs_map_get(
         enum_type->constants, ecs_enum_constant_t, value);
     if (!constant) {
+        char *path = ecs_get_fullpath(world, op->type);
+        ecs_err("value %d is not valid for enum type '%s'", value, path);
+        ecs_os_free(path);
         return -1;
     }
 
@@ -194,7 +198,12 @@ int expr_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        return -1;
+        char *path = ecs_get_fullpath(world, op->type);
+        ecs_err(
+            "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
+            path, value);
+        ecs_os_free(path);
+        goto error;
     }
 
     if (!count) {
@@ -204,6 +213,8 @@ int expr_ser_bitmask(
     ecs_strbuf_list_pop(str, "");
 
     return 0;
+error:
+    return -1;
 }
 
 /* Serialize elements of a contiguous array */
@@ -315,22 +326,22 @@ int expr_ser_type_op(
         break;
     case EcsOpEnum:
         if (expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpBitmask:
         if (expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpArray:
         if (expr_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpVector:
         if (expr_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     default:
@@ -339,12 +350,14 @@ int expr_ser_type_op(
         {
             /* Unknown operation */
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
-            return -1;
+            goto error;
         }
         break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 /* Iterate over a slice of the type ops array */
@@ -420,12 +433,20 @@ int ecs_ptr_to_expr_buf(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
+    if (ser == NULL) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize value for type '%s'", path);
+        ecs_os_free(path);
+        goto error;
+    }
 
     if (expr_ser_type(world, ser->ops, ptr, buf_out)) {
-        return -1;
+        goto error;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 char* ecs_ptr_to_expr(

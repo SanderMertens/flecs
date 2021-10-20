@@ -780,6 +780,7 @@ void SerializeToJson_serialize_entity_empty() {
     test_assert(json != NULL);
     test_str(json, str);
     ecs_os_free(json);
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
