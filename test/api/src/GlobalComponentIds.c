@@ -1,7 +1,7 @@
 #include <api.h>
 
-ECS_TAG_DECLARE(MyTag);
-ECS_ENTITY_DECLARE(MyEntity);
+ECS_DECLARE(MyTag);
+ECS_DECLARE(MyEntity);
 ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Velocity);
 

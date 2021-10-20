@@ -26,17 +26,11 @@
 extern "C" {
 #endif
 
-/* Module import boilerplate */
-
-typedef struct FlecsCoreDoc {
-    int32_t dummy; 
-} FlecsCoreDoc;
+/* Module import */
 
 FLECS_API
 void FlecsCoreDocImport(
     ecs_world_t *world);
-
-#define FlecsCoreDocImportHandles(handles)
 
 #ifdef __cplusplus
 }

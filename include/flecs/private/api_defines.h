@@ -142,13 +142,7 @@ typedef int32_t ecs_size_t;
 /** Translate C type to id. */
 #define ecs_id(T) FLECS__E##T
 
-/** Translate C type to module struct. */
-#define ecs_module(T) FLECS__M##T
-
-/** Translate C type to module struct. */
-#define ecs_module_ptr(T) FLECS__M##T##_ptr
-
-/** Translate C type to module struct. */
+/** Translate C type to system function. */
 #define ecs_iter_action(T) FLECS__F##T
 
 

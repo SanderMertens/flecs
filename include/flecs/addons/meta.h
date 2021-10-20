@@ -481,17 +481,10 @@ ecs_entity_t ecs_struct_init(
     const ecs_struct_desc_t *desc);
 
 
-/* Module import boilerplate */
-
-typedef struct FlecsMeta {
-    int32_t dummy; 
-} FlecsMeta;
-
+/* Module import */
 FLECS_API
 void FlecsMetaImport(
     ecs_world_t *world);
-
-#define FlecsMetaImportHandles(handles)
 
 #ifdef __cplusplus
 }
