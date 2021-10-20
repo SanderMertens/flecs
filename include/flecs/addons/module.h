@@ -42,9 +42,7 @@ FLECS_API
 ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
-    const char *module_name,
-    void *handles_out,
-    size_t handles_size);
+    const char *module_name);
 
 /* Import a module from a library.
  * Similar to ecs_import, except that this operation will attempt to load the 
@@ -84,14 +82,10 @@ ecs_entity_t ecs_module_init(
         .entity = {\
             .name = #id,\
             .add = {EcsModule}\
-        },\
-        .size = sizeof(id),\
-        .alignment = ECS_ALIGNOF(id)\
+        }\
     });\
-    id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
     ecs_set_scope(world, ecs_id(id));\
-    (void)ecs_id(id);\
-    (void)handles
+    (void)ecs_id(id);
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -106,52 +100,10 @@ ecs_entity_t ecs_module_init(
  * typically contain handles to the content of the module.
  */
 #define ECS_IMPORT(world, id) \
-    id ecs_module(id);\
-    char *id##__name = ecs_module_path_from_c(#id);\
-    ecs_id_t ecs_id(id) = ecs_import(\
-        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
-    ecs_os_free(id##__name);\
-    id##ImportHandles(ecs_module(id));\
+    char *FLECS__##id##_name = ecs_module_path_from_c(#id);\
+    ecs_id_t ecs_id(id) = ecs_import(world, id##Import, FLECS__##id##_name);\
+    ecs_os_free(FLECS__##id##_name);\
     (void)ecs_id(id)
-
-/** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(id)\
-    ecs_id_t ecs_id(id)
-
-/** Utility macro for declaring an entity inside a handles type */
-#define ECS_DECLARE_ENTITY(id)\
-    ecs_entity_t id\
-
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(id)\
-    if (handles) handles->ecs_id(id) = ecs_id(id)
-
-/** Utility macro for setting an entity in a module function */
-#define ECS_SET_ENTITY(id)\
-    if (handles) handles->id = id;
-
-#define ECS_EXPORT_COMPONENT(id)\
-    ECS_SET_COMPONENT(id)
-
-#define ECS_EXPORT_ENTITY(id)\
-    ECS_SET_ENTITY(id)
-
-/** Utility macro for importing a component */
-#define ECS_IMPORT_COMPONENT(handles, id)\
-    ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
-    (void)ecs_id(id)
-
-/** Utility macro for importing an entity */
-#define ECS_IMPORT_ENTITY(handles, id)\
-    ecs_entity_t id = (handles).id;\
-    (void)id
-
-#define ECS_IMPORT_TERM(it, module, column) \
-    module *ecs_module_ptr(module) = ecs_term(it, module, column);\
-    ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
-    ecs_assert(!ecs_term_is_owned(it, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
-    module ecs_module(module) = *ecs_module_ptr(module);\
-    module##ImportHandles(ecs_module(module))
 
 #ifdef __cplusplus
 }

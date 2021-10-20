@@ -121,15 +121,18 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_iter_action_t ecs_iter_action(id) = id;\
-    ecs_entity_t id = ecs_system_init(world, &(ecs_system_desc_t){\
+#define ECS_SYSTEM_DEFINE(world, id, kind, ...) \
+    ecs_id(id) = ecs_system_init(world, &(ecs_system_desc_t){\
         .entity = { .name = #id, .add = {kind} },\
         .query.filter.expr = #__VA_ARGS__,\
-        .callback = ecs_iter_action(id)\
+        .callback = id\
     });\
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)ecs_iter_action(id);\
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+
+#define ECS_SYSTEM(world, id, kind, ...) \
+    ecs_entity_t ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
     (void)id;
 #endif
 
@@ -261,15 +264,9 @@ void* ecs_get_system_binding_ctx(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct FlecsSystem {
-    int32_t dummy; 
-} FlecsSystem;
-
 FLECS_API
 void FlecsSystemImport(
     ecs_world_t *world);
-
-#define FlecsSystemImportHandles(handles)
 
 #ifdef __cplusplus
 }

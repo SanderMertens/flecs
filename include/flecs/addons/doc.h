@@ -101,17 +101,10 @@ const char* ecs_doc_get_link(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/* Module import boilerplate */
-
-typedef struct FlecsDoc {
-    int32_t dummy; 
-} FlecsDoc;
-
+/* Module import */
 FLECS_API
 void FlecsDocImport(
     ecs_world_t *world);
-
-#define FlecsDocImportHandles(handles)
 
 #ifdef __cplusplus
 }

@@ -29,14 +29,19 @@ extern "C" {
 #endif
 
 #ifndef FLECS_LEGACY
-#define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+#define ECS_PIPELINE_DEFINE(world, id, ...)\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
         .entity = {\
             .name = #id,\
             .add = {EcsPipeline}\
         },\
         .ids_expr = #__VA_ARGS__\
     });
+
+#define ECS_PIPELINE(world, id, ...) \
+    ecs_entity_t ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    (void)id
+    
 #endif
 
 /** Set a custom pipeline.
@@ -160,16 +165,9 @@ void ecs_set_threads(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Pipeline component is empty: components and tags in module are static */
-typedef struct FlecsPipeline {
-    int32_t dummy; 
-} FlecsPipeline;
-
 FLECS_API
 void FlecsPipelineImport(
     ecs_world_t *world);
-
-#define FlecsPipelineImportHandles(handles)
 
 #ifdef __cplusplus
 }

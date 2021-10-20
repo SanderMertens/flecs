@@ -48,6 +48,7 @@
 #define FLECS_PIPELINE      /* Pipeline support */
 #define FLECS_TIMER         /* Timer support */
 #define FLECS_META          /* Reflection support */
+#define FLECS_META_UTILS    /* Utilities for populating reflection data */
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
@@ -238,13 +239,7 @@ typedef int32_t ecs_size_t;
 /** Translate C type to id. */
 #define ecs_id(T) FLECS__E##T
 
-/** Translate C type to module struct. */
-#define ecs_module(T) FLECS__M##T
-
-/** Translate C type to module struct. */
-#define ecs_module_ptr(T) FLECS__M##T##_ptr
-
-/** Translate C type to module struct. */
+/** Translate C type to system function. */
 #define ecs_iter_action(T) FLECS__F##T
 
 
@@ -6192,9 +6187,7 @@ FLECS_API
 ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t module,
-    const char *module_name,
-    void *handles_out,
-    size_t handles_size);
+    const char *module_name);
 
 /* Import a module from a library.
  * Similar to ecs_import, except that this operation will attempt to load the 
@@ -6234,14 +6227,10 @@ ecs_entity_t ecs_module_init(
         .entity = {\
             .name = #id,\
             .add = {EcsModule}\
-        },\
-        .size = sizeof(id),\
-        .alignment = ECS_ALIGNOF(id)\
+        }\
     });\
-    id *handles = (id*)ecs_get_mut(world, ecs_id(id), id, NULL);\
     ecs_set_scope(world, ecs_id(id));\
-    (void)ecs_id(id);\
-    (void)handles
+    (void)ecs_id(id);
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -6256,52 +6245,10 @@ ecs_entity_t ecs_module_init(
  * typically contain handles to the content of the module.
  */
 #define ECS_IMPORT(world, id) \
-    id ecs_module(id);\
-    char *id##__name = ecs_module_path_from_c(#id);\
-    ecs_id_t ecs_id(id) = ecs_import(\
-        world, id##Import, id##__name, &ecs_module(id), sizeof(id));\
-    ecs_os_free(id##__name);\
-    id##ImportHandles(ecs_module(id));\
+    char *FLECS__##id##_name = ecs_module_path_from_c(#id);\
+    ecs_id_t ecs_id(id) = ecs_import(world, id##Import, FLECS__##id##_name);\
+    ecs_os_free(FLECS__##id##_name);\
     (void)ecs_id(id)
-
-/** Utility macro for declaring a component inside a handles type */
-#define ECS_DECLARE_COMPONENT(id)\
-    ecs_id_t ecs_id(id)
-
-/** Utility macro for declaring an entity inside a handles type */
-#define ECS_DECLARE_ENTITY(id)\
-    ecs_entity_t id\
-
-/** Utility macro for setting a component in a module function */
-#define ECS_SET_COMPONENT(id)\
-    if (handles) handles->ecs_id(id) = ecs_id(id)
-
-/** Utility macro for setting an entity in a module function */
-#define ECS_SET_ENTITY(id)\
-    if (handles) handles->id = id;
-
-#define ECS_EXPORT_COMPONENT(id)\
-    ECS_SET_COMPONENT(id)
-
-#define ECS_EXPORT_ENTITY(id)\
-    ECS_SET_ENTITY(id)
-
-/** Utility macro for importing a component */
-#define ECS_IMPORT_COMPONENT(handles, id)\
-    ecs_id_t ecs_id(id) = (handles).ecs_id(id); (void)ecs_id(id);\
-    (void)ecs_id(id)
-
-/** Utility macro for importing an entity */
-#define ECS_IMPORT_ENTITY(handles, id)\
-    ecs_entity_t id = (handles).id;\
-    (void)id
-
-#define ECS_IMPORT_TERM(it, module, column) \
-    module *ecs_module_ptr(module) = ecs_term(it, module, column);\
-    ecs_assert(ecs_module_ptr(module) != NULL, ECS_MODULE_UNDEFINED, #module);\
-    ecs_assert(!ecs_term_is_owned(it, column), ECS_COLUMN_IS_NOT_SHARED, NULL);\
-    module ecs_module(module) = *ecs_module_ptr(module);\
-    module##ImportHandles(ecs_module(module))
 
 #ifdef __cplusplus
 }
@@ -6417,15 +6364,18 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc);
 
 #ifndef FLECS_LEGACY
-#define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_iter_action_t ecs_iter_action(id) = id;\
-    ecs_entity_t id = ecs_system_init(world, &(ecs_system_desc_t){\
+#define ECS_SYSTEM_DEFINE(world, id, kind, ...) \
+    ecs_id(id) = ecs_system_init(world, &(ecs_system_desc_t){\
         .entity = { .name = #id, .add = {kind} },\
         .query.filter.expr = #__VA_ARGS__,\
-        .callback = ecs_iter_action(id)\
+        .callback = id\
     });\
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)ecs_iter_action(id);\
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+
+#define ECS_SYSTEM(world, id, kind, ...) \
+    ecs_entity_t ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
     (void)id;
 #endif
 
@@ -6557,15 +6507,9 @@ void* ecs_get_system_binding_ctx(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct FlecsSystem {
-    int32_t dummy; 
-} FlecsSystem;
-
 FLECS_API
 void FlecsSystemImport(
     ecs_world_t *world);
-
-#define FlecsSystemImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -6606,14 +6550,19 @@ extern "C" {
 #endif
 
 #ifndef FLECS_LEGACY
-#define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
+#define ECS_PIPELINE_DEFINE(world, id, ...)\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
         .entity = {\
             .name = #id,\
             .add = {EcsPipeline}\
         },\
         .ids_expr = #__VA_ARGS__\
     });
+
+#define ECS_PIPELINE(world, id, ...) \
+    ecs_entity_t ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    (void)id
+    
 #endif
 
 /** Set a custom pipeline.
@@ -6737,16 +6686,9 @@ void ecs_set_threads(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Pipeline component is empty: components and tags in module are static */
-typedef struct FlecsPipeline {
-    int32_t dummy; 
-} FlecsPipeline;
-
 FLECS_API
 void FlecsPipelineImport(
     ecs_world_t *world);
-
-#define FlecsPipelineImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -6990,16 +6932,9 @@ void ecs_set_tick_source(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
-/* Timers module component */
-typedef struct FlecsTimer {
-    int32_t dummy;
-} FlecsTimer;
-
 FLECS_API
 void FlecsTimerImport(
     ecs_world_t *world);
-
-#define FlecsTimerImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -7112,17 +7047,10 @@ const char* ecs_doc_get_link(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/* Module import boilerplate */
-
-typedef struct FlecsDoc {
-    int32_t dummy; 
-} FlecsDoc;
-
+/* Module import */
 FLECS_API
 void FlecsDocImport(
     ecs_world_t *world);
-
-#define FlecsDocImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -7763,17 +7691,10 @@ ecs_entity_t ecs_struct_init(
     const ecs_struct_desc_t *desc);
 
 
-/* Module import boilerplate */
-
-typedef struct FlecsMeta {
-    int32_t dummy; 
-} FlecsMeta;
-
+/* Module import */
 FLECS_API
 void FlecsMetaImport(
     ecs_world_t *world);
-
-#define FlecsMetaImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -7787,17 +7708,11 @@ void FlecsMetaImport(
 extern "C" {
 #endif
 
-/* Module import boilerplate */
-
-typedef struct FlecsCoreDoc {
-    int32_t dummy; 
-} FlecsCoreDoc;
+/* Module import */
 
 FLECS_API
 void FlecsCoreDocImport(
     ecs_world_t *world);
-
-#define FlecsCoreDocImportHandles(handles)
 
 #ifdef __cplusplus
 }
@@ -7808,6 +7723,73 @@ void FlecsCoreDocImport(
 #endif
 #endif
 #ifdef FLECS_META
+#endif
+#ifdef FLECS_META_UTILS
+/**
+ * @file meta.h
+ * @brief Meta utilities addon.
+ */
+
+#ifdef FLECS_META_UTILS
+
+#ifndef FLECS_META
+#define FLECS_META
+#endif
+
+
+#ifndef FLECS_META_UTILS_H
+#define FLECS_META_UTILS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/* Public macro's */
+
+/* Control import behavior by setting to IMPORT or EXPORT. Not setting the macro
+ * is equivalent to IMPORT */
+// #define ECS_META_IMPL IMPORT
+
+/* Declare component with descriptor */
+#define ECS_META_COMPONENT(world, name)\
+    ECS_COMPONENT_DEFINE(world, name)
+
+/* ECS_STRUCT(name, body) */
+#define ECS_STRUCT(name, ...)\
+    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+
+/* Private macro's */
+
+/* Utilities to switch beteen IMPORT and EXPORT variants */
+#define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
+    base ## impl(name, type_desc)
+
+#define ECS_META_IMPL_CALL(base, impl, name, type_desc)\
+    ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)
+
+/* ECS_STRUCT implementation */
+#define ECS_STRUCT_TYPE(name, ...)\
+    typedef struct __VA_ARGS__ name
+
+#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPORT
+
+#define ECS_STRUCT_IMPORT(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    ECS_COMPONENT_DECLARE(name)
+
+#define ECS_STRUCT_EXPORT(name, type_desc)\
+    extern ECS_COMPONENT_DECLARE(name)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // FLECS_META_UTILS_H
+
+#endif // FLECS_META_UTILS
 #endif
 #ifdef FLECS_EXPR
 /**
@@ -8709,7 +8691,8 @@ FLECS_API void ecs_gauge_reduce(
  * @{
  */
 
-#define ECS_ENTITY_DECLARE(id)\
+/* Use for declaring entity, tag, prefab / any other entity identifier */
+#define ECS_DECLARE(id)\
     ecs_entity_t id;\
     ecs_entity_t ecs_id(id)
 
@@ -8727,14 +8710,13 @@ FLECS_API void ecs_gauge_reduce(
     ecs_entity_t ecs_id(id);\
     ecs_entity_t ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
 
-#define ECS_TAG_DECLARE(id)               ECS_ENTITY_DECLARE(id)
 #define ECS_TAG_DEFINE(world, id)         ECS_ENTITY_DEFINE(world, id, 0)
 #define ECS_TAG(world, id)                ECS_ENTITY(world, id, 0)
 
-#define ECS_PREFAB_DECLARE(id)            ECS_ENTITY_DECLARE(id)
 #define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
 #define ECS_PREFAB(world, id, ...)        ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
+/* Use for declaring component identifiers */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
 #define ECS_COMPONENT_DEFINE(world, id)\
     ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
@@ -8753,29 +8735,40 @@ FLECS_API void ecs_gauge_reduce(
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-#define ECS_TRIGGER(world, trigger_name, kind, component) \
-    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
-        .entity.name = #trigger_name,\
-        .callback = trigger_name,\
+/* Use for declaring trigger, observer and system identifiers */
+#define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
+
+/* Triggers */
+#define ECS_TRIGGER_DEFINE(world, id, kind, component) \
+    ecs_id(id) = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #id,\
+        .callback = id,\
         .expr = #component,\
         .events = {kind},\
     });\
-    ecs_entity_t trigger_name = __F##trigger_name;\
-    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##trigger_name;\
-    (void)trigger_name;
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
 
-#define ECS_OBSERVER(world, observer_name, kind, ...)\
-    ecs_entity_t __F##observer_name = ecs_observer_init(world, &(ecs_observer_desc_t){\
-        .entity.name = #observer_name,\
-        .callback = observer_name,\
+#define ECS_TRIGGER(world, id, kind, component) \
+    ecs_entity_t ECS_TRIGGER_DEFINE(world, id, kind, component);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
+    (void)id;
+
+/* Observers */
+#define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
+    ecs_id(id) = ecs_observer_init(world, &(ecs_observer_desc_t){\
+        .entity.name = #id,\
+        .callback = id,\
         .filter.expr = #__VA_ARGS__,\
         .events = {kind},\
     });\
-    ecs_entity_t observer_name = __F##observer_name;\
-    ecs_assert(observer_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##observer_name;\
-    (void)observer_name;
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
+
+#define ECS_OBSERVER(world, id, kind, ...)\
+    ecs_entity_t ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
+    (void)id;
 
 /** @} */
 

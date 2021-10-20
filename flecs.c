@@ -18960,9 +18960,7 @@ char* ecs_module_path_from_c(
 ecs_entity_t ecs_import(
     ecs_world_t *world,
     ecs_module_action_t init_action,
-    const char *module_name,
-    void *handles_out,
-    size_t handles_size)
+    const char *module_name)
 {
     ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
@@ -18985,12 +18983,6 @@ ecs_entity_t ecs_import(
         ecs_assert(e != 0, ECS_MODULE_UNDEFINED, module_name);
 
         ecs_log_pop();
-    }
-
-    /* Copy value of module component in handles_out parameter */
-    if (handles_size && handles_out) {
-        void *handles_ptr = ecs_get_mut_id(world, e, e, NULL);
-        ecs_os_memcpy(handles_out, handles_ptr, flecs_from_size_t(handles_size));   
     }
 
     /* Restore to previous state */
@@ -19092,7 +19084,7 @@ ecs_entity_t ecs_import_from_library(
     }
 
     /* Do not free id, as it will be stored as the component identifier */
-    ecs_entity_t result = ecs_import(world, action, module, NULL, 0);
+    ecs_entity_t result = ecs_import(world, action, module);
 
     if (import_func != module_name) {
         ecs_os_free(import_func);
@@ -19128,10 +19120,6 @@ ecs_entity_t ecs_module_init(
     ecs_entity_t result = ecs_component_init(world, &private_desc);
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
-
-    /* Add module to itself. This way we have all the module information stored
-     * in a single contained entity that we can use for namespacing */
-    ecs_set_id(world, result, result, desc->size, NULL);
 
     return result;
 }

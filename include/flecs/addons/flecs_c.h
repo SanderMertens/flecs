@@ -11,7 +11,8 @@
  * @{
  */
 
-#define ECS_ENTITY_DECLARE(id)\
+/* Use for declaring entity, tag, prefab / any other entity identifier */
+#define ECS_DECLARE(id)\
     ecs_entity_t id;\
     ecs_entity_t ecs_id(id)
 
@@ -29,14 +30,13 @@
     ecs_entity_t ecs_id(id);\
     ecs_entity_t ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
 
-#define ECS_TAG_DECLARE(id)               ECS_ENTITY_DECLARE(id)
 #define ECS_TAG_DEFINE(world, id)         ECS_ENTITY_DEFINE(world, id, 0)
 #define ECS_TAG(world, id)                ECS_ENTITY(world, id, 0)
 
-#define ECS_PREFAB_DECLARE(id)            ECS_ENTITY_DECLARE(id)
 #define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
 #define ECS_PREFAB(world, id, ...)        ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
+/* Use for declaring component identifiers */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
 #define ECS_COMPONENT_DEFINE(world, id)\
     ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
@@ -55,29 +55,40 @@
     ECS_COMPONENT_DEFINE(world, id);\
     (void)ecs_id(id)
 
-#define ECS_TRIGGER(world, trigger_name, kind, component) \
-    ecs_entity_t __F##trigger_name = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
-        .entity.name = #trigger_name,\
-        .callback = trigger_name,\
+/* Use for declaring trigger, observer and system identifiers */
+#define ECS_SYSTEM_DECLARE(id)         ecs_entity_t ecs_id(id)
+
+/* Triggers */
+#define ECS_TRIGGER_DEFINE(world, id, kind, component) \
+    ecs_id(id) = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
+        .entity.name = #id,\
+        .callback = id,\
         .expr = #component,\
         .events = {kind},\
     });\
-    ecs_entity_t trigger_name = __F##trigger_name;\
-    ecs_assert(trigger_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##trigger_name;\
-    (void)trigger_name;
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
 
-#define ECS_OBSERVER(world, observer_name, kind, ...)\
-    ecs_entity_t __F##observer_name = ecs_observer_init(world, &(ecs_observer_desc_t){\
-        .entity.name = #observer_name,\
-        .callback = observer_name,\
+#define ECS_TRIGGER(world, id, kind, component) \
+    ecs_entity_t ECS_TRIGGER_DEFINE(world, id, kind, component);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
+    (void)id;
+
+/* Observers */
+#define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
+    ecs_id(id) = ecs_observer_init(world, &(ecs_observer_desc_t){\
+        .entity.name = #id,\
+        .callback = id,\
         .filter.expr = #__VA_ARGS__,\
         .events = {kind},\
     });\
-    ecs_entity_t observer_name = __F##observer_name;\
-    ecs_assert(observer_name != 0, ECS_INVALID_PARAMETER, NULL);\
-    (void)__F##observer_name;\
-    (void)observer_name;
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
+
+#define ECS_OBSERVER(world, id, kind, ...)\
+    ecs_entity_t ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t id = ecs_id(id);\
+    (void)ecs_id(id);\
+    (void)id;
 
 /** @} */
 
