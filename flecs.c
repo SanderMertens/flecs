@@ -14607,9 +14607,12 @@ const char* parse_stmt(
     } else if (ch == '}') {
         ptr = ecs_parse_fluff(ptr + 1);
         goto scope_close;
-    } else if (ch == '=') {
-        ptr = ecs_parse_fluff(ptr + 1);
-        goto assign_to_scope_stmt;
+    } else if (ch == '(') {
+        if (ecs_get_scope(world) != 0) {
+            goto assign_to_scope_stmt;
+        } else {
+            goto term_expr;
+        }
     } else if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
         ptr = parse_using_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
@@ -25182,6 +25185,9 @@ parse_pair:
         ptr ++;
         term.subj.entity = EcsThis;
         goto parse_pair_predicate;
+    } else if (ptr[0] == TOK_PAREN_CLOSE) {
+        term.subj.entity = EcsThis;
+        goto parse_pair_predicate;
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected character '%c'", ptr[0]);
@@ -25212,6 +25218,7 @@ parse_pair_predicate:
         }
     } else if (ptr[0] == TOK_PAREN_CLOSE) {
         /* No object */
+        ptr ++;
         goto parse_done;
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 

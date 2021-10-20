@@ -615,9 +615,12 @@ const char* parse_stmt(
     } else if (ch == '}') {
         ptr = ecs_parse_fluff(ptr + 1);
         goto scope_close;
-    } else if (ch == '=') {
-        ptr = ecs_parse_fluff(ptr + 1);
-        goto assign_to_scope_stmt;
+    } else if (ch == '(') {
+        if (ecs_get_scope(world) != 0) {
+            goto assign_to_scope_stmt;
+        } else {
+            goto term_expr;
+        }
     } else if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
         ptr = parse_using_stmt(name, expr, ptr, state);
         if (!ptr) goto error;

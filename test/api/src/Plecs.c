@@ -1788,7 +1788,7 @@ void Plecs_assign_component_value_in_assign_scope() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE " = Position{10, 20}"
+    LINE " (Position){10, 20}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -1828,8 +1828,8 @@ void Plecs_assign_2_component_values_in_assign_scope() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE " = Position{10, 20}"
-    LINE " = Velocity{1, 2}"
+    LINE " (Position){10, 20}"
+    LINE " (Velocity){1, 2}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2115,8 +2115,8 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
     LINE "}"
     LINE 
     LINE "Foo {"
-    LINE "  = Position{x: 10, y: 20}"
-    LINE "  = Color{Green}"
+    LINE "  (Position){x: 10, y: 20}"
+    LINE "  (Color){Green}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2970,7 +2970,7 @@ void Plecs_assign_tag_to_parent() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  =Tag"
+    LINE "  (Tag)"
     LINE "  Child"
     LINE "}";
 
@@ -3005,7 +3005,7 @@ void Plecs_assign_component_to_parent() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  =Position{10, 20}"
+    LINE "  (Position){10, 20}"
     LINE "  Child"
     LINE "}";
 
@@ -3035,7 +3035,7 @@ void Plecs_assign_to_parent_pair_w_new_entities_in_scope() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  =(Rel, Obj)"
+    LINE "  (Rel, Obj)"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -3061,7 +3061,7 @@ void Plecs_assign_to_parent_pair_w_existing_entities_in_scope() {
     const char *expr =
     HEAD "Rel, Obj"
     LINE "Foo {"
-    LINE "  =(Rel, Obj)"
+    LINE "  (Rel, Obj)"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);

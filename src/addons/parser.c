@@ -814,6 +814,9 @@ parse_pair:
         ptr ++;
         term.subj.entity = EcsThis;
         goto parse_pair_predicate;
+    } else if (ptr[0] == TOK_PAREN_CLOSE) {
+        term.subj.entity = EcsThis;
+        goto parse_pair_predicate;
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
             "unexpected character '%c'", ptr[0]);
@@ -844,6 +847,7 @@ parse_pair_predicate:
         }
     } else if (ptr[0] == TOK_PAREN_CLOSE) {
         /* No object */
+        ptr ++;
         goto parse_done;
     } else {
         ecs_parser_error(name, expr, (ptr - expr), 
