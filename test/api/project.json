@@ -378,7 +378,8 @@
                 "2_trailing_newlines",
                 "trailing_space",
                 "2_trailing_spaces",
-                "template_type"
+                "template_type",
+                "predicate_w_parens"
             ]
         }, {
             "id": "Plecs",
