@@ -25,9 +25,11 @@ extern "C" {
 
 /* Public API */
 
-/* Control import behavior by setting to IMPORT or EXPORT. Not setting the macro
- * is equivalent to IMPORT */
-/* #define ECS_META_IMPL IMPORT */
+/* Control import behavior by setting to IMPL or or EXPORT. When not set, the
+ * behavior defaults to IMPL. When IMPL is selected, the macro's will define 
+ * variables that contain reflection data. */
+
+/* #define ECS_META_IMPL IMPL */
 
 /** Declare component with descriptor */
 #define ECS_META_COMPONENT(world, name)\
@@ -61,7 +63,7 @@ int ecs_meta_from_desc(
 
 /* Private API */
 
-/* Utilities to switch beteen IMPORT and EXPORT variants */
+/* Utilities to switch beteen IMPL and EXPORT variants */
 #define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
     base ## impl(name, type_desc)
 
@@ -72,12 +74,12 @@ int ecs_meta_from_desc(
 #define ECS_STRUCT_TYPE(name, ...)\
     typedef struct __VA_ARGS__ name
 
-#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPORT
+#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
 
-#define ECS_STRUCT_IMPORT(name, type_desc)\
+#define ECS_STRUCT_IMPL(name, type_desc)\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
-    ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name)
 
 #define ECS_STRUCT_EXPORT(name, type_desc)\
     extern ECS_COMPONENT_DECLARE(name)
@@ -86,12 +88,12 @@ int ecs_meta_from_desc(
 #define ECS_ENUM_TYPE(name, ...)\
     typedef enum __VA_ARGS__ name
 
-#define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPORT
+#define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
 
-#define ECS_ENUM_IMPORT(name, type_desc)\
+#define ECS_ENUM_IMPL(name, type_desc)\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
-    ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name)
 
 #define ECS_ENUM_EXPORT(name, type_desc)\
     extern ECS_COMPONENT_DECLARE(name)
@@ -100,12 +102,12 @@ int ecs_meta_from_desc(
 #define ECS_BITMASK_TYPE(name, ...)\
     typedef enum __VA_ARGS__ name
 
-#define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPORT
+#define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
 
-#define ECS_BITMASK_IMPORT(name, type_desc)\
+#define ECS_BITMASK_IMPL(name, type_desc)\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
-    ECS_COMPONENT_DECLARE(name);\
+    ECS_COMPONENT_DECLARE(name)
 
 #define ECS_BITMASK_EXPORT(name, type_desc)\
     extern ECS_COMPONENT_DECLARE(name)
