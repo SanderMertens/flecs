@@ -25561,20 +25561,22 @@ const char* skip_scope(const char *ptr, meta_parse_ctx_t *ctx) {
     char ch;
 
     while ((ch = *ptr)) {
-        if (ch == '(') {
-            stack[sp++] = ch;
-        } else if (ch == '<') {
-            stack[sp++] = ch;
-        } else if (ch == '>') {
-            if (stack[--sp] != '<') {
-                ecs_meta_error(ctx, ptr, "mismatching < > in type definition");
-                goto error;
-            }
-        } else if (ch == ')') {
-            if (stack[--sp] != '(') {
-                ecs_meta_error(ctx, ptr, "mismatching ( ) in type definition");
+        if (ch == '(' || ch == '<') {
+            stack[sp] = ch;
+
+            sp ++;
+            if (sp >= 256) {
+                ecs_meta_error(ctx, ptr, "maximum level of nesting reached");
                 goto error;
             }            
+        } else if (ch == ')' || ch == '>') {
+            sp --;
+            if ((sp < 0) || (ch == '>' && stack[sp] != '<') || 
+                (ch == ')' && stack[sp] != '(')) 
+            {
+                ecs_meta_error(ctx, ptr, "mismatching %c in identifier", ch);
+                goto error;
+            }
         }
 
         ptr ++;
@@ -25898,6 +25900,10 @@ int meta_parse_desc(
         if (isdigit(*ptr)) {
             int64_t value;
             ptr = parse_c_digit(ptr, &value);
+            if (!ptr) {
+                goto error;
+            }
+
             token->count = value;
             token->is_fixed_size = true;
         } else {
