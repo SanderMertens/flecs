@@ -21,9 +21,6 @@ Flecs is a fast and lightweight Entity Component System with a focus on high per
 - Reactive systems for listening to component add/remove events (amongst others)
 - Organize components & systems in reusable packages with flecs modules
 - Ordered access ("sort by Position") and grouped access ("group by platoon")
-- A dashboard module for visualizing statistics:
-
-<img width="942" alt="Screen Shot 2020-12-02 at 1 28 04 AM" src="https://user-images.githubusercontent.com/9919222/100856510-5eebe000-3440-11eb-908e-f4844c335f37.png">
 
 **This is a v3 alpha release! All of the usual QA is applied to master, but API changes may occur!**
 For the last stable version, use [Flecs v2.4.6](https://github.com/SanderMertens/flecs/releases/tag/v2.4.6).
@@ -209,21 +206,17 @@ The following modules are available in [flecs-hub](https://github.com/flecs-hub)
 
 Module      | Description      
 ------------|------------------
-[flecs.rest](https://github.com/flecs-hub/flecs-rest) | A REST interface for introspecting & editing entities
-[flecs.player](https://github.com/flecs-hub/flecs-player) | Play, stop and pause simulations
-[flecs.monitor](https://github.com/flecs-hub/flecs-monitor) | Web-based monitoring of statistics
-[flecs.dash](https://github.com/flecs-hub/flecs-dash) | Web-based dashboard for remote monitoring and debugging of Flecs apps
+[flecs.components.cglm](https://github.com/flecs-hub/flecs-components-cglm) | Component registration for cglm (math) types
 [flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
 [flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale
 [flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement
 [flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry
 [flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics
 [flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components
-[flecs.components.http](https://github.com/flecs-hub/flecs-components-http) | Components describing an HTTP server
 [flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs
+[flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-physics) | Systems for moving objects and collision detection
 [flecs.systems.sdl2](https://github.com/flecs-hub/flecs-systems-sdl2) | SDL window creation & input management
 [flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer
-[flecs.systems.civetweb](https://github.com/flecs-hub/flecs-systems-civetweb) | A civetweb-based implementation of flecs.components.http
 
 ## Language bindings
 - [Lua](https://github.com/flecs-hub/flecs-lua)
