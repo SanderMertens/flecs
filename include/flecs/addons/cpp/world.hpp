@@ -166,7 +166,7 @@ public:
      * @param level The tracing level.
      */
     static void enable_tracing(int level) {
-        ecs_tracing_enable(level);
+        ecs_log_set_level(level);
     }
 
     /** Enable tracing with colors.
@@ -174,7 +174,7 @@ public:
      * @param enabled Whether to enable tracing with colors.
      */
     static void enable_tracing_color(bool enabled) {
-        ecs_tracing_color_enable(enabled);
+        ecs_log_enable_colors(enabled);
     }    
 
     void set_pipeline(const flecs::pipeline& pip) const;

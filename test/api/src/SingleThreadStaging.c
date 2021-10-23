@@ -2,7 +2,7 @@
 #include <flecs/type.h>
 
 void SingleThreadStaging_setup() {
-    ecs_tracing_enable(-3);
+    ecs_log_set_level(-3);
 }
 
 static

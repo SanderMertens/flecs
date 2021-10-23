@@ -5,7 +5,7 @@ void Error_setup() {
     ecs_os_api_t os_api = ecs_os_api;
     os_api.abort_ = test_abort;
     ecs_os_set_api(&os_api);
-    ecs_tracing_enable(-5);
+    ecs_log_set_level(-5);
 }
 
 void Error_abort() {
@@ -85,21 +85,21 @@ void Error_error_codes() {
 }
 
 void Error_log_dbg() {
-    ecs_os_dbg("test debug message");
+    ecs_dbg("test debug message");
     test_assert(true);
 }
 
 void Error_log_log() {
-    ecs_os_log("test log message");
+    ecs_trace("test trace message");
     test_assert(true);
 }
 
 void Error_log_warning() {
-    ecs_os_warn("test warning message");
+    ecs_warn("test warning message");
     test_assert(true);
 }
 
 void Error_log_error() {
-    ecs_os_err("test error message");
+    ecs_err("test error message");
     test_assert(true);
 }

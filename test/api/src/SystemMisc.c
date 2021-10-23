@@ -1,7 +1,7 @@
 #include <api.h>
 
 void SystemMisc_setup() {
-    // ecs_tracing_enable(-3);
+    // ecs_log_set_level(-3);
 }
 
 static
@@ -253,7 +253,7 @@ void SystemMisc_invalid_empty_string_w_space() {
 }
 
 void SystemMisc_invalid_mixed_src_modifier() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

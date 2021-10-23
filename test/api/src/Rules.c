@@ -25,7 +25,7 @@
 }
 
 void Rules_empty_rule() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -37,7 +37,7 @@ void Rules_empty_rule() {
 }
 
 void Rules_invalid_rule() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
 
@@ -3280,7 +3280,7 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
 }
 
 void Rules_invalid_rule_w_only_not_term() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -3296,7 +3296,7 @@ void Rules_invalid_rule_w_only_not_term() {
 }
 
 void Rules_invalid_rule_w_not_term_unknown_var() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -3313,7 +3313,7 @@ void Rules_invalid_rule_w_not_term_unknown_var() {
 }
 
 void Rules_invalid_rule_w_not_term_unknown_pair_var() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -3330,7 +3330,7 @@ void Rules_invalid_rule_w_not_term_unknown_pair_var() {
 }
 
 void Rules_invalid_rule_w_not_term_unknown_pair_var_subj_var() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 

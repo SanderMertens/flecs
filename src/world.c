@@ -364,7 +364,7 @@ void fini_store(ecs_world_t *world) {
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
-    ecs_trace_1("bootstrap");
+    ecs_trace("bootstrap");
     ecs_log_push();
 
     if (!ecs_os_has_heap()) {
@@ -372,11 +372,11 @@ ecs_world_t *ecs_mini(void) {
     }
 
     if (!ecs_os_has_threading()) {
-        ecs_trace_1("threading not available");
+        ecs_trace("threading not available");
     }
 
     if (!ecs_os_has_time()) {
-        ecs_trace_1("time management not available");
+        ecs_trace("time management not available");
     }
 
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
@@ -422,7 +422,7 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifdef FLECS_MODULE_H
-    ecs_trace_1("import builtin modules");
+    ecs_trace("import builtin modules");
     ecs_log_push();
 #ifdef FLECS_SYSTEM_H
     ECS_IMPORT(world, FlecsSystem);

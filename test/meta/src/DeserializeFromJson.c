@@ -592,7 +592,7 @@ void DeserializeFromJson_struct_enum() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {0};
     const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Black\"}", NULL, t, &value);
     test_assert(ptr == NULL);
@@ -666,7 +666,7 @@ void DeserializeFromJson_struct_bitmask() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {0};
     const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Foo\"}", NULL, t, &value);
     test_assert(ptr == NULL);

@@ -412,7 +412,7 @@ void Cursor_set_str_to_entity() {
 }
 
 void Cursor_set_str_to_invalid_bool() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -427,7 +427,7 @@ void Cursor_set_str_to_invalid_bool() {
 }
 
 void Cursor_set_str_to_invalid_entity() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 

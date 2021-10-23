@@ -1,7 +1,7 @@
 #include <api.h>
 
 void TriggerOnAdd_setup() {
-    ecs_tracing_enable(-3);
+    ecs_log_set_level(-3);
 }
 
 void Init(ecs_iter_t *it) {

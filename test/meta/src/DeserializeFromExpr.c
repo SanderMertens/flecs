@@ -304,7 +304,7 @@ void DeserializeFromExpr_enum() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = 0;
     const char *ptr = ecs_parse_expr(world, "Black", t, &value, NULL);
     test_assert(ptr == NULL);
@@ -363,7 +363,7 @@ void DeserializeFromExpr_bitmask() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     uint32_t value = 0;
     const char *ptr = ecs_parse_expr(world, "Foo", t, &value, NULL);
     test_assert(ptr == NULL);
@@ -422,7 +422,7 @@ void DeserializeFromExpr_struct_enum() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {0};
     const char *ptr = ecs_parse_expr(world, "{v: Black}", t, &value, NULL);
     test_assert(ptr == NULL);
@@ -496,7 +496,7 @@ void DeserializeFromExpr_struct_bitmask() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {0};
     const char *ptr = ecs_parse_expr(world, "{v:Foo\"}", t, &value, NULL);
     test_assert(ptr == NULL);

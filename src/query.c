@@ -2211,7 +2211,7 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-    ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
+    ecs_dbg_1("query #[green]%s#[reset] created with expression #[red]%s", 
         query_name(world, result), result->filter.expr);
 
     ecs_log_push();

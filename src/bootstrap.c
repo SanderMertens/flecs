@@ -271,7 +271,7 @@ void bootstrap_entity(
 void flecs_bootstrap(
     ecs_world_t *world)
 {
-    ecs_trace_1("bootstrap core components");
+    ecs_trace("bootstrap core components");
     ecs_log_push();
 
     ecs_set_name_prefix(world, "Ecs");

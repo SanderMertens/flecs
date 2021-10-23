@@ -5,7 +5,10 @@ void ecs_os_api_impl(ecs_os_api_t *api);
 static bool ecs_os_api_initialized = false;
 static int ecs_os_api_init_count = 0;
 
-ecs_os_api_t ecs_os_api;
+ecs_os_api_t ecs_os_api = {
+    .log_with_color_ = true,
+    .log_level_ = -1 /* disable tracing by default, but enable >= warnings */
+};
 
 int64_t ecs_os_api_malloc_count = 0;
 int64_t ecs_os_api_realloc_count = 0;
@@ -43,67 +46,125 @@ void ecs_os_fini(void) {
 }
 
 static
-void ecs_log(const char *fmt, va_list args) {
-    vfprintf(stdout, fmt, args);
-    fprintf(stdout, "\n");
-}
-
-static
-void ecs_log_error(const char *fmt, va_list args) {
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-}
-
-static
-void ecs_log_debug(const char *fmt, va_list args) {
-    vfprintf(stdout, fmt, args);
-    fprintf(stdout, "\n");
-}
-
-static
-void ecs_log_warning(const char *fmt, va_list args) {
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-}
-
-void ecs_os_dbg(const char *fmt, ...) {
-#ifndef NDEBUG
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_debug_) {
-        ecs_os_api.log_debug_(fmt, args);
+void log_msg(
+    int32_t level,
+    const char *file, 
+    int32_t line,  
+    const char *msg)
+{
+    FILE *stream;
+    if (level >= 0) {
+        stream = stdout;
+    } else {
+        stream = stderr;
     }
-    va_end(args);
+
+    if (level >= 0) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        fputs("info", stream);
+    } else if (level == -2) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_YELLOW, stream);
+        fputs("warning", stream);
+    } else if (level == -3) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        fputs("error", stream);
+    } else if (level == -4) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        fputs("fatal", stream);
+    }
+
+    if (ecs_os_api.log_with_color_) fputs(ECS_NORMAL, stream);
+    fputs(": ", stream);
+
+    if (ecs_os_api.log_indent_) {
+        char indent[32];
+        int i;
+        for (i = 0; i < ecs_os_api.log_indent_; i ++) {
+            indent[i * 2] = '|';
+            indent[i * 2 + 1] = ' ';
+        }
+        indent[i * 2] = '\0';
+
+        fputs(indent, stream);
+    }
+
+    if (file) {
+        const char *file_ptr = strrchr(file, '/');
+        if (!file_ptr) {
+            file_ptr = strrchr(file, '\\');
+        }
+
+        if (file_ptr) {
+            file = file_ptr + 1;
+        }
+
+        fputs(file, stream);
+        fputs(": ", stream);
+    }
+
+    if (line) {
+        fprintf(stream, "%d: ", line);
+    }
+
+    fputs(msg, stream);
+
+    fputs("\n", stream);
+}
+
+void ecs_os_dbg(
+    const char *file, 
+    int32_t line, 
+    const char *msg)
+{
+#ifndef NDEBUG
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(1, file, line, msg);
+    }
 #else
-    (void)fmt;
+    (void)file;
+    (void)line;
+    (void)msg;
 #endif
 }
 
-void ecs_os_warn(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_warning_) {
-        ecs_os_api.log_warning_(fmt, args);
-    }
-    va_end(args);
-}
-
-void ecs_os_log(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
+void ecs_os_trace(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(fmt, args);
+        ecs_os_api.log_(0, file, line, msg);
     }
-    va_end(args);
 }
 
-void ecs_os_err(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_error_) {
-        ecs_os_api.log_error_(fmt, args);
+void ecs_os_warn(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-2, file, line, msg);
     }
-    va_end(args);
+}
+
+void ecs_os_err(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-3, file, line, msg);
+    }
+}
+
+void ecs_os_fatal(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-4, file, line, msg);
+    }
 }
 
 static
@@ -245,10 +306,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */
-    ecs_os_api.log_ = ecs_log;
-    ecs_os_api.log_error_ = ecs_log_error;
-    ecs_os_api.log_debug_ = ecs_log_debug;
-    ecs_os_api.log_warning_ = ecs_log_warning;
+    ecs_os_api.log_ = log_msg;
 
     /* Modules */
     if (!ecs_os_api.module_to_dl_) {
@@ -292,11 +350,7 @@ bool ecs_os_has_time(void) {
 }
 
 bool ecs_os_has_logging(void) {
-    return 
-        (ecs_os_api.log_ != NULL) &&
-        (ecs_os_api.log_error_ != NULL) &&
-        (ecs_os_api.log_debug_ != NULL) &&
-        (ecs_os_api.log_warning_ != NULL);
+    return (ecs_os_api.log_ != NULL);
 }
 
 bool ecs_os_has_dl(void) {

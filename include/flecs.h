@@ -46,17 +46,18 @@
 #define FLECS_PIPELINE      /* Pipeline support */
 #define FLECS_TIMER         /* Timer support */
 #define FLECS_META          /* Reflection support */
-#define FLECS_META_C    /* Utilities for populating reflection data */
+#define FLECS_META_C        /* Utilities for populating reflection data */
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
 #define FLECS_COREDOC       /* Documentation for core entities & components */
+#define FLECS_LOG           /* When enabled ECS provides more detailed logs */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
 
 #include "flecs/private/api_defines.h"
-#include "flecs/private/log.h"              /* Logging API */
+#include "flecs/addons/log.h"               /* Logging API */
 #include "flecs/private/vector.h"           /* Vector datatype */
 #include "flecs/private/map.h"              /* Map */
 #include "flecs/private/strbuf.h"           /* String builder */
@@ -1188,7 +1189,7 @@ void ecs_end_wait(
  * @param level Desired tracing level.
  */
 FLECS_API
-void ecs_tracing_enable(
+void ecs_log_set_level(
     int level);
 
 /** Enable/disable tracing with colors.
@@ -1197,7 +1198,7 @@ void ecs_tracing_enable(
  * @param enabled Whether to enable tracing with colors.
  */
 FLECS_API
-void ecs_tracing_color_enable(
+void ecs_log_enable_colors(
     bool enabled);
 
 /** Measure frame time. 

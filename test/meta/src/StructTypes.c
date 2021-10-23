@@ -381,7 +381,7 @@ void StructTypes_incomplete_member() {
     ecs_entity_t m_z = ecs_new_w_pair(world, EcsChildOf, t);
     ecs_set_name(world, m_z, "z");
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     ecs_set(world, m_z, EcsMember, {.type = 0});
 
     const EcsStruct *ptr = ecs_get(world, t, EcsStruct);

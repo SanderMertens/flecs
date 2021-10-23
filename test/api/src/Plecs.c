@@ -81,7 +81,7 @@ void Plecs_multiple_trailing_newlines() {
 }
 
 void Plecs_invalid_2_identifiers_separated_by_space() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
 
@@ -680,7 +680,7 @@ void Plecs_hierarchy_2_levels_2_subtrees() {
 }
 
 void Plecs_missing_end_of_scope() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -696,7 +696,7 @@ void Plecs_missing_end_of_scope() {
 }
 
 void Plecs_missing_end_of_predicate_scope() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1612,7 +1612,7 @@ void Plecs_assignment_w_pair() {
 }
 
 void Plecs_assignment_w_invalid_subject() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
     
@@ -1625,7 +1625,7 @@ void Plecs_assignment_w_invalid_subject() {
 }
 
 void Plecs_assignment_w_invalid_with() {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
     
@@ -2656,7 +2656,7 @@ void Plecs_assignment_to_non_component() {
     const char *expr =
     HEAD "Foo = Position{x: 10, y: 20}";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2670,7 +2670,7 @@ void Plecs_struct_w_member_w_assignment_to_nothing() {
     LINE "  flecs.meta.Member(x) = "
     LINE "}";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2684,7 +2684,7 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
     LINE "  x = flecs.meta.Member{"
     LINE "}";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2923,7 +2923,7 @@ void Plecs_invalid_nested_assignment() {
     HEAD "Foo ="
     LINE "Bar = Hello";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2935,7 +2935,7 @@ void Plecs_invalid_partial_pair_assignment() {
     const char *expr =
     HEAD "Foo = (Hello, ";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2947,7 +2947,7 @@ void Plecs_empty_assignment() {
     const char *expr =
     HEAD "Foo =";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -2959,7 +2959,7 @@ void Plecs_empty_assignment_before_end_of_scope() {
     const char *expr =
     HEAD "{Foo =}";
 
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);

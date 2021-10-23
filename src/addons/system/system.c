@@ -59,7 +59,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_trace_2("system #[green]%s#[reset] %s", 
+    ecs_dbg_1("system #[green]%s#[reset] %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -479,7 +479,7 @@ ecs_entity_t ecs_system_init(
 
         ecs_modified(world, result, EcsSystem);
 
-        ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
+        ecs_trace("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
 
         ecs_defer_end(world);            

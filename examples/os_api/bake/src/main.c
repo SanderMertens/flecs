@@ -133,7 +133,7 @@ void bake_init(void)
 {
     ut_init(NULL);
     if (ut_load_init(NULL, NULL, NULL, NULL)) {
-        ecs_os_err("warning: failed to initialize package loader");
+        ecs_err("warning: failed to initialize package loader");
     }
 }
 

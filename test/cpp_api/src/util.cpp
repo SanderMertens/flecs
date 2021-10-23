@@ -6,5 +6,5 @@ void install_test_abort() {
     os_api.abort_ = test_abort;
     ecs_os_set_api(&os_api);
 
-    ecs_tracing_enable(-5);
+    ecs_log_set_level(-5);
 }

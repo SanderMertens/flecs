@@ -250,7 +250,7 @@ void flecs_os_time_sleep(
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;
     if (nanosleep(&sleepTime, NULL)) {
-        ecs_os_err("nanosleep failed");
+        ecs_err("nanosleep failed");
     }
 #else
     HANDLE timer;

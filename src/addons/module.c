@@ -40,7 +40,7 @@ ecs_entity_t ecs_import(
     ecs_os_free(path);
     
     if (!e) {
-        ecs_trace_1("import %s", module_name);
+        ecs_trace("import %s", module_name);
         ecs_log_push();
 
         /* Load module */
@@ -71,7 +71,7 @@ ecs_entity_t ecs_import_from_library(
     char *module = (char*)module_name;
 
     if (!ecs_os_has_modules() || !ecs_os_has_dl()) {
-        ecs_os_err(
+        ecs_err(
             "library loading not supported, set module_to_dl, dlopen, dlclose "
             "and dlproc os API callbacks first");
         return 0;
@@ -111,19 +111,19 @@ ecs_entity_t ecs_import_from_library(
 
     char *library_filename = ecs_os_module_to_dl(library_name);
     if (!library_filename) {
-        ecs_os_err("failed to find library file for '%s'", library_name);
+        ecs_err("failed to find library file for '%s'", library_name);
         if (module != module_name) {
             ecs_os_free(module);
         }
         return 0;
     } else {
-        ecs_trace_1("found file '%s' for library '%s'", 
+        ecs_trace("found file '%s' for library '%s'", 
             library_filename, library_name);
     }
 
     ecs_os_dl_t dl = ecs_os_dlopen(library_filename);
     if (!dl) {
-        ecs_os_err("failed to load library '%s' ('%s')", 
+        ecs_err("failed to load library '%s' ('%s')", 
             library_name, library_filename);
         
         ecs_os_free(library_filename);
@@ -134,20 +134,20 @@ ecs_entity_t ecs_import_from_library(
 
         return 0;
     } else {
-        ecs_trace_1("library '%s' ('%s') loaded", 
+        ecs_trace("library '%s' ('%s') loaded", 
             library_name, library_filename);
     }
 
     ecs_module_action_t action = (ecs_module_action_t)
         ecs_os_dlproc(dl, import_func);
     if (!action) {
-        ecs_os_err("failed to load import function %s from library %s",
+        ecs_err("failed to load import function %s from library %s",
             import_func, library_name);
         ecs_os_free(library_filename);
         ecs_os_dlclose(dl);            
         return 0;
     } else {
-        ecs_trace_1("found import function '%s' in library '%s' for module '%s'",
+        ecs_trace("found import function '%s' in library '%s' for module '%s'",
             import_func, library_name, module);
     }
 

@@ -511,7 +511,7 @@ void SerializeToExpr_enum() {
 
     {
     T value = 10;
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr == NULL);
     }
@@ -576,7 +576,7 @@ void SerializeToExpr_bitmask() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     uint32_t value = 16;
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr == NULL);
@@ -638,7 +638,7 @@ void SerializeToExpr_struct_enum() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {10};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr == NULL);
@@ -717,7 +717,7 @@ void SerializeToExpr_struct_bitmask() {
     }
 
     {
-    ecs_tracing_enable(-4);
+    ecs_log_set_level(-4);
     T value = {16};
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr == NULL);

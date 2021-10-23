@@ -160,8 +160,10 @@ void (*ecs_os_api_get_time_t)(
 /* Logging */
 typedef
 void (*ecs_os_api_log_t)(
-    const char *fmt,
-    va_list args);
+    int32_t level,     /* Logging level */
+    const char *file,  /* File where message was logged */
+    int32_t line,      /* Line it was logged */
+    const char *msg);
 
 /* Application termination */
 typedef
@@ -229,10 +231,12 @@ typedef struct ecs_os_api_t {
     ecs_os_api_get_time_t get_time_;
 
     /* Logging */
-    ecs_os_api_log_t log_;
-    ecs_os_api_log_t log_error_;
-    ecs_os_api_log_t log_debug_;
-    ecs_os_api_log_t log_warning_;
+    ecs_os_api_log_t log_; /* Logging function. The level should be interpreted as: */
+                           /* >0: Debug tracing. Only enabled in debug builds. */
+                           /*  0: Tracing. Enabled in debug/release builds. */
+                           /* -2: Warning. An issue occurred, but operation was successful. */
+                           /* -3: Error. An issue occurred, and operation was unsuccessful. */
+                           /* -4: Fatal. An issue occurred, and application must quit. */
 
     /* Application termination */
     ecs_os_api_abort_t abort_;
@@ -248,7 +252,16 @@ typedef struct ecs_os_api_t {
 
     /* Overridable function that translates from a logical module id to a
      * path that contains module-specif resources or assets */
-    ecs_os_api_module_to_path_t module_to_etc_;    
+    ecs_os_api_module_to_path_t module_to_etc_;
+
+    /* Trace level */
+    int32_t log_level_;
+
+    /* Trace indentation */
+    int32_t log_indent_;
+
+    /* Enable tracing with color */
+    bool log_with_color_;
 } ecs_os_api_t;
 
 FLECS_API
@@ -384,16 +397,19 @@ void ecs_os_set_api_defaults(void);
 
 /* Logging (use functions to avoid using variadic macro arguments) */
 FLECS_API
-void ecs_os_log(const char *fmt, ...);
+void ecs_os_dbg(const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_warn(const char *fmt, ...);
+void ecs_os_trace(const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_err(const char *fmt, ...);
+void ecs_os_warn(const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_dbg(const char *fmt, ...);
+void ecs_os_err(const char *file, int32_t line, const char *msg);
+
+FLECS_API
+void ecs_os_fatal(const char *file, int32_t line, const char *msg);
 
 FLECS_API
 const char* ecs_os_strerror(int err);

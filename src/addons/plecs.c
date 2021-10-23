@@ -366,20 +366,20 @@ const char* parse_assign_expr(
     
     if (!state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr,
-            "unexpected expression outside of assignment statement");
+            "unexpected value outside of assignment statement");
         return NULL;
     }
 
     ecs_id_t assign_id = state->last_assign_id;
     if (!assign_id) {
         ecs_parser_error(name, expr, ptr - expr,
-            "missing component for assignment statement");
+            "missing type for assignment statement");
         return NULL;
     }
 
 #ifndef FLECS_EXPR
     ecs_parser_error(name, expr, ptr - expr,
-        "cannot parse component value, missing FLECS_EXPR addon");
+        "cannot parse value, missing FLECS_EXPR addon");
     return NULL;
 #else
     ecs_entity_t assign_to = state->assign_to;
@@ -397,7 +397,7 @@ const char* parse_assign_expr(
     if (!type) {
         char *id_str = ecs_id_str(world, assign_id);
         ecs_parser_error(name, expr, ptr - expr, 
-            "cannot assign to non-component id '%s'", id_str);
+            "invalid assignment, '%s' is not a type", id_str);
         ecs_os_free(id_str);
         return NULL;
     }
@@ -629,7 +629,7 @@ const char *parse_plecs_term(
     }
 
     if (!ecs_term_is_initialized(&term)) {
-        ecs_parser_error(name, expr, ptr - expr, "expected term expression");
+        ecs_parser_error(name, expr, ptr - expr, "expected identifier");
         return NULL; /* No term found */
     }
 

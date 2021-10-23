@@ -9,7 +9,7 @@ char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
 }
 
 void Type_setup() {
-    ecs_tracing_enable(-2);
+    ecs_log_set_level(-2);
 }
 
 void Type_type_of_1_tostr() {

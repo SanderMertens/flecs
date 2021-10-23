@@ -1,7 +1,7 @@
 #include <api.h>
 
 void World_setup() {
-    ecs_tracing_enable(-3);
+    ecs_log_set_level(-3);
 }
 
 static

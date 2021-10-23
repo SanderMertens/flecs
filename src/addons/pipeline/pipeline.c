@@ -229,7 +229,7 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_trace_2("rebuilding pipeline #[green]%s", 
+    ecs_dbg_1("rebuilding pipeline #[green]%s", 
         ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
@@ -550,7 +550,7 @@ void EcsOnUpdatePipeline(
         ecs_entity_t pipeline = entities[i];
         
 #ifndef NDEBUG
-        ecs_trace_1("pipeline #[green]%s#[normal] created",
+        ecs_trace("pipeline #[green]%s#[normal] created",
             ecs_get_name(world, pipeline));
 #endif
         ecs_log_push();

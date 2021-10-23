@@ -2,7 +2,7 @@
 
 void MultiThreadStaging_setup() {
     bake_set_os_api();
-    ecs_tracing_enable(-3);
+    ecs_log_set_level(-3);
 }
 
 static

@@ -19,7 +19,7 @@ flecs::entity module(const flecs::world& world) {
 
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
-    ecs_trace_1("import %s", _::name_helper<T>::name());
+    ecs_trace("import %s", _::name_helper<T>::name());
     ecs_log_push();
 
     ecs_entity_t scope = ecs_get_scope(world);

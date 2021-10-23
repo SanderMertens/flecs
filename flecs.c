@@ -2064,473 +2064,6 @@ void _assert_func(
 
 #endif
 
-static
-char *ecs_vasprintf(
-    const char *fmt,
-    va_list args)
-{
-    ecs_size_t size = 0;
-    char *result  = NULL;
-    va_list tmpa;
-
-    va_copy(tmpa, args);
-
-    size = vsnprintf(result, 0, fmt, tmpa);
-
-    va_end(tmpa);
-
-    if ((int32_t)size < 0) { 
-        return NULL; 
-    }
-
-    result = (char *) ecs_os_malloc(size + 1);
-
-    if (!result) { 
-        return NULL; 
-    }
-
-    ecs_os_vsprintf(result, fmt, args);
-
-    return result;
-}
-
-static
-char* ecs_colorize(
-    char *msg,
-    bool enable_colors)
-{
-    ecs_strbuf_t buff = ECS_STRBUF_INIT;
-    char *ptr, ch, prev = '\0';
-    bool isNum = false;
-    char isStr = '\0';
-    bool isVar = false;
-    bool overrideColor = false;
-    bool autoColor = true;
-    bool dontAppend = false;
-
-    for (ptr = msg; (ch = *ptr); ptr++) {
-        dontAppend = false;
-
-        if (!overrideColor) {
-            if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-                isNum = false;
-            }
-            if (isStr && (isStr == ch) && prev != '\\') {
-                isStr = '\0';
-            } else if (((ch == '\'') || (ch == '"')) && !isStr &&
-                !isalpha(prev) && (prev != '\\'))
-            {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-                isStr = ch;
-            }
-
-            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) ||
-                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar &&
-                 !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
-                 (prev != '.'))
-            {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-                isNum = true;
-            }
-
-            if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-                isVar = false;
-            }
-
-            if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-                isVar = true;
-            }
-        }
-
-        if (!isVar && !isStr && !isNum && ch == '#' && ptr[1] == '[') {
-            bool isColor = true;
-            overrideColor = true;
-
-            /* Custom colors */
-            if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
-                autoColor = false;
-            } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREEN);
-            } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_RED);
-            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_BLUE);
-            } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_MAGENTA);
-            } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_CYAN);
-            } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_YELLOW);
-            } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_GREY);
-            } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_BOLD);
-            } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
-                overrideColor = false;
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            } else {
-                isColor = false;
-                overrideColor = false;
-            }
-
-            if (isColor) {
-                ptr += 2;
-                while ((ch = *ptr) != ']') ptr ++;
-                dontAppend = true;
-            }
-            if (!autoColor) {
-                overrideColor = true;
-            }
-        }
-
-        if (ch == '\n') {
-            if (isNum || isStr || isVar || overrideColor) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-                overrideColor = false;
-                isNum = false;
-                isStr = false;
-                isVar = false;
-            }
-        }
-
-        if (!dontAppend) {
-            ecs_strbuf_appendstrn(&buff, ptr, 1);
-        }
-
-        if (!overrideColor) {
-            if (((ch == '\'') || (ch == '"')) && !isStr) {
-                if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-            }
-        }
-
-        prev = ch;
-    }
-
-    if (isNum || isStr || isVar || overrideColor) {
-        if (enable_colors) ecs_strbuf_appendstr(&buff, ECS_NORMAL);
-    }
-
-    return ecs_strbuf_get(&buff);
-}
-
-static int trace_indent = 0;
-static int trace_level = 0;
-static bool trace_color = true;
-
-static
-void ecs_log_print(
-    int level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    va_list args)
-{
-    (void)level;
-    (void)line;
-
-    if (level > trace_level) {
-        return;
-    }
-
-    /* Massage filename so it doesn't take up too much space */
-    char file_buf[256];
-    ecs_os_strcpy(file_buf, file);
-    file = file_buf;
-
-    char *file_ptr = strrchr(file, '/');
-    if (!file_ptr) {
-        file_ptr = strrchr(file, '\\');
-    }
-
-    if (file_ptr) {
-        file = file_ptr + 1;
-    } else {
-        file = file_buf;
-    }
-
-    char indent[32];
-    int i;
-    for (i = 0; i < trace_indent; i ++) {
-        indent[i * 2] = '|';
-        indent[i * 2 + 1] = ' ';
-    }
-    indent[i * 2] = '\0';
-
-    char *msg_nocolor = ecs_vasprintf(fmt, args);
-    char *msg = ecs_colorize(msg_nocolor, trace_color);
-
-    if (trace_color) {
-        if (level >= 0) {
-            ecs_os_log("%sinfo%s: %s%s%s%s:%s%d%s: %s", ECS_MAGENTA, ECS_NORMAL, 
-                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-                msg);
-        } else if (level == -2) {
-            ecs_os_warn("%swarn%s: %s%s%s%s:%s%d%s: %s", ECS_YELLOW, ECS_NORMAL, 
-                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-                msg);
-        } else if (level == -3) {
-            ecs_os_err("%serr%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
-                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-                msg);
-        } else if (level == -4) {
-            ecs_os_err("%sfatal%s:  %s%s%s%s:%s%d%s: %s", ECS_RED, ECS_NORMAL, 
-                ECS_GREY, indent, ECS_NORMAL, file, ECS_GREEN, line, ECS_NORMAL, 
-                msg);
-        }
-    } else {
-        if (level >= 0) {
-            ecs_os_log("info: %s%s:%d: %s", indent, file, line, msg);
-        } else if (level == -2) {
-            ecs_os_warn("warn: %s%s:%d: %s", indent, file, line, msg); 
-        } else if (level == -3) {
-            ecs_os_err("err:  %s%s:%d: %s", indent, file, line, msg); 
-        } else if (level == -4) {
-            ecs_os_err("fatal:  %s%s:%d: %s", indent, file, line, msg);
-        }
-    }
-
-    ecs_os_free(msg);
-    ecs_os_free(msg_nocolor);
-}
-
-void _ecs_trace(
-    int level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ecs_log_print(level, file, line, fmt, args);
-    va_end(args);    
-}
-
-void _ecs_warn(
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ecs_log_print(-2, file, line, fmt, args);
-    va_end(args);
-}
-
-void _ecs_err(
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ecs_log_print(-3, file, line, fmt, args);
-    va_end(args);
-}
-
-void _ecs_fatal(
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    ecs_log_print(-4, file, line, fmt, args);
-    va_end(args);
-}
-
-void ecs_log_push(void) {
-    trace_indent ++;
-}
-
-void ecs_log_pop(void) {
-    trace_indent --;
-}
-
-void ecs_tracing_enable(
-    int level)
-{
-    trace_level = level;
-}
-
-void ecs_tracing_color_enable(
-    bool enabled)
-{
-    trace_color = enabled;
-}
-
-void _ecs_parser_errorv(
-    const char *name,
-    const char *expr, 
-    int64_t column_arg,
-    const char *fmt,
-    va_list args)
-{
-    int32_t column = flecs_to_i32(column_arg);
-
-    if (trace_level >= -2) {
-        char *msg = ecs_vasprintf(fmt, args);
-
-        if (column != -1) {
-            if (name) {
-                ecs_os_err("%s: error: %s", name, msg);
-            } else {
-                ecs_os_err("error: %s", msg);
-            }
-        } else {
-            if (name) {
-                ecs_os_err("%s: error: %s", name, msg);
-            } else {
-                ecs_os_err("error: %s", msg);
-            }            
-        }
-
-        char *newline_ptr = strchr(expr, '\n');
-        if (newline_ptr) {
-            /* Strip newline from expr */
-            char *expr_tmp = ecs_os_strdup(expr);
-            expr_tmp[newline_ptr - expr] = '\0';
-            ecs_os_err("    %s", expr_tmp);
-            ecs_os_free(expr_tmp);
-        } else {
-            ecs_os_err("    %s", expr);
-        }
-
-        if (column != -1) {
-            ecs_os_err("    %*s^", column, "");
-        } else {
-            ecs_os_err("");
-        }
-
-        ecs_os_free(msg);
-    }
-}
-
-void _ecs_parser_error(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    ...)
-{
-    if (trace_level >= -2) {
-        va_list args;
-        va_start(args, fmt);
-        _ecs_parser_errorv(name, expr, column, fmt, args);
-        va_end(args);
-    }
-}
-
-void _ecs_abort(
-    int32_t err,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    if (fmt) {
-        va_list args;
-        va_start(args, fmt);
-        char *msg = ecs_vasprintf(fmt, args);
-        va_end(args);
-        _ecs_fatal(file, line, "%s (%s)", msg, ecs_strerror(err));
-        ecs_os_free(msg);
-    } else {
-        _ecs_fatal(file, line, "%s", ecs_strerror(err));
-    }
-
-    ecs_os_abort();
-}
-
-void _ecs_assert(
-    bool condition,
-    int32_t err,
-    const char *cond_str,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...)
-{
-    if (!condition) {
-        if (fmt) {
-            va_list args;
-            va_start(args, fmt);
-            char *msg = ecs_vasprintf(fmt, args);
-            va_end(args);            
-            _ecs_fatal(file, line, "assert(%s) %s (%s)", 
-                cond_str, msg, ecs_strerror(err));
-            ecs_os_free(msg);
-        } else {
-            _ecs_fatal(file, line, "assert(%s) %s", 
-                cond_str, ecs_strerror(err));
-        }
-
-        ecs_os_abort();
-    }
-}
-
-void _ecs_deprecated(
-    const char *file,
-    int32_t line,
-    const char *msg)
-{
-    _ecs_err(file, line, "%s", msg);
-}
-
-#define ECS_ERR_STR(code) case code: return &(#code[4])
-
-const char* ecs_strerror(
-    int32_t error_code)
-{
-    switch (error_code) {
-    ECS_ERR_STR(ECS_INVALID_PARAMETER);
-    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
-    ECS_ERR_STR(ECS_TYPE_NOT_AN_ENTITY);
-    ECS_ERR_STR(ECS_INTERNAL_ERROR);
-    ECS_ERR_STR(ECS_ALREADY_DEFINED);
-    ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
-    ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
-    ECS_ERR_STR(ECS_OUT_OF_MEMORY);
-    ECS_ERR_STR(ECS_MODULE_UNDEFINED);
-    ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
-    ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
-    ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
-    ECS_ERR_STR(ECS_COLUMN_HAS_NO_DATA);
-    ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
-    ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
-    ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
-    ECS_ERR_STR(ECS_OUT_OF_RANGE);
-    ECS_ERR_STR(ECS_THREAD_ERROR);
-    ECS_ERR_STR(ECS_MISSING_OS_API);
-    ECS_ERR_STR(ECS_UNSUPPORTED);
-    ECS_ERR_STR(ECS_NO_OUT_COLUMNS);
-    ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
-    ECS_ERR_STR(ECS_DESERIALIZE_FORMAT_ERROR);
-    ECS_ERR_STR(ECS_TYPE_CONSTRAINT_VIOLATION);
-    ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
-    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
-    ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
-    ECS_ERR_STR(ECS_INCONSISTENT_NAME);
-    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
-    ECS_ERR_STR(ECS_INVALID_OPERATION);
-    ECS_ERR_STR(ECS_INVALID_DELETE);
-    ECS_ERR_STR(ECS_CYCLE_DETECTED);
-    ECS_ERR_STR(ECS_LOCKED_STORAGE);
-    }
-
-    return "unknown error code";
-}
-
 /* Count number of switch columns */
 static
 int32_t switch_column_count(
@@ -3233,7 +2766,7 @@ void flecs_table_free(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, table->type);
-    ecs_trace_2("table #[green][%s]#[normal] deleted", expr);
+    ecs_dbg_1("table #[green][%s]#[normal] deleted", expr);
     ecs_os_free(expr);
 #endif    
 
@@ -12563,6 +12096,454 @@ void* _flecs_hashmap_next(
     return ecs_vector_get_t(bucket->values, value_size, 8, index);
 }
 
+#ifdef FLECS_LOG
+
+static
+char *ecs_vasprintf(
+    const char *fmt,
+    va_list args)
+{
+    ecs_size_t size = 0;
+    char *result  = NULL;
+    va_list tmpa;
+
+    va_copy(tmpa, args);
+
+    size = vsnprintf(result, 0, fmt, tmpa);
+
+    va_end(tmpa);
+
+    if ((int32_t)size < 0) { 
+        return NULL; 
+    }
+
+    result = (char *) ecs_os_malloc(size + 1);
+
+    if (!result) { 
+        return NULL; 
+    }
+
+    ecs_os_vsprintf(result, fmt, args);
+
+    return result;
+}
+
+static
+void ecs_colorize_buf(
+    char *msg,
+    bool enable_colors,
+    ecs_strbuf_t *buf)
+{
+    char *ptr, ch, prev = '\0';
+    bool isNum = false;
+    char isStr = '\0';
+    bool isVar = false;
+    bool overrideColor = false;
+    bool autoColor = true;
+    bool dontAppend = false;
+
+    for (ptr = msg; (ch = *ptr); ptr++) {
+        dontAppend = false;
+
+        if (!overrideColor) {
+            if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                isNum = false;
+            }
+            if (isStr && (isStr == ch) && prev != '\\') {
+                isStr = '\0';
+            } else if (((ch == '\'') || (ch == '"')) && !isStr &&
+                !isalpha(prev) && (prev != '\\'))
+            {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                isStr = ch;
+            }
+
+            if ((isdigit(ch) || (ch == '%' && isdigit(prev)) ||
+                (ch == '-' && isdigit(ptr[1]))) && !isNum && !isStr && !isVar &&
+                 !isalpha(prev) && !isdigit(prev) && (prev != '_') &&
+                 (prev != '.'))
+            {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+                isNum = true;
+            }
+
+            if (isVar && !isalpha(ch) && !isdigit(ch) && ch != '_') {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                isVar = false;
+            }
+
+            if (!isStr && !isVar && ch == '$' && isalpha(ptr[1])) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+                isVar = true;
+            }
+        }
+
+        if (!isVar && !isStr && !isNum && ch == '#' && ptr[1] == '[') {
+            bool isColor = true;
+            overrideColor = true;
+
+            /* Custom colors */
+            if (!ecs_os_strncmp(&ptr[2], "]", ecs_os_strlen("]"))) {
+                autoColor = false;
+            } else if (!ecs_os_strncmp(&ptr[2], "green]", ecs_os_strlen("green]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREEN);
+            } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_RED);
+            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BLUE);
+            } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_MAGENTA);
+            } else if (!ecs_os_strncmp(&ptr[2], "cyan]", ecs_os_strlen("cyan]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_CYAN);
+            } else if (!ecs_os_strncmp(&ptr[2], "yellow]", ecs_os_strlen("yellow]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_YELLOW);
+            } else if (!ecs_os_strncmp(&ptr[2], "grey]", ecs_os_strlen("grey]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_GREY);
+            } else if (!ecs_os_strncmp(&ptr[2], "white]", ecs_os_strlen("white]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+            } else if (!ecs_os_strncmp(&ptr[2], "bold]", ecs_os_strlen("bold]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_BOLD);
+            } else if (!ecs_os_strncmp(&ptr[2], "normal]", ecs_os_strlen("normal]"))) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+            } else if (!ecs_os_strncmp(&ptr[2], "reset]", ecs_os_strlen("reset]"))) {
+                overrideColor = false;
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+            } else {
+                isColor = false;
+                overrideColor = false;
+            }
+
+            if (isColor) {
+                ptr += 2;
+                while ((ch = *ptr) != ']') ptr ++;
+                dontAppend = true;
+            }
+            if (!autoColor) {
+                overrideColor = true;
+            }
+        }
+
+        if (ch == '\n') {
+            if (isNum || isStr || isVar || overrideColor) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+                overrideColor = false;
+                isNum = false;
+                isStr = false;
+                isVar = false;
+            }
+        }
+
+        if (!dontAppend) {
+            ecs_strbuf_appendstrn(buf, ptr, 1);
+        }
+
+        if (!overrideColor) {
+            if (((ch == '\'') || (ch == '"')) && !isStr) {
+                if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+            }
+        }
+
+        prev = ch;
+    }
+
+    if (isNum || isStr || isVar || overrideColor) {
+        if (enable_colors) ecs_strbuf_appendstr(buf, ECS_NORMAL);
+    }
+}
+
+static
+void log_print(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args)
+{
+    (void)level;
+    (void)line;
+
+    ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
+
+    if (level > ecs_os_api.log_level_) {
+        return;
+    }
+
+    /* Apply color. Even if we don't want color, we still need to call the
+     * colorize function to get rid of the color tags (e.g. #[green]) */
+    char *msg_nocolor = ecs_vasprintf(fmt, args);
+    ecs_colorize_buf(msg_nocolor, ecs_os_api.log_with_color_, &msg_buf);
+    ecs_os_free(msg_nocolor);
+    
+    char *msg = ecs_strbuf_get(&msg_buf);
+    ecs_os_api.log_(level, file, line, msg);
+    ecs_os_free(msg);
+}
+
+void _ecs_log(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    log_print(level, file, line, fmt, args);
+    va_end(args);    
+}
+
+void ecs_log_push(void) {
+    ecs_os_api.log_indent_ ++;
+}
+
+void ecs_log_pop(void) {
+    ecs_os_api.log_indent_ --;
+}
+
+void ecs_log_set_level(
+    int level)
+{
+    ecs_os_api.log_level_ = level;
+}
+
+void ecs_log_enable_colors(
+    bool enabled)
+{
+    ecs_os_api.log_with_color_ = enabled;
+}
+
+void _ecs_parser_errorv(
+    const char *name,
+    const char *expr, 
+    int64_t column_arg,
+    const char *fmt,
+    va_list args)
+{
+    int32_t column = flecs_to_i32(column_arg);
+
+    if (ecs_os_api.log_level_ >= -2) {
+        ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
+
+        ecs_strbuf_vappend(&msg_buf, fmt, args);
+        ecs_strbuf_appendstr(&msg_buf, "\n");
+
+        char *newline_ptr = strchr(expr, '\n');
+        if (newline_ptr) {
+            /* Strip newline from expr */
+            ecs_strbuf_appendstrn(&msg_buf, expr, 
+                (int32_t)(newline_ptr - expr));
+        } else {
+            ecs_strbuf_appendstr(&msg_buf, expr);
+        }
+
+        ecs_strbuf_appendstr(&msg_buf, "\n");
+
+        if (column != -1) {
+            ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+        }
+
+        char *msg = ecs_strbuf_get(&msg_buf);
+        ecs_os_err(name, 0, msg);
+        ecs_os_free(msg);
+    }
+}
+
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    if (ecs_os_api.log_level_  >= -2) {
+        va_list args;
+        va_start(args, fmt);
+        _ecs_parser_errorv(name, expr, column, fmt, args);
+        va_end(args);
+    }
+}
+
+void _ecs_abort(
+    int32_t err,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char *msg = ecs_vasprintf(fmt, args);
+        va_end(args);
+        _ecs_fatal(file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_os_free(msg);
+    } else {
+        _ecs_fatal(file, line, "%s", ecs_strerror(err));
+    }
+
+    ecs_os_abort();
+}
+
+void _ecs_assert(
+    bool condition,
+    int32_t err,
+    const char *cond_str,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    if (!condition) {
+        if (fmt) {
+            va_list args;
+            va_start(args, fmt);
+            char *msg = ecs_vasprintf(fmt, args);
+            va_end(args);            
+            _ecs_fatal(file, line, "assert(%s) %s (%s)", 
+                cond_str, msg, ecs_strerror(err));
+            ecs_os_free(msg);
+        } else {
+            _ecs_fatal(file, line, "assert(%s) %s", 
+                cond_str, ecs_strerror(err));
+        }
+
+        ecs_os_abort();
+    }
+}
+
+void _ecs_deprecated(
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    _ecs_err(file, line, "%s", msg);
+}
+
+#define ECS_ERR_STR(code) case code: return &(#code[4])
+
+const char* ecs_strerror(
+    int32_t error_code)
+{
+    switch (error_code) {
+    ECS_ERR_STR(ECS_INVALID_PARAMETER);
+    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
+    ECS_ERR_STR(ECS_TYPE_NOT_AN_ENTITY);
+    ECS_ERR_STR(ECS_INTERNAL_ERROR);
+    ECS_ERR_STR(ECS_ALREADY_DEFINED);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
+    ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_MODULE_UNDEFINED);
+    ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_HAS_NO_DATA);
+    ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
+    ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
+    ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
+    ECS_ERR_STR(ECS_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_THREAD_ERROR);
+    ECS_ERR_STR(ECS_MISSING_OS_API);
+    ECS_ERR_STR(ECS_UNSUPPORTED);
+    ECS_ERR_STR(ECS_NO_OUT_COLUMNS);
+    ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
+    ECS_ERR_STR(ECS_DESERIALIZE_FORMAT_ERROR);
+    ECS_ERR_STR(ECS_TYPE_CONSTRAINT_VIOLATION);
+    ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
+    ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
+    ECS_ERR_STR(ECS_INCONSISTENT_NAME);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
+    ECS_ERR_STR(ECS_INVALID_OPERATION);
+    ECS_ERR_STR(ECS_INVALID_DELETE);
+    ECS_ERR_STR(ECS_CYCLE_DETECTED);
+    ECS_ERR_STR(ECS_LOCKED_STORAGE);
+    }
+
+    return "unknown error code";
+}
+
+#else
+
+/* Empty bodies for when logging is disabled */
+
+FLECS_API
+void _ecs_log(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    (void)level;
+    (void)file;
+    (void)line;
+    (void)fmt;
+}
+
+FLECS_API
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+}
+
+FLECS_API
+void _ecs_parser_errorv(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+    (void)args;
+}
+
+FLECS_API
+void _ecs_abort(
+    int32_t error_code,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    (void)error_code;
+    (void)file;
+    (void)line;
+    (void)fmt;
+}
+
+FLECS_API
+void _ecs_assert(
+    bool condition,
+    int32_t error_code,
+    const char *condition_str,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...)
+{
+    (void)condition;
+    (void)error_code;
+    (void)condition_str;
+    (void)file;
+    (void)line;
+    (void)fmt;
+}
+
+#endif
 #ifdef FLECS_PIPELINE
 
 #ifndef FLECS_PIPELINE_PRIVATE_H
@@ -13216,7 +13197,7 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_trace_2("rebuilding pipeline #[green]%s", 
+    ecs_dbg_1("rebuilding pipeline #[green]%s", 
         ecs_get_name(world, pipeline));
 
     world->stats.pipeline_build_count_total ++;
@@ -13537,7 +13518,7 @@ void EcsOnUpdatePipeline(
         ecs_entity_t pipeline = entities[i];
         
 #ifndef NDEBUG
-        ecs_trace_1("pipeline #[green]%s#[normal] created",
+        ecs_trace("pipeline #[green]%s#[normal] created",
             ecs_get_name(world, pipeline));
 #endif
         ecs_log_push();
@@ -14358,20 +14339,20 @@ const char* parse_assign_expr(
     
     if (!state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr,
-            "unexpected expression outside of assignment statement");
+            "unexpected value outside of assignment statement");
         return NULL;
     }
 
     ecs_id_t assign_id = state->last_assign_id;
     if (!assign_id) {
         ecs_parser_error(name, expr, ptr - expr,
-            "missing component for assignment statement");
+            "missing type for assignment statement");
         return NULL;
     }
 
 #ifndef FLECS_EXPR
     ecs_parser_error(name, expr, ptr - expr,
-        "cannot parse component value, missing FLECS_EXPR addon");
+        "cannot parse value, missing FLECS_EXPR addon");
     return NULL;
 #else
     ecs_entity_t assign_to = state->assign_to;
@@ -14389,7 +14370,7 @@ const char* parse_assign_expr(
     if (!type) {
         char *id_str = ecs_id_str(world, assign_id);
         ecs_parser_error(name, expr, ptr - expr, 
-            "cannot assign to non-component id '%s'", id_str);
+            "invalid assignment, '%s' is not a type", id_str);
         ecs_os_free(id_str);
         return NULL;
     }
@@ -14621,7 +14602,7 @@ const char *parse_plecs_term(
     }
 
     if (!ecs_term_is_initialized(&term)) {
-        ecs_parser_error(name, expr, ptr - expr, "expected term expression");
+        ecs_parser_error(name, expr, ptr - expr, "expected identifier");
         return NULL; /* No term found */
     }
 
@@ -18972,7 +18953,7 @@ ecs_entity_t ecs_import(
     ecs_os_free(path);
     
     if (!e) {
-        ecs_trace_1("import %s", module_name);
+        ecs_trace("import %s", module_name);
         ecs_log_push();
 
         /* Load module */
@@ -19003,7 +18984,7 @@ ecs_entity_t ecs_import_from_library(
     char *module = (char*)module_name;
 
     if (!ecs_os_has_modules() || !ecs_os_has_dl()) {
-        ecs_os_err(
+        ecs_err(
             "library loading not supported, set module_to_dl, dlopen, dlclose "
             "and dlproc os API callbacks first");
         return 0;
@@ -19043,19 +19024,19 @@ ecs_entity_t ecs_import_from_library(
 
     char *library_filename = ecs_os_module_to_dl(library_name);
     if (!library_filename) {
-        ecs_os_err("failed to find library file for '%s'", library_name);
+        ecs_err("failed to find library file for '%s'", library_name);
         if (module != module_name) {
             ecs_os_free(module);
         }
         return 0;
     } else {
-        ecs_trace_1("found file '%s' for library '%s'", 
+        ecs_trace("found file '%s' for library '%s'", 
             library_filename, library_name);
     }
 
     ecs_os_dl_t dl = ecs_os_dlopen(library_filename);
     if (!dl) {
-        ecs_os_err("failed to load library '%s' ('%s')", 
+        ecs_err("failed to load library '%s' ('%s')", 
             library_name, library_filename);
         
         ecs_os_free(library_filename);
@@ -19066,20 +19047,20 @@ ecs_entity_t ecs_import_from_library(
 
         return 0;
     } else {
-        ecs_trace_1("library '%s' ('%s') loaded", 
+        ecs_trace("library '%s' ('%s') loaded", 
             library_name, library_filename);
     }
 
     ecs_module_action_t action = (ecs_module_action_t)
         ecs_os_dlproc(dl, import_func);
     if (!action) {
-        ecs_os_err("failed to load import function %s from library %s",
+        ecs_err("failed to load import function %s from library %s",
             import_func, library_name);
         ecs_os_free(library_filename);
         ecs_os_dlclose(dl);            
         return 0;
     } else {
-        ecs_trace_1("found import function '%s' in library '%s' for module '%s'",
+        ecs_trace("found import function '%s' in library '%s' for module '%s'",
             import_func, library_name, module);
     }
 
@@ -23033,7 +23014,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_trace_2("system #[green]%s#[reset] %s", 
+    ecs_dbg_1("system #[green]%s#[reset] %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -23453,7 +23434,7 @@ ecs_entity_t ecs_system_init(
 
         ecs_modified(world, result, EcsSystem);
 
-        ecs_trace_1("system #[green]%s#[reset] created with #[red]%s", 
+        ecs_trace("system #[green]%s#[reset] created with #[red]%s", 
             ecs_get_name(world, result), query->filter.expr);
 
         ecs_defer_end(world);            
@@ -26679,7 +26660,7 @@ void fini_store(ecs_world_t *world) {
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
-    ecs_trace_1("bootstrap");
+    ecs_trace("bootstrap");
     ecs_log_push();
 
     if (!ecs_os_has_heap()) {
@@ -26687,11 +26668,11 @@ ecs_world_t *ecs_mini(void) {
     }
 
     if (!ecs_os_has_threading()) {
-        ecs_trace_1("threading not available");
+        ecs_trace("threading not available");
     }
 
     if (!ecs_os_has_time()) {
-        ecs_trace_1("time management not available");
+        ecs_trace("time management not available");
     }
 
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
@@ -26737,7 +26718,7 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifdef FLECS_MODULE_H
-    ecs_trace_1("import builtin modules");
+    ecs_trace("import builtin modules");
     ecs_log_push();
 #ifdef FLECS_SYSTEM_H
     ECS_IMPORT(world, FlecsSystem);
@@ -30626,7 +30607,10 @@ void ecs_os_api_impl(ecs_os_api_t *api);
 static bool ecs_os_api_initialized = false;
 static int ecs_os_api_init_count = 0;
 
-ecs_os_api_t ecs_os_api;
+ecs_os_api_t ecs_os_api = {
+    .log_with_color_ = true,
+    .log_level_ = -1 /* disable tracing by default, but enable >= warnings */
+};
 
 int64_t ecs_os_api_malloc_count = 0;
 int64_t ecs_os_api_realloc_count = 0;
@@ -30664,67 +30648,125 @@ void ecs_os_fini(void) {
 }
 
 static
-void ecs_log(const char *fmt, va_list args) {
-    vfprintf(stdout, fmt, args);
-    fprintf(stdout, "\n");
-}
-
-static
-void ecs_log_error(const char *fmt, va_list args) {
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-}
-
-static
-void ecs_log_debug(const char *fmt, va_list args) {
-    vfprintf(stdout, fmt, args);
-    fprintf(stdout, "\n");
-}
-
-static
-void ecs_log_warning(const char *fmt, va_list args) {
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-}
-
-void ecs_os_dbg(const char *fmt, ...) {
-#ifndef NDEBUG
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_debug_) {
-        ecs_os_api.log_debug_(fmt, args);
+void log_msg(
+    int32_t level,
+    const char *file, 
+    int32_t line,  
+    const char *msg)
+{
+    FILE *stream;
+    if (level >= 0) {
+        stream = stdout;
+    } else {
+        stream = stderr;
     }
-    va_end(args);
+
+    if (level >= 0) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        fputs("info", stream);
+    } else if (level == -2) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_YELLOW, stream);
+        fputs("warning", stream);
+    } else if (level == -3) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        fputs("error", stream);
+    } else if (level == -4) {
+        if (ecs_os_api.log_with_color_) fputs(ECS_RED, stream);
+        fputs("fatal", stream);
+    }
+
+    if (ecs_os_api.log_with_color_) fputs(ECS_NORMAL, stream);
+    fputs(": ", stream);
+
+    if (ecs_os_api.log_indent_) {
+        char indent[32];
+        int i;
+        for (i = 0; i < ecs_os_api.log_indent_; i ++) {
+            indent[i * 2] = '|';
+            indent[i * 2 + 1] = ' ';
+        }
+        indent[i * 2] = '\0';
+
+        fputs(indent, stream);
+    }
+
+    if (file) {
+        const char *file_ptr = strrchr(file, '/');
+        if (!file_ptr) {
+            file_ptr = strrchr(file, '\\');
+        }
+
+        if (file_ptr) {
+            file = file_ptr + 1;
+        }
+
+        fputs(file, stream);
+        fputs(": ", stream);
+    }
+
+    if (line) {
+        fprintf(stream, "%d: ", line);
+    }
+
+    fputs(msg, stream);
+
+    fputs("\n", stream);
+}
+
+void ecs_os_dbg(
+    const char *file, 
+    int32_t line, 
+    const char *msg)
+{
+#ifndef NDEBUG
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(1, file, line, msg);
+    }
 #else
-    (void)fmt;
+    (void)file;
+    (void)line;
+    (void)msg;
 #endif
 }
 
-void ecs_os_warn(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_warning_) {
-        ecs_os_api.log_warning_(fmt, args);
-    }
-    va_end(args);
-}
-
-void ecs_os_log(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
+void ecs_os_trace(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(fmt, args);
+        ecs_os_api.log_(0, file, line, msg);
     }
-    va_end(args);
 }
 
-void ecs_os_err(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    if (ecs_os_api.log_error_) {
-        ecs_os_api.log_error_(fmt, args);
+void ecs_os_warn(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-2, file, line, msg);
     }
-    va_end(args);
+}
+
+void ecs_os_err(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-3, file, line, msg);
+    }
+}
+
+void ecs_os_fatal(
+    const char *file, 
+    int32_t line, 
+    const char *msg) 
+{
+    if (ecs_os_api.log_) {
+        ecs_os_api.log_(-4, file, line, msg);
+    }
 }
 
 static
@@ -30866,10 +30908,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */
-    ecs_os_api.log_ = ecs_log;
-    ecs_os_api.log_error_ = ecs_log_error;
-    ecs_os_api.log_debug_ = ecs_log_debug;
-    ecs_os_api.log_warning_ = ecs_log_warning;
+    ecs_os_api.log_ = log_msg;
 
     /* Modules */
     if (!ecs_os_api.module_to_dl_) {
@@ -30913,11 +30952,7 @@ bool ecs_os_has_time(void) {
 }
 
 bool ecs_os_has_logging(void) {
-    return 
-        (ecs_os_api.log_ != NULL) &&
-        (ecs_os_api.log_error_ != NULL) &&
-        (ecs_os_api.log_debug_ != NULL) &&
-        (ecs_os_api.log_warning_ != NULL);
+    return (ecs_os_api.log_ != NULL);
 }
 
 bool ecs_os_has_dl(void) {
@@ -33156,7 +33191,7 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-    ecs_trace_2("query #[green]%s#[reset] created with expression #[red]%s", 
+    ecs_dbg_1("query #[green]%s#[reset] created with expression #[red]%s", 
         query_name(world, result), result->filter.expr);
 
     ecs_log_push();
@@ -34221,7 +34256,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_trace_2("table #[green][%s]#[normal] created", expr);
+    ecs_dbg_1("table #[green][%s]#[normal] created", expr);
     ecs_os_free(expr);
 #endif
     ecs_log_push();
@@ -36138,7 +36173,7 @@ void flecs_os_time_sleep(
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;
     if (nanosleep(&sleepTime, NULL)) {
-        ecs_os_err("nanosleep failed");
+        ecs_err("nanosleep failed");
     }
 #else
     HANDLE timer;
@@ -36693,7 +36728,7 @@ void bootstrap_entity(
 void flecs_bootstrap(
     ecs_world_t *world)
 {
-    ecs_trace_1("bootstrap core components");
+    ecs_trace("bootstrap core components");
     ecs_log_push();
 
     ecs_set_name_prefix(world, "Ecs");
