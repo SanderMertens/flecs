@@ -11,6 +11,9 @@
 #define STACK_MAX_SIZE (64)
 
 typedef struct {
+    const char *name;
+    const char *code;
+
     ecs_entity_t last_predicate;
     ecs_entity_t last_subject;
     ecs_entity_t last_object;
@@ -34,6 +37,8 @@ typedef struct {
     bool using_stmt;
     bool assign_stmt;
     bool isa_stmt;
+
+    int32_t errors;
 } plecs_state_t;
 
 static
@@ -76,15 +81,31 @@ ecs_entity_t plecs_lookup_action(
 #endif
 
 static
+void clear_comment(
+    const char *expr,
+    const char *ptr,
+    plecs_state_t *state)
+{
+    if (state->comment) {
+        ecs_parser_error(state->name, expr, ptr - expr, "unused doc comment");
+        ecs_os_free(state->comment);
+        state->comment = NULL;
+
+        state->errors ++; /* Non-fatal error */
+    }
+}
+
+static
 const char* parse_fluff(
+    const char *expr,
     const char *ptr,
     plecs_state_t *state)
 {
     char *comment;
     const char *next = ecs_parse_fluff(ptr, &comment);
 
-    if (comment) {
-        comment = (char*)ecs_parse_fluff(comment, NULL);
+    if (comment && comment[0] == '/') {
+        comment = (char*)ecs_parse_fluff(comment + 1, NULL);
         int32_t len = (ecs_size_t)(next - comment);
         int32_t newline_count = 0;
 
@@ -102,17 +123,17 @@ const char* parse_fluff(
         }
 
         if (len > 0) {
-            if (state->comment) {
-                ecs_os_free(state->comment);
-            }
-
+            clear_comment(expr, ptr, state);
             state->comment = ecs_os_calloc_n(char, len + 1);
             ecs_os_strncpy(state->comment, comment, len);
+        } else {
+            ecs_parser_error(state->name, expr, ptr - expr, 
+                "unused doc comment");
+            state->errors ++;
         }
     } else {
         if (ptr != next && state->comment) {
-            ecs_os_free(state->comment);
-            state->comment = NULL;
+            clear_comment(expr, ptr, state);
         }
     }
 
@@ -659,17 +680,17 @@ const char* parse_stmt(
     state->last_predicate = 0;
     state->last_object = 0;
 
-    ptr = parse_fluff(ptr, state);
+    ptr = parse_fluff(expr, ptr, state);
 
     char ch = ptr[0];
 
     if (!ch) {
         goto done;
     } else if (ch == '{') {
-        ptr = parse_fluff(ptr + 1, state);
+        ptr = parse_fluff(expr, ptr + 1, state);
         goto scope_open;
     } else if (ch == '}') {
-        ptr = parse_fluff(ptr + 1, state);
+        ptr = parse_fluff(expr, ptr + 1, state);
         goto scope_close;
     } else if (ch == '(') {
         if (ecs_get_scope(world) != 0) {
@@ -702,7 +723,7 @@ term_expr:
         goto error;
     }
 
-    ptr = parse_fluff(ptr, state);
+    ptr = parse_fluff(expr, ptr, state);
 
     if (ptr[0] == '{' && !isspace(ptr[-1])) {
         /* A '{' directly after an identifier (no whitespace) is a literal */
@@ -711,17 +732,17 @@ term_expr:
 
     if (!state->using_stmt) {
         if (ptr[0] == ':') {
-            ptr = parse_fluff(ptr + 1, state);
+            ptr = parse_fluff(expr, ptr + 1, state);
             goto inherit_stmt;
         } else if (ptr[0] == '=') {
-            ptr = parse_fluff(ptr + 1, state);
+            ptr = parse_fluff(expr, ptr + 1, state);
             goto assign_stmt;
         } else if (ptr[0] == ',') {
-            ptr = parse_fluff(ptr + 1, state);
+            ptr = parse_fluff(expr, ptr + 1, state);
             goto term_expr;
         } else if (ptr[0] == '{') {
             state->assign_stmt = false;
-            ptr = parse_fluff(ptr + 1, state);
+            ptr = parse_fluff(expr, ptr + 1, state);
             goto scope_open;
         }
     }
@@ -744,7 +765,7 @@ assign_stmt:
     ptr = parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = parse_fluff(ptr, state);
+    ptr = parse_fluff(expr, ptr, state);
 
     if (ptr[0] == '{') {
         /* Assignment without a preceding component */
@@ -766,7 +787,7 @@ assign_expr:
     ptr = parse_assign_expr(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
-    ptr = parse_fluff(ptr, state);
+    ptr = parse_fluff(expr, ptr, state);
     if (ptr[0] == ',') {
         ptr ++;
         goto term_expr;
@@ -824,11 +845,8 @@ int ecs_plecs_from_str(
 
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
-
-    if (state.comment) {
-        ecs_os_free(state.comment);
-        state.comment = NULL;
-    }
+    
+    clear_comment(expr, ptr, &state);
 
     if (state.sp != 0) {
         ecs_parser_error(name, expr, 0, "missing end of scope");
@@ -837,6 +855,10 @@ int ecs_plecs_from_str(
 
     if (state.assign_stmt) {
         ecs_parser_error(name, expr, 0, "unfinished assignment");
+        goto error;
+    }
+
+    if (state.errors) {
         goto error;
     }
 

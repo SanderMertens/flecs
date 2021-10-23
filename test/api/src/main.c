@@ -482,8 +482,8 @@ void Plecs_comment_as_brief_doc(void);
 void Plecs_comment_as_brief_doc_after_using(void);
 void Plecs_comment_as_brief_doc_2_stmts(void);
 void Plecs_comment_type(void);
-void Plecs_empty_comment(void);
-void Plecs_newline_after_comment_no_brief(void);
+void Plecs_empty_doc_comment(void);
+void Plecs_newline_after_doc_comment(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -4015,12 +4015,12 @@ bake_test_case Plecs_testcases[] = {
         Plecs_comment_type
     },
     {
-        "empty_comment",
-        Plecs_empty_comment
+        "empty_doc_comment",
+        Plecs_empty_doc_comment
     },
     {
-        "newline_after_comment_no_brief",
-        Plecs_newline_after_comment_no_brief
+        "newline_after_doc_comment",
+        Plecs_newline_after_doc_comment
     }
 };
 

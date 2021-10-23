@@ -3278,7 +3278,7 @@ void Plecs_comment_as_brief_doc() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "// Foo entity"
+    HEAD "/// Foo entity"
     LINE "Foo";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -3301,7 +3301,7 @@ void Plecs_comment_as_brief_doc_after_using() {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "// Foo entity"
+    LINE "/// Foo entity"
     LINE "Foo";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -3322,9 +3322,9 @@ void Plecs_comment_as_brief_doc_2_stmts() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "// Foo entity"
+    HEAD "/// Foo entity"
     LINE "Foo"
-    LINE "// Bar entity"
+    LINE "/// Bar entity"
     LINE "Bar";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -3348,19 +3348,15 @@ void Plecs_comment_as_brief_doc_2_stmts() {
     ecs_fini(world);
 }
 
-void Plecs_empty_comment() {
+void Plecs_empty_doc_comment() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "//"
+    HEAD "///"
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    test_assert(foo != 0);
-
-    test_assert( !ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
@@ -3371,12 +3367,12 @@ void Plecs_comment_type() {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "// Position component"
+    LINE "/// Position component"
     LINE "Struct(Position) {"
-    LINE "  // x member"
+    LINE "  /// x member"
     LINE "  x = {f32}"
     LINE
-    LINE "  // y member"
+    LINE "  /// y member"
     LINE "  y = {f32}"
     LINE "}";
 
@@ -3408,20 +3404,16 @@ void Plecs_comment_type() {
     ecs_fini(world);
 }
 
-void Plecs_newline_after_comment_no_brief() {
+void Plecs_newline_after_doc_comment() {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "// Foo entity"
+    HEAD "/// Foo entity"
     LINE
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    test_assert(foo != 0);
-
-    test_assert( !ecs_has_pair(world, foo, ecs_id(EcsDocDescription), EcsDocBrief));
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
