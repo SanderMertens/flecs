@@ -4,28 +4,25 @@
 /* This generated file contains includes for project dependencies */
 #include "${id dash}/bake_config.h"
 
+// Reflection system boilerplate
+#undef ECS_META_IMPL
+#ifndef ${id underscore}_EXPORTS
+#define ECS_META_IMPL EXTERN // Ensure meta symbols are only defined once
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*
-typedef int MyComponent;
+ECS_STRUCT(MyComponent) {
+    float x;
+    float y;
+});
 */
-
-typedef struct ${id pascalcase} {
-    /*
-     * ECS_DECLARE_ENTITY(MyTag);
-     * ECS_DECLARE_COMPONENT(MyComponent);
-     */
-} ${id pascalcase};
 
 void ${id pascalcase}Import(
     ecs_world_t *world);
-
-#define ${id pascalcase}ImportHandles(handles) /*\
-    * ECS_IMPORT_ENTITY(handles, MyTag);\
-    * ECS_IMPORT_COMPONENT(handles, MyComponent); 
-    */
 
 #ifdef __cplusplus
 }

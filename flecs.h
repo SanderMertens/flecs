@@ -5414,7 +5414,7 @@ const ecs_filter_t* ecs_query_get_filter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query);  
 
 /** Iterate over a query.
@@ -5429,7 +5429,7 @@ ecs_iter_t ecs_query_iter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter_page(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
@@ -5984,7 +5984,7 @@ ecs_world_t* ecs_get_stage(
  */
 FLECS_API
 const ecs_world_t* ecs_get_world(
-    const ecs_world_t *world);
+    const ecs_poly_t *world);
 
 /** Test whether the current world object is readonly.
  * This function allows the code to test whether the currently used world object
@@ -7978,11 +7978,21 @@ extern "C" {
 
 /* Public API */
 
-/* Control import behavior by setting to IMPL or or EXPORT. When not set, the
- * behavior defaults to IMPL. When IMPL is selected, the macro's will define 
- * variables that contain reflection data. */
+/* Macro that controls behavior of API. Usually set in module header. When the
+ * macro is not defined, it defaults to IMPL. */
 
+/* Define variables used by reflection utilities. This should only be defined
+ * by the module itself, not by the code importing the module */
 /* #define ECS_META_IMPL IMPL */
+
+/* Don't define variables used by reflection utilities but still declare the
+ * variable for the component id. This enables the reflection utilities to be
+ * used for global component variables, even if no reflection is used. */
+/* #define ECS_META_IMPL DECLARE */
+
+/* Don't define variables used by reflection utilities. This generates an extern
+ * variable for the component identifier. */
+/* #define ECS_META_IMPL EXTERN */
 
 /** Declare component with descriptor */
 #define ECS_META_COMPONENT(world, name)\
@@ -8005,6 +8015,9 @@ extern "C" {
     ECS_ENUM_TYPE(name, __VA_ARGS__);\
     ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__)
 
+/** Macro used to mark part of type for which no reflection data is created */
+#define ECS_PRIVATE
+
 /** Populate meta information from type descriptor. */
 FLECS_API
 int ecs_meta_from_desc(
@@ -8016,7 +8029,7 @@ int ecs_meta_from_desc(
 
 /* Private API */
 
-/* Utilities to switch beteen IMPL and EXPORT variants */
+/* Utilities to switch beteen IMPL, DECLARE and EXTERN variants */
 #define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
     base ## impl(name, type_desc)
 
@@ -8032,10 +8045,14 @@ int ecs_meta_from_desc(
 #define ECS_STRUCT_IMPL(name, type_desc)\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
-    ECS_COMPONENT_DECLARE(name)
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
-#define ECS_STRUCT_EXPORT(name, type_desc)\
-    extern ECS_COMPONENT_DECLARE(name)
+#define ECS_STRUCT_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_STRUCT_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
 
 /* ECS_ENUM implementation */
 #define ECS_ENUM_TYPE(name, ...)\
@@ -8046,10 +8063,14 @@ int ecs_meta_from_desc(
 #define ECS_ENUM_IMPL(name, type_desc)\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
-    ECS_COMPONENT_DECLARE(name)
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
-#define ECS_ENUM_EXPORT(name, type_desc)\
-    extern ECS_COMPONENT_DECLARE(name)
+#define ECS_ENUM_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_ENUM_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
 
 /* ECS_BITMASK implementation */
 #define ECS_BITMASK_TYPE(name, ...)\
@@ -8062,8 +8083,21 @@ int ecs_meta_from_desc(
     static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
     ECS_COMPONENT_DECLARE(name)
 
-#define ECS_BITMASK_EXPORT(name, type_desc)\
-    extern ECS_COMPONENT_DECLARE(name)
+#define ECS_BITMASK_DECLARE(name, type_desc)\
+    ECS_COMPONENT_DECLARE(name)
+
+#define ECS_BITMASK_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
+
+/* Symbol export utility macro's */
+#if (defined(_MSC_VER) || defined(__MINGW32__))
+#define FLECS_META_C_EXPORT __declspec(dllexport)
+#define FLECS_META_C_IMPORT __declspec(dllimport)
+#else
+#define FLECS_META_C_EXPORT __attribute__((__visibility__("default")))
+#define FLECS_META_C_IMPORT
+#endif
 
 #ifdef __cplusplus
 }

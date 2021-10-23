@@ -229,9 +229,6 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_dbg_1("rebuilding pipeline #[green]%s", 
-        ecs_get_name(world, pipeline));
-
     world->stats.pipeline_build_count_total ++;
 
     write_state_t ws = {
@@ -549,10 +546,8 @@ void EcsOnUpdatePipeline(
     for (i = it->count - 1; i >= 0; i --) {
         ecs_entity_t pipeline = entities[i];
         
-#ifndef NDEBUG
-        ecs_trace("pipeline #[green]%s#[normal] created",
+        ecs_trace("#[green]pipeline#[reset] %s created",
             ecs_get_name(world, pipeline));
-#endif
         ecs_log_push();
 
         /* Build signature for pipeline quey that matches EcsSystems, has the

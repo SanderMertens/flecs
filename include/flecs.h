@@ -2702,7 +2702,7 @@ const ecs_filter_t* ecs_query_get_filter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query);  
 
 /** Iterate over a query.
@@ -2717,7 +2717,7 @@ ecs_iter_t ecs_query_iter(
  */
 FLECS_API
 ecs_iter_t ecs_query_iter_page(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit);  
@@ -3272,7 +3272,7 @@ ecs_world_t* ecs_get_stage(
  */
 FLECS_API
 const ecs_world_t* ecs_get_world(
-    const ecs_world_t *world);
+    const ecs_poly_t *world);
 
 /** Test whether the current world object is readonly.
  * This function allows the code to test whether the currently used world object

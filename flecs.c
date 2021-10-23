@@ -4236,13 +4236,13 @@ ecs_mixins_t ecs_query_t_mixins = {
 
 static
 void* get_mixin(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
     
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
@@ -4255,7 +4255,7 @@ void* get_mixin(
     ecs_size_t offset = mixins->elems[kind];
     if (offset == 0) {
         /* Object has mixins but not the requested one. Try to find the mixin
-         * in the object's base */
+         * in the poly's base */
         goto find_in_base;
     }
 
@@ -4264,7 +4264,7 @@ void* get_mixin(
 
 find_in_base:    
     if (offset) {
-        /* If the object has a base, try to find the mixin in the base */
+        /* If the poly has a base, try to find the mixin in the base */
         ecs_poly_t *base = *(ecs_poly_t**)ECS_OFFSET(hdr, offset);
         if (base) {
             return get_mixin(base, kind);
@@ -4272,18 +4272,18 @@ find_in_base:
     }
     
 not_found:
-    /* Mixin wasn't found for object */
+    /* Mixin wasn't found for poly */
     return NULL;
 }
 
 static
 void* assert_mixin(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
-    void *ptr = get_mixin(object, kind);
+    void *ptr = get_mixin(poly, kind);
     if (!ptr) {
-        const ecs_header_t *header = object;
+        const ecs_header_t *header = poly;
         const ecs_mixins_t *mixins = header->mixins;
         ecs_err("%s not available for type %s", 
             mixin_kind_str[kind],
@@ -4295,15 +4295,15 @@ void* assert_mixin(
 }
 
 void _ecs_poly_init(
-    ecs_poly_t *object,
+    ecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
     ecs_mixins_t *mixins)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_header_t *hdr = object;
-    ecs_os_memset(object, 0, size);
+    ecs_header_t *hdr = poly;
+    ecs_os_memset(poly, 0, size);
 
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
@@ -4311,15 +4311,15 @@ void _ecs_poly_init(
 }
 
 void _ecs_poly_fini(
-    ecs_poly_t *object,
+    ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)type;
 
-    ecs_header_t *hdr = object;
+    ecs_header_t *hdr = poly;
 
-    /* Don't deinit object that wasn't initialized */
+    /* Don't deinit poly that wasn't initialized */
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
     hdr->magic = 0;
@@ -4331,34 +4331,40 @@ void _ecs_poly_fini(
 
 #ifndef NDEBUG
 void _ecs_poly_assert(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     int32_t type,
     const char *file,
     int32_t line)
 {
-    assert_object(object != NULL, file, line);
+    assert_object(poly != NULL, file, line);
     
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
     assert_object(hdr->type == type, file, line);
 }
 #endif
 
 bool _ecs_poly_is(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     return hdr->type == type;    
 }
 
 ecs_observable_t* ecs_get_observable(
-    const ecs_poly_t *object)
+    const ecs_poly_t *poly)
 {
-    return (ecs_observable_t*)assert_mixin(object, EcsMixinObservable);
+    return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
+}
+
+const ecs_world_t* ecs_get_world(
+    const ecs_poly_t *poly)
+{
+    return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
 }
 
 
@@ -12544,6 +12550,7 @@ void _ecs_assert(
 }
 
 #endif
+
 #ifdef FLECS_PIPELINE
 
 #ifndef FLECS_PIPELINE_PRIVATE_H
@@ -13197,9 +13204,6 @@ bool build_pipeline(
         return false;
     }
 
-    ecs_dbg_1("rebuilding pipeline #[green]%s", 
-        ecs_get_name(world, pipeline));
-
     world->stats.pipeline_build_count_total ++;
 
     write_state_t ws = {
@@ -13517,10 +13521,8 @@ void EcsOnUpdatePipeline(
     for (i = it->count - 1; i >= 0; i --) {
         ecs_entity_t pipeline = entities[i];
         
-#ifndef NDEBUG
-        ecs_trace("pipeline #[green]%s#[normal] created",
+        ecs_trace("#[green]pipeline#[reset] %s created",
             ecs_get_name(world, pipeline));
-#endif
         ecs_log_push();
 
         /* Build signature for pipeline quey that matches EcsSystems, has the
@@ -18975,7 +18977,7 @@ ecs_entity_t ecs_import(
     ecs_os_free(path);
     
     if (!e) {
-        ecs_trace("import %s", module_name);
+        ecs_trace("#[magenta]import#[reset] %s", module_name);
         ecs_log_push();
 
         /* Load module */
@@ -23456,8 +23458,10 @@ ecs_entity_t ecs_system_init(
 
         ecs_modified(world, result, EcsSystem);
 
-        ecs_trace("system #[green]%s#[reset] created with #[red]%s", 
-            ecs_get_name(world, result), query->filter.expr);
+        if (desc->entity.name) {
+            ecs_trace("#[green]system#[reset] %s created", 
+                ecs_get_name(world, result));
+        }
 
         ecs_defer_end(world);            
     } else {
@@ -26447,18 +26451,6 @@ const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
 
 /* -- Private functions -- */
 
-const ecs_world_t* ecs_get_world(
-    const ecs_world_t *world)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (ecs_poly_is(world, ecs_world_t)) {
-        return world;
-    } else {
-        return ((ecs_stage_t*)world)->world;
-    }
-}
-
 const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
@@ -26677,25 +26669,95 @@ void fini_store(ecs_world_t *world) {
     flecs_hashmap_free(world->store.table_map);
 }
 
+static
+void log_addons(void) {
+    ecs_trace("addons included in build:");
+    ecs_log_push();
+    #ifdef FLECS_CPP
+        ecs_trace("FLECS_CPP");
+    #endif
+    #ifdef FLECS_MODULE
+        ecs_trace("FLECS_MODULE");
+    #endif
+    #ifdef FLECS_PARSER
+        ecs_trace("FLECS_PARSER");
+    #endif
+    #ifdef FLECS_PLECS
+        ecs_trace("FLECS_PLECS");
+    #endif
+    #ifdef FLECS_RULES
+        ecs_trace("FLECS_RULES");
+    #endif
+    #ifdef FLECS_SNAPSHOT
+        ecs_trace("FLECS_SNAPSHOT");
+    #endif
+    #ifdef FLECS_STATS
+        ecs_trace("FLECS_STATS");
+    #endif
+    #ifdef FLECS_SYSTEM
+        ecs_trace("FLECS_SYSTEM");
+    #endif
+    #ifdef FLECS_PIPELINE
+        ecs_trace("FLECS_PIPELINE");
+    #endif
+    #ifdef FLECS_TIMER
+        ecs_trace("FLECS_TIMER");
+    #endif
+    #ifdef FLECS_META
+        ecs_trace("FLECS_META");
+    #endif
+    #ifdef FLECS_META_C
+        ecs_trace("FLECS_META_C");
+    #endif
+    #ifdef FLECS_EXPR
+        ecs_trace("FLECS_EXPR");
+    #endif
+    #ifdef FLECS_JSON
+        ecs_trace("FLECS_JSON");
+    #endif
+    #ifdef FLECS_DOC
+        ecs_trace("FLECS_DOC");
+    #endif
+    #ifdef FLECS_COREDOC
+        ecs_trace("FLECS_COREDOC");
+    #endif
+    #ifdef FLECS_LOG
+        ecs_trace("FLECS_LOG");
+    #endif
+    ecs_log_pop();
+}
+
 /* -- Public functions -- */
 
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
-    ecs_trace("bootstrap");
+    /* Log information about current build & OS API config */
+
+    ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
+
+    ecs_trace("tracing enabled, call ecs_log_set_level(-1) to disable");
 
     if (!ecs_os_has_heap()) {
         ecs_abort(ECS_MISSING_OS_API, NULL);
     }
 
     if (!ecs_os_has_threading()) {
-        ecs_trace("threading not available");
+        ecs_trace("threading unavailable, to use threads set OS API first (see examples)");
     }
 
     if (!ecs_os_has_time()) {
         ecs_trace("time management not available");
     }
+
+    log_addons();
+
+#ifndef NDEBUG
+    ecs_trace("debug build, rebuild with NDEBUG for improved performance");
+#else
+    ecs_trace("#[green]release#[reset] build");
+#endif
 
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -26728,9 +26790,11 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_stages(world, 1);
 
     init_store(world);
+    ecs_trace("table store initialized");
 
     flecs_bootstrap(world);
 
+    ecs_trace("world ready!");
     ecs_log_pop();
 
     return world;
@@ -26740,8 +26804,9 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifdef FLECS_MODULE_H
-    ecs_trace("import builtin modules");
+    ecs_trace("#[bold]import addons");
     ecs_log_push();
+    ecs_trace("use ecs_mini to create world without importing addons");
 #ifdef FLECS_SYSTEM_H
     ECS_IMPORT(world, FlecsSystem);
 #endif
@@ -26760,6 +26825,7 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_COREDOC_H
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
+    ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
 
@@ -27206,6 +27272,9 @@ int ecs_fini(
     ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
+    ecs_trace("#[bold]shutting down world");
+    ecs_log_push();
+
     world->is_fini = true;
 
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
@@ -27237,6 +27306,8 @@ int ecs_fini(
         ecs_os_mutex_free(world->mutex);
     }
 
+    ecs_trace("table store deinitialized");
+
     fini_stages(world);
 
     fini_component_lifecycle(world);
@@ -27263,6 +27334,9 @@ int ecs_fini(
     ecs_poly_free(world, ecs_world_t);
 
     ecs_os_fini(); 
+
+    ecs_trace("world destroyed, bye!");
+    ecs_log_pop();
 
     return 0;
 }
@@ -29990,6 +30064,11 @@ ecs_entity_t ecs_observer_init(
         observer->entity = entity;
 
         comp->observer = observer;
+
+        if (desc->entity.name) {
+            ecs_trace("#[green]observer#[reset] %s created", 
+                ecs_get_name(world, entity));
+        }
     } else {
         ecs_assert(comp->observer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -30700,34 +30779,38 @@ void log_msg(
     if (ecs_os_api.log_with_color_) fputs(ECS_NORMAL, stream);
     fputs(": ", stream);
 
-    if (ecs_os_api.log_indent_) {
-        char indent[32];
-        int i;
-        for (i = 0; i < ecs_os_api.log_indent_; i ++) {
-            indent[i * 2] = '|';
-            indent[i * 2 + 1] = ' ';
-        }
-        indent[i * 2] = '\0';
+    if (level >= 0) {
+        if (ecs_os_api.log_indent_) {
+            char indent[32];
+            int i;
+            for (i = 0; i < ecs_os_api.log_indent_; i ++) {
+                indent[i * 2] = '|';
+                indent[i * 2 + 1] = ' ';
+            }
+            indent[i * 2] = '\0';
 
-        fputs(indent, stream);
+            fputs(indent, stream);
+        }
     }
 
-    if (file) {
-        const char *file_ptr = strrchr(file, '/');
-        if (!file_ptr) {
-            file_ptr = strrchr(file, '\\');
+    if (level < 0) {
+        if (file) {
+            const char *file_ptr = strrchr(file, '/');
+            if (!file_ptr) {
+                file_ptr = strrchr(file, '\\');
+            }
+
+            if (file_ptr) {
+                file = file_ptr + 1;
+            }
+
+            fputs(file, stream);
+            fputs(": ", stream);
         }
 
-        if (file_ptr) {
-            file = file_ptr + 1;
+        if (line) {
+            fprintf(stream, "%d: ", line);
         }
-
-        fputs(file, stream);
-        fputs(": ", stream);
-    }
-
-    if (line) {
-        fprintf(stream, "%d: ", line);
     }
 
     fputs(msg, stream);
@@ -33306,7 +33389,7 @@ const ecs_filter_t* ecs_query_get_filter(
 
 /* Create query iterator */
 ecs_iter_t ecs_query_iter_page(
-    ecs_world_t *stage,
+    const ecs_world_t *stage,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -33347,7 +33430,7 @@ ecs_iter_t ecs_query_iter_page(
 
     return (ecs_iter_t){
         .real_world = world,
-        .world = stage,
+        .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
@@ -33357,7 +33440,7 @@ ecs_iter_t ecs_query_iter_page(
 }
 
 ecs_iter_t ecs_query_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
@@ -35878,6 +35961,11 @@ ecs_entity_t ecs_trigger_init(
         register_trigger(world, observable, trigger);
 
         ecs_term_fini(&term);
+
+        if (desc->entity.name) {
+            ecs_trace("#[green]observer#[reset] %s created", 
+                ecs_get_name(world, entity));
+        }
     } else {
         ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -36750,7 +36838,6 @@ void bootstrap_entity(
 void flecs_bootstrap(
     ecs_world_t *world)
 {
-    ecs_trace("bootstrap core components");
     ecs_log_push();
 
     ecs_set_name_prefix(world, "Ecs");

@@ -5,11 +5,5 @@ void ${id pascalcase}Import(
 {
     ECS_MODULE(world, ${id pascalcase});
 
-    /*
-     * ECS_COMPONENT(world, MyComponent);
-     * ECS_ENTITY(world, MyTag, 0);
-     * 
-     * ECS_EXPORT_COMPONENT(MyComponent);
-     * ECS_EXPORT_ENTITY(MyTag);
-     */
+    // ECS_COMPONENT_DEFINE(world, MyComponent);
 }

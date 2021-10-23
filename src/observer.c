@@ -186,6 +186,11 @@ ecs_entity_t ecs_observer_init(
         observer->entity = entity;
 
         comp->observer = observer;
+
+        if (desc->entity.name) {
+            ecs_trace("#[green]observer#[reset] %s created", 
+                ecs_get_name(world, entity));
+        }
     } else {
         ecs_assert(comp->observer != NULL, ECS_INTERNAL_ERROR, NULL);
 

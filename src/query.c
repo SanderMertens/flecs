@@ -2304,7 +2304,7 @@ const ecs_filter_t* ecs_query_get_filter(
 
 /* Create query iterator */
 ecs_iter_t ecs_query_iter_page(
-    ecs_world_t *stage,
+    const ecs_world_t *stage,
     ecs_query_t *query,
     int32_t offset,
     int32_t limit)
@@ -2345,7 +2345,7 @@ ecs_iter_t ecs_query_iter_page(
 
     return (ecs_iter_t){
         .real_world = world,
-        .world = stage,
+        .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
@@ -2355,7 +2355,7 @@ ecs_iter_t ecs_query_iter_page(
 }
 
 ecs_iter_t ecs_query_iter(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);

@@ -76,34 +76,38 @@ void log_msg(
     if (ecs_os_api.log_with_color_) fputs(ECS_NORMAL, stream);
     fputs(": ", stream);
 
-    if (ecs_os_api.log_indent_) {
-        char indent[32];
-        int i;
-        for (i = 0; i < ecs_os_api.log_indent_; i ++) {
-            indent[i * 2] = '|';
-            indent[i * 2 + 1] = ' ';
-        }
-        indent[i * 2] = '\0';
+    if (level >= 0) {
+        if (ecs_os_api.log_indent_) {
+            char indent[32];
+            int i;
+            for (i = 0; i < ecs_os_api.log_indent_; i ++) {
+                indent[i * 2] = '|';
+                indent[i * 2 + 1] = ' ';
+            }
+            indent[i * 2] = '\0';
 
-        fputs(indent, stream);
+            fputs(indent, stream);
+        }
     }
 
-    if (file) {
-        const char *file_ptr = strrchr(file, '/');
-        if (!file_ptr) {
-            file_ptr = strrchr(file, '\\');
+    if (level < 0) {
+        if (file) {
+            const char *file_ptr = strrchr(file, '/');
+            if (!file_ptr) {
+                file_ptr = strrchr(file, '\\');
+            }
+
+            if (file_ptr) {
+                file = file_ptr + 1;
+            }
+
+            fputs(file, stream);
+            fputs(": ", stream);
         }
 
-        if (file_ptr) {
-            file = file_ptr + 1;
+        if (line) {
+            fprintf(stream, "%d: ", line);
         }
-
-        fputs(file, stream);
-        fputs(": ", stream);
-    }
-
-    if (line) {
-        fprintf(stream, "%d: ", line);
     }
 
     fputs(msg, stream);

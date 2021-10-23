@@ -129,18 +129,6 @@ const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
 
 /* -- Private functions -- */
 
-const ecs_world_t* ecs_get_world(
-    const ecs_world_t *world)
-{
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (ecs_poly_is(world, ecs_world_t)) {
-        return world;
-    } else {
-        return ((ecs_stage_t*)world)->world;
-    }
-}
-
 const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
@@ -359,25 +347,95 @@ void fini_store(ecs_world_t *world) {
     flecs_hashmap_free(world->store.table_map);
 }
 
+static
+void log_addons(void) {
+    ecs_trace("addons included in build:");
+    ecs_log_push();
+    #ifdef FLECS_CPP
+        ecs_trace("FLECS_CPP");
+    #endif
+    #ifdef FLECS_MODULE
+        ecs_trace("FLECS_MODULE");
+    #endif
+    #ifdef FLECS_PARSER
+        ecs_trace("FLECS_PARSER");
+    #endif
+    #ifdef FLECS_PLECS
+        ecs_trace("FLECS_PLECS");
+    #endif
+    #ifdef FLECS_RULES
+        ecs_trace("FLECS_RULES");
+    #endif
+    #ifdef FLECS_SNAPSHOT
+        ecs_trace("FLECS_SNAPSHOT");
+    #endif
+    #ifdef FLECS_STATS
+        ecs_trace("FLECS_STATS");
+    #endif
+    #ifdef FLECS_SYSTEM
+        ecs_trace("FLECS_SYSTEM");
+    #endif
+    #ifdef FLECS_PIPELINE
+        ecs_trace("FLECS_PIPELINE");
+    #endif
+    #ifdef FLECS_TIMER
+        ecs_trace("FLECS_TIMER");
+    #endif
+    #ifdef FLECS_META
+        ecs_trace("FLECS_META");
+    #endif
+    #ifdef FLECS_META_C
+        ecs_trace("FLECS_META_C");
+    #endif
+    #ifdef FLECS_EXPR
+        ecs_trace("FLECS_EXPR");
+    #endif
+    #ifdef FLECS_JSON
+        ecs_trace("FLECS_JSON");
+    #endif
+    #ifdef FLECS_DOC
+        ecs_trace("FLECS_DOC");
+    #endif
+    #ifdef FLECS_COREDOC
+        ecs_trace("FLECS_COREDOC");
+    #endif
+    #ifdef FLECS_LOG
+        ecs_trace("FLECS_LOG");
+    #endif
+    ecs_log_pop();
+}
+
 /* -- Public functions -- */
 
 ecs_world_t *ecs_mini(void) {
     ecs_os_init();
 
-    ecs_trace("bootstrap");
+    /* Log information about current build & OS API config */
+
+    ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
+
+    ecs_trace("tracing enabled, call ecs_log_set_level(-1) to disable");
 
     if (!ecs_os_has_heap()) {
         ecs_abort(ECS_MISSING_OS_API, NULL);
     }
 
     if (!ecs_os_has_threading()) {
-        ecs_trace("threading not available");
+        ecs_trace("threading unavailable, to use threads set OS API first (see examples)");
     }
 
     if (!ecs_os_has_time()) {
         ecs_trace("time management not available");
     }
+
+    log_addons();
+
+#ifndef NDEBUG
+    ecs_trace("debug build, rebuild with NDEBUG for improved performance");
+#else
+    ecs_trace("#[green]release#[reset] build");
+#endif
 
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -410,9 +468,11 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_stages(world, 1);
 
     init_store(world);
+    ecs_trace("table store initialized");
 
     flecs_bootstrap(world);
 
+    ecs_trace("world ready!");
     ecs_log_pop();
 
     return world;
@@ -422,8 +482,9 @@ ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
 #ifdef FLECS_MODULE_H
-    ecs_trace("import builtin modules");
+    ecs_trace("#[bold]import addons");
     ecs_log_push();
+    ecs_trace("use ecs_mini to create world without importing addons");
 #ifdef FLECS_SYSTEM_H
     ECS_IMPORT(world, FlecsSystem);
 #endif
@@ -442,6 +503,7 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_COREDOC_H
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
+    ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
 
@@ -888,6 +950,9 @@ int ecs_fini(
     ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
+    ecs_trace("#[bold]shutting down world");
+    ecs_log_push();
+
     world->is_fini = true;
 
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
@@ -919,6 +984,8 @@ int ecs_fini(
         ecs_os_mutex_free(world->mutex);
     }
 
+    ecs_trace("table store deinitialized");
+
     fini_stages(world);
 
     fini_component_lifecycle(world);
@@ -945,6 +1012,9 @@ int ecs_fini(
     ecs_poly_free(world, ecs_world_t);
 
     ecs_os_fini(); 
+
+    ecs_trace("world destroyed, bye!");
+    ecs_log_pop();
 
     return 0;
 }

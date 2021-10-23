@@ -33,13 +33,13 @@ ecs_mixins_t ecs_query_t_mixins = {
 
 static
 void* get_mixin(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
     
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
 
@@ -52,7 +52,7 @@ void* get_mixin(
     ecs_size_t offset = mixins->elems[kind];
     if (offset == 0) {
         /* Object has mixins but not the requested one. Try to find the mixin
-         * in the object's base */
+         * in the poly's base */
         goto find_in_base;
     }
 
@@ -61,7 +61,7 @@ void* get_mixin(
 
 find_in_base:    
     if (offset) {
-        /* If the object has a base, try to find the mixin in the base */
+        /* If the poly has a base, try to find the mixin in the base */
         ecs_poly_t *base = *(ecs_poly_t**)ECS_OFFSET(hdr, offset);
         if (base) {
             return get_mixin(base, kind);
@@ -69,18 +69,18 @@ find_in_base:
     }
     
 not_found:
-    /* Mixin wasn't found for object */
+    /* Mixin wasn't found for poly */
     return NULL;
 }
 
 static
 void* assert_mixin(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
-    void *ptr = get_mixin(object, kind);
+    void *ptr = get_mixin(poly, kind);
     if (!ptr) {
-        const ecs_header_t *header = object;
+        const ecs_header_t *header = poly;
         const ecs_mixins_t *mixins = header->mixins;
         ecs_err("%s not available for type %s", 
             mixin_kind_str[kind],
@@ -92,15 +92,15 @@ void* assert_mixin(
 }
 
 void _ecs_poly_init(
-    ecs_poly_t *object,
+    ecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
     ecs_mixins_t *mixins)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_header_t *hdr = object;
-    ecs_os_memset(object, 0, size);
+    ecs_header_t *hdr = poly;
+    ecs_os_memset(poly, 0, size);
 
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
@@ -108,15 +108,15 @@ void _ecs_poly_init(
 }
 
 void _ecs_poly_fini(
-    ecs_poly_t *object,
+    ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)type;
 
-    ecs_header_t *hdr = object;
+    ecs_header_t *hdr = poly;
 
-    /* Don't deinit object that wasn't initialized */
+    /* Don't deinit poly that wasn't initialized */
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
     hdr->magic = 0;
@@ -128,32 +128,38 @@ void _ecs_poly_fini(
 
 #ifndef NDEBUG
 void _ecs_poly_assert(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     int32_t type,
     const char *file,
     int32_t line)
 {
-    assert_object(object != NULL, file, line);
+    assert_object(poly != NULL, file, line);
     
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line);
     assert_object(hdr->type == type, file, line);
 }
 #endif
 
 bool _ecs_poly_is(
-    const ecs_poly_t *object,
+    const ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const ecs_header_t *hdr = object;
+    const ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     return hdr->type == type;    
 }
 
 ecs_observable_t* ecs_get_observable(
-    const ecs_poly_t *object)
+    const ecs_poly_t *poly)
 {
-    return (ecs_observable_t*)assert_mixin(object, EcsMixinObservable);
+    return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
+}
+
+const ecs_world_t* ecs_get_world(
+    const ecs_poly_t *poly)
+{
+    return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
 }

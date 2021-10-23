@@ -574,6 +574,11 @@ ecs_entity_t ecs_trigger_init(
         register_trigger(world, observable, trigger);
 
         ecs_term_fini(&term);
+
+        if (desc->entity.name) {
+            ecs_trace("#[green]observer#[reset] %s created", 
+                ecs_get_name(world, entity));
+        }
     } else {
         ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
 
