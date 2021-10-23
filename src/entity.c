@@ -1977,6 +1977,13 @@ ecs_entity_t ecs_component_init(
     if (added) {
         ptr->size = flecs_from_size_t(desc->size);
         ptr->alignment = flecs_from_size_t(desc->alignment);
+        if (!ptr->size) {
+            ecs_trace("#[green]tag#[reset] %s registered", 
+                ecs_get_name(world, result));
+        } else {
+            ecs_trace("#[green]component#[reset] %s registered", 
+                ecs_get_name(world, result));
+        }
     } else {
         if (ptr->size != flecs_from_size_t(desc->size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
