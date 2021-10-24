@@ -18,7 +18,7 @@ void DeserializeFromJson_struct_bool() {
 
     T value = {false};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": true}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": true}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -45,7 +45,7 @@ void DeserializeFromJson_struct_byte() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -72,7 +72,7 @@ void DeserializeFromJson_struct_char() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -99,7 +99,7 @@ void DeserializeFromJson_struct_char_literal() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"a\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"a\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -126,7 +126,7 @@ void DeserializeFromJson_struct_i8() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -153,7 +153,7 @@ void DeserializeFromJson_struct_i16() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -180,7 +180,7 @@ void DeserializeFromJson_struct_i32() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -207,7 +207,7 @@ void DeserializeFromJson_struct_i64() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -234,7 +234,7 @@ void DeserializeFromJson_struct_iptr() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -261,7 +261,7 @@ void DeserializeFromJson_struct_u8() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -288,7 +288,7 @@ void DeserializeFromJson_struct_u16() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -315,7 +315,7 @@ void DeserializeFromJson_struct_u32() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -342,7 +342,7 @@ void DeserializeFromJson_struct_u64() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -369,7 +369,7 @@ void DeserializeFromJson_struct_uptr() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -396,7 +396,7 @@ void DeserializeFromJson_struct_float() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10.5}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10.5}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -423,7 +423,7 @@ void DeserializeFromJson_struct_double() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": 10.5}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": 10.5}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -450,7 +450,7 @@ void DeserializeFromJson_struct_negative_int() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": -10}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": -10}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -477,7 +477,7 @@ void DeserializeFromJson_struct_negative_float() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": -10.5}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": -10.5}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -504,7 +504,7 @@ void DeserializeFromJson_struct_string() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Hello World\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"Hello World\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -533,7 +533,7 @@ void DeserializeFromJson_struct_entity() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"flecs.core\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"flecs.core\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -572,21 +572,21 @@ void DeserializeFromJson_struct_enum() {
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Red\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"Red\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Red);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Blue\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"Blue\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Blue);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Green\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"Green\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Green);
     }
@@ -594,7 +594,7 @@ void DeserializeFromJson_struct_enum() {
     {
     ecs_log_set_level(-4);
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\": \"Black\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\": \"Black\"}", t, &value, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -632,35 +632,35 @@ void DeserializeFromJson_struct_bitmask() {
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":\"Lettuce\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce|Bacon\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":\"Lettuce|Bacon\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Lettuce|Bacon|Tomato|Cheese\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":\"Lettuce|Bacon|Tomato|Cheese\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon|Tomato|Cheese);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"BLT\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":\"BLT\"}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon|Tomato);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":0}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":0}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, 0);
     }
@@ -668,7 +668,7 @@ void DeserializeFromJson_struct_bitmask() {
     {
     ecs_log_set_level(-4);
     T value = {0};
-    const char *ptr = ecs_parse_json(world, NULL, "{\"v\":\"Foo\"}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"v\":\"Foo\"}", t, &value, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -695,7 +695,7 @@ void DeserializeFromJson_struct_i32_i32() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"x\": 10, \"y\": 20}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"x\": 10, \"y\": 20}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -732,7 +732,7 @@ void DeserializeFromJson_struct_nested_i32() {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"n_1\": {\"x\": 10}}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"n_1\": {\"x\": 10}}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -770,7 +770,7 @@ void DeserializeFromJson_struct_nested_i32_i32() {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"n_1\": {\"x\": 10, \"y\": 20}}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"n_1\": {\"x\": 10, \"y\": 20}}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -811,8 +811,9 @@ void DeserializeFromJson_struct_2_nested_i32_i32() {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_json(world, NULL, 
-        "{\"n_1\": {\"x\": 10, \"y\": 20}, \"n_2\": {\"x\": 30, \"y\": 40}}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world,
+        "{\"n_1\": {\"x\": 10, \"y\": 20}, \"n_2\": {\"x\": 30, \"y\": 40}}", 
+        t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -842,7 +843,7 @@ void DeserializeFromJson_struct_i32_array_3() {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"x\": [10, 20, 30]}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"x\": [10, 20, 30]}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -880,7 +881,7 @@ void DeserializeFromJson_struct_struct_i32_array_3() {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_json(world, NULL, "{\"n_1\": [{\"x\": 10}, {\"x\": 20}, {\"x\": 30}]}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, "{\"n_1\": [{\"x\": 10}, {\"x\": 20}, {\"x\": 30}]}", t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -920,8 +921,9 @@ void DeserializeFromJson_struct_struct_i32_i32_array_3() {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_json(world, NULL, 
-        "{\"n_1\": [{\"x\": 10, \"y\": 20}, {\"x\": 30, \"y\": 40}, {\"x\": 50, \"y\": 60}]}", NULL, t, &value);
+    const char *ptr = ecs_parse_json(world, 
+        "{\"n_1\": [{\"x\": 10, \"y\": 20}, {\"x\": 30, \"y\": 40}, {\"x\": 50, \"y\": 60}]}"
+        , t, &value, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -934,3 +936,76 @@ void DeserializeFromJson_struct_struct_i32_i32_array_3() {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_struct_w_array_type_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1}
+        }
+    });
+
+    T value = {{ 0 }};
+
+    const char *ptr = ecs_parse_json(world, "{\"n_1\": [10, 20]}", t, &value, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.n_1[0], 10);
+    test_int(value.n_1[1], 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_2_array_type_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1}
+        }
+    });
+
+    T value = {{ 0 }};
+
+    const char *ptr = ecs_parse_json(world, "{\"n_1\": [10, 20], \"n_2\": [30, 40]}", t, &value, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.n_1[0], 10);
+    test_int(value.n_1[1], 20);
+    test_int(value.n_2[0], 30);
+    test_int(value.n_2[1], 40);
+
+    ecs_fini(world);
+}
+

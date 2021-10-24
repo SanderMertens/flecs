@@ -112,6 +112,25 @@ ecs_vector_t* serialize_array(
 }
 
 static
+ecs_vector_t* serialize_array_component(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsArray *ptr = ecs_get(world, type, EcsArray);
+    if (!ptr) {
+        return NULL; /* Should never happen, will trigger internal error */
+    }
+
+    ecs_vector_t *ops = serialize_type(world, ptr->type, 0, NULL);
+    ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_type_op_t *first = ecs_vector_first(ops, ecs_meta_type_op_t);
+    first->count = ptr->count;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_vector(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -231,6 +250,33 @@ ecs_vector_t* serialize_type(
     return ops;
 }
 
+static
+ecs_vector_t* serialize_component(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+    if (!ptr) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("missing EcsMetaType for type %s'", path);
+        ecs_os_free(path);
+        return NULL;
+    }
+
+    ecs_vector_t *ops = NULL;
+
+    switch(ptr->kind) {
+    case EcsArrayType:
+        ops = serialize_array_component(world, type);
+        break;
+    default:
+        ops = serialize_type(world, type, 0, NULL);
+        break;
+    }
+
+    return ops;
+}
+
 void ecs_meta_type_serialized_init(
     ecs_iter_t *it)
 {
@@ -239,7 +285,7 @@ void ecs_meta_type_serialized_init(
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_vector_t *ops = serialize_type(world, e, 0, NULL);
+        ecs_vector_t *ops = serialize_component(world, e);
         ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsMetaTypeSerialized *ptr = ecs_get_mut(

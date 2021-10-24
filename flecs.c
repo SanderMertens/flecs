@@ -12339,21 +12339,41 @@ void _ecs_parser_errorv(
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         ecs_strbuf_vappend(&msg_buf, fmt, args);
-        ecs_strbuf_appendstr(&msg_buf, "\n");
 
-        char *newline_ptr = strchr(expr, '\n');
-        if (newline_ptr) {
-            /* Strip newline from expr */
-            ecs_strbuf_appendstrn(&msg_buf, expr, 
-                (int32_t)(newline_ptr - expr));
-        } else {
-            ecs_strbuf_appendstr(&msg_buf, expr);
-        }
+        if (expr) {
+            ecs_strbuf_appendstr(&msg_buf, "\n");
 
-        ecs_strbuf_appendstr(&msg_buf, "\n");
+            /* Find start of line by taking column and looking for the
+             * last occurring newline */
+            if (column != -1) {
+                const char *ptr = &expr[column];
+                while (ptr[0] != '\n' && ptr > expr) {
+                    ptr --;
+                }
 
-        if (column != -1) {
-            ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+                if (ptr == expr) {
+                    /* ptr is already at start of line */
+                } else {
+                    column -= (int32_t)(ptr - expr + 1);
+                    expr = ptr + 1;
+                }
+            }
+
+            /* Strip newlines from current statement, if any */            
+            char *newline_ptr = strchr(expr, '\n');
+            if (newline_ptr) {
+                /* Strip newline from expr */
+                ecs_strbuf_appendstrn(&msg_buf, expr, 
+                    (int32_t)(newline_ptr - expr));
+            } else {
+                ecs_strbuf_appendstr(&msg_buf, expr);
+            }
+
+            ecs_strbuf_appendstr(&msg_buf, "\n");
+
+            if (column != -1) {
+                ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+            }
         }
 
         char *msg = ecs_strbuf_get(&msg_buf);
@@ -14409,7 +14429,7 @@ const char* parse_assign_expr(
         world, assign_to, assign_id, NULL);
 
     ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
-        &(ecs_expr_desc_t) {
+        &(ecs_parse_expr_desc_t) {
             .name = name,
             .expr = expr,
             .lookup_action = plecs_lookup_action,
@@ -19434,6 +19454,25 @@ ecs_vector_t* serialize_array(
 }
 
 static
+ecs_vector_t* serialize_array_component(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsArray *ptr = ecs_get(world, type, EcsArray);
+    if (!ptr) {
+        return NULL; /* Should never happen, will trigger internal error */
+    }
+
+    ecs_vector_t *ops = serialize_type(world, ptr->type, 0, NULL);
+    ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_type_op_t *first = ecs_vector_first(ops, ecs_meta_type_op_t);
+    first->count = ptr->count;
+
+    return ops;
+}
+
+static
 ecs_vector_t* serialize_vector(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -19553,6 +19592,33 @@ ecs_vector_t* serialize_type(
     return ops;
 }
 
+static
+ecs_vector_t* serialize_component(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+    if (!ptr) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("missing EcsMetaType for type %s'", path);
+        ecs_os_free(path);
+        return NULL;
+    }
+
+    ecs_vector_t *ops = NULL;
+
+    switch(ptr->kind) {
+    case EcsArrayType:
+        ops = serialize_array_component(world, type);
+        break;
+    default:
+        ops = serialize_type(world, type, 0, NULL);
+        break;
+    }
+
+    return ops;
+}
+
 void ecs_meta_type_serialized_init(
     ecs_iter_t *it)
 {
@@ -19561,7 +19627,7 @@ void ecs_meta_type_serialized_init(
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_vector_t *ops = serialize_type(world, e, 0, NULL);
+        ecs_vector_t *ops = serialize_component(world, e);
         ecs_assert(ops != NULL, ECS_INTERNAL_ERROR, NULL);
 
         EcsMetaTypeSerialized *ptr = ecs_get_mut(
@@ -20868,7 +20934,7 @@ int ecs_meta_push(
      * array, push a frame for the array.
      * Doing this first ensures that inline arrays take precedence over other
      * kinds of push operations, such as for a struct element type. */
-    if (!scope->is_inline_array && op->count > 1) {
+    if (!scope->is_inline_array && op->count > 1 && !scope->is_collection) {
         /* Push a frame just for the element type, with inline_array = true */
         next_scope[0] = (ecs_meta_scope_t){
             .ops = op,
@@ -20895,17 +20961,26 @@ int ecs_meta_push(
         };
         break;
 
-    case EcsOpArray:
+    case EcsOpArray: {
         if (push_type(world, next_scope, op->type, ptr) != 0) {
             return -1;
         }
+
+        const EcsArray *type_ptr = ecs_get(world, op->type, EcsArray);
+        next_scope->type = type_ptr->type;
+        next_scope->is_collection = true;
         break;
+    }
 
     case EcsOpVector:
         next_scope->vector = ptr;
         if (push_type(world, next_scope, op->type, NULL) != 0) {
             return -1;
         }
+
+        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
+        next_scope->type = type_ptr->type;
+        next_scope->is_collection = true;
         break;
 
     default: {
@@ -20943,13 +21018,19 @@ int ecs_meta_pop(
     ecs_meta_type_op_t *op = get_op(next_scope);
 
     if (!scope->is_inline_array) {
-        /* The last op from the previous scope must be a push */
-        ecs_assert(op->kind == EcsOpPush, ECS_INTERNAL_ERROR, NULL);
-        next_scope->op_cur += op->op_count - 1;
+        if (op->kind == EcsOpPush) {
+            next_scope->op_cur += op->op_count - 1;
 
-        /* push + op_count should point to the operation after pop */
-        op = get_op(next_scope);
-        ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
+            /* push + op_count should point to the operation after pop */
+            op = get_op(next_scope);
+            ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
+        } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
+            /* Collection type, nothing else to do */
+        } else {
+            /* should not have been able to push if the previous scope was not
+             * a complex or collection type */
+            ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
+        }
     } else {
         /* Make sure that this was an inline array */
         ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
@@ -20963,6 +21044,14 @@ int ecs_meta_is_collection(
 {
     ecs_meta_scope_t *scope = get_scope(cursor);
     return scope->is_collection;
+}
+
+ecs_entity_t ecs_meta_get_type(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    return op->type;
 }
 
 /* Utility macro's to let the compiler do the conversion work for us */
@@ -20999,6 +21088,17 @@ case EcsOpBool:\
     set_T(ecs_bool_t, dst, value != 0);\
     break
 
+static
+void conversion_error(
+    ecs_meta_cursor_t *cursor,
+    ecs_meta_type_op_t *op,
+    const char *from)
+{
+    char *path = ecs_get_fullpath(cursor->world, op->type);
+    ecs_err("unsupported conversion from %s to '%s'", from, path);
+    ecs_os_free(path);
+}
+
 int ecs_meta_set_bool(
     ecs_meta_cursor_t *cursor,
     bool value)
@@ -21011,7 +21111,7 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_unsigned(ptr, value);
     default:
-        ecs_err("unsupported conversion from bool");
+        conversion_error(cursor, op, "bool");
         return -1;
     }
 
@@ -21030,7 +21130,7 @@ int ecs_meta_set_char(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value);
     default:
-        ecs_err("unsupported conversion from char");
+        conversion_error(cursor, op, "char");
         return -1;
     }
 
@@ -21049,9 +21149,10 @@ int ecs_meta_set_int(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value);
     cases_T_float(ptr, value);
-    default:
-        ecs_err("unsupported conversion from int");
+    default: {
+        conversion_error(cursor, op, "int");
         return -1;
+    }
     }
 
     return 0;
@@ -21073,7 +21174,7 @@ int ecs_meta_set_uint(
         set_T(ecs_entity_t, ptr, value);
         break;
     default:
-        ecs_err("unsupported conversion from uint");
+        conversion_error(cursor, op, "uint");
         return -1;
     }
 
@@ -21094,7 +21195,7 @@ int ecs_meta_set_float(
     cases_T_unsigned(ptr, value);
     cases_T_float(ptr, value);
     default:
-        ecs_err("unsupported conversion from float");
+        conversion_error(cursor, op, "float");
         return -1;
     }
 
@@ -21242,7 +21343,7 @@ int ecs_meta_set_string(
         set_T(ecs_i32_t, ptr, v[0]);
         break;
     }
-    case EcsOpBitmask: 
+    case EcsOpBitmask:
         if (parse_bitmask(cursor, op, ptr, value) != 0) {
             return -1;
         }
@@ -21334,7 +21435,7 @@ int ecs_meta_set_entity(
         set_T(ecs_entity_t, ptr, value);
         break;
     default:
-        ecs_err("unsupported conversion from entity");
+        conversion_error(cursor, op, "entity");
         return -1;
     }
 
@@ -21353,7 +21454,7 @@ int ecs_meta_set_null(
         set_T(ecs_string_t, ptr, NULL);
         break;
     default:
-        ecs_err("unsupported conversion from entity");
+        conversion_error(cursor, op, "null");
         return -1;
     }
 
@@ -22038,7 +22139,7 @@ const char* ecs_parse_expr(
     const char *ptr,
     ecs_entity_t type,
     void *data_out,
-    const ecs_expr_desc_t *desc)
+    const ecs_parse_expr_desc_t *desc)
 {
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
@@ -22064,13 +22165,17 @@ const char* ecs_parse_expr(
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         if (!ecs_os_strcmp(token, "{")) {
+            ecs_entity_t scope_type = ecs_meta_get_type(&cur);
             depth ++;
             if (ecs_meta_push(&cur) != 0) {
                 goto error;
             }
 
             if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '['");
+                char *path = ecs_get_fullpath(world, scope_type);
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "expected '[' for collection type '%s'", path);
+                ecs_os_free(path);
                 return NULL;
             }
         }
@@ -24103,24 +24208,27 @@ char* ecs_entity_to_json(
 
 const char* ecs_parse_json(
     const ecs_world_t *world,
-    const char *name,
-    const char *expr,
     const char *ptr,
     ecs_entity_t type,
-    void *data_out)
+    void *data_out,
+    const ecs_parse_json_desc_t *desc)
 {
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
 
-    if (!ptr) {
-        ptr = expr;
-    }
+    const char *name = NULL;
+    const char *expr = NULL;
 
     ptr = ecs_parse_fluff(ptr, NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
         return NULL;
+    }
+
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {

@@ -33,7 +33,7 @@ const char* ecs_parse_expr(
     const char *ptr,
     ecs_entity_t type,
     void *data_out,
-    const ecs_expr_desc_t *desc)
+    const ecs_parse_expr_desc_t *desc)
 {
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
@@ -59,13 +59,17 @@ const char* ecs_parse_expr(
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
 
         if (!ecs_os_strcmp(token, "{")) {
+            ecs_entity_t scope_type = ecs_meta_get_type(&cur);
             depth ++;
             if (ecs_meta_push(&cur) != 0) {
                 goto error;
             }
 
             if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '['");
+                char *path = ecs_get_fullpath(world, scope_type);
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "expected '[' for collection type '%s'", path);
+                ecs_os_free(path);
                 return NULL;
             }
         }

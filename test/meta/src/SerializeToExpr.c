@@ -1089,7 +1089,7 @@ void SerializeToExpr_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_w_2_array_types_i32_i32() {
+void SerializeToExpr_struct_w_2_array_type_i32_i32() {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1117,6 +1117,112 @@ void SerializeToExpr_struct_w_2_array_types_i32_i32() {
     char *expr = ecs_ptr_to_expr(world, t, &value);
     test_assert(expr != NULL);
     test_str(expr, "{n_1: [10, 20], n_2: [30, 40]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_struct_w_array_type_struct() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef N1 A1[2];
+
+    typedef struct {
+        A1 n_1;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "N1",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(n1 != 0);
+
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A1",
+        .type = n1,
+        .count = 2
+    });
+
+    test_assert(a1 != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", a1}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = { .n_1 = {{ 10, 20 }, { 30, 40 }}};
+    char *expr = ecs_ptr_to_expr(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_struct_w_2_array_type_struct() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N1;
+
+    typedef N1 A1[2];
+
+    typedef struct {
+        A1 n_1;
+        A1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "N1",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(n1 != 0);
+
+    ecs_entity_t a1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "A1",
+        .type = n1,
+        .count = 2
+    });
+
+    test_assert(a1 != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", a1},
+            {"n_2", a1}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = { 
+        .n_1 = {{ 10, 20 }, { 30, 40 }}, 
+        .n_2 = {{ 50, 60 }, { 70, 80 }} 
+    };
+
+    char *expr = ecs_ptr_to_expr(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}], n_2: [{x: 50, y: 60}, {x: 70, y: 80}]}");
     ecs_os_free(expr);
 
     ecs_fini(world);

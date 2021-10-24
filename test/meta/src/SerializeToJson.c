@@ -1126,7 +1126,7 @@ void SerializeToJson_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_w_2_array_types_i32_i32() {
+void SerializeToJson_struct_w_2_array_type_i32_i32() {
     typedef int32_t N1[2];
 
     typedef struct {

@@ -230,21 +230,41 @@ void _ecs_parser_errorv(
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         ecs_strbuf_vappend(&msg_buf, fmt, args);
-        ecs_strbuf_appendstr(&msg_buf, "\n");
 
-        char *newline_ptr = strchr(expr, '\n');
-        if (newline_ptr) {
-            /* Strip newline from expr */
-            ecs_strbuf_appendstrn(&msg_buf, expr, 
-                (int32_t)(newline_ptr - expr));
-        } else {
-            ecs_strbuf_appendstr(&msg_buf, expr);
-        }
+        if (expr) {
+            ecs_strbuf_appendstr(&msg_buf, "\n");
 
-        ecs_strbuf_appendstr(&msg_buf, "\n");
+            /* Find start of line by taking column and looking for the
+             * last occurring newline */
+            if (column != -1) {
+                const char *ptr = &expr[column];
+                while (ptr[0] != '\n' && ptr > expr) {
+                    ptr --;
+                }
 
-        if (column != -1) {
-            ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+                if (ptr == expr) {
+                    /* ptr is already at start of line */
+                } else {
+                    column -= (int32_t)(ptr - expr + 1);
+                    expr = ptr + 1;
+                }
+            }
+
+            /* Strip newlines from current statement, if any */            
+            char *newline_ptr = strchr(expr, '\n');
+            if (newline_ptr) {
+                /* Strip newline from expr */
+                ecs_strbuf_appendstrn(&msg_buf, expr, 
+                    (int32_t)(newline_ptr - expr));
+            } else {
+                ecs_strbuf_appendstr(&msg_buf, expr);
+            }
+
+            ecs_strbuf_appendstr(&msg_buf, "\n");
+
+            if (column != -1) {
+                ecs_strbuf_append(&msg_buf, "%*s^", column, "");
+            }
         }
 
         char *msg = ecs_strbuf_get(&msg_buf);

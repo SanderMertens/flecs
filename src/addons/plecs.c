@@ -427,7 +427,7 @@ const char* parse_assign_expr(
         world, assign_to, assign_id, NULL);
 
     ptr = ecs_parse_expr(world, ptr, type, value_ptr, 
-        &(ecs_expr_desc_t) {
+        &(ecs_parse_expr_desc_t) {
             .name = name,
             .expr = expr,
             .lookup_action = plecs_lookup_action,

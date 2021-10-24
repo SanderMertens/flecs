@@ -355,6 +355,11 @@ FLECS_API
 int ecs_meta_is_collection(
     ecs_meta_cursor_t *cursor);
 
+/** Get type of current element. */
+FLECS_API
+ecs_entity_t ecs_meta_get_type(
+    ecs_meta_cursor_t *cursor);
+
 /** The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
  * If no valid conversion is available, the operation will fail. */

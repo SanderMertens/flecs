@@ -5,24 +5,27 @@
 
 const char* ecs_parse_json(
     const ecs_world_t *world,
-    const char *name,
-    const char *expr,
     const char *ptr,
     ecs_entity_t type,
-    void *data_out)
+    void *data_out,
+    const ecs_parse_json_desc_t *desc)
 {
     char token[ECS_MAX_TOKEN_SIZE];
     int depth = 0;
 
-    if (!ptr) {
-        ptr = expr;
-    }
+    const char *name = NULL;
+    const char *expr = NULL;
 
     ptr = ecs_parse_fluff(ptr, NULL);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, data_out);
     if (cur.valid == false) {
         return NULL;
+    }
+
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
     }
 
     while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {

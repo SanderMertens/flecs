@@ -263,6 +263,10 @@ void Cursor_struct_member_i32_i32_reverse(void);
 void Cursor_struct_member_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32(void);
 void Cursor_struct_member_2_nested_i32_i32_reverse(void);
+void Cursor_struct_w_array_type_i32_i32(void);
+void Cursor_struct_w_array_type_struct(void);
+void Cursor_struct_w_2_array_type_i32_i32(void);
+void Cursor_struct_w_2_array_type_struct(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -304,6 +308,10 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse(void);
 void DeserializeFromExpr_struct_i32_array_3(void);
 void DeserializeFromExpr_struct_struct_i32_array_3(void);
 void DeserializeFromExpr_struct_struct_i32_i32_array_3(void);
+void DeserializeFromExpr_struct_w_array_type_i32_i32(void);
+void DeserializeFromExpr_struct_w_array_type_struct(void);
+void DeserializeFromExpr_struct_w_2_array_type_i32_i32(void);
+void DeserializeFromExpr_struct_w_2_array_type_struct(void);
 
 // Testsuite 'SerializeToExpr'
 void SerializeToExpr_bool(void);
@@ -336,7 +344,9 @@ void SerializeToExpr_struct_2_nested_i32_i32(void);
 void SerializeToExpr_struct_struct_i32_array_3(void);
 void SerializeToExpr_struct_struct_i32_i32_array_3(void);
 void SerializeToExpr_struct_w_array_type_i32_i32(void);
-void SerializeToExpr_struct_w_2_array_types_i32_i32(void);
+void SerializeToExpr_struct_w_array_type_struct(void);
+void SerializeToExpr_struct_w_2_array_type_i32_i32(void);
+void SerializeToExpr_struct_w_2_array_type_struct(void);
 void SerializeToExpr_escape_simple_string(void);
 void SerializeToExpr_escape_newline(void);
 void SerializeToExpr_escape_2_newlines(void);
@@ -374,6 +384,8 @@ void DeserializeFromJson_struct_2_nested_i32_i32(void);
 void DeserializeFromJson_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
+void DeserializeFromJson_struct_w_array_type_i32_i32(void);
+void DeserializeFromJson_struct_w_2_array_type_i32_i32(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -416,7 +428,7 @@ void SerializeToJson_serialize_entity_w_enum_component(void);
 void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
 void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 void SerializeToJson_struct_w_array_type_i32_i32(void);
-void SerializeToJson_struct_w_2_array_types_i32_i32(void);
+void SerializeToJson_struct_w_2_array_type_i32_i32(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -1409,6 +1421,22 @@ bake_test_case Cursor_testcases[] = {
     {
         "struct_member_2_nested_i32_i32_reverse",
         Cursor_struct_member_2_nested_i32_i32_reverse
+    },
+    {
+        "struct_w_array_type_i32_i32",
+        Cursor_struct_w_array_type_i32_i32
+    },
+    {
+        "struct_w_array_type_struct",
+        Cursor_struct_w_array_type_struct
+    },
+    {
+        "struct_w_2_array_type_i32_i32",
+        Cursor_struct_w_2_array_type_i32_i32
+    },
+    {
+        "struct_w_2_array_type_struct",
+        Cursor_struct_w_2_array_type_struct
     }
 };
 
@@ -1568,6 +1596,22 @@ bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "struct_struct_i32_i32_array_3",
         DeserializeFromExpr_struct_struct_i32_i32_array_3
+    },
+    {
+        "struct_w_array_type_i32_i32",
+        DeserializeFromExpr_struct_w_array_type_i32_i32
+    },
+    {
+        "struct_w_array_type_struct",
+        DeserializeFromExpr_struct_w_array_type_struct
+    },
+    {
+        "struct_w_2_array_type_i32_i32",
+        DeserializeFromExpr_struct_w_2_array_type_i32_i32
+    },
+    {
+        "struct_w_2_array_type_struct",
+        DeserializeFromExpr_struct_w_2_array_type_struct
     }
 };
 
@@ -1693,8 +1737,16 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_struct_w_array_type_i32_i32
     },
     {
-        "struct_w_2_array_types_i32_i32",
-        SerializeToExpr_struct_w_2_array_types_i32_i32
+        "struct_w_array_type_struct",
+        SerializeToExpr_struct_w_array_type_struct
+    },
+    {
+        "struct_w_2_array_type_i32_i32",
+        SerializeToExpr_struct_w_2_array_type_i32_i32
+    },
+    {
+        "struct_w_2_array_type_struct",
+        SerializeToExpr_struct_w_2_array_type_struct
     },
     {
         "escape_simple_string",
@@ -1838,6 +1890,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "struct_struct_i32_i32_array_3",
         DeserializeFromJson_struct_struct_i32_i32_array_3
+    },
+    {
+        "struct_w_array_type_i32_i32",
+        DeserializeFromJson_struct_w_array_type_i32_i32
+    },
+    {
+        "struct_w_2_array_type_i32_i32",
+        DeserializeFromJson_struct_w_2_array_type_i32_i32
     }
 };
 
@@ -2003,8 +2063,8 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_w_array_type_i32_i32
     },
     {
-        "struct_w_2_array_types_i32_i32",
-        SerializeToJson_struct_w_2_array_types_i32_i32
+        "struct_w_2_array_type_i32_i32",
+        SerializeToJson_struct_w_2_array_type_i32_i32
     }
 };
 
@@ -2124,28 +2184,28 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        57,
+        61,
         Cursor_testcases
     },
     {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        39,
+        43,
         DeserializeFromExpr_testcases
     },
     {
         "SerializeToExpr",
         NULL,
         NULL,
-        37,
+        39,
         SerializeToExpr_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        29,
+        31,
         DeserializeFromJson_testcases
     },
     {

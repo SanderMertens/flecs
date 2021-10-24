@@ -106,7 +106,7 @@ char* ecs_astresc(
     const char *in);
 
 /** Used with ecs_parse_expr. */
-typedef struct ecs_expr_desc_t {
+typedef struct ecs_parse_expr_desc_t {
     const char *name;
     const char *expr;
     ecs_entity_t (*lookup_action)(
@@ -114,18 +114,17 @@ typedef struct ecs_expr_desc_t {
         const char *value, 
         void *ctx);
     void *lookup_ctx;
-} ecs_expr_desc_t;
+} ecs_parse_expr_desc_t;
 
 /** Parse expression into value.
  * This operation parses a flecs expression into the provided pointer. The
  * memory pointed to must be large enough to contain a value of the used type.
  * 
  * @param world The world.
- * @param name The name of the expression (used for debug logs).
- * @param expr The full expression (used for debug logs).
  * @param ptr The pointer to the expression to parse.
  * @param type The type of the expression to parse.
  * @param data_out Pointer to the memory to write to.
+ * @param desc Configuration parameters for deserializer.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
@@ -134,7 +133,7 @@ const char* ecs_parse_expr(
     const char *ptr,
     ecs_entity_t type,
     void *data_out,
-    const ecs_expr_desc_t *desc);
+    const ecs_parse_expr_desc_t *desc);
 
 /** Serialize value into expression string.
  * This operation serializes a value of the provided type to a string. The 

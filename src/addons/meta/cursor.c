@@ -268,7 +268,7 @@ int ecs_meta_push(
      * array, push a frame for the array.
      * Doing this first ensures that inline arrays take precedence over other
      * kinds of push operations, such as for a struct element type. */
-    if (!scope->is_inline_array && op->count > 1) {
+    if (!scope->is_inline_array && op->count > 1 && !scope->is_collection) {
         /* Push a frame just for the element type, with inline_array = true */
         next_scope[0] = (ecs_meta_scope_t){
             .ops = op,
@@ -295,17 +295,26 @@ int ecs_meta_push(
         };
         break;
 
-    case EcsOpArray:
+    case EcsOpArray: {
         if (push_type(world, next_scope, op->type, ptr) != 0) {
             return -1;
         }
+
+        const EcsArray *type_ptr = ecs_get(world, op->type, EcsArray);
+        next_scope->type = type_ptr->type;
+        next_scope->is_collection = true;
         break;
+    }
 
     case EcsOpVector:
         next_scope->vector = ptr;
         if (push_type(world, next_scope, op->type, NULL) != 0) {
             return -1;
         }
+
+        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
+        next_scope->type = type_ptr->type;
+        next_scope->is_collection = true;
         break;
 
     default: {
@@ -343,13 +352,19 @@ int ecs_meta_pop(
     ecs_meta_type_op_t *op = get_op(next_scope);
 
     if (!scope->is_inline_array) {
-        /* The last op from the previous scope must be a push */
-        ecs_assert(op->kind == EcsOpPush, ECS_INTERNAL_ERROR, NULL);
-        next_scope->op_cur += op->op_count - 1;
+        if (op->kind == EcsOpPush) {
+            next_scope->op_cur += op->op_count - 1;
 
-        /* push + op_count should point to the operation after pop */
-        op = get_op(next_scope);
-        ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
+            /* push + op_count should point to the operation after pop */
+            op = get_op(next_scope);
+            ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
+        } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
+            /* Collection type, nothing else to do */
+        } else {
+            /* should not have been able to push if the previous scope was not
+             * a complex or collection type */
+            ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
+        }
     } else {
         /* Make sure that this was an inline array */
         ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
@@ -363,6 +378,14 @@ int ecs_meta_is_collection(
 {
     ecs_meta_scope_t *scope = get_scope(cursor);
     return scope->is_collection;
+}
+
+ecs_entity_t ecs_meta_get_type(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    return op->type;
 }
 
 /* Utility macro's to let the compiler do the conversion work for us */
@@ -399,6 +422,17 @@ case EcsOpBool:\
     set_T(ecs_bool_t, dst, value != 0);\
     break
 
+static
+void conversion_error(
+    ecs_meta_cursor_t *cursor,
+    ecs_meta_type_op_t *op,
+    const char *from)
+{
+    char *path = ecs_get_fullpath(cursor->world, op->type);
+    ecs_err("unsupported conversion from %s to '%s'", from, path);
+    ecs_os_free(path);
+}
+
 int ecs_meta_set_bool(
     ecs_meta_cursor_t *cursor,
     bool value)
@@ -411,7 +445,7 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_unsigned(ptr, value);
     default:
-        ecs_err("unsupported conversion from bool");
+        conversion_error(cursor, op, "bool");
         return -1;
     }
 
@@ -430,7 +464,7 @@ int ecs_meta_set_char(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value);
     default:
-        ecs_err("unsupported conversion from char");
+        conversion_error(cursor, op, "char");
         return -1;
     }
 
@@ -449,9 +483,10 @@ int ecs_meta_set_int(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value);
     cases_T_float(ptr, value);
-    default:
-        ecs_err("unsupported conversion from int");
+    default: {
+        conversion_error(cursor, op, "int");
         return -1;
+    }
     }
 
     return 0;
@@ -473,7 +508,7 @@ int ecs_meta_set_uint(
         set_T(ecs_entity_t, ptr, value);
         break;
     default:
-        ecs_err("unsupported conversion from uint");
+        conversion_error(cursor, op, "uint");
         return -1;
     }
 
@@ -494,7 +529,7 @@ int ecs_meta_set_float(
     cases_T_unsigned(ptr, value);
     cases_T_float(ptr, value);
     default:
-        ecs_err("unsupported conversion from float");
+        conversion_error(cursor, op, "float");
         return -1;
     }
 
@@ -642,7 +677,7 @@ int ecs_meta_set_string(
         set_T(ecs_i32_t, ptr, v[0]);
         break;
     }
-    case EcsOpBitmask: 
+    case EcsOpBitmask:
         if (parse_bitmask(cursor, op, ptr, value) != 0) {
             return -1;
         }
@@ -734,7 +769,7 @@ int ecs_meta_set_entity(
         set_T(ecs_entity_t, ptr, value);
         break;
     default:
-        ecs_err("unsupported conversion from entity");
+        conversion_error(cursor, op, "entity");
         return -1;
     }
 
@@ -753,7 +788,7 @@ int ecs_meta_set_null(
         set_T(ecs_string_t, ptr, NULL);
         break;
     default:
-        ecs_err("unsupported conversion from entity");
+        conversion_error(cursor, op, "null");
         return -1;
     }
 
