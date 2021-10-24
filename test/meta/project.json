@@ -360,6 +360,8 @@
                 "struct_2_nested_i32_i32",
                 "struct_struct_i32_array_3",
                 "struct_struct_i32_i32_array_3",
+                "struct_w_array_type_i32_i32",
+                "struct_w_2_array_types_i32_i32",
                 "escape_simple_string",
                 "escape_newline",
                 "escape_2_newlines",
@@ -441,7 +443,9 @@
                 "serialize_entity_w_primitive_component",
                 "serialize_entity_w_enum_component",
                 "serialize_entity_w_struct_and_enum_component",
-                "serialize_entity_w_invalid_enum_component"
+                "serialize_entity_w_invalid_enum_component",
+                "struct_w_array_type_i32_i32",
+                "struct_w_2_array_types_i32_i32"
             ]
         }, {
             "id": "MetaUtils",

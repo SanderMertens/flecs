@@ -6344,6 +6344,13 @@ ecs_entity_t ecs_component_init(
     if (added) {
         ptr->size = flecs_from_size_t(desc->size);
         ptr->alignment = flecs_from_size_t(desc->alignment);
+        if (!ptr->size) {
+            ecs_trace("#[green]tag#[reset] %s registered", 
+                ecs_get_name(world, result));
+        } else {
+            ecs_trace("#[green]component#[reset] %s registered", 
+                ecs_get_name(world, result));
+        }
     } else {
         if (ptr->size != flecs_from_size_t(desc->size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
@@ -21635,7 +21642,7 @@ int expr_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return expr_ser_type_elements(
-        world, a->type, ptr, op->count, str);
+        world, a->type, ptr, a->count, str);
 }
 
 /* Serialize vector */
@@ -23708,7 +23715,7 @@ int json_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return json_ser_type_elements(
-        world, a->type, ptr, op->count, str);
+        world, a->type, ptr, a->count, str);
 }
 
 /* Serialize vector */

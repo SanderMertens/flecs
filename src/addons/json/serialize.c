@@ -165,7 +165,7 @@ int json_ser_array(
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return json_ser_type_elements(
-        world, a->type, ptr, op->count, str);
+        world, a->type, ptr, a->count, str);
 }
 
 /* Serialize vector */

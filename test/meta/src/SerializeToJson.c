@@ -1094,3 +1094,67 @@ void SerializeToJson_serialize_entity_w_invalid_enum_component() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_struct_w_array_type_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1}
+        }
+    });
+
+    T value = { .n_1 = { 10, 20 }};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"n_1\": [10, 20]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_2_array_types_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1}
+        }
+    });
+
+    T value = { .n_1 = { 10, 20 }, .n_2 = {30, 40} };
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"n_1\": [10, 20], \"n_2\": [30, 40]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
