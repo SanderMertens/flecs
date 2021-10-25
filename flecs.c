@@ -24786,8 +24786,13 @@ const char* ecs_parse_token(
     char *tptr = token_out, ch = ptr[0];
 
     if (!valid_token_start_char(ch)) {
-        ecs_parser_error(name, expr, column, 
-            "invalid start of token '%s'", ptr);
+        if (ch == '\0' || ch == '\n') {
+            ecs_parser_error(name, expr, column, 
+                "unexpected end of expression");
+        } else {
+            ecs_parser_error(name, expr, column, 
+                "invalid start of token '%s'", ptr);
+        }
         return NULL;
     }
 
