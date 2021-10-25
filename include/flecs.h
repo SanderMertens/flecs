@@ -52,6 +52,7 @@
 #define FLECS_DOC           /* Document entities & components */
 #define FLECS_COREDOC       /* Documentation for core entities & components */
 #define FLECS_LOG           /* When enabled ECS provides more detailed logs */
+#define FLECS_APP           /* Application addon */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3568,6 +3569,9 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
+#endif
+#ifdef FLECS_APP
+#include "flecs/addons/app.h"
 #endif
 
 #include "flecs/addons/flecs_c.h"

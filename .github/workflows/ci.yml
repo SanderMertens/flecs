@@ -347,6 +347,11 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_LOG
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_LOG
 
+      - name: FLECS_APP
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_APP
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_APP
+
   flecs-amalgamated:
     timeout-minutes: 5
     runs-on: ubuntu-latest

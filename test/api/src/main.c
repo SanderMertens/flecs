@@ -2174,6 +2174,9 @@ void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
 
+// Testsuite 'App'
+void App_app_w_frame_action(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "init_id",
@@ -10432,6 +10435,13 @@ bake_test_case Error_testcases[] = {
     }
 };
 
+bake_test_case App_testcases[] = {
+    {
+        "app_w_frame_action",
+        App_app_w_frame_action
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -10866,10 +10876,17 @@ static bake_test_suite suites[] = {
         NULL,
         11,
         Error_testcases
+    },
+    {
+        "App",
+        NULL,
+        NULL,
+        1,
+        App_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 62);
+    return bake_test_run("api", argc, argv, suites, 63);
 }

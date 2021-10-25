@@ -2303,6 +2303,11 @@
                 "log_warning",
                 "log_error"
             ]
+        }, {
+            "id": "App",
+            "testcases": [
+                "app_w_frame_action"
+            ]
         }]
     }
 }
