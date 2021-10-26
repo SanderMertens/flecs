@@ -1179,6 +1179,8 @@ void SerializeToJson_serialize_iterator_1_comps_empty() {
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[\"Position\"], \"results\":[]}");
 
+    ecs_os_free(json);
+
     ecs_fini(world);
 }
 
@@ -1220,6 +1222,8 @@ void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table() {
             "]]"
         "}]"
     "}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -1277,6 +1281,8 @@ void SerializeToJson_serialize_iterator_2_comps_2_ents_same_table() {
         "}]"
     "}");
 
+    ecs_os_free(json);
+
     ecs_fini(world);
 }
 
@@ -1307,6 +1313,8 @@ void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table() {
             "\"values\":[0]"
         "}]"
     "}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -1353,6 +1361,8 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table() {
             "], 0]"
         "}]"
     "}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -1420,6 +1430,8 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
             "], 0]"
         "}]"
     "}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
