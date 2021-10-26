@@ -50,6 +50,44 @@ const char* ecs_parse_json(
  * This operation serializes a value of the provided type to a JSON string. The 
  * memory pointed to must be large enough to contain a value of the used type.
  * 
+ * If count is 0, the function will serialize a single value, not wrapped in
+ * array brackets. If count is >= 1, the operation will serialize values to a
+ * a comma-separated list inside of array brackets.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param count The number of elements to serialize.
+ * @return String with JSON expression, or NULL if failed.
+ */
+FLECS_API
+char* ecs_array_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    int32_t count);
+
+/** Serialize value into JSON string buffer.
+ * Same as ecs_array_to_json_buf, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param count The number of elements to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_array_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    int32_t count,
+    ecs_strbuf_t *buf_out);
+
+/** Serialize value into JSON string.
+ * Same as ecs_array_to_json, with count = 0.
+ * 
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
@@ -105,6 +143,45 @@ int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_strbuf_t *buf_out);
+
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_iter_to_json_desc_t {
+    bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
+    bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
+    bool dont_serialize_variables; /* Exclude variables from result */
+    bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
+    bool dont_serialize_values;    /* Exclude component values from result */
+    bool dont_serialize_entities;  /* Exclude entities (for This terms) */
+} ecs_iter_to_json_desc_t;
+
+/** Serialize iterator into JSON string.
+ * This operation will iterate the contents of the iterator and serialize them
+ * to JSON. The function acccepts iterators from any source.
+ * 
+ * @param world The world.
+ * @param iter The iterator to serialize to JSON.
+ * @return A JSON string with the serialized iterator data, or NULL if failed.
+ */
+FLECS_API
+char* ecs_iter_to_json(
+    const ecs_world_t *world,
+    ecs_iter_t *iter,
+    const ecs_iter_to_json_desc_t *desc);
+
+/** Serialize iterator into JSON string buffer.
+ * Same as ecs_iter_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param iter The iterator to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_iter_to_json_buf(
+    const ecs_world_t *world,
+    ecs_iter_t *iter,
+    ecs_strbuf_t *buf_out,
+    const ecs_iter_to_json_desc_t *desc);
 
 #ifdef __cplusplus
 }

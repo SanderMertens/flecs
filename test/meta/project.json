@@ -443,6 +443,8 @@
                 "struct_i32_array_3",
                 "struct_struct_i32_array_3",
                 "struct_struct_i32_i32_array_3",
+                "struct_w_array_type_i32_i32",
+                "struct_w_2_array_type_i32_i32",
                 "serialize_entity_empty",
                 "serialize_entity_w_name",
                 "serialize_entity_w_name_1_tag",
@@ -456,8 +458,12 @@
                 "serialize_entity_w_enum_component",
                 "serialize_entity_w_struct_and_enum_component",
                 "serialize_entity_w_invalid_enum_component",
-                "struct_w_array_type_i32_i32",
-                "struct_w_2_array_type_i32_i32"
+                "serialize_iterator_1_comps_empty",
+                "serialize_iterator_1_comps_2_ents_same_table",
+                "serialize_iterator_1_tag_2_ents_same_table",
+                "serialize_iterator_2_comps_2_ents_same_table",
+                "serialize_iterator_1_tag_1_comp_2_ents_same_table",
+                "serialize_iterator_1_tag_1_comp_4_ents_two_tables"
             ]
         }, {
             "id": "MetaUtils",

@@ -414,6 +414,8 @@ void SerializeToJson_struct_2_nested_i32_i32(void);
 void SerializeToJson_struct_i32_array_3(void);
 void SerializeToJson_struct_struct_i32_array_3(void);
 void SerializeToJson_struct_struct_i32_i32_array_3(void);
+void SerializeToJson_struct_w_array_type_i32_i32(void);
+void SerializeToJson_struct_w_2_array_type_i32_i32(void);
 void SerializeToJson_serialize_entity_empty(void);
 void SerializeToJson_serialize_entity_w_name(void);
 void SerializeToJson_serialize_entity_w_name_1_tag(void);
@@ -427,8 +429,12 @@ void SerializeToJson_serialize_entity_w_primitive_component(void);
 void SerializeToJson_serialize_entity_w_enum_component(void);
 void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
 void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
-void SerializeToJson_struct_w_array_type_i32_i32(void);
-void SerializeToJson_struct_w_2_array_type_i32_i32(void);
+void SerializeToJson_serialize_iterator_1_comps_empty(void);
+void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
+void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table(void);
+void SerializeToJson_serialize_iterator_2_comps_2_ents_same_table(void);
+void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table(void);
+void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -2007,6 +2013,14 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_struct_i32_i32_array_3
     },
     {
+        "struct_w_array_type_i32_i32",
+        SerializeToJson_struct_w_array_type_i32_i32
+    },
+    {
+        "struct_w_2_array_type_i32_i32",
+        SerializeToJson_struct_w_2_array_type_i32_i32
+    },
+    {
         "serialize_entity_empty",
         SerializeToJson_serialize_entity_empty
     },
@@ -2059,12 +2073,28 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_invalid_enum_component
     },
     {
-        "struct_w_array_type_i32_i32",
-        SerializeToJson_struct_w_array_type_i32_i32
+        "serialize_iterator_1_comps_empty",
+        SerializeToJson_serialize_iterator_1_comps_empty
     },
     {
-        "struct_w_2_array_type_i32_i32",
-        SerializeToJson_struct_w_2_array_type_i32_i32
+        "serialize_iterator_1_comps_2_ents_same_table",
+        SerializeToJson_serialize_iterator_1_comps_2_ents_same_table
+    },
+    {
+        "serialize_iterator_1_tag_2_ents_same_table",
+        SerializeToJson_serialize_iterator_1_tag_2_ents_same_table
+    },
+    {
+        "serialize_iterator_2_comps_2_ents_same_table",
+        SerializeToJson_serialize_iterator_2_comps_2_ents_same_table
+    },
+    {
+        "serialize_iterator_1_tag_1_comp_2_ents_same_table",
+        SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table
+    },
+    {
+        "serialize_iterator_1_tag_1_comp_4_ents_two_tables",
+        SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables
     }
 };
 
@@ -2212,7 +2242,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        41,
+        47,
         SerializeToJson_testcases
     },
     {

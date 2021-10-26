@@ -2472,7 +2472,13 @@ void create_variable_name_array(
         int i;
         for (i = 0; i < rule->variable_count; i ++) {
             ecs_rule_var_t *var = &rule->variables[i];
-            rule->variable_names[var->id] = var->name;
+
+            if (var->kind != EcsRuleVarKindEntity) {
+                /* Table variables are hidden for applications. */
+                rule->variable_names[var->id] = NULL;
+            } else {
+                rule->variable_names[var->id] = var->name;
+            }
         }
     }
 }
@@ -2810,9 +2816,10 @@ ecs_iter_t ecs_rule_iter(
             table_reg_set(rule, it->registers, i, NULL);
         }
     }
-    
+
+    result.variable_names = rule->variable_names;
+    result.variable_count = rule->variable_count;
     result.term_count = rule->filter.term_count;
-    
     result.next = ecs_rule_next;
 
     return result;
@@ -3899,8 +3906,6 @@ void populate_iterator(
 
     int32_t i, variable_count = rule->variable_count;
     int32_t term_count = rule->filter.term_count;
-    iter->variable_count = variable_count;
-    iter->variable_names = rule->variable_names;
     iter->variables = it->variables;
 
     for (i = 0; i < variable_count; i ++) {

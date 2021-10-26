@@ -19,7 +19,7 @@ void SerializeToJson_struct_bool() {
     T value = {true};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": true}");
+    test_str(expr, "{\"x\":true}");
     ecs_os_free(expr);
     }
 
@@ -27,7 +27,7 @@ void SerializeToJson_struct_bool() {
     T value = {false};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": false}");
+    test_str(expr, "{\"x\":false}");
     ecs_os_free(expr);
     }
 
@@ -51,7 +51,7 @@ void SerializeToJson_struct_byte() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -74,7 +74,7 @@ void SerializeToJson_struct_char() {
     T value = {'a'};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"a\"}");
+    test_str(expr, "{\"x\":\"a\"}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -97,7 +97,7 @@ void SerializeToJson_struct_i8() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -120,7 +120,7 @@ void SerializeToJson_struct_i16() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -143,7 +143,7 @@ void SerializeToJson_struct_i32() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -166,7 +166,7 @@ void SerializeToJson_struct_i64() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -189,7 +189,7 @@ void SerializeToJson_struct_iptr() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -212,7 +212,7 @@ void SerializeToJson_struct_u8() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -235,7 +235,7 @@ void SerializeToJson_struct_u16() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -258,7 +258,7 @@ void SerializeToJson_struct_u32() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -281,7 +281,7 @@ void SerializeToJson_struct_u64() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -304,7 +304,7 @@ void SerializeToJson_struct_uptr() {
     T value = {10};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10}");
+    test_str(expr, "{\"x\":10}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -327,7 +327,7 @@ void SerializeToJson_struct_float() {
     T value = {10.5};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10.500000}");
+    test_str(expr, "{\"x\":10.500000}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -350,7 +350,7 @@ void SerializeToJson_struct_double() {
     T value = {10.5};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10.500000}");
+    test_str(expr, "{\"x\":10.500000}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -373,7 +373,7 @@ void SerializeToJson_struct_string() {
     T value = {"Hello World"};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Hello World\"}");
+    test_str(expr, "{\"x\":\"Hello World\"}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -396,7 +396,7 @@ void SerializeToJson_struct_entity() {
     T value = {EcsFlecsCore};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"flecs.core\"}");
+    test_str(expr, "{\"x\":\"flecs.core\"}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -434,7 +434,7 @@ void SerializeToJson_struct_enum() {
     T value = {Red};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Red\"}");
+    test_str(expr, "{\"x\":\"Red\"}");
     ecs_os_free(expr);
     }
 
@@ -442,7 +442,7 @@ void SerializeToJson_struct_enum() {
     T value = {Blue};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Blue\"}");
+    test_str(expr, "{\"x\":\"Blue\"}");
     ecs_os_free(expr);
     }
 
@@ -450,7 +450,7 @@ void SerializeToJson_struct_enum() {
     T value = {Green};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Green\"}");
+    test_str(expr, "{\"x\":\"Green\"}");
     ecs_os_free(expr);
     }
 
@@ -496,7 +496,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {0};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 0}");
+    test_str(expr, "{\"x\":0}");
     ecs_os_free(expr);
     }
 
@@ -504,7 +504,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Lettuce};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Lettuce\"}");
+    test_str(expr, "{\"x\":\"Lettuce\"}");
     ecs_os_free(expr);
     }
 
@@ -512,7 +512,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Bacon};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Bacon\"}");
+    test_str(expr, "{\"x\":\"Bacon\"}");
     ecs_os_free(expr);
     }
 
@@ -520,7 +520,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Lettuce | Bacon};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Lettuce|Bacon\"}");
+    test_str(expr, "{\"x\":\"Lettuce|Bacon\"}");
     ecs_os_free(expr);
     }
 
@@ -528,7 +528,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Lettuce | Bacon | Tomato | Cheese};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": \"Cheese|Lettuce|Bacon|Tomato\"}");
+    test_str(expr, "{\"x\":\"Cheese|Lettuce|Bacon|Tomato\"}");
     ecs_os_free(expr);
     }
 
@@ -560,7 +560,7 @@ void SerializeToJson_struct_i32_i32() {
     T value = {10, 20};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": 10, \"y\": 20}");
+    test_str(expr, "{\"x\":10, \"y\":20}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -594,7 +594,7 @@ void SerializeToJson_struct_nested_i32() {
     T value = {{10}};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": {\"x\": 10}}");
+    test_str(expr, "{\"n_1\":{\"x\":10}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -630,7 +630,7 @@ void SerializeToJson_struct_nested_i32_i32() {
     T value = {{10, 20}};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": {\"x\": 10, \"y\": 20}}");
+    test_str(expr, "{\"n_1\":{\"x\":10, \"y\":20}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -668,7 +668,7 @@ void SerializeToJson_struct_2_nested_i32_i32() {
     T value = {{10, 20}, {30, 40}};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": {\"x\": 10, \"y\": 20}, \"n_2\": {\"x\": 30, \"y\": 40}}");
+    test_str(expr, "{\"n_1\":{\"x\":10, \"y\":20}, \"n_2\":{\"x\":30, \"y\":40}}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -691,7 +691,7 @@ void SerializeToJson_struct_i32_array_3() {
     T value = {{10, 20, 30}};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\": [10, 20, 30]}");
+    test_str(expr, "{\"x\":[10, 20, 30]}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -725,7 +725,7 @@ void SerializeToJson_struct_struct_i32_array_3() {
     T value = {{ {10}, {20}, {30} }};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": [{\"x\": 10}, {\"x\": 20}, {\"x\": 30}]}");
+    test_str(expr, "{\"n_1\":[{\"x\":10}, {\"x\":20}, {\"x\":30}]}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -761,7 +761,71 @@ void SerializeToJson_struct_struct_i32_i32_array_3() {
     T value = {{ {10, 20}, {30, 40}, {50, 60} }};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": [{\"x\": 10, \"y\": 20}, {\"x\": 30, \"y\": 40}, {\"x\": 50, \"y\": 60}]}");
+    test_str(expr, "{\"n_1\":[{\"x\":10, \"y\":20}, {\"x\":30, \"y\":40}, {\"x\":50, \"y\":60}]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_array_type_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1}
+        }
+    });
+
+    T value = { .n_1 = { 10, 20 }};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"n_1\":[10, 20]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_w_2_array_type_i32_i32() {
+    typedef int32_t N1[2];
+
+    typedef struct {
+        N1 n_1;
+        N1 n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
+        .entity.name = "vec2",
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"n_1", n1},
+            {"n_2", n1}
+        }
+    });
+
+    T value = { .n_1 = { 10, 20 }, .n_2 = {30, 40} };
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"n_1\":[10, 20], \"n_2\":[30, 40]}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -772,9 +836,9 @@ void SerializeToJson_serialize_entity_empty() {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    char *str = ecs_os_strdup("{\"valid\": true, \"path\": \"446\", \"type\": []}");
+    char *str = ecs_os_strdup("{\"path\":\"446\", \"type\":[]}");
     ecs_os_sprintf(
-        str, "{\"valid\": true, \"path\": \"%u\", \"type\": []}", (uint32_t)e);
+        str, "{\"path\":\"%u\", \"type\":[]}", (uint32_t)e);
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
@@ -792,7 +856,7 @@ void SerializeToJson_serialize_entity_w_name() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -808,7 +872,7 @@ void SerializeToJson_serialize_entity_w_name_1_tag() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Tag\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Tag\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -827,7 +891,7 @@ void SerializeToJson_serialize_entity_w_name_2_tags() {
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
     test_str(json, 
-        "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -845,7 +909,7 @@ void SerializeToJson_serialize_entity_w_name_1_pair() {
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
     test_str(json, 
-        "{\"valid\": true, \"path\": \"Foo\", \"type\": [{\"pred\":\"Identifier\", \"obj\":\"Name\"}, {\"pred\":\"Rel\", \"obj\":\"Obj\"}]}");
+        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Identifier\", \"obj\":\"Name\"}, {\"pred\":\"Rel\", \"obj\":\"Obj\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -866,12 +930,12 @@ void SerializeToJson_serialize_entity_w_base() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"is_a\": {\"Base\": {\"type\": ["
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"is_a\":{\"Base\":{\"type\":["
             "{\"pred\":\"TagA\"}"
         "]}}, "
-        "\"type\": ["
+        "\"type\":["
             "{\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
@@ -896,12 +960,12 @@ void SerializeToJson_serialize_entity_w_base_override() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"is_a\": {\"Base\": {\"type\": ["
-            "{\"pred\":\"TagA\", \"hidden\": true}"
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"is_a\":{\"Base\":{\"type\":["
+            "{\"pred\":\"TagA\", \"hidden\":true}"
         "]}}, "
-        "\"type\": ["
+        "\"type\":["
             "{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
@@ -926,10 +990,10 @@ void SerializeToJson_serialize_entity_w_1_component() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"type\": ["
-            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -961,11 +1025,11 @@ void SerializeToJson_serialize_entity_w_2_components() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"type\": ["
-            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, "
-            "{\"pred\":\"Mass\", \"data\": {\"value\": 1234}}, "
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, "
+            "{\"pred\":\"Mass\", \"value\":{\"value\":1234}}, "
             "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
@@ -982,10 +1046,10 @@ void SerializeToJson_serialize_entity_w_primitive_component() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"type\": ["
-            "{\"pred\":\"flecs.meta.i32\", \"data\": 10}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"flecs.meta.i32\", \"value\":10}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1014,10 +1078,10 @@ void SerializeToJson_serialize_entity_w_enum_component() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"type\": ["
-            "{\"pred\":\"Color\", \"data\": \"Blue\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Color\", \"value\":\"Blue\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1057,11 +1121,11 @@ void SerializeToJson_serialize_entity_w_struct_and_enum_component() {
 
     char *json = ecs_entity_to_json(world, e);
     test_assert(json != NULL);
-    test_str(json, "{\"valid\": true, "
-        "\"path\": \"Foo\", "
-        "\"type\": ["
-            "{\"pred\":\"Position\", \"data\": {\"x\": 10, \"y\": 20}}, "
-            "{\"pred\":\"Color\", \"data\": \"Blue\"}, "
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, "
+            "{\"pred\":\"Color\", \"value\":\"Blue\"}, "
             "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
         "]}");
 
@@ -1095,66 +1159,267 @@ void SerializeToJson_serialize_entity_w_invalid_enum_component() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_w_array_type_i32_i32() {
-    typedef int32_t N1[2];
-
-    typedef struct {
-        N1 n_1;
-    } T;
-
+void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
-        .entity.name = "vec2",
-        .type = ecs_id(ecs_i32_t),
-        .count = 2
-    });
+    ECS_COMPONENT(world, Position);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
-        .entity.name = "T",
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
         .members = {
-            {"n_1", n1}
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    T value = { .n_1 = { 10, 20 }};
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": [10, 20]}");
-    ecs_os_free(expr);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"ids\":[\"Position\"], \"results\":[]}");
 
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_w_2_array_type_i32_i32() {
-    typedef int32_t N1[2];
-
-    typedef struct {
-        N1 n_1;
-        N1 n_2;
-    } T;
-
+void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table() {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_array_init(world, &(ecs_array_desc_t) {
-        .entity.name = "vec2",
-        .type = ecs_id(ecs_i32_t),
-        .count = 2
-    });
+    ECS_COMPONENT(world, Position);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
-        .entity.name = "T",
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
         .members = {
-            {"n_1", n1},
-            {"n_2", n1}
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
         }
     });
 
-    T value = { .n_1 = { 10, 20 }, .n_2 = {30, 40} };
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"n_1\": [10, 20], \"n_2\": [30, 40]}");
-    ecs_os_free(expr);
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"x\":10, \"y\":20}, "
+                "{\"x\":30, \"y\":40}"
+            "]]"
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_2_comps_2_ents_same_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_set(world, e1, Mass, {1});
+    ecs_set(world, e2, Mass, {2});
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Mass");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\", \"Mass\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\", \"Mass\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"x\":10, \"y\":20}, "
+                "{\"x\":30, \"y\":40}"
+            "], ["
+                "{\"value\":1}, "
+                "{\"value\":2}"
+            "]]"
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_add(world, e1, MyTag);
+    ecs_add(world, e2, MyTag);
+
+    ecs_query_t *q = ecs_query_new(world, "MyTag");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"MyTag\"], "
+        "\"results\":[{"
+            "\"ids\":[\"MyTag\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, MyTag);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_add(world, e1, MyTag);
+    ecs_add(world, e2, MyTag);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, MyTag");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\", \"MyTag\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\", \"MyTag\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"x\":10, \"y\":20}, "
+                "{\"x\":30, \"y\":40}"
+            "], 0]"
+        "}]"
+    "}");
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+    ecs_entity_t e3 = ecs_set_name(world, 0, "Hello");
+    ecs_entity_t e4 = ecs_set_name(world, 0, "World");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set(world, e3, Position, {50, 60});
+    ecs_set(world, e4, Position, {70, 80});
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, TagA");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\", \"TagA\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\", \"TagA\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"x\":10, \"y\":20}, "
+                "{\"x\":30, \"y\":40}"
+            "], 0]"
+        "}, {"
+            "\"ids\":[\"Position\", \"TagA\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Hello\", \"World\""
+            "], "
+            "\"values\":[["
+                "{\"x\":50, \"y\":60}, "
+                "{\"x\":70, \"y\":80}"
+            "], 0]"
+        "}]"
+    "}");
 
     ecs_fini(world);
 }

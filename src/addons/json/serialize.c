@@ -27,6 +27,83 @@ int json_ser_type_op(
     ecs_strbuf_t *str);
 
 static
+void json_next(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_next(buf);
+}
+
+static
+void json_literal(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_strbuf_appendstr(buf, value);
+}
+
+static
+void json_true(
+    ecs_strbuf_t *buf)
+{
+    json_literal(buf, "true");
+}
+
+static
+void json_false(
+    ecs_strbuf_t *buf)
+{
+    json_literal(buf, "false");
+}
+
+static
+void json_array_push(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_push(buf, "[", ", ");
+}
+
+static
+void json_array_pop(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_pop(buf, "]");
+}
+
+static
+void json_object_push(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_push(buf, "{", ", ");
+}
+
+static
+void json_object_pop(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_pop(buf, "}");
+}
+
+static
+void json_string(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_strbuf_appendstr(buf, "\"");
+    ecs_strbuf_appendstr(buf, value);
+    ecs_strbuf_appendstr(buf, "\"");
+}
+
+static
+void json_member(
+    ecs_strbuf_t *buf,
+    const char *name)
+{
+    ecs_strbuf_list_appendstr(buf, "\"");
+    ecs_strbuf_appendstr(buf, name);
+    ecs_strbuf_appendstr(buf, "\":");
+}
+
+static
 ecs_primitive_kind_t json_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
@@ -113,7 +190,7 @@ int json_ser_elements(
     int32_t elem_size,
     ecs_strbuf_t *str)
 {
-    ecs_strbuf_list_push(str, "[", ", ");
+    json_array_push(str);
 
     const void *ptr = base;
 
@@ -126,7 +203,7 @@ int json_ser_elements(
         ptr = ECS_OFFSET(ptr, elem_size);
     }
 
-    ecs_strbuf_list_pop(str, "]");
+    json_array_pop(str);
 
     return 0;
 }
@@ -270,8 +347,7 @@ int json_ser_type_ops(
 
         if (op != ops) {
             if (op->name) {
-                ecs_strbuf_list_next(str);
-                ecs_strbuf_append(str, "\"%s\": ", op->name);
+                json_member(str, op->name);
             }
 
             int32_t elem_count = op->count;
@@ -290,10 +366,10 @@ int json_ser_type_ops(
         
         switch(op->kind) {
         case EcsOpPush:
-            ecs_strbuf_list_push(str, "{", ", ");
+            json_object_push(str);
             break;
         case EcsOpPop:
-            ecs_strbuf_list_pop(str, "}");
+            json_object_pop(str);
             break;
         default:
             if (json_ser_type_op(world, op, base, str)) {
@@ -321,30 +397,75 @@ int json_ser_type(
     return json_ser_type_ops(world, ops, count, base, str);
 }
 
-int ecs_ptr_to_json_buf(
+static
+int array_to_json_buf_w_type_data(
     const ecs_world_t *world,
-    ecs_entity_t type,
     const void *ptr,
-    ecs_strbuf_t *buf_out)
+    int32_t count,
+    ecs_strbuf_t *buf,
+    const EcsComponent *comp,
+    const EcsMetaTypeSerialized *ser)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    if (count) {
+        ecs_size_t size = comp->size;
 
-    if (json_ser_type(world, ser->ops, ptr, buf_out)) {
-        return -1;
+        json_array_push(buf);
+
+        do {
+            ecs_strbuf_list_next(buf);
+            if (json_ser_type(world, ser->ops, ptr, buf)) {
+                return -1;
+            }
+
+            ptr = ECS_OFFSET(ptr, size);
+        } while (-- count);
+
+        json_array_pop(buf);
+    } else {
+        if (json_ser_type(world, ser->ops, ptr, buf)) {
+            return -1;
+        }
     }
 
     return 0;
 }
 
-char* ecs_ptr_to_json(
+int ecs_array_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    int32_t count,
+    ecs_strbuf_t *buf)
+{
+    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+    if (!comp) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize to JSON, '%s' is not a component", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    const EcsMetaTypeSerialized *ser = ecs_get(
+        world, type, EcsMetaTypeSerialized);
+    if (!ser) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize to JSON, '%s' has no reflection data", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    return array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
+}
+
+char* ecs_array_to_json(
     const ecs_world_t *world, 
     ecs_entity_t type, 
-    const void* ptr)
+    const void* ptr,
+    int32_t count)
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
 
-    if (ecs_ptr_to_json_buf(world, type, ptr, &str) != 0) {
+    if (ecs_array_to_json_buf(world, type, ptr, count, &str) != 0) {
         ecs_strbuf_reset(&str);
         return NULL;
     }
@@ -352,10 +473,27 @@ char* ecs_ptr_to_json(
     return ecs_strbuf_get(&str);
 }
 
+int ecs_ptr_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf)
+{
+    return ecs_array_to_json_buf(world, type, ptr, 0, buf);
+}
+
+char* ecs_ptr_to_json(
+    const ecs_world_t *world, 
+    ecs_entity_t type, 
+    const void* ptr)
+{
+    return ecs_array_to_json(world, type, ptr, 0);
+}
+
 static
 int append_type(
     const ecs_world_t *world, 
-    ecs_strbuf_t *buf_out, 
+    ecs_strbuf_t *buf, 
     ecs_entity_t ent, 
     ecs_entity_t inst) 
 {
@@ -363,8 +501,8 @@ int append_type(
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);
 
-    ecs_strbuf_list_appendstr(buf_out, "\"type\": ");
-    ecs_strbuf_list_push(buf_out, "[", ", ");
+    json_member(buf, "type");
+    json_array_push(buf);
 
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -396,22 +534,23 @@ int append_type(
             }
         }
 
-        ecs_strbuf_list_next(buf_out);
-        ecs_strbuf_list_push(buf_out, "{", ", ");
+        ecs_strbuf_list_next(buf);
+        json_object_push(buf);
 
         if (pred) {
             char *str = ecs_get_fullpath(world, pred);
-            ecs_strbuf_list_append(buf_out, "\"pred\":\"%s\"", str);
+            json_member(buf, "pred"); json_string(buf, str);
             ecs_os_free(str);
         }
         if (obj) {
             char *str = ecs_get_fullpath(world, obj);
-            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", str);
+            json_member(buf, "obj"); 
+            json_string(buf, str);
             ecs_os_free(str);
         }
         if (role) {
-            ecs_strbuf_list_append(buf_out, "\"obj\":\"%s\"", 
-                ecs_role_str(role));
+            json_member(buf, "obj"); 
+            json_string(buf, ecs_role_str(role));
         }
 
         bool hidden = false;
@@ -419,8 +558,7 @@ int append_type(
         if (ent != inst) {
             if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
                 hidden = true;
-                ecs_strbuf_list_append(buf_out, "\"hidden\": true", 
-                    ecs_role_str(role));
+                ecs_strbuf_list_appendstr(buf, "\"hidden\":true");
             }
         }
 
@@ -432,8 +570,8 @@ int append_type(
                 if (ser) {
                     const void *ptr = ecs_get_id(world, ent, id);
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    ecs_strbuf_list_appendstr(buf_out, "\"data\": ");
-                    if (json_ser_type(world, ser->ops, ptr, buf_out) != 0) {
+                    json_member(buf, "value");
+                    if (json_ser_type(world, ser->ops, ptr, buf) != 0) {
                         /* Entity contains invalid value */
                         return -1;
                     }
@@ -441,10 +579,10 @@ int append_type(
             }
         }
 
-        ecs_strbuf_list_pop(buf_out, "}");
+        json_object_pop(buf);
     }
 
-    ecs_strbuf_list_pop(buf_out, "]");
+    json_array_pop(buf);
     
     return 0;
 }
@@ -452,7 +590,7 @@ int append_type(
 static
 int append_base(
     const ecs_world_t *world, 
-    ecs_strbuf_t *buf_out, 
+    ecs_strbuf_t *buf, 
     ecs_entity_t ent, 
     ecs_entity_t inst) 
 {
@@ -463,21 +601,23 @@ int append_base(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            if (append_base(world, buf_out, ecs_pair_object(world, id), inst)) {
+            if (append_base(world, buf, ecs_pair_object(world, id), inst)) {
                 return -1;
             }
         }
     }
 
     char *path = ecs_get_fullpath(world, ent);
-    ecs_strbuf_list_append(buf_out, "\"%s\": ", path);
+    json_member(buf, path);
     ecs_os_free(path);
 
-    ecs_strbuf_list_push(buf_out, "{", ", ");
-    if (append_type(world, buf_out, ent, inst)) {
+    json_object_push(buf);
+
+    if (append_type(world, buf, ent, inst)) {
         return -1;
     }
-    ecs_strbuf_list_pop(buf_out, "}");
+
+    json_object_pop(buf);
 
     return 0;
 }
@@ -485,47 +625,46 @@ int append_base(
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_strbuf_t *buf_out)
+    ecs_strbuf_t *buf)
 {
-    ecs_strbuf_list_push(buf_out, "{", ", ");
-
     if (!entity || !ecs_is_valid(world, entity)) {
-        ecs_strbuf_list_appendstr(buf_out, "\"valid\": false");
-    } else {
-        ecs_strbuf_list_appendstr(buf_out, "\"valid\": true");
-
-        char *path = ecs_get_fullpath(world, entity);
-        ecs_strbuf_list_append(buf_out, "\"path\": \"%s\"", path);
-        ecs_os_free(path);
-
-        ecs_type_t type = ecs_get_type(world, entity);
-        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-        int32_t i, count = ecs_vector_count(type);
-
-        if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
-            ecs_strbuf_list_appendstr(buf_out, "\"is_a\": ");
-            ecs_strbuf_list_push(buf_out, "{", ", ");
-
-            for (i = 0; i < count; i ++) {
-                ecs_id_t id = ids[i];
-                if (ECS_HAS_RELATION(id, EcsIsA)) {
-                    if (append_base(
-                        world, buf_out, ecs_pair_object(world, id), entity)) 
-                    {
-                        return -1;
-                    }
-                }
-            }
-
-            ecs_strbuf_list_pop(buf_out, "}");
-        }
-
-        if (append_type(world, buf_out, entity, entity)) {
-            goto error;
-        }
+        return -1;
     }
 
-    ecs_strbuf_list_pop(buf_out, "}");
+    json_object_push(buf);
+
+    char *path = ecs_get_fullpath(world, entity);
+    json_member(buf, "path");
+    json_string(buf, path);
+    ecs_os_free(path);
+
+    ecs_type_t type = ecs_get_type(world, entity);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
+        json_member(buf, "is_a");
+        json_object_push(buf);
+
+        for (i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            if (ECS_HAS_RELATION(id, EcsIsA)) {
+                if (append_base(
+                    world, buf, ecs_pair_object(world, id), entity)) 
+                {
+                    return -1;
+                }
+            }
+        }
+
+        json_object_pop(buf);
+    }
+
+    if (append_type(world, buf, entity, entity)) {
+        goto error;
+    }
+
+    json_object_pop(buf);
 
     return 0;
 error:
@@ -539,6 +678,308 @@ char* ecs_entity_to_json(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
     if (ecs_entity_to_json_buf(world, entity, &buf) != 0) {
+        ecs_strbuf_reset(&buf);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+static
+bool skip_variable(
+    const char *name)
+{
+    if (!name || name[0] == '_' || name[0] == '.') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
+void serialize_id(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_strbuf_t *buf) 
+{
+    char *id_str = ecs_id_str(world, id);
+    json_string(buf, id_str);
+    ecs_os_free(id_str);
+}
+
+static
+void serialize_iter_ids(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf) 
+{
+    int32_t term_count = it->term_count;
+    if (!term_count) {
+        return;
+    }
+
+    json_member(buf, "ids");
+    json_array_push(buf);
+
+    for (int i = 0; i < term_count; i ++) {
+        json_next(buf);
+        serialize_id(world, it->terms[i].id, buf);
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
+    char **variable_names = it->variable_names;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 0; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (skip_variable(var_name)) continue;
+
+        if (!actual_count) {
+            json_member(buf, "vars");
+            json_array_push(buf);
+            actual_count ++;
+        }
+
+        json_string(buf, var_name);
+    }
+
+    if (actual_count) {
+        json_array_pop(buf);
+    }
+}
+
+static
+void serialize_iter_result_ids(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    json_member(buf, "ids");
+    json_array_push(buf);
+
+    for (int i = 0; i < it->term_count; i ++) {
+        json_next(buf);
+        serialize_id(world,  ecs_term_id(it, i + 1), buf);
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_is_set(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    json_member(buf, "is_set");
+    json_array_push(buf);
+
+    for (int i = 0; i < it->term_count; i ++) {
+        ecs_strbuf_list_next(buf);
+        if (ecs_term_is_set(it, i + 1)) {
+            json_true(buf);
+        } else {
+            json_false(buf);
+        }
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_variables(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    char **variable_names = it->variable_names;
+    ecs_entity_t *variables = it->variables;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 0; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (skip_variable(var_name)) continue;
+
+        if (!actual_count) {
+            json_member(buf, "vars");
+            json_array_push(buf);
+            actual_count ++;
+        }
+
+        char *path = ecs_get_fullpath(world, variables[i]);
+        ecs_strbuf_list_appendstr(buf, path);
+        ecs_os_free(path);
+    }
+
+    if (actual_count) {
+        json_array_pop(buf);
+    }
+}
+
+static
+void serialize_iter_result_entities(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    json_member(buf, "entities");
+    json_array_push(buf);
+
+    ecs_entity_t *entities = it->entities;
+
+    for (int i = 0; i < count; i ++) {
+        char *path = ecs_get_fullpath(world, entities[i]);
+        json_next(buf);
+        json_string(buf, path);
+        ecs_os_free(path);
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_values(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    json_member(buf, "values");
+    json_array_push(buf);
+
+    int32_t i, term_count = it->term_count;
+    for (i = 0; i < term_count; i ++) {
+        ecs_strbuf_list_next(buf);
+        
+        const void *ptr = it->ptrs[i];
+        if (!ptr) {
+            /* No data in column */
+            json_literal(buf, "0");
+            continue;
+        }
+
+        /* Get component id (can be different in case of pairs) */
+        ecs_entity_t type = ecs_get_typeid(world, it->ids[i]);
+        if (!type) {
+            /* Odd, we have a ptr but no Component? Not the place of the
+             * serializer to complain about that. */
+            json_literal(buf, "0");
+            continue;
+        }
+
+        const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+        if (!comp) {
+            /* Also odd, typeid but not a component? */
+            json_literal(buf, "0");
+            continue;
+        }
+
+        const EcsMetaTypeSerialized *ser = ecs_get(
+            world, type, EcsMetaTypeSerialized);
+        if (!ser) {
+            /* Not odd, component just has no reflection data */
+            json_literal(buf, "0");
+            continue;
+        }
+
+        array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
+    }
+    
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc) 
+{
+    json_next(buf);
+    json_object_push(buf);
+
+    /* Each result can be matched with different component ids. Add them to
+     * the result so clients know with which component an entity was matched */
+    if (!desc || !desc->dont_serialize_ids) {
+        serialize_iter_result_ids(world, it, buf);
+    }
+
+    /* Include information on which terms are set, to support optional terms */
+    if (!desc || !desc->dont_serialize_is_set) {
+        serialize_iter_result_is_set(it, buf);
+    }
+
+    /* Write variable values for current result */
+    if (!desc || !desc->dont_serialize_variables) {
+        serialize_iter_result_variables(world, it, buf);
+    }
+
+    /* Write entity ids for current result (for queries with This terms) */
+    if (!desc || !desc->dont_serialize_entities) {
+        serialize_iter_result_entities(world, it, buf);
+    }
+
+    /* Serialize component values */
+    if (!desc || !desc->dont_serialize_values) {
+        serialize_iter_result_values(world, it, buf);
+    }
+
+    json_object_pop(buf);
+}
+
+int ecs_iter_to_json_buf(
+    const ecs_world_t *world,
+    ecs_iter_t *it,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc)
+{
+    json_object_push(buf);
+
+    /* Serialize component ids of the terms (usually provided by query) */
+    if (!desc || !desc->dont_serialize_term_ids) {
+        serialize_iter_ids(world, it, buf);
+    }
+
+    /* Serialize variable names, if iterator has any */
+    serialize_iter_variables(it, buf);
+
+    /* Serialize results */
+    json_member(buf, "results");
+    json_array_push(buf);
+
+    ecs_iter_next_action_t next = it->next;
+    while (next(it)) {
+        serialize_iter_result(world, it, buf, desc);
+    }
+
+    json_array_pop(buf);
+    json_object_pop(buf);
+
+    return 0;
+}
+
+char* ecs_iter_to_json(
+    const ecs_world_t *world,
+    ecs_iter_t *it,
+    const ecs_iter_to_json_desc_t *desc)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (ecs_iter_to_json_buf(world, it, &buf, desc)) {
         ecs_strbuf_reset(&buf);
         return NULL;
     }
