@@ -24437,6 +24437,7 @@ void serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
             actual_count ++;
         }
 
+        ecs_strbuf_list_next(buf);
         json_string(buf, var_name);
     }
 
@@ -24527,6 +24528,7 @@ void serialize_iter_result_variables(
             actual_count ++;
         }
 
+        ecs_strbuf_list_next(buf);
         char *path = ecs_get_fullpath(world, variables[i]);
         json_string(buf, path);
         ecs_os_free(path);
@@ -25977,10 +25979,11 @@ parse_singleton:
 
 parse_done:
     *term_out = term;
-
     return ptr;
+
 error:
     ecs_term_fini(&term);
+    *term_out = (ecs_term_t){0};
     return NULL;
 }
 

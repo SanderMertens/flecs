@@ -897,10 +897,11 @@ parse_singleton:
 
 parse_done:
     *term_out = term;
-
     return ptr;
+
 error:
     ecs_term_fini(&term);
+    *term_out = (ecs_term_t){0};
     return NULL;
 }
 

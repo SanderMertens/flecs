@@ -4051,3 +4051,18 @@ void Filter_chain_iter_2_levels() {
 
     ecs_fini(world);
 }
+
+void Filter_filter_from_expr_2_terms_err() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_log_set_level(-4);
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "Foo, (IsA"
+    }) != 0);
+
+    ecs_fini(world);
+}

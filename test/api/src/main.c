@@ -1089,6 +1089,7 @@ void Filter_chain_filter_iter(void);
 void Filter_chain_query_iter(void);
 void Filter_chain_rule_iter(void);
 void Filter_chain_iter_2_levels(void);
+void Filter_filter_from_expr_2_terms_err(void);
 
 // Testsuite 'FilterDefaultSubstitution'
 void FilterDefaultSubstitution_final_pred_no_args(void);
@@ -6325,6 +6326,10 @@ bake_test_case Filter_testcases[] = {
     {
         "chain_iter_2_levels",
         Filter_chain_iter_2_levels
+    },
+    {
+        "filter_from_expr_2_terms_err",
+        Filter_filter_from_expr_2_terms_err
     }
 };
 
@@ -10651,7 +10656,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        88,
+        89,
         Filter_testcases
     },
     {
