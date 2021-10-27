@@ -23734,6 +23734,14 @@ void json_literal(
 }
 
 static
+void json_number(
+    ecs_strbuf_t *buf,
+    double value)
+{
+    ecs_strbuf_append(buf, "%f", value);
+}
+
+static
 void json_true(
     ecs_strbuf_t *buf)
 {
@@ -24674,6 +24682,11 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
+    ecs_time_t duration = {0};
+    if (desc->measure_eval_duration) {
+        ecs_time_measure(&duration);
+    }
+
     json_object_push(buf);
 
     /* Serialize component ids of the terms (usually provided by query) */
@@ -24694,6 +24707,13 @@ int ecs_iter_to_json_buf(
     }
 
     json_array_pop(buf);
+
+    if (desc->measure_eval_duration) {
+        double dt = ecs_time_measure(&duration);
+        json_member(buf, "eval_duration");
+        json_number(buf, dt);
+    }
+
     json_object_pop(buf);
 
     return 0;

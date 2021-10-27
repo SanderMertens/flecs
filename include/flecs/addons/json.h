@@ -153,6 +153,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
     bool dont_serialize_values;    /* Exclude component values from result */
     bool dont_serialize_entities;  /* Exclude entities (for This terms) */
+    bool measure_eval_duration;    /* Include evaluation duration */
 } ecs_iter_to_json_desc_t;
 
 /** Serialize iterator into JSON string.
