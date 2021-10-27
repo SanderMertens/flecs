@@ -8486,6 +8486,7 @@ int ecs_entity_to_json_buf(
 typedef struct ecs_iter_to_json_desc_t {
     bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
     bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
+    bool dont_serialize_subjects;  /* Exclude subjects from result */
     bool dont_serialize_variables; /* Exclude variables from result */
     bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
     bool dont_serialize_values;    /* Exclude component values from result */

@@ -24460,6 +24460,30 @@ void serialize_iter_result_ids(
 }
 
 static
+void serialize_iter_result_subjects(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    json_member(buf, "subjects");
+    json_array_push(buf);
+
+    for (int i = 0; i < it->term_count; i ++) {
+        json_next(buf);
+        ecs_entity_t subj = it->subjects[i];
+        if (subj) {
+            char *path = ecs_get_fullpath(world, subj);
+            json_string(buf, path);
+            ecs_os_free(path);
+        } else {
+            json_literal(buf, "0");
+        }
+    }
+
+    json_array_pop(buf);
+}
+
+static
 void serialize_iter_result_is_set(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -24605,6 +24629,11 @@ void serialize_iter_result(
      * the result so clients know with which component an entity was matched */
     if (!desc || !desc->dont_serialize_ids) {
         serialize_iter_result_ids(world, it, buf);
+    }
+
+    /* Include information on which entity the term is matched with */
+    if (!desc || !desc->dont_serialize_ids) {
+        serialize_iter_result_subjects(world, it, buf);
     }
 
     /* Include information on which terms are set, to support optional terms */
