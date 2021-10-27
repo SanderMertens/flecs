@@ -1785,6 +1785,17 @@ void Pairs_typeid_from_pair_w_rel_0_obj_0_type() {
     ecs_fini(world);
 }
 
+void Pairs_typeid_from_pair_with_0_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t pair_id = ecs_pair(EcsChildOf, 0);
+
+    ecs_entity_t id = ecs_get_typeid(world, pair_id);
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
 void Pairs_tag_pair_w_rel_comp() {
     ecs_world_t *world = ecs_init();
 

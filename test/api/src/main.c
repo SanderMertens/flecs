@@ -1201,6 +1201,7 @@ void Pairs_typeid_from_pair_w_rel_obj_type(void);
 void Pairs_typeid_from_pair_w_rel_0_obj_type(void);
 void Pairs_typeid_from_pair_w_rel_obj_0_type(void);
 void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void);
+void Pairs_typeid_from_pair_with_0_obj(void);
 void Pairs_tag_pair_w_rel_comp(void);
 void Pairs_tag_pair_w_obj_comp(void);
 void Pairs_tag_pair_w_rel_obj_comp(void);
@@ -6759,6 +6760,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_typeid_from_pair_w_rel_0_obj_0_type
     },
     {
+        "typeid_from_pair_with_0_obj",
+        Pairs_typeid_from_pair_with_0_obj
+    },
+    {
         "tag_pair_w_rel_comp",
         Pairs_tag_pair_w_rel_comp
     },
@@ -10667,7 +10672,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        65,
+        66,
         Pairs_testcases
     },
     {

@@ -1546,7 +1546,7 @@ void SerializeToJson_serialize_iterator_w_pair_wildcard() {
     ecs_fini(world);
 }
 
-void SerializeToJson_serialize_iterator_w_variable() {
+void SerializeToJson_serialize_iterator_w_var() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -1588,6 +1588,65 @@ void SerializeToJson_serialize_iterator_w_variable() {
                 "\"Bar\""
             "], "
             "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_w_2_vars() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, ObjC);
+    ECS_TAG(world, ObjD);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_add_pair(world, e1, RelX, ObjA);
+    ecs_add_pair(world, e2, RelX, ObjB);
+
+    ecs_add_pair(world, e1, RelY, ObjC);
+    ecs_add_pair(world, e2, RelY, ObjD);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(RelX, X), (RelY, Y)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"(RelX,*)\", \"(RelY,*)\"], "
+        "\"vars\":[\"X\", \"Y\"], "
+        "\"results\":[{"
+            "\"ids\":[\"(RelX,ObjA)\", \"(RelY,ObjC)\"], "
+            "\"subjects\":[0, 0], "
+            "\"vars\":[\"ObjA\", \"ObjC\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\""
+            "], "
+            "\"values\":[0, 0]"
+        "}, {"
+            "\"ids\":[\"(RelX,ObjB)\", \"(RelY,ObjD)\"], "
+            "\"subjects\":[0, 0], "
+            "\"vars\":[\"ObjB\", \"ObjD\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Bar\""
+            "], "
+            "\"values\":[0, 0]"
         "}]"
     "}");
 

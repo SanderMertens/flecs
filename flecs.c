@@ -7573,9 +7573,7 @@ bool ecs_is_valid(
     /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
     if (ECS_HAS_ROLE(entity, PAIR)) {
-        ecs_entity_t lo = ECS_PAIR_OBJECT(entity);
-        ecs_entity_t hi = ECS_PAIR_RELATION(entity);
-        return lo != 0 && hi != 0;
+        return ECS_PAIR_RELATION(entity) != 0;
     } else
     if (entity & ECS_ROLE) {
         return ecs_entity_t_lo(entity) != 0;
@@ -7735,18 +7733,20 @@ ecs_id_t ecs_get_typeid(
         const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
         if (ptr && ptr->size != 0) {
             return rel;
-        } else {
-            ecs_entity_t obj = ecs_get_alive(world, ECS_PAIR_OBJECT(id));
+        }
+        
+        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+        if (obj) {
+            obj = ecs_get_alive(world, obj);
             ptr = ecs_get(world, obj, EcsComponent);
             
             if (ptr && ptr->size != 0) {
                 return obj;
             }
-
-            /* Neither relation nor object have data */
-            return 0;
         }
 
+        /* Neither relation nor object have data */
+        return 0;
     } else if (id & ECS_ROLE_MASK) {
         return 0;
     } else {
@@ -17713,6 +17713,9 @@ ecs_iter_t ecs_rule_iter(
     const ecs_world_t *world,
     const ecs_rule_t *rule)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(rule != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_iter_t result = {0};
     int i;
 

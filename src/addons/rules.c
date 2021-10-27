@@ -2776,6 +2776,9 @@ ecs_iter_t ecs_rule_iter(
     const ecs_world_t *world,
     const ecs_rule_t *rule)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(rule != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_iter_t result = {0};
     int i;
 

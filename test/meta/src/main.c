@@ -437,7 +437,8 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_2_ents_same_table(void);
 void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables(void);
 void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents(void);
 void SerializeToJson_serialize_iterator_w_pair_wildcard(void);
-void SerializeToJson_serialize_iterator_w_variable(void);
+void SerializeToJson_serialize_iterator_w_var(void);
+void SerializeToJson_serialize_iterator_w_2_vars(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -2108,8 +2109,12 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_iterator_w_pair_wildcard
     },
     {
-        "serialize_iterator_w_variable",
-        SerializeToJson_serialize_iterator_w_variable
+        "serialize_iterator_w_var",
+        SerializeToJson_serialize_iterator_w_var
+    },
+    {
+        "serialize_iterator_w_2_vars",
+        SerializeToJson_serialize_iterator_w_2_vars
     }
 };
 
@@ -2257,7 +2262,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        50,
+        51,
         SerializeToJson_testcases
     },
     {
