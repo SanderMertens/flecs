@@ -3936,3 +3936,80 @@ void Rules_optional_w_subj_var() {
 
     ecs_fini(world);
 }
+
+void Rules_terms_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "TagA, TagB"
+    });
+
+    test_assert(r != NULL);
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    test_int(it.term_count, 2);
+    test_assert(it.terms != NULL);
+
+    test_int(it.terms[0].id, TagA);
+    test_int(it.terms[1].id, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagA);
+
+    while (ecs_rule_next(&it)) {
+        test_int(it.term_count, 2);
+        test_assert(it.terms != NULL);
+        test_int(it.terms[0].id, TagA);
+        test_int(it.terms[1].id, TagB);
+        test_int(it.count, 1);
+    }
+
+    ecs_fini(world);
+}
+
+void Rules_value_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "Position, Velocity"
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e2, Velocity, {1, 2});
+
+    test_assert(r != NULL);
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    test_int(it.term_count, 2);
+    test_assert(it.terms != NULL);
+
+    test_int(it.terms[0].id, ecs_id(Position));
+    test_int(it.terms[1].id, ecs_id(Velocity));
+
+    while (ecs_rule_next(&it)) {
+        test_int(it.term_count, 2);
+        test_assert(it.terms != NULL);
+        test_int(it.terms[0].id, ecs_id(Position));
+        test_int(it.terms[1].id, ecs_id(Velocity));
+
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_assert(p != NULL);
+        test_assert(v != NULL);
+
+        test_int(it.count, 2);
+        test_int(it.entities[0], e1);
+        test_int(it.entities[1], e2);
+    }
+
+    ecs_fini(world);
+}

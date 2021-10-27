@@ -2363,73 +2363,6 @@ ecs_iter_t ecs_query_iter(
 }
 
 static
-void populate_ptrs(
-    ecs_world_t *world,
-    ecs_iter_t *it)
-{
-    ecs_table_t *table = it->table;
-    ecs_column_t *columns = NULL;
-    ecs_id_t *ids = NULL;
-
-    if (table) {
-        ids = ecs_vector_first(table->type, ecs_id_t);
-    }
-    if (table) {
-        columns = table->storage.columns;
-    }
-
-    int c;
-    for (c = 0; c < it->term_count; c ++) {
-        int32_t c_index = it->columns[c];
-
-        /* Term has no data */
-        if (!c_index) {
-            it->ptrs[c] = NULL;
-            continue;
-        }
-
-        /* Term references a component from another entity */
-        if (c_index < 0) {
-            ecs_ref_t *ref = &it->references[-c_index - 1];
-            it->ptrs[c] = (void*)ecs_get_ref_w_id(
-                world, ref, ref->entity, ref->component);
-            continue;
-        }
-
-        /* Term matches component from matched entity */
-        ecs_assert(c_index > 0, ECS_INTERNAL_ERROR, NULL);
-        c_index --;
-
-        ecs_vector_t *vec;
-        ecs_size_t size, align;
-
-        ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (ECS_HAS_ROLE(ids[c_index], SWITCH)) {
-            ecs_switch_t *sw = table->storage.sw_columns[
-                c_index - table->sw_column_offset].data;
-            vec = flecs_switch_values(sw);
-            size = ECS_SIZEOF(ecs_entity_t);
-            align = ECS_ALIGNOF(ecs_entity_t);
-        } else {
-            if (!columns || it->sizes[c] == 0) {
-                continue;
-            }
-
-            int32_t storage_index = ecs_table_type_to_storage_index(
-                table, c_index);
-
-            ecs_column_t *col = &columns[storage_index];
-            vec = col->data;
-            size = col->size;
-            align = col->alignment;
-        }
-
-        it->ptrs[c] = ecs_vector_get_t(vec, size, align, it->offset);
-    }    
-}
-
-static
 int ecs_page_iter_next(
     ecs_page_iter_t *it,
     ecs_page_cursor_t *cur)
@@ -2904,7 +2837,7 @@ bool ecs_query_next(
 
         flecs_iter_init(it);
 
-        populate_ptrs(world, it);
+        flecs_iter_populate_data(world, it, it->ptrs, NULL);
 
         if (query->flags & EcsQueryHasOutColumns) {
             if (table) {
@@ -2931,6 +2864,7 @@ bool ecs_query_next_worker(
     int32_t total)
 {
     int32_t per_worker, first, prev_offset = it->offset;
+    ecs_world_t *world = it->world;
 
     do {
         if (!ecs_query_next(it)) {
@@ -2954,7 +2888,7 @@ bool ecs_query_next_worker(
 
         if (!per_worker && !(it->iter.query.query->flags & EcsQueryNeedsTables)) {
             if (current == 0) {
-                populate_ptrs(it->world, it);
+                flecs_iter_populate_data(world, it, it->ptrs, NULL);
                 return true;
             } else {
                 return false;
@@ -2968,7 +2902,7 @@ bool ecs_query_next_worker(
     it->entities = &it->entities[first];
     it->frame_offset += first;
 
-    populate_ptrs(it->world, it);
+    flecs_iter_populate_data(world, it, it->ptrs, NULL);
 
     return true;
 }

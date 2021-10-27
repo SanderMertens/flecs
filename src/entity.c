@@ -3318,6 +3318,18 @@ ecs_table_t* ecs_get_table(
     return NULL;
 }
 
+ecs_table_t* ecs_get_storage_table(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_table_t *table = ecs_get_table(world, entity);
+    if (table) {
+       return table->storage_table;
+    }
+
+    return NULL;   
+}
+
 ecs_type_t ecs_get_type(
     const ecs_world_t *world,
     ecs_entity_t entity)

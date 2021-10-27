@@ -373,7 +373,7 @@ ecs_rule_op_t* create_operation(
         rule->operations, (cur + 1) * ECS_SIZEOF(ecs_rule_op_t));
 
     ecs_rule_op_t *result = &rule->operations[cur];
-    memset(result, 0, sizeof(ecs_rule_op_t));
+    ecs_os_memset_t(result, 0, ecs_rule_op_t);
 
     return result;
 }
@@ -1332,8 +1332,6 @@ int scan_variables(
     ecs_term_t *terms = rule->filter.terms;
     int32_t i, term_count = rule->filter.term_count;
 
-    rule->subject_variables = ecs_os_malloc_n(int32_t, term_count);
-
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
 
@@ -1356,10 +1354,6 @@ int scan_variables(
                 max_occur = subj->occurs;
                 max_occur_var = subj->id;
             }
-
-            rule->subject_variables[i] = subj->id;
-        } else {            
-            rule->subject_variables[i] = -1;
         }
     }
 
@@ -1444,7 +1438,7 @@ int scan_variables(
     for (i = 0; i < rule->variable_count; i ++) {
         rule->variables[i].id = i;
     }
-
+    
 done:
     return 0;
 error:
@@ -2533,18 +2527,22 @@ ecs_rule_t* ecs_rule_init(
      * iterators without requiring access to the ecs_rule_t */
     create_variable_name_array(result);
 
-    /* Make sure that subject variable ids are pointing to entity variables */
+    /* Create lookup array for subject variables */
+    result->subject_variables = ecs_os_malloc_n(int32_t, term_count);
+
     for (i = 0; i < term_count; i ++) {
-        int32_t var_id = result->subject_variables[i];
-        if (var_id != -1) {
-            ecs_rule_var_t *var = &result->variables[var_id];
-            var = to_entity(result, var);
-            if (var) {
-                result->subject_variables[i] = var->id;
-            } else {
-                result->subject_variables[i] = -1;
-            }
+        ecs_term_t *term = &terms[i];
+        if (term_id_is_variable(&term->subj)) {
+            const char *subj_name = term_id_var_name(&term->subj);
+            ecs_rule_var_t *subj = find_variable(
+                result, EcsRuleVarKindEntity, subj_name);
+            if (subj) {
+                result->subject_variables[i] = subj->id;
+                continue;
+            }          
         }
+
+        result->subject_variables[i] = -1;
     }
 
     return result;
@@ -2820,6 +2818,7 @@ ecs_iter_t ecs_rule_iter(
     result.variable_names = rule->variable_names;
     result.variable_count = rule->variable_count;
     result.term_count = rule->filter.term_count;
+    result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
 
     return result;
@@ -3822,7 +3821,7 @@ void push_columns(
 
     int32_t *src_cols = rule_get_columns_frame(it, cur);
     int32_t *dst_cols = rule_get_columns_frame(it, next);
-    
+
     ecs_os_memcpy_n(dst_cols, src_cols, int32_t, it->rule->filter.term_count);
 }
 
@@ -3847,7 +3846,7 @@ void set_iter_table(
     it->table = table;
     it->type = table->type;
 
-    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);    
+    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);  
 }
 
 /* Populate iterator with data before yielding to application */
@@ -3858,6 +3857,7 @@ void populate_iterator(
     ecs_rule_iter_t *it,
     ecs_rule_op_t *op)
 {
+    ecs_world_t *world = rule->world;
     int32_t r = op->r_in;
     ecs_rule_reg_t *regs = get_register_frame(it, op->frame);
 
@@ -3890,8 +3890,8 @@ void populate_iterator(
                 ECS_INTERNAL_ERROR, NULL);
 
             ecs_entity_t e = reg->entity;
-            ecs_record_t *record = ecs_eis_get(rule->world, e);
-            
+            ecs_record_t *record = ecs_eis_get(world, e);
+
             bool is_monitored;
             int32_t offset = iter->offset = flecs_record_to_row(
                 record->row, &is_monitored);
@@ -3929,8 +3929,20 @@ void populate_iterator(
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
     for (i = 0; i < term_count; i ++) {
-        iter->columns[i] ++;
+        ecs_entity_t subj = iter->subjects[i];
+        int32_t c = ++ iter->columns[i];
+
+        // printf("%d: col %d, subj = %d (this = %d)\n", i, c, subj, EcsThis);
+        if (!subj) {
+            if (iter->terms[i].subj.entity != EcsThis) {
+                iter->columns[i] = 0;
+            }
+        } else if (c) {
+            iter->columns[i] = -1;
+        }
     }
+
+    flecs_iter_populate_data(world, iter, iter->ptrs, iter->sizes);
 }
 
 static

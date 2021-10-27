@@ -177,7 +177,7 @@ void TransitiveRules_trans_pred_This_X__pred_X() {
     test_bool(true, ecs_rule_next(&it));
     char *expect =
     HEAD "term: (LocatedIn,Earth),Location"
-    LINE "subj: Earth,0"
+    LINE "subj: 0,Earth"
     LINE "vars: X=Earth"
     LINE "this:"
     LINE "    - Earth"

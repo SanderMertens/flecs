@@ -4576,10 +4576,23 @@ ecs_type_t ecs_get_type(
  *
  * @param world The world.
  * @param entity The entity.
- * @return The table of the entity, NULL if the entity has no components.
+ * @return The table of the entity, NULL if the entity has no components/tags.
  */
 FLECS_API
 ecs_table_t* ecs_get_table(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get the storage table of an entity.
+ * The storage table of an entity has a type that only contains components, and
+ * excludes tags/entities/pairs that have no data.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @return The storage table of the entity, NULL if the entity has no components.
+ */
+FLECS_API
+ecs_table_t* ecs_get_storage_table(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
