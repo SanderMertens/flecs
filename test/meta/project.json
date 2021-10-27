@@ -463,7 +463,10 @@
                 "serialize_iterator_1_tag_2_ents_same_table",
                 "serialize_iterator_2_comps_2_ents_same_table",
                 "serialize_iterator_1_tag_1_comp_2_ents_same_table",
-                "serialize_iterator_1_tag_1_comp_4_ents_two_tables"
+                "serialize_iterator_1_tag_1_comp_4_ents_two_tables",
+                "serialize_iterator_2_comps_1_owned_2_ents",
+                "serialize_iterator_w_pair_wildcard",
+                "serialize_iterator_w_variable"
             ]
         }, {
             "id": "MetaUtils",

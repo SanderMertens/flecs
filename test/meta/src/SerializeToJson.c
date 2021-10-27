@@ -1441,3 +1441,159 @@ void SerializeToJson_serialize_iterator_1_tag_1_comp_4_ents_two_tables() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_entity_t base = ecs_set_name(world, 0, "Base");
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, base, Mass, {100});
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Mass(super)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\", \"Mass\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\", \"Mass\"], "
+            "\"subjects\":[0, \"Base\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"x\":10, \"y\":20}, "
+                "{\"x\":30, \"y\":40}"
+            "], {"
+                "\"value\":100"
+            "}]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_w_pair_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_add_pair(world, e1, Rel, ObjA);
+    ecs_add_pair(world, e2, Rel, ObjB);
+
+    ecs_query_t *q = ecs_query_new(world, "(Rel, *)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"(Rel,*)\"], "
+        "\"results\":[{"
+            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\""
+            "], "
+            "\"values\":[0]"
+        "}, {"
+            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Bar\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_w_variable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_add_pair(world, e1, Rel, ObjA);
+    ecs_add_pair(world, e2, Rel, ObjB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, X)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[\"(Rel,*)\"], "
+        "\"vars\":[\"X\"], "
+        "\"results\":[{"
+            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"subjects\":[0], "
+            "\"vars\":[\"ObjA\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\""
+            "], "
+            "\"values\":[0]"
+        "}, {"
+            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"subjects\":[0], "
+            "\"vars\":[\"ObjB\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Bar\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

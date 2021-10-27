@@ -24525,7 +24525,7 @@ void serialize_iter_result_variables(
         }
 
         char *path = ecs_get_fullpath(world, variables[i]);
-        ecs_strbuf_list_appendstr(buf, path);
+        json_string(buf, path);
         ecs_os_free(path);
     }
 
@@ -24609,9 +24609,13 @@ void serialize_iter_result_values(
             continue;
         }
 
-        array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
+        if (ecs_term_is_owned(it, i + 1)) {
+            array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
+        } else {
+            array_to_json_buf_w_type_data(world, ptr, 0, buf, comp, ser);
+        }
     }
-    
+
     json_array_pop(buf);
 }
 
@@ -24636,14 +24640,14 @@ void serialize_iter_result(
         serialize_iter_result_subjects(world, it, buf);
     }
 
-    /* Include information on which terms are set, to support optional terms */
-    if (!desc || !desc->dont_serialize_is_set) {
-        serialize_iter_result_is_set(it, buf);
-    }
-
     /* Write variable values for current result */
     if (!desc || !desc->dont_serialize_variables) {
         serialize_iter_result_variables(world, it, buf);
+    }
+
+    /* Include information on which terms are set, to support optional terms */
+    if (!desc || !desc->dont_serialize_is_set) {
+        serialize_iter_result_is_set(it, buf);
     }
 
     /* Write entity ids for current result (for queries with This terms) */
@@ -35810,7 +35814,7 @@ void flecs_iter_populate_term_data(
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
-            ptr_out[0] = (void*)ecs_get_ref_w_id(
+            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_w_id(
                 world, ref, ref->entity, ref->component);
 
             /* If cached references were provided, the code that populated
