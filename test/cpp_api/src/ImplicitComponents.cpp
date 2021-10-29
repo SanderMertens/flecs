@@ -367,8 +367,6 @@ void ImplicitComponents_use_const_w_stage() {
 }
 
 void ImplicitComponents_use_const_w_threads() {
-    bake_set_os_api();
-
     flecs::world world;
 
     world.use<const Velocity>();

@@ -128,7 +128,8 @@ bool ecs_type_has_id(
     ecs_id_t id,
     bool owned)
 {
-    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, NULL, NULL) != -1;
+    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, 
+        NULL, NULL) != -1;
 }
 
 int32_t ecs_type_index_of(
@@ -154,7 +155,9 @@ int32_t ecs_type_match(
     if (subject_out) {
         *subject_out = 0;
     }
-    return search_type(world, table, type, offset, id, rel, min_depth, max_depth, 0, subject_out, count_out);
+
+    return search_type(world, table, type, offset, id, rel, min_depth, 
+        max_depth, 0, subject_out, count_out);
 }
 
 char* ecs_type_str(
@@ -178,6 +181,7 @@ char* ecs_type_str(
 
         if (i) {
             *(char*)ecs_vector_add(&chbuf, char) = ',';
+            *(char*)ecs_vector_add(&chbuf, char) = ' ';
         }
 
         if (e == 1) {

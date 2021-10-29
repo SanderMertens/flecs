@@ -1,7 +1,6 @@
 #include <api.h>
 
 void MultiThread_setup() {
-    bake_set_os_api();
     ecs_log_set_level(-3);
 }
 

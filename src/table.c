@@ -702,7 +702,7 @@ void flecs_table_free(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_1("table #[green][%s]#[normal] deleted", expr);
+    ecs_dbg_1("#[green]table#[reset] [%s] deleted", expr);
     ecs_os_free(expr);
 #endif    
 

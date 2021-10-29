@@ -6,7 +6,7 @@ void ecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
     /* Allocate new element */
-    ecs_strbuf_element_embedded *e = ecs_os_malloc(sizeof(ecs_strbuf_element_embedded));
+    ecs_strbuf_element_embedded *e = ecs_os_malloc_t(ecs_strbuf_element_embedded);
     b->size += b->current->pos;
     b->current->next = (ecs_strbuf_element*)e;
     b->current = (ecs_strbuf_element*)e;
@@ -26,7 +26,7 @@ void ecs_strbuf_grow_str(
     int32_t size)
 {
     /* Allocate new element */
-    ecs_strbuf_element_str *e = ecs_os_malloc(sizeof(ecs_strbuf_element_str));
+    ecs_strbuf_element_str *e = ecs_os_malloc_t(ecs_strbuf_element_str);
     b->size += b->current->pos;
     b->current->next = (ecs_strbuf_element*)e;
     b->current = (ecs_strbuf_element*)e;
@@ -89,36 +89,9 @@ void ecs_strbuf_init(
     }
 }
 
-/* Quick custom function to copy a maxium number of characters and
- * simultaneously determine length of source string. */
-static
-int32_t fast_strncpy(
-    char * dst,
-    const char * src,
-    int n_cpy,
-    int n)
-{
-    ecs_assert(n_cpy >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(n >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    const char *ptr, *orig = src;
-    char ch;
-
-    for (ptr = src; (ptr - orig < n) && (ch = *ptr); ptr ++) {
-        if (ptr - orig < n_cpy) {
-            *dst = ch;
-            dst ++;
-        }
-    }
-
-    ecs_assert(ptr - orig < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-
-    return (int32_t)(ptr - orig);
-}
-
 /* Append a format string to a buffer */
 static
-bool ecs_strbuf_vappend_intern(
+bool vappend(
     ecs_strbuf_t *b,
     const char* str,
     va_list args)
@@ -182,84 +155,72 @@ bool ecs_strbuf_vappend_intern(
             ecs_os_vsprintf(dst, str, arg_cpy);
             ecs_strbuf_grow_str(b, dst, dst, memRequired);
         }
-    } else {
-        /* Buffer max has been reached */
-        result = false;
     }
 
     va_end(arg_cpy);
 
-    return result;
+    return ecs_strbuf_memLeft(b) > 0;
 }
 
 static
-bool ecs_strbuf_append_intern(
+bool appendstr(
     ecs_strbuf_t *b,
     const char* str,
     int n)
 {
-    bool result = true;
-
-    if (!str) {
-        return result;
-    }
-
     ecs_strbuf_init(b);
 
     int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
     int32_t memLeft = ecs_strbuf_memLeft(b);
-
     if (memLeft <= 0) {
         return false;
     }
 
-    /* Compute the memory required to add the string to the buffer. If user
-     * provided buffer, use space left in buffer, otherwise use space left in
-     * current element. */
-    int32_t max_copy = b->buf ? memLeft : memLeftInElement;
-    int32_t memRequired;
+    /* Never write more than what the buffer can store */
+    if (n > memLeft) {
+        n = memLeft;
+    }
 
-    if (n < 0) n = INT_MAX;
-
-    memRequired = fast_strncpy(ecs_strbuf_ptr(b), str, max_copy, n);
-
-    if (memRequired <= memLeftInElement) {
+    if (n <= memLeftInElement) {
         /* Element was large enough to fit string */
-        b->current->pos += memRequired;
-    } else if ((memRequired - memLeftInElement) < memLeft) {
+        ecs_os_strncpy(ecs_strbuf_ptr(b), str, n);
+        b->current->pos += n;
+    } else if ((n - memLeftInElement) < memLeft) {
+        ecs_os_strncpy(ecs_strbuf_ptr(b), str, memLeftInElement);
+
         /* Element was not large enough, but buffer still has space */
         b->current->pos += memLeftInElement;
-        memRequired -= memLeftInElement;
+        n -= memLeftInElement;
 
         /* Current element was too small, copy remainder into new element */
-        if (memRequired < ECS_STRBUF_ELEMENT_SIZE) {
+        if (n < ECS_STRBUF_ELEMENT_SIZE) {
             /* A standard-size buffer is large enough for the new string */
             ecs_strbuf_grow(b);
 
             /* Copy the remainder to the new buffer */
             if (n) {
                 /* If a max number of characters to write is set, only a
-                    * subset of the string should be copied to the buffer */
+                 * subset of the string should be copied to the buffer */
                 ecs_os_strncpy(
                     ecs_strbuf_ptr(b),
                     str + memLeftInElement,
-                    (size_t)memRequired);
+                    (size_t)n);
             } else {
                 ecs_os_strcpy(ecs_strbuf_ptr(b), str + memLeftInElement);
             }
 
             /* Update to number of characters copied to new buffer */
-            b->current->pos += memRequired;
+            b->current->pos += n;
         } else {
-            char *remainder = ecs_os_strdup(str + memLeftInElement);
-            ecs_strbuf_grow_str(b, remainder, remainder, memRequired);
+            char *remainder = ecs_os_strdup(str);
+            ecs_strbuf_grow_str(b, remainder, remainder, n);
         }
     } else {
         /* Buffer max has been reached */
-        result = false;
+        return false;
     }
 
-    return result;
+    return ecs_strbuf_memLeft(b) > 0;
 }
 
 bool ecs_strbuf_vappend(
@@ -267,11 +228,9 @@ bool ecs_strbuf_vappend(
     const char* fmt,
     va_list args)
 {
-    bool result = ecs_strbuf_vappend_intern(
-        b, fmt, args
-    );
-
-    return result;
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+    return vappend(b, fmt, args);
 }
 
 bool ecs_strbuf_append(
@@ -279,11 +238,12 @@ bool ecs_strbuf_append(
     const char* fmt,
     ...)
 {
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+
     va_list args;
     va_start(args, fmt);
-    bool result = ecs_strbuf_vappend_intern(
-        b, fmt, args
-    );
+    bool result = vappend(b, fmt, args);
     va_end(args);
 
     return result;
@@ -294,15 +254,25 @@ bool ecs_strbuf_appendstrn(
     const char* str,
     int32_t len)
 {
-    return ecs_strbuf_append_intern(
-        b, str, len
-    );
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    return appendstr(b, str, len);
+}
+
+bool ecs_strbuf_appendch(
+    ecs_strbuf_t *b,
+    char ch)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    return ecs_strbuf_appendstrn(b, &ch, 1);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *b,
     char* str)
 {
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_init(b);
     ecs_strbuf_grow_str(b, str, str, 0);
     return true;
@@ -312,6 +282,8 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *b,
     const char* str)
 {
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     /* Removes const modifier, but logic prevents changing / delete string */
     ecs_strbuf_init(b);
     ecs_strbuf_grow_str(b, (char*)str, NULL, 0);
@@ -322,9 +294,9 @@ bool ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str)
 {
-    return ecs_strbuf_append_intern(
-        b, str, -1
-    );
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    return appendstr(b, str, ecs_os_strlen(str));
 }
 
 bool ecs_strbuf_mergebuff(
@@ -352,9 +324,12 @@ bool ecs_strbuf_mergebuff(
     return true;
 }
 
-char* ecs_strbuf_get(ecs_strbuf_t *b) {
-    char* result = NULL;
+char* ecs_strbuf_get(
+    ecs_strbuf_t *b) 
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    char* result = NULL;
     if (b->elementCount) {
         if (b->buf) {
             b->buf[b->current->pos] = '\0';
@@ -381,6 +356,7 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
             } while ((e = next));
 
             result[len - 1] = '\0';
+            b->length = len;
         }
     } else {
         result = NULL;
@@ -388,10 +364,28 @@ char* ecs_strbuf_get(ecs_strbuf_t *b) {
 
     b->elementCount = 0;
 
+    b->content = result;
+
     return result;
 }
 
-void ecs_strbuf_reset(ecs_strbuf_t *b) {
+char *ecs_strbuf_get_small(
+    ecs_strbuf_t *b)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t written = ecs_strbuf_written(b);
+    ecs_assert(written <= ECS_STRBUF_ELEMENT_SIZE, ECS_INVALID_OPERATION, NULL);
+    char *buf = b->firstElement.buf;
+    buf[written] = '\0';
+    return buf;
+}
+
+void ecs_strbuf_reset(
+    ecs_strbuf_t *b) 
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (b->elementCount && !b->buf) {
         void *next = NULL;
         ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
@@ -407,61 +401,81 @@ void ecs_strbuf_reset(ecs_strbuf_t *b) {
 }
 
 void ecs_strbuf_list_push(
-    ecs_strbuf_t *buffer,
+    ecs_strbuf_t *b,
     const char *list_open,
     const char *separator)
 {
-    buffer->list_sp ++;
-    buffer->list_stack[buffer->list_sp].count = 0;
-    buffer->list_stack[buffer->list_sp].separator = separator;
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(list_open != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(separator != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    b->list_sp ++;
+    b->list_stack[b->list_sp].count = 0;
+    b->list_stack[b->list_sp].separator = separator;
 
     if (list_open) {
-        ecs_strbuf_appendstr(buffer, list_open);
+        ecs_strbuf_appendstr(b, list_open);
     }
 }
 
 void ecs_strbuf_list_pop(
-    ecs_strbuf_t *buffer,
+    ecs_strbuf_t *b,
     const char *list_close)
 {
-    buffer->list_sp --;
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(list_close != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    b->list_sp --;
     
     if (list_close) {
-        ecs_strbuf_appendstr(buffer, list_close);
+        ecs_strbuf_appendstr(b, list_close);
     }
 }
 
 void ecs_strbuf_list_next(
-    ecs_strbuf_t *buffer)
+    ecs_strbuf_t *b)
 {
-    int32_t list_sp = buffer->list_sp;
-    if (buffer->list_stack[list_sp].count != 0) {
-        ecs_strbuf_appendstr(buffer, buffer->list_stack[list_sp].separator);
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t list_sp = b->list_sp;
+    if (b->list_stack[list_sp].count != 0) {
+        ecs_strbuf_appendstr(b, b->list_stack[list_sp].separator);
     }
-    buffer->list_stack[list_sp].count ++;
+    b->list_stack[list_sp].count ++;
 }
 
 bool ecs_strbuf_list_append(
-    ecs_strbuf_t *buffer,
+    ecs_strbuf_t *b,
     const char *fmt,
     ...)
 {
-    ecs_strbuf_list_next(buffer);
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_strbuf_list_next(b);
 
     va_list args;
     va_start(args, fmt);
-    bool result = ecs_strbuf_vappend_intern(
-        buffer, fmt, args
-    );
+    bool result = vappend(b, fmt, args);
     va_end(args);
 
     return result;
 }
 
 bool ecs_strbuf_list_appendstr(
-    ecs_strbuf_t *buffer,
+    ecs_strbuf_t *b,
     const char *str)
 {
-    ecs_strbuf_list_next(buffer);
-    return ecs_strbuf_appendstr(buffer, str);
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_strbuf_list_next(b);
+    return ecs_strbuf_appendstr(b, str);
+}
+
+int32_t ecs_strbuf_written(
+    const ecs_strbuf_t *b)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    return b->size + b->current->pos;
 }

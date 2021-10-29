@@ -3,12 +3,12 @@
     "type":"package",
     "value": {
         "author": "Sander Mertens",
-        "description": "Multithreaded Entity Component System written in C99",
+        "description": "Entity Component System written in C99/C++11",
         "amalgamate": true
     },
     "lang.c": {
         "${os linux}": {
-            "lib": ["rt"]
+            "lib": ["rt", "pthread"]
         }
     }
 }

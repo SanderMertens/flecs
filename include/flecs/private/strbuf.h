@@ -72,6 +72,12 @@ typedef struct ecs_strbuf_t {
      * inserting a separator */
     ecs_strbuf_list_elem list_stack[ECS_STRBUF_MAX_LIST_DEPTH];
     int32_t list_sp;
+
+    /* This is set to the output string after calling ecs_strbuf_get */
+    char *content;
+
+    /* This is set to the output string length after calling ecs_strbuf_get */
+    int32_t length;
 } ecs_strbuf_t;
 
 /* Append format string to a buffer.
@@ -96,6 +102,13 @@ FLECS_API
 bool ecs_strbuf_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
+
+/* Append character to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendch(
+    ecs_strbuf_t *buffer,
+    char ch);
 
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */
@@ -126,9 +139,14 @@ bool ecs_strbuf_appendstrn(
     const char *str,
     int32_t n);
 
-/* Return result string (also resets buffer) */
+/* Return result string */
 FLECS_API
 char *ecs_strbuf_get(
+    ecs_strbuf_t *buffer);
+
+/* Return small string from first element (appends \0) */
+FLECS_API
+char *ecs_strbuf_get_small(
     ecs_strbuf_t *buffer);
 
 /* Reset buffer without returning a string */
@@ -166,6 +184,10 @@ FLECS_API
 bool ecs_strbuf_list_appendstr(
     ecs_strbuf_t *buffer,
     const char *str);
+
+FLECS_API
+int32_t ecs_strbuf_written(
+    const ecs_strbuf_t *buffer);
 
 #ifdef __cplusplus
 }

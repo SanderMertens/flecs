@@ -413,24 +413,6 @@ uint64_t group_by_cascade(
     return result;
 }
 
-#ifndef NDEBUG
-
-static
-const char* query_name(
-    ecs_world_t *world,
-    ecs_query_t *q)
-{
-    if (q->system) {
-        return ecs_get_name(world, q->system);
-    } else if (q->filter.name) {
-        return q->filter.name;
-    } else {
-        return q->filter.expr;
-    }
-}
-
-#endif
-
 static
 int get_comp_and_src(
     ecs_world_t *world,
@@ -2211,8 +2193,11 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-    ecs_dbg_1("query #[green]%s#[reset] created with expression #[red]%s", 
-        query_name(world, result), result->filter.expr);
+#ifndef NDEBUG
+    char *filter_expr = ecs_filter_str(world, &result->filter);
+    ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
+    ecs_os_free(filter_expr);
+#endif
 
     ecs_log_push();
 

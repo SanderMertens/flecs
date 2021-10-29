@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+void install_test_abort();
+
 #ifdef __cplusplus
 }
 #endif
