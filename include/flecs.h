@@ -32,7 +32,7 @@
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
 // #define FLECS_CUSTOM_BUILD
 
-/* If this is a regular, non-custom build, build all modules and addons. */
+/* If this is a regular, non-custom build, build all addons. */
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */
@@ -53,6 +53,8 @@
 #define FLECS_COREDOC       /* Documentation for core entities & components */
 #define FLECS_LOG           /* When enabled ECS provides more detailed logs */
 #define FLECS_APP           /* Application addon */
+#define FLECS_OS_API_IMPL   /* Default implementation for OS API */
+#define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3536,6 +3538,7 @@ void* ecs_record_get_column(
 
 /** @} */
 
+
 /* Include enabled addons */
 
 #ifdef FLECS_SYSTEM
@@ -3585,6 +3588,12 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_APP
 #include "flecs/addons/app.h"
+#endif
+#ifdef FLECS_OS_API_IMPL
+#include "flecs/addons/os_api_impl.h"
+#endif
+#ifdef FLECS_HTTP
+#include "flecs/addons/http.h"
 #endif
 
 #include "flecs/addons/flecs_c.h"

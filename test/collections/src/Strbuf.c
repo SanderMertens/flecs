@@ -35,13 +35,11 @@ void Strbuf_appendstrn() {
 }
 
 void Strbuf_appendstr_null() {
+    install_test_abort();
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
+    test_expect_abort();
     ecs_strbuf_appendstr(&b, NULL);
-    char *str = ecs_strbuf_get(&b);
-    test_assert(str != NULL);
-    test_str(str, "Foo");
-    ecs_os_free(str);
 }
 
 void Strbuf_append_list() {

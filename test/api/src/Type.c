@@ -38,7 +38,7 @@ void Type_type_of_2_tostr() {
 
     char *str = type_str(world, Type);
     
-    test_str(str, "Position,Velocity");
+    test_str(str, "Position, Velocity");
 
     free(str);
 
@@ -54,7 +54,7 @@ void Type_type_of_2_tostr_no_id() {
     
     char *str = ecs_type_str(world, t);
     
-    test_str(str, "100,200");
+    test_str(str, "100, 200");
 
     free(str);
 
@@ -191,7 +191,7 @@ void Type_type_to_expr_2_comp() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     char *expr = type_str(world, Type);
-    test_str(expr, "Position,Velocity");
+    test_str(expr, "Position, Velocity");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -262,7 +262,7 @@ void Type_type_to_expr_scope() {
     ecs_set_scope(world, 0);
 
     char *expr = type_str(world, Type);
-    test_str(expr, "Position,scope.Velocity");
+    test_str(expr, "Position, scope.Velocity");
     ecs_os_free(expr);
 
     ecs_fini(world);

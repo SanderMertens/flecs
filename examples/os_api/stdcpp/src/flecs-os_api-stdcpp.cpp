@@ -3,6 +3,10 @@
 #include <mutex>
 #include <condition_variable>
 
+#ifdef _MSC_VER
+#include "windows.h"
+#endif
+
 static
 ecs_os_thread_t stdcpp_thread_new(
     ecs_os_thread_callback_t callback, 
@@ -30,7 +34,7 @@ int32_t stdcpp_ainc(int32_t *count) {
     value = __sync_add_and_fetch (count, 1);
     return value;
 #else
-    return InterlockedIncrement(reinterpret_cast<LONG*>(count));
+    return InterlockedIncrement(count);
 #endif
     return value;
 }
@@ -42,7 +46,7 @@ int32_t stdcpp_adec(int32_t *count) {
     value = __sync_sub_and_fetch (count, 1);
     return value;
 #else
-    return InterlockedDecrement(reinterpret_cast<LONG*>(count));
+    return InterlockedDecrement(count);
 #endif
     return value;
 }

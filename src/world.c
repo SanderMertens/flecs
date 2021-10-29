@@ -402,12 +402,25 @@ void log_addons(void) {
     #ifdef FLECS_LOG
         ecs_trace("FLECS_LOG");
     #endif
+    #ifdef FLECS_APP
+        ecs_trace("FLECS_APP");
+    #endif
+    #ifdef FLECS_OS_API_IMPL
+        ecs_trace("FLECS_OS_API_IMPL");
+    #endif
+    #ifdef FLECS_HTTP
+        ecs_trace("FLECS_HTTP");
+    #endif
     ecs_log_pop();
 }
 
 /* -- Public functions -- */
 
 ecs_world_t *ecs_mini(void) {
+#ifdef FLECS_OS_API_IMPL
+    ecs_set_os_api_impl();
+#endif
+
     ecs_os_init();
 
     /* Log information about current build & OS API config */
