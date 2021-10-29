@@ -647,6 +647,18 @@ void default_move_ctor_w_dtor(
 }
 
 static
+void default_ctor_w_move_dtor(
+    ecs_world_t *world, ecs_entity_t component,
+    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
+    int32_t count, void *ctx)
+{
+    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
+    callbacks->move_dtor(world, component, callbacks, dst_entity, src_entity,
+        dst_ptr, src_ptr, size, count, ctx);
+}
+
+static
 void default_move(
     ecs_world_t *world, ecs_entity_t component,
     const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
@@ -752,8 +764,13 @@ void ecs_set_component_actions_w_id(
                          * that uses the move ctor vs. using a ctor+move */
                         c_info->lifecycle.ctor_move_dtor = 
                             default_move_ctor_w_dtor;
+                    } else if (lifecycle->move_dtor) {
+                        /* If no explicit move_dtor has been set, use callback
+                         * that uses the move dtor vs. using a move+dtor */
+                        c_info->lifecycle.ctor_move_dtor =
+                            default_ctor_w_move_dtor;
                     } else {
-                        /* If no explicit move_ctor has been set, use
+                        /* If neither move_ctor nor move_dtor has been set, use
                          * combination of ctor + move + dtor */
                         c_info->lifecycle.ctor_move_dtor = 
                             default_ctor_w_move_w_dtor;

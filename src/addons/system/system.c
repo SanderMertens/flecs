@@ -309,6 +309,103 @@ void sys_ctor_init_zero(
     memset(ptr, 0, size * (size_t)count);
 }
 
+/* System move */
+static
+void ecs_colsystem_move(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *dst_entities,
+    const ecs_entity_t *src_entities,
+    void *dst_ptr,
+    void *src_ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    (void)world;
+    (void)dst_entities;
+    (void)src_entities;
+    (void)component;
+    (void)ctx;
+    (void)size;
+
+    EcsSystem *dst_data = dst_ptr;
+    EcsSystem *src_data = src_ptr;
+
+    int i;
+    for (i = 0; i < count; i ++) {
+        EcsSystem *dst = &dst_data[i];
+        EcsSystem *src = &src_data[i];
+        // ecs_entity_t dst_e = dst_entities[i];
+        // ecs_entity_t src_e = src_entities[i];
+
+        // if (!ecs_is_alive(world, dst_e)) {
+        //     /* This can happen when a set is deferred while a system is being
+        //      * cleaned up. The operation will be discarded, but the destructor
+        //      * still needs to be invoked for the value */
+        //     continue;
+        // }
+
+        // /* Invoke Deactivated action for active systems */
+        // if (dst->query && dst->query != src->query && ecs_query_table_count(dst->query)) {
+        //     invoke_status_action(world, dst_e, dst, EcsSystemDeactivated);
+        // }
+
+        // /* Invoke Disabled action for enabled systems */
+        // if (!ecs_has_id(world, dst_e, EcsDisabled)) {
+        //     invoke_status_action(world, dst_e, dst, EcsSystemDisabled);
+        // }
+
+        if (dst->ctx != src->ctx && dst->ctx_free) {
+            dst->ctx_free(dst->ctx);
+        }
+
+        if (dst->status_ctx != src->status_ctx && dst->status_ctx_free) {
+            dst->status_ctx_free(dst->status_ctx);
+        }
+
+        if (dst->binding_ctx != src->binding_ctx && dst->binding_ctx_free) {
+            dst->binding_ctx_free(dst->binding_ctx);
+        }
+
+        if (dst->query && dst->query != src->query) {
+            ecs_query_fini(dst->query);
+        }
+
+        dst->action = src->action;
+        dst->entity = src->entity;
+        dst->query = src->query;
+        dst->status_action = src->status_action;
+        dst->tick_source = src->tick_source;
+        dst->invoke_count = src->invoke_count;
+        dst->time_spent = src->time_spent;
+        dst->time_passed = src->time_passed;
+        dst->self = src->self;
+        dst->ctx = src->ctx;
+        dst->status_ctx = src->status_ctx;
+        dst->binding_ctx = src->binding_ctx;
+        dst->ctx_free = src->ctx_free;
+        dst->status_ctx_free = src->status_ctx_free;
+        dst->binding_ctx_free = src->binding_ctx_free;
+
+        src->action = NULL;
+        src->entity = 0;
+        src->query = NULL;
+        src->status_action = NULL;
+        src->tick_source = 0;
+        src->invoke_count = 0;
+        src->time_spent = 0;
+        src->time_passed = 0;
+        src->self = 0;
+        src->ctx = NULL;
+        src->status_ctx = NULL;
+        src->binding_ctx = NULL;
+        src->ctx_free = NULL;
+        src->status_ctx_free = NULL;
+        src->binding_ctx_free = NULL;
+    }
+}
+
 /* System destructor */
 static
 void ecs_colsystem_dtor(
@@ -556,6 +653,7 @@ void FlecsSystemImport(
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
         &(EcsComponentLifecycle) {
             .ctor = sys_ctor_init_zero,
+            .move = ecs_colsystem_move,
             .dtor = ecs_colsystem_dtor
         });
 
