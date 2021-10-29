@@ -24683,7 +24683,7 @@ int ecs_iter_to_json_buf(
     const ecs_iter_to_json_desc_t *desc)
 {
     ecs_time_t duration = {0};
-    if (desc->measure_eval_duration) {
+    if (desc && desc->measure_eval_duration) {
         ecs_time_measure(&duration);
     }
 
@@ -24708,7 +24708,7 @@ int ecs_iter_to_json_buf(
 
     json_array_pop(buf);
 
-    if (desc->measure_eval_duration) {
+    if (desc && desc->measure_eval_duration) {
         double dt = ecs_time_measure(&duration);
         json_member(buf, "eval_duration");
         json_number(buf, dt);
