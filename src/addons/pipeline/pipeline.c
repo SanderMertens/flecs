@@ -8,6 +8,20 @@ static ECS_CTOR(EcsPipelineQuery, ptr, {
     memset(ptr, 0, _size);
 })
 
+static ECS_MOVE(EcsPipelineQuery, dst, src, {
+    ecs_vector_free(dst->ops);
+
+    dst->query = src->query;
+    dst->build_query = src->build_query;
+    dst->match_count = src->match_count;
+    dst->ops = src->ops;
+
+    src->query = NULL;
+    src->build_query = NULL;
+    src->match_count = 0;
+    src->ops = NULL;
+})
+
 static ECS_DTOR(EcsPipelineQuery, ptr, {
     ecs_vector_free(ptr->ops);
 })
@@ -715,6 +729,7 @@ void FlecsPipelineImport(
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
         .ctor = ecs_ctor(EcsPipelineQuery),
+        .move = ecs_move(EcsPipelineQuery),
         .dtor = ecs_dtor(EcsPipelineQuery)
     });
 

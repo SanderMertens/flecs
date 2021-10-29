@@ -2816,10 +2816,10 @@ ecs_entity_t assign_ptr_w_id(
         const ecs_type_info_t *cdata = get_c_info(world, real_id);
         if (cdata) {
             if (is_move) {
-                ecs_move_t move = cdata->lifecycle.move;
-                if (move) {
-                    move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                        cdata->lifecycle.ctx);
+                ecs_move_ctor_t move_dtor = cdata->lifecycle.move_dtor;
+                if (move_dtor) {
+                    move_dtor(world, real_id, &cdata->lifecycle, &entity,
+                        &entity, dst, ptr, size, 1, cdata->lifecycle.ctx);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
                 }
