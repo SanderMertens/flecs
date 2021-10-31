@@ -57,6 +57,7 @@
 #define FLECS_APP           /* Application addon */
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
+#define FLECS_REST          /* REST API for querying application data */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -7843,7 +7844,6 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
 
-
 /* Module import */
 FLECS_API
 void FlecsMetaImport(
@@ -9051,8 +9051,9 @@ extern "C" {
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
     FLECS_FLOAT target_fps;   /* Target FPS. */
-    int32_t threads;          /* Number of threads. */
     FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
+    int32_t threads;          /* Number of threads. */
+    bool enable_rest;         /* Allows HTTP clients to access ECS data */
 } ecs_app_desc_t;
 
 /** Run application.
@@ -9221,14 +9222,14 @@ typedef struct {
 /** A reply */
 typedef struct {
     int code;                   /* default = 200 */
-    ecs_strbuf_t body;          /* default = NULL */
+    ecs_strbuf_t body;          /* default = "" */
     const char* status;         /* default = OK */
     const char* content_type;   /* default = application/json */
-    char* extra_headers;        /* default = NULL */
+    ecs_strbuf_t headers;       /* default = "" */
 } ecs_http_reply_t;
 
 #define ECS_HTTP_REPLY_INIT\
-    (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", 0}
+    (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
 /** Request callback.
  * Invoked for each valid request. The function should populate the reply and
@@ -9324,6 +9325,61 @@ const char* ecs_http_get_param(
 #endif // FLECS_HTTP_H
 
 #endif // FLECS_HTTP
+#endif
+#ifdef FLECS_REST
+/**
+ * @file rest.h
+ * @brief REST API addon.
+ *
+ * A small REST API that uses the HTTP server and JSON serializer to provide
+ * access to application data for remote applications.
+ */
+
+#ifdef FLECS_REST
+
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#ifndef FLECS_HTTP
+#define FLECS_HTTP
+#endif
+
+#ifndef FLECS_JSON
+#define FLECS_JSON
+#endif
+
+
+#ifndef FLECS_REST_H
+#define FLECS_REST_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define ECS_REST_DEFAULT_PORT (27750)
+
+/* Component that instantiates the REST API */
+FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
+
+typedef struct {
+    uint16_t port;        /* Port of server (optional, default = 27750) */
+    char *ipaddr;         /* Interface address (optional, default = 0.0.0.0) */
+    void *impl;
+} EcsRest;
+
+/* Module import */
+FLECS_API
+void FlecsRestImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
 #endif
 
 /**

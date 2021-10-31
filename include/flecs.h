@@ -55,6 +55,7 @@
 #define FLECS_APP           /* Application addon */
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
+#define FLECS_REST          /* REST API for querying application data */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -3594,6 +3595,9 @@ void* ecs_record_get_column(
 #endif
 #ifdef FLECS_HTTP
 #include "flecs/addons/http.h"
+#endif
+#ifdef FLECS_REST
+#include "flecs/addons/rest.h"
 #endif
 
 #include "flecs/addons/flecs_c.h"

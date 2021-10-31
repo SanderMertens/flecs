@@ -16,6 +16,14 @@ int ecs_app_run(
         callback = ecs_app_run_frame;
     }
 
+    if (desc->enable_rest) {
+#ifdef FLECS_REST
+        ecs_set(world, EcsWorld, EcsRest, {.port = 0});
+#else
+        ecs_warn("cannot enable remote API, REST addon not available");
+#endif
+    }
+
     int result;
     while ((result = callback(world, desc)) == 0) { }
 
@@ -26,7 +34,7 @@ int ecs_app_run_frame(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {
-    return ecs_progress(world, desc->delta_time);
+    return !ecs_progress(world, desc->delta_time);
 }
 
 int ecs_app_set_frame_action(

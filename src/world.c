@@ -127,6 +127,9 @@ const ecs_entity_t EcsDocBrief =              ECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t EcsDocDetail =             ECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
 
+/* REST module components */
+const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
+
 /* -- Private functions -- */
 
 const ecs_stage_t* flecs_stage_from_readonly_world(
@@ -411,6 +414,9 @@ void log_addons(void) {
     #ifdef FLECS_HTTP
         ecs_trace("FLECS_HTTP");
     #endif
+    #ifdef FLECS_REST
+        ecs_trace("FLECS_REST");
+    #endif
     ecs_log_pop();
 }
 
@@ -420,10 +426,7 @@ ecs_world_t *ecs_mini(void) {
 #ifdef FLECS_OS_API_IMPL
     ecs_set_os_api_impl();
 #endif
-
     ecs_os_init();
-
-    /* Log information about current build & OS API config */
 
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
@@ -455,7 +458,6 @@ ecs_world_t *ecs_mini(void) {
     ecs_poly_init(world, ecs_world_t);
 
     world->self = world;
-
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
     flecs_observable_init(&world->observable);
@@ -464,7 +466,6 @@ ecs_world_t *ecs_mini(void) {
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-
     world->aliases = flecs_string_hashmap_new(ecs_entity_t);
     world->symbols = flecs_string_hashmap_new(ecs_entity_t);
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
@@ -516,6 +517,9 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_COREDOC_H
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
+#ifdef FLECS_REST_H
+    ECS_IMPORT(world, FlecsRest);
+#endif
     ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
@@ -544,9 +548,26 @@ ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[])
 {
+    ecs_world_t *world = ecs_init();
+
     (void)argc;
-    (void)argv;
-    return ecs_init();
+    (void) argv;
+
+#ifdef FLECS_DOC
+    if (argc) {
+        char *app = argv[0];
+        char *last_elem = strrchr(app, '/');
+        if (!last_elem) {
+            last_elem = strrchr(app, '\\');
+        }
+        if (last_elem) {
+            app = last_elem + 1;
+        }
+        ecs_set_pair(world, EcsWorld, EcsDocDescription, EcsName, {app});
+    }
+#endif
+
+    return world;
 }
 
 void ecs_quit(

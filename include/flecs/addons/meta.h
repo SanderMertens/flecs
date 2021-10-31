@@ -485,7 +485,6 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
 
-
 /* Module import */
 FLECS_API
 void FlecsMetaImport(
