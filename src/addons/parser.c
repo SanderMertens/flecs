@@ -671,6 +671,22 @@ const char* parse_arguments(
 }
 
 static
+void parser_unexpected_char(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char ch)
+{
+    if (ch && (ch != '\n')) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected character '%c'", ch);
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected end of term");
+    }
+}
+
+static
 const char* parse_term(
     const ecs_world_t *world,
     const char *name,
@@ -742,8 +758,7 @@ const char* parse_term(
 
     /* Nothing else expected here */
     } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
+        parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
@@ -836,8 +851,7 @@ parse_pair:
         term.subj.entity = EcsThis;
         goto parse_pair_predicate;
     } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
+        parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
@@ -859,8 +873,7 @@ parse_pair_predicate:
             ptr ++;
             goto parse_pair_object;
         } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "unexpected character '%c'", ptr[0]);
+            parser_unexpected_char(name, expr, ptr, ptr[0]);
             goto error;
         }
     } else if (ptr[0] == TOK_PAREN_CLOSE) {

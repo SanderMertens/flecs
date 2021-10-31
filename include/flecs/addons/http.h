@@ -77,14 +77,14 @@ typedef struct {
 /** A reply */
 typedef struct {
     int code;                   /* default = 200 */
-    ecs_strbuf_t body;          /* default = NULL */
+    ecs_strbuf_t body;          /* default = "" */
     const char* status;         /* default = OK */
     const char* content_type;   /* default = application/json */
-    char* extra_headers;        /* default = NULL */
+    ecs_strbuf_t headers;       /* default = "" */
 } ecs_http_reply_t;
 
 #define ECS_HTTP_REPLY_INIT\
-    (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", 0}
+    (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
 /** Request callback.
  * Invoked for each valid request. The function should populate the reply and

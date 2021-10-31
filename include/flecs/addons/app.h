@@ -26,8 +26,9 @@ extern "C" {
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
     FLECS_FLOAT target_fps;   /* Target FPS. */
-    int32_t threads;          /* Number of threads. */
     FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
+    int32_t threads;          /* Number of threads. */
+    bool enable_rest;         /* Allows HTTP clients to access ECS data */
 } ecs_app_desc_t;
 
 /** Run application.

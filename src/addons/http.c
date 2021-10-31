@@ -217,7 +217,6 @@ ecs_http_socket_t http_accept(
 
 static 
 void reply_free(ecs_http_reply_t* response) {
-    ecs_os_free(response->extra_headers);
     ecs_os_free(response->body.content);
 }
 
@@ -235,6 +234,14 @@ void connection_free(ecs_http_connection_impl_t *conn) {
     flecs_sparse_remove(conn->pub.server->connections, conn->pub.id);
 }
 
+// https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
+static
+char hex_2_int(char a, char b){
+    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
+    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
+    return (char)((a << 4) + b);
+}
+
 static
 void decode_url_str(
     char *str) 
@@ -242,17 +249,9 @@ void decode_url_str(
     char ch, *ptr, *dst = str;
     for (ptr = str; (ch = *ptr); ptr++) {
         if (ch == '%') {
-            if (ptr[1] == '2') {
-                char code = ptr[2];
-                if (code >= 'A') {
-                    dst[0] = (char)((code - 'A') + '*');
-                } else if (code >= '0') {
-                    dst[0] = (char)((code - '0') + ' ');
-                }
-
-                dst ++;
-                ptr += 2;
-            }
+            dst[0] = hex_2_int(ptr[1], ptr[2]);
+            dst ++;
+            ptr += 2;
         } else {
             dst[0] = ptr[0];
             dst ++;
@@ -524,7 +523,7 @@ void append_send_headers(
     int code, 
     const char* status, 
     const char* content_type,  
-    const char* extra_headers, 
+    ecs_strbuf_t *extra_headers,
     ecs_size_t content_len) 
 {
     ecs_strbuf_appendstr(hdrs, "HTTP/1.1 ");
@@ -542,10 +541,7 @@ void append_send_headers(
 
     ecs_strbuf_appendstr(hdrs, "Server: flecs\r\n");
 
-    if (extra_headers) {
-        ecs_strbuf_appendstr(hdrs, extra_headers);
-        ecs_strbuf_appendstr(hdrs, "\r\n");
-    }
+    ecs_strbuf_mergebuff(hdrs, extra_headers);
 
     ecs_strbuf_appendstr(hdrs, "\r\n");
 }
@@ -559,7 +555,6 @@ void send_reply(
     ecs_strbuf_t hdr_buf = ECS_STRBUF_INIT;
     hdr_buf.buf = hdrs;
     hdr_buf.max = ECS_HTTP_REPLY_HEADER_SIZE;
-
     hdr_buf.buf = hdrs;
 
     char *content = ecs_strbuf_get(&reply->body);
@@ -567,7 +562,7 @@ void send_reply(
 
     /* First, send the response HTTP headers */
     append_send_headers(&hdr_buf, reply->code, reply->status, 
-        reply->content_type, reply->extra_headers, content_length);
+        reply->content_type, &reply->headers, content_length);
 
     ecs_size_t hdrs_len = ecs_strbuf_written(&hdr_buf);
     hdrs[hdrs_len] = '\0';

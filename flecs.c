@@ -23503,7 +23503,7 @@ void ecs_system_activate(
     invoke_status_action(world, system, system_data, 
         activate ? EcsSystemActivated : EcsSystemDeactivated);
 
-    ecs_dbg_1("system #[green]%s#[reset] %s", 
+    ecs_dbg_1("#[green]system#[reset] %s %s", 
         ecs_get_name(world, system), 
         activate ? "activated" : "deactivated");
 }
@@ -25188,6 +25188,228 @@ error:
 
 #endif
 
+#ifdef FLECS_REST
+
+typedef struct {
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    ecs_http_server_t *srv;
+    int32_t rc;
+} ecs_rest_ctx_t;
+
+static ECS_COPY(EcsRest, dst, src, {
+    ecs_rest_ctx_t *impl = src->impl;
+    if (impl) {
+        impl->rc ++;
+    }
+
+    ecs_os_strset(&dst->ipaddr, src->ipaddr);
+    dst->port = src->port;
+    dst->impl = impl;
+})
+
+static ECS_MOVE(EcsRest, dst, src, {
+    *dst = *src;
+    src->ipaddr = NULL;
+    src->impl = NULL;
+})
+
+static ECS_DTOR(EcsRest, ptr, { 
+    ecs_rest_ctx_t *impl = ptr->impl;
+    if (impl) {
+        impl->rc --;
+        if (!impl->rc) {
+            ecs_http_server_fini(impl->srv);
+            ecs_os_free(impl);
+        }
+    }
+    ecs_os_free(ptr->ipaddr);
+})
+
+static char *rest_last_err;
+
+static 
+void rest_capture_log(
+    int32_t level, 
+    const char *file, 
+    int32_t line, 
+    const char *msg)
+{
+    (void)file; (void)line;
+
+    if (!rest_last_err && level < 0) {
+        rest_last_err = ecs_os_strdup(msg);
+    }
+}
+
+static
+char* rest_get_captured_log(void) {
+    char *result = rest_last_err;
+    rest_last_err = NULL;
+    return result;
+}
+
+static
+void reply_error(
+    ecs_http_reply_t *reply,
+    const char *msg)
+{
+    ecs_strbuf_append(&reply->body, "{\"error\":\"%s\"}", msg);
+}
+
+static
+bool rest_reply(
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    void *ctx)
+{
+    ecs_rest_ctx_t *impl = ctx;
+    ecs_world_t *world = impl->world;
+
+    ecs_strbuf_appendstr(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
+
+    if (req->method == EcsHttpGet) {
+        /* Entity endpoint */
+        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+            char *path = &req->path[7];
+            ecs_dbg("rest: request entity '%s'", path);
+
+            ecs_entity_t e = ecs_lookup_path_w_sep(
+                world, 0, path, "/", NULL, false);
+            if (!e) {
+                e = ecs_lookup_path_w_sep(
+                    world, EcsFlecsCore, path, "/", NULL, false);
+                if (!e) {
+                    ecs_dbg("rest: requested entity '%s' does not exist", path);
+                    reply_error(reply, "entity not found");
+                    return true;
+                }
+            }
+
+            ecs_entity_to_json_buf(world, e, &reply->body);
+            return true;
+        
+        /* Query endpoint */
+        } else if (!ecs_os_strcmp(req->path, "query")) {
+            const char *q = ecs_http_get_param(req, "q");
+            if (!q) {
+                ecs_strbuf_appendstr(&reply->body, "Missing parameter 'q'");
+                reply->code = 400; /* bad request */
+                return true;
+            }
+
+            ecs_dbg("rest: request query '%s'", q);
+            ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
+            ecs_os_api.log_ = rest_capture_log;
+
+            ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+                .expr = q
+            });
+            if (!r) {
+                char *err = rest_get_captured_log();
+                char *escaped_err = ecs_astresc('"', err);
+                reply_error(reply, escaped_err);
+                ecs_os_free(escaped_err);
+                ecs_os_free(err);
+            } else {
+                ecs_iter_t it = ecs_rule_iter(world, r);
+                ecs_iter_to_json_buf(world, &it, &reply->body, NULL);
+                ecs_rule_fini(r);
+            }
+
+            ecs_os_api.log_ = prev_log_;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+void on_set_rest(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    const ecs_entity_t *entities,
+    void *ptr,
+    size_t size,
+    int32_t count,
+    void *ctx)
+{
+    EcsRest *rest = ptr;
+
+    (void)component;
+    (void)size;
+    (void)ctx;
+
+    int i;
+    for(i = 0; i < count; i ++) {
+        if (!rest[i].port) {
+            rest[i].port = ECS_REST_DEFAULT_PORT;
+        }
+
+        ecs_rest_ctx_t *srv_ctx = ecs_os_malloc_t(ecs_rest_ctx_t);
+        ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
+            .ipaddr = rest[i].ipaddr,
+            .port = rest[i].port,
+            .callback = rest_reply,
+            .ctx = srv_ctx
+        });
+
+        if (!srv) {
+            const char *ipaddr = rest[i].ipaddr ? rest[i].ipaddr : "0.0.0.0";
+            ecs_err("failed to create REST server on %s:%u", 
+                ipaddr, rest[i].port);
+            ecs_os_free(srv_ctx);
+            continue;
+        }
+
+        srv_ctx->world = world;
+        srv_ctx->entity = entities[i];
+        srv_ctx->srv = srv;
+        srv_ctx->rc = 1;
+
+        rest[i].impl = srv_ctx;
+
+        ecs_http_server_start(srv_ctx->srv);
+    }
+}
+
+static
+void dequeue_rest(ecs_iter_t *it) {
+    EcsRest *rest = ecs_term(it, EcsRest, 1);
+
+    int32_t i;
+    for(i = 0; i < it->count; i ++) {
+        ecs_rest_ctx_t *ctx = rest[i].impl;
+        if (ctx) {
+            ecs_http_server_dequeue(ctx->srv);
+        }
+    } 
+}
+
+void FlecsRestImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, FlecsRest);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    flecs_bootstrap_component(world, EcsRest);
+
+    ecs_set_component_actions(world, EcsRest, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsRest),
+        .copy = ecs_copy(EcsRest),
+        .dtor = ecs_dtor(EcsRest),
+        .on_set = on_set_rest
+    });
+
+    ECS_SYSTEM(world, dequeue_rest, EcsPostFrame, EcsRest);
+}
+
+#endif
+
 
 #ifdef FLECS_COREDOC
 
@@ -25527,7 +25749,6 @@ ecs_http_socket_t http_accept(
 
 static 
 void reply_free(ecs_http_reply_t* response) {
-    ecs_os_free(response->extra_headers);
     ecs_os_free(response->body.content);
 }
 
@@ -25545,6 +25766,14 @@ void connection_free(ecs_http_connection_impl_t *conn) {
     flecs_sparse_remove(conn->pub.server->connections, conn->pub.id);
 }
 
+// https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
+static
+char hex_2_int(char a, char b){
+    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
+    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
+    return (char)((a << 4) + b);
+}
+
 static
 void decode_url_str(
     char *str) 
@@ -25552,17 +25781,9 @@ void decode_url_str(
     char ch, *ptr, *dst = str;
     for (ptr = str; (ch = *ptr); ptr++) {
         if (ch == '%') {
-            if (ptr[1] == '2') {
-                char code = ptr[2];
-                if (code >= 'A') {
-                    dst[0] = (char)((code - 'A') + '*');
-                } else if (code >= '0') {
-                    dst[0] = (char)((code - '0') + ' ');
-                }
-
-                dst ++;
-                ptr += 2;
-            }
+            dst[0] = hex_2_int(ptr[1], ptr[2]);
+            dst ++;
+            ptr += 2;
         } else {
             dst[0] = ptr[0];
             dst ++;
@@ -25834,7 +26055,7 @@ void append_send_headers(
     int code, 
     const char* status, 
     const char* content_type,  
-    const char* extra_headers, 
+    ecs_strbuf_t *extra_headers,
     ecs_size_t content_len) 
 {
     ecs_strbuf_appendstr(hdrs, "HTTP/1.1 ");
@@ -25852,10 +26073,7 @@ void append_send_headers(
 
     ecs_strbuf_appendstr(hdrs, "Server: flecs\r\n");
 
-    if (extra_headers) {
-        ecs_strbuf_appendstr(hdrs, extra_headers);
-        ecs_strbuf_appendstr(hdrs, "\r\n");
-    }
+    ecs_strbuf_mergebuff(hdrs, extra_headers);
 
     ecs_strbuf_appendstr(hdrs, "\r\n");
 }
@@ -25869,7 +26087,6 @@ void send_reply(
     ecs_strbuf_t hdr_buf = ECS_STRBUF_INIT;
     hdr_buf.buf = hdrs;
     hdr_buf.max = ECS_HTTP_REPLY_HEADER_SIZE;
-
     hdr_buf.buf = hdrs;
 
     char *content = ecs_strbuf_get(&reply->body);
@@ -25877,7 +26094,7 @@ void send_reply(
 
     /* First, send the response HTTP headers */
     append_send_headers(&hdr_buf, reply->code, reply->status, 
-        reply->content_type, reply->extra_headers, content_length);
+        reply->content_type, &reply->headers, content_length);
 
     ecs_size_t hdrs_len = ecs_strbuf_written(&hdr_buf);
     hdrs[hdrs_len] = '\0';
@@ -27019,6 +27236,22 @@ const char* parse_arguments(
 }
 
 static
+void parser_unexpected_char(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char ch)
+{
+    if (ch && (ch != '\n')) {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected character '%c'", ch);
+    } else {
+        ecs_parser_error(name, expr, (ptr - expr), 
+            "unexpected end of term");
+    }
+}
+
+static
 const char* parse_term(
     const ecs_world_t *world,
     const char *name,
@@ -27090,8 +27323,7 @@ const char* parse_term(
 
     /* Nothing else expected here */
     } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
+        parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
@@ -27184,8 +27416,7 @@ parse_pair:
         term.subj.entity = EcsThis;
         goto parse_pair_predicate;
     } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ptr[0]);
+        parser_unexpected_char(name, expr, ptr, ptr[0]);
         goto error;
     }
 
@@ -27207,8 +27438,7 @@ parse_pair_predicate:
             ptr ++;
             goto parse_pair_object;
         } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "unexpected character '%c'", ptr[0]);
+            parser_unexpected_char(name, expr, ptr, ptr[0]);
             goto error;
         }
     } else if (ptr[0] == TOK_PAREN_CLOSE) {
@@ -28238,6 +28468,14 @@ int ecs_app_run(
         callback = ecs_app_run_frame;
     }
 
+    if (desc->enable_rest) {
+#ifdef FLECS_REST
+        ecs_set(world, EcsWorld, EcsRest, {.port = 0});
+#else
+        ecs_warn("cannot enable remote API, REST addon not available");
+#endif
+    }
+
     int result;
     while ((result = callback(world, desc)) == 0) { }
 
@@ -28248,7 +28486,7 @@ int ecs_app_run_frame(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {
-    return ecs_progress(world, desc->delta_time);
+    return !ecs_progress(world, desc->delta_time);
 }
 
 int ecs_app_set_frame_action(
@@ -28392,6 +28630,9 @@ const ecs_entity_t ecs_id(EcsDocDescription) =ECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t EcsDocBrief =              ECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t EcsDocDetail =             ECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
+
+/* REST module components */
+const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
 
 /* -- Private functions -- */
 
@@ -28677,6 +28918,9 @@ void log_addons(void) {
     #ifdef FLECS_HTTP
         ecs_trace("FLECS_HTTP");
     #endif
+    #ifdef FLECS_REST
+        ecs_trace("FLECS_REST");
+    #endif
     ecs_log_pop();
 }
 
@@ -28686,10 +28930,7 @@ ecs_world_t *ecs_mini(void) {
 #ifdef FLECS_OS_API_IMPL
     ecs_set_os_api_impl();
 #endif
-
     ecs_os_init();
-
-    /* Log information about current build & OS API config */
 
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
@@ -28721,7 +28962,6 @@ ecs_world_t *ecs_mini(void) {
     ecs_poly_init(world, ecs_world_t);
 
     world->self = world;
-
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
     flecs_observable_init(&world->observable);
@@ -28730,7 +28970,6 @@ ecs_world_t *ecs_mini(void) {
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-
     world->aliases = flecs_string_hashmap_new(ecs_entity_t);
     world->symbols = flecs_string_hashmap_new(ecs_entity_t);
     world->type_handles = ecs_map_new(ecs_entity_t, 0);
@@ -28782,6 +29021,9 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_COREDOC_H
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
+#ifdef FLECS_REST_H
+    ECS_IMPORT(world, FlecsRest);
+#endif
     ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
@@ -28810,9 +29052,26 @@ ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[])
 {
+    ecs_world_t *world = ecs_init();
+
     (void)argc;
-    (void)argv;
-    return ecs_init();
+    (void) argv;
+
+#ifdef FLECS_DOC
+    if (argc) {
+        char *app = argv[0];
+        char *last_elem = strrchr(app, '/');
+        if (!last_elem) {
+            last_elem = strrchr(app, '\\');
+        }
+        if (last_elem) {
+            app = last_elem + 1;
+        }
+        ecs_set_pair(world, EcsWorld, EcsDocDescription, EcsName, {app});
+    }
+#endif
+
+    return world;
 }
 
 void ecs_quit(
