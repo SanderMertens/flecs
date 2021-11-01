@@ -1,5 +1,99 @@
 #include "../private_api.h"
 
+/**
+ *  stm32tpl --  STM32 C++ Template Peripheral Library
+ *  Visit https://github.com/antongus/stm32tpl for new versions
+ *
+ *  Copyright (c) 2011-2020 Anton B. Gusev aka AHTOXA
+ */
+
+#define MAX_PRECISION	(10)
+static const double rounders[MAX_PRECISION + 1] =
+{
+	0.5,				// 0
+	0.05,				// 1
+	0.005,				// 2
+	0.0005,				// 3
+	0.00005,			// 4
+	0.000005,			// 5
+	0.0000005,			// 6
+	0.00000005,			// 7
+	0.000000005,		// 8
+	0.0000000005,		// 9
+	0.00000000005		// 10
+};
+
+static
+int ecs_strbuf_ftoa(
+    ecs_strbuf_t *out, double f, int precision)
+{
+    char buf[64];
+	char * ptr = buf;
+	char * p = ptr;
+	char * p1;
+	char c;
+	long intPart;
+
+	if (precision > MAX_PRECISION) {
+		precision = MAX_PRECISION;
+    }
+
+	if (f < 0) {
+		f = -f;
+		*ptr++ = '-';
+	}
+
+	if (precision < 0) {
+		if (f < 1.0) precision = 6;
+		else if (f < 10.0) precision = 5;
+		else if (f < 100.0) precision = 4;
+		else if (f < 1000.0) precision = 3;
+		else if (f < 10000.0) precision = 2;
+		else if (f < 100000.0) precision = 1;
+		else precision = 0;
+	}
+
+	if (precision) {
+		f += rounders[precision];
+    }
+
+	intPart = f;
+	f -= intPart;
+
+	if (!intPart) {
+		*ptr++ = '0';
+    } else {
+		p = ptr;
+		while (intPart) {
+			*p++ = '0' + intPart % 10;
+			intPart /= 10;
+		}
+
+		p1 = p;
+
+		while (p > ptr) {
+			c = *--p;
+			*p = *ptr;
+			*ptr++ = c;
+		}
+		ptr = p1;
+	}
+
+	if (precision) {
+		*ptr++ = '.';
+		while (precision--) {
+			f *= 10.0;
+			c = f;
+			*ptr++ = '0' + c;
+			f -= c;
+		}
+	}
+	*ptr = 0;
+    
+    return ecs_strbuf_appendstrn(out, buf, ptr - buf);
+}
+
+
 /* Add an extra element to the buffer */
 static
 void ecs_strbuf_grow(
@@ -223,6 +317,32 @@ bool appendstr(
     return ecs_strbuf_memLeft(b) > 0;
 }
 
+static
+bool appendch(
+    ecs_strbuf_t *b,
+    char ch)
+{
+    ecs_strbuf_init(b);
+
+    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = ecs_strbuf_memLeft(b);
+    if (memLeft <= 0) {
+        return false;
+    }
+
+    if (memLeftInElement) {
+        /* Element was large enough to fit string */
+        ecs_strbuf_ptr(b)[0] = ch;
+        b->current->pos ++;
+    } else {
+        ecs_strbuf_grow(b);
+        ecs_strbuf_ptr(b)[0] = ch;
+        b->current->pos ++;
+    }
+
+    return ecs_strbuf_memLeft(b) > 0;
+}
+
 bool ecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* fmt,
@@ -264,7 +384,15 @@ bool ecs_strbuf_appendch(
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_appendstrn(b, &ch, 1);
+    return appendch(b, ch);
+}
+
+bool ecs_strbuf_appendflt(
+    ecs_strbuf_t *b,
+    double flt)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    return ecs_strbuf_ftoa(b, flt, 2);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(

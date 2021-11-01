@@ -224,8 +224,7 @@ bool test_iter(
                     break;
                 }
 
-                char id_found[256];
-                ecs_id_str_w_buf(it->world, ecs_term_id(it, t + 1), id_found, 256);
+                char *id_found = ecs_id_str(it->world, ecs_term_id(it, t + 1));
                 if (!if_test_str(id_found, ids_expect[t])) {
                     printf(" - term %d\n", t);
                     if (e) {
@@ -245,9 +244,9 @@ bool test_iter(
                     }
 
                     printf(" - @ result index %d\n", entity_index);
-
                     return false;
                 }
+                ecs_os_free(id_found);
             }
 
             if (!if_test_assert(ids_expect[t] == NULL)) {

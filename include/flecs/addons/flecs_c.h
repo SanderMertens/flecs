@@ -285,6 +285,9 @@
 #define ecs_get_fullpath(world, child)\
     ecs_get_path_w_sep(world, 0, child, ".", NULL)
 
+#define ecs_get_fullpath_buf(world, child, buf)\
+    ecs_get_path_w_sep_buf(world, 0, child, ".", NULL, buf)
+
 #define ecs_new_from_path(world, parent, path)\
     ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
 

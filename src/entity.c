@@ -3423,41 +3423,6 @@ bool ecs_defer_end(
     return flecs_defer_flush(world, stage);
 }
 
-static
-size_t append_to_str(
-    char **buffer,
-    const char *str,
-    size_t bytes_left,
-    size_t *required)
-{
-    char *ptr = NULL;
-    if (buffer) {
-        ptr = *buffer;
-    }
-
-    size_t len = strlen(str);
-    size_t to_write;
-    if (bytes_left < len) {
-        to_write = bytes_left;
-        bytes_left = 0;
-    } else {
-        to_write = len;
-        bytes_left -= len;
-    }
-    
-    if (to_write && ptr) {
-        ecs_os_memcpy(ptr, str, to_write);
-    }
-
-    (*required) += len;
-
-    if (buffer) {
-        (*buffer) += to_write;
-    }
-
-    return bytes_left;
-}
-
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
@@ -3492,27 +3457,18 @@ const char* ecs_role_str(
     }
 }
 
-size_t ecs_id_str_w_buf(
+void ecs_id_str_buf(
     const ecs_world_t *world,
     ecs_id_t id,
-    char *buffer,
-    size_t buffer_len)
+    ecs_strbuf_t *buf)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
-    char *ptr = buffer;
-    char **pptr = NULL;
-    if (ptr) {
-        pptr = &ptr;
-    }
-
-    size_t bytes_left = buffer_len - 1, required = 0;
     if (id & ECS_ROLE_MASK && !ECS_HAS_ROLE(id, PAIR)) {
-        const char *role = ecs_role_str(id);
-        bytes_left = append_to_str(pptr, role, bytes_left, &required);
-        bytes_left = append_to_str(pptr, "|", bytes_left, &required);
+        ecs_strbuf_appendstr(buf, ecs_role_str(id));
+        ecs_strbuf_appendch(buf, '|');
     }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
@@ -3527,39 +3483,24 @@ size_t ecs_id_str_w_buf(
             obj = e;
         }
 
-        char *rel_str = ecs_get_fullpath(world, rel);
-        bytes_left = append_to_str(pptr, "(", bytes_left, &required);
-        bytes_left = append_to_str(pptr, rel_str, bytes_left, &required);
-        ecs_os_free(rel_str);
-        bytes_left = append_to_str(pptr, ",", bytes_left, &required);
-
-        char *obj_str = ecs_get_fullpath(world, obj);
-        bytes_left = append_to_str(pptr, obj_str, bytes_left, &required);
-        ecs_os_free(obj_str);
-
-        append_to_str(pptr, ")", bytes_left, &required);
+        ecs_strbuf_appendch(buf, '(');
+        ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf);
+        ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
-        char *path = ecs_get_fullpath(world, e);
-        append_to_str(pptr, path, bytes_left, &required);
-        ecs_os_free(path);
+        ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf);
     }
-
-    if (ptr) {
-        ptr[0] = '\0';
-    }
-    
-    return required;
 }
 
 char* ecs_id_str(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    size_t size = ecs_id_str_w_buf(world, id, NULL, 0);
-    char *result = ecs_os_malloc(flecs_from_size_t(size) + 1);
-    ecs_id_str_w_buf(world, id, result, size + 1);
-    return result;
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_id_str_buf(world, id, &buf);
+    return ecs_strbuf_get(&buf);
 }
 
 static

@@ -17,6 +17,7 @@ void* win_thread_join(
 {
     HANDLE *thread = (HANDLE*)(uintptr_t)thr;
     WaitForSingleObject(thread, INFINITE);
+    ecs_os_free(thread);
     return NULL;
 }
 

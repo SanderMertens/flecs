@@ -46,7 +46,7 @@ void json_number(
     ecs_strbuf_t *buf,
     double value)
 {
-    ecs_strbuf_append(buf, "%f", value);
+    ecs_strbuf_appendflt(buf, value);
 }
 
 static
@@ -112,6 +112,28 @@ void json_member(
 }
 
 static
+void json_path(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_get_fullpath_buf(world, e, buf);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
+void json_id(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_id_str_buf(world, id, buf);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
 ecs_primitive_kind_t json_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
@@ -137,9 +159,9 @@ int json_ser_enum(
         return -1;
     }
 
-    ecs_strbuf_appendstr(str, "\"");
+    ecs_strbuf_appendch(str, '"');
     ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
-    ecs_strbuf_appendstr(str, "\"");
+    ecs_strbuf_appendch(str, '"');
 
     return 0;
 }
@@ -160,7 +182,7 @@ int json_ser_bitmask(
     ecs_bitmask_constant_t *constant;
 
     if (!value) {
-        ecs_strbuf_appendstr(str, "0");
+        ecs_strbuf_appendch(str, '0');
         return 0;
     }
 
@@ -317,7 +339,7 @@ int json_ser_type_op(
     case EcsOpEntity: {
         ecs_entity_t e = *(ecs_entity_t*)ptr;
         if (!e) {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         } else {
             char *path = ecs_get_fullpath(world, e);
             ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -710,9 +732,7 @@ void serialize_id(
     ecs_id_t id,
     ecs_strbuf_t *buf) 
 {
-    char *id_str = ecs_id_str(world, id);
-    json_string(buf, id_str);
-    ecs_os_free(id_str);
+    json_id(buf, world, id);
 }
 
 static
@@ -791,10 +811,8 @@ void serialize_iter_result_subjects(
     for (int i = 0; i < it->term_count; i ++) {
         json_next(buf);
         ecs_entity_t subj = it->subjects[i];
-        if (subj) {
-            char *path = ecs_get_fullpath(world, subj);
-            json_string(buf, path);
-            ecs_os_free(path);
+        if (subj) {            
+            json_path(buf, world, subj);
         } else {
             json_literal(buf, "0");
         }
@@ -845,9 +863,7 @@ void serialize_iter_result_variables(
         }
 
         ecs_strbuf_list_next(buf);
-        char *path = ecs_get_fullpath(world, variables[i]);
-        json_string(buf, path);
-        ecs_os_free(path);
+        json_path(buf, world, variables[i]);
     }
 
     if (actual_count) {
@@ -872,10 +888,8 @@ void serialize_iter_result_entities(
     ecs_entity_t *entities = it->entities;
 
     for (int i = 0; i < count; i ++) {
-        char *path = ecs_get_fullpath(world, entities[i]);
         json_next(buf);
-        json_string(buf, path);
-        ecs_os_free(path);
+        json_path(buf, world, entities[i]);
     }
 
     json_array_pop(buf);

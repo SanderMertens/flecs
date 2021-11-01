@@ -306,12 +306,13 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world) {
 
 /* Public functions */
 
-char* ecs_get_path_w_sep(
+void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     const char *sep,
-    const char *prefix)
+    const char *prefix,
+    ecs_strbuf_t *buf)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
@@ -320,14 +321,22 @@ char* ecs_get_path_w_sep(
         sep = ".";
     }
 
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
     if (!child || parent != child) {
-        path_append(world, parent, child, sep, prefix, &buf);
+        path_append(world, parent, child, sep, prefix, buf);
     } else {
-        ecs_strbuf_appendstr(&buf, "");
+        ecs_strbuf_appendstr(buf, "");
     }
+}
 
+char* ecs_get_path_w_sep(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    const char *sep,
+    const char *prefix)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_get_path_w_sep_buf(world, parent, child, sep, prefix, &buf);
     return ecs_strbuf_get(&buf);
 }
 

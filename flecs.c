@@ -2045,6 +2045,12 @@ int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2);
 
+/* Convert floating point to string */
+char * ecs_ftoa(
+    double f, 
+    char * buf, 
+    int precision);
+
 uint64_t flecs_string_hash(
     const void *ptr);
 
@@ -7795,41 +7801,6 @@ bool ecs_defer_end(
     return flecs_defer_flush(world, stage);
 }
 
-static
-size_t append_to_str(
-    char **buffer,
-    const char *str,
-    size_t bytes_left,
-    size_t *required)
-{
-    char *ptr = NULL;
-    if (buffer) {
-        ptr = *buffer;
-    }
-
-    size_t len = strlen(str);
-    size_t to_write;
-    if (bytes_left < len) {
-        to_write = bytes_left;
-        bytes_left = 0;
-    } else {
-        to_write = len;
-        bytes_left -= len;
-    }
-    
-    if (to_write && ptr) {
-        ecs_os_memcpy(ptr, str, to_write);
-    }
-
-    (*required) += len;
-
-    if (buffer) {
-        (*buffer) += to_write;
-    }
-
-    return bytes_left;
-}
-
 const char* ecs_role_str(
     ecs_entity_t entity)
 {
@@ -7864,27 +7835,18 @@ const char* ecs_role_str(
     }
 }
 
-size_t ecs_id_str_w_buf(
+void ecs_id_str_buf(
     const ecs_world_t *world,
     ecs_id_t id,
-    char *buffer,
-    size_t buffer_len)
+    ecs_strbuf_t *buf)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
-    char *ptr = buffer;
-    char **pptr = NULL;
-    if (ptr) {
-        pptr = &ptr;
-    }
-
-    size_t bytes_left = buffer_len - 1, required = 0;
     if (id & ECS_ROLE_MASK && !ECS_HAS_ROLE(id, PAIR)) {
-        const char *role = ecs_role_str(id);
-        bytes_left = append_to_str(pptr, role, bytes_left, &required);
-        bytes_left = append_to_str(pptr, "|", bytes_left, &required);
+        ecs_strbuf_appendstr(buf, ecs_role_str(id));
+        ecs_strbuf_appendch(buf, '|');
     }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
@@ -7899,39 +7861,24 @@ size_t ecs_id_str_w_buf(
             obj = e;
         }
 
-        char *rel_str = ecs_get_fullpath(world, rel);
-        bytes_left = append_to_str(pptr, "(", bytes_left, &required);
-        bytes_left = append_to_str(pptr, rel_str, bytes_left, &required);
-        ecs_os_free(rel_str);
-        bytes_left = append_to_str(pptr, ",", bytes_left, &required);
-
-        char *obj_str = ecs_get_fullpath(world, obj);
-        bytes_left = append_to_str(pptr, obj_str, bytes_left, &required);
-        ecs_os_free(obj_str);
-
-        append_to_str(pptr, ")", bytes_left, &required);
+        ecs_strbuf_appendch(buf, '(');
+        ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf);
+        ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
-        char *path = ecs_get_fullpath(world, e);
-        append_to_str(pptr, path, bytes_left, &required);
-        ecs_os_free(path);
+        ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf);
     }
-
-    if (ptr) {
-        ptr[0] = '\0';
-    }
-    
-    return required;
 }
 
 char* ecs_id_str(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    size_t size = ecs_id_str_w_buf(world, id, NULL, 0);
-    char *result = ecs_os_malloc(flecs_from_size_t(size) + 1);
-    ecs_id_str_w_buf(world, id, result, size + 1);
-    return result;
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_id_str_buf(world, id, &buf);
+    return ecs_strbuf_get(&buf);
 }
 
 static
@@ -10903,6 +10850,100 @@ void flecs_bitset_swap(
     flecs_bitset_set(bs, elem_b, a);
 }
 
+/**
+ *  stm32tpl --  STM32 C++ Template Peripheral Library
+ *  Visit https://github.com/antongus/stm32tpl for new versions
+ *
+ *  Copyright (c) 2011-2020 Anton B. Gusev aka AHTOXA
+ */
+
+#define MAX_PRECISION	(10)
+static const double rounders[MAX_PRECISION + 1] =
+{
+	0.5,				// 0
+	0.05,				// 1
+	0.005,				// 2
+	0.0005,				// 3
+	0.00005,			// 4
+	0.000005,			// 5
+	0.0000005,			// 6
+	0.00000005,			// 7
+	0.000000005,		// 8
+	0.0000000005,		// 9
+	0.00000000005		// 10
+};
+
+static
+int ecs_strbuf_ftoa(
+    ecs_strbuf_t *out, double f, int precision)
+{
+    char buf[64];
+	char * ptr = buf;
+	char * p = ptr;
+	char * p1;
+	char c;
+	long intPart;
+
+	if (precision > MAX_PRECISION) {
+		precision = MAX_PRECISION;
+    }
+
+	if (f < 0) {
+		f = -f;
+		*ptr++ = '-';
+	}
+
+	if (precision < 0) {
+		if (f < 1.0) precision = 6;
+		else if (f < 10.0) precision = 5;
+		else if (f < 100.0) precision = 4;
+		else if (f < 1000.0) precision = 3;
+		else if (f < 10000.0) precision = 2;
+		else if (f < 100000.0) precision = 1;
+		else precision = 0;
+	}
+
+	if (precision) {
+		f += rounders[precision];
+    }
+
+	intPart = f;
+	f -= intPart;
+
+	if (!intPart) {
+		*ptr++ = '0';
+    } else {
+		p = ptr;
+		while (intPart) {
+			*p++ = '0' + intPart % 10;
+			intPart /= 10;
+		}
+
+		p1 = p;
+
+		while (p > ptr) {
+			c = *--p;
+			*p = *ptr;
+			*ptr++ = c;
+		}
+		ptr = p1;
+	}
+
+	if (precision) {
+		*ptr++ = '.';
+		while (precision--) {
+			f *= 10.0;
+			c = f;
+			*ptr++ = '0' + c;
+			f -= c;
+		}
+	}
+	*ptr = 0;
+    
+    return ecs_strbuf_appendstrn(out, buf, ptr - buf);
+}
+
+
 /* Add an extra element to the buffer */
 static
 void ecs_strbuf_grow(
@@ -11126,6 +11167,32 @@ bool appendstr(
     return ecs_strbuf_memLeft(b) > 0;
 }
 
+static
+bool appendch(
+    ecs_strbuf_t *b,
+    char ch)
+{
+    ecs_strbuf_init(b);
+
+    int32_t memLeftInElement = ecs_strbuf_memLeftInCurrentElement(b);
+    int32_t memLeft = ecs_strbuf_memLeft(b);
+    if (memLeft <= 0) {
+        return false;
+    }
+
+    if (memLeftInElement) {
+        /* Element was large enough to fit string */
+        ecs_strbuf_ptr(b)[0] = ch;
+        b->current->pos ++;
+    } else {
+        ecs_strbuf_grow(b);
+        ecs_strbuf_ptr(b)[0] = ch;
+        b->current->pos ++;
+    }
+
+    return ecs_strbuf_memLeft(b) > 0;
+}
+
 bool ecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* fmt,
@@ -11167,7 +11234,15 @@ bool ecs_strbuf_appendch(
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_appendstrn(b, &ch, 1);
+    return appendch(b, ch);
+}
+
+bool ecs_strbuf_appendflt(
+    ecs_strbuf_t *b,
+    double flt)
+{
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    return ecs_strbuf_ftoa(b, flt, 2);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
@@ -14059,6 +14134,7 @@ void* win_thread_join(
 {
     HANDLE *thread = (HANDLE*)(uintptr_t)thr;
     WaitForSingleObject(thread, INFINITE);
+    ecs_os_free(thread);
     return NULL;
 }
 
@@ -21913,10 +21989,10 @@ int expr_ser_primitive(
         ecs_strbuf_append(str, "%lld", *(int64_t*)base);
         break;
     case EcsF32:
-        ecs_strbuf_append(str, "%f", (double)*(float*)base);
+        ecs_strbuf_appendflt(str, (double)*(float*)base);
         break;
     case EcsF64:
-        ecs_strbuf_append(str, "%f", *(double*)base);
+        ecs_strbuf_appendflt(str, *(double*)base);
         break;
     case EcsIPtr:
         ecs_strbuf_append(str, "%i", *(intptr_t*)base);
@@ -24066,7 +24142,7 @@ void json_number(
     ecs_strbuf_t *buf,
     double value)
 {
-    ecs_strbuf_append(buf, "%f", value);
+    ecs_strbuf_appendflt(buf, value);
 }
 
 static
@@ -24132,6 +24208,28 @@ void json_member(
 }
 
 static
+void json_path(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_get_fullpath_buf(world, e, buf);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
+void json_id(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_id_str_buf(world, id, buf);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
 ecs_primitive_kind_t json_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
@@ -24157,9 +24255,9 @@ int json_ser_enum(
         return -1;
     }
 
-    ecs_strbuf_appendstr(str, "\"");
+    ecs_strbuf_appendch(str, '"');
     ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
-    ecs_strbuf_appendstr(str, "\"");
+    ecs_strbuf_appendch(str, '"');
 
     return 0;
 }
@@ -24180,7 +24278,7 @@ int json_ser_bitmask(
     ecs_bitmask_constant_t *constant;
 
     if (!value) {
-        ecs_strbuf_appendstr(str, "0");
+        ecs_strbuf_appendch(str, '0');
         return 0;
     }
 
@@ -24337,7 +24435,7 @@ int json_ser_type_op(
     case EcsOpEntity: {
         ecs_entity_t e = *(ecs_entity_t*)ptr;
         if (!e) {
-            ecs_strbuf_appendstr(str, "0");
+            ecs_strbuf_appendch(str, '0');
         } else {
             char *path = ecs_get_fullpath(world, e);
             ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -24730,9 +24828,7 @@ void serialize_id(
     ecs_id_t id,
     ecs_strbuf_t *buf) 
 {
-    char *id_str = ecs_id_str(world, id);
-    json_string(buf, id_str);
-    ecs_os_free(id_str);
+    json_id(buf, world, id);
 }
 
 static
@@ -24811,10 +24907,8 @@ void serialize_iter_result_subjects(
     for (int i = 0; i < it->term_count; i ++) {
         json_next(buf);
         ecs_entity_t subj = it->subjects[i];
-        if (subj) {
-            char *path = ecs_get_fullpath(world, subj);
-            json_string(buf, path);
-            ecs_os_free(path);
+        if (subj) {            
+            json_path(buf, world, subj);
         } else {
             json_literal(buf, "0");
         }
@@ -24865,9 +24959,7 @@ void serialize_iter_result_variables(
         }
 
         ecs_strbuf_list_next(buf);
-        char *path = ecs_get_fullpath(world, variables[i]);
-        json_string(buf, path);
-        ecs_os_free(path);
+        json_path(buf, world, variables[i]);
     }
 
     if (actual_count) {
@@ -24892,10 +24984,8 @@ void serialize_iter_result_entities(
     ecs_entity_t *entities = it->entities;
 
     for (int i = 0; i < count; i ++) {
-        char *path = ecs_get_fullpath(world, entities[i]);
         json_next(buf);
-        json_string(buf, path);
-        ecs_os_free(path);
+        json_path(buf, world, entities[i]);
     }
 
     json_array_pop(buf);
@@ -32903,38 +32993,26 @@ char* ecs_type_str(
         return ecs_os_strdup("");
     }
 
-    ecs_vector_t *chbuf = ecs_vector_new(char, 32);
-    char *dst;
-
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
-        char buffer[256];
-        ecs_size_t len;
+        ecs_entity_t id = ids[i];
 
         if (i) {
-            *(char*)ecs_vector_add(&chbuf, char) = ',';
-            *(char*)ecs_vector_add(&chbuf, char) = ' ';
+            ecs_strbuf_appendch(&buf, ',');
+            ecs_strbuf_appendch(&buf, ' ');
         }
 
-        if (e == 1) {
-            ecs_os_strcpy(buffer, "EcsComponent");
-            len = ecs_os_strlen("EcsComponent");
+        if (id == 1) {
+            ecs_strbuf_appendstr(&buf, "Component");
         } else {
-            len = flecs_from_size_t(ecs_id_str_w_buf(world, e, buffer, 256));
+            ecs_id_str_buf(world, id, &buf);
         }
-
-        dst = ecs_vector_addn(&chbuf, char, len);
-        ecs_os_memcpy(dst, buffer, len);
     }
 
-    *(char*)ecs_vector_add(&chbuf, char) = '\0';
-
-    char* result = ecs_os_strdup(ecs_vector_first(chbuf, char));
-    ecs_vector_free(chbuf);
-    return result;
+    return ecs_strbuf_get(&buf);
 }
 
 void ecs_os_api_impl(ecs_os_api_t *api);
@@ -38588,7 +38666,6 @@ void flecs_os_time_sleep(
 #endif
 }
 
-
 #if defined(_WIN32)
 
 static ULONG win32_current_resolution;
@@ -39596,12 +39673,13 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world) {
 
 /* Public functions */
 
-char* ecs_get_path_w_sep(
+void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t child,
     const char *sep,
-    const char *prefix)
+    const char *prefix,
+    ecs_strbuf_t *buf)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
@@ -39610,14 +39688,22 @@ char* ecs_get_path_w_sep(
         sep = ".";
     }
 
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-
     if (!child || parent != child) {
-        path_append(world, parent, child, sep, prefix, &buf);
+        path_append(world, parent, child, sep, prefix, buf);
     } else {
-        ecs_strbuf_appendstr(&buf, "");
+        ecs_strbuf_appendstr(buf, "");
     }
+}
 
+char* ecs_get_path_w_sep(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    const char *sep,
+    const char *prefix)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_get_path_w_sep_buf(world, parent, child, sep, prefix, &buf);
     return ecs_strbuf_get(&buf);
 }
 

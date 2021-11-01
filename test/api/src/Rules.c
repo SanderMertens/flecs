@@ -1,27 +1,24 @@
 #include <api.h>
 
 #define test_term_id(it, column_id, str) {\
-    ecs_entity_t _column_entity_e = ecs_term_id(it, column_id);\
-    test_assert(_column_entity_e != 0);\
-    char _column_entity[512];\
-    ecs_id_str_w_buf((it)->world, _column_entity_e, _column_entity, sizeof(_column_entity));\
-    test_str(_column_entity, str);\
+    ecs_id_t _term_id = ecs_term_id(it, column_id);\
+    test_assert(_term_id != 0);\
+    char *_term_id_str = ecs_id_str((it)->world, _term_id);\
+    test_str(_term_id_str, str);\
 }
 
 #define test_term_source(it, column_id, str) {\
-    ecs_entity_t _column_source_e = ecs_term_source(it, column_id);\
-    test_assert(_column_source_e != 0);\
-    char _column_source[512];\
-    ecs_id_str_w_buf((it)->world, _column_source_e, _column_source, sizeof(_column_source));\
-    test_str(_column_source, str);\
+    ecs_entity_t _term_source = ecs_term_source(it, column_id);\
+    test_assert(_term_source != 0);\
+    char *_term_source_str = ecs_id_str((it)->world, _term_source);\
+    test_str(_term_source_str, str);\
 }
 
 #define test_var(it, var_id, str) {\
     ecs_entity_t _var_e = ecs_rule_variable(it, var_id);\
     test_assert(_var_e != 0);\
-    char _var[512];\
-    ecs_id_str_w_buf((it)->world, _var_e, _var, sizeof(_var));\
-    test_str(_var, str);\
+    char *_var_str = ecs_id_str((it)->world, _var_e);\
+    test_str(_var_str, str);\
 }
 
 void Rules_empty_rule() {
