@@ -507,7 +507,8 @@
                 "comment_as_brief_doc_2_stmts",
                 "comment_type",
                 "empty_doc_comment",
-                "newline_after_doc_comment"
+                "newline_after_doc_comment",
+                "default_type_from_with"
             ]
         }, {
             "id": "GlobalComponentIds",

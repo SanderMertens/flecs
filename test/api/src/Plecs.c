@@ -3417,3 +3417,41 @@ void Plecs_newline_after_doc_comment() {
 
     ecs_fini(world);
 }
+
+void Plecs_default_type_from_with() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity.name = "Position",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "with Position {"
+    LINE "  e1 = {10, 20}"
+    LINE "  e2 = {30, 40}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
+    ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
