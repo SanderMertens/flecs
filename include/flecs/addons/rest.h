@@ -8,21 +8,30 @@
 
 #ifdef FLECS_REST
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
+/* Used for the HTTP server */
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
 
+/* Used for building the JSON replies */
 #ifndef FLECS_JSON
 #define FLECS_JSON
 #endif
 
-#include "module.h"
+/* Query engine used */
+#ifndef FLECS_RULES
+#define FLECS_RULES
+#endif
+
+/* For the REST system */
+#ifndef FLECS_SYSTEM
+#define FLECS_SYSTEM
+#endif
+
 #include "http.h"
 #include "json.h"
+#include "rules.h"
+#include "system.h"
 
 #ifndef FLECS_REST_H
 #define FLECS_REST_H

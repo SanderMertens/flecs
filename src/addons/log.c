@@ -205,18 +205,6 @@ void ecs_log_pop(void) {
     ecs_os_api.log_indent_ --;
 }
 
-void ecs_log_set_level(
-    int level)
-{
-    ecs_os_api.log_level_ = level;
-}
-
-void ecs_log_enable_colors(
-    bool enabled)
-{
-    ecs_os_api.log_with_color_ = enabled;
-}
-
 void _ecs_parser_errorv(
     const char *name,
     const char *expr, 
@@ -468,3 +456,19 @@ void _ecs_assert(
 }
 
 #endif
+
+int ecs_log_set_level(
+    int level)
+{
+    int prev = level;
+    ecs_os_api.log_level_ = level;
+    return prev;
+}
+
+bool ecs_log_enable_colors(
+    bool enabled)
+{
+    bool prev = ecs_os_api.log_with_color_;
+    ecs_os_api.log_with_color_ = enabled;
+    return prev;
+}

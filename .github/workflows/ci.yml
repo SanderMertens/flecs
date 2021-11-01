@@ -362,6 +362,11 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
 
+      - name: FLECS_REST
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_REST
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_REST
+
   flecs-amalgamated:
     timeout-minutes: 5
     runs-on: ubuntu-latest

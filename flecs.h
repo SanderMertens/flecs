@@ -731,6 +731,51 @@ void _ecs_parser_errorv(
 
 #endif // FLECS_LEGACY
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Functions that are always available
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Enable or disable tracing.
+ * This will enable builtin tracing. For tracing to work, it will have to be
+ * compiled in which requires defining one of the following macro's:
+ *
+ * ECS_TRACE_0 - All tracing is disabled
+ * ECS_TRACE_1 - Enable tracing level 1
+ * ECS_TRACE_2 - Enable tracing level 2 and below
+ * ECS_TRACE_3 - Enable tracing level 3 and below
+ *
+ * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
+ * have been automatically defined.
+ *
+ * The provided level corresponds with the tracing level. If -1 is provided as
+ * value, warnings are disabled. If -2 is provided, errors are disabled as well.
+ *
+ * @param level Desired tracing level.
+ * @return Previous tracing level.
+ */
+FLECS_API
+int ecs_log_set_level(
+    int level);
+
+/** Enable/disable tracing with colors.
+ * By default colors are enabled.
+ *
+ * @param enabled Whether to enable tracing with colors.
+ * @return Previous color setting.
+ */
+FLECS_API
+bool ecs_log_enable_colors(
+    bool enabled);
+
+#ifdef __cplusplus
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Used when logging with colors is enabled
 ////////////////////////////////////////////////////////////////////////////////
@@ -3908,36 +3953,6 @@ void ecs_begin_wait(
 FLECS_API 
 void ecs_end_wait(
     ecs_world_t *world);
-
-/** Enable or disable tracing.
- * This will enable builtin tracing. For tracing to work, it will have to be
- * compiled in which requires defining one of the following macro's:
- *
- * ECS_TRACE_0 - All tracing is disabled
- * ECS_TRACE_1 - Enable tracing level 1
- * ECS_TRACE_2 - Enable tracing level 2 and below
- * ECS_TRACE_3 - Enable tracing level 3 and below
- *
- * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
- * have been automatically defined.
- *
- * The provided level corresponds with the tracing level. If -1 is provided as
- * value, warnings are disabled. If -2 is provided, errors are disabled as well.
- *
- * @param level Desired tracing level.
- */
-FLECS_API
-void ecs_log_set_level(
-    int level);
-
-/** Enable/disable tracing with colors.
- * By default colors are enabled.
- *
- * @param enabled Whether to enable tracing with colors.
- */
-FLECS_API
-void ecs_log_enable_colors(
-    bool enabled);
 
 /** Measure frame time. 
  * Frame time measurements measure the total time passed in a single frame, and 
@@ -9337,16 +9352,24 @@ const char* ecs_http_get_param(
 
 #ifdef FLECS_REST
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
+/* Used for the HTTP server */
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
 
+/* Used for building the JSON replies */
 #ifndef FLECS_JSON
 #define FLECS_JSON
+#endif
+
+/* Query engine used */
+#ifndef FLECS_RULES
+#define FLECS_RULES
+#endif
+
+/* For the REST system */
+#ifndef FLECS_SYSTEM
+#define FLECS_SYSTEM
 #endif
 
 
