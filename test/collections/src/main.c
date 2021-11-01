@@ -106,6 +106,11 @@ void Strbuf_append_zerocopy_const(void);
 void Strbuf_reset(void);
 void Strbuf_merge(void);
 void Strbuf_app_buffer(void);
+void Strbuf_append_char(void);
+void Strbuf_append_511_chars(void);
+void Strbuf_append_512_chars(void);
+void Strbuf_append_513_chars(void);
+void Strbuf_append_flt(void);
 
 bake_test_case Vector_testcases[] = {
     {
@@ -464,6 +469,26 @@ bake_test_case Strbuf_testcases[] = {
     {
         "app_buffer",
         Strbuf_app_buffer
+    },
+    {
+        "append_char",
+        Strbuf_append_char
+    },
+    {
+        "append_511_chars",
+        Strbuf_append_511_chars
+    },
+    {
+        "append_512_chars",
+        Strbuf_append_512_chars
+    },
+    {
+        "append_513_chars",
+        Strbuf_append_513_chars
+    },
+    {
+        "append_flt",
+        Strbuf_append_flt
     }
 };
 
@@ -493,7 +518,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        14,
+        19,
         Strbuf_testcases
     }
 };

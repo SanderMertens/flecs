@@ -737,6 +737,12 @@ int flecs_entity_compare_qsort(
     const void *e1,
     const void *e2);
 
+/* Convert floating point to string */
+char * ecs_ftoa(
+    double f, 
+    char * buf, 
+    int precision);
+
 uint64_t flecs_string_hash(
     const void *ptr);
 

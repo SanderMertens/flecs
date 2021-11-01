@@ -110,6 +110,13 @@ bool ecs_strbuf_appendch(
     ecs_strbuf_t *buffer,
     char ch);
 
+/* Append float to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendflt(
+    ecs_strbuf_t *buffer,
+    double v);
+
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */
 FLECS_API

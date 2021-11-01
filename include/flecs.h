@@ -1942,21 +1942,25 @@ const char* ecs_role_str(
  *
  * @param world The world.
  * @param id The id to convert to a string.
- * @param buffer The buffer in which to store the string.
- * @param buffer_len The length of the provided buffer.
- * @return The number of characters required to write the string.
+ * @return The id converted to a string.
  */
 FLECS_API
 char* ecs_id_str(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/** Write id string to buffer.
+ * Same as ecs_id_str but writes result to ecs_strbuf_t.
+ *
+ * @param world The world.
+ * @param id The id to convert to a string.
+ * @param buffer The buffer to write to.
+ */
 FLECS_API
-size_t ecs_id_str_w_buf(
+void ecs_id_str_buf(
     const ecs_world_t *world,
     ecs_id_t id,
-    char *buffer,
-    size_t buffer_len);
+    ecs_strbuf_t *buf);
 
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
@@ -2152,6 +2156,8 @@ void ecs_use(
  * @param world The world.
  * @param parent The entity from which to create the path.
  * @param child The entity to which to create the path.
+ * @param sep The separator to use between path elements.
+ * @param prefix The initial character to use for root elements.
  * @return The relative entity path.
  */
 FLECS_API
@@ -2161,6 +2167,24 @@ char* ecs_get_path_w_sep(
     ecs_entity_t child,
     const char *sep,
     const char *prefix);
+
+/** Write path identifier to buffer.
+ * Same as ecs_get_path_w_sep, but writes result to an ecs_strbuf_t.
+ * 
+ * @param world The world.
+ * @param parent The entity from which to create the path.
+ * @param child The entity to which to create the path.
+ * @param sep The separator to use between path elements.
+ * @param prefix The initial character to use for root elements.
+ * @param buf The buffer to write to.
+ */
+void ecs_get_path_w_sep_buf(
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
+    const char *sep,
+    const char *prefix,
+    ecs_strbuf_t *buf);
 
 /** Find or create entity from path.
  * This operation will find or create an entity from a path, and will create any

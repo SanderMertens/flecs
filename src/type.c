@@ -168,36 +168,24 @@ char* ecs_type_str(
         return ecs_os_strdup("");
     }
 
-    ecs_vector_t *chbuf = ecs_vector_new(char, 32);
-    char *dst;
-
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
     int32_t i, count = ecs_vector_count(type);
 
     for (i = 0; i < count; i ++) {
-        ecs_entity_t e = entities[i];
-        char buffer[256];
-        ecs_size_t len;
+        ecs_entity_t id = ids[i];
 
         if (i) {
-            *(char*)ecs_vector_add(&chbuf, char) = ',';
-            *(char*)ecs_vector_add(&chbuf, char) = ' ';
+            ecs_strbuf_appendch(&buf, ',');
+            ecs_strbuf_appendch(&buf, ' ');
         }
 
-        if (e == 1) {
-            ecs_os_strcpy(buffer, "EcsComponent");
-            len = ecs_os_strlen("EcsComponent");
+        if (id == 1) {
+            ecs_strbuf_appendstr(&buf, "Component");
         } else {
-            len = flecs_from_size_t(ecs_id_str_w_buf(world, e, buffer, 256));
+            ecs_id_str_buf(world, id, &buf);
         }
-
-        dst = ecs_vector_addn(&chbuf, char, len);
-        ecs_os_memcpy(dst, buffer, len);
     }
 
-    *(char*)ecs_vector_add(&chbuf, char) = '\0';
-
-    char* result = ecs_os_strdup(ecs_vector_first(chbuf, char));
-    ecs_vector_free(chbuf);
-    return result;
+    return ecs_strbuf_get(&buf);
 }

@@ -116,7 +116,12 @@
                 "append_zerocopy_const",
                 "reset",
                 "merge",
-                "app_buffer"
+                "app_buffer",
+                "append_char",
+                "append_511_chars",
+                "append_512_chars",
+                "append_513_chars",
+                "append_flt"
             ]
         }]
     }

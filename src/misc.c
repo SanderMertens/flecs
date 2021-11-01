@@ -265,7 +265,6 @@ void flecs_os_time_sleep(
 #endif
 }
 
-
 #if defined(_WIN32)
 
 static ULONG win32_current_resolution;
