@@ -484,6 +484,7 @@ void Plecs_comment_as_brief_doc_2_stmts(void);
 void Plecs_comment_type(void);
 void Plecs_empty_doc_comment(void);
 void Plecs_newline_after_doc_comment(void);
+void Plecs_default_type_from_with(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -4028,6 +4029,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "newline_after_doc_comment",
         Plecs_newline_after_doc_comment
+    },
+    {
+        "default_type_from_with",
+        Plecs_default_type_from_with
     }
 };
 
@@ -10530,7 +10535,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        125,
+        126,
         Plecs_testcases
     },
     {

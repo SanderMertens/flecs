@@ -32,6 +32,7 @@ flecs_src = files(
     'src/addons/pipeline/pipeline.c',
     'src/addons/pipeline/worker.c',
     'src/addons/plecs.c',
+    'src/addons/rest.c',
     'src/addons/rules.c',
     'src/addons/snapshot.c',
     'src/addons/stats.c',

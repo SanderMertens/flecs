@@ -15106,9 +15106,17 @@ assign_stmt:
         /* Assignment without a preceding component */
         ecs_entity_t type = state->default_scope_type[state->sp];
         if (!type) {
-            ecs_parser_error(name, expr, ptr - expr, 
-                "missing type for assignment");
-            return NULL;
+            /* Scope has no default type, check if last with id is a type */
+            int32_t with_frame_count = state->with_frames[state->sp];
+            if (with_frame_count) {
+                type = state->with[with_frame_count - 1];
+            }
+
+            if (!type) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing type for assignment");
+                return NULL;
+            }
         }
 
         state->last_assign_id = type;
