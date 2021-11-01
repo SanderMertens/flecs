@@ -111,6 +111,7 @@ bool rest_reply(
             }
 
             ecs_dbg("rest: request query '%s'", q);
+            bool prev_color = ecs_log_enable_colors(false);
             ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
             ecs_os_api.log_ = rest_capture_log;
 
@@ -130,6 +131,7 @@ bool rest_reply(
             }
 
             ecs_os_api.log_ = prev_log_;
+            ecs_log_enable_colors(prev_color);
 
             return true;
         }
