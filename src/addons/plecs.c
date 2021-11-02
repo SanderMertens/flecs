@@ -710,10 +710,6 @@ const char* parse_stmt(
         goto term_expr;
     }
 
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    goto done;
-
 term_expr:
     if (!ptr[0]) {
         goto done;

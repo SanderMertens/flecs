@@ -349,7 +349,7 @@ int expr_ser_type_op(
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_err("unknown serializer operation kind (%d)", op->kind);
             goto error;
         }
         break;

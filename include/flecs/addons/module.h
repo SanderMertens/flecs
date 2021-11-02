@@ -31,11 +31,8 @@ extern "C" {
  * A more convenient way to import a module is by using the ECS_IMPORT macro.
  *
  * @param world The world.
- * @param module The module to load.
- * @param module_name The name of the module to load.
- * @param flags An integer that will be passed into the module import action.
- * @param handles_out A struct with handles to the module components/systems.
- * @param handles_size Size of the handles_out parameter.
+ * @param module The module import function.
+ * @param module_name The name of the module.
  * @return The module entity.
  */
 FLECS_API

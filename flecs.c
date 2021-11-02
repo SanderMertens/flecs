@@ -5773,7 +5773,7 @@ ecs_entity_t ecs_set_with(
     return prev;
 }
 
-ecs_entity_t ecs_get_with(
+ecs_id_t ecs_get_with(
     const ecs_world_t *world)
 {
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
@@ -5797,7 +5797,7 @@ ecs_entity_t ecs_new_low_id(
             ECS_INVALID_WHILE_ITERATING, NULL);
     }
 
-    ecs_entity_t id;
+    ecs_entity_t id = 0;
 
     if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
@@ -10875,14 +10875,16 @@ static const double rounders[MAX_PRECISION + 1] =
 
 static
 int ecs_strbuf_ftoa(
-    ecs_strbuf_t *out, double f, int precision)
+    ecs_strbuf_t *out, 
+    double f, 
+    int precision)
 {
     char buf[64];
 	char * ptr = buf;
 	char * p = ptr;
 	char * p1;
 	char c;
-	long intPart;
+	int64_t intPart;
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
@@ -10907,15 +10909,15 @@ int ecs_strbuf_ftoa(
 		f += rounders[precision];
     }
 
-	intPart = f;
-	f -= intPart;
+	intPart = (int64_t)f;
+	f -= (double)intPart;
 
 	if (!intPart) {
 		*ptr++ = '0';
     } else {
 		p = ptr;
 		while (intPart) {
-			*p++ = '0' + intPart % 10;
+			*p++ = (char)('0' + intPart % 10);
 			intPart /= 10;
 		}
 
@@ -10933,14 +10935,14 @@ int ecs_strbuf_ftoa(
 		*ptr++ = '.';
 		while (precision--) {
 			f *= 10.0;
-			c = f;
-			*ptr++ = '0' + c;
+			c = (char)f;
+			*ptr++ = (char)('0' + c);
 			f -= c;
 		}
 	}
 	*ptr = 0;
     
-    return ecs_strbuf_appendstrn(out, buf, ptr - buf);
+    return ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
 
 
@@ -15124,10 +15126,6 @@ const char* parse_stmt(
     } else {
         goto term_expr;
     }
-
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    goto done;
 
 term_expr:
     if (!ptr[0]) {
@@ -22253,7 +22251,7 @@ int expr_ser_type_op(
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_err("unknown serializer operation kind (%d)", op->kind);
             goto error;
         }
         break;
@@ -23260,8 +23258,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 
 /** Create a filtered snapshot */
 ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter,
-    ecs_iter_next_action_t next)
+    ecs_iter_t *iter)
 {
     ecs_world_t *world = iter->world;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -23270,7 +23267,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
         world,
         world->store.entity_index,
         iter,
-        next);
+        iter ? iter->next : NULL);
 
     result->last_id = world->stats.last_id;
 
@@ -23465,7 +23462,8 @@ ecs_iter_t ecs_snapshot_iter(
     return (ecs_iter_t){
         .world = snapshot->world,
         .table_count = ecs_vector_count(snapshot->tables),
-        .iter.snapshot = iter
+        .iter.snapshot = iter,
+        .next = ecs_snapshot_next
     };
 }
 
@@ -27265,7 +27263,7 @@ const char* parse_arguments(
                 return NULL;
             }
 
-            ecs_term_id_t *term_id;
+            ecs_term_id_t *term_id = NULL;
 
             if (arg == 0) {
                 term_id = &term->subj;

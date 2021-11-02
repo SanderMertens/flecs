@@ -171,8 +171,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 
 /** Create a filtered snapshot */
 ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter,
-    ecs_iter_next_action_t next)
+    ecs_iter_t *iter)
 {
     ecs_world_t *world = iter->world;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -181,7 +180,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
         world,
         world->store.entity_index,
         iter,
-        next);
+        iter ? iter->next : NULL);
 
     result->last_id = world->stats.last_id;
 
@@ -376,7 +375,8 @@ ecs_iter_t ecs_snapshot_iter(
     return (ecs_iter_t){
         .world = snapshot->world,
         .table_count = ecs_vector_count(snapshot->tables),
-        .iter.snapshot = iter
+        .iter.snapshot = iter,
+        .next = ecs_snapshot_next
     };
 }
 

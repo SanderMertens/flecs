@@ -60,7 +60,7 @@ void ecs_doc_set_detail(
  * 
  * @param world The world.
  * @param entity The entity to which to add the link.
- * @param description The link to add.
+ * @param link The link to add.
  */
 FLECS_API
 void ecs_doc_set_link(

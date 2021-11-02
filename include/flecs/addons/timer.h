@@ -219,7 +219,7 @@ ecs_entity_t ecs_set_rate(
  *
  * @param world The world.
  * @param system The system to associate with the timer.
- * @param timer The timer to associate with the system.
+ * @param tick_source The tick source to associate with the system.
  */ 
 FLECS_API
 void ecs_set_tick_source(

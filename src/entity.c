@@ -1395,7 +1395,7 @@ ecs_entity_t ecs_set_with(
     return prev;
 }
 
-ecs_entity_t ecs_get_with(
+ecs_id_t ecs_get_with(
     const ecs_world_t *world)
 {
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
@@ -1419,7 +1419,7 @@ ecs_entity_t ecs_new_low_id(
             ECS_INVALID_WHILE_ITERATING, NULL);
     }
 
-    ecs_entity_t id;
+    ecs_entity_t id = 0;
 
     if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
