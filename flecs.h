@@ -3807,7 +3807,7 @@ bool ecs_should_quit(
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.
- * @param component The component id for which to register the actions
+ * @param id The component id for which to register the actions
  * @param actions Type that contains the component actions.
  */
 FLECS_API
@@ -4055,7 +4055,7 @@ ecs_entity_t ecs_new_low_id(
  * entity may contain type roles. This operation recycles ids.
  *
  * @param world The world.
- * @param entity The entity to initialize the new entity with.
+ * @param id The component id to initialize the new entity with.
  * @return The new entity.
  */
 FLECS_API
@@ -4108,7 +4108,7 @@ ecs_entity_t ecs_entity_init(
  * that is owned by the application, and then use this array to populate the
  * entities.
  * 
- * @param world. The world.
+ * @param world The world.
  * @param desc Bulk creation parameters.
  * @return Array with the list of entity ids created/populated.
  */
@@ -4163,7 +4163,7 @@ ecs_entity_t ecs_type_init(
  * instead of one and does not recycle ids.
  * 
  * @param world The world.
- * @param entity The entity.
+ * @param id The component id to create the entities with.
  * @param count The number of entities to create.
  * @return The first entity id of the newly created entities.
  */
@@ -4365,7 +4365,7 @@ void ecs_remove_all(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component to obtain.
+ * @param id The id of the component to get.
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
@@ -4383,7 +4383,7 @@ const void* ecs_get_id(
  * @param world The world.
  * @param ref Pointer to a ecs_ref_t value. Must be initialized.
  * @param entity The entity.
- * @param component The entity id of the component to obtain.
+ * @param id The id of the component to get.
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
@@ -4464,7 +4464,7 @@ void* ecs_emplace_id(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component that was modified.
+ * @param id The id of the component that was modified.
  */
 FLECS_API 
 void ecs_modified_id(
@@ -4480,7 +4480,7 @@ void ecs_modified_id(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component to set.
+ * @param id The id of the component to set.
  * @param size The size of the pointer to the value.
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
@@ -4594,19 +4594,19 @@ ecs_entity_t ecs_get_alive(
 FLECS_API
 void ecs_ensure(
     ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_entity_t entity);
 
 /** Test whether an entity exists.
  * Similar as ecs_is_alive, but ignores entity generation count.
  *
  * @param world The world.
- * @param e The entity.
+ * @param entity The entity.
  * @return True if the entity exists, false if the entity does not exist.
  */
 FLECS_API
 bool ecs_exists(
     const ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_entity_t entity);
 
 /** Get the type of an entity.
  *
@@ -4652,7 +4652,7 @@ ecs_table_t* ecs_get_storage_table(
 FLECS_API
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
-    ecs_id_t e);
+    ecs_id_t entity);
 
 /** Get the name of an entity.
  * This will return the name stored in (EcsIdentifier, EcsName).
@@ -4712,16 +4712,15 @@ ecs_entity_t ecs_set_symbol(
     ecs_entity_t entity,
     const char *symbol);
 
-/** Convert type role to string.
- * This operation converts a type role to a string.
+/** Convert role to string.
+ * This operation converts a role to a string.
  * 
- * @param world The world.
- * @param entity The entity containing the type role.
- * @return The type role string, or NULL if no type role is provided.
+ * @param role The role id.
+ * @return The role string, or NULL if no valid role is provided.
  */
 FLECS_API
 const char* ecs_role_str(
-    ecs_entity_t entity);
+    ecs_id_t role);
 
 /** Convert id to string.
  * This operation interprets the structure of an id and converts it to a string.
@@ -4740,7 +4739,7 @@ char* ecs_id_str(
  *
  * @param world The world.
  * @param id The id to convert to a string.
- * @param buffer The buffer to write to.
+ * @param buf The buffer to write to.
  */
 FLECS_API
 void ecs_id_str_buf(
@@ -5069,11 +5068,10 @@ ecs_entity_t ecs_set_with(
  * Get the id set with ecs_set_with.
  *
  * @param world The world.
- * @param id The id.
- * @return The previous id.
+ * @return The last id provided to ecs_set_with.
  */
 FLECS_API
-ecs_entity_t ecs_get_with(
+ecs_id_t ecs_get_with(
     const ecs_world_t *world);
 
 /** Set a name prefix for newly created entities.
@@ -5121,7 +5119,7 @@ ecs_iter_t ecs_term_iter(
  * must be invoked at least once before interpreting the contents of the 
  * iterator.
  *
- * @param iter The iterator.
+ * @param it The iterator.
  * @returns True if more data is available, false if not.
  */
 FLECS_API
@@ -5195,7 +5193,6 @@ bool ecs_term_is_trivial(
  *
  * @param world The world.
  * @param name The name of the entity that uses the term (such as a system).
- * @param expr The string expression of which the term is a part.
  * @param term The term to finalize.
  * @return Zero if success, nonzero if an error occurred.
  */
@@ -5210,8 +5207,8 @@ int ecs_term_finalize(
  * allocated resources (such as identifiers), they will be duplicated so that
  * no memory is shared between the terms.
  *
- * @param dst The term to copy to.
  * @param src The term to copy from.
+ * @return The destination term.
  */
 FLECS_API 
 ecs_term_t ecs_term_copy(
@@ -5224,8 +5221,8 @@ ecs_term_t ecs_term_copy(
  * The conditional move reduces redundant allocations in scenarios where a list 
  * of terms is partially created with allocated resources.
  *
- * @param dst The term to copy to.
- * @param src The term to copy from.
+ * @param src The term to move from.
+ * @return The destination term.
  */
 FLECS_API 
 ecs_term_t ecs_term_move(
@@ -5367,7 +5364,6 @@ ecs_iter_t ecs_filter_iter(
 /** Return a chained filter iterator.
  * A chained iterator applies a filter to the results of the input iterator. The
  * resulting iterator must be iterated with ecs_filter_next.
- *
  * 
  * @param it The input iterator
  * @param filter The filter to apply to the iterator.
@@ -5389,7 +5385,7 @@ ecs_iter_t ecs_filter_chain_iter(
  */
 FLECS_API
 bool ecs_filter_next(
-    ecs_iter_t *iter);
+    ecs_iter_t *it);
 
 /** Move resources of one filter to another. */
 FLECS_API
@@ -5598,7 +5594,7 @@ bool ecs_query_orphaned(
  * See the documentation for ecs_trigger_desc_t for more details.
  *
  * @param world The world.
- * @param decs The trigger creation parameters.
+ * @param desc The trigger creation parameters.
  */
 FLECS_API
 ecs_entity_t ecs_trigger_init(
@@ -5752,7 +5748,7 @@ bool ecs_term_is_readonly(
  * 
  * @param it The iterator.
  * @param index The index of the term in the query.
- * @param Whether the term is set.
+ * @return Whether the term is set.
  */
 FLECS_API
 bool ecs_term_is_set(
@@ -5782,7 +5778,6 @@ bool ecs_term_is_owned(
  * call ecs_iter_str on each result.
  * 
  * @param it The iterator.
- * @param next The function used to progress the iterator.
  * @return A string representing the contents of the iterator.
  */
 FLECS_API
@@ -6064,6 +6059,7 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id);
 
 /** Get actual world from world.
+ *
  * @param world A pointer to a stage or the world.
  * @return The world.
  */
@@ -6080,7 +6076,7 @@ const ecs_world_t* ecs_get_world(
  */
 FLECS_API
 bool ecs_stage_is_readonly(
-    const ecs_world_t *stage);
+    const ecs_world_t *world);
 
 /** Create asynchronous stage.
  * An asynchronous stage can be used to asynchronously queue operations for
@@ -6193,7 +6189,6 @@ int32_t ecs_table_storage_to_type_index(
  * the regular (entity) API as well as the number of records that have been
  * inserted using the direct access API.
  *
- * @param world The world.
  * @param table The table.
  * @return The number of records in a table.
  */
@@ -6371,11 +6366,8 @@ extern "C" {
  * A more convenient way to import a module is by using the ECS_IMPORT macro.
  *
  * @param world The world.
- * @param module The module to load.
- * @param module_name The name of the module to load.
- * @param flags An integer that will be passed into the module import action.
- * @param handles_out A struct with handles to the module components/systems.
- * @param handles_size Size of the handles_out parameter.
+ * @param module The module import function.
+ * @param module_name The name of the module.
  * @return The module entity.
  */
 FLECS_API
@@ -6499,9 +6491,9 @@ typedef enum ecs_system_status_t {
  * example the system is disabled, and ecs_enable is invoked with enabled: true.
  *
  * @param world The world.
- * @param system The system for which to set the action.
- * @param action The action.
- * @param ctx Context that will be passed to the action when invoked.
+ * @param system The system for which the action has changed.
+ * @param status The status that triggered the callback.
+ * @param ctx Context passed to ecs_system_desc_t as status_ctx.
  */
 typedef void (*ecs_system_status_action_t)(
     ecs_world_t *world,
@@ -6597,7 +6589,7 @@ ecs_entity_t ecs_system_init(
  *
  * @param world The world.
  * @param system The system to run.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -6614,7 +6606,7 @@ ecs_entity_t ecs_run(
  * @param system The system to run.
  * @param stage_current The id of the current stage.
  * @param stage_count The total number of stages.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -6643,7 +6635,7 @@ ecs_entity_t ecs_run_worker(
  * 
  * @param world The world.
  * @param system The system to invoke.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -6775,7 +6767,7 @@ void ecs_set_pipeline(
  * This operation gets the current pipeline.
  *
  * @param world The world.
- * @param pipeline The pipeline to set.
+ * @return The current pipeline.
  */
 FLECS_API
 ecs_entity_t ecs_get_pipeline(
@@ -7114,7 +7106,7 @@ ecs_entity_t ecs_set_rate(
  *
  * @param world The world.
  * @param system The system to associate with the timer.
- * @param timer The timer to associate with the system.
+ * @param tick_source The tick source to associate with the system.
  */ 
 FLECS_API
 void ecs_set_tick_source(
@@ -7201,7 +7193,7 @@ void ecs_doc_set_detail(
  * 
  * @param world The world.
  * @param entity The entity to which to add the link.
- * @param description The link to add.
+ * @param link The link to add.
  */
 FLECS_API
 void ecs_doc_set_link(
@@ -7959,7 +7951,7 @@ extern "C" {
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.
  * 
- * @param expr Pointer to (potential) whitespaces to skip.
+ * @param ptr Pointer to (potential) whitespaces to skip.
  * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
@@ -7969,7 +7961,7 @@ const char* ecs_parse_whitespace(
 /** Skip whitespace and newline characters.
  * This function skips whitespace characters.
  * 
- * @param expr Pointer to (potential) whitespaces to skip.
+ * @param ptr Pointer to (potential) whitespaces to skip.
  * @return Pointer to the next non-whitespace character.
  */
 FLECS_API
@@ -7980,7 +7972,7 @@ const char* ecs_parse_eol_and_whitespace(
  * This function will parse until the first non-digit character is found. The
  * provided expression must contain at least one digit character.
  * 
- * @param expr The expression to parse.
+ * @param ptr The expression to parse.
  * @param token The output buffer.
  * @return Pointer to the first non-digit character.
  */
@@ -7992,7 +7984,7 @@ const char* ecs_parse_digit(
 /** Skip whitespaces and comments.
  * This function skips whitespace characters and comments (single line, //).
  * 
- * @param expr pointer to (potential) whitespaces/comments to skip.
+ * @param ptr pointer to (potential) whitespaces/comments to skip.
  * @return pointer to the next non-whitespace character.
  */
 FLECS_API
@@ -8354,7 +8346,7 @@ char* ecs_ptr_to_expr(
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
- * @param buf_out The strbuf to append the string to.
+ * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -8362,7 +8354,7 @@ int ecs_ptr_to_expr_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *data,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf);
 
 /** Serialize primitive value into string buffer.
  * Serializes a primitive value to an ecs_strbuf_t instance. This operation can
@@ -8372,7 +8364,7 @@ int ecs_ptr_to_expr_buf(
  * @param world The world.
  * @param kind The kind of primitive value.
  * @param data The value ot serialize
- * @param buf_out The strbuf to append the string to.
+ * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -8380,7 +8372,7 @@ int ecs_primitive_to_expr_buf(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
     const void *data, 
-    ecs_strbuf_t *str);
+    ecs_strbuf_t *buf);
 
 /** Parse expression token.
  * Expression tokens can contain more characters (such as '|') than tokens
@@ -8670,7 +8662,7 @@ int ecs_plecs_from_str(
  * ecs_plecs_from_str.
  *
  * @param world The world.
- * @param file The plecs file name.
+ * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
@@ -8804,7 +8796,7 @@ typedef struct ecs_snapshot_t ecs_snapshot_t;
  * specified filter.
  *
  * @param world The world to snapshot.
- * @param return The snapshot.
+ * @return The snapshot.
  */
 FLECS_API
 ecs_snapshot_t* ecs_snapshot_take(
@@ -8815,13 +8807,11 @@ ecs_snapshot_t* ecs_snapshot_take(
  * an application can control what is stored by the snapshot. 
  *
  * @param iter An iterator to the data to be stored by the snapshot.
- * @param next A function pointer to the next operation for the iterator.
- * @param return The snapshot.
+ * @return The snapshot.
  */
 FLECS_API
 ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter,
-    ecs_iter_next_action_t action);
+    ecs_iter_t *iter);
 
 /** Restore a snapshot.
  * This operation restores the world to the state it was in when the specified
@@ -8859,11 +8849,9 @@ FLECS_API
 bool ecs_snapshot_next(
     ecs_iter_t *iter);
 
-
 /** Free snapshot resources.
  * This frees resources associated with a snapshot without restoring it.
  *
- * @param world The world.
  * @param snapshot The snapshot to free. 
  */
 FLECS_API
@@ -9023,7 +9011,7 @@ FLECS_API void ecs_dump_world_stats(
 FLECS_API void ecs_get_query_stats(
     const ecs_world_t *world,
     const ecs_query_t *query,
-    ecs_query_stats_t *s);
+    ecs_query_stats_t *stats);
 
 #ifdef FLECS_SYSTEM
 /** Get system statistics.
@@ -16955,7 +16943,7 @@ public:
         : m_world( obj.m_world )
     { 
         ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
+        m_snapshot = ecs_snapshot_take_w_iter(&it);
     }
 
     snapshot(snapshot&& obj) 
@@ -16968,7 +16956,7 @@ public:
     snapshot& operator=(const snapshot& obj) {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
         ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);        
+        m_snapshot = ecs_snapshot_take_w_iter(&it);        
         return *this;
     }
 
@@ -16995,7 +16983,7 @@ public:
 
         ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
 
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+        m_snapshot = ecs_snapshot_take_w_iter(&it);
     }    
 
     void restore() {

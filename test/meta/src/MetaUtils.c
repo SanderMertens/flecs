@@ -153,7 +153,7 @@ void MetaUtils_struct_w_2_f32() {
     Struct_2_f32 v = {10.5, 20.5};
     char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_2_f32), &v);
     test_assert(expr != NULL);
-    test_str(expr, "{x: 10.500000, y: 20.500000}");
+    test_str(expr, "{x: 10.50, y: 20.50}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -167,7 +167,7 @@ void MetaUtils_struct_w_2_f64() {
     Struct_2_f64 v = {10.5, 20.5};
     char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_2_f64), &v);
     test_assert(expr != NULL);
-    test_str(expr, "{x: 10.500000, y: 20.500000}");
+    test_str(expr, "{x: 10.50, y: 20.50}");
     ecs_os_free(expr);
 
     ecs_fini(world);

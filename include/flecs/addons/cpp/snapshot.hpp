@@ -16,7 +16,7 @@ public:
         : m_world( obj.m_world )
     { 
         ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
+        m_snapshot = ecs_snapshot_take_w_iter(&it);
     }
 
     snapshot(snapshot&& obj) 
@@ -29,7 +29,7 @@ public:
     snapshot& operator=(const snapshot& obj) {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
         ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);        
+        m_snapshot = ecs_snapshot_take_w_iter(&it);        
         return *this;
     }
 
@@ -56,7 +56,7 @@ public:
 
         ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
 
-        m_snapshot = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+        m_snapshot = ecs_snapshot_take_w_iter(&it);
     }    
 
     void restore() {

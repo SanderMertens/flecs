@@ -63,7 +63,7 @@ int ecs_plecs_from_str(
  * ecs_plecs_from_str.
  *
  * @param world The world.
- * @param file The plecs file name.
+ * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API

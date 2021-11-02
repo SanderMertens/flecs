@@ -25,14 +25,16 @@ static const double rounders[MAX_PRECISION + 1] =
 
 static
 int ecs_strbuf_ftoa(
-    ecs_strbuf_t *out, double f, int precision)
+    ecs_strbuf_t *out, 
+    double f, 
+    int precision)
 {
     char buf[64];
 	char * ptr = buf;
 	char * p = ptr;
 	char * p1;
 	char c;
-	long intPart;
+	int64_t intPart;
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
@@ -57,15 +59,15 @@ int ecs_strbuf_ftoa(
 		f += rounders[precision];
     }
 
-	intPart = f;
-	f -= intPart;
+	intPart = (int64_t)f;
+	f -= (double)intPart;
 
 	if (!intPart) {
 		*ptr++ = '0';
     } else {
 		p = ptr;
 		while (intPart) {
-			*p++ = '0' + intPart % 10;
+			*p++ = (char)('0' + intPart % 10);
 			intPart /= 10;
 		}
 
@@ -83,14 +85,14 @@ int ecs_strbuf_ftoa(
 		*ptr++ = '.';
 		while (precision--) {
 			f *= 10.0;
-			c = f;
-			*ptr++ = '0' + c;
+			c = (char)f;
+			*ptr++ = (char)('0' + c);
 			f -= c;
 		}
 	}
 	*ptr = 0;
     
-    return ecs_strbuf_appendstrn(out, buf, ptr - buf);
+    return ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
 
 

@@ -1021,7 +1021,7 @@ bool ecs_should_quit(
 /** Register ctor, dtor, copy & move actions for component.
  *
  * @param world The world.
- * @param component The component id for which to register the actions
+ * @param id The component id for which to register the actions
  * @param actions Type that contains the component actions.
  */
 FLECS_API
@@ -1269,7 +1269,7 @@ ecs_entity_t ecs_new_low_id(
  * entity may contain type roles. This operation recycles ids.
  *
  * @param world The world.
- * @param entity The entity to initialize the new entity with.
+ * @param id The component id to initialize the new entity with.
  * @return The new entity.
  */
 FLECS_API
@@ -1322,7 +1322,7 @@ ecs_entity_t ecs_entity_init(
  * that is owned by the application, and then use this array to populate the
  * entities.
  * 
- * @param world. The world.
+ * @param world The world.
  * @param desc Bulk creation parameters.
  * @return Array with the list of entity ids created/populated.
  */
@@ -1377,7 +1377,7 @@ ecs_entity_t ecs_type_init(
  * instead of one and does not recycle ids.
  * 
  * @param world The world.
- * @param entity The entity.
+ * @param id The component id to create the entities with.
  * @param count The number of entities to create.
  * @return The first entity id of the newly created entities.
  */
@@ -1579,7 +1579,7 @@ void ecs_remove_all(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component to obtain.
+ * @param id The id of the component to get.
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
@@ -1597,7 +1597,7 @@ const void* ecs_get_id(
  * @param world The world.
  * @param ref Pointer to a ecs_ref_t value. Must be initialized.
  * @param entity The entity.
- * @param component The entity id of the component to obtain.
+ * @param id The id of the component to get.
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
@@ -1678,7 +1678,7 @@ void* ecs_emplace_id(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component that was modified.
+ * @param id The id of the component that was modified.
  */
 FLECS_API 
 void ecs_modified_id(
@@ -1694,7 +1694,7 @@ void ecs_modified_id(
  *
  * @param world The world.
  * @param entity The entity.
- * @param component The entity id of the component to set.
+ * @param id The id of the component to set.
  * @param size The size of the pointer to the value.
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
@@ -1808,19 +1808,19 @@ ecs_entity_t ecs_get_alive(
 FLECS_API
 void ecs_ensure(
     ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_entity_t entity);
 
 /** Test whether an entity exists.
  * Similar as ecs_is_alive, but ignores entity generation count.
  *
  * @param world The world.
- * @param e The entity.
+ * @param entity The entity.
  * @return True if the entity exists, false if the entity does not exist.
  */
 FLECS_API
 bool ecs_exists(
     const ecs_world_t *world,
-    ecs_entity_t e);
+    ecs_entity_t entity);
 
 /** Get the type of an entity.
  *
@@ -1866,7 +1866,7 @@ ecs_table_t* ecs_get_storage_table(
 FLECS_API
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
-    ecs_id_t e);
+    ecs_id_t entity);
 
 /** Get the name of an entity.
  * This will return the name stored in (EcsIdentifier, EcsName).
@@ -1926,16 +1926,15 @@ ecs_entity_t ecs_set_symbol(
     ecs_entity_t entity,
     const char *symbol);
 
-/** Convert type role to string.
- * This operation converts a type role to a string.
+/** Convert role to string.
+ * This operation converts a role to a string.
  * 
- * @param world The world.
- * @param entity The entity containing the type role.
- * @return The type role string, or NULL if no type role is provided.
+ * @param role The role id.
+ * @return The role string, or NULL if no valid role is provided.
  */
 FLECS_API
 const char* ecs_role_str(
-    ecs_entity_t entity);
+    ecs_id_t role);
 
 /** Convert id to string.
  * This operation interprets the structure of an id and converts it to a string.
@@ -1954,7 +1953,7 @@ char* ecs_id_str(
  *
  * @param world The world.
  * @param id The id to convert to a string.
- * @param buffer The buffer to write to.
+ * @param buf The buffer to write to.
  */
 FLECS_API
 void ecs_id_str_buf(
@@ -2283,11 +2282,10 @@ ecs_entity_t ecs_set_with(
  * Get the id set with ecs_set_with.
  *
  * @param world The world.
- * @param id The id.
- * @return The previous id.
+ * @return The last id provided to ecs_set_with.
  */
 FLECS_API
-ecs_entity_t ecs_get_with(
+ecs_id_t ecs_get_with(
     const ecs_world_t *world);
 
 /** Set a name prefix for newly created entities.
@@ -2335,7 +2333,7 @@ ecs_iter_t ecs_term_iter(
  * must be invoked at least once before interpreting the contents of the 
  * iterator.
  *
- * @param iter The iterator.
+ * @param it The iterator.
  * @returns True if more data is available, false if not.
  */
 FLECS_API
@@ -2409,7 +2407,6 @@ bool ecs_term_is_trivial(
  *
  * @param world The world.
  * @param name The name of the entity that uses the term (such as a system).
- * @param expr The string expression of which the term is a part.
  * @param term The term to finalize.
  * @return Zero if success, nonzero if an error occurred.
  */
@@ -2424,8 +2421,8 @@ int ecs_term_finalize(
  * allocated resources (such as identifiers), they will be duplicated so that
  * no memory is shared between the terms.
  *
- * @param dst The term to copy to.
  * @param src The term to copy from.
+ * @return The destination term.
  */
 FLECS_API 
 ecs_term_t ecs_term_copy(
@@ -2438,8 +2435,8 @@ ecs_term_t ecs_term_copy(
  * The conditional move reduces redundant allocations in scenarios where a list 
  * of terms is partially created with allocated resources.
  *
- * @param dst The term to copy to.
- * @param src The term to copy from.
+ * @param src The term to move from.
+ * @return The destination term.
  */
 FLECS_API 
 ecs_term_t ecs_term_move(
@@ -2581,7 +2578,6 @@ ecs_iter_t ecs_filter_iter(
 /** Return a chained filter iterator.
  * A chained iterator applies a filter to the results of the input iterator. The
  * resulting iterator must be iterated with ecs_filter_next.
- *
  * 
  * @param it The input iterator
  * @param filter The filter to apply to the iterator.
@@ -2603,7 +2599,7 @@ ecs_iter_t ecs_filter_chain_iter(
  */
 FLECS_API
 bool ecs_filter_next(
-    ecs_iter_t *iter);
+    ecs_iter_t *it);
 
 /** Move resources of one filter to another. */
 FLECS_API
@@ -2812,7 +2808,7 @@ bool ecs_query_orphaned(
  * See the documentation for ecs_trigger_desc_t for more details.
  *
  * @param world The world.
- * @param decs The trigger creation parameters.
+ * @param desc The trigger creation parameters.
  */
 FLECS_API
 ecs_entity_t ecs_trigger_init(
@@ -2966,7 +2962,7 @@ bool ecs_term_is_readonly(
  * 
  * @param it The iterator.
  * @param index The index of the term in the query.
- * @param Whether the term is set.
+ * @return Whether the term is set.
  */
 FLECS_API
 bool ecs_term_is_set(
@@ -2996,7 +2992,6 @@ bool ecs_term_is_owned(
  * call ecs_iter_str on each result.
  * 
  * @param it The iterator.
- * @param next The function used to progress the iterator.
  * @return A string representing the contents of the iterator.
  */
 FLECS_API
@@ -3278,6 +3273,7 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id);
 
 /** Get actual world from world.
+ *
  * @param world A pointer to a stage or the world.
  * @return The world.
  */
@@ -3294,7 +3290,7 @@ const ecs_world_t* ecs_get_world(
  */
 FLECS_API
 bool ecs_stage_is_readonly(
-    const ecs_world_t *stage);
+    const ecs_world_t *world);
 
 /** Create asynchronous stage.
  * An asynchronous stage can be used to asynchronously queue operations for
@@ -3407,7 +3403,6 @@ int32_t ecs_table_storage_to_type_index(
  * the regular (entity) API as well as the number of records that have been
  * inserted using the direct access API.
  *
- * @param world The world.
  * @param table The table.
  * @return The number of records in a table.
  */

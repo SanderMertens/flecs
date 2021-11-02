@@ -143,7 +143,7 @@ FLECS_API void ecs_dump_world_stats(
 FLECS_API void ecs_get_query_stats(
     const ecs_world_t *world,
     const ecs_query_t *query,
-    ecs_query_stats_t *s);
+    ecs_query_stats_t *stats);
 
 #ifdef FLECS_SYSTEM
 /** Get system statistics.

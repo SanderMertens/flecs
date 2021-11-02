@@ -61,9 +61,9 @@ typedef enum ecs_system_status_t {
  * example the system is disabled, and ecs_enable is invoked with enabled: true.
  *
  * @param world The world.
- * @param system The system for which to set the action.
- * @param action The action.
- * @param ctx Context that will be passed to the action when invoked.
+ * @param system The system for which the action has changed.
+ * @param status The status that triggered the callback.
+ * @param ctx Context passed to ecs_system_desc_t as status_ctx.
  */
 typedef void (*ecs_system_status_action_t)(
     ecs_world_t *world,
@@ -159,7 +159,7 @@ ecs_entity_t ecs_system_init(
  *
  * @param world The world.
  * @param system The system to run.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -176,7 +176,7 @@ ecs_entity_t ecs_run(
  * @param system The system to run.
  * @param stage_current The id of the current stage.
  * @param stage_count The total number of stages.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */
@@ -205,7 +205,7 @@ ecs_entity_t ecs_run_worker(
  * 
  * @param world The world.
  * @param system The system to invoke.
- * @param delta_time: The time passed since the last system invocation.
+ * @param delta_time The time passed since the last system invocation.
  * @param param A user-defined parameter to pass to the system.
  * @return handle to last evaluated entity if system was interrupted.
  */

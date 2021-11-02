@@ -156,7 +156,7 @@ char* ecs_ptr_to_expr(
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
- * @param buf_out The strbuf to append the string to.
+ * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -164,7 +164,7 @@ int ecs_ptr_to_expr_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *data,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf);
 
 /** Serialize primitive value into string buffer.
  * Serializes a primitive value to an ecs_strbuf_t instance. This operation can
@@ -174,7 +174,7 @@ int ecs_ptr_to_expr_buf(
  * @param world The world.
  * @param kind The kind of primitive value.
  * @param data The value ot serialize
- * @param buf_out The strbuf to append the string to.
+ * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -182,7 +182,7 @@ int ecs_primitive_to_expr_buf(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
     const void *data, 
-    ecs_strbuf_t *str);
+    ecs_strbuf_t *buf);
 
 /** Parse expression token.
  * Expression tokens can contain more characters (such as '|') than tokens

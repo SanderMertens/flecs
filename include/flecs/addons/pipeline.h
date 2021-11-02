@@ -59,7 +59,7 @@ void ecs_set_pipeline(
  * This operation gets the current pipeline.
  *
  * @param world The world.
- * @param pipeline The pipeline to set.
+ * @return The current pipeline.
  */
 FLECS_API
 ecs_entity_t ecs_get_pipeline(

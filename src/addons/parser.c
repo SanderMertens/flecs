@@ -596,7 +596,7 @@ const char* parse_arguments(
                 return NULL;
             }
 
-            ecs_term_id_t *term_id;
+            ecs_term_id_t *term_id = NULL;
 
             if (arg == 0) {
                 term_id = &term->subj;
