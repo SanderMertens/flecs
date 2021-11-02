@@ -179,7 +179,7 @@ void Snapshot_snapshot_w_include_filter() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
@@ -256,7 +256,7 @@ void Snapshot_snapshot_w_exclude_filter() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     Position *p = ecs_get_mut(world, e1, Position, NULL);
     test_assert(p != NULL);
@@ -327,7 +327,7 @@ void Snapshot_snapshot_w_filter_after_new() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_set(world, e1, Position, {5, 6});
     ecs_set(world, e2, Velocity, {7, 8});
@@ -397,7 +397,7 @@ void Snapshot_snapshot_w_filter_after_delete() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_delete(world, e3);
     ecs_delete(world, e4);
@@ -462,7 +462,7 @@ void Snapshot_snapshot_free_filtered() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
     test_assert(s != NULL);
 
     ecs_snapshot_free(s);
@@ -505,7 +505,7 @@ void Snapshot_snapshot_free_filtered_w_dtor() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
     test_assert(s != NULL);
 
     ecs_snapshot_free(s);
@@ -536,7 +536,7 @@ void Snapshot_snapshot_activate_table_w_filter() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it, ecs_filter_next);
+    ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_snapshot_restore(world, s);
 
@@ -559,7 +559,7 @@ void Snapshot_snapshot_copy() {
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
     ecs_iter_t it = ecs_snapshot_iter(s);
-    ecs_snapshot_t *s_copy = ecs_snapshot_take_w_iter(&it, ecs_snapshot_next);
+    ecs_snapshot_t *s_copy = ecs_snapshot_take_w_iter(&it);
     ecs_snapshot_free(s);
 
     Position *p = ecs_get_mut(world, e, Position, NULL);

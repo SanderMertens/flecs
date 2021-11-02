@@ -504,16 +504,13 @@ public:
     }
 
     /** Set timescale
-     *
-     * @return Monotonically increasing frame count.
      */
     void set_time_scale(FLECS_FLOAT mul) const {
         ecs_set_time_scale(m_world, mul);
     }  
 
     /** Get timescale
-     *
-     * @return Monotonically increasing frame count.
+     * @return Current time scale (default = 1.0)
      */
     FLECS_FLOAT get_time_scale() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
@@ -578,8 +575,6 @@ public:
      * This function allows an application to manually disable inactive systems
      * which removes them from the main loop. Doing so will cause Flecs to
      * rebuild the pipeline in the next iteration.
-     *
-     * @param level The tracing level.
      */
     void deactivate_systems() {
         ecs_deactivate_systems(m_world);
@@ -667,8 +662,9 @@ public:
 
     /** Create alias for component.
      *
-     * @tparam Component to create an alias for.
+     * @tparam T to create an alias for.
      * @param alias Alias for the component.
+     * @return Entity representing the component.
      */
     template <typename T>
     flecs::entity use(const char *alias = nullptr);

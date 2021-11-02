@@ -9262,7 +9262,7 @@ typedef struct {
     ecs_strbuf_t headers;       /* default = "" */
 } ecs_http_reply_t;
 
-#define ECS_HTTP_REPLY_INIT\
+#define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
 /** Request callback.
@@ -11247,7 +11247,7 @@ namespace _ {
 
 /** Iterate over an integer range (used to iterate over entity range).
  *
- * @tparam Type of the iterator
+ * @tparam T of the iterator
  */
 template <typename T>
 class range_iterator
@@ -11470,7 +11470,7 @@ public:
     /** Obtain owned term.
      * Same as iter::term, but ensures that term is owned.
      *
-     * @tparam Type of the term.
+     * @tparam T of the term.
      * @param index The term index.
      * @return The term data.
      */
@@ -11483,7 +11483,7 @@ public:
     /** Obtain shared term.
      * Same as iter::term, but ensures that term is shared.
      *
-     * @tparam Type of the term.
+     * @tparam T of the term.
      * @param index The term index.
      * @return The component term.
      */
@@ -11508,11 +11508,11 @@ public:
 
     /** Obtain untyped pointer to table column.
      *
-     * @param table_column Id of table column (corresponds with location in table type).
+     * @param column Id of table column (corresponds with location in table type).
      * @return Pointer to table column.
      */
-    void* table_column(int32_t col) const {
-        return ecs_iter_column_w_size(m_iter, 0, col);
+    void* table_column(int32_t column) const {
+        return ecs_iter_column_w_size(m_iter, 0, column);
     }
 
     /** Obtain typed pointer to table column.
@@ -12104,16 +12104,13 @@ public:
     }
 
     /** Set timescale
-     *
-     * @return Monotonically increasing frame count.
      */
     void set_time_scale(FLECS_FLOAT mul) const {
         ecs_set_time_scale(m_world, mul);
     }  
 
     /** Get timescale
-     *
-     * @return Monotonically increasing frame count.
+     * @return Current time scale (default = 1.0)
      */
     FLECS_FLOAT get_time_scale() const {
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
@@ -12178,8 +12175,6 @@ public:
      * This function allows an application to manually disable inactive systems
      * which removes them from the main loop. Doing so will cause Flecs to
      * rebuild the pipeline in the next iteration.
-     *
-     * @param level The tracing level.
      */
     void deactivate_systems() {
         ecs_deactivate_systems(m_world);
@@ -12267,8 +12262,9 @@ public:
 
     /** Create alias for component.
      *
-     * @tparam Component to create an alias for.
+     * @tparam T to create an alias for.
      * @param alias Alias for the component.
+     * @return Entity representing the component.
      */
     template <typename T>
     flecs::entity use(const char *alias = nullptr);
@@ -12867,7 +12863,7 @@ public:
 
     /** Get component value (untyped).
      * 
-     * @param component The component to get.
+     * @param comp The component to get.
      * @return Pointer to the component value, nullptr if the entity does not
      *         have the component.
      */
@@ -12973,7 +12969,7 @@ public:
 
     /** Check if entity has the provided entity.
      *
-     * @param entity The entity to check.
+     * @param e The entity to check.
      * @return True if the entity has the provided entity, false otherwise.
      */
     bool has(flecs::id_t e) const {
@@ -12993,7 +12989,7 @@ public:
     /** Check if entity has the provided pair.
      *
      * @tparam Relation The relation type.
-     * @param Object The object type.
+     * @tparam Object The object type.
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Relation, typename Object>
@@ -13038,7 +13034,7 @@ public:
     /** Check if entity owns the provided entity.
      * An entity is owned if it is not shared from a base entity.
      *
-     * @param entity The entity to check.
+     * @param e The entity to check.
      * @return True if the entity owns the provided entity, false otherwise.
      */
     bool owns(flecs::id_t e) const {
@@ -13108,14 +13104,14 @@ public:
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @return The entity representing the case.
      */
     flecs::entity get_case(flecs::id_t sw) const;
 
     /** Get case for switch.
      *
-     * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @tparam T The switch type for which to obtain the case.
+     * @return The entity representing the case.
      */
     template<typename T> 
     flecs::entity get_case() const;
@@ -13123,7 +13119,7 @@ public:
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @return The entity representing the case.
      */
     flecs::entity get_case(const flecs::type& sw) const;
 
@@ -13140,7 +13136,7 @@ public:
 
     /** Test if component is enabled.
      *
-     * @param entity The component to test.
+     * @param e The component to test.
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity_view& e) {
@@ -13161,8 +13157,11 @@ public:
 
     /** Return iterator to entity children.
      * Enables depth-first iteration over entity children.
+     * 
+     * The operation accepts function with the signature:
+     *   void(*)(flecs::entity e)
      *
-     * @return Iterator to child entities.
+     * @param func Function used to iterate over children.
      */
     template <typename Func>
     void children(Func&& func) const;
@@ -13192,7 +13191,7 @@ public:
      * This operation allows for the construction of a mutable entity handle
      * from an iterator.
      *
-     * @param stage An created for the current stage.
+     * @param it An iterator that contains a reference to the world or stage.
      * @return An entity handle that allows for mutations in the current stage.
      */
     flecs::entity mut(const flecs::iter& it) const;
@@ -13202,7 +13201,7 @@ public:
      * from another entity. This is useful in each() functions, which only 
      * provide a handle to the entity being iterated over.
      *
-     * @param stage An created for the current stage.
+     * @param e Another mutable entity.
      * @return An entity handle that allows for mutations in the current stage.
      */
     flecs::entity mut(const flecs::entity_view& e) const;
@@ -13323,7 +13322,7 @@ public:
         return this->add(_::cpp_type<R>::id(this->base_world()), object);
     }
 
-    /** Shortcut for add(IsA. obj).
+    /** Shortcut for add(IsA, obj).
      *
      * @param object the object id.
      */
@@ -13331,12 +13330,16 @@ public:
         return this->add(flecs::IsA, object);
     }
 
+    /** Shortcut for add(IsA, obj).
+     *
+     * @tparam T the type associated with the object.
+     */
     template <typename T>
     const Base& is_a() const {
         return this->add(flecs::IsA, _::cpp_type<T>::id(this->base_world()));
     }
 
-    /** Shortcut for add(ChildOf. obj).
+    /** Shortcut for add(ChildOf, obj).
      *
      * @param object the object id.
      */
@@ -13344,9 +13347,9 @@ public:
         return this->add(flecs::ChildOf, object);
     }
 
-    /** Shortcut for add(ChildOf. obj).
+    /** Shortcut for add(ChildOf, obj).
      *
-     * @param object the object id.
+     * @tparam T the type associated with the object.
      */
     template <typename T>
     const Base& child_of() const {
@@ -13474,7 +13477,7 @@ public:
     /** Add a switch to an entity by C++ type.
      * The C++ type must be associated with a switch type.
      *
-     * @param sw The switch to add.
+     * @tparam T The switch to add.
      */ 
     template <typename T>
     const Base& add_switch() const {
@@ -13492,7 +13495,7 @@ public:
 
     /** Remove a switch from an entity by id.
      *
-     * @param sw The switch entity id to remove.
+     * @param sw The switch to remove.
      */    
     const Base& remove_switch(entity_t sw) const {
         ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw);
@@ -13502,7 +13505,7 @@ public:
     /** Add a switch to an entity by C++ type.
      * The C++ type must be associated with a switch type.
      *
-     * @param sw The switch to add.
+     * @tparam T The switch to remove.
      */ 
     template <typename T>
     const Base& remove_switch() const {
@@ -13603,7 +13606,7 @@ public:
     /** Enable a component.
      * See enable<T>.
      *
-     * @param component The component to enable.
+     * @param comp The component to enable.
      */   
     const Base& enable(entity_t comp) const {
         ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, true);
@@ -13613,7 +13616,7 @@ public:
     /** Disable a component.
      * See disable<T>.
      *
-     * @param component The component to disable.
+     * @param comp The component to disable.
      */   
     const Base& disable(entity_t comp) const {
         ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, false);
@@ -13698,7 +13701,7 @@ public:
      * This operation sets the pair value, and uses the relation as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam Object The object part of the pair.
+     * @tparam O The object part of the pair.
      * @param relation The relation part of the pair.
      * @param value The value to set.
      */
@@ -13914,7 +13917,6 @@ public:
      *
      * @param world The world in which to create the entity.
      * @param name The entity name.
-     * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
     explicit entity(world_t *world, const char *name) 
         : flecs::entity_view()
@@ -13939,7 +13941,10 @@ public:
         m_id = id;
     }
 
-    /** Conversion from flecs::entity_t to flecs::entity. */
+    /** Conversion from flecs::entity_t to flecs::entity. 
+     * 
+     * @param id The entity_t value to convert.
+     */
     explicit entity(entity_t id) 
         : flecs::entity_view( nullptr, id ) { }
 
@@ -13974,7 +13979,7 @@ public:
      * the component, it will be overridden, and the value of the base component
      * will be copied to the entity before this function returns.
      *
-     * @param component The component to get.
+     * @param comp The component to get.
      * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
@@ -14082,7 +14087,7 @@ public:
 
     /** Signal that component was modified.
      *
-     * @param component component that was modified.
+     * @param comp component that was modified.
      */
     void modified(entity_t comp) const {
         ecs_modified_id(m_world, m_id, comp);
@@ -17682,27 +17687,12 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
     return flecs::entity(m_id).set_stage(stage.c_ptr());
 }
 
-/** Same as mut(world), but for iterator.
- * This operation allows for the construction of a mutable entity handle
- * from an iterator.
- *
- * @param stage An created for the current stage.
- * @return An entity handle that allows for mutations in the current stage.
- */
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
     ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use iterator created for readonly world/stage to create mutable handle");
     return flecs::entity(m_id).set_stage(it.world().c_ptr());
 }
 
-/** Same as mut(world), but for entity.
- * This operation allows for the construction of a mutable entity handle
- * from another entity. This is useful in each() functions, which only 
- * provide a handle to the entity being iterated over.
- *
- * @param stage An created for the current stage.
- * @return An entity handle that allows for mutations in the current stage.
- */
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
     ecs_assert(!e.world().is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use entity created for readonly world/stage to create mutable handle");
