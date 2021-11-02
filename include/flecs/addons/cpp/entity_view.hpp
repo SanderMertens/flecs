@@ -185,7 +185,7 @@ public:
 
     /** Get component value (untyped).
      * 
-     * @param component The component to get.
+     * @param comp The component to get.
      * @return Pointer to the component value, nullptr if the entity does not
      *         have the component.
      */
@@ -291,7 +291,7 @@ public:
 
     /** Check if entity has the provided entity.
      *
-     * @param entity The entity to check.
+     * @param e The entity to check.
      * @return True if the entity has the provided entity, false otherwise.
      */
     bool has(flecs::id_t e) const {
@@ -311,7 +311,7 @@ public:
     /** Check if entity has the provided pair.
      *
      * @tparam Relation The relation type.
-     * @param Object The object type.
+     * @tparam Object The object type.
      * @return True if the entity has the provided component, false otherwise.
      */
     template <typename Relation, typename Object>
@@ -356,7 +356,7 @@ public:
     /** Check if entity owns the provided entity.
      * An entity is owned if it is not shared from a base entity.
      *
-     * @param entity The entity to check.
+     * @param e The entity to check.
      * @return True if the entity owns the provided entity, false otherwise.
      */
     bool owns(flecs::id_t e) const {
@@ -426,14 +426,14 @@ public:
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @return The entity representing the case.
      */
     flecs::entity get_case(flecs::id_t sw) const;
 
     /** Get case for switch.
      *
-     * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @tparam T The switch type for which to obtain the case.
+     * @return The entity representing the case.
      */
     template<typename T> 
     flecs::entity get_case() const;
@@ -441,7 +441,7 @@ public:
     /** Get case for switch.
      *
      * @param sw The switch for which to obtain the case.
-     * @return True if the entity has the provided case, false otherwise.
+     * @return The entity representing the case.
      */
     flecs::entity get_case(const flecs::type& sw) const;
 
@@ -458,7 +458,7 @@ public:
 
     /** Test if component is enabled.
      *
-     * @param entity The component to test.
+     * @param e The component to test.
      * @return True if the component is enabled, false if it has been disabled.
      */
     bool is_enabled(const flecs::entity_view& e) {
@@ -479,8 +479,11 @@ public:
 
     /** Return iterator to entity children.
      * Enables depth-first iteration over entity children.
+     * 
+     * The operation accepts function with the signature:
+     *   void(*)(flecs::entity e)
      *
-     * @return Iterator to child entities.
+     * @param func Function used to iterate over children.
      */
     template <typename Func>
     void children(Func&& func) const;
@@ -510,7 +513,7 @@ public:
      * This operation allows for the construction of a mutable entity handle
      * from an iterator.
      *
-     * @param stage An created for the current stage.
+     * @param it An iterator that contains a reference to the world or stage.
      * @return An entity handle that allows for mutations in the current stage.
      */
     flecs::entity mut(const flecs::iter& it) const;
@@ -520,7 +523,7 @@ public:
      * from another entity. This is useful in each() functions, which only 
      * provide a handle to the entity being iterated over.
      *
-     * @param stage An created for the current stage.
+     * @param e Another mutable entity.
      * @return An entity handle that allows for mutations in the current stage.
      */
     flecs::entity mut(const flecs::entity_view& e) const;

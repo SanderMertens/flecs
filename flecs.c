@@ -10881,7 +10881,6 @@ int ecs_strbuf_ftoa(
 {
     char buf[64];
 	char * ptr = buf;
-	char * p = ptr;
 	char * p1;
 	char c;
 	int64_t intPart;
@@ -10915,7 +10914,7 @@ int ecs_strbuf_ftoa(
 	if (!intPart) {
 		*ptr++ = '0';
     } else {
-		p = ptr;
+		char *p = ptr;
 		while (intPart) {
 			*p++ = (char)('0' + intPart % 10);
 			intPart /= 10;

@@ -101,7 +101,7 @@ public:
         return this->add(_::cpp_type<R>::id(this->base_world()), object);
     }
 
-    /** Shortcut for add(IsA. obj).
+    /** Shortcut for add(IsA, obj).
      *
      * @param object the object id.
      */
@@ -109,12 +109,16 @@ public:
         return this->add(flecs::IsA, object);
     }
 
+    /** Shortcut for add(IsA, obj).
+     *
+     * @tparam T the type associated with the object.
+     */
     template <typename T>
     const Base& is_a() const {
         return this->add(flecs::IsA, _::cpp_type<T>::id(this->base_world()));
     }
 
-    /** Shortcut for add(ChildOf. obj).
+    /** Shortcut for add(ChildOf, obj).
      *
      * @param object the object id.
      */
@@ -122,9 +126,9 @@ public:
         return this->add(flecs::ChildOf, object);
     }
 
-    /** Shortcut for add(ChildOf. obj).
+    /** Shortcut for add(ChildOf, obj).
      *
-     * @param object the object id.
+     * @tparam T the type associated with the object.
      */
     template <typename T>
     const Base& child_of() const {
@@ -252,7 +256,7 @@ public:
     /** Add a switch to an entity by C++ type.
      * The C++ type must be associated with a switch type.
      *
-     * @param sw The switch to add.
+     * @tparam T The switch to add.
      */ 
     template <typename T>
     const Base& add_switch() const {
@@ -270,7 +274,7 @@ public:
 
     /** Remove a switch from an entity by id.
      *
-     * @param sw The switch entity id to remove.
+     * @param sw The switch to remove.
      */    
     const Base& remove_switch(entity_t sw) const {
         ecs_remove_id(this->base_world(), this->base_id(), ECS_SWITCH | sw);
@@ -280,7 +284,7 @@ public:
     /** Add a switch to an entity by C++ type.
      * The C++ type must be associated with a switch type.
      *
-     * @param sw The switch to add.
+     * @tparam T The switch to remove.
      */ 
     template <typename T>
     const Base& remove_switch() const {
@@ -381,7 +385,7 @@ public:
     /** Enable a component.
      * See enable<T>.
      *
-     * @param component The component to enable.
+     * @param comp The component to enable.
      */   
     const Base& enable(entity_t comp) const {
         ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, true);
@@ -391,7 +395,7 @@ public:
     /** Disable a component.
      * See disable<T>.
      *
-     * @param component The component to disable.
+     * @param comp The component to disable.
      */   
     const Base& disable(entity_t comp) const {
         ecs_enable_component_w_id(this->base_world(), this->base_id(), comp, false);
@@ -476,7 +480,7 @@ public:
      * This operation sets the pair value, and uses the relation as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam Object The object part of the pair.
+     * @tparam O The object part of the pair.
      * @param relation The relation part of the pair.
      * @param value The value to set.
      */
@@ -692,7 +696,6 @@ public:
      *
      * @param world The world in which to create the entity.
      * @param name The entity name.
-     * @param is_component If true, the entity will be created from the pool of component ids (default = false).
      */
     explicit entity(world_t *world, const char *name) 
         : flecs::entity_view()
@@ -717,7 +720,10 @@ public:
         m_id = id;
     }
 
-    /** Conversion from flecs::entity_t to flecs::entity. */
+    /** Conversion from flecs::entity_t to flecs::entity. 
+     * 
+     * @param id The entity_t value to convert.
+     */
     explicit entity(entity_t id) 
         : flecs::entity_view( nullptr, id ) { }
 
@@ -752,7 +758,7 @@ public:
      * the component, it will be overridden, and the value of the base component
      * will be copied to the entity before this function returns.
      *
-     * @param component The component to get.
+     * @param comp The component to get.
      * @param is_added If provided, this parameter will be set to true if the component was added.
      * @return Pointer to the component value.
      */
@@ -860,7 +866,7 @@ public:
 
     /** Signal that component was modified.
      *
-     * @param component component that was modified.
+     * @param comp component that was modified.
      */
     void modified(entity_t comp) const {
         ecs_modified_id(m_world, m_id, comp);

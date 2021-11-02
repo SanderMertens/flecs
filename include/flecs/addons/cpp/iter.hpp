@@ -109,7 +109,7 @@ namespace _ {
 
 /** Iterate over an integer range (used to iterate over entity range).
  *
- * @tparam Type of the iterator
+ * @tparam T of the iterator
  */
 template <typename T>
 class range_iterator
@@ -332,7 +332,7 @@ public:
     /** Obtain owned term.
      * Same as iter::term, but ensures that term is owned.
      *
-     * @tparam Type of the term.
+     * @tparam T of the term.
      * @param index The term index.
      * @return The term data.
      */
@@ -345,7 +345,7 @@ public:
     /** Obtain shared term.
      * Same as iter::term, but ensures that term is shared.
      *
-     * @tparam Type of the term.
+     * @tparam T of the term.
      * @param index The term index.
      * @return The component term.
      */
@@ -370,11 +370,11 @@ public:
 
     /** Obtain untyped pointer to table column.
      *
-     * @param table_column Id of table column (corresponds with location in table type).
+     * @param column Id of table column (corresponds with location in table type).
      * @return Pointer to table column.
      */
-    void* table_column(int32_t col) const {
-        return ecs_iter_column_w_size(m_iter, 0, col);
+    void* table_column(int32_t column) const {
+        return ecs_iter_column_w_size(m_iter, 0, column);
     }
 
     /** Obtain typed pointer to table column.

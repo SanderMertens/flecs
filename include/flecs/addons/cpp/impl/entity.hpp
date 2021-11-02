@@ -81,27 +81,12 @@ inline flecs::entity entity_view::mut(const flecs::world& stage) const {
     return flecs::entity(m_id).set_stage(stage.c_ptr());
 }
 
-/** Same as mut(world), but for iterator.
- * This operation allows for the construction of a mutable entity handle
- * from an iterator.
- *
- * @param stage An created for the current stage.
- * @return An entity handle that allows for mutations in the current stage.
- */
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
     ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use iterator created for readonly world/stage to create mutable handle");
     return flecs::entity(m_id).set_stage(it.world().c_ptr());
 }
 
-/** Same as mut(world), but for entity.
- * This operation allows for the construction of a mutable entity handle
- * from another entity. This is useful in each() functions, which only 
- * provide a handle to the entity being iterated over.
- *
- * @param stage An created for the current stage.
- * @return An entity handle that allows for mutations in the current stage.
- */
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
     ecs_assert(!e.world().is_readonly(), ECS_INVALID_PARAMETER, 
         "cannot use entity created for readonly world/stage to create mutable handle");

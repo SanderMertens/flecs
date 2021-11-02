@@ -83,7 +83,7 @@ typedef struct {
     ecs_strbuf_t headers;       /* default = "" */
 } ecs_http_reply_t;
 
-#define ECS_HTTP_REPLY_INIT\
+#define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
 /** Request callback.
