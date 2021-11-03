@@ -1852,7 +1852,9 @@
                 "fail_on_override_final",
                 "instantiate_tree_once",
                 "nested_prefab_w_named_children",
-                "dont_copy_children_for_non_prefab_base"
+                "dont_copy_children_for_non_prefab_base",
+                "get_component_pair_from_base",
+                "get_component_pair_from_prefab_base"
             ]
         }, {
             "id": "System_w_FromParent",

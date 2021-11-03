@@ -3322,3 +3322,48 @@ void Prefab_dont_copy_children_for_non_prefab_base() {
     
     ecs_fini(world);
 }
+
+void Prefab_get_component_pair_from_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t base = ecs_set_pair(world, 0, Position, Obj, {10, 20});
+    test_assert(ecs_has_pair(world, base, ecs_id(Position), Obj));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_pair(world, inst, ecs_id(Position), Obj));
+
+    const Position *p = ecs_get_pair(world, inst, Position, Obj);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p == ecs_get_pair(world, base, Position, Obj));
+
+    ecs_fini(world);
+}
+
+void Prefab_get_component_pair_from_prefab_base() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_pair(world, base, Position, Obj, {10, 20});
+    test_assert(ecs_has_pair(world, base, ecs_id(Position), Obj));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_pair(world, inst, ecs_id(Position), Obj));
+
+    const Position *p = ecs_get_pair(world, inst, Position, Obj);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p == ecs_get_pair(world, base, Position, Obj));
+
+    ecs_fini(world);
+}

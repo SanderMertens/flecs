@@ -4460,7 +4460,8 @@ void* get_base_component(
     /* Should always be an id record for IsA, otherwise a table with a 
      * HasBase flag set should not exist. */
     if (!table_index_isa) {
-        ecs_id_record_t *idr = flecs_get_id_record(world, ecs_pair(EcsIsA, EcsWildcard));
+        ecs_id_record_t *idr = flecs_get_id_record(
+            world, ecs_pair(EcsIsA, EcsWildcard));
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         table_index_isa = idr;
     }
@@ -4490,8 +4491,16 @@ void* get_base_component(
             continue;
         }
 
-        const ecs_table_record_t *tr = flecs_id_record_table(
-            table_index, table);
+        const ecs_table_record_t *tr = NULL;
+
+        ecs_table_t *storage_table = table->storage_table;
+        if (storage_table) {
+            tr = flecs_id_record_table(table_index, storage_table);
+        } else {
+            ecs_assert(!ecs_owns_id(world, base, id), 
+                ECS_NOT_A_COMPONENT, NULL);
+        }
+
         if (!tr) {
             ptr = get_base_component(world, table, id, table_index, 
                 table_index_isa, recur_depth + 1);
