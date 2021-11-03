@@ -19592,6 +19592,11 @@ ecs_entity_t ecs_module_init(
         ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
         (void)result;
+    } else {
+        ecs_entity_t result = ecs_entity_init(world, &private_desc.entity);
+        ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
+        (void)result;
     }
 
     return e;
@@ -25482,6 +25487,12 @@ void on_set_rest(
 static
 void dequeue_rest(ecs_iter_t *it) {
     EcsRest *rest = ecs_term(it, EcsRest, 1);
+
+    if (it->delta_system_time > (FLECS_FLOAT)1.0) {
+        ecs_warn(
+            "detected large progress interval (%.2fs), REST request may timeout",
+            (double)it->delta_system_time);
+    }
 
     int32_t i;
     for(i = 0; i < it->count; i ++) {
@@ -36592,7 +36603,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_1("#[green]table#[normal] [%s] created", expr);
+    ecs_dbg_1("#[green]table#[normal] [%s] created with id %d", expr, result->id);
     ecs_os_free(expr);
 #endif
     ecs_log_push();
@@ -37295,6 +37306,11 @@ void flecs_init_root_table(
     };
 
     init_table(world, &world->store.root, &entities);
+
+    /* Ensure table indices start at 1, as 0 is reserved for the root */
+    uint64_t new_id = flecs_sparse_new_id(world->store.tables);
+    ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
+    (void)new_id;
 }
 
 void flecs_table_clear_edges(

@@ -2164,6 +2164,7 @@ void Internals_activate_deactivate_activate_other(void);
 void Internals_no_double_system_table_after_merge(void);
 void Internals_recreate_deleted_table(void);
 void Internals_create_65k_tables(void);
+void Internals_no_duplicate_root_table_id(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -10410,6 +10411,10 @@ bake_test_case Internals_testcases[] = {
     {
         "create_65k_tables",
         Internals_create_65k_tables
+    },
+    {
+        "no_duplicate_root_table_id",
+        Internals_no_duplicate_root_table_id
     }
 };
 
@@ -10892,7 +10897,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        8,
+        9,
         Internals_testcases
     },
     {

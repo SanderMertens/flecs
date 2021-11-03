@@ -193,6 +193,12 @@ static
 void dequeue_rest(ecs_iter_t *it) {
     EcsRest *rest = ecs_term(it, EcsRest, 1);
 
+    if (it->delta_system_time > (FLECS_FLOAT)1.0) {
+        ecs_warn(
+            "detected large progress interval (%.2fs), REST request may timeout",
+            (double)it->delta_system_time);
+    }
+
     int32_t i;
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;

@@ -221,3 +221,28 @@ void Internals_create_65k_tables() {
     
     ecs_fini(world);
 }
+
+void Internals_no_duplicate_root_table_id() {
+    ecs_world_t *world = ecs_init();
+
+    /* This scenario triggered a bug where the first table registered in the
+     * world would get id 0, which is the same id as the root table. This caused
+     * the table cache to assert as it saw the wrong table for an id. */
+
+    int32_t i;
+    for (i = 0; i <= 50; i ++) {
+        ecs_entity_t e = ecs_new_id(world);
+        ecs_add_id(world, e, i + 1000);
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, i + 1000));
+    }
+
+    ecs_entity_t f = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+    
+    test_assert(f != 0);
+    test_str(ecs_get_name(world, f), "Foo");
+    
+    ecs_fini(world);
+}

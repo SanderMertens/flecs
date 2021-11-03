@@ -288,7 +288,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_1("#[green]table#[normal] [%s] created", expr);
+    ecs_dbg_1("#[green]table#[normal] [%s] created with id %d", expr, result->id);
     ecs_os_free(expr);
 #endif
     ecs_log_push();
@@ -991,6 +991,11 @@ void flecs_init_root_table(
     };
 
     init_table(world, &world->store.root, &entities);
+
+    /* Ensure table indices start at 1, as 0 is reserved for the root */
+    uint64_t new_id = flecs_sparse_new_id(world->store.tables);
+    ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
+    (void)new_id;
 }
 
 void flecs_table_clear_edges(
