@@ -177,7 +177,8 @@
                 "sort",
                 "recycled_tags",
                 "query_recycled_tags",
-                "single_case"
+                "single_case",
+                "match_switch_on_base_instance"
             ]
         }, {
             "id": "EnabledComponents",

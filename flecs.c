@@ -37111,6 +37111,10 @@ void compute_table_diff(
     ecs_edge_t *edge,
     ecs_id_t id)
 {
+    if (node == next) {
+        return;
+    }
+
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
 
@@ -37334,6 +37338,10 @@ void populate_diff(
     if (out) {
         int32_t di = edge->diff_index;
         if (di > 0) {
+            ecs_assert(!add_ptr || !ECS_HAS_ROLE(add_ptr[0], CASE), 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!remove_ptr || !ECS_HAS_ROLE(remove_ptr[0], CASE), 
+                ECS_INTERNAL_ERROR, NULL);
             *out = ecs_vector_first(table->node.diffs, ecs_table_diff_t)[di - 1];
         } else {
             out->on_set.count = 0;

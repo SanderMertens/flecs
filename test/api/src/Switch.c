@@ -40,7 +40,6 @@ void Switch_get_case_unset() {
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);
-
     ECS_TYPE(world, Type, Walking, Running, Jumping);
 
     ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
@@ -1139,6 +1138,39 @@ void Switch_single_case() {
     test_int(it.entities[0], e2);
 
     test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_match_switch_on_base_instance() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Type, Walking, Running, Jumping);
+
+    ecs_query_t *q = ecs_query_new(world, "CASE | Walking");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new_id(world);
+    test_assert(base != 0);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Type);
+    test_assert(e1 != 0);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+
+    ecs_entity_t 
+    case_id = ecs_get_case(world, e1, Type);
+    test_int(case_id, Walking);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+
+    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }
