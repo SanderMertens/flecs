@@ -1422,9 +1422,10 @@ void Trigger_readonly_term(void);
 void Trigger_trigger_on_prefab(void);
 void Trigger_trigger_on_disabled(void);
 void Trigger_trigger_cleanup_2_w_self_super_id(void);
-void Trigger_yield_existing(void);
-void Trigger_yield_existing_2_tables(void);
-void Trigger_yield_existing_wildcard_pair(void);
+void Trigger_on_add_yield_existing(void);
+void Trigger_on_add_yield_existing_2_tables(void);
+void Trigger_on_add_yield_existing_wildcard_pair(void);
+void Trigger_on_set_yield_existing(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7651,16 +7652,20 @@ bake_test_case Trigger_testcases[] = {
         Trigger_trigger_cleanup_2_w_self_super_id
     },
     {
-        "yield_existing",
-        Trigger_yield_existing
+        "on_add_yield_existing",
+        Trigger_on_add_yield_existing
     },
     {
-        "yield_existing_2_tables",
-        Trigger_yield_existing_2_tables
+        "on_add_yield_existing_2_tables",
+        Trigger_on_add_yield_existing_2_tables
     },
     {
-        "yield_existing_wildcard_pair",
-        Trigger_yield_existing_wildcard_pair
+        "on_add_yield_existing_wildcard_pair",
+        Trigger_on_add_yield_existing_wildcard_pair
+    },
+    {
+        "on_set_yield_existing",
+        Trigger_on_set_yield_existing
     }
 };
 
@@ -10798,7 +10803,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        67,
+        68,
         Trigger_testcases
     },
     {

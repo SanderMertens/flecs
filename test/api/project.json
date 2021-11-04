@@ -1494,9 +1494,10 @@
                "trigger_on_prefab",
                "trigger_on_disabled",
                "trigger_cleanup_2_w_self_super_id",
-               "yield_existing",
-               "yield_existing_2_tables",
-               "yield_existing_wildcard_pair"
+               "on_add_yield_existing",
+               "on_add_yield_existing_2_tables",
+               "on_add_yield_existing_wildcard_pair",
+               "on_set_yield_existing"
            ]
         }, {
             "id": "Observer",

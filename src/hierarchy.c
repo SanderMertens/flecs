@@ -299,7 +299,8 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
         .callback = on_set_symbol,
-        .events = {EcsOnSet}
+        .events = {EcsOnSet},
+        .yield_existing = true
     });
 }
 

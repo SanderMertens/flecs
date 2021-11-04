@@ -346,7 +346,6 @@ void Lookup_lookup_path_wildcard_from_scope() {
 }
 
 void Lookup_resolve_builtin_symbols() {
-    test_quarantine("Nov 3 2021");
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_lookup_symbol(world, "EcsComponent", false) == ecs_id(EcsComponent));
