@@ -465,7 +465,7 @@ void Pipeline_no_merge_after_main_out() {
     ecs_fini(world);
 }
 
-void Pipeline_no_merge_after_staged_in_out() {
+void Pipeline_merge_after_staged_in_out() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -473,6 +473,8 @@ void Pipeline_no_merge_after_staged_in_out() {
 
     ECS_ENTITY(world, E, Position, Velocity);
 
+    /* Requires merge, because getting value in 2nd system cannot access data
+     * written to stage from first system */
     ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, Velocity());
     ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity());
 
@@ -481,7 +483,63 @@ void Pipeline_no_merge_after_staged_in_out() {
     ecs_progress(world, 1);
 
     test_int(stats->systems_ran_frame, 2);
-    test_int(stats->merge_count_total, 1);
+    test_int(stats->merge_count_total, 2);
+    test_int(stats->pipeline_build_count_total, 1);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_in_invoked, 1);
+
+    ecs_progress(world, 1);
+    test_int(stats->pipeline_build_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_merge_after_staged_inout_main_implicit_inout() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, E, Position, Velocity);
+
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, Velocity());
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(stats->systems_ran_frame, 2);
+    test_int(stats->merge_count_total, 2);
+    test_int(stats->pipeline_build_count_total, 1);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_in_invoked, 1);
+
+    ecs_progress(world, 1);
+    test_int(stats->pipeline_build_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_merge_after_staged_inout_main_inout() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, E, Position, Velocity);
+
+    ECS_SYSTEM(world, SysOut, EcsOnUpdate, Position, [inout] Velocity());
+    ECS_SYSTEM(world, SysIn, EcsOnUpdate, Velocity);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(stats->systems_ran_frame, 2);
+    test_int(stats->merge_count_total, 2);
     test_int(stats->pipeline_build_count_total, 1);
 
     test_int(sys_out_invoked, 1);

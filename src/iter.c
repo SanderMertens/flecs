@@ -403,3 +403,13 @@ bool ecs_iter_next(
     ecs_assert(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
     return iter->next(iter);
 }
+
+bool ecs_iter_count(
+    ecs_iter_t *it)
+{
+    int32_t count = 0;
+    while (ecs_iter_next(it)) {
+        count += it->count;
+    }
+    return count;
+}

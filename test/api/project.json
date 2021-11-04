@@ -932,7 +932,9 @@
                 "merge_after_staged_out",
                 "merge_after_not_out",
                 "no_merge_after_main_out",
-                "no_merge_after_staged_in_out",
+                "merge_after_staged_in_out",
+                "merge_after_staged_inout_main_implicit_inout",
+                "merge_after_staged_inout_main_inout",
                 "merge_after_staged_out_before_owned",
                 "switch_pipeline",
                 "run_pipeline",
@@ -1949,10 +1951,21 @@
                 "no_threading",
                 "no_time",
                 "is_entity_enabled",
-                "get_stats",
                 "ensure_empty_root",
                 "register_alias_twice_same_entity",
                 "register_alias_twice_different_entity"
+            ]
+        }, {
+            "id": "Stats",
+            "testcases": [
+                "get_world_stats",
+                "get_pipeline_stats_before_progress_mini_world",
+                "get_pipeline_stats_before_progress",
+                "get_pipeline_stats_after_progress_no_systems",
+                "get_pipeline_stats_after_progress_1_system",
+                "get_pipeline_stats_after_progress_1_inactive_system",
+                "get_pipeline_stats_after_progress_2_systems",
+                "get_pipeline_stats_after_progress_2_systems_one_merge"
             ]
         }, {
             "id": "Type",

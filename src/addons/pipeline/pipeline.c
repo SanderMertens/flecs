@@ -4,10 +4,6 @@
 
 #include "pipeline.h"
 
-static ECS_CTOR(EcsPipelineQuery, ptr, {
-    memset(ptr, 0, _size);
-})
-
 static ECS_DTOR(EcsPipelineQuery, ptr, {
     ecs_vector_free(ptr->ops);
 })
@@ -154,6 +150,7 @@ bool check_term_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
+
     } else if (!subj->entity || term->oper == EcsNot) {
         bool needs_merge = false;
 
@@ -176,9 +173,9 @@ bool check_term_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (!(subj->set.mask & EcsSelf) || !subj->entity || 
-                subj->entity != EcsThis) 
-            {
+            if ((!(subj->set.mask & EcsSelf) || (subj->entity != EcsThis)) && (subj->set.mask != EcsNothing)) {
+                /* Default inout behavior is [inout] for This terms, and [in]
+                 * for terms that match other entities */
                 break;
             }
             // fall through
@@ -230,6 +227,7 @@ bool build_pipeline(
     }
 
     world->stats.pipeline_build_count_total ++;
+    pq->rebuild_count ++;
 
     write_state_t ws = {
         .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
@@ -714,7 +712,7 @@ void FlecsPipelineImport(
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
-        .ctor = ecs_ctor(EcsPipelineQuery),
+        .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsPipelineQuery)
     });
 

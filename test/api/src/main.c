@@ -878,7 +878,9 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline(void);
 void Pipeline_merge_after_staged_out(void);
 void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
-void Pipeline_no_merge_after_staged_in_out(void);
+void Pipeline_merge_after_staged_in_out(void);
+void Pipeline_merge_after_staged_inout_main_implicit_inout(void);
+void Pipeline_merge_after_staged_inout_main_inout(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
 void Pipeline_switch_pipeline(void);
 void Pipeline_run_pipeline(void);
@@ -1843,10 +1845,19 @@ void World_recreate_world_w_component(void);
 void World_no_threading(void);
 void World_no_time(void);
 void World_is_entity_enabled(void);
-void World_get_stats(void);
 void World_ensure_empty_root(void);
 void World_register_alias_twice_same_entity(void);
 void World_register_alias_twice_different_entity(void);
+
+// Testsuite 'Stats'
+void Stats_get_world_stats(void);
+void Stats_get_pipeline_stats_before_progress_mini_world(void);
+void Stats_get_pipeline_stats_before_progress(void);
+void Stats_get_pipeline_stats_after_progress_no_systems(void);
+void Stats_get_pipeline_stats_after_progress_1_system(void);
+void Stats_get_pipeline_stats_after_progress_1_inactive_system(void);
+void Stats_get_pipeline_stats_after_progress_2_systems(void);
+void Stats_get_pipeline_stats_after_progress_2_systems_one_merge(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -5528,8 +5539,16 @@ bake_test_case Pipeline_testcases[] = {
         Pipeline_no_merge_after_main_out
     },
     {
-        "no_merge_after_staged_in_out",
-        Pipeline_no_merge_after_staged_in_out
+        "merge_after_staged_in_out",
+        Pipeline_merge_after_staged_in_out
+    },
+    {
+        "merge_after_staged_inout_main_implicit_inout",
+        Pipeline_merge_after_staged_inout_main_implicit_inout
+    },
+    {
+        "merge_after_staged_inout_main_inout",
+        Pipeline_merge_after_staged_inout_main_inout
     },
     {
         "merge_after_staged_out_before_owned",
@@ -9234,10 +9253,6 @@ bake_test_case World_testcases[] = {
         World_is_entity_enabled
     },
     {
-        "get_stats",
-        World_get_stats
-    },
-    {
         "ensure_empty_root",
         World_ensure_empty_root
     },
@@ -9248,6 +9263,41 @@ bake_test_case World_testcases[] = {
     {
         "register_alias_twice_different_entity",
         World_register_alias_twice_different_entity
+    }
+};
+
+bake_test_case Stats_testcases[] = {
+    {
+        "get_world_stats",
+        Stats_get_world_stats
+    },
+    {
+        "get_pipeline_stats_before_progress_mini_world",
+        Stats_get_pipeline_stats_before_progress_mini_world
+    },
+    {
+        "get_pipeline_stats_before_progress",
+        Stats_get_pipeline_stats_before_progress
+    },
+    {
+        "get_pipeline_stats_after_progress_no_systems",
+        Stats_get_pipeline_stats_after_progress_no_systems
+    },
+    {
+        "get_pipeline_stats_after_progress_1_system",
+        Stats_get_pipeline_stats_after_progress_1_system
+    },
+    {
+        "get_pipeline_stats_after_progress_1_inactive_system",
+        Stats_get_pipeline_stats_after_progress_1_inactive_system
+    },
+    {
+        "get_pipeline_stats_after_progress_2_systems",
+        Stats_get_pipeline_stats_after_progress_2_systems
+    },
+    {
+        "get_pipeline_stats_after_progress_2_systems_one_merge",
+        Stats_get_pipeline_stats_after_progress_2_systems_one_merge
     }
 };
 
@@ -10755,7 +10805,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        27,
+        29,
         Pipeline_testcases
     },
     {
@@ -10937,8 +10987,15 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        36,
+        35,
         World_testcases
+    },
+    {
+        "Stats",
+        NULL,
+        NULL,
+        8,
+        Stats_testcases
     },
     {
         "Type",
@@ -11035,5 +11092,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 64);
+    return bake_test_run("api", argc, argv, suites, 65);
 }

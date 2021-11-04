@@ -5838,6 +5838,21 @@ FLECS_API
 bool ecs_iter_next(
     ecs_iter_t *it);
 
+/** Count number of matched entities in query.
+ * This operation returns the number of matched entities. If a query contains no
+ * matched entities but still yields results (e.g. it has no terms with This
+ * subjects) the operation will return 0.
+ * 
+ * To determine the number of matched entities, the operation iterates the
+ * iterator until it yields no more results.
+ * 
+ * @param it The iterator.
+ * @return True if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_iter_count(
+    ecs_iter_t *it);
+
 /** Obtain data for a query term.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
@@ -9113,6 +9128,10 @@ typedef struct ecs_pipeline_stats_t {
     /** Map with system statistics. For each system in the systems vector, an
      * entry in the map exists of type ecs_system_stats_t. */
     ecs_map_t *system_stats;
+
+    int32_t system_count; /* Number of systems in pipeline */
+    int32_t active_system_count; /* Number of active systems in pipeline */
+    int32_t rebuild_count; /* Number of times pipeline has rebuilt */
 } ecs_pipeline_stats_t;
 
 /** Get world statistics.
@@ -9122,7 +9141,8 @@ typedef struct ecs_pipeline_stats_t {
  * @param world The world.
  * @param stats Out parameter for statistics.
  */
-FLECS_API void ecs_get_world_stats(
+FLECS_API 
+void ecs_get_world_stats(
     const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
@@ -9133,7 +9153,8 @@ FLECS_API void ecs_get_world_stats(
  * @param world The world.
  * @param stats The statistics to print.
  */
-FLECS_API void ecs_dump_world_stats(
+FLECS_API 
+void ecs_dump_world_stats(
     const ecs_world_t *world,
     const ecs_world_stats_t *stats);
 
@@ -9144,7 +9165,8 @@ FLECS_API void ecs_dump_world_stats(
  * @param query The query.
  * @param stats Out parameter for statistics.
  */
-FLECS_API void ecs_get_query_stats(
+FLECS_API 
+void ecs_get_query_stats(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *stats);
@@ -9158,7 +9180,8 @@ FLECS_API void ecs_get_query_stats(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a system.
  */
-FLECS_API bool ecs_get_system_stats(
+FLECS_API 
+bool ecs_get_system_stats(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
@@ -9173,13 +9196,24 @@ FLECS_API bool ecs_get_system_stats(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a pipeline.
  */
-FLECS_API bool ecs_get_pipeline_stats(
+FLECS_API 
+bool ecs_get_pipeline_stats(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
+
+/** Free pipeline stats.
+ * 
+ * @param stats The stats to free.
+ */
+FLECS_API
+void ecs_pipeline_stats_fini(
+    ecs_pipeline_stats_t *stats);
+
 #endif
 
-FLECS_API void ecs_gauge_reduce(
+FLECS_API 
+void ecs_gauge_reduce(
     ecs_gauge_t *dst,
     int32_t t_dst,
     ecs_gauge_t *src,

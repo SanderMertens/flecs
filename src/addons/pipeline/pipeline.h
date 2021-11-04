@@ -14,8 +14,9 @@ typedef struct ecs_pipeline_op_t {
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
     ecs_query_t *build_query;
-    int32_t match_count;
     ecs_vector_t *ops;
+    int32_t match_count;
+    int32_t rebuild_count;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////

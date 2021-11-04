@@ -1000,17 +1000,6 @@ void World_is_entity_enabled() {
     ecs_fini(world);
 }
 
-void World_get_stats() {
-    ecs_world_t *world = ecs_init();
-
-    ecs_world_stats_t stats = {0};
-    ecs_get_world_stats(world, &stats);
-
-    test_int(stats.t, 1);
-
-    ecs_fini(world);
-}
-
 static int zero_time_scale_invoked = 0;
 
 void ZeroTimeScale(ecs_iter_t *it) {
@@ -1083,4 +1072,20 @@ void World_register_alias_twice_different_entity() {
     
     test_expect_abort();
     ecs_use(world, f, "Foo");
+}
+
+void World_get_pipeline_stats_after_progress_no_systems() {
+    // Implement testcase
+}
+
+void World_get_pipeline_stats_after_progress_1_system() {
+    // Implement testcase
+}
+
+void World_get_pipeline_stats_after_progress_2_systems() {
+    // Implement testcase
+}
+
+void World_get_pipeline_stats_after_progress_2_systems_one_merge() {
+    // Implement testcase
 }

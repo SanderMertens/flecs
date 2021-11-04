@@ -12785,8 +12785,9 @@ typedef struct ecs_pipeline_op_t {
 typedef struct EcsPipelineQuery {
     ecs_query_t *query;
     ecs_query_t *build_query;
-    int32_t match_count;
     ecs_vector_t *ops;
+    int32_t match_count;
+    int32_t rebuild_count;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13149,10 +13150,6 @@ void ecs_set_threads(
 #ifdef FLECS_PIPELINE
 
 
-static ECS_CTOR(EcsPipelineQuery, ptr, {
-    memset(ptr, 0, _size);
-})
-
 static ECS_DTOR(EcsPipelineQuery, ptr, {
     ecs_vector_free(ptr->ops);
 })
@@ -13299,6 +13296,7 @@ bool check_term_component(
                 set_write_state(write_state, component, WriteToMain);
             }
         };
+
     } else if (!subj->entity || term->oper == EcsNot) {
         bool needs_merge = false;
 
@@ -13321,9 +13319,9 @@ bool check_term_component(
 
         switch(term->inout) {
         case EcsInOutDefault:
-            if (!(subj->set.mask & EcsSelf) || !subj->entity || 
-                subj->entity != EcsThis) 
-            {
+            if ((!(subj->set.mask & EcsSelf) || (subj->entity != EcsThis)) && (subj->set.mask != EcsNothing)) {
+                /* Default inout behavior is [inout] for This terms, and [in]
+                 * for terms that match other entities */
                 break;
             }
             // fall through
@@ -13375,6 +13373,7 @@ bool build_pipeline(
     }
 
     world->stats.pipeline_build_count_total ++;
+    pq->rebuild_count ++;
 
     write_state_t ws = {
         .components = ecs_map_new(int32_t, ECS_HI_COMPONENT_ID),
@@ -13859,7 +13858,7 @@ void FlecsPipelineImport(
 
     /* Set ctor and dtor for PipelineQuery */
     ecs_set(world, ecs_id(EcsPipelineQuery), EcsComponentLifecycle, {
-        .ctor = ecs_ctor(EcsPipelineQuery),
+        .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsPipelineQuery)
     });
 
@@ -22983,20 +22982,11 @@ void ecs_get_query_stats(
 
     int32_t t = s->t = t_next(s->t);
 
-    int32_t i, entity_count = 0, count = ecs_query_table_count(query);
-    ecs_query_table_match_t *matched_tables = ecs_vector_first(
-        query->cache.tables, ecs_query_table_match_t);
-    for (i = 0; i < count; i ++) {
-        ecs_query_table_match_t *matched = &matched_tables[i];
-        if (matched->table) {
-            entity_count += ecs_table_count(matched->table);
-        }
-    }
-
-    record_gauge(&s->matched_table_count, t, count);
-    record_gauge(&s->matched_empty_table_count, t,
+    ecs_iter_t it = ecs_query_iter(world, (ecs_query_t*)query);
+    record_gauge(&s->matched_entity_count, t, ecs_iter_count(&it));
+    record_gauge(&s->matched_table_count, t, ecs_query_table_count(query));
+    record_gauge(&s->matched_empty_table_count, t, 
         ecs_query_empty_table_count(query));
-    record_gauge(&s->matched_entity_count, t, entity_count);
 }
 
 #ifdef FLECS_SYSTEM
@@ -23040,11 +23030,7 @@ static ecs_system_stats_t* get_system_stats(
 
     ecs_system_stats_t *s = ecs_map_get(systems, ecs_system_stats_t, system);
     if (!s) {
-        ecs_system_stats_t stats;
-        memset(&stats, 0, sizeof(ecs_system_stats_t));
-        ecs_map_set(systems, system, &stats);
-        s = ecs_map_get(systems, ecs_system_stats_t, system);
-        ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
+        s = ecs_map_ensure(systems, ecs_system_stats_t, system);
     }
 
     return s;
@@ -23066,33 +23052,55 @@ bool ecs_get_pipeline_stats(
         return false;
     }
 
-    /* First find out how many systems are matched by the pipeline */
+    int32_t sys_count = 0, active_sys_count = 0;
+
+    /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
-    int32_t count = 0;
     while (ecs_query_next(&it)) {
-        count += it.count;
+        active_sys_count += it.count;
     }
 
-    if (!s->system_stats) {
-        s->system_stats = ecs_map_new(ecs_system_stats_t, count);
-    }    
+    /* Count total number of systems in pipeline */
+    it = ecs_query_iter(stage, pq->build_query);
+    while (ecs_query_next(&it)) {
+        sys_count += it.count;
+    }   
 
     /* Also count synchronization points */
     ecs_vector_t *ops = pq->ops;
     ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
     ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
-    count += ecs_vector_count(ops);
+    int32_t pip_count = active_sys_count + ecs_vector_count(ops);
+
+    if (!sys_count) {
+        return false;
+    }
+
+    if (s->system_stats && !sys_count) {
+        ecs_map_free(s->system_stats);
+    }
+    if (!s->system_stats && sys_count) {
+        s->system_stats = ecs_map_new(ecs_system_stats_t, sys_count);
+    }
+    if (!sys_count) {
+        s->system_stats = NULL;
+    }
 
     /* Make sure vector is large enough to store all systems & sync points */
-    ecs_vector_set_count(&s->systems, ecs_entity_t, count - 1);
-    ecs_entity_t *systems = ecs_vector_first(s->systems, ecs_entity_t);
+    ecs_entity_t *systems = NULL;
+    if (pip_count) {
+        ecs_vector_set_count(&s->systems, ecs_entity_t, pip_count);
+        systems = ecs_vector_first(s->systems, ecs_entity_t);
+    } else {
+        ecs_vector_free(s->systems);
+        s->systems = NULL;
+    }
 
     /* Populate systems vector, keep track of sync points */
     it = ecs_query_iter(stage, pq->query);
     
-    int32_t i_system = 0, ran_since_merge = 0;
+    int32_t i, i_system = 0, ran_since_merge = 0;
     while (ecs_query_next(&it)) {
-        int32_t i;
         for (i = 0; i < it.count; i ++) {
             systems[i_system ++] = it.entities[i];
             ran_since_merge ++;
@@ -23101,17 +23109,35 @@ bool ecs_get_pipeline_stats(
                 op++;
                 systems[i_system ++] = 0; /* 0 indicates a merge point */
             }
+        }
+    }
 
+    if (systems) {
+        systems[i_system ++] = 0; /* Last merge */
+        ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    /* Separately populate system stats map from build query, which includes
+     * systems that aren't currently active */
+    it = ecs_query_iter(stage, pq->build_query);
+    while (ecs_query_next(&it)) {
+        for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *sys_stats = get_system_stats(
                 s->system_stats, it.entities[i]);
             ecs_get_system_stats(world, it.entities[i], sys_stats);
         }
     }
 
-    ecs_assert(i_system == (count - 1), ECS_INTERNAL_ERROR, NULL);
-
     return true;
 }
+
+void ecs_pipeline_stats_fini(
+    ecs_pipeline_stats_t *stats)
+{
+    ecs_map_free(stats->system_stats);
+    ecs_vector_free(stats->systems);
+}
+
 #endif
 
 void ecs_dump_world_stats(
@@ -37988,6 +38014,16 @@ bool ecs_iter_next(
     ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
     return iter->next(iter);
+}
+
+bool ecs_iter_count(
+    ecs_iter_t *it)
+{
+    int32_t count = 0;
+    while (ecs_iter_next(it)) {
+        count += it->count;
+    }
+    return count;
 }
 
 static
