@@ -836,7 +836,7 @@ ecs_rule_pair_t term_to_pair(
     if (term->pred.var == EcsVarIsVariable) {
         /* Always lookup the as an entity, as pairs never refer to tables */
         const ecs_rule_var_t *var = find_variable(
-            rule, EcsRuleVarKindEntity, term->pred.name);
+            rule, EcsRuleVarKindEntity, term_id_var_name(&term->pred));
 
         /* Variables should have been declared */
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -882,7 +882,7 @@ ecs_rule_pair_t term_to_pair(
     /* Same as above, if the object is a variable, store it and flag it */
     if (term->obj.var == EcsVarIsVariable) {
         const ecs_rule_var_t *var = find_variable(
-            rule, EcsRuleVarKindEntity, term->obj.name);
+            rule, EcsRuleVarKindEntity, term_id_var_name(&term->obj));
 
         /* Variables should have been declared */
         ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1306,7 +1306,7 @@ void ensure_all_variables(
 
         /* If predicate is a variable, make sure it has been registered */
         if (term->pred.var == EcsVarIsVariable) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term->pred.name);
+            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->pred));
         }
 
         /* If subject is a variable and it is not This, make sure it is 
@@ -1314,13 +1314,13 @@ void ensure_all_variables(
          * correctly return all permutations */
         if (term->subj.var == EcsVarIsVariable) {
             if (term->subj.entity != EcsThis) {
-                ensure_variable(rule, EcsRuleVarKindEntity, term->subj.name);
+                ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->subj));
             }
         }
 
         /* If object is a variable, make sure it has been registered */
         if (obj_is_set(term) && (term->obj.var == EcsVarIsVariable)) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term->obj.name);
+            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->obj));
         }
     }    
 }
@@ -1431,12 +1431,12 @@ int scan_variables(
 
         if (!pred && term_id_is_variable(&term->pred)) {
             rule_error(rule, "missing predicate variable '%s'", 
-                term->pred.name);
+                term_id_var_name(&term->pred));
             goto error;
         }
         if (!obj && term_id_is_variable(&term->obj)) {
             rule_error(rule, "missing object variable '%s'", 
-                term->obj.name);
+                term_id_var_name(&term->obj));
             goto error;
         }
     }
