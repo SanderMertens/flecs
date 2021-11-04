@@ -2844,7 +2844,7 @@ void flecs_table_mark_dirty(
         int32_t index = ecs_type_match(world, table->storage_table, 
             table->storage_type, 0, component, 0, 0, 0, NULL, NULL);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-        table->dirty_state[index] ++;
+        table->dirty_state[index + 1] ++;
     }
 }
 
@@ -35093,17 +35093,20 @@ void sort_tables(
         if (order_by_component) {
             /* Get index of sorted component. We only care if the component we're
             * sorting on has changed or if entities have been added / re(moved) */
-            index = ecs_type_index_of(table->type, 0, order_by_component);
+            index = ecs_type_index_of(table->storage_type, 
+                0, order_by_component);
+
             if (index != -1) {
                 ecs_assert(index < ecs_vector_count(table->type), 
                     ECS_INTERNAL_ERROR, NULL); 
+
                 is_dirty = is_dirty || (dirty_state[index + 1] != qt->monitor[index + 1]);
             } else {
                 /* Table does not contain component which means the sorted
                  * component is shared. Table does not need to be sorted */
                 continue;
             }
-        }      
+        }
         
         /* Check both if entities have moved (element 0) or if the component
          * we're sorting on has changed (index + 1) */
@@ -36302,31 +36305,33 @@ void mark_columns_dirty(
 
     if (table && table->dirty_state) {
         ecs_term_t *terms = query->filter.terms;
-        int32_t c = 0, i, count = query->filter.term_count;
+        int32_t i, count = query->filter.term_count_actual;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            ecs_term_id_t *subj = &term->subj;
+            int32_t ti = term->index;
 
-            if (term->inout != EcsIn && (term->inout != EcsInOutDefault || 
-                (subj->entity == EcsThis && subj->set.mask == EcsSelf)))
-            {
-                int32_t index = table_data->columns[c];
-                if (index > 0) {
-                    int32_t storage_index = ecs_table_type_to_storage_index(
-                        table, index - 1);
-                    if (storage_index >= 0) {
-                        table->dirty_state[storage_index + 1] ++;
-                    }
-                }
+            if (term->inout == EcsIn) {
+                /* Don't mark readonly terms dirty */
+                continue;
             }
 
-            if (terms[i].oper == EcsOr) {
-                do {
-                    i ++;
-                } while ((i < count) && terms[i].oper == EcsOr);
+            if (table_data->subjects[ti] != 0) {
+                /* Don't mark table dirty if term is not from the table */
+                continue;
             }
 
-            c ++;
+            int32_t index = table_data->columns[ti];
+            if (index <= 0) {
+                /* If term is not set, there's nothing to mark dirty */
+                continue;
+            }
+
+            /* Potential candidate for marking table dirty, if a component */
+            int32_t storage_index = ecs_table_type_to_storage_index(
+                table, index - 1);
+            if (storage_index >= 0) {
+                table->dirty_state[storage_index + 1] ++;
+            }
         }
     }
 }

@@ -763,7 +763,7 @@ void flecs_table_mark_dirty(
         int32_t index = ecs_type_match(world, table->storage_table, 
             table->storage_type, 0, component, 0, 0, 0, NULL, NULL);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
-        table->dirty_state[index] ++;
+        table->dirty_state[index + 1] ++;
     }
 }
 

@@ -1,5 +1,6 @@
 #include <api.h>
 
+static
 int compare_position(
     ecs_entity_t e1,
     const void *ptr1,
@@ -11,6 +12,7 @@ int compare_position(
     return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
+static
 int compare_entity(
     ecs_entity_t e1,
     const void *ptr1,
@@ -666,8 +668,6 @@ void Sorting_sort_after_system() {
 
     ecs_progress(world, 0);
 
-    /* First iteration, query will register monitor with table, so table is
-     * always marked dirty */
     it = ecs_query_iter(world, q);
 
     test_assert(ecs_query_next(&it));
@@ -1562,6 +1562,174 @@ void Sorting_sort_relation_marked() {
     test_assert(ecs_has_pair(world, e2, Rel, e1));
     test_int(1, ecs_vector_count(ecs_get_type(world, e3)));
     test_assert(ecs_has(world, e3, Tag));
+
+    ecs_fini(world);
+}
+
+bool dummy_compare_invoked;
+
+static
+int dummy_compare(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
+{
+    dummy_compare_invoked = true;
+    return (e1 > e2) - (e1 < e2);
+}
+
+void Sorting_dont_resort_after_set_unsorted_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "[in] Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = dummy_compare
+    });
+
+    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_set(world, e1, Velocity, {0, 0});
+
+    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_set(world, e2, Position, {0, 0});
+    ecs_set(world, e2, Velocity, {0, 0});
+
+    // Initial sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true); 
+    dummy_compare_invoked = false;
+
+    // No changes, shouldn't sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // No change in sorted component, shouldn't sort
+    ecs_modified(world, e2, Velocity);
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // Change in sorted component, should sort
+    ecs_modified(world, e2, Position);
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true);
+
+    ecs_fini(world);
+}
+
+void Sorting_dont_resort_after_set_unsorted_component_w_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t Tag = ecs_new_low_id(world); // wiggle id between components
+
+    ECS_COMPONENT(world, Position);
+
+    /* Because Position's id is larger than the Tag, its type index in the
+     * storage table is different from the actual table. Ensure that this 
+     * doesn't break the test. */
+
+    test_assert(Tag < ecs_id(Position));
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "[in] Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = dummy_compare
+    });
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_set(world, e1, Velocity, {0, 0});
+
+    ecs_entity_t e2 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e2, Position, {0, 0});
+    ecs_set(world, e2, Velocity, {0, 0});
+
+    // Initial sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true); 
+    dummy_compare_invoked = false;
+
+    // No changes, shouldn't sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // No change in sorted component, shouldn't sort
+    ecs_modified(world, e2, Velocity);
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // Change in sorted component, should sort
+    ecs_modified(world, e2, Position);
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true);
+
+    ecs_fini(world);
+}
+
+void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t Tag = ecs_new_low_id(world); // wiggle id between components
+
+    ECS_COMPONENT(world, Position);
+
+    /* Same as previous testcase, but with query out column vs. modified */
+
+    test_assert(Tag < ecs_id(Position));
+
+    // Sorted query
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "[in] Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = dummy_compare
+    });
+
+    // Dummy queries that mutate
+    ecs_query_t *q_a = ecs_query_new(world, "Position"); // [inout]
+    ecs_query_t *q_b = ecs_query_new(world, "[out] Position");
+    ecs_query_t *q_c = ecs_query_new(world, "[out] Velocity");
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e1, Position, {0, 0});
+    ecs_set(world, e1, Velocity, {0, 0});
+
+    ecs_entity_t e2 = ecs_new_w_id(world, Tag);
+    ecs_set(world, e2, Position, {0, 0});
+    ecs_set(world, e2, Velocity, {0, 0});
+
+    // Initial sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true); 
+    dummy_compare_invoked = false;
+
+    // No changes, shouldn't sort
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // No change in sorted component, shouldn't sort
+    { ecs_iter_t it = ecs_query_iter(world, q_c); while (ecs_query_next(&it)); }
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, false);
+
+    // Change in sorted component (inout), should sort
+    { ecs_iter_t it = ecs_query_iter(world, q_a); while (ecs_query_next(&it)); }
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true);
+    dummy_compare_invoked = false;
+
+    // Change in sorted component (out), should sort
+    { ecs_iter_t it = ecs_query_iter(world, q_b); while (ecs_query_next(&it)); }
+    ecs_query_iter(world, q);
+    test_bool(dummy_compare_invoked, true);
+    dummy_compare_invoked = false;
 
     ecs_fini(world);
 }

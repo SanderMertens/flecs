@@ -1001,6 +1001,9 @@ void Sorting_sort_w_tags_only(void);
 void Sorting_sort_childof_marked(void);
 void Sorting_sort_isa_marked(void);
 void Sorting_sort_relation_marked(void);
+void Sorting_dont_resort_after_set_unsorted_component(void);
+void Sorting_dont_resort_after_set_unsorted_component_w_tag(void);
+void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
 
 // Testsuite 'Filter'
 void Filter_filter_1_term(void);
@@ -6001,6 +6004,18 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_relation_marked",
         Sorting_sort_relation_marked
+    },
+    {
+        "dont_resort_after_set_unsorted_component",
+        Sorting_dont_resort_after_set_unsorted_component
+    },
+    {
+        "dont_resort_after_set_unsorted_component_w_tag",
+        Sorting_dont_resort_after_set_unsorted_component_w_tag
+    },
+    {
+        "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
+        Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term
     }
 };
 
@@ -10754,7 +10769,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        30,
+        33,
         Sorting_testcases
     },
     {

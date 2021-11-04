@@ -1058,7 +1058,10 @@
                 "sort_w_tags_only",
                 "sort_childof_marked",
                 "sort_isa_marked",
-                "sort_relation_marked"
+                "sort_relation_marked",
+                "dont_resort_after_set_unsorted_component",
+                "dont_resort_after_set_unsorted_component_w_tag",
+                "dont_resort_after_set_unsorted_component_w_tag_w_out_term"
             ]
         }, {
             "id": "Filter",
