@@ -394,6 +394,11 @@
         .filter.expr = q_expr\
     })
 
+#define ecs_rule_new(world, q_expr)\
+    ecs_rule_init(world, &(ecs_filter_desc_t){\
+        .expr = q_expr\
+    })
+
 #define ECS_TYPE(world, id, ...) \
     ecs_entity_t id = ecs_type_init(world, &(ecs_type_desc_t){\
         .entity.name = #id,\

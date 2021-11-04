@@ -2129,6 +2129,24 @@ void query_group_by(
     query->groups = ecs_map_new(ecs_query_table_list_t, 16);
 }
 
+/* Implementation for iterable mixin */
+static
+void query_iter_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter,
+    ecs_id_t filter)
+{
+    ecs_poly_assert(poly, ecs_query_t);
+
+    if (filter) {
+        iter[1] = ecs_query_iter(world, (ecs_query_t*)poly);
+        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+    } else {
+        iter[0] = ecs_query_iter(world, (ecs_query_t*)poly);
+    }
+}
+
 
 /* -- Public API -- */
 
@@ -2150,6 +2168,7 @@ ecs_query_t* ecs_query_init(
     }
 
     result->world = world;
+    result->iterable.init = query_iter_init;
     result->system = desc->system;
     result->prev_match_count = -1;
 

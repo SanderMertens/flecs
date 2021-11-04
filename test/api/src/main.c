@@ -785,6 +785,7 @@ void Lookup_lookup_path_this(void);
 void Lookup_lookup_path_wildcard(void);
 void Lookup_lookup_path_this_from_scope(void);
 void Lookup_lookup_path_wildcard_from_scope(void);
+void Lookup_resolve_builtin_symbols(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1091,6 +1092,9 @@ void Filter_chain_query_iter(void);
 void Filter_chain_rule_iter(void);
 void Filter_chain_iter_2_levels(void);
 void Filter_filter_from_expr_2_terms_err(void);
+void Filter_chain_term_iter_w_term_iter(void);
+void Filter_chain_filter_iter_w_term_iter(void);
+void Filter_chain_w_term_iter_component(void);
 
 // Testsuite 'FilterDefaultSubstitution'
 void FilterDefaultSubstitution_final_pred_no_args(void);
@@ -2155,6 +2159,16 @@ void Modules_nested_module(void);
 void Modules_module_tag_on_namespace(void);
 void Modules_module_tag_on_namespace_on_add(void);
 void Modules_module_tag_on_namespace_on_add_2_levels(void);
+
+// Testsuite 'MixinIterable'
+void MixinIterable_iter_query(void);
+void MixinIterable_iter_query_w_filter(void);
+void MixinIterable_iter_world(void);
+void MixinIterable_iter_world_w_filter(void);
+void MixinIterable_iter_rule(void);
+void MixinIterable_iter_rule_w_filter(void);
+void MixinIterable_iter_filter(void);
+void MixinIterable_iter_filter_w_filter(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -5161,6 +5175,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_wildcard_from_scope",
         Lookup_lookup_path_wildcard_from_scope
+    },
+    {
+        "resolve_builtin_symbols",
+        Lookup_resolve_builtin_symbols
     }
 };
 
@@ -6338,6 +6356,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_from_expr_2_terms_err",
         Filter_filter_from_expr_2_terms_err
+    },
+    {
+        "chain_term_iter_w_term_iter",
+        Filter_chain_term_iter_w_term_iter
+    },
+    {
+        "chain_filter_iter_w_term_iter",
+        Filter_chain_filter_iter_w_term_iter
+    },
+    {
+        "chain_w_term_iter_component",
+        Filter_chain_w_term_iter_component
     }
 };
 
@@ -10389,6 +10419,41 @@ bake_test_case Modules_testcases[] = {
     }
 };
 
+bake_test_case MixinIterable_testcases[] = {
+    {
+        "iter_query",
+        MixinIterable_iter_query
+    },
+    {
+        "iter_query_w_filter",
+        MixinIterable_iter_query_w_filter
+    },
+    {
+        "iter_world",
+        MixinIterable_iter_world
+    },
+    {
+        "iter_world_w_filter",
+        MixinIterable_iter_world_w_filter
+    },
+    {
+        "iter_rule",
+        MixinIterable_iter_rule
+    },
+    {
+        "iter_rule_w_filter",
+        MixinIterable_iter_rule_w_filter
+    },
+    {
+        "iter_filter",
+        MixinIterable_iter_filter
+    },
+    {
+        "iter_filter_w_filter",
+        MixinIterable_iter_filter_w_filter
+    }
+};
+
 bake_test_case Internals_testcases[] = {
     {
         "deactivate_table",
@@ -10627,7 +10692,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        27,
+        28,
         Lookup_testcases
     },
     {
@@ -10676,7 +10741,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        89,
+        92,
         Filter_testcases
     },
     {
@@ -10904,6 +10969,13 @@ static bake_test_suite suites[] = {
         Modules_testcases
     },
     {
+        "MixinIterable",
+        NULL,
+        NULL,
+        8,
+        MixinIterable_testcases
+    },
+    {
         "Internals",
         Internals_setup,
         NULL,
@@ -10928,5 +11000,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 63);
+    return bake_test_run("api", argc, argv, suites, 64);
 }

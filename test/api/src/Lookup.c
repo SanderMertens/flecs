@@ -344,3 +344,18 @@ void Lookup_lookup_path_wildcard_from_scope() {
 
     ecs_fini(world);
 }
+
+void Lookup_resolve_builtin_symbols() {
+    test_quarantine("Nov 3 2021");
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_lookup_symbol(world, "EcsComponent", false) == ecs_id(EcsComponent));
+    test_assert(ecs_lookup_symbol(world, "EcsComponentLifecycle", false) == ecs_id(EcsComponentLifecycle));
+    test_assert(ecs_lookup_symbol(world, "EcsType", false) == ecs_id(EcsType));
+    test_assert(ecs_lookup_symbol(world, "EcsIdentifier", false) == ecs_id(EcsIdentifier));
+
+    test_assert(ecs_lookup_symbol(world, "EcsName", false) == EcsName);
+    test_assert(ecs_lookup_symbol(world, "EcsSymbol", false) == EcsSymbol);
+
+    ecs_fini(world);
+}

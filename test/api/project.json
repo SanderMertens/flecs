@@ -830,7 +830,8 @@
                 "lookup_path_this",
                 "lookup_path_wildcard",
                 "lookup_path_this_from_scope",
-                "lookup_path_wildcard_from_scope"                                       
+                "lookup_path_wildcard_from_scope",
+                "resolve_builtin_symbols"
             ]
         }, {
             "id": "Singleton",
@@ -1150,7 +1151,10 @@
                 "chain_query_iter",
                 "chain_rule_iter",
                 "chain_iter_2_levels",
-                "filter_from_expr_2_terms_err"
+                "filter_from_expr_2_terms_err",
+                "chain_term_iter_w_term_iter",
+                "chain_filter_iter_w_term_iter",
+                "chain_w_term_iter_component"
             ]
         }, {
             "id": "FilterDefaultSubstitution",
@@ -2279,6 +2283,18 @@
                 "module_tag_on_namespace",
                 "module_tag_on_namespace_on_add",
                 "module_tag_on_namespace_on_add_2_levels"
+            ]
+        }, {
+            "id": "MixinIterable",
+            "testcases": [
+                "iter_query",
+                "iter_query_w_filter",
+                "iter_world",
+                "iter_world_w_filter",
+                "iter_rule",
+                "iter_rule_w_filter",
+                "iter_filter",
+                "iter_filter_w_filter"
             ]
         }, {
             "id": "Internals",

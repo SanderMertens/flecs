@@ -1,9 +1,9 @@
 #include "private_api.h"
 
 /* Roles */
-const ecs_id_t ECS_CASE =  (ECS_ROLE | (0x7Cull << 56));
-const ecs_id_t ECS_SWITCH =  (ECS_ROLE | (0x7Bull << 56));
-const ecs_id_t ECS_PAIR =  (ECS_ROLE | (0x7Aull << 56));
+const ecs_id_t ECS_CASE =      (ECS_ROLE | (0x7Cull << 56));
+const ecs_id_t ECS_SWITCH =    (ECS_ROLE | (0x7Bull << 56));
+const ecs_id_t ECS_PAIR =      (ECS_ROLE | (0x7Aull << 56));
 const ecs_id_t ECS_OVERRIDE =  (ECS_ROLE | (0x75ull << 56));
 const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
 
@@ -15,6 +15,7 @@ const ecs_entity_t ecs_id(EcsIdentifier) =         4;
 const ecs_entity_t ecs_id(EcsTrigger) =            5;
 const ecs_entity_t ecs_id(EcsQuery) =              6;
 const ecs_entity_t ecs_id(EcsObserver) =           7;
+const ecs_entity_t ecs_id(EcsIterable) =           8;
 
 /* System module component ids */
 const ecs_entity_t ecs_id(EcsSystem) =             10;
@@ -350,6 +351,43 @@ void fini_store(ecs_world_t *world) {
     flecs_hashmap_free(world->store.table_map);
 }
 
+/* Implementation for iterable mixin */
+static
+bool world_iter_next(
+    ecs_iter_t *it)
+{
+    if (it->is_valid) {
+        return it->is_valid = false;
+    }
+
+    ecs_world_t *world = it->real_world;
+    ecs_sparse_t *entity_index = world->store.entity_index;
+    it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
+    it->count = flecs_sparse_count(entity_index);
+
+    return it->is_valid = true;
+}
+
+static
+void world_iter_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter,
+    ecs_id_t filter)
+{
+    ecs_poly_assert(poly, ecs_world_t);
+
+    if (filter) {
+        iter[0] = ecs_term_iter(world, &(ecs_term_t){ .id = filter });
+    } else {
+        iter[0] = (ecs_iter_t){
+            .world = (ecs_world_t*)world,
+            .real_world = (ecs_world_t*)ecs_get_world(world),
+            .next = world_iter_next
+        };
+    }
+}
+
 static
 void log_addons(void) {
     ecs_trace("addons included in build:");
@@ -461,6 +499,7 @@ ecs_world_t *ecs_mini(void) {
     world->type_info = flecs_sparse_new(ecs_type_info_t);
     world->id_index = ecs_map_new(ecs_id_record_t, 8);
     flecs_observable_init(&world->observable);
+    world->iterable.init = world_iter_init;
 
     world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);

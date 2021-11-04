@@ -15,6 +15,7 @@
 #include <time.h>
 #include <ctype.h>
 #include <math.h>
+#include <stddef.h>
 
 #ifdef _MSC_VER
 //FIXME
@@ -43,6 +44,7 @@
 #define ECS_ecs_world_t_MAGIC     (0x65637377)
 #define ECS_ecs_stage_t_MAGIC     (0x65637373)
 #define ECS_ecs_query_t_MAGIC     (0x65637371)
+#define ECS_ecs_rule_t_MAGIC      (0x65637375)
 #define ECS_ecs_table_t_MAGIC     (0x65637374)
 #define ECS_ecs_filter_t_MAGIC    (0x65637366)
 #define ECS_ecs_trigger_t_MAGIC   (0x65637372)
@@ -52,6 +54,7 @@
 typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
     EcsMixinObservable,
+    EcsMixinIterable,
     EcsMixinBase,        /* If mixin can't be found in object, look in base */
     EcsMixinMax
 } ecs_mixin_kind_t;
@@ -73,7 +76,6 @@ extern ecs_mixins_t ecs_query_t_mixins;
 
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
-
 
 /** Type used for internal string hashmap */
 typedef struct ecs_hashed_string_t {
@@ -343,9 +345,6 @@ struct ecs_query_t {
     /* Query filter */
     ecs_filter_t filter;
 
-    /* Reference to world */
-    ecs_world_t *world;
-
     /* Tables matched with query */
     ecs_table_cache_t cache;
 
@@ -380,8 +379,11 @@ struct ecs_query_t {
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
     int32_t prev_match_count;   /* Used to track if sorting is needed */
-
     bool constraints_satisfied; /* Are all term constraints satisfied */
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_iterable_t iterable;
 };
 
 /** All triggers for a specific (component) id */
@@ -558,6 +560,7 @@ struct ecs_world_t {
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
+    ecs_iterable_t iterable;
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;

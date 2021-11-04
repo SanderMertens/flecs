@@ -1987,10 +1987,10 @@ ecs_entity_t ecs_component_init(
         ptr->size = flecs_from_size_t(desc->size);
         ptr->alignment = flecs_from_size_t(desc->alignment);
         if (!ptr->size) {
-            ecs_trace("#[green]tag#[reset] %s registered", 
+            ecs_trace("#[green]tag#[reset] %s created", 
                 ecs_get_name(world, result));
         } else {
-            ecs_trace("#[green]component#[reset] %s registered", 
+            ecs_trace("#[green]component#[reset] %s created", 
                 ecs_get_name(world, result));
         }
     } else {

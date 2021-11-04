@@ -385,3 +385,21 @@ char* ecs_iter_str(
 
     return ecs_strbuf_get(&buf);
 }
+
+void ecs_iter_poly(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter_out,
+    ecs_id_t filter)
+{
+    ecs_iterable_t *iterable = ecs_get_iterable(poly);
+    iterable->init(world, poly, iter_out, filter);
+}
+
+bool ecs_iter_next(
+    ecs_iter_t *iter)
+{
+    ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    return iter->next(iter);
+}

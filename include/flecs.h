@@ -76,7 +76,23 @@ extern "C" {
  * @{
  */
 
-/** An object with a mixin table. */
+/** A poly object.
+ * A poly (short for polymorph) object is an object that has a variable list of
+ * capabilities, determined by a mixin table. This is the current list of types
+ * in the flecs API that can be used as an ecs_poly_t:
+ * 
+ * - ecs_world_t
+ * - ecs_stage_t
+ * - ecs_query_t
+ * - ecs_filter_t
+ * - ecs_rule_t
+ * - (more to come)
+ * 
+ * The poly/mixin framework enables partially overlapping features to be
+ * implemented once, and enables objects of different types to interact with
+ * each other depending on what mixins they have, rather than what type they are
+ * (in some ways it's like a mini-ECS).
+ */
 typedef void ecs_poly_t;
 
 /** An id. Ids are the things that can be added to an entity. An id can be an
@@ -116,6 +132,9 @@ typedef struct ecs_iter_t ecs_iter_t;
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
 
+/* Mixins */
+typedef struct ecs_mixins_t ecs_mixins_t;
+
 /** @} */
 
 
@@ -140,14 +159,43 @@ typedef struct ecs_ref_t ecs_ref_t;
 
 
 /**
- * @defgroup function_types Function Types
+ * @defgroup function_types Function Prototypes
  * @{
  */
 
-/** Action callback for systems and triggers */
+/** Function prototype for systems and triggers.
+ * A system may invoke a callback multiple times, typically once for each
+ * matched table.
+ * 
+ * @param it The iterator containing the data for the current match.
+ */
 typedef void (*ecs_iter_action_t)(
     ecs_iter_t *it);
 
+/** Function prototype for creating an iterator from a poly.
+ * Used to create iterators from poly objects with the iterable mixin. When a
+ * filter is provided, an array of two iterators must be passed to the function.
+ * This allows the mixin implementation to create a chained iterator when
+ * necessary, which requires two iterator objects.
+ * 
+ * @param world The world or stage for which to create the iterator.
+ * @param iterable An iterable poly object.
+ * @param it The iterator to create (out parameter)
+ * @param filter Optional id to filter results.
+ */
+typedef void (*ecs_iter_init_action_t)(
+    const ecs_world_t *world,
+    const ecs_poly_t *iterable,
+    ecs_iter_t *it,
+    ecs_id_t filter);
+
+/** Function prototype for iterating an iterator.
+ * Stored inside initialized iterators. This allows an application to * iterate 
+ * an iterator without needing to know what created it.
+ * 
+ * @param it The iterator to iterate.
+ * @return True if iterator has no more results, false if it does.
+ */
 typedef bool (*ecs_iter_next_action_t)(
     ecs_iter_t *it);  
 
@@ -189,6 +237,25 @@ typedef uint64_t (*ecs_hash_value_action_t)(
 
 /** @} */
 
+/**
+ * @defgroup mixin Public mixin types.
+ * @{
+ */
+
+/** Header for ecs_poly_t objects. */
+typedef struct ecs_header_t {
+    int32_t magic; /* Magic number verifying it's a flecs object */
+    int32_t type;  /* Magic number indicating which type of flecs object */
+    ecs_mixins_t *mixins; /* Table with offsets to (optional) mixins */
+} ecs_header_t;
+
+/** Iterable mixin.
+ * Allows its container to be iterated. */
+typedef struct ecs_iterable_t {
+    ecs_iter_init_action_t init; /* Callback that creates iterator. */
+} ecs_iterable_t;
+
+/** @} */
 
 /**
  * @defgroup filter_types Types used to describe filters, terms and triggers
@@ -276,6 +343,8 @@ typedef struct ecs_term_t {
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
+    ecs_header_t hdr;
+    
     ecs_term_t *terms;         /* Array containing terms for filter */
     int32_t term_count;        /* Number of elements in terms array */
     int32_t term_count_actual; /* Processed count, which folds OR terms */
@@ -290,6 +359,8 @@ struct ecs_filter_t {
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
+
+    ecs_iterable_t iterable;   /* Iterable mixin */
 };
 
 /** A trigger reacts to events matching a single term */
@@ -527,6 +598,11 @@ typedef struct ecs_trigger_desc_t {
     bool match_prefab;
     bool match_disabled;
 
+    /* When trigger is created, generate events from existing data. For example,
+     * EcsOnAdd Position would trigger for all existing instances of Position.
+     * This is only supported for events that are iterable (see EcsIterable) */
+    bool yield_existing;
+
     /* Callback to invoke on an event */
     ecs_iter_action_t callback;
 
@@ -660,6 +736,9 @@ typedef struct EcsQuery {
     ecs_query_t *query;
 } EcsQuery;
 
+/** Component for iterable entities */
+typedef ecs_iterable_t EcsIterable;
+
 /** @} */
 
 
@@ -742,6 +821,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsTrigger);
 FLECS_API extern const ecs_entity_t ecs_id(EcsQuery);
 FLECS_API extern const ecs_entity_t ecs_id(EcsObserver);
+FLECS_API extern const ecs_entity_t ecs_id(EcsIterable);
 
 /* System module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsSystem);
@@ -2327,6 +2407,19 @@ ecs_iter_t ecs_term_iter(
     const ecs_world_t *world,
     ecs_term_t *term);
 
+/** Return a chained term iterator.
+ * A chained iterator applies a filter to the results of the input iterator. The
+ * resulting iterator must be iterated with ecs_term_next.
+ * 
+ * @param it The input iterator
+ * @param term The term filter to apply to the iterator.
+ * @return The chained iterator. 
+ */
+FLECS_API
+ecs_iter_t ecs_term_chain_iter(
+    const ecs_iter_t *it,
+    ecs_term_t *term);
+
 /** Progress the term iterator.
  * This operation progresses the term iterator to the next table. The 
  * iterator must have been initialized with `ecs_term_iter`. This operation 
@@ -2585,7 +2678,7 @@ ecs_iter_t ecs_filter_iter(
  */
 FLECS_API
 ecs_iter_t ecs_filter_chain_iter(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     const ecs_filter_t *filter);
 
 /** Iterate tables matched by filter.
@@ -2915,6 +3008,51 @@ void* ecs_get_observer_binding_ctx(
  * @defgroup iterator Iterators
  * @{
  */
+
+/** Create iterator from poly object.
+ * The provided poly object must have the iterable mixin. If an object is 
+ * provided that does not have the mixin, the function will assert. 
+ * 
+ * When a filter is provided, an array of two iterators must be passed to the 
+ * function. This allows the mixin implementation to create a chained iterator 
+ * when necessary, which requires two iterator objects.
+ * 
+ * If a filter is provided, the first element in the array of two iterators is
+ * the one that should be iterated. The mixin implementation may or may not set
+ * the second element, depending on whether an iterator chain is required.
+ * 
+ * Additionally, when a filter is provided the returned iterator will be for a
+ * single term with the provided filter id. If the iterator is chained, the
+ * previous iterator in the chain can be accessed through it->chain_it.
+ * 
+ * @param world The world or stage for which to create the iterator.
+ * @param poly The poly object from which to create the iterator.
+ * @param iter The iterator (out, ecs_iter_t[2] when filter is set).
+ * @param filter Optional (component) id used for filtering the results.
+ */
+FLECS_API
+void ecs_iter_poly(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter,
+    ecs_id_t filter);
+
+/** Progress any iterator.
+ * This operation is useful in combination with iterators for which it is not
+ * known what created them. Example use cases are functions that should accept
+ * any kind of iterator (such as serializers) or iterators created from poly
+ * objects.
+ * 
+ * This operation is slightly slower than using a type-specific iterator (e.g.
+ * ecs_filter_next, ecs_query_next) as it has to call a function pointer which
+ * introduces a level of indirection.
+ * 
+ * @param it The iterator.
+ * @return True if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_iter_next(
+    ecs_iter_t *it);
 
 /** Obtain data for a query term.
  * This operation retrieves a pointer to an array of data that belongs to the

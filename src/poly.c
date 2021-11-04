@@ -1,10 +1,10 @@
 #include "private_api.h"
-#include <stddef.h>
 
 static const char* mixin_kind_str[] = {
     [EcsMixinBase] = "base (should never be requested by application)",
     [EcsMixinWorld] = "world",
     [EcsMixinObservable] = "observable",
+    [EcsMixinIterable] = "iterable",
     [EcsMixinMax] = "max (should never be requested by application)"
 };
 
@@ -12,7 +12,8 @@ ecs_mixins_t ecs_world_t_mixins = {
     .type_name = "ecs_world_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_world_t, self),
-        [EcsMixinObservable] = offsetof(ecs_world_t, observable)
+        [EcsMixinObservable] = offsetof(ecs_world_t, observable),
+        [EcsMixinIterable] = offsetof(ecs_world_t, iterable)
     }
 };
 
@@ -27,7 +28,15 @@ ecs_mixins_t ecs_stage_t_mixins = {
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_t, world)
+        [EcsMixinWorld] = offsetof(ecs_query_t, world),
+        [EcsMixinIterable] = offsetof(ecs_query_t, iterable)
+    }
+};
+
+ecs_mixins_t ecs_filter_t_mixins = {
+    .type_name = "ecs_filter_t",
+    .elems = {
+        [EcsMixinIterable] = offsetof(ecs_filter_t, iterable)
     }
 };
 
@@ -91,7 +100,7 @@ void* assert_mixin(
     return ptr;
 }
 
-void _ecs_poly_init(
+void* _ecs_poly_init(
     ecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
@@ -105,6 +114,8 @@ void _ecs_poly_init(
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
     hdr->mixins = mixins;
+
+    return poly;
 }
 
 void _ecs_poly_fini(
@@ -150,6 +161,12 @@ bool _ecs_poly_is(
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     return hdr->type == type;    
+}
+
+ecs_iterable_t* ecs_get_iterable(
+    const ecs_poly_t *poly)
+{
+    return (ecs_iterable_t*)assert_mixin(poly, EcsMixinIterable);
 }
 
 ecs_observable_t* ecs_get_observable(

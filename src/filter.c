@@ -666,6 +666,24 @@ int ecs_filter_finalize(
     return 0;
 }
 
+/* Implementation for iterable mixin */
+static
+void filter_iter_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter,
+    ecs_id_t filter)
+{
+    ecs_poly_assert(poly, ecs_filter_t);
+
+    if (filter) {
+        iter[1] = ecs_filter_iter(world, (ecs_filter_t*)poly);
+        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+    } else {
+        iter[0] = ecs_filter_iter(world, (ecs_filter_t*)poly);
+    }
+}
+
 int ecs_filter_init(
     const ecs_world_t *stage,
     ecs_filter_t *filter_out,
@@ -682,12 +700,12 @@ int ecs_filter_init(
     const char *name = desc->name;
     const char *expr = desc->expr;
 
-    ecs_filter_t f = {
-        /* Temporarily set the fields to the values provided in desc, until the
-         * filter has been validated. */
-        .name = (char*)name,
-        .expr = (char*)expr
-    };
+    /* Temporarily set the fields to the values provided in desc, until the
+     * filter has been validated. */
+    ecs_filter_t f;
+    ecs_poly_init(&f, ecs_filter_t);
+    f.name = (char*)name;
+    f.expr = (char*)expr;
 
     if (terms) {
         terms = desc->terms_buffer;
@@ -795,6 +813,8 @@ int ecs_filter_init(
     ecs_assert(!filter_out->term_cache_used || 
         filter_out->terms == filter_out->term_cache,
         ECS_INTERNAL_ERROR, NULL);
+
+    filter_out->iterable.init = filter_iter_init;
 
     return 0;
 error:
@@ -1357,6 +1377,35 @@ ecs_iter_t ecs_term_iter(
     return it;
 }
 
+ecs_iter_t ecs_term_chain_iter(
+    const ecs_iter_t *chain_it,
+    ecs_term_t *term)
+{
+    ecs_assert(chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_world_t *world = chain_it->real_world;
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_term_finalize(world, NULL, term)) {
+        /* Invalid term */
+        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+    }
+
+    ecs_iter_t it = {
+        .chain_it = (ecs_iter_t*)chain_it,
+        .real_world = (ecs_world_t*)world,
+        .world = chain_it->world,
+        .terms = term,
+        .term_count = 1,
+        .next = ecs_term_next
+    };
+
+    term_iter_init(world, term, &it.iter.term);
+
+    return it;
+}
+
 static
 const ecs_table_record_t *next_table(
     ecs_term_iter_t *iter)
@@ -1475,45 +1524,69 @@ bool ecs_term_next(
     ecs_term_t *term = &iter->term;
     ecs_world_t *world = it->real_world;
 
-    ecs_entity_t source = 0;
-    ecs_table_record_t tr = term_iter_next(world, iter, &source, false, false);
-    ecs_table_t *table = tr.table;
-    if (!table) {
-        it->is_valid = false;
-        return false;
-    }
-
-    /* Source must either be 0 (EcsThis) or nonzero in case of substitution */
-    ecs_assert(source || iter->cur != iter->set_index, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    it->table = table;
-    it->type = table->type;
     it->ids = &iter->id;
     it->columns = &iter->column;
     it->subjects = &iter->subject;
     it->sizes = &iter->size;
     it->ptrs = &iter->ptr;
 
-    it->count = ecs_table_count(table);
-    it->entities = ecs_vector_first(table->storage.entities, ecs_entity_t);
-    it->is_valid = true;
+    ecs_iter_t *chain_it = it->chain_it;
+    if (chain_it) {
+        ecs_iter_next_action_t next = chain_it->next;
+        ecs_table_t *table;
+        bool match;
 
-    bool has_data = populate_from_column(world, table, 0, term->id, tr.column, 
-        source, &iter->id, &iter->subject, &iter->size, 
-        &iter->ptr);
+        do {
+            if (!next(chain_it)) {
+                goto done;
+            }
 
-    if (!source) {
-        if (has_data) {
-            iter->column = tr.column + 1;
-        } else {
-            iter->column = 0;
-        }
+            table = chain_it->table;
+            match = flecs_term_match_table(world, term, table, table->type,
+                0, it->ids, it->columns, it->subjects, it->sizes, 
+                it->ptrs, it->match_indices, true);
+        } while (!match);
+
+        populate_from_table(it, table);
+        goto yield;
+
     } else {
-        iter->column = -1; /* Point to ref */
+        ecs_entity_t source = 0;
+        ecs_table_record_t tr = term_iter_next(
+            world, iter, &source, false, false);
+        ecs_table_t *table = tr.table;
+        if (!table) {
+            it->is_valid = false;
+            goto done;
+        }
+
+        /* Source must either be 0 (EcsThis) or nonzero in case of substitution */
+        ecs_assert(source || iter->cur != iter->set_index, 
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        populate_from_table(it, table);
+
+        bool has_data = populate_from_column(world, table, 0, term->id, 
+            tr.column, source, &iter->id, &iter->subject, &iter->size, 
+            &iter->ptr);
+
+        if (!source) {
+            if (has_data) {
+                iter->column = tr.column + 1;
+            } else {
+                iter->column = 0;
+            }
+        } else {
+            iter->column = -1; /* Point to ref */
+        }
     }
 
+yield:
+    it->is_valid = true;
     return true;
+done:
+    return false;
 }
 
 static
@@ -1627,11 +1700,11 @@ ecs_iter_t ecs_filter_iter(
 }
 
 ecs_iter_t ecs_filter_chain_iter(
-    ecs_iter_t *chain_it,
+    const ecs_iter_t *chain_it,
     const ecs_filter_t *filter)
 {
     ecs_iter_t it = {
-        .chain_it = chain_it,
+        .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_filter_next,
         .world = chain_it->world,
         .real_world = chain_it->real_world
@@ -1643,7 +1716,7 @@ ecs_iter_t ecs_filter_chain_iter(
     iter->kind = EcsFilterIterEvalChain;
 
     if (filter->terms == filter->term_cache) {
-        /* See ecs_filter_iter*/
+        /* See ecs_filter_iter */
         iter->filter.terms = NULL;
     }
 
@@ -1670,7 +1743,24 @@ bool ecs_filter_next(
 
     flecs_iter_init(it);
 
-    if (iter->kind == EcsFilterIterEvalIndex) {
+    ecs_iter_t *chain_it = it->chain_it;
+    if (chain_it) {
+        ecs_iter_next_action_t next = chain_it->next;
+
+        do {
+            if (!next(chain_it)) {
+                goto done;
+            }
+
+            table = chain_it->table;
+            match = flecs_filter_match_table(world, filter, table, table->type,
+                0, it->ids, it->columns, it->subjects, it->sizes, 
+                it->ptrs, it->match_indices, NULL, true, -1);
+        } while (!match);
+
+        populate_from_table(it, table);
+        goto yield;
+    } else if (iter->kind == EcsFilterIterEvalIndex) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t term_index = term->index;
@@ -1731,27 +1821,6 @@ bool ecs_filter_next(
         populate_from_table(it, table);
         goto yield;
 
-    } else if (iter->kind == EcsFilterIterEvalChain) {
-        ecs_iter_t *chain_it = it->chain_it;
-        ecs_iter_next_action_t next = chain_it->next;
-
-        /* If this is a chain iterator, the input iterator must be set */
-        ecs_assert(chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-
-        do {
-            if (!next(chain_it)) {
-                goto done;
-            }
-
-            table = chain_it->table;
-
-            match = flecs_filter_match_table(world, filter, table, table->type,
-                0, it->ids, it->columns, it->subjects, it->sizes, 
-                it->ptrs, it->match_indices, NULL, true, -1);
-        } while (!match);
-
-        populate_from_table(it, table);
-        goto yield;
     }
 
 done:

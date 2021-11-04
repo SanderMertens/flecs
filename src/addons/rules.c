@@ -324,6 +324,8 @@ typedef struct ecs_rule_var_t {
 
 /* Top-level rule datastructure */
 struct ecs_rule_t {
+    ecs_header_t hdr;
+    
     ecs_world_t *world;         /* Ref to world so rule can be used by itself */
     ecs_rule_op_t *operations;  /* Operations array */
     ecs_rule_var_t *variables;  /* Variable array */
@@ -336,6 +338,17 @@ struct ecs_rule_t {
     int32_t subject_variable_count;
     int32_t frame_count;        /* Number of register frames */
     int32_t operation_count;    /* Number of operations in rule */
+
+    ecs_iterable_t iterable;    /* Iterable mixin */
+};
+
+/* ecs_rule_t mixins */
+ecs_mixins_t ecs_rule_t_mixins = {
+    .type_name = "ecs_rule_t",
+    .elems = {
+        [EcsMixinWorld] = offsetof(ecs_rule_t, world),
+        [EcsMixinIterable] = offsetof(ecs_rule_t, iterable)
+    }
 };
 
 static
@@ -2477,11 +2490,29 @@ void create_variable_name_array(
     }
 }
 
+/* Implementation for iterable mixin */
+static
+void rule_iter_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly,
+    ecs_iter_t *iter,
+    ecs_id_t filter)
+{
+    ecs_poly_assert(poly, ecs_rule_t);
+
+    if (filter) {
+        iter[1] = ecs_rule_iter(world, (ecs_rule_t*)poly);
+        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+    } else {
+        iter[0] = ecs_rule_iter(world, (ecs_rule_t*)poly);
+    }
+}
+
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *desc)
 {
-    ecs_rule_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_rule_t));
+    ecs_rule_t *result = ecs_poly_new(ecs_rule_t);
 
     ecs_filter_desc_t local_desc = *desc;
     local_desc.substitute_default = true;
@@ -2544,6 +2575,8 @@ ecs_rule_t* ecs_rule_init(
 
         result->subject_variables[i] = -1;
     }
+
+    result->iterable.init = rule_iter_init;
 
     return result;
 error:

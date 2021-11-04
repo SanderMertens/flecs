@@ -599,7 +599,7 @@ void flecs_increase_timer_resolution(
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Initialize object header & mixins for specified type */
-void _ecs_poly_init(
+void* _ecs_poly_init(
     ecs_poly_t *object,
     int32_t kind,
     ecs_size_t size,
@@ -618,7 +618,7 @@ void _ecs_poly_fini(
 
 /* Utility functions for creating an object on the heap */
 #define ecs_poly_new(type)\
-    ecs_poly_init(ecs_os_calloc_t(type), type)
+    (type*)ecs_poly_init(ecs_os_calloc_t(type), type)
 
 #define ecs_poly_free(obj, type)\
     ecs_poly_fini(obj, type);\
@@ -646,6 +646,9 @@ bool _ecs_poly_is(
     _ecs_poly_is(object, ECS_##type##_MAGIC)
 
 /* Utility functions for getting a mixin from an object */
+ecs_iterable_t* ecs_get_iterable(
+    const ecs_poly_t *poly);
+
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
 
