@@ -2876,7 +2876,7 @@ bool ecs_query_next_worker(
  */
 FLECS_API
 bool ecs_query_changed(
-    ecs_query_t *query);
+    const ecs_query_t *query);
 
 /** Returns whether query is orphaned.
  * When the parent query of a subquery is deleted, it is left in an orphaned

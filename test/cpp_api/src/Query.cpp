@@ -596,16 +596,21 @@ void Query_changed() {
 
     auto e = world.entity().set<Position>({1, 0});
 
-    auto q = world.query<Position>();
+    auto q = world.query<const Position>();
+    auto q_w = world.query<Position>();
 
     test_bool(q.changed(), true);
 
-    q.each([](flecs::entity e, Position& p) { });
-
+    q.each([](const Position& p) { });
     test_bool(q.changed(), false);
     
     e.set<Position>({2, 0});
+    test_bool(q.changed(), true);
 
+    q.each([](const Position& p) { });
+    test_bool(q.changed(), false); // Reset state
+
+    q_w.each([](Position& p) { }); // Query has out term
     test_bool(q.changed(), true);
 }
 

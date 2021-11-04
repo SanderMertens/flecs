@@ -34996,7 +34996,7 @@ void build_sorted_tables(
 
 static
 bool tables_dirty(
-    ecs_query_t *query)
+    const ecs_query_t *query)
 {
     bool is_dirty = false;
 
@@ -36502,7 +36502,7 @@ bool ecs_query_next_worker(
 }
 
 bool ecs_query_changed(
-    ecs_query_t *query)
+    const ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
     ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
