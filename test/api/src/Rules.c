@@ -5,6 +5,7 @@
     test_assert(_term_id != 0);\
     char *_term_id_str = ecs_id_str((it)->world, _term_id);\
     test_str(_term_id_str, str);\
+    ecs_os_free(_term_id_str);\
 }
 
 #define test_term_source(it, column_id, str) {\
@@ -12,6 +13,7 @@
     test_assert(_term_source != 0);\
     char *_term_source_str = ecs_id_str((it)->world, _term_source);\
     test_str(_term_source_str, str);\
+    ecs_os_free(_term_source_str);\
 }
 
 #define test_var(it, var_id, str) {\
@@ -19,6 +21,7 @@
     test_assert(_var_e != 0);\
     char *_var_str = ecs_id_str((it)->world, _var_e);\
     test_str(_var_str, str);\
+    ecs_os_free(_var_str);\
 }
 
 void Rules_empty_rule() {
@@ -3963,6 +3966,8 @@ void Rules_terms_set() {
         test_int(it.terms[1].id, TagB);
         test_int(it.count, 1);
     }
+    
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -4007,6 +4012,8 @@ void Rules_value_set() {
         test_int(it.entities[0], e1);
         test_int(it.entities[1], e2);
     }
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }

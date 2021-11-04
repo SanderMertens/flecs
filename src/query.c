@@ -1278,7 +1278,7 @@ void build_sorted_table_range(
             continue;
         }
 
-        int32_t index = ecs_type_index_of(table->type, 0, component);
+        int32_t index = ecs_type_index_of(table->storage_type, 0, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
             int16_t size = column->size;
