@@ -29060,6 +29060,7 @@ void world_iter_init(
     ecs_id_t filter)
 {
     ecs_poly_assert(poly, ecs_world_t);
+    (void)poly;
 
     if (filter) {
         iter[0] = ecs_term_iter(world, &(ecs_term_t){ .id = filter });

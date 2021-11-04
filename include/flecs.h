@@ -88,10 +88,15 @@ extern "C" {
  * - ecs_rule_t
  * - (more to come)
  * 
+ * Functions that accept an ecs_poly_t argument can accept objects of these
+ * types. If the object does not have the requested mixin the API will throw an
+ * assert.
+ * 
  * The poly/mixin framework enables partially overlapping features to be
  * implemented once, and enables objects of different types to interact with
- * each other depending on what mixins they have, rather than what type they are
- * (in some ways it's like a mini-ECS).
+ * each other depending on what mixins they have, rather than their type
+ * (in some ways it's like a mini-ECS). Additionally, each poly object has a
+ * header that enables the API to do sanity checking on the input arguments.
  */
 typedef void ecs_poly_t;
 
