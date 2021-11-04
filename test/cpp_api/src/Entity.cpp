@@ -2963,3 +2963,30 @@ void Entity_id_get_invalid_entity() {
     
     id.entity();
 }
+
+void Entity_each_in_stage() {
+    flecs::world world;
+
+    struct Rel { };
+    struct Obj { };
+
+    auto e = world.entity().add<Rel, Obj>();
+    test_assert((e.has<Rel, Obj>()));
+
+    world.staging_begin();
+
+    auto s = world.get_stage(0);
+    auto em = e.mut(s);
+    test_assert((em.has<Rel, Obj>()));
+
+    int count = 0;
+
+    em.each<Rel>([&](flecs::entity obj) {
+        count ++;
+        test_assert(obj == world.id<Obj>());
+    });
+
+    test_int(count, 1);
+
+    world.staging_end();
+}

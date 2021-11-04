@@ -128,6 +128,8 @@ bool ecs_type_has_id(
     ecs_id_t id,
     bool owned)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    
     return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, 
         NULL, NULL) != -1;
 }
@@ -152,6 +154,8 @@ int32_t ecs_type_match(
     ecs_entity_t *subject_out,
     int32_t *count_out)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    
     if (subject_out) {
         *subject_out = 0;
     }

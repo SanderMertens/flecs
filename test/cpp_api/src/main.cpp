@@ -167,6 +167,7 @@ void Entity_child_of(void);
 void Entity_child_of_w_type(void);
 void Entity_id_get_entity(void);
 void Entity_id_get_invalid_entity(void);
+void Entity_each_in_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1349,6 +1350,10 @@ bake_test_case Entity_testcases[] = {
     {
         "id_get_invalid_entity",
         Entity_id_get_invalid_entity
+    },
+    {
+        "each_in_stage",
+        Entity_each_in_stage
     }
 };
 
@@ -3444,7 +3449,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        158,
+        159,
         Entity_testcases
     },
     {
