@@ -372,13 +372,13 @@ void world_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_world_t);
     (void)poly;
 
     if (filter) {
-        iter[0] = ecs_term_iter(world, &(ecs_term_t){ .id = filter });
+        iter[0] = ecs_term_iter(world, filter);
     } else {
         iter[0] = (ecs_iter_t){
             .world = (ecs_world_t*)world,

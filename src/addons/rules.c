@@ -2496,13 +2496,13 @@ void rule_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_rule_t);
 
     if (filter) {
         iter[1] = ecs_rule_iter(world, (ecs_rule_t*)poly);
-        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+        iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
         iter[0] = ecs_rule_iter(world, (ecs_rule_t*)poly);
     }

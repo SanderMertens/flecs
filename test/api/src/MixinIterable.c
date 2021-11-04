@@ -16,7 +16,12 @@ void test_no_chain(
     ecs_add(world, e3, Tag);
 
     ecs_iter_t it;
-    ecs_iter_poly(world, poly, &it, filter);
+    if (filter) {
+        ecs_term_t term = { .id = filter };
+        ecs_iter_poly(world, poly, &it, &term);
+    } else {
+        ecs_iter_poly(world, poly, &it, NULL);
+    }
 
     test_assert(ecs_iter_next(&it));
     test_int(it.count, 2);
@@ -64,7 +69,7 @@ void test_w_chain(
 
     ecs_iter_t it_arr[2];
     ecs_iter_t *it = it_arr;
-    ecs_iter_poly(world, poly, it_arr, Tag);
+    ecs_iter_poly(world, poly, it_arr, &(ecs_term_t){ .id = Tag});
 
     test_assert(ecs_iter_next(it));
     test_int(it->count, 2);

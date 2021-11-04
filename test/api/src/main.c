@@ -1422,6 +1422,9 @@ void Trigger_readonly_term(void);
 void Trigger_trigger_on_prefab(void);
 void Trigger_trigger_on_disabled(void);
 void Trigger_trigger_cleanup_2_w_self_super_id(void);
+void Trigger_yield_existing(void);
+void Trigger_yield_existing_2_tables(void);
+void Trigger_yield_existing_wildcard_pair(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7646,6 +7649,18 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_cleanup_2_w_self_super_id",
         Trigger_trigger_cleanup_2_w_self_super_id
+    },
+    {
+        "yield_existing",
+        Trigger_yield_existing
+    },
+    {
+        "yield_existing_2_tables",
+        Trigger_yield_existing_2_tables
+    },
+    {
+        "yield_existing_wildcard_pair",
+        Trigger_yield_existing_wildcard_pair
     }
 };
 
@@ -10783,7 +10798,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        64,
+        67,
         Trigger_testcases
     },
     {

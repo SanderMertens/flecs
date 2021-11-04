@@ -17866,13 +17866,13 @@ void rule_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_rule_t);
 
     if (filter) {
         iter[1] = ecs_rule_iter(world, (ecs_rule_t*)poly);
-        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+        iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
         iter[0] = ecs_rule_iter(world, (ecs_rule_t*)poly);
     }
@@ -29048,7 +29048,6 @@ bool world_iter_next(
     ecs_sparse_t *entity_index = world->store.entity_index;
     it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
     it->count = flecs_sparse_count(entity_index);
-
     return it->is_valid = true;
 }
 
@@ -29057,13 +29056,13 @@ void world_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_world_t);
     (void)poly;
 
     if (filter) {
-        iter[0] = ecs_term_iter(world, &(ecs_term_t){ .id = filter });
+        iter[0] = ecs_term_iter(world, filter);
     } else {
         iter[0] = (ecs_iter_t){
             .world = (ecs_world_t*)world,
@@ -31223,13 +31222,13 @@ void filter_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_filter_t);
 
     if (filter) {
         iter[1] = ecs_filter_iter(world, (ecs_filter_t*)poly);
-        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+        iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
         iter[0] = ecs_filter_iter(world, (ecs_filter_t*)poly);
     }
@@ -35717,13 +35716,13 @@ void query_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_poly_assert(poly, ecs_query_t);
 
     if (filter) {
         iter[1] = ecs_query_iter(world, (ecs_query_t*)poly);
-        iter[0] = ecs_term_chain_iter(&iter[1], &(ecs_term_t) { .id = filter });
+        iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
         iter[0] = ecs_query_iter(world, (ecs_query_t*)poly);
     }
@@ -37968,7 +37967,7 @@ void ecs_iter_poly(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter_out,
-    ecs_id_t filter)
+    ecs_term_t *filter)
 {
     ecs_iterable_t *iterable = ecs_get_iterable(poly);
     iterable->init(world, poly, iter_out, filter);
@@ -38383,6 +38382,37 @@ void notify_triggers_for_id(
     }
 }
 
+static
+void trigger_yield_existing(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{
+    ecs_iter_action_t callback = trigger->action;
+
+    /* If yield existing is enabled, trigger for each thing that matches
+     * the event, if the event is iterable. */
+    int i, count = trigger->event_count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t evt = trigger->events[i];
+        const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
+        if (!iterable) {
+            continue;
+        }
+
+        ecs_iter_t it;
+        iterable->init(world, world, &it, &trigger->term);
+        it.system = trigger->entity;
+        it.ctx = trigger->ctx;
+        it.binding_ctx = trigger->binding_ctx;
+
+        ecs_iter_next_action_t next = it.next;
+        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
+        while (next(&it)) {
+            callback(&it);
+        }
+    }
+}
+
 void flecs_triggers_notify(
     ecs_world_t *world,
     ecs_poly_t *observable,
@@ -38558,8 +38588,12 @@ ecs_entity_t ecs_trigger_init(
         ecs_term_fini(&term);
 
         if (desc->entity.name) {
-            ecs_trace("#[green]observer#[reset] %s created", 
+            ecs_trace("#[green]trigger#[reset] %s created", 
                 ecs_get_name(world, entity));
+        }
+
+        if (desc->yield_existing) {
+            trigger_yield_existing(world, trigger);
         }
     } else {
         ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -39161,6 +39195,8 @@ ecs_table_t* ecs_table_from_str(
     return result;
 }
 
+/* -- Component lifecycle -- */
+
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
@@ -39246,6 +39282,9 @@ static ECS_MOVE(EcsObserver, dst, src, {
     src->observer = NULL;
 })
 
+
+/* -- Builtin triggers -- */
+
 static
 void register_on_delete(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -39307,6 +39346,22 @@ void ensure_module_tag(ecs_iter_t *it) {
         }
     }
 }
+
+
+/* -- Iterable mixins -- */
+
+static
+void on_add_iterable_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly, /* Observable */
+    ecs_iter_t *it,
+    ecs_term_t *filter)
+{
+    ecs_iter_poly(world, poly, it, filter);
+    it->event = EcsOnAdd;
+    it->event_id = filter->id;
+}
+
 
 /* -- Bootstrapping -- */
 
@@ -39555,6 +39610,9 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
     ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
+
+    /* Make EcsOnAdd event iterable to enable .yield_existing */
+    ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_add_iterable_init });
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){

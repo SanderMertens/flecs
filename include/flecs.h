@@ -113,6 +113,9 @@ typedef const ecs_vector_t* ecs_type_t;
 /** A world is the container for all ECS data and supporting features. */
 typedef struct ecs_world_t ecs_world_t;
 
+/** A term is a single element in a query */
+typedef struct ecs_term_t ecs_term_t;
+
 /** A query allows for cached iteration over ECS data */
 typedef struct ecs_query_t ecs_query_t;
 
@@ -186,13 +189,13 @@ typedef void (*ecs_iter_action_t)(
  * @param world The world or stage for which to create the iterator.
  * @param iterable An iterable poly object.
  * @param it The iterator to create (out parameter)
- * @param filter Optional id to filter results.
+ * @param filter Optional term to filter results.
  */
 typedef void (*ecs_iter_init_action_t)(
     const ecs_world_t *world,
     const ecs_poly_t *iterable,
     ecs_iter_t *it,
-    ecs_id_t filter);
+    ecs_term_t *filter);
 
 /** Function prototype for iterating an iterator.
  * Stored inside initialized iterators. This allows an application to * iterate 
@@ -324,7 +327,7 @@ typedef struct ecs_term_id_t {
 } ecs_term_id_t;
 
 /** Type that describes a single column in the system signature */
-typedef struct ecs_term_t {
+struct ecs_term_t {
     ecs_id_t id;                /* Can be used instead of pred, args and role to
                                  * set component/pair id. If not set, it will be 
                                  * computed from predicate, object. If set, the
@@ -344,7 +347,7 @@ typedef struct ecs_term_t {
     bool move;                  /* When true, this signals to ecs_term_copy that
                                  * the resources held by this term may be moved
                                  * into the destination term. */
-} ecs_term_t;
+};
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
@@ -3033,14 +3036,14 @@ void* ecs_get_observer_binding_ctx(
  * @param world The world or stage for which to create the iterator.
  * @param poly The poly object from which to create the iterator.
  * @param iter The iterator (out, ecs_iter_t[2] when filter is set).
- * @param filter Optional (component) id used for filtering the results.
+ * @param filter Optional term used for filtering the results.
  */
 FLECS_API
 void ecs_iter_poly(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
     ecs_iter_t *iter,
-    ecs_id_t filter);
+    ecs_term_t *filter);
 
 /** Progress any iterator.
  * This operation is useful in combination with iterators for which it is not

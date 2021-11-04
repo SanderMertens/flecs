@@ -2532,3 +2532,127 @@ void Trigger_trigger_cleanup_2_w_self_super_id() {
 
     /* Ensure two triggers for Tag and Tag(super) are cleaned up correctly */
 }
+
+void Trigger_yield_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, Tag);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], Tag);
+
+    ecs_fini(world);
+}
+
+void Trigger_yield_existing_2_tables() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_add(world, e3, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[1][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Trigger_yield_existing_wildcard_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, ObjB);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(Rel, EcsWildcard),
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], ecs_pair(Rel, ObjA));
+    test_int(ctx.c[1][0], ecs_pair(Rel, ObjB));
+
+    ecs_fini(world);
+}

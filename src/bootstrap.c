@@ -1,5 +1,7 @@
 #include "private_api.h"
 
+/* -- Component lifecycle -- */
+
 /* Component lifecycle actions for EcsIdentifier */
 static ECS_CTOR(EcsIdentifier, ptr, {
     ptr->value = NULL;
@@ -85,6 +87,9 @@ static ECS_MOVE(EcsObserver, dst, src, {
     src->observer = NULL;
 })
 
+
+/* -- Builtin triggers -- */
+
 static
 void register_on_delete(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -146,6 +151,22 @@ void ensure_module_tag(ecs_iter_t *it) {
         }
     }
 }
+
+
+/* -- Iterable mixins -- */
+
+static
+void on_add_iterable_init(
+    const ecs_world_t *world,
+    const ecs_poly_t *poly, /* Observable */
+    ecs_iter_t *it,
+    ecs_term_t *filter)
+{
+    ecs_iter_poly(world, poly, it, filter);
+    it->event = EcsOnAdd;
+    it->event_id = filter->id;
+}
+
 
 /* -- Bootstrapping -- */
 
@@ -394,6 +415,9 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
     ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
+
+    /* Make EcsOnAdd event iterable to enable .yield_existing */
+    ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_add_iterable_init });
 
     /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){

@@ -401,6 +401,37 @@ void notify_triggers_for_id(
     }
 }
 
+static
+void trigger_yield_existing(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{
+    ecs_iter_action_t callback = trigger->action;
+
+    /* If yield existing is enabled, trigger for each thing that matches
+     * the event, if the event is iterable. */
+    int i, count = trigger->event_count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t evt = trigger->events[i];
+        const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
+        if (!iterable) {
+            continue;
+        }
+
+        ecs_iter_t it;
+        iterable->init(world, world, &it, &trigger->term);
+        it.system = trigger->entity;
+        it.ctx = trigger->ctx;
+        it.binding_ctx = trigger->binding_ctx;
+
+        ecs_iter_next_action_t next = it.next;
+        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
+        while (next(&it)) {
+            callback(&it);
+        }
+    }
+}
+
 void flecs_triggers_notify(
     ecs_world_t *world,
     ecs_poly_t *observable,
@@ -576,8 +607,12 @@ ecs_entity_t ecs_trigger_init(
         ecs_term_fini(&term);
 
         if (desc->entity.name) {
-            ecs_trace("#[green]observer#[reset] %s created", 
+            ecs_trace("#[green]trigger#[reset] %s created", 
                 ecs_get_name(world, entity));
+        }
+
+        if (desc->yield_existing) {
+            trigger_yield_existing(world, trigger);
         }
     } else {
         ecs_assert(comp->trigger != NULL, ECS_INTERNAL_ERROR, NULL);
