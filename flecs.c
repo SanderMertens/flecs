@@ -23091,36 +23091,35 @@ bool ecs_get_pipeline_stats(
     if (pip_count) {
         ecs_vector_set_count(&s->systems, ecs_entity_t, pip_count);
         systems = ecs_vector_first(s->systems, ecs_entity_t);
+
+        /* Populate systems vector, keep track of sync points */
+        it = ecs_query_iter(stage, pq->query);
+        
+        int32_t i, i_system = 0, ran_since_merge = 0;
+        while (ecs_query_next(&it)) {
+            for (i = 0; i < it.count; i ++) {
+                systems[i_system ++] = it.entities[i];
+                ran_since_merge ++;
+                if (op != op_last && ran_since_merge == op->count) {
+                    ran_since_merge = 0;
+                    op++;
+                    systems[i_system ++] = 0; /* 0 indicates a merge point */
+                }
+            }
+        }
+
+        systems[i_system ++] = 0; /* Last merge */
+        ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
     } else {
         ecs_vector_free(s->systems);
         s->systems = NULL;
-    }
-
-    /* Populate systems vector, keep track of sync points */
-    it = ecs_query_iter(stage, pq->query);
-    
-    int32_t i, i_system = 0, ran_since_merge = 0;
-    while (ecs_query_next(&it)) {
-        for (i = 0; i < it.count; i ++) {
-            systems[i_system ++] = it.entities[i];
-            ran_since_merge ++;
-            if (op != op_last && ran_since_merge == op->count) {
-                ran_since_merge = 0;
-                op++;
-                systems[i_system ++] = 0; /* 0 indicates a merge point */
-            }
-        }
-    }
-
-    if (systems) {
-        systems[i_system ++] = 0; /* Last merge */
-        ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
     }
 
     /* Separately populate system stats map from build query, which includes
      * systems that aren't currently active */
     it = ecs_query_iter(stage, pq->build_query);
     while (ecs_query_next(&it)) {
+        int i;
         for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *sys_stats = get_system_stats(
                 s->system_stats, it.entities[i]);
