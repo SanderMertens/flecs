@@ -2990,3 +2990,24 @@ void Entity_each_in_stage() {
 
     world.staging_end();
 }
+
+void Entity_iter_recycled_parent() {
+    flecs::world ecs;
+    
+    auto e = ecs.entity();
+    e.destruct();
+
+    auto e2 = ecs.entity();
+    test_assert(e != e2);
+    test_assert((uint32_t)e.id() == (uint32_t)e2.id());
+
+    auto e_child = ecs.entity().child_of(e2);
+    int32_t count = 0;
+
+    e2.children([&](flecs::entity child){
+        count ++;
+        test_assert(child == e_child);
+    });
+
+    test_int(count, 1);
+}

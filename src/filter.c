@@ -358,7 +358,7 @@ int populate_from_term_id(
 
     ecs_entity_t term_obj = entity_from_identifier(&term->obj);
     if (term_obj) {
-        if (term_obj != obj) {
+        if (ecs_entity_t_lo(term_obj) != obj) {
             term_error(world, term, name, 
                 "mismatch between term.id and term.obj");
             return -1;

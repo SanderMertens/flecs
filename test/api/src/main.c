@@ -1101,6 +1101,7 @@ void Filter_filter_from_expr_2_terms_err(void);
 void Filter_chain_term_iter_w_term_iter(void);
 void Filter_chain_filter_iter_w_term_iter(void);
 void Filter_chain_w_term_iter_component(void);
+void Filter_filter_w_recycled_object_and_id(void);
 
 // Testsuite 'FilterDefaultSubstitution'
 void FilterDefaultSubstitution_final_pred_no_args(void);
@@ -6413,6 +6414,10 @@ bake_test_case Filter_testcases[] = {
     {
         "chain_w_term_iter_component",
         Filter_chain_w_term_iter_component
+    },
+    {
+        "filter_w_recycled_object_and_id",
+        Filter_filter_w_recycled_object_and_id
     }
 };
 
@@ -10841,7 +10846,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        92,
+        93,
         Filter_testcases
     },
     {

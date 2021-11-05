@@ -1160,7 +1160,8 @@
                 "filter_from_expr_2_terms_err",
                 "chain_term_iter_w_term_iter",
                 "chain_filter_iter_w_term_iter",
-                "chain_w_term_iter_component"
+                "chain_w_term_iter_component",
+                "filter_w_recycled_object_and_id"
             ]
         }, {
             "id": "FilterDefaultSubstitution",

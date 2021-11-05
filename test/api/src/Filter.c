@@ -4172,3 +4172,33 @@ void Filter_filter_from_expr_2_terms_err() {
 
     ecs_fini(world);
 }
+
+void Filter_filter_w_recycled_object_and_id() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t obj = ecs_new_id(world);
+    ecs_delete(world, obj);
+    
+    ecs_entity_t obj2 = ecs_new_id(world);
+    test_assert(obj != obj2);
+    test_assert((uint32_t)obj == (uint32_t)obj2);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, obj2);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) { 
+        .terms = {{ .id = ecs_pair(Rel, obj2), .obj.entity = obj2 }}
+    }), 0);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.ids[0], ecs_pair(Rel, obj2));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

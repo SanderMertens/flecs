@@ -173,7 +173,8 @@
                 "child_of_w_type",
                 "id_get_entity",
                 "id_get_invalid_entity",
-                "each_in_stage"
+                "each_in_stage",
+                "iter_recycled_parent"
             ]
         }, {
             "id": "Pairs",
