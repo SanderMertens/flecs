@@ -1410,7 +1410,9 @@
                 "optional_term_on_relation_this_obj",
                 "optional_w_subj_var",
                 "terms_set",
-                "value_set"
+                "value_set",
+                "term_w_this_this_this",
+                "term_w_x_x_x"
             ]
         }, {
             "id": "TransitiveRules",

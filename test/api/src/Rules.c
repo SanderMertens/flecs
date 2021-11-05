@@ -4017,3 +4017,84 @@ void Rules_value_set() {
 
     ecs_fini(world);
 }
+
+void Rules_term_w_this_this_this() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, e, e);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, e2, e);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_pair(world, e3, e, e3);
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    ecs_add_pair(world, e4, e, e);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "This(This, This)"
+    });
+
+    test_assert(r != NULL);
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    test_int(it.term_count, 1);
+    test_assert(it.terms != NULL);
+    test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.term_count, 1);
+    test_assert(it.terms != NULL);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_term_w_x_x_x() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, e, e);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, e2, e);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_pair(world, e3, e, e3);
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    ecs_add_pair(world, e4, e, e);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "_X(_X, _X)"
+    });
+
+    int32_t x_var = ecs_rule_find_variable(r, "X");
+    test_assert(x_var != -1);
+
+    test_assert(r != NULL);
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    test_int(it.term_count, 1);
+    test_assert(it.terms != NULL);
+    test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.term_count, 1);
+    test_assert(it.terms != NULL);
+    test_int(it.count, 0);
+    test_assert(ecs_rule_variable(&it, x_var) == e);
+
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

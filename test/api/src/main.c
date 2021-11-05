@@ -1343,6 +1343,8 @@ void Rules_optional_term_on_relation_this_obj(void);
 void Rules_optional_w_subj_var(void);
 void Rules_terms_set(void);
 void Rules_value_set(void);
+void Rules_term_w_this_this_this(void);
+void Rules_term_w_x_x_x(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7359,6 +7361,14 @@ bake_test_case Rules_testcases[] = {
     {
         "value_set",
         Rules_value_set
+    },
+    {
+        "term_w_this_this_this",
+        Rules_term_w_this_this_this
+    },
+    {
+        "term_w_x_x_x",
+        Rules_term_w_x_x_x
     }
 };
 
@@ -10859,7 +10869,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        108,
+        110,
         Rules_testcases
     },
     {

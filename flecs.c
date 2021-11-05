@@ -16494,8 +16494,6 @@ int32_t get_depth_from_term(
 {
     int32_t result = UINT8_MAX;
 
-    ecs_assert(cur != pred || cur != obj, ECS_INTERNAL_ERROR, NULL);
-
     /* If neither of the other parts of the terms are variables, this
      * variable is guaranteed to have no dependencies. */
     if (!pred && !obj) {
