@@ -32723,13 +32723,14 @@ ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
 {
+    ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
-    ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
+    entity = ecs_entity_init(world, &desc->entity);
 
     bool added = false;
     EcsObserver *comp = ecs_get_mut(world, entity, EcsObserver, &added);
@@ -36000,10 +36001,11 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
+    ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
-    ecs_query_t *result = flecs_sparse_add(world->queries, ecs_query_t);
+    result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
 
     result->id = flecs_sparse_last_id(world->queries);
@@ -38824,12 +38826,13 @@ ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc)
 {
+    char *name = NULL;
+    
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
-    char *name = NULL;
     const char *expr = desc->expr;
     
     ecs_observable_t *observable = desc->observable;

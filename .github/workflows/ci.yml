@@ -267,6 +267,11 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
+      - name: FLECS_SOFT_ASSERT flag
+        run: |
+          bake rebuild --strict -D FLECS_SOFT_ASSERT
+          bake rebuild --strict --cfg release -D FLECS_SOFT_ASSERT
+
       - name: no extensions
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD

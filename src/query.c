@@ -2163,10 +2163,11 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
+    ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
-    ecs_query_t *result = flecs_sparse_add(world->queries, ecs_query_t);
+    result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
 
     result->id = flecs_sparse_last_id(world->queries);

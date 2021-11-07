@@ -522,12 +522,13 @@ ecs_entity_t ecs_trigger_init(
     ecs_world_t *world,
     const ecs_trigger_desc_t *desc)
 {
+    char *name = NULL;
+    
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
-    char *name = NULL;
     const char *expr = desc->expr;
     
     ecs_observable_t *observable = desc->observable;
