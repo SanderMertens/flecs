@@ -214,7 +214,7 @@ void _ecs_parser_errorv(
 
 /** Assert 
  * Aborts if condition is false, disabled in debug mode. */
-#ifdef NDEBUG
+#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
@@ -224,13 +224,24 @@ void _ecs_parser_errorv(
     assert(condition) /* satisfy compiler/static analyzers */
 #endif // NDEBUG
 
-/** Check
- * goto error if condition is false. */
-#ifdef NDEBUG
-#define ecs_check(condition, error_code, ...)\
+/** Debug assert 
+ * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
+#ifndef NDEBUG
+#define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
+#else
+#define ecs_dbg_assert(condition, error_code, ...)
+#endif
+
+/* Silence dead code/unused label warnings when compiling without checks. */
+#define ecs_dummy_check\
     if ((false)) {\
         goto error;\
-    } // Silence dead code/unused label warnings
+    }
+
+/** Check
+ * goto error if condition is false. */
+#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#define ecs_check(condition, error_code, ...) ecs_dummy_check
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
@@ -240,14 +251,15 @@ void _ecs_parser_errorv(
 #else // FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
     ecs_assert(condition, error_code, __VA_ARGS__);\
-    if ((false)) {\
-        goto error;\
-    } // Silence dead code/unused label warnings
+    ecs_dummy_check
 #endif
 #endif // NDEBUG
 
 /** Throw
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
+#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#define ecs_throw(error_code, ...) ecs_dummy_check
+#else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_throw(error_code, ...)\
     _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
@@ -255,10 +267,9 @@ void _ecs_parser_errorv(
 #else
 #define ecs_throw(error_code, ...)\
     ecs_abort(error_code, __VA_ARGS__);\
-    if ((false)) {\
-        goto error;\
-    } // Silence dead code/unused label warnings
+    ecs_dummy_check
 #endif
+#endif // NDEBUG
 
 /** Parser error */
 #define ecs_parser_error(name, expr, column, ...)\
@@ -305,6 +316,53 @@ int ecs_log_set_level(
 FLECS_API
 bool ecs_log_enable_colors(
     bool enabled);
+
+/** Get last logged error code.
+ * Calling this operation resets the error code.
+ *
+ * @return Last error, 0 if none was logged since last call to last_error.
+ */
+FLECS_API
+int ecs_log_last_error(void);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Error codes
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_INVALID_OPERATION (1)
+#define ECS_INVALID_PARAMETER (2)
+#define ECS_CONSTRAINT_VIOLATED (3)
+#define ECS_OUT_OF_MEMORY (4)
+#define ECS_OUT_OF_RANGE (5)
+#define ECS_UNSUPPORTED (6)
+#define ECS_INTERNAL_ERROR (7)
+#define ECS_ALREADY_DEFINED (8)
+#define ECS_MISSING_OS_API (9)
+#define ECS_OPERATION_FAILED (10)
+
+#define ECS_INCONSISTENT_NAME (20)
+#define ECS_NAME_IN_USE (21)
+#define ECS_NOT_A_COMPONENT (22)
+#define ECS_INVALID_COMPONENT_SIZE (23)
+#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
+#define ECS_COMPONENT_NOT_REGISTERED (25)
+#define ECS_INCONSISTENT_COMPONENT_ID (26)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
+#define ECS_MODULE_UNDEFINED (28)
+
+#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
+#define ECS_COLUMN_IS_NOT_SHARED (42)
+#define ECS_COLUMN_IS_SHARED (43)
+#define ECS_COLUMN_TYPE_MISMATCH (45)
+
+#define ECS_TYPE_INVALID_CASE (62)
+
+#define ECS_INVALID_WHILE_ITERATING (70)
+#define ECS_LOCKED_STORAGE (71)
+#define ECS_INVALID_FROM_WORKER (72)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Used when logging with colors is enabled

@@ -272,6 +272,11 @@ jobs:
           bake rebuild --strict -D FLECS_SOFT_ASSERT
           bake rebuild --strict --cfg release -D FLECS_SOFT_ASSERT
 
+      - name: FLECS_KEEP_ASSERT flag
+        run: |
+          bake rebuild --strict -D FLECS_KEEP_ASSERT
+          bake rebuild --strict --cfg release -D FLECS_KEEP_ASSERT
+
       - name: no extensions
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD

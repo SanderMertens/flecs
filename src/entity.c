@@ -579,7 +579,7 @@ void components_override(
 
             /* Cannot inherit from base if base is final */
             ecs_check(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
-                ECS_INVALID_PARAMETER, NULL);
+                ECS_CONSTRAINT_VIOLATED, NULL);
             ecs_check(base != 0, ECS_INVALID_PARAMETER, NULL);
 
             if (!world->stage.base) {
@@ -2218,7 +2218,7 @@ void throw_invalid_delete(
     ecs_id_t id)
 {
     char *id_str = ecs_id_str(world, id);
-    ecs_throw(ECS_INVALID_DELETE, id_str);
+    ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
 error:
     ecs_os_free(id_str);
 }

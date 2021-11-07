@@ -2217,6 +2217,7 @@ void Error_log_dbg(void);
 void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
+void Error_last_error(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
@@ -10642,6 +10643,10 @@ bake_test_case Error_testcases[] = {
     {
         "log_error",
         Error_log_error
+    },
+    {
+        "last_error",
+        Error_last_error
     }
 };
 
@@ -11098,7 +11103,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        11,
+        12,
         Error_testcases
     },
     {

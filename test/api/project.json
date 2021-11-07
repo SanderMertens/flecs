@@ -2348,7 +2348,8 @@
                 "log_dbg",
                 "log_log",
                 "log_warning",
-                "log_error"
+                "log_error",
+                "last_error"
             ]
         }, {
             "id": "App",

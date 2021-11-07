@@ -310,11 +310,11 @@ bool _ecs_assert(
             va_start(args, fmt);
             char *msg = ecs_vasprintf(fmt, args);
             va_end(args);            
-            _ecs_fatal(file, line, "assert(%s) %s (%s)", 
+            _ecs_fatal(file, line, "assert: %s %s (%s)", 
                 cond_str, msg, ecs_strerror(err));
             ecs_os_free(msg);
         } else {
-            _ecs_fatal(file, line, "assert(%s) %s", 
+            _ecs_fatal(file, line, "assert: %s %s", 
                 cond_str, ecs_strerror(err));
         }
     }
@@ -338,7 +338,6 @@ const char* ecs_strerror(
     switch (error_code) {
     ECS_ERR_STR(ECS_INVALID_PARAMETER);
     ECS_ERR_STR(ECS_NOT_A_COMPONENT);
-    ECS_ERR_STR(ECS_TYPE_NOT_AN_ENTITY);
     ECS_ERR_STR(ECS_INTERNAL_ERROR);
     ECS_ERR_STR(ECS_ALREADY_DEFINED);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
@@ -348,26 +347,21 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
     ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
     ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
-    ECS_ERR_STR(ECS_COLUMN_HAS_NO_DATA);
     ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
     ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
     ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
     ECS_ERR_STR(ECS_OUT_OF_RANGE);
-    ECS_ERR_STR(ECS_THREAD_ERROR);
+    ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_MISSING_OS_API);
     ECS_ERR_STR(ECS_UNSUPPORTED);
-    ECS_ERR_STR(ECS_NO_OUT_COLUMNS);
     ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
-    ECS_ERR_STR(ECS_DESERIALIZE_FORMAT_ERROR);
-    ECS_ERR_STR(ECS_TYPE_CONSTRAINT_VIOLATION);
     ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
     ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
     ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
     ECS_ERR_STR(ECS_INCONSISTENT_NAME);
     ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
     ECS_ERR_STR(ECS_INVALID_OPERATION);
-    ECS_ERR_STR(ECS_INVALID_DELETE);
-    ECS_ERR_STR(ECS_CYCLE_DETECTED);
+    ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
     }
 
@@ -470,4 +464,11 @@ bool ecs_log_enable_colors(
     bool prev = ecs_os_api.log_with_color_;
     ecs_os_api.log_with_color_ = enabled;
     return prev;
+}
+
+int ecs_log_last_error(void)
+{
+    int result = ecs_os_api.log_last_error_;
+    ecs_os_api.log_last_error_ = 0;
+    return result;
 }

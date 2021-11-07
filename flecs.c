@@ -4986,7 +4986,7 @@ void components_override(
 
             /* Cannot inherit from base if base is final */
             ecs_check(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
-                ECS_INVALID_PARAMETER, NULL);
+                ECS_CONSTRAINT_VIOLATED, NULL);
             ecs_check(base != 0, ECS_INVALID_PARAMETER, NULL);
 
             if (!world->stage.base) {
@@ -6625,7 +6625,7 @@ void throw_invalid_delete(
     ecs_id_t id)
 {
     char *id_str = ecs_id_str(world, id);
-    ecs_throw(ECS_INVALID_DELETE, id_str);
+    ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
 error:
     ecs_os_free(id_str);
 }
@@ -8993,7 +8993,7 @@ void ecs_vector_assert_size(
     (void)elem_size;
     
     if (vector) {
-        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     }
 }
 
@@ -9015,7 +9015,7 @@ void* _ecs_vector_addn(
         *array_inout = vector;
     }
 
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     int32_t max_count = vector->size;
     int32_t old_count = vector->count;
@@ -9050,7 +9050,7 @@ void* _ecs_vector_add(
     int32_t count, size;
 
     if (vector) {
-        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
         count = vector->count;
         size = vector->size;
 
@@ -9083,9 +9083,9 @@ int32_t _ecs_vector_move_index(
     int32_t index)
 {
     if (dst && *dst) {
-        ecs_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     }
-    ecs_assert(src->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(src->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     void *dst_elem = _ecs_vector_add(dst, elem_size, offset);
     void *src_elem = _ecs_vector_get(src, elem_size, offset, index);
@@ -9110,7 +9110,7 @@ bool _ecs_vector_pop(
         return false;
     }
 
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     int32_t count = vector->count;
     if (!count) {
@@ -9134,7 +9134,7 @@ int32_t _ecs_vector_remove(
     int16_t offset,
     int32_t index)
 {
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     
     int32_t count = vector->count;
     void *buffer = ECS_OFFSET(vector, offset);
@@ -9160,7 +9160,7 @@ void _ecs_vector_reclaim(
 {
     ecs_vector_t *vector = *array_inout;
 
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     
     int32_t size = vector->size;
     int32_t count = vector->count;
@@ -9203,7 +9203,7 @@ int32_t _ecs_vector_set_size(
         *array_inout = _ecs_vector_new(elem_size, offset, elem_count);
         return elem_count;
     } else {
-        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
         int32_t result = vector->size;
 
@@ -9243,7 +9243,7 @@ int32_t _ecs_vector_set_count(
         *array_inout = _ecs_vector_new(elem_size, offset, elem_count);
     }
 
-    ecs_assert((*array_inout)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert((*array_inout)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     (*array_inout)->count = elem_count;
     ecs_size_t size = _ecs_vector_set_size(array_inout, elem_size, offset, elem_count);
@@ -9257,7 +9257,7 @@ void* _ecs_vector_first(
 {
     (void)elem_size;
 
-    ecs_assert(!vector || vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(!vector || vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     if (vector && vector->size) {
         return ECS_OFFSET(vector, offset);
     } else {
@@ -9272,7 +9272,7 @@ void* _ecs_vector_get(
     int32_t index)
 {
     ecs_assert(vector != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(index < vector->count, ECS_INTERNAL_ERROR, NULL);
 
@@ -9285,7 +9285,7 @@ void* _ecs_vector_last(
     int16_t offset)
 {
     if (vector) {
-        ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
         int32_t count = vector->count;
         if (!count) {
             return NULL;
@@ -9336,7 +9336,7 @@ void _ecs_vector_sort(
         return;
     }
 
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
 
     int32_t count = vector->count;
     void *buffer = ECS_OFFSET(vector, offset);
@@ -9357,7 +9357,7 @@ void _ecs_vector_memory(
         return;
     }
 
-    ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
 
     if (allocd) {
         *allocd += vector->size * elem_size + offset;
@@ -12670,11 +12670,11 @@ bool _ecs_assert(
             va_start(args, fmt);
             char *msg = ecs_vasprintf(fmt, args);
             va_end(args);            
-            _ecs_fatal(file, line, "assert(%s) %s (%s)", 
+            _ecs_fatal(file, line, "assert: %s %s (%s)", 
                 cond_str, msg, ecs_strerror(err));
             ecs_os_free(msg);
         } else {
-            _ecs_fatal(file, line, "assert(%s) %s", 
+            _ecs_fatal(file, line, "assert: %s %s", 
                 cond_str, ecs_strerror(err));
         }
     }
@@ -12698,7 +12698,6 @@ const char* ecs_strerror(
     switch (error_code) {
     ECS_ERR_STR(ECS_INVALID_PARAMETER);
     ECS_ERR_STR(ECS_NOT_A_COMPONENT);
-    ECS_ERR_STR(ECS_TYPE_NOT_AN_ENTITY);
     ECS_ERR_STR(ECS_INTERNAL_ERROR);
     ECS_ERR_STR(ECS_ALREADY_DEFINED);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
@@ -12708,26 +12707,21 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
     ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
     ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
-    ECS_ERR_STR(ECS_COLUMN_HAS_NO_DATA);
     ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
     ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
     ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
     ECS_ERR_STR(ECS_OUT_OF_RANGE);
-    ECS_ERR_STR(ECS_THREAD_ERROR);
+    ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_MISSING_OS_API);
     ECS_ERR_STR(ECS_UNSUPPORTED);
-    ECS_ERR_STR(ECS_NO_OUT_COLUMNS);
     ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
-    ECS_ERR_STR(ECS_DESERIALIZE_FORMAT_ERROR);
-    ECS_ERR_STR(ECS_TYPE_CONSTRAINT_VIOLATION);
     ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
     ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
     ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
     ECS_ERR_STR(ECS_INCONSISTENT_NAME);
     ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
     ECS_ERR_STR(ECS_INVALID_OPERATION);
-    ECS_ERR_STR(ECS_INVALID_DELETE);
-    ECS_ERR_STR(ECS_CYCLE_DETECTED);
+    ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
     }
 
@@ -12830,6 +12824,13 @@ bool ecs_log_enable_colors(
     bool prev = ecs_os_api.log_with_color_;
     ecs_os_api.log_with_color_ = enabled;
     return prev;
+}
+
+int ecs_log_last_error(void)
+{
+    int result = ecs_os_api.log_last_error_;
+    ecs_os_api.log_last_error_ = 0;
+    return result;
 }
 
 #ifdef FLECS_PIPELINE
@@ -13001,7 +13002,7 @@ void start_workers(
 
         ecs_vector_get(world->worker_stages, ecs_stage_t, i);
         stage->thread = ecs_os_thread_new(worker, stage);
-        ecs_assert(stage->thread != 0, ECS_THREAD_ERROR, NULL);
+        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
     }
 }
 

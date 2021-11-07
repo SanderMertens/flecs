@@ -260,6 +260,9 @@ typedef struct ecs_os_api_t {
     /* Trace indentation */
     int32_t log_indent_;
 
+    /* Last error code */
+    int32_t log_last_error_;
+
     /* Enable tracing with color */
     bool log_with_color_;
 } ecs_os_api_t;
@@ -395,7 +398,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
-/* Logging (use functions to avoid using variadic macro arguments) */
+/* Logging */
 FLECS_API
 void ecs_os_dbg(const char *file, int32_t line, const char *msg);
 

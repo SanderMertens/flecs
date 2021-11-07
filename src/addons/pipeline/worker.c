@@ -57,7 +57,7 @@ void start_workers(
 
         ecs_vector_get(world->worker_stages, ecs_stage_t, i);
         stage->thread = ecs_os_thread_new(worker, stage);
-        ecs_assert(stage->thread != 0, ECS_THREAD_ERROR, NULL);
+        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
     }
 }
 

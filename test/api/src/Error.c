@@ -61,7 +61,6 @@ void Error_assert_false_w_param() {
 void Error_error_codes() {
     test_assert(ecs_strerror(ECS_INVALID_PARAMETER) != NULL);
     test_assert(ecs_strerror(ECS_NOT_A_COMPONENT) != NULL);
-    test_assert(ecs_strerror(ECS_TYPE_NOT_AN_ENTITY) != NULL);
     test_assert(ecs_strerror(ECS_INTERNAL_ERROR) != NULL);
     test_assert(ecs_strerror(ECS_ALREADY_DEFINED) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_COMPONENT_SIZE) != NULL);
@@ -71,17 +70,14 @@ void Error_error_codes() {
     test_assert(ecs_strerror(ECS_COLUMN_INDEX_OUT_OF_RANGE) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_IS_NOT_SHARED) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_IS_SHARED) != NULL);
-    test_assert(ecs_strerror(ECS_COLUMN_HAS_NO_DATA) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_TYPE_MISMATCH) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_WHILE_ITERATING) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_FROM_WORKER) != NULL);
     test_assert(ecs_strerror(ECS_OUT_OF_RANGE) != NULL);
-    test_assert(ecs_strerror(ECS_THREAD_ERROR) != NULL);
+    test_assert(ecs_strerror(ECS_OPERATION_FAILED) != NULL);
     test_assert(ecs_strerror(ECS_MISSING_OS_API) != NULL);
     test_assert(ecs_strerror(ECS_UNSUPPORTED) != NULL);
-    test_assert(ecs_strerror(ECS_NO_OUT_COLUMNS) != NULL);
     test_assert(ecs_strerror(ECS_COLUMN_ACCESS_VIOLATION) != NULL);
-    test_assert(ecs_strerror(ECS_DESERIALIZE_FORMAT_ERROR) != NULL);
 }
 
 void Error_log_dbg() {
@@ -102,4 +98,11 @@ void Error_log_warning() {
 void Error_log_error() {
     ecs_err("test error message");
     test_assert(true);
+}
+
+void Error_last_error() {
+    ecs_os_api.log_last_error_ = 10;
+    int err = ecs_log_last_error();
+    test_int(10, err);
+    test_int(0, ecs_log_last_error());
 }

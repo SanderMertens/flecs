@@ -32,6 +32,9 @@
 /* FLECS_SOFT_ASSERT disables aborting for recoverable errors */
 // #define FLECS_SOFT_ASSERT
 
+/* FLECS_KEEP_ASSERT keeps asserts in release mode. */
+// #define FLECS_KEEP_ASSERT
+
 /* FLECS_CUSTOM_BUILD should be defined when manually selecting addons */
 // #define FLECS_CUSTOM_BUILD
 
