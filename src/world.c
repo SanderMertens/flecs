@@ -612,17 +612,21 @@ ecs_world_t* ecs_init_w_args(
 void ecs_quit(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
     world->should_quit = true;
+error:
+    return;
 }
 
 bool ecs_should_quit(
     const ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
     return world->should_quit;
+error:
+    return true;
 }
 
 void flecs_notify_tables(
@@ -767,29 +771,29 @@ void ecs_set_component_actions_w_id(
     ecs_entity_t component,
     EcsComponentLifecycle *lifecycle)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
 
     const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
 
     /* Cannot register lifecycle actions for things that aren't a component */
-    ecs_assert(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* Cannot register lifecycle actions for components with size 0 */
-    ecs_assert(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_type_info_t *c_info = flecs_get_or_create_c_info(world, component);
     ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (c_info->lifecycle_set) {
         ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(c_info->lifecycle.ctor == lifecycle->ctor, 
+        ecs_check(c_info->lifecycle.ctor == lifecycle->ctor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_assert(c_info->lifecycle.dtor == lifecycle->dtor, 
+        ecs_check(c_info->lifecycle.dtor == lifecycle->dtor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_assert(c_info->lifecycle.copy == lifecycle->copy, 
+        ecs_check(c_info->lifecycle.copy == lifecycle->copy, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_assert(c_info->lifecycle.move == lifecycle->move, 
+        ecs_check(c_info->lifecycle.move == lifecycle->move, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
     } else {
         c_info->component = component;
@@ -865,17 +869,22 @@ void ecs_set_component_actions_w_id(
             .component = component
         });
     }
+error:
+    return;
 }
 
 bool ecs_component_has_actions(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
+    
     world = ecs_get_world(world);
-
     const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
     return (c_info != NULL) && c_info->lifecycle_set;
+error:
+    return false;
 }
 
 void ecs_atfini(
@@ -884,8 +893,7 @@ void ecs_atfini(
     void *ctx)
 {
     ecs_poly_assert(world, ecs_world_t);
-
-    ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_action_elem_t *elem = ecs_vector_add(&world->fini_actions, 
         ecs_action_elem_t);
@@ -893,6 +901,8 @@ void ecs_atfini(
 
     elem->action = action;
     elem->ctx = ctx;
+error:
+    return;
 }
 
 void ecs_run_post_frame(
@@ -900,16 +910,18 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(action != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+    
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-
     ecs_action_elem_t *elem = ecs_vector_add(&stage->post_frame_actions, 
         ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     elem->action = action;
-    elem->ctx = ctx;    
+    elem->ctx = ctx; 
+error:
+    return;
 }
 
 /* Unset data in tables */
@@ -1112,11 +1124,13 @@ void ecs_measure_frame_time(
     bool enable)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     if (world->stats.target_fps == 0.0f || enable) {
         world->measure_frame_time = enable;
     }
+error:
+    return;
 }
 
 void ecs_measure_system_time(
@@ -1124,8 +1138,10 @@ void ecs_measure_system_time(
     bool enable)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
     world->measure_system_time = enable;
+error:
+    return;
 }
 
 /* Increase timer resolution based on target fps */
@@ -1142,19 +1158,23 @@ void ecs_set_target_fps(
     FLECS_FLOAT fps)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     ecs_measure_frame_time(world, true);
     world->stats.target_fps = fps;
     set_timer_resolution(fps);
+error:
+    return;
 }
 
 void* ecs_get_context(
     const ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
     world = ecs_get_world(world);
     return world->context;
+error:
+    return NULL;
 }
 
 void ecs_set_context(
@@ -1171,8 +1191,9 @@ void ecs_set_entity_range(
     ecs_entity_t id_end)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id_end || id_end > world->stats.last_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id_end || id_end > world->stats.last_id, 
+        ECS_INVALID_PARAMETER, NULL);
 
     if (world->stats.last_id < id_start) {
         world->stats.last_id = id_start - 1;
@@ -1180,6 +1201,8 @@ void ecs_set_entity_range(
 
     world->stats.min_id = id_start;
     world->stats.max_id = id_end;
+error:
+    return;
 }
 
 bool ecs_enable_range_check(
@@ -1383,9 +1406,9 @@ FLECS_FLOAT ecs_frame_begin(
     FLECS_FLOAT user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
-
-    ecs_assert(user_delta_time != 0 || ecs_os_has_time(), ECS_MISSING_OS_API, "get_time");
+    ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(user_delta_time != 0 || ecs_os_has_time(), 
+        ECS_MISSING_OS_API, "get_time");
 
     if (world->locking_enabled) {
         ecs_lock(world);
@@ -1406,13 +1429,15 @@ FLECS_FLOAT ecs_frame_begin(
     flecs_eval_component_monitors(world);
 
     return world->stats.delta_time;
+error:
+    return (FLECS_FLOAT)0;
 }
 
 void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
     world->stats.frame_count_total ++;
 
@@ -1429,6 +1454,8 @@ void ecs_frame_end(
     }
 
     stop_measure_frame(world);
+error:
+    return;
 }
 
 const ecs_world_info_t* ecs_get_world_info(

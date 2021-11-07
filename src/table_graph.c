@@ -840,8 +840,8 @@ ecs_table_t* flecs_table_traverse_remove(
     node = node ? node : &world->store.root;
 
     /* Removing 0 from an entity is not valid */
-    ecs_assert(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
     ecs_edge_t *edge = ensure_edge(&node->node.remove, id);
@@ -856,6 +856,8 @@ ecs_table_t* flecs_table_traverse_remove(
     populate_diff(node, edge, NULL, id_ptr, diff);
 
     return next;
+error:
+    return NULL;
 }
 
 ecs_table_t* flecs_table_traverse_add(
@@ -869,8 +871,8 @@ ecs_table_t* flecs_table_traverse_add(
     node = node ? node : &world->store.root;
 
     /* Adding 0 to an entity is not valid */
-    ecs_assert(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
     ecs_edge_t *edge = ensure_edge(&node->node.add, id);
@@ -885,6 +887,8 @@ ecs_table_t* flecs_table_traverse_add(
     populate_diff(node, edge, id_ptr, NULL, diff);
 
     return next;
+error:
+    return NULL;
 }
 
 static

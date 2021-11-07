@@ -506,7 +506,7 @@ void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
 void Hierarchies_get_parent_from_nested(void);
 void Hierarchies_get_parent_from_nested_2(void);
-void Hierarchies_get_parent_from_root(void);
+void Hierarchies_get_object_from_0(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
@@ -4139,8 +4139,8 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_get_parent_from_nested_2
     },
     {
-        "get_parent_from_root",
-        Hierarchies_get_parent_from_root
+        "get_object_from_0",
+        Hierarchies_get_object_from_0
     },
     {
         "tree_iter_empty",

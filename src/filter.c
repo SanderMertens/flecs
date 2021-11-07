@@ -473,11 +473,11 @@ bool ecs_id_match(
         ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
         ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
 
-        ecs_assert(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
 
-        ecs_assert(pattern_rel != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(pattern_obj != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(pattern_rel != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(pattern_obj != 0, ECS_INVALID_PARAMETER, NULL);
         
         if (pattern_rel == EcsWildcard) {
             if (pattern_obj == EcsWildcard || pattern_obj == id_obj) {
@@ -498,6 +498,7 @@ bool ecs_id_match(
         }
     }
 
+error:
     return false;
 }
 
@@ -689,9 +690,12 @@ int ecs_filter_init(
     ecs_filter_t *filter_out,
     const ecs_filter_desc_t *desc)    
 {
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_filter_t f;
+    ecs_poly_init(&f, ecs_filter_t);
+
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
 
@@ -702,8 +706,6 @@ int ecs_filter_init(
 
     /* Temporarily set the fields to the values provided in desc, until the
      * filter has been validated. */
-    ecs_filter_t f;
-    ecs_poly_init(&f, ecs_filter_t);
     f.name = (char*)name;
     f.expr = (char*)expr;
 
@@ -1005,8 +1007,8 @@ char* ecs_filter_str(
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!filter->term_cache_used || filter->terms == filter->term_cache,
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
@@ -1043,6 +1045,8 @@ char* ecs_filter_str(
     }
 
     return ecs_strbuf_get(&buf);
+error:
+    return NULL;
 }
 
 static
@@ -1218,9 +1222,6 @@ bool flecs_filter_match_table(
     bool first,
     int32_t skip_term)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(filter != NULL, ECS_INVALID_PARAMETER, NULL);
-
     ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
         ECS_INTERNAL_ERROR, NULL);
 
@@ -1353,15 +1354,14 @@ ecs_iter_t ecs_term_iter(
     const ecs_world_t *stage,
     ecs_term_t *term)
 {
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term->id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term->id != 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
 
     if (ecs_term_finalize(world, NULL, term)) {
-        /* Invalid term */
-        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, NULL);
     }
 
     ecs_iter_t it = {
@@ -1375,21 +1375,22 @@ ecs_iter_t ecs_term_iter(
     term_iter_init(world, term, &it.iter.term);
 
     return it;
+error:
+    return (ecs_iter_t){ 0 };
 }
 
 ecs_iter_t ecs_term_chain_iter(
     const ecs_iter_t *chain_it,
     ecs_term_t *term)
 {
-    ecs_assert(chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = chain_it->real_world;
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ecs_term_finalize(world, NULL, term)) {
-        /* Invalid term */
-        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, NULL);
     }
 
     ecs_iter_t it = {
@@ -1404,6 +1405,8 @@ ecs_iter_t ecs_term_chain_iter(
     term_iter_init(world, term, &it.iter.term);
 
     return it;
+error:
+    return (ecs_iter_t){ 0 };
 }
 
 static
@@ -1517,8 +1520,8 @@ ecs_table_record_t term_iter_next(
 bool ecs_term_next(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_iter_t *iter = &it->iter.term;
     ecs_term_t *term = &iter->term;
@@ -1586,6 +1589,7 @@ yield:
     it->is_valid = true;
     return true;
 done:
+error:
     return false;
 }
 
@@ -1625,7 +1629,7 @@ ecs_iter_t ecs_filter_iter(
     const ecs_world_t *stage,
     const ecs_filter_t *filter)
 {
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
 
@@ -1652,7 +1656,7 @@ ecs_iter_t ecs_filter_iter(
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
 
-            ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
             if (term->oper != EcsAnd) {
                 continue;
@@ -1697,6 +1701,8 @@ ecs_iter_t ecs_filter_iter(
     }
 
     return it;
+error:
+    return (ecs_iter_t){ 0 };
 }
 
 ecs_iter_t ecs_filter_chain_iter(
@@ -1726,9 +1732,9 @@ ecs_iter_t ecs_filter_chain_iter(
 bool ecs_filter_next(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->next == ecs_filter_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_filter_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
 
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_filter_t *filter = &iter->filter;
@@ -1824,6 +1830,7 @@ bool ecs_filter_next(
     }
 
 done:
+error:
     flecs_iter_fini(it);
     return false;
 

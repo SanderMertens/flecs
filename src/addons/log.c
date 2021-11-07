@@ -293,11 +293,9 @@ void _ecs_abort(
     } else {
         _ecs_fatal(file, line, "%s", ecs_strerror(err));
     }
-
-    ecs_os_abort();
 }
 
-void _ecs_assert(
+bool _ecs_assert(
     bool condition,
     int32_t err,
     const char *cond_str,
@@ -319,9 +317,9 @@ void _ecs_assert(
             _ecs_fatal(file, line, "assert(%s) %s", 
                 cond_str, ecs_strerror(err));
         }
-
-        ecs_os_abort();
     }
+
+    return condition;
 }
 
 void _ecs_deprecated(
@@ -438,7 +436,7 @@ void _ecs_abort(
 }
 
 FLECS_API
-void _ecs_assert(
+bool _ecs_assert(
     bool condition,
     int32_t error_code,
     const char *condition_str,
@@ -453,6 +451,7 @@ void _ecs_assert(
     (void)file;
     (void)line;
     (void)fmt;
+    return true;
 }
 
 #endif

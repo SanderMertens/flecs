@@ -19,7 +19,7 @@ void* get_component_w_index(
     int32_t column_index,
     int32_t row)
 {
-    ecs_assert(column_index < ecs_table_storage_count(table), 
+    ecs_check(column_index < ecs_table_storage_count(table), 
         ECS_NOT_A_COMPONENT, NULL);
 
     ecs_column_t *column = &table->storage.columns[column_index];
@@ -27,10 +27,12 @@ void* get_component_w_index(
     /* If size is 0, component does not have a value. This is likely caused by
     * an application trying to call ecs_get with a tag. */
     int32_t size = column->size;    
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, NULL);
 
     void *ptr = ecs_vector_first_t(column->data, size, column->alignment); 
     return ECS_OFFSET(ptr, size * row);  
+error:
+    return NULL;
 }
 
 static
@@ -41,7 +43,7 @@ void* get_component(
     ecs_id_t id)
 {
     if (!table->storage_table) {
-        ecs_assert(ecs_type_index_of(table->type, 0, id) == -1, 
+        ecs_check(ecs_type_index_of(table->type, 0, id) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
         return NULL;
     }
@@ -49,12 +51,14 @@ void* get_component(
     ecs_table_record_t *tr = flecs_get_table_record(
         world, table->storage_table, id);
     if (!tr) {
-        ecs_assert(ecs_type_index_of(table->type, 0, id) == -1, 
+        ecs_check(ecs_type_index_of(table->type, 0, id) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
        return NULL;
     }
 
     return get_component_w_index(table, tr->column, row);
+error:
+    return NULL;
 }
 
 static
@@ -67,7 +71,7 @@ void* get_base_component(
     int32_t recur_depth)
 {
     /* Cycle detected in IsA relation */
-    ecs_assert(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
 
     /* Table (and thus entity) does not have component, look for base */
     if (!(table->flags & EcsTableHasIsA)) {
@@ -84,7 +88,7 @@ void* get_base_component(
     if (!table_index_isa) {
         ecs_id_record_t *idr = flecs_get_id_record(
             world, ecs_pair(EcsIsA, EcsWildcard));
-        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_check(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         table_index_isa = idr;
     }
 
@@ -92,7 +96,7 @@ void* get_base_component(
      * HasBase flag should not have been set */
     const ecs_table_record_t *tr_isa = flecs_id_record_table(
         table_index_isa, table);
-    ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = table->type;
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
@@ -119,7 +123,7 @@ void* get_base_component(
         if (storage_table) {
             tr = flecs_id_record_table(table_index, storage_table);
         } else {
-            ecs_assert(!ecs_owns_id(world, base, id), 
+            ecs_check(!ecs_owns_id(world, base, id), 
                 ECS_NOT_A_COMPONENT, NULL);
         }
 
@@ -134,6 +138,8 @@ void* get_base_component(
     } while (!ptr && (i < end));
 
     return ptr;
+error:
+    return NULL;
 }
 
 /* Utility to compute actual row from row in record */
@@ -254,9 +260,11 @@ ecs_table_t* table_append(
 {
     ecs_table_diff_t temp_diff;
     table = flecs_table_traverse_add(world, table, &id, &temp_diff);
-    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     diff_append(diff, &temp_diff);
     return table;
+error:
+    return NULL;
 }
 
 static
@@ -389,11 +397,16 @@ void instantiate_children(
          * which would cause infinite recursion. */
         ecs_entity_t *children = ecs_vector_first(
             child_data->entities, ecs_entity_t);
-#ifndef NDEBUG
+
+#ifdef FLECS_SANITIZE
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];        
-            ecs_assert(child != instance, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(child != instance, ECS_INVALID_PARAMETER, NULL);
         }
+#else
+        /* Bit of boilerplate to ensure that we don't get warnings about the
+         * error label not being used. */
+        ecs_check(true, ECS_INVALID_OPERATION, NULL);
 #endif
 
         /* Create children */
@@ -408,7 +421,9 @@ void instantiate_children(
             ecs_entity_t child = children[j];
             instantiate(world, child, i_table, i_data, child_row + j, 1);
         }
-    }       
+    }   
+error:
+    return;    
 }
 
 static
@@ -563,10 +578,9 @@ void components_override(
             ecs_entity_t base = ECS_PAIR_OBJECT(id);
 
             /* Cannot inherit from base if base is final */
-            ecs_assert(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
+            ecs_check(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
                 ECS_INVALID_PARAMETER, NULL);
-
-            ecs_assert(base != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(base != 0, ECS_INVALID_PARAMETER, NULL);
 
             if (!world->stage.base) {
                 /* Setting base prevents instantiating the hierarchy multiple
@@ -598,6 +612,8 @@ void components_override(
 
         override_component(world, id, type, data, column, row, count);
     }
+error:
+    return;
 }
 
 static
@@ -679,8 +695,7 @@ int32_t new_entity(
     record->table = new_table;
     record->row = flecs_row_to_record(new_row, info->is_watched);
 
-    ecs_assert(
-        ecs_vector_count(new_data[0].entities) > new_row, 
+    ecs_assert(ecs_vector_count(new_data[0].entities) > new_row, 
         ECS_INTERNAL_ERROR, NULL);
 
     if (new_table->flags & EcsTableHasAddActions) {
@@ -707,12 +722,12 @@ int32_t move_entity(
 {    
     ecs_data_t *dst_data = &dst_table->storage;
     ecs_assert(src_data != dst_data, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_vector_count(src_data->entities) > src_row, 
         ECS_INTERNAL_ERROR, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_record_t *record = info->record;
     ecs_assert(!record || record == ecs_eis_get(world, entity), 
@@ -749,8 +764,9 @@ int32_t move_entity(
     }
 
     info->data = dst_data;
-
     return dst_row;
+error:
+    return -1;
 }
 
 static
@@ -797,7 +813,9 @@ void update_component_monitor_w_array(
             /* If a relationship has changed, check if it could have impacted
              * the shape of the graph for that relationship. If so, mark the
              * relationship as dirty */        
-            if (rel != relation && flecs_get_id_record(world, ecs_pair(rel, entity))) {
+            if (rel != relation && flecs_get_id_record(
+                world, ecs_pair(rel, entity))) 
+            {
                 update_component_monitor_w_array(world, entity, rel, entities);
             }
 
@@ -893,9 +911,13 @@ void commit(
     }
 
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
-        ecs_assert(!world->stats.max_id || entity <= world->stats.max_id, ECS_OUT_OF_RANGE, 0);
-        ecs_assert(entity >= world->stats.min_id, ECS_OUT_OF_RANGE, 0);
+        ecs_check(!world->stats.max_id || entity <= world->stats.max_id, 
+            ECS_OUT_OF_RANGE, 0);
+        ecs_check(entity >= world->stats.min_id, 
+            ECS_OUT_OF_RANGE, 0);
     } 
+error:
+    return;
 }
 
 static
@@ -930,16 +952,11 @@ const ecs_entity_t* new_w_data(
     int32_t *row_out,
     ecs_table_diff_t *diff)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
-    
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = ecs_eis_count(world);
         entities = flecs_sparse_new_ids(world->store.entity_index, count);
     }
-
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!table) {
         return entities;
@@ -1056,7 +1073,6 @@ void add_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_add(world, stage, entity, id)) {
@@ -1082,7 +1098,6 @@ void remove_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_remove(world, stage, entity, id)) {
@@ -1110,9 +1125,9 @@ void *get_mutable(
     ecs_entity_info_t *info,
     bool *is_added)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(component != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert((component & ECS_COMPONENT_MASK) == component || 
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check((component & ECS_COMPONENT_MASK) == component || 
         ECS_HAS_ROLE(component, PAIR), ECS_INVALID_PARAMETER, NULL);
 
     void *dst = NULL;
@@ -1141,6 +1156,8 @@ void *get_mutable(
 
         return dst;
     }
+error:
+    return NULL;
 }
 
 
@@ -1334,7 +1351,7 @@ bool ecs_commit(
     ecs_ids_t *added,
     ecs_ids_t *removed)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_t *src_table = NULL;
     if (!record) {
@@ -1358,12 +1375,37 @@ bool ecs_commit(
     commit(world, entity, &info, table, &diff, true);
 
     return src_table != table;
+error:
+    return false;
+}
+
+ecs_entity_t ecs_set_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_id_t prev = stage->with;
+    stage->with = id;
+    return prev;
+error:
+    return 0;
+}
+
+ecs_id_t ecs_get_with(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->with;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_new_id(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
 
@@ -1374,13 +1416,11 @@ ecs_entity_t ecs_new_id(
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
 
     ecs_entity_t entity;
-
     int32_t stage_count = ecs_get_stage_count(unsafe_world);
     if (stage->asynchronous || (ecs_os_has_threading() && stage_count > 1)) {
         /* Can't atomically increase number above max int */
-        ecs_assert(
-            unsafe_world->stats.last_id < UINT_MAX, ECS_INTERNAL_ERROR, NULL);
-
+        ecs_assert(unsafe_world->stats.last_id < UINT_MAX, 
+            ECS_INVALID_OPERATION, NULL);
         entity = (ecs_entity_t)ecs_os_ainc(
             (int32_t*)&unsafe_world->stats.last_id);
     } else {
@@ -1392,44 +1432,27 @@ ecs_entity_t ecs_new_id(
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
-}
-
-ecs_entity_t ecs_set_with(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_id_t prev = stage->with;
-    stage->with = id;
-    return prev;
-}
-
-ecs_id_t ecs_get_with(
-    const ecs_world_t *world)
-{
-    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->with;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_new_low_id(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
      * but only if single threaded. */
     ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
-
     if (unsafe_world->is_readonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
-        ecs_assert(ecs_get_stage_count(world) <= 1, 
+        ecs_check(ecs_get_stage_count(world) <= 1,
             ECS_INVALID_WHILE_ITERATING, NULL);
     }
 
     ecs_entity_t id = 0;
-
     if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
             id = unsafe_world->stats.last_component_id ++;
@@ -1442,13 +1465,15 @@ ecs_entity_t ecs_new_low_id(
     }
 
     return id;
+error: 
+    return 0;
 }
 
 ecs_entity_t ecs_new_w_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
@@ -1471,7 +1496,6 @@ ecs_entity_t ecs_new_w_id(
             ids[to_add.count ++] = ecs_pair(EcsChildOf, scope);
         }
     }
-
     if (to_add.count) {
         if (flecs_defer_new(world, stage, entity, to_add.array[0])) {
             int i;
@@ -1489,10 +1513,11 @@ ecs_entity_t ecs_new_w_id(
 
         ecs_eis_set(world, entity, &(ecs_record_t){ 0 });
     }
-
     flecs_defer_flush(world, stage);
 
     return entity;
+error:
+    return 0;
 }
 
 #ifdef FLECS_PARSER
@@ -1583,7 +1608,7 @@ void defer_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) {
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -1787,8 +1812,8 @@ ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = ecs_get_scope(world);
@@ -1801,7 +1826,6 @@ ecs_entity_t ecs_entity_init(
     }
 
     const char *root_sep = desc->root_sep;
-
     bool new_entity = false;
     bool name_assigned = false;
 
@@ -1882,12 +1906,17 @@ ecs_entity_t ecs_entity_init(
     }
 
     return result;
+error:
+    return 0;
 }
 
 const ecs_entity_t* ecs_bulk_init(
     ecs_world_t *world,
     const ecs_bulk_desc_t *desc)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
 
@@ -1904,7 +1933,6 @@ const ecs_entity_t* ecs_bulk_init(
     }
 
     ecs_ids_t ids;
-
     ecs_table_t *table = desc->table;
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     if (!table) {
@@ -1934,13 +1962,17 @@ const ecs_entity_t* ecs_bulk_init(
         entities = flecs_sparse_ids(world->store.entity_index);
         return &entities[sparse_count];
     }
+error:
+    return NULL;
 }
 
 ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
     world = (ecs_world_t*)ecs_get_world(world);
 
     bool is_readonly = world->is_readonly;
@@ -1977,7 +2009,7 @@ ecs_entity_t ecs_component_init(
     ecs_entity_t e = desc->entity.entity;
     ecs_entity_t result = ecs_entity_init(world, &entity_desc);
     if (!result) {
-        return 0;
+        goto error;
     }
 
     bool added = false;
@@ -2022,15 +2054,20 @@ ecs_entity_t ecs_component_init(
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
     return result;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_type_init(
     ecs_world_t *world,
     const ecs_type_desc_t *desc)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {
-        return 0;
+        goto error;
     }
 
     ecs_table_t *table = NULL, *normalized = NULL;
@@ -2058,13 +2095,13 @@ ecs_entity_t ecs_type_init(
         normalized = traverse_from_expr(world, normalized, desc->entity.name, 
             desc->ids_expr, &diff, true, &error);
         if (error) {
-            return 0;
+            goto error;
         }
 
         table = traverse_from_expr(world, table, desc->entity.name, 
             desc->ids_expr, &diff, false, &error);
         if (error) {
-            return 0;
+            goto error;
         }
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
@@ -2096,15 +2133,15 @@ ecs_entity_t ecs_type_init(
 
         ecs_modified(world, result, EcsType);
     } else {
-        if (type_ptr->type != type) {
-            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
-        }
-        if (type_ptr->normalized != normalized_type) {
-            ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
-        }        
+        ecs_check(type_ptr->type == type, ECS_ALREADY_DEFINED, 
+            desc->entity.name);
+        ecs_check(type_ptr->normalized == normalized_type, ECS_ALREADY_DEFINED,
+            desc->entity.name);      
     }
 
     return result;
+error:
+    return 0;
 }
 
 const ecs_entity_t* ecs_bulk_new_w_id(
@@ -2112,7 +2149,7 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     ecs_id_t id,
     int32_t count)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     const ecs_entity_t *ids;
@@ -2131,14 +2168,16 @@ const ecs_entity_t* ecs_bulk_new_w_id(
     flecs_defer_flush(world, stage);
 
     return ids;
+error:
+    return NULL;
 }
 
 void ecs_clear(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_clear(world, stage, entity)) {
@@ -2163,6 +2202,8 @@ void ecs_clear(
     }    
 
     flecs_defer_flush(world, stage);
+error:
+    return;
 }
 
 static
@@ -2176,7 +2217,10 @@ void throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_abort(ECS_INVALID_DELETE, ecs_id_str(world, id));
+    char *id_str = ecs_id_str(world, id);
+    ecs_throw(ECS_INVALID_DELETE, id_str);
+error:
+    ecs_os_free(id_str);
 }
 
 static
@@ -2213,7 +2257,8 @@ void remove_from_table(
             continue;
         }
 
-        dst_table = flecs_table_traverse_remove(world, dst_table, &e, &temp_diff);
+        dst_table = flecs_table_traverse_remove(
+            world, dst_table, &e, &temp_diff);
         diff_append(&diff, &temp_diff);
         
         removed_count ++;
@@ -2406,7 +2451,6 @@ void ecs_delete_with(
     }
 
     on_delete_action(world, id, EcsDelete);
-
     flecs_defer_flush(world, stage);
 }
 
@@ -2420,7 +2464,6 @@ void ecs_remove_all(
     }
 
     on_delete_action(world, id, EcsRemove);
-
     flecs_defer_flush(world, stage);
 }
 
@@ -2428,8 +2471,8 @@ void ecs_delete(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_delete(world, stage, entity)) {
@@ -2495,6 +2538,8 @@ void ecs_delete(
     }
 
     flecs_defer_flush(world, stage);
+error:
+    return;
 }
 
 void ecs_add_id(
@@ -2502,10 +2547,12 @@ void ecs_add_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     add_id(world, entity, id);
+error:
+    return;
 }
 
 void ecs_remove_id(
@@ -2513,10 +2560,12 @@ void ecs_remove_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     remove_id(world, entity, id);
+error:
+    return;
 }
 
 ecs_entity_t ecs_clone(
@@ -2525,12 +2574,11 @@ ecs_entity_t ecs_clone(
     ecs_entity_t src,
     bool copy_value)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(src != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, src), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(src != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, src), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    
     if (!dst) {
         dst = ecs_new_id(world);
     }
@@ -2560,10 +2608,11 @@ ecs_entity_t ecs_clone(
         flecs_notify_on_set(world, src_table, dst_info.row, 1, NULL, true);
     }
 
-
 done:
     flecs_defer_flush(world, stage);
     return dst;
+error:
+    return 0;
 }
 
 const void* ecs_get_id(
@@ -2571,9 +2620,9 @@ const void* ecs_get_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(flecs_stage_from_readonly_world(world)->asynchronous == false, 
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(flecs_stage_from_readonly_world(world)->asynchronous == false, 
         ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
@@ -2600,7 +2649,7 @@ const void* ecs_get_id(
     } else {
         /* If the entity does not have a storage table (has no data) but it does
          * have the id, the id must be a tag, and getting a tag is illegal. */
-        ecs_assert(!ecs_owns_id(world, entity, id), ECS_NOT_A_COMPONENT, NULL);
+        ecs_check(!ecs_owns_id(world, entity, id), ECS_NOT_A_COMPONENT, NULL);
     }
 
     if (!tr) {
@@ -2611,6 +2660,8 @@ const void* ecs_get_id(
     int32_t row = flecs_record_to_row(r->row, &is_monitored);
 
     return get_component_w_index(table, tr->column, row);
+error:
+    return NULL;
 }
 
 const void* ecs_get_ref_w_id(
@@ -2619,10 +2670,12 @@ const void* ecs_get_ref_w_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ref != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!entity || !ref->entity || entity == ref->entity, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!id || !ref->component || id == ref->component, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!entity || !ref->entity || entity == ref->entity, 
+        ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id || !ref->component || id == ref->component, 
+        ECS_INVALID_PARAMETER, NULL);
     ecs_record_t *record = ref->record;
 
     /* Make sure we're not working with a stage */
@@ -2635,7 +2688,7 @@ const void* ecs_get_ref_w_id(
     }
 
     if (!record || !record->table) {
-        return NULL;
+        goto error;
     }
 
     ecs_table_t *table = record->table;
@@ -2651,7 +2704,6 @@ const void* ecs_get_ref_w_id(
     id |= ref->component;
 
     int32_t row = record->row;
-
     ref->entity = entity;
     ref->component = id;
     ref->table = table;
@@ -2665,8 +2717,9 @@ const void* ecs_get_ref_w_id(
     }
 
     ref->record = record;
-
     return ref->ptr;
+error:
+    return NULL;
 }
 
 void* ecs_get_mut_id(
@@ -2675,9 +2728,9 @@ void* ecs_get_mut_id(
     ecs_id_t id,
     bool *is_added)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
@@ -2690,6 +2743,7 @@ void* ecs_get_mut_id(
 
     ecs_entity_info_t info;
     result = get_mutable(world, entity, id, &info, is_added);
+    ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
     /* Store table so we can quickly check if returned pointer is still valid */
     ecs_table_t *table = info.record->table;
@@ -2716,11 +2770,13 @@ void* ecs_get_mut_id(
             /* A trigger has removed the component we just added. This is not
              * allowed, an application should always be able to assume that
              * get_mut returns a valid pointer. */
-            ecs_assert(false, ECS_INVALID_OPERATION, NULL);
+            ecs_throw(ECS_INVALID_OPERATION, NULL);
         }
     }
 
     return result;
+error:
+    return NULL;
 }
 
 void* ecs_emplace_id(
@@ -2728,10 +2784,10 @@ void* ecs_emplace_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
@@ -2744,14 +2800,16 @@ void* ecs_emplace_id(
 
     ecs_entity_info_t info = {0};
     flecs_get_info(world, entity, &info);
-
     add_id_w_info(world, entity, &info, id, false /* Add without ctor */);
 
     void *ptr = get_component(world, info.table, info.row, id);
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     flecs_defer_flush(world, stage);
 
     return ptr;
+error:
+    return NULL;
 }
 
 void ecs_modified_id(
@@ -2759,9 +2817,9 @@ void ecs_modified_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -2773,8 +2831,7 @@ void ecs_modified_id(
      * invalid. The assert needs to happen after the defer statement, as the
      * entity may not have the component when this function is called while
      * operations are being deferred. */
-    ecs_assert(ecs_has_id(world, entity, id), 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_info_t info = {0};
     if (flecs_get_info(world, entity, &info)) {
@@ -2783,8 +2840,9 @@ void ecs_modified_id(
     }
 
     flecs_table_mark_dirty(world, info.table, id);
-    
     flecs_defer_flush(world, stage);
+error:
+    return;
 }
 
 static
@@ -2816,9 +2874,7 @@ ecs_entity_t assign_ptr_w_id(
     ecs_entity_info_t info;
 
     void *dst = get_mutable(world, entity, id, &info, NULL);
-
-    /* This can no longer happen since we defer operations */
-    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, id);
@@ -2858,6 +2914,8 @@ ecs_entity_t assign_ptr_w_id(
     flecs_defer_flush(world, stage);
 
     return entity;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_set_id(
@@ -2867,13 +2925,15 @@ ecs_entity_t ecs_set_id(
     size_t size,
     const void *ptr)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Safe to cast away const: function won't modify if move arg is false */
     return assign_ptr_w_id(
         world, entity, id, size, (void*)ptr, false, true);
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_get_case(
@@ -2881,9 +2941,9 @@ ecs_entity_t ecs_get_case(
     ecs_entity_t entity,
     ecs_entity_t sw_id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -2908,6 +2968,8 @@ ecs_entity_t ecs_get_case(
     ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_switch_t *sw = info.data->sw_columns[index].data;  
     return flecs_switch_get(sw, info.row);  
+error:
+    return 0;
 }
 
 void ecs_enable_component_w_id(
@@ -2916,9 +2978,9 @@ void ecs_enable_component_w_id(
     ecs_id_t id,
     bool enable)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -2957,6 +3019,8 @@ void ecs_enable_component_w_id(
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, info.row, enable);
+error:
+    return;
 }
 
 bool ecs_is_component_enabled_w_id(
@@ -2964,9 +3028,9 @@ bool ecs_is_component_enabled_w_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -2995,6 +3059,8 @@ bool ecs_is_component_enabled_w_id(
     ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
 
     return flecs_bitset_get(bs, info.row);
+error:
+    return false;
 }
 
 bool ecs_has_id(
@@ -3002,13 +3068,9 @@ bool ecs_has_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
-
-    if (!id) {
-        return true;
-    }
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -3037,6 +3099,8 @@ bool ecs_has_id(
         return ecs_type_match(
             world, table, table->type, 0, id, EcsIsA, 0, 0, NULL, NULL) != -1;
     }
+error:
+    return false;
 }
 
 ecs_entity_t ecs_get_object(
@@ -3045,14 +3109,11 @@ ecs_entity_t ecs_get_object(
     ecs_entity_t rel,
     int32_t index)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(rel != 0, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
-
-    if (!entity) {
-        return 0;
-    }
 
     ecs_table_t *table = ecs_get_table(world, entity);
     if (!table) {
@@ -3071,6 +3132,8 @@ ecs_entity_t ecs_get_object(
 
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     return ecs_pair_object(world, ids[tr->column + index]);
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_get_object_for_id(
@@ -3113,54 +3176,66 @@ ecs_entity_t ecs_get_object_for_id(
     }
 }
 
-const char* ecs_get_name(
+static
+const char* get_identifier(
     const ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    ecs_entity_t tag)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
     const EcsIdentifier *ptr = ecs_get_pair(
-        world, entity, EcsIdentifier, EcsName);
+        world, entity, EcsIdentifier, tag);
 
     if (ptr) {
         return ptr->value;
     } else {
         return NULL;
     }
+error:
+    return NULL;
+}
+
+const char* ecs_get_name(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return get_identifier(world, entity, EcsName);
 }
 
 const char* ecs_get_symbol(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-
-    const EcsIdentifier *ptr = ecs_get_pair(
-        world, entity, EcsIdentifier, EcsSymbol);
-
-    if (ptr) {
-        return ptr->value;
-    } else {
-        return NULL;
-    }
+    return get_identifier(world, entity, EcsSymbol);
 }
+
+static
+ecs_entity_t set_identifier(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t tag,
+    const char *name)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!entity) {
+        entity = ecs_new_id(world);
+    }
+    
+    ecs_set_pair(world, entity, EcsIdentifier, tag, {.value = (char*)name});
+    return entity;
+error:
+    return 0;
+}
+
 
 ecs_entity_t ecs_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (!entity) {
-        entity = ecs_new_id(world);
-    }
-    
-    ecs_set_pair(world, entity, EcsIdentifier, EcsName, {.value = (char*)name});
-
-    return entity;
+    return set_identifier(world, entity, EcsName, name);
 }
 
 ecs_entity_t ecs_set_symbol(
@@ -3168,17 +3243,7 @@ ecs_entity_t ecs_set_symbol(
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (!entity) {
-        entity = ecs_new_id(world);
-    }
-    
-    ecs_set_pair(world, entity, EcsIdentifier, EcsSymbol, {
-        .value = (char*)name
-    });
-
-    return entity;
+    return set_identifier(world, entity, EcsSymbol, name);
 }
 
 ecs_id_t ecs_make_pair(
@@ -3192,7 +3257,7 @@ bool ecs_is_valid(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* 0 is not a valid entity id */
     if (!entity) {
@@ -3221,6 +3286,8 @@ bool ecs_is_valid(
      * is used. However, if the entity id does exist in the world, it must be
      * alive. */
     return !ecs_exists(world, entity) || ecs_is_alive(world, entity);
+error:
+    return false;
 }
 
 ecs_id_t ecs_strip_generation(
@@ -3238,20 +3305,21 @@ bool ecs_is_alive(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     return ecs_eis_is_alive(world, entity);
+error:
+    return false;
 }
 
 ecs_entity_t ecs_get_alive(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (!entity) {
         return 0;
@@ -3274,14 +3342,16 @@ ecs_entity_t ecs_get_alive(
     }
 
     return current;
+error:
+    return 0;
 }
 
 void ecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_poly_assert(world, ecs_world_t); /* Cannot be a stage */
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ecs_eis_is_alive(world, entity)) {
         /* Nothing to be done, already alive */
@@ -3291,29 +3361,31 @@ void ecs_ensure(
     /* Ensure id exists. The underlying datastructure will verify that the
      * generation count matches the provided one. */
     ecs_eis_ensure(world, entity);
+error:
+    return;
 }
 
 bool ecs_exists(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     return ecs_eis_exists(world, entity);
+error:
+    return false;
 }
 
 ecs_table_t* ecs_get_table(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     ecs_record_t *record = ecs_eis_get(world, entity);
@@ -3321,7 +3393,7 @@ ecs_table_t* ecs_get_table(
     if (record && (table = record->table)) {
         return table;
     }
-    
+error:
     return NULL;
 }
 
@@ -3353,8 +3425,8 @@ ecs_id_t ecs_get_typeid(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     if (ECS_HAS_ROLE(id, PAIR)) {
         /* Make sure we're not working with a stage */
@@ -3394,42 +3466,49 @@ ecs_id_t ecs_get_typeid(
     }
 
     return id;
+error:
+    return 0;
 }
 
 int32_t ecs_count_id(
     const ecs_world_t *world,
     ecs_entity_t id)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!id) {
         return 0;
     }
 
     int32_t count = 0;
-
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { .id = id });
     while (ecs_term_next(&it)) {
         count += it.count;
     }
 
     return count;
+error:
+    return 0;
 }
 
 bool ecs_defer_begin(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     return flecs_defer_none(world, stage);
+error:
+    return false;
 }
 
 bool ecs_defer_end(
     ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     return flecs_defer_flush(world, stage);
+error:
+    return false;
 }
 
 const char* ecs_role_str(
@@ -3471,7 +3550,7 @@ void ecs_id_str_buf(
     ecs_id_t id,
     ecs_strbuf_t *buf)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -3501,6 +3580,9 @@ void ecs_id_str_buf(
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
         ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf);
     }
+
+error:
+    return;
 }
 
 char* ecs_id_str(
@@ -3633,8 +3715,8 @@ bool flecs_defer_flush(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!--stage->defer) {
         /* Set to NULL. Processing deferred commands can cause additional
@@ -3736,6 +3818,7 @@ bool flecs_defer_flush(
         return true;
     }
 
+error:
     return false;
 }
 
@@ -3744,8 +3827,8 @@ bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!--stage->defer) {
         ecs_vector_t *defer_queue = stage->defer_queue;
@@ -3770,5 +3853,6 @@ bool flecs_defer_purge(
         return true;
     }
 
+error:
     return false;
 }

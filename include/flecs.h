@@ -29,10 +29,13 @@
 #define FLECS_SANITIZE
 #endif
 
-/* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
+/* FLECS_SOFT_ASSERT disables aborting for recoverable errors */
+// #define FLECS_SOFT_ASSERT
+
+/* FLECS_CUSTOM_BUILD should be defined when manually selecting addons */
 // #define FLECS_CUSTOM_BUILD
 
-/* If this is a regular, non-custom build, build all addons. */
+/* If this is a regular, non-custom build, include all addons. */
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */

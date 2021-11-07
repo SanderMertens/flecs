@@ -10,7 +10,7 @@ void Get_component_get_empty() {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    test_assert(ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == 0);
+    test_assert(ecs_get_type(world, e) == NULL);
     
     ecs_fini(world);
 }
@@ -190,7 +190,7 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
     test_assert( ecs_has(world, e, Velocity));
 
     test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Velocity));
-    test_assert(ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == 0);
+    test_assert(ecs_vector_count(ecs_get_type(world, e)) == 1);
 
     ecs_fini(world);
 }

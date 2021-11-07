@@ -371,11 +371,10 @@ uint64_t group_by_cascade(
     ecs_entity_t relation = term->subj.set.relation;
 
     /* Cascade needs a relation to calculate depth from */
-    ecs_assert(relation != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(relation != 0, ECS_INVALID_PARAMETER, NULL);
 
     /* Should only be used with cascade terms */
-    ecs_assert(term->subj.set.mask & EcsCascade, 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term->subj.set.mask & EcsCascade, ECS_INVALID_PARAMETER, NULL);
 
     /* Iterate back to front as relations are more likely to occur near the
      * end of a type. */
@@ -411,6 +410,8 @@ uint64_t group_by_cascade(
     }
 
     return result;
+error:
+    return 0;
 }
 
 static
@@ -1641,11 +1642,11 @@ void process_signature(
         (void)obj;
 
         /* Queries do not support variables */
-        ecs_assert(pred->var != EcsVarIsVariable, 
+        ecs_check(pred->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-        ecs_assert(subj->entity == EcsThis || subj->var != EcsVarIsVariable, 
+        ecs_check(subj->entity == EcsThis || subj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
-        ecs_assert(obj->var != EcsVarIsVariable, 
+        ecs_check(obj->var != EcsVarIsVariable, 
             ECS_UNSUPPORTED, NULL);
 
         /* If self is not included in set, always start from depth 1 */
@@ -1700,6 +1701,8 @@ void process_signature(
     if (!(query->flags & EcsQueryIsSubquery)) {
         register_monitors(world, query);
     }
+error:
+    return;
 }
 
 static
@@ -1808,8 +1811,7 @@ void resolve_cascade_subject_for_table(
     int32_t term_index = query->cascade_by - 1;
     ecs_term_t *term = &query->filter.terms[term_index];
 
-    ecs_assert(table_data->references != 0, 
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table_data->references != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Obtain reference index */
     int32_t *column_indices = table_data->columns;
@@ -2100,9 +2102,9 @@ void query_order_by(
     ecs_entity_t order_by_component,
     ecs_order_by_action_t order_by)
 {
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
-    ecs_assert(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);    
+    ecs_check(query->flags & EcsQueryNeedsTables, ECS_INVALID_PARAMETER, NULL);
 
     query->order_by_component = order_by_component;
     query->order_by = order_by;
@@ -2115,6 +2117,8 @@ void query_order_by(
     if (!query->table_slices) {
         build_sorted_tables(query);
     }
+error:
+    return;
 }
 
 static
@@ -2124,12 +2128,14 @@ void query_group_by(
     ecs_group_by_action_t group_by)
 {   
     /* Cannot change grouping once a query has been created */
-    ecs_assert(query->group_by_id == 0, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(query->group_by == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(query->group_by_id == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(query->group_by == 0, ECS_INVALID_OPERATION, NULL);
 
     query->group_by_id = sort_component;
     query->group_by = group_by;
     query->groups = ecs_map_new(ecs_query_table_list_t, 16);
+error:
+    return;
 }
 
 /* Implementation for iterable mixin */
@@ -2157,8 +2163,8 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     ecs_query_t *result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
@@ -2191,7 +2197,7 @@ ecs_query_t* ecs_query_init(
     if (desc->group_by) {
         /* Can't have a cascade term and group by at the same time, as cascade
          * uses the group_by mechanism */
-        ecs_assert(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
         query_group_by(result, desc->group_by_id, desc->group_by);
         result->group_by_ctx = desc->group_by_ctx;
         result->group_by_ctx_free = desc->group_by_ctx_free;
@@ -2246,6 +2252,11 @@ ecs_query_t* ecs_query_init(
     ecs_log_pop();
 
     return result;
+error:
+    if (result) {
+        flecs_sparse_remove(world->queries, result->id);
+    }
+    return NULL;
 }
 
 void ecs_query_fini(
@@ -2253,7 +2264,7 @@ void ecs_query_fini(
 {
     ecs_poly_assert(query, ecs_query_t);
     ecs_world_t *world = query->world;
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (query->group_by_ctx_free) {
         if (query->group_by_ctx) {
@@ -2300,6 +2311,8 @@ void ecs_query_fini(
     
     /* Remove query from storage */
     flecs_sparse_remove(world->queries, query->id);
+error:
+    return;
 }
 
 const ecs_filter_t* ecs_query_get_filter(
@@ -2317,7 +2330,8 @@ ecs_iter_t ecs_query_iter_page(
     int32_t limit)
 {
     ecs_poly_assert(query, ecs_query_t);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(query->flags & EcsQueryIsOrphaned),
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 
@@ -2359,6 +2373,8 @@ ecs_iter_t ecs_query_iter_page(
         .iter.query = it,
         .next = ecs_query_next
     };
+error:
+    return (ecs_iter_t){ 0 };
 }
 
 ecs_iter_t ecs_query_iter(
@@ -2755,8 +2771,8 @@ void mark_columns_dirty(
 bool ecs_query_next(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
@@ -2860,6 +2876,7 @@ bool ecs_query_next(
     }
 
 done:
+error:
     flecs_iter_fini(it);
     return false;
     
@@ -2920,8 +2937,11 @@ bool ecs_query_changed(
     const ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
-    ecs_assert(!(query->flags & EcsQueryIsOrphaned), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(query->flags & EcsQueryIsOrphaned), 
+        ECS_INVALID_PARAMETER, NULL);
     return tables_dirty(query);
+error:
+    return false;
 }
 
 bool ecs_query_orphaned(

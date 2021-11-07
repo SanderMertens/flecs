@@ -96,18 +96,18 @@ void Vector_get_last_from_null() {
 }
 
 void Vector_get_empty() {
+    install_test_abort();
     ecs_vector_t *array = ecs_vector_new(int, 4);
-    int *elem = ecs_vector_get(array, int, 1);
-    test_assert(elem == NULL);
-    ecs_vector_free(array);
+    test_expect_abort();
+    ecs_vector_get(array, int, 1);
 }
 
 void Vector_get_out_of_bound() {
+    install_test_abort();
     ecs_vector_t *array = ecs_vector_new(int, 4);
     array = fill_array(array);
-    int *elem = ecs_vector_get(array, int, 4);
-    test_assert(elem == NULL);
-    ecs_vector_free(array);
+    test_expect_abort();
+    ecs_vector_get(array, int, 4);
 }
 
 void Vector_add_empty() {
@@ -133,7 +133,7 @@ void Vector_add_resize() {
     test_int(*(int*)ecs_vector_get(array, int, 2), 2);
     test_int(*(int*)ecs_vector_get(array, int, 3), 3);
     test_int(*(int*)ecs_vector_get(array, int, 4), 4);
-    test_assert(ecs_vector_get(array, int, 5) == NULL);
+    test_assert(ecs_vector_count(array) == 5);
     ecs_vector_free(array);
 }
 

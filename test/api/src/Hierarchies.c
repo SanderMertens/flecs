@@ -48,16 +48,12 @@ void Hierarchies_get_parent_from_nested_2() {
     ecs_fini(world);
 }
 
-void Hierarchies_get_parent_from_root() {
+void Hierarchies_get_object_from_0() {
+    install_test_abort();
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Scope, 0);
-    ECS_ENTITY(world, Child, (ChildOf, Scope));
-
-    ecs_entity_t e = ecs_get_object(world, 0, EcsChildOf, 0);
-    test_assert(e == 0);
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_get_object(world, 0, EcsChildOf, 0);
 }
 
 void Hierarchies_delete_children() {

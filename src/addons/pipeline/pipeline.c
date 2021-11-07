@@ -658,18 +658,22 @@ void ecs_set_pipeline(
     ecs_entity_t pipeline)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
+    ecs_check( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
         ECS_INVALID_PARAMETER, NULL);
 
     world->pipeline = pipeline;
+error:
+    return;
 }
 
 ecs_entity_t ecs_get_pipeline(
     const ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     world = ecs_get_world(world);
     return world->pipeline;
+error:
+    return 0;
 }
 
 /* -- Module implementation -- */

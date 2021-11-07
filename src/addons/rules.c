@@ -516,11 +516,12 @@ const char *term_id_var_name(
         if (term_id->entity == EcsThis) {
             return ".";
         } else {
-            ecs_assert(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
             return term_id->name;
         }
     }
     
+error:
     return NULL;
 }
 
@@ -671,10 +672,10 @@ void entity_reg_set(
     (void)rule;
     ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_is_valid(rule->world, entity), 
-        ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(ecs_is_valid(rule->world, entity), ECS_INVALID_PARAMETER, NULL);
     regs[r].entity = entity;
+error:
+    return;
 }
 
 static
@@ -689,8 +690,10 @@ ecs_entity_t entity_reg_get(
         return EcsWildcard;
     }
     
-    ecs_assert(ecs_is_valid(rule->world, e), ECS_INVALID_PARAMETER, NULL);   
+    ecs_check(ecs_is_valid(rule->world, e), ECS_INVALID_PARAMETER, NULL);   
     return e;
+error:
+    return 0;
 }
 
 static
@@ -736,7 +739,7 @@ ecs_entity_t reg_get_entity(
         /* The subject is referenced from the query string by string identifier.
          * If subject entity is not valid, it could have been deletd by the
          * application after the rule was created */
-        ecs_assert(ecs_is_valid(rule->world, op->subject), 
+        ecs_check(ecs_is_valid(rule->world, op->subject), 
             ECS_INVALID_PARAMETER, NULL);
 
         return op->subject;
@@ -751,7 +754,7 @@ ecs_entity_t reg_get_entity(
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(offset < ecs_vector_count(data->entities), 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ecs_is_valid(rule->world, entities[offset]), 
+        ecs_check(ecs_is_valid(rule->world, entities[offset]), 
             ECS_INVALID_PARAMETER, NULL);            
         
         return entities[offset];
@@ -763,6 +766,7 @@ ecs_entity_t reg_get_entity(
     /* Must return an entity */
     ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
 
+error:
     return 0;
 }
 
@@ -775,7 +779,7 @@ ecs_table_t* reg_get_table(
 {
     if (r == UINT8_MAX) {
         ecs_assert(op->subject != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(ecs_is_valid(rule->world, op->subject), 
+        ecs_check(ecs_is_valid(rule->world, op->subject), 
             ECS_INVALID_PARAMETER, NULL);
 
         return table_from_entity(rule->world, op->subject);
@@ -786,6 +790,7 @@ ecs_table_t* reg_get_table(
     if (rule->variables[r].kind == EcsRuleVarKindEntity) {
         return table_from_entity(rule->world, entity_reg_get(rule, regs, r));
     } 
+error:
     return NULL;
 }
 
@@ -798,7 +803,7 @@ void reg_set_entity(
 {
     if (rule->variables[r].kind == EcsRuleVarKindTable) {
         ecs_world_t *world = rule->world;
-        ecs_assert(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+        ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
 
         ecs_record_t *record = ecs_eis_get(world, entity);
         if (!record || !record->table) {
@@ -816,6 +821,8 @@ void reg_set_entity(
     } else {
         entity_reg_set(rule, regs, r, entity);
     }
+error:
+    return;
 }
 
 /* This encodes a column expression into a pair. A pair stores information about
@@ -2624,7 +2631,7 @@ ecs_rule_var_t* get_variable(
 char* ecs_rule_str(
     ecs_rule_t *rule)
 {
-    ecs_assert(rule != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_world_t *world = rule->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
@@ -2745,6 +2752,8 @@ char* ecs_rule_str(
     }
 
     return ecs_strbuf_get(&buf);
+error:
+    return NULL;
 }
 
 /* Public function that returns number of variables. This enables an application
@@ -3999,8 +4008,8 @@ bool is_control_flow(
 bool ecs_rule_next(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_rule_iter_t *iter = &it->iter.rule;
     const ecs_rule_t *rule = iter->rule;
@@ -4009,7 +4018,7 @@ bool ecs_rule_next(
     bool init_subjects = it->subjects == NULL;
 
     /* Can't iterate an iterator that's already depleted */
-    ecs_assert(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
 
     flecs_iter_init(it);
 
@@ -4091,6 +4100,7 @@ bool ecs_rule_next(
 
     ecs_rule_iter_free(it);
 
+error:
     return false;
 }
 

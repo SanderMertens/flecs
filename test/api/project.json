@@ -536,7 +536,7 @@
                 "get_parent",
                 "get_parent_from_nested",
                 "get_parent_from_nested_2",
-                "get_parent_from_root",
+                "get_object_from_0",
                 "tree_iter_empty",
                 "tree_iter_1_table",
                 "tree_iter_2_tables",

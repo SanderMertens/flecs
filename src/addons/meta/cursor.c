@@ -41,8 +41,10 @@ static
 ecs_meta_scope_t* get_scope(
     ecs_meta_cursor_t *cursor)
 {
-    ecs_assert(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
     return &cursor->scope[cursor->depth];
+error:
+    return NULL;
 }
 
 /* Get previous scope */
@@ -50,9 +52,11 @@ static
 ecs_meta_scope_t* get_prev_scope(
     ecs_meta_cursor_t *cursor)
 {
-    ecs_assert(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(cursor->depth > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cursor->depth > 0, ECS_INVALID_PARAMETER, NULL);
     return &cursor->scope[cursor->depth - 1];
+error:
+    return NULL;
 }
 
 /* Get current operation for scope */
@@ -157,9 +161,9 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_entity_t type,
     void *ptr)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_cursor_t result = {
         .world = world,
@@ -171,6 +175,8 @@ ecs_meta_cursor_t ecs_meta_cursor(
     }
 
     return result;
+error:
+    return (ecs_meta_cursor_t){ 0 };
 }
 
 void* ecs_meta_get_ptr(
@@ -259,8 +265,8 @@ int ecs_meta_push(
 
     void *ptr = get_ptr(world, scope);
     cursor->depth ++;
-    ecs_assert(cursor->depth < ECS_META_MAX_SCOPE_DEPTH, 
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH, 
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_scope_t *next_scope = get_scope(cursor);
 
@@ -297,7 +303,7 @@ int ecs_meta_push(
 
     case EcsOpArray: {
         if (push_type(world, next_scope, op->type, ptr) != 0) {
-            return -1;
+            goto error;
         }
 
         const EcsArray *type_ptr = ecs_get(world, op->type, EcsArray);
@@ -309,7 +315,7 @@ int ecs_meta_push(
     case EcsOpVector:
         next_scope->vector = ptr;
         if (push_type(world, next_scope, op->type, NULL) != 0) {
-            return -1;
+            goto error;
         }
 
         const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
@@ -321,7 +327,7 @@ int ecs_meta_push(
         char *path = ecs_get_fullpath(world, scope->type);
         ecs_err("invalid push for type '%s'", path);
         ecs_os_free(path);
-        return -1;
+        goto error;
     }
     }
 
@@ -331,6 +337,8 @@ int ecs_meta_push(
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_pop(

@@ -31,10 +31,13 @@
 #define FLECS_SANITIZE
 #endif
 
-/* FLECS_CUSTOM_BUILD should be defined when manually selecting features */
+/* FLECS_SOFT_ASSERT disables aborting for recoverable errors */
+// #define FLECS_SOFT_ASSERT
+
+/* FLECS_CUSTOM_BUILD should be defined when manually selecting addons */
 // #define FLECS_CUSTOM_BUILD
 
-/* If this is a regular, non-custom build, build all addons. */
+/* If this is a regular, non-custom build, include all addons. */
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */
@@ -487,23 +490,16 @@ typedef int32_t ecs_size_t;
 #ifndef FLECS_LOG_H
 #define FLECS_LOG_H
 
-#ifdef FLECS_LOG
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef FLECS_LOG
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
 
-FLECS_API
-void _ecs_log(
-    int32_t level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
 
 FLECS_API
 void _ecs_deprecated(
@@ -527,64 +523,11 @@ FLECS_API
 const char* ecs_strerror(
     int32_t error_code);
 
-/** Abort */
-FLECS_API
-void _ecs_abort(
-    int32_t error_code,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-/** Assert */
-FLECS_API
-void _ecs_assert(
-    bool condition,
-    int32_t error_code,
-    const char *condition_str,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-/** Parser error.
- * This function is used by parsers, and includes additional information such
- * as the failed expression, position in the expression and the name of the
- * expression/script being parsed. */
-FLECS_API
-void _ecs_parser_error(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_parser_errorv(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    va_list args);
-
-#ifdef __cplusplus
-}
-#endif
-
 #else // FLECS_LOG
 
-
 ////////////////////////////////////////////////////////////////////////////////
-//// Functions/macro's that do nothing when logging is disabled
+//// Dummy macro's for when logging is disabled
 ////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-void _ecs_log(
-    int32_t level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
 
 #define _ecs_deprecated(file, line, msg)\
     (void)file;\
@@ -597,6 +540,21 @@ void _ecs_log(
 #define ecs_strerror(error_code)\
     (void)error_code
 
+#endif // FLECS_LOG
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Logging functions (do nothing when logging is enabled)
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void _ecs_log(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
 FLECS_API
 void _ecs_abort(
     int32_t error_code,
@@ -606,7 +564,7 @@ void _ecs_abort(
     ...);
 
 FLECS_API
-void _ecs_assert(
+bool _ecs_assert(
     bool condition,
     int32_t error_code,
     const char *condition_str,
@@ -630,8 +588,6 @@ void _ecs_parser_errorv(
     int64_t column,
     const char *fmt,
     va_list args);
-
-#endif // FLECS_LOG
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -712,17 +668,61 @@ void _ecs_parser_errorv(
 
 #define ecs_dbg ecs_dbg_1 /* Default debug tracing is at level 1 */
 
+/** Abort 
+ * Unconditionally aborts process. */
+#define ecs_abort(error_code, ...)\
+    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
+
+/** Assert 
+ * Aborts if condition is false, disabled in debug mode. */
 #ifdef NDEBUG
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
-    _ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
-    assert(condition)
+    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+        ecs_os_abort();\
+    }\
+    assert(condition) /* satisfy compiler/static analyzers */
 #endif // NDEBUG
 
-#define ecs_abort(error_code, ...)\
-    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__); abort()
+/** Check
+ * goto error if condition is false. */
+#ifdef NDEBUG
+#define ecs_check(condition, error_code, ...)\
+    if ((false)) {\
+        goto error;\
+    } // Silence dead code/unused label warnings
+#else
+#ifdef FLECS_SOFT_ASSERT
+#define ecs_check(condition, error_code, ...)\
+    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+        goto error;\
+    }
+#else // FLECS_SOFT_ASSERT
+#define ecs_check(condition, error_code, ...)\
+    ecs_assert(condition, error_code, __VA_ARGS__);\
+    if ((false)) {\
+        goto error;\
+    } // Silence dead code/unused label warnings
+#endif
+#endif // NDEBUG
 
+/** Throw
+ * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
+#ifdef FLECS_SOFT_ASSERT
+#define ecs_throw(error_code, ...)\
+    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    goto error;
+#else
+#define ecs_throw(error_code, ...)\
+    ecs_abort(error_code, __VA_ARGS__);\
+    if ((false)) {\
+        goto error;\
+    } // Silence dead code/unused label warnings
+#endif
+
+/** Parser error */
 #define ecs_parser_error(name, expr, column, ...)\
     _ecs_parser_error(name, expr, column, __VA_ARGS__)
 
@@ -735,10 +735,6 @@ void _ecs_parser_errorv(
 ////////////////////////////////////////////////////////////////////////////////
 //// Functions that are always available
 ////////////////////////////////////////////////////////////////////////////////
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /** Enable or disable tracing.
  * This will enable builtin tracing. For tracing to work, it will have to be
@@ -772,10 +768,6 @@ FLECS_API
 bool ecs_log_enable_colors(
     bool enabled);
 
-#ifdef __cplusplus
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Used when logging with colors is enabled
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,6 +783,10 @@ bool ecs_log_enable_colors(
 #define ECS_GREY    "\033[0;37m"
 #define ECS_NORMAL  "\033[0;49m"
 #define ECS_BOLD    "\033[1;49m"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FLECS_LOG_H
 
@@ -1293,7 +1289,6 @@ public:
     }
 
     T& get(int32_t index) {
-        ecs_assert(index < ecs_vector_count(m_vector), ECS_OUT_OF_RANGE, NULL);
         return *static_cast<T*>(_ecs_vector_get(m_vector, ECS_VECTOR_T(T), index));
     }
 
@@ -1797,7 +1792,7 @@ int32_t ecs_strbuf_written(
 #endif
 /**
  * @file os_api.h
- * @brief Operationg system abstractions.
+ * @brief Operating system abstraction API.
  *
  * This file contains the operating system abstraction API. The flecs core 
  * library avoids OS/runtime specific API calls as much as possible. Instead it
