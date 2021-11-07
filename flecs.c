@@ -12653,6 +12653,7 @@ void _ecs_abort(
     } else {
         _ecs_fatal(file, line, "%s", ecs_strerror(err));
     }
+    ecs_os_api.log_last_error_ = err;
 }
 
 bool _ecs_assert(
@@ -12677,6 +12678,7 @@ bool _ecs_assert(
             _ecs_fatal(file, line, "assert: %s %s", 
                 cond_str, ecs_strerror(err));
         }
+        ecs_os_api.log_last_error_ = err;
     }
 
     return condition;
@@ -21310,6 +21312,21 @@ void FlecsMetaImport(
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsArray),
+        .members = {
+            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsVector),
+        .members = {
+            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
         }
     });
 }

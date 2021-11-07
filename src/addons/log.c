@@ -293,6 +293,7 @@ void _ecs_abort(
     } else {
         _ecs_fatal(file, line, "%s", ecs_strerror(err));
     }
+    ecs_os_api.log_last_error_ = err;
 }
 
 bool _ecs_assert(
@@ -317,6 +318,7 @@ bool _ecs_assert(
             _ecs_fatal(file, line, "assert: %s %s", 
                 cond_str, ecs_strerror(err));
         }
+        ecs_os_api.log_last_error_ = err;
     }
 
     return condition;
