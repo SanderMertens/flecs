@@ -89,8 +89,8 @@ void ecs_gauge_reduce(
     ecs_gauge_t *src,
     int32_t t_src)
 {
-    ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(src != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(src != NULL, ECS_INVALID_PARAMETER, NULL);
 
     bool min_set = false;
     dst->min[t_dst] = 0;
@@ -109,14 +109,16 @@ void ecs_gauge_reduce(
             dst->max[t_dst] = src->max[t];
         }
     }
+error:
+    return;
 }
 
 void ecs_get_world_stats(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -194,6 +196,9 @@ void ecs_get_world_stats(
     record_gauge(&s->table_count, t, count);
     record_gauge(&s->empty_table_count, t, empty_table_count);
     record_gauge(&s->singleton_table_count, t, singleton_table_count);
+
+error:
+    return;
 }
 
 void ecs_get_query_stats(
@@ -201,9 +206,9 @@ void ecs_get_query_stats(
     const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
     int32_t t = s->t = t_next(s->t);
@@ -213,6 +218,8 @@ void ecs_get_query_stats(
     record_gauge(&s->matched_table_count, t, ecs_query_table_count(query));
     record_gauge(&s->matched_empty_table_count, t, 
         ecs_query_empty_table_count(query));
+error:
+    return;
 }
 
 #ifdef FLECS_SYSTEM
@@ -221,9 +228,9 @@ bool ecs_get_system_stats(
     ecs_entity_t system,
     ecs_system_stats_t *s)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -241,18 +248,21 @@ bool ecs_get_system_stats(
     record_gauge(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     return true;
+error:
+    return false;
 }
 #endif
 
 
 #ifdef FLECS_PIPELINE
 
-static ecs_system_stats_t* get_system_stats(
+static 
+ecs_system_stats_t* get_system_stats(
     ecs_map_t *systems,
     ecs_entity_t system)
 {
-    ecs_assert(systems != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(systems != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_system_stats_t *s = ecs_map_get(systems, ecs_system_stats_t, system);
     if (!s) {
@@ -260,6 +270,8 @@ static ecs_system_stats_t* get_system_stats(
     }
 
     return s;
+error:
+    return NULL;
 }
 
 bool ecs_get_pipeline_stats(
@@ -267,9 +279,9 @@ bool ecs_get_pipeline_stats(
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
-    ecs_assert(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
 
@@ -354,6 +366,8 @@ bool ecs_get_pipeline_stats(
     }
 
     return true;
+error:
+    return false;
 }
 
 void ecs_pipeline_stats_fini(
@@ -371,8 +385,8 @@ void ecs_dump_world_stats(
 {
     int32_t t = s->t;
 
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);    
     
@@ -407,6 +421,9 @@ void ecs_dump_world_stats(
     print_counter("deferred set operations", t, &s->set_count);
     print_counter("discarded operations", t, &s->discard_count);
     printf("\n");
+    
+error:
+    return;
 }
 
 #endif

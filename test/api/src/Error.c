@@ -30,8 +30,8 @@ void Error_override_abort() {
      * because abort always exits before it gets there. */
 
     /* hack, because the setup already set the OS API */
-    ((ecs_os_api_t*)&ecs_os_api)->abort_ = my_abort;
-    _ecs_abort(ECS_INTERNAL_ERROR, __FILE__, __LINE__, NULL);
+    ecs_os_api.abort_ = my_abort;
+    ecs_os_abort();
     test_assert(my_abort_called == true);
 }
 

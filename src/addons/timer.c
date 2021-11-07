@@ -106,7 +106,7 @@ ecs_entity_t ecs_set_timeout(
     ecs_entity_t timer,
     FLECS_FLOAT timeout)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     timer = ecs_set(world, timer, EcsTimer, {
         .timeout = timeout,
@@ -119,6 +119,7 @@ ecs_entity_t ecs_set_timeout(
         system_data->tick_source = timer;
     }
 
+error:
     return timer;
 }
 
@@ -126,15 +127,15 @@ FLECS_FLOAT ecs_get_timeout(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(timer != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(timer != 0, ECS_INVALID_PARAMETER, NULL);
 
     const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
-    } else {
-        return 0;
     }
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_set_interval(
@@ -142,7 +143,7 @@ ecs_entity_t ecs_set_interval(
     ecs_entity_t timer,
     FLECS_FLOAT interval)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     timer = ecs_set(world, timer, EcsTimer, {
         .timeout = interval,
@@ -152,8 +153,8 @@ ecs_entity_t ecs_set_interval(
     EcsSystem *system_data = ecs_get_mut(world, timer, EcsSystem, NULL);
     if (system_data) {
         system_data->tick_source = timer;
-    }  
-
+    }
+error:
     return timer;  
 }
 
@@ -161,7 +162,7 @@ FLECS_FLOAT ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!timer) {
         return 0;
@@ -170,9 +171,9 @@ FLECS_FLOAT ecs_get_interval(
     const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
-    } else {
-        return 0;
     }
+error:
+    return 0;
 }
 
 void ecs_start_timer(
@@ -180,10 +181,11 @@ void ecs_start_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = true;
     ptr->time = 0;
+error:
+    return;
 }
 
 void ecs_stop_timer(
@@ -191,9 +193,10 @@ void ecs_stop_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = false;
+error:
+    return;
 }
 
 ecs_entity_t ecs_set_rate(
@@ -202,7 +205,7 @@ ecs_entity_t ecs_set_rate(
     int32_t rate,
     ecs_entity_t source)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     filter = ecs_set(world, filter, EcsRateFilter, {
         .rate = rate,
@@ -214,6 +217,7 @@ ecs_entity_t ecs_set_rate(
         system_data->tick_source = filter;
     }  
 
+error:
     return filter;     
 }
 
@@ -222,14 +226,16 @@ void ecs_set_tick_source(
     ecs_entity_t system,
     ecs_entity_t tick_source)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(system != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
 
     EcsSystem *system_data = ecs_get_mut(world, system, EcsSystem, NULL);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;
+error:
+    return;
 }
 
 void FlecsTimerImport(
@@ -245,16 +251,20 @@ void FlecsTimerImport(
     flecs_bootstrap_component(world, EcsRateFilter);
 
     /* Add EcsTickSource to timers and rate filters */
-    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, [in] Timer || RateFilter, [out] !flecs.system.TickSource);
+    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, 
+        [in] Timer || RateFilter, [out] !flecs.system.TickSource);
 
     /* Timer handling */
-    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, Timer, flecs.system.TickSource);
+    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, 
+        Timer, flecs.system.TickSource);
 
     /* Rate filter handling */
-    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, [in] RateFilter, [out] flecs.system.TickSource);
+    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, 
+        [in] RateFilter, [out] flecs.system.TickSource);
 
     /* TickSource without a timer or rate filter just increases each frame */
-    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, [out] flecs.system.TickSource, !RateFilter, !Timer);
+    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, 
+        [out] flecs.system.TickSource, !RateFilter, !Timer);
 }
 
 #endif

@@ -461,7 +461,7 @@ ecs_entity_t meta_lookup_array(
         e = ecs_set(world, 0, EcsMetaType, { EcsArrayType });
     }
 
-    ecs_assert(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
     return ecs_set(world, e, EcsArray, { element_type, (int32_t)params.count });
 error:
@@ -536,13 +536,13 @@ ecs_entity_t meta_lookup_bitmask(
 
     ecs_entity_t bitmask_type = meta_lookup(
         world, &params.type, params_decl, 1, &param_ctx);
-    ecs_assert(bitmask_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(bitmask_type != 0, ECS_INVALID_PARAMETER, NULL);
 
 #ifndef NDEBUG
     /* Make sure this is a bitmask type */
     const EcsMetaType *type_ptr = ecs_get(world, bitmask_type, EcsMetaType);
-    ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type_ptr->kind == EcsBitmaskType, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type_ptr->kind == EcsBitmaskType, ECS_INVALID_PARAMETER, NULL);
 #endif
 
     return bitmask_type;
@@ -638,7 +638,7 @@ ecs_entity_t meta_lookup(
     }
 
     if (count != 1) {
-        ecs_assert(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
         type = ecs_set(world, ecs_set(world, 0,
             EcsMetaType, {EcsArrayType}),

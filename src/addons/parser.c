@@ -944,9 +944,9 @@ char* ecs_parse_term(
     const char *ptr,
     ecs_term_t *term)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_id_t *subj = &term->subj;
 
@@ -1077,7 +1077,9 @@ char* ecs_parse_term(
 
     return (char*)ptr;
 error:
-    ecs_term_fini(term);
+    if (term) {
+        ecs_term_fini(term);
+    }
     return NULL;
 }
 

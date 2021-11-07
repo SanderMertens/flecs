@@ -147,7 +147,7 @@ int json_ser_enum(
     ecs_strbuf_t *str) 
 {
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
-    ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     int32_t value = *(int32_t*)base;
     
@@ -156,7 +156,7 @@ int json_ser_enum(
     ecs_enum_constant_t *constant = ecs_map_get(
         enum_type->constants, ecs_enum_constant_t, value);
     if (!constant) {
-        return -1;
+        goto error;
     }
 
     ecs_strbuf_appendch(str, '"');
@@ -164,6 +164,8 @@ int json_ser_enum(
     ecs_strbuf_appendch(str, '"');
 
     return 0;
+error:
+    return -1;
 }
 
 /* Serialize bitmask */
@@ -175,7 +177,7 @@ int json_ser_bitmask(
     ecs_strbuf_t *str) 
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
-    ecs_assert(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t value = *(uint32_t*)ptr;
     ecs_map_key_t key;
@@ -201,12 +203,14 @@ int json_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        return -1;
+        goto error;
     }
 
     ecs_strbuf_list_pop(str, "\"");
 
     return 0;
+error:
+    return -1;
 }
 
 /* Serialize elements of a contiguous array */
@@ -314,26 +318,26 @@ int json_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, NULL);
         break;
     case EcsOpEnum:
         if (json_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpBitmask:
         if (json_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpArray:
         if (json_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpVector:
         if (json_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpEntity: {
@@ -354,13 +358,15 @@ int json_ser_type_op(
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_throw(ECS_INTERNAL_ERROR, NULL);
             return -1;
         }
         break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 /* Iterate over a slice of the type ops array */

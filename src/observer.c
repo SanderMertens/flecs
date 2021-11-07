@@ -94,9 +94,9 @@ ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
@@ -133,7 +133,7 @@ ecs_entity_t ecs_observer_init(
 
             if (event == EcsMonitor) {
                 /* Monitor event must be first and last event */
-                ecs_assert(i == 0, ECS_INVALID_PARAMETER, NULL);
+                ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
 
                 observer->events[0] = EcsOnAdd;
                 observer->events[1] = EcsOnRemove;
@@ -147,7 +147,7 @@ ecs_entity_t ecs_observer_init(
         }
 
         /* Observer must have at least one event */
-        ecs_assert(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
         /* Create a trigger for each term in the filter */
         observer->triggers = ecs_os_malloc_n(ecs_entity_t, 
@@ -210,6 +210,11 @@ ecs_entity_t ecs_observer_init(
     }
 
     return entity; 
+error:
+    if (entity) {
+        ecs_delete(world, entity);
+    }
+    return 0;
 }
 
 void flecs_observer_fini(

@@ -130,9 +130,11 @@ ecs_size_t ecs_stresc(
     char ch, *bptr = out, buff[3];
     ecs_size_t written = 0;
     while ((ch = *ptr++)) {
-        if ((written += (ecs_size_t)(ecs_chresc(buff, ch, delimiter) - buff)) <= n) {
+        if ((written += (ecs_size_t)(ecs_chresc(
+            buff, ch, delimiter) - buff)) <= n) 
+        {
             /* If size != 0, an out buffer must be provided. */
-            ecs_assert(out != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
             *bptr++ = buff[0];
             if ((ch = buff[1])) {
                 *bptr = ch;
@@ -149,6 +151,8 @@ ecs_size_t ecs_stresc(
         }
     }
     return written;
+error:
+    return 0;
 }
 
 char* ecs_astresc(

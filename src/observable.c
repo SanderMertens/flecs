@@ -34,9 +34,9 @@ void ecs_emit(
     ecs_event_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->event != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->event != EcsWildcard, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->event != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->event != EcsWildcard, ECS_INVALID_PARAMETER, NULL);
 
     ecs_ids_t ids_storage, *ids = desc->ids;
     ecs_table_t *table = NULL, *other_table = NULL;
@@ -81,4 +81,6 @@ void ecs_emit(
 
     flecs_triggers_notify(world, desc->observable, ids, event, 
         entity, table, other_table, row, count, desc->param);
+error:
+    return;
 }

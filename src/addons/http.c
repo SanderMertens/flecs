@@ -861,27 +861,29 @@ void ecs_http_server_fini(
 int ecs_http_server_start(
     ecs_http_server_t *srv)
 {
-    ecs_assert(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!srv->thread, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
 
     srv->should_run = true;
 
     srv->thread = ecs_os_thread_new(http_server_thread, srv);
     if (!srv->thread) {
-        return -1;
+        goto error;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 void ecs_http_server_stop(
     ecs_http_server_t* srv) 
 {
-    ecs_assert(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(srv->initialized, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_OPERATION, NULL);
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
 
     /* Stop server thread */
     ecs_trace("http: shutting down server thread");
@@ -912,15 +914,19 @@ void ecs_http_server_stop(
         ECS_INTERNAL_ERROR, NULL);
 
     srv->thread = 0;
+error:
+    return;
 }
 
 void ecs_http_server_dequeue(
     ecs_http_server_t* srv)
 {
-    ecs_assert(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
     dequeue_requests(srv);
+error:
+    return;
 }
 
 #endif

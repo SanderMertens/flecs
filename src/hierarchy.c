@@ -96,8 +96,8 @@ void register_by_name(
     ecs_size_t length,
     uint64_t hash)
 {
-    ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_hashed_string_t key = ecs_get_hashed_string(name, length, hash);
     
@@ -115,6 +115,8 @@ void register_by_name(
         *map, &key, ecs_entity_t);
 
     *((ecs_entity_t*)hmr.value) = entity;
+error:
+    return;
 }
 
 static
@@ -200,7 +202,7 @@ const char* path_elem(
             template_nesting --;
         }
 
-        ecs_assert(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
+        ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
 
         if (!template_nesting && is_sep(&ptr, sep)) {
             break;
@@ -218,6 +220,8 @@ const char* path_elem(
     } else {
         return NULL;
     }
+error:
+    return NULL;
 }
 
 static
@@ -231,8 +235,6 @@ ecs_entity_t get_parent_from_path(
     bool start_from_root = false;
     const char *path = *path_ptr;
    
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-
     if (prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
         if (!ecs_os_strncmp(path, prefix, len)) {
@@ -269,7 +271,7 @@ uint64_t string_hash(
     const void *ptr)
 {
     const ecs_hashed_string_t *str = ptr;
-    ecs_assert(str->hash != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
     return str->hash;
 }
 
@@ -315,7 +317,9 @@ void ecs_get_path_w_sep_buf(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
+
     world = ecs_get_world(world);
 
     if (!sep) {
@@ -327,6 +331,9 @@ void ecs_get_path_w_sep_buf(
     } else {
         ecs_strbuf_appendstr(buf, "");
     }
+
+error:
+    return;
 }
 
 char* ecs_get_path_w_sep(
@@ -346,7 +353,7 @@ ecs_entity_t ecs_lookup_child(
     ecs_entity_t parent,
     const char *name)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (is_number(name)) {
         return name_to_id(world, name);
@@ -362,7 +369,7 @@ ecs_entity_t ecs_lookup_child(
         }
     });
     
-    ecs_assert(ret == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(ret == 0, ECS_INTERNAL_ERROR, NULL);
     (void)ret;
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -379,6 +386,7 @@ ecs_entity_t ecs_lookup_child(
     }
 
     ecs_filter_fini(&f);
+error:
     return 0;
 }
 
@@ -390,7 +398,7 @@ ecs_entity_t ecs_lookup(
         return 0;
     }
 
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
     ecs_entity_t e = get_builtin(name);
@@ -408,6 +416,8 @@ ecs_entity_t ecs_lookup(
     }    
     
     return ecs_lookup_child(world, 0, name);
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_lookup_symbol(
@@ -419,7 +429,7 @@ ecs_entity_t ecs_lookup_symbol(
         return 0;
     }
 
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
     ecs_entity_t e = find_by_name(&world->symbols, name, 0, 0);
@@ -431,6 +441,7 @@ ecs_entity_t ecs_lookup_symbol(
         return ecs_lookup_fullpath(world, name);
     }
 
+error:
     return 0;
 }
 
@@ -450,7 +461,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         sep = ".";
     }
 
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
     ecs_entity_t e = get_builtin(path);
@@ -520,12 +531,15 @@ tail:
     }
 
     return cur;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_entity_t cur = stage->scope;
@@ -540,13 +554,18 @@ ecs_entity_t ecs_set_scope(
     }
 
     return cur;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_get_scope(
     const ecs_world_t *world)
 {
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->scope;
+error:
+    return 0;
 }
 
 const char* ecs_set_name_prefix(
@@ -554,7 +573,6 @@ const char* ecs_set_name_prefix(
     const char *prefix)
 {
     ecs_poly_assert(world, ecs_world_t);
-
     const char *old_prefix = world->name_prefix;
     world->name_prefix = prefix;
     return old_prefix;
@@ -568,7 +586,7 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!sep) {
         sep = ".";
@@ -668,6 +686,8 @@ ecs_entity_t ecs_add_path_w_sep(
     }
 
     return cur;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_new_from_path_w_sep(

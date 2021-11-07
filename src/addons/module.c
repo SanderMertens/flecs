@@ -30,7 +30,7 @@ ecs_entity_t ecs_import(
     ecs_module_action_t init_action,
     const char *module_name)
 {
-    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->name_prefix;
@@ -48,7 +48,7 @@ ecs_entity_t ecs_import(
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup_fullpath(world, module_name);
-        ecs_assert(e != 0, ECS_MODULE_UNDEFINED, module_name);
+        ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
 
         ecs_log_pop();
     }
@@ -58,6 +58,8 @@ ecs_entity_t ecs_import(
     world->name_prefix = old_name_prefix;
 
     return e;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_import_from_library(
@@ -65,7 +67,7 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name)
 {
-    ecs_assert(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char *import_func = (char*)module_name; /* safe */
     char *module = (char*)module_name;
@@ -165,13 +167,15 @@ ecs_entity_t ecs_import_from_library(
     ecs_os_free(library_filename);
 
     return result;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc)
 {
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(world, ecs_world_t);
 
     const char *name = desc->entity.name;
@@ -198,6 +202,8 @@ ecs_entity_t ecs_module_init(
     }
 
     return e;
+error:
+    return 0;
 }
 
 #endif

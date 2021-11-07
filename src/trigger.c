@@ -180,7 +180,7 @@ ecs_map_t* get_triggers_for_event(
 
     /* Get triggers for event */
     ecs_observable_t *observable = ecs_get_observable(object);
-    ecs_assert(observable != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_sparse_t *triggers = observable->triggers;
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -192,6 +192,7 @@ ecs_map_t* get_triggers_for_event(
         return evt->triggers;
     }
 
+error:
     return NULL;
 }
 
@@ -522,9 +523,9 @@ ecs_entity_t ecs_trigger_init(
     const ecs_trigger_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     char *name = NULL;
     const char *expr = desc->expr;
@@ -541,10 +542,10 @@ ecs_entity_t ecs_trigger_init(
     bool added = false;
     EcsTrigger *comp = ecs_get_mut(world, entity, EcsTrigger, &added);
     if (added) {
-        ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
         
         /* Something went wrong with the construction of the entity */
-        ecs_assert(entity != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
         name = ecs_get_fullpath(world, entity);
 
         ecs_term_t term;
@@ -578,7 +579,7 @@ ecs_entity_t ecs_trigger_init(
         }
 
         /* Currently triggers are not supported for specific entities */
-        ecs_assert(term.subj.entity == EcsThis, ECS_UNSUPPORTED, NULL);
+        ecs_check(term.subj.entity == EcsThis, ECS_UNSUPPORTED, NULL);
 
         ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
         trigger->id = flecs_sparse_last_id(world->triggers);
@@ -600,7 +601,7 @@ ecs_entity_t ecs_trigger_init(
         comp->trigger = trigger;
 
         /* Trigger must have at least one event */
-        ecs_assert(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(trigger->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
         register_trigger(world, observable, trigger);
 
@@ -665,9 +666,7 @@ void* ecs_get_trigger_binding_ctx(
 void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
-{
-    ecs_assert(trigger != NULL, ECS_INVALID_PARAMETER, NULL);
-    
+{    
     unregister_trigger(trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 

@@ -2080,37 +2080,41 @@ int32_t ecs_table_type_to_storage_index(
     const ecs_table_t *table,
     int32_t index)
 {
-    ecs_assert(index < ecs_vector_count(table->type), 
+    ecs_check(index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
     int32_t *storage_map = table->storage_map;
     if (storage_map) {
         return storage_map[index];
-    } else {
-        return -1;
     }
+error:
+    return -1;
 }
 
 int32_t ecs_table_storage_to_type_index(
     const ecs_table_t *table,
     int32_t index)
 {
-    ecs_assert(index < ecs_vector_count(table->storage_type), 
+    ecs_check(index < ecs_vector_count(table->storage_type), 
         ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(table->storage_map != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(table->storage_map != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t offset = ecs_vector_count(table->type);
     return table->storage_map[offset + index];
+error:
+    return -1;
 }
 
 ecs_record_t* ecs_record_find(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_record_t *r = ecs_eis_get(world, entity);
     if (r) {
         return r;
-    } else {
-        return NULL;
     }
+error:
+    return NULL;
 }
 
 void* ecs_record_get_column(
@@ -2121,14 +2125,14 @@ void* ecs_record_get_column(
     (void)c_size;
     ecs_table_t *table = r->table;
 
-    ecs_assert(column < ecs_vector_count(table->storage_type), 
+    ecs_check(column < ecs_vector_count(table->storage_type), 
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_column_t *c = &table->storage.columns[column];
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int16_t size = c->size;
-    ecs_assert(!flecs_from_size_t(c_size) || 
+    ecs_check(!flecs_from_size_t(c_size) || 
         flecs_from_size_t(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -2137,4 +2141,6 @@ void* ecs_record_get_column(
     int32_t row = flecs_record_to_row(r->row, &is_watched);
 
     return ECS_OFFSET(array, size * row);
+error:
+    return NULL;
 }

@@ -363,18 +363,10 @@ void* _ecs_vector_get(
     int16_t offset,
     int32_t index)
 {
-    if (!vector) {
-        return NULL;
-    }
-    
+    ecs_assert(vector != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = vector->count;
-
-    if (index >= count) {
-        return NULL;
-    }
+    ecs_assert(index < vector->count, ECS_INTERNAL_ERROR, NULL);
 
     return ECS_OFFSET(vector, offset + elem_size * index);
 }

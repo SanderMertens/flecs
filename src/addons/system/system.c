@@ -387,7 +387,7 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
+    ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t existing = desc->entity.entity;
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
@@ -398,7 +398,7 @@ ecs_entity_t ecs_system_init(
     bool added = false;
     EcsSystem *system = ecs_get_mut(world, result, EcsSystem, &added);
     if (added) {
-        ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
         memset(system, 0, sizeof(EcsSystem));
 
@@ -528,6 +528,8 @@ ecs_entity_t ecs_system_init(
     }
 
     return result;
+error:
+    return 0;
 }
 
 void FlecsSystemImport(

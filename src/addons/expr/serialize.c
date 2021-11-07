@@ -146,7 +146,7 @@ int expr_ser_enum(
     ecs_strbuf_t *str) 
 {
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
-    ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     int32_t value = *(int32_t*)base;
     
@@ -158,12 +158,14 @@ int expr_ser_enum(
         char *path = ecs_get_fullpath(world, op->type);
         ecs_err("value %d is not valid for enum type '%s'", value, path);
         ecs_os_free(path);
-        return -1;
+        goto error;
     }
 
     ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
 
     return 0;
+error:
+    return -1;
 }
 
 /* Serialize bitmask */
@@ -175,7 +177,7 @@ int expr_ser_bitmask(
     ecs_strbuf_t *str) 
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
-    ecs_assert(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t value = *(uint32_t*)ptr;
     ecs_map_key_t key;
@@ -322,7 +324,7 @@ int expr_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, NULL);
         break;
     case EcsOpEnum:
         if (expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {

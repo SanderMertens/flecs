@@ -34,7 +34,7 @@ void flecs_iter_init(
 void flecs_iter_fini(
     ecs_iter_t *it)
 {
-    ecs_assert(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
     it->is_valid = false;
 
     FINI_CACHE(it, ids);
@@ -43,6 +43,8 @@ void flecs_iter_fini(
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
     FINI_CACHE(it, match_indices);
+error:
+    return;
 }
 
 static
@@ -190,8 +192,8 @@ void* ecs_term_w_size(
     size_t size,
     int32_t term)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || ecs_term_size(it, term) == size, 
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!size || ecs_term_size(it, term) == size, 
         ECS_INVALID_PARAMETER, NULL);
 
     (void)size;
@@ -205,17 +207,19 @@ void* ecs_term_w_size(
     }
 
     return it->ptrs[term - 1];
+error:
+    return NULL;
 }
 
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t term_index)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_term_t *term = &it->terms[term_index - 1];
-    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
     if (term->inout == EcsIn) {
         return true;
@@ -235,6 +239,7 @@ bool ecs_term_is_readonly(
         }
     }
 
+error:
     return false;
 }
 
@@ -242,16 +247,18 @@ int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     return ecs_type_index_of(it->table->type, 0, component);
+error:
+    return -1;
 }
 
 bool ecs_term_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
 
     int32_t column = it->columns[index - 1];
     if (!column) {
@@ -267,6 +274,8 @@ bool ecs_term_is_set(
     }
 
     return true;
+error:
+    return false;
 }
 
 void* ecs_iter_column_w_size(
@@ -274,8 +283,8 @@ void* ecs_iter_column_w_size(
     size_t size,
     int32_t index)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)size;
     
     ecs_table_t *table = it->table;
@@ -286,21 +295,23 @@ void* ecs_iter_column_w_size(
 
     ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[storage_index];
-    ecs_assert(!size || (ecs_size_t)size == column->size, 
+    ecs_check(!size || (ecs_size_t)size == column->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     void *ptr = ecs_vector_first_t(
         column->data, column->size, column->alignment);
 
     return ECS_OFFSET(ptr, column->size * it->offset);
+error:
+    return NULL;
 }
 
 size_t ecs_iter_column_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_table_t *table = it->table;
     int32_t storage_index = ecs_table_type_to_storage_index(table, index);
@@ -312,6 +323,8 @@ size_t ecs_iter_column_size(
     ecs_column_t *column = &columns[storage_index];
     
     return flecs_to_size_t(column->size);
+error:
+    return 0;
 }
 
 char* ecs_iter_str(
@@ -399,17 +412,22 @@ void ecs_iter_poly(
 bool ecs_iter_next(
     ecs_iter_t *iter)
 {
-    ecs_assert(iter != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(iter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
     return iter->next(iter);
+error:
+    return false;
 }
 
 bool ecs_iter_count(
     ecs_iter_t *it)
 {
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t count = 0;
     while (ecs_iter_next(it)) {
         count += it->count;
     }
     return count;
+error:
+    return 0;
 }
