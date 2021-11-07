@@ -541,11 +541,6 @@ void FlecsSystemImport(
 
     flecs_bootstrap_component(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
-    
-    flecs_bootstrap_tag(world, EcsOnAdd);
-    flecs_bootstrap_tag(world, EcsOnRemove);
-    flecs_bootstrap_tag(world, EcsOnSet);
-    flecs_bootstrap_tag(world, EcsUnSet);
 
     /* Put following tags in flecs.core so they can be looked up
      * without using the flecs.systems prefix. */
