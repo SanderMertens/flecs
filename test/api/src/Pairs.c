@@ -2248,3 +2248,77 @@ void Pairs_add_exclusive_non_empty_table_w_pairs() {
 
     ecs_fini(world);
 }
+
+void Pairs_add_pair_to_entity_w_exclusive_pair() {
+    ecs_world_t *world = ecs_init();    
+
+    ECS_TAG(world, ObjA);
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsChildOf, ObjA);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
+
+    ecs_add_pair(world, e, RelA, ObjA);
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+
+    ecs_add_pair(world, e, RelB, ObjA);
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_add_pair_to_entity_w_scope() {
+    ecs_world_t *world = ecs_init();    
+
+    ECS_TAG(world, ObjA);
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+
+    ecs_set_scope(world, ObjA);
+
+    ecs_entity_t e = ecs_new(world, 0);
+
+    ecs_add_pair(world, e, RelA, ObjA);
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+
+    ecs_add_pair(world, e, RelB, ObjA);
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+
+    ecs_set_scope(world, 0);
+
+    ecs_fini(world);
+}
+
+void Pairs_add_existing_exclusive_pair_after_pair() {
+    ecs_world_t *world = ecs_init();    
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add_pair(world, e, EcsChildOf, ObjA);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
+
+    ecs_add_pair(world, e, RelA, ObjA);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+
+    ecs_add_pair(world, e, EcsChildOf, ObjA);
+    test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+
+    ecs_add_pair(world, e, RelB, ObjA);
+
+    test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+
+    ecs_fini(world);
+}

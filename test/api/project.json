@@ -513,7 +513,8 @@
                 "comment_type",
                 "empty_doc_comment",
                 "newline_after_doc_comment",
-                "default_type_from_with"
+                "default_type_from_with",
+                "scope_w_1_subj_and_2_pairs"
             ]
         }, {
             "id": "GlobalComponentIds",
@@ -1319,7 +1320,10 @@
                 "add_same_exclusive_relation_twice",
                 "set_exclusive_relation_twice",
                 "add_exclusive_non_empty_table",
-                "add_exclusive_non_empty_table_w_pairs"
+                "add_exclusive_non_empty_table_w_pairs",
+                "add_pair_to_entity_w_exclusive_pair",
+                "add_pair_to_entity_w_scope",
+                "add_existing_exclusive_pair_after_pair"
             ]
         }, {
             "id": "Rules",

@@ -3455,3 +3455,32 @@ void Plecs_default_type_from_with() {
 
     ecs_fini(world);
 }
+
+void Plecs_scope_w_1_subj_and_2_pairs() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " RelA(Foo, Bar)"
+    LINE " RelB(Foo, Bar)"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t rel_a = ecs_lookup_fullpath(world, "RelA");
+    ecs_entity_t rel_b = ecs_lookup_fullpath(world, "RelB");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Parent.Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Parent.Bar");
+
+    test_assert(parent != 0);
+    test_assert(rel_a != 0);
+    test_assert(rel_b != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert( ecs_has_pair(world, foo, rel_a, bar));
+    test_assert( ecs_has_pair(world, foo, rel_b, bar));
+
+    ecs_fini(world);
+}
