@@ -644,19 +644,19 @@ void Pairs_each_pair_by_type() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair_w_childof() {
+void Pairs_each_pair_w_isa() {
     flecs::world ecs;
 
     auto p_1 = ecs.entity();
     auto p_2 = ecs.entity();
 
     auto e = ecs.entity()
-        .child_of(p_1)
-        .child_of(p_2);
+        .is_a(p_1)
+        .is_a(p_2);
 
     int32_t count = 0;
 
-    e.each(flecs::ChildOf, [&](flecs::entity object) {
+    e.each(flecs::IsA, [&](flecs::entity object) {
         if (count == 0) {
             test_assert(object == p_1);
         } else if (count == 1) {
