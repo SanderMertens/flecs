@@ -51,17 +51,18 @@ const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsInclusive =             ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 16;
+
+/* Builtin relations */
+const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 17;
-
-/* Relations */
-const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 28;
 
 /* Events */
 const ecs_entity_t EcsOnAdd =                 ECS_HI_COMPONENT_ID + 30;
@@ -72,7 +73,7 @@ const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsOnCreateTable =         ECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsOnDeleteTable =         ECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableFilled =       ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableFilled =         ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;

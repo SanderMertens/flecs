@@ -1607,3 +1607,47 @@ void Hierarchies_long_name_depth_2() {
 
     ecs_fini(world);
 }
+
+void Hierarchies_ensure_1_parent_after_adding_2() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    test_assert(parent_1 != 0);
+
+    ecs_entity_t parent_2 = ecs_new(world, 0);
+    test_assert(parent_2 != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_1);
+    test_assert(child != 0);
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_1));
+
+    ecs_add_pair(world, child, EcsChildOf, parent_2);
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_2));
+    test_assert( !ecs_has_pair(world, child, EcsChildOf, parent_1));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_ensure_child_alive_after_deleting_prev_parent() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_1 = ecs_new(world, 0);
+    test_assert(parent_1 != 0);
+
+    ecs_entity_t parent_2 = ecs_new(world, 0);
+    test_assert(parent_2 != 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_1);
+    test_assert(child != 0);
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_1));
+
+    ecs_add_pair(world, child, EcsChildOf, parent_2);
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_2));
+    test_assert( !ecs_has_pair(world, child, EcsChildOf, parent_1));
+
+    ecs_delete(world, parent_1);
+
+    test_assert( ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}

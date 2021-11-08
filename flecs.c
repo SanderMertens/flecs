@@ -16377,7 +16377,7 @@ ecs_rule_pair_t term_to_pair(
             result.final = true;
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsInclusive)) {
+        if (ecs_has_id(rule->world, pred_id, EcsTransitiveSelf)) {
             result.inclusive = true;
         }
     }
@@ -25866,7 +25866,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsInclusive, "Inclusive relation property");
+    ecs_doc_set_brief(world, EcsTransitiveSelf, "TransitiveSelf relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
@@ -25883,7 +25883,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsInclusive, URL_ROOT "#inclusive-relations");
+    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#inclusive-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
     ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#relation-cleanup-properties");
@@ -28981,17 +28981,18 @@ const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsInclusive =             ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 16;
+
+/* Builtin relations */
+const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 17;
-
-/* Relations */
-const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 28;
 
 /* Events */
 const ecs_entity_t EcsOnAdd =                 ECS_HI_COMPONENT_ID + 30;
@@ -29002,7 +29003,7 @@ const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsOnCreateTable =         ECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsOnDeleteTable =         ECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableFilled =       ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableFilled =         ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;
@@ -34484,7 +34485,7 @@ int32_t get_pair_index(
         pair_offsets[column_index].index = result + 1;
         pair_offsets[column_index].count = count;
     }
-    
+
     return result;
 }
 
@@ -37191,7 +37192,8 @@ static
 void add_id_to_ids(
     ecs_type_t type,
     ecs_entity_t add,
-    ecs_ids_t *out)
+    ecs_ids_t *out,
+    ecs_entity_t r_exclusive)
 {
     int32_t count = ecs_vector_count(type);
     ecs_id_t *array = ecs_vector_first(type, ecs_id_t);    
@@ -37201,13 +37203,22 @@ void add_id_to_ids(
     for (i = 0; i < count; i ++) {
         ecs_id_t e = array[i];
 
-        if (e >= add && !added) {
-            if (e != add) {
-                out->array[el ++] = add;
+        if (!added) {
+            if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
+                if (ECS_PAIR_RELATION(e) == r_exclusive) {
+                    out->array[el ++] = add;
+                    continue; /* don't add original element */
+                }
             }
-            added = true;
+
+            if (e >= add) {
+                if (e != add) {
+                    out->array[el ++] = add;
+                }
+                added = true;
+            }
         }
-        
+
         out->array[el ++] = e;
         ecs_assert(el <= out->count, ECS_INTERNAL_ERROR, NULL);
     }
@@ -37545,13 +37556,21 @@ ecs_table_t* find_or_create_table_with_id(
     } else {
         ecs_type_t type = node->type;
         int32_t count = ecs_vector_count(type);
+        ecs_entity_t r_exclusive = 0;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t r = ecs_pair_relation(world, id);
+            if (ecs_has_id(world, r, EcsExclusive)) {
+                r_exclusive = (uint32_t)r;
+            }
+        }
 
         ecs_ids_t ids = {
             .array = ecs_os_alloca_n(ecs_id_t, count + 1),
             .count = count + 1
         };
 
-        add_id_to_ids(type, id, &ids);
+        add_id_to_ids(type, id, &ids, r_exclusive);
 
         return flecs_table_find_or_create(world, &ids);
     }
@@ -39995,32 +40014,31 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
+
+    /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
-    flecs_bootstrap_tag(world, EcsInclusive);
+    flecs_bootstrap_tag(world, EcsTransitiveSelf);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
-
-    flecs_bootstrap_tag(world, EcsIsA);
-    flecs_bootstrap_tag(world, EcsChildOf);
-
-    /* Relation/component cleanup policies */
+    flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsOnDelete);
     flecs_bootstrap_tag(world, EcsOnDeleteObject);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsThrow);
-
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
+
+    /* Builtin relations */
+    flecs_bootstrap_tag(world, EcsIsA);
+    flecs_bootstrap_tag(world, EcsChildOf);
 
     /* Builtin events */
     bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
     bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
     bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
     bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
-    
     bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
     bootstrap_entity(world, EcsOnTableFilled, "OnTableFilled", EcsFlecsCore);
-
     // bootstrap_entity(world, EcsOnCreateTable, "OnCreateTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteTable, "OnDeleteTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnCreateTrigger, "OnCreateTrigger", EcsFlecsCore);
@@ -40030,7 +40048,7 @@ void flecs_bootstrap(
 
     /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
-    ecs_add_id(world, EcsIsA, EcsInclusive);
+    ecs_add_id(world, EcsIsA, EcsTransitiveSelf);
 
     /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
@@ -40046,11 +40064,19 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
+    ecs_add_id(world, EcsTag, EcsFinal);
+    ecs_add_id(world, EcsExclusive, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
     ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
     ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
+
+    /* Exclusive properties */
+    ecs_add_id(world, EcsChildOf, EcsExclusive);
+    ecs_add_id(world, EcsOnDelete, EcsExclusive);
+    ecs_add_id(world, EcsOnDeleteObject, EcsExclusive);
+    ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
 
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });

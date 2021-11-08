@@ -740,8 +740,8 @@ LocatedIn.add(flecs::Transitive);
 
 When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
-### Inclusive relations
-A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `Inclusive` becomes more obvious with an example:
+### TransitiveSelf relations
+A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `TransitiveSelf` becomes more obvious with an example:
 
 Given this dataset:
 ```

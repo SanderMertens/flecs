@@ -281,77 +281,6 @@ void System_w_FromParent_3_column_2_from_container() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_3_column_2_from_different_container() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Rotation);
-    ECS_COMPONENT(world, Mass);
-
-    ECS_ENTITY(world, e1, Position);
-    ECS_ENTITY(world, e2, Position);
-    ECS_ENTITY(world, e3, Position);
-    ECS_ENTITY(world, e4, Position);
-    ECS_ENTITY(world, e5, Position);
-    ECS_ENTITY(world, e6, Position);
-
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, Mass(parent), Rotation(parent), Position);
-
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
-
-    ecs_add_pair(world, e1, EcsChildOf, parent_1);
-    ecs_add_pair(world, e1, EcsChildOf, parent_2);
-
-    ecs_add_pair(world, e2, EcsChildOf, parent_1);
-    ecs_add_pair(world, e2, EcsChildOf, parent_2);
-
-    ecs_add_pair(world, e3, EcsChildOf, parent_1);
-    ecs_add_pair(world, e3, EcsChildOf, parent_2);
-
-    /* e4 and e5 should not be matched */
-    ecs_add_pair(world, e4, EcsChildOf, parent_1);
-    ecs_add_pair(world, e5, EcsChildOf, parent_2);
-
-    Probe ctx = {0};
-    ecs_set_context(world, &ctx);
-
-    ecs_progress(world, 1);
-
-    test_int(ctx.count, 3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, Iter_2_shared);
-    test_int(ctx.term_count, 3);
-    test_null(ctx.param);
-
-    test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_id(Mass));
-    test_int(ctx.s[0][0], parent_1);
-    test_int(ctx.c[0][1], ecs_id(Rotation));
-    test_int(ctx.s[0][1], parent_2);
-    test_int(ctx.c[0][2], ecs_id(Position));
-    test_int(ctx.s[0][2], 0);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 23);
-    test_int(p->y, 43);
-
-    p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 23);
-    test_int(p->y, 43);
-
-    p = ecs_get(world, e3, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 23);
-    test_int(p->y, 43);
-
-    ecs_fini(world);
-}
-
 void System_w_FromParent_2_column_1_from_container_w_not() {
     ecs_world_t *world = ecs_init();
 
@@ -565,16 +494,14 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
     ecs_add_pair(world, e3, EcsChildOf, parent_3);
     ecs_add_pair(world, e4, EcsChildOf, parent_4);
-    ecs_add_pair(world, e5, EcsChildOf, parent_2);
-    ecs_add_pair(world, e5, EcsChildOf, parent_3);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
     ecs_progress(world, 1);
 
-    test_int(ctx.count, 4);
-    test_int(ctx.invoked, 4);
+    test_int(ctx.count, 3);
+    test_int(ctx.invoked, 3);
     test_int(ctx.system, Iter);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
@@ -582,7 +509,6 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.e[3], e5);
     test_int(ctx.c[0][0], ecs_id(Mass));
     test_int(ctx.s[0][0], parent_1);
     test_int(ctx.c[0][1], ecs_id(Position));
@@ -595,10 +521,6 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
     test_int(ctx.s[2][0], parent_3);
     test_int(ctx.c[2][1], ecs_id(Position));
     test_int(ctx.s[2][1], 0);
-    test_int(ctx.c[3][0], ecs_id(Mass));
-    test_int(ctx.s[3][0], parent_3);
-    test_int(ctx.c[3][1], ecs_id(Position));
-    test_int(ctx.s[3][1], 0);
 
     const Position *p = ecs_get(world, e1, Position);
     test_assert(p != NULL);
@@ -611,11 +533,6 @@ void System_w_FromParent_2_column_1_from_container_w_or() {
     test_int(p->y, 60);
 
     p = ecs_get(world, e3, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 50);
-    test_int(p->y, 100);
-
-    p = ecs_get(world, e5, Position);
     test_assert(p != NULL);
     test_int(p->x, 50);
     test_int(p->y, 100);

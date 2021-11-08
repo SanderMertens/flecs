@@ -616,7 +616,9 @@
                 "cascade_after_recycled_parent_change",
                 "long_name_depth_0",
                 "long_name_depth_1",
-                "long_name_depth_2"
+                "long_name_depth_2",
+                "ensure_1_parent_after_adding_2",
+                "ensure_child_alive_after_deleting_prev_parent"
             ]
         }, {
             "id": "Has",
@@ -1312,7 +1314,10 @@
                 "get_object_for_wildcard_from_self",
                 "get_object_for_wildcard_from_base",
                 "get_object_for_wildcard_from_nested_base",
-                "ignore_childof_from_base"
+                "ignore_childof_from_base",
+                "add_exclusive_relation_twice",
+                "add_same_exclusive_relation_twice",
+                "set_exclusive_relation_twice"
             ]
         }, {
             "id": "Rules",
@@ -1900,7 +1905,6 @@
                 "1_column_from_container",
                 "2_column_1_from_container",
                 "3_column_2_from_container",
-                "3_column_2_from_different_container",
                 "2_column_1_from_container_w_not",
                 "2_column_1_from_container_w_not_prefab",
                 "3_column_1_from_comtainer_1_from_container_w_not",
