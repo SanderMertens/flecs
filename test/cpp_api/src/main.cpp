@@ -203,7 +203,7 @@ void Pairs_get_w_object_id_t(void);
 void Pairs_each(void);
 void Pairs_each_pair(void);
 void Pairs_each_pair_by_type(void);
-void Pairs_each_pair_w_childof(void);
+void Pairs_each_pair_w_isa(void);
 void Pairs_each_pair_w_recycled_rel(void);
 void Pairs_each_pair_w_recycled_obj(void);
 void Pairs_match_pair(void);
@@ -1494,8 +1494,8 @@ bake_test_case Pairs_testcases[] = {
         Pairs_each_pair_by_type
     },
     {
-        "each_pair_w_childof",
-        Pairs_each_pair_w_childof
+        "each_pair_w_isa",
+        Pairs_each_pair_w_isa
     },
     {
         "each_pair_w_recycled_rel",
