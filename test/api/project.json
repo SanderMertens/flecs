@@ -143,7 +143,6 @@
             ]
         }, {
             "id": "Switch",
-            "setup": true,
             "testcases": [
                 "get_case_empty",
                 "get_case_no_switch",
@@ -380,7 +379,11 @@
                 "trailing_space",
                 "2_trailing_spaces",
                 "template_type",
-                "predicate_w_parens"
+                "predicate_w_parens",
+                "switch_id",
+                "case_pair",
+                "pair_w_invalid_role",
+                "case_w_missing_obj"
             ]
         }, {
             "id": "Plecs",

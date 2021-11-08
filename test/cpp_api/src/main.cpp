@@ -235,6 +235,8 @@ void Pairs_get_object_for_id_not_found(void);
 void Switch_add_case(void);
 void Switch_get_case(void);
 void Switch_system_w_case(void);
+void Switch_system_w_case_builder(void);
+void Switch_system_w_sw_type_builder(void);
 void Switch_system_w_switch(void);
 void Switch_add_case_w_type(void);
 void Switch_add_switch_w_type(void);
@@ -1613,6 +1615,14 @@ bake_test_case Switch_testcases[] = {
     {
         "system_w_case",
         Switch_system_w_case
+    },
+    {
+        "system_w_case_builder",
+        Switch_system_w_case_builder
+    },
+    {
+        "system_w_sw_type_builder",
+        Switch_system_w_sw_type_builder
     },
     {
         "system_w_switch",
@@ -3468,7 +3478,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        8,
+        10,
         Switch_testcases
     },
     {

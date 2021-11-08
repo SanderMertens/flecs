@@ -899,24 +899,25 @@ void QueryBuilder_isa_superset_min_depth_2_max_depth_3() {
 void QueryBuilder_role() {
     flecs::world ecs;
 
+    struct Movement { };
     struct Walking { };
     struct Running { };
 
-    auto Movement = ecs.type()
+    ecs.type().component<Movement>()
         .add<Walking>()
         .add<Running>();
 
     auto q = ecs.query_builder<Self>()
-        .term(Movement).role(flecs::Switch)
-        .term<Running>().role(flecs::Case)
+        .term<Movement>().role(flecs::Switch)
+        .term<Movement, Running>().role(flecs::Case)
         .build();
 
     auto 
-    e = ecs.entity().add_switch(Movement).add_case<Running>(); e.set<Self>({e});
-    e = ecs.entity().add_switch(Movement).add_case<Running>(); e.set<Self>({e});
+    e = ecs.entity().add_switch<Movement>().add_case<Running>(); e.set<Self>({e});
+    e = ecs.entity().add_switch<Movement>().add_case<Running>(); e.set<Self>({e});
 
-    e = ecs.entity().add_switch(Movement).add_case<Walking>(); e.set<Self>({0});
-    e = ecs.entity().add_switch(Movement).add_case<Walking>(); e.set<Self>({0});
+    e = ecs.entity().add_switch<Movement>().add_case<Walking>(); e.set<Self>({0});
+    e = ecs.entity().add_switch<Movement>().add_case<Walking>(); e.set<Self>({0});
 
     int32_t count = 0;
 

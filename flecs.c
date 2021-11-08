@@ -2455,18 +2455,6 @@ void table_activate(
         });                
     }
 
-    ecs_ids_t ids = {
-        .array = ecs_vector_first(table->type, ecs_id_t),
-        .count = ecs_vector_count(table->type)
-    };
-
-    ecs_emit(world, &(ecs_event_desc_t) {
-        .event = activate ? EcsOnTableEmpty : EcsOnTableFilled,
-        .ids = &ids,
-        .payload_kind = EcsPayloadTable,
-        .payload.table.table = table
-    });
-
     flecs_table_set_empty(world, table);
 }
 
@@ -5975,6 +5963,12 @@ ecs_table_t *traverse_from_expr(
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid non-trivial term in add expression");
                 return NULL;
+            }
+
+            if (term.role == ECS_CASE) {
+                table = table_append(world, table, 
+                    ECS_SWITCH | ECS_PAIR_RELATION(term.id), diff);
+                term.id = ECS_CASE | ECS_PAIR_OBJECT(term.id);
             }
 
             if (term.oper == EcsAnd || !replace_and) {
@@ -27879,7 +27873,16 @@ parse_pair_object:
         goto error;
     }
 
-    term.role = ECS_PAIR;
+    if (term.role != 0) {
+        if (term.role != ECS_PAIR && term.role != ECS_CASE) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid combination of role '%s' with pair", 
+                    ecs_role_str(term.role));
+            goto error;
+        }
+    } else {
+        term.role = ECS_PAIR;
+    }
 
     ptr = ecs_parse_whitespace(ptr);
     goto parse_done; 
@@ -31108,13 +31111,18 @@ int finalize_term_id(
     if (!obj && role != ECS_PAIR) {
         term->id = pred | role;
     } else {
-        if (role && role != ECS_PAIR) {
-            term_error(world, term, name, "invalid role for pair");
-            return -1;
+        if (role) {
+            if (role && role != ECS_PAIR && role != ECS_CASE) {
+                term_error(world, term, name, "invalid role for pair");
+                return -1;
+            }
+
+            term->role = role;
+        } else {
+            term->role = ECS_PAIR;
         }
 
-        term->id = ecs_pair(pred, obj);
-        term->role = ECS_PAIR;
+        term->id = term->role | ecs_entity_t_comb(obj, pred);
     }
 
     return 0;
@@ -31206,9 +31214,15 @@ int verify_term_consistency(
     ecs_id_t role = term->role;
     ecs_id_t id = term->id;
 
-    if (obj && (!role || (role != ECS_PAIR))) {
+    if (obj && (!role || (role != ECS_PAIR && role != ECS_CASE))) {
         term_error(world, term, name, 
             "invalid role for term with pair (expected ECS_PAIR)");
+        return -1;
+    }
+
+    if (role == ECS_CASE && !obj) {
+        term_error(world, term, name, 
+            "missing object for term with ECS_CASE role");
         return -1;
     }
 
@@ -31222,13 +31236,14 @@ int verify_term_consistency(
         return -1;
     }
 
-    if (obj && !(ECS_HAS_ROLE(id, PAIR))) {
+    if (obj && !ECS_HAS_ROLE(id, PAIR) && !ECS_HAS_ROLE(id, CASE)) {
         term_error(world, term, name, "term has object but id is not a pair");
         return -1;
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        if (id != ecs_pair(pred, obj)) {
+    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
+        role = ECS_ROLE_MASK & id;
+        if (id != (role | ecs_entity_t_comb(obj, pred))) {
             char *id_str = ecs_id_str(world, ecs_pair(pred, obj));
             term_error(world, term, name, 
                 "term id does not match pred/obj (%s)", id_str);
@@ -33336,31 +33351,30 @@ void _ecs_table_cache_fini_delete_all(
     ecs_table_cache_fini(cache);
 }
 
-/* -- Public API -- */
-
-static
-bool has_case(
-    const ecs_world_t *world,
-    ecs_entity_t sw_case,
-    ecs_entity_t e)
-{
-    const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
-    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_has_id(world, type_ptr->normalized, sw_case, false);
-}
-
 static
 bool match_id(
     const ecs_world_t *world,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
+    (void)world;
+    
     if (ECS_HAS_ROLE(match_with, CASE)) {
-        ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
-        if (ECS_HAS_ROLE(id, SWITCH) && has_case(world, sw_case, id)) {
-            return 1;
+        ecs_entity_t sw = ECS_PAIR_RELATION(match_with);
+        if (id == (ECS_SWITCH | sw)) {
+#ifdef FLECS_SANITIZE
+            ecs_entity_t sw_case = ECS_PAIR_OBJECT(match_with);
+            const EcsType *sw_type = ecs_get(world, sw, EcsType);
+            ecs_assert(sw_type != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_type_has_id(world, sw_type->normalized, 
+                ecs_get_alive(world, sw_case), false) == true,
+                        ECS_INVALID_PARAMETER, NULL);
+            (void)sw_case;
+            (void)sw_type;
+#endif
+            return true;
         } else {
-            return 0;
+            return false;
         }
     } else {
         return ecs_id_match(id, match_with);
@@ -34477,29 +34491,25 @@ int32_t get_pair_index(
 static
 int32_t get_component_index(
     ecs_world_t *world,
-    ecs_table_t *table,
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
     ecs_oper_kind_t op,
     pair_offset_t *pair_offsets,
     int32_t count)
-{
+{    
     int32_t result = 0;
     ecs_entity_t component = *component_out;
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (component) {
         /* If requested component is a case, find the corresponding switch to
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
-            result = flecs_table_switch_from_case(
-                world, table, component);
+            ecs_entity_t sw = ECS_PAIR_RELATION(component);
+            result = ecs_type_index_of(table_type, 0, ECS_SWITCH | sw);
             ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
-
-            result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
             ecs_entity_t rel = ECS_PAIR_RELATION(component);
@@ -34758,7 +34768,7 @@ add_pair:
 
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
-            int32_t index = get_component_index(world, table, table_type, 
+            int32_t index = get_component_index(world, table_type, 
                 &component, c, op, pair_offsets, pair_cur + 1);
 
             if (index == -1) {
@@ -34780,7 +34790,7 @@ add_pair:
                 flecs_sparse_column_t *sc = ecs_vector_add(
                     &table_data->sparse_columns, flecs_sparse_column_t);
                 sc->signature_column_index = t;
-                sc->sw_case = component & ECS_COMPONENT_MASK;
+                sc->sw_case = ECS_PAIR_OBJECT(component);
                 sc->sw_column = NULL;
             }
 
@@ -39489,6 +39499,10 @@ ecs_vector_t* expr_to_ids(
 
         if (term.oper == EcsAndFrom) {
             term.role = ECS_AND;
+        }
+
+        if (term.role == ECS_CASE) {
+            term.id = ECS_PAIR_OBJECT(term.id);
         }
 
         ecs_id_t* elem = ecs_vector_add(&result, ecs_id_t);
