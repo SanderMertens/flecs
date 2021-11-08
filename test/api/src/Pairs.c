@@ -2191,4 +2191,3 @@ void Pairs_set_exclusive_relation_twice() {
 
     ecs_fini(world);
 }
-

@@ -1457,6 +1457,7 @@ void Trigger_on_add_yield_existing_2_tables(void);
 void Trigger_on_add_yield_existing_wildcard_pair(void);
 void Trigger_on_set_yield_existing(void);
 void Trigger_filter_term(void);
+void Trigger_on_add_remove_after_exclusive_add(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7837,6 +7838,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "filter_term",
         Trigger_filter_term
+    },
+    {
+        "on_add_remove_after_exclusive_add",
+        Trigger_on_add_remove_after_exclusive_add
     }
 };
 
@@ -11017,7 +11022,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        69,
+        70,
         Trigger_testcases
     },
     {
