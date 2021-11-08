@@ -490,6 +490,7 @@ void Plecs_comment_type(void);
 void Plecs_empty_doc_comment(void);
 void Plecs_newline_after_doc_comment(void);
 void Plecs_default_type_from_with(void);
+void Plecs_scope_w_1_subj_and_2_pairs(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -1254,6 +1255,9 @@ void Pairs_add_same_exclusive_relation_twice(void);
 void Pairs_set_exclusive_relation_twice(void);
 void Pairs_add_exclusive_non_empty_table(void);
 void Pairs_add_exclusive_non_empty_table_w_pairs(void);
+void Pairs_add_pair_to_entity_w_exclusive_pair(void);
+void Pairs_add_pair_to_entity_w_scope(void);
+void Pairs_add_existing_exclusive_pair_after_pair(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -4125,6 +4129,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "default_type_from_with",
         Plecs_default_type_from_with
+    },
+    {
+        "scope_w_1_subj_and_2_pairs",
+        Plecs_scope_w_1_subj_and_2_pairs
     }
 };
 
@@ -7044,6 +7052,18 @@ bake_test_case Pairs_testcases[] = {
     {
         "add_exclusive_non_empty_table_w_pairs",
         Pairs_add_exclusive_non_empty_table_w_pairs
+    },
+    {
+        "add_pair_to_entity_w_exclusive_pair",
+        Pairs_add_pair_to_entity_w_exclusive_pair
+    },
+    {
+        "add_pair_to_entity_w_scope",
+        Pairs_add_pair_to_entity_w_scope
+    },
+    {
+        "add_existing_exclusive_pair_after_pair",
+        Pairs_add_existing_exclusive_pair_after_pair
     }
 };
 
@@ -10869,7 +10889,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        126,
+        127,
         Plecs_testcases
     },
     {
@@ -11016,7 +11036,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        71,
+        74,
         Pairs_testcases
     },
     {

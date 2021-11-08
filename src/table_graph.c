@@ -332,6 +332,7 @@ void add_id_to_ids(
             if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
                 if (ECS_PAIR_RELATION(e) == r_exclusive) {
                     out->array[el ++] = add;
+                    added = true;
                     continue; /* don't add original element */
                 }
             }
