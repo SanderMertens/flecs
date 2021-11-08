@@ -1317,7 +1317,9 @@
                 "ignore_childof_from_base",
                 "add_exclusive_relation_twice",
                 "add_same_exclusive_relation_twice",
-                "set_exclusive_relation_twice"
+                "set_exclusive_relation_twice",
+                "add_exclusive_non_empty_table",
+                "add_exclusive_non_empty_table_w_pairs"
             ]
         }, {
             "id": "Rules",
@@ -1982,7 +1984,8 @@
                 "is_entity_enabled",
                 "ensure_empty_root",
                 "register_alias_twice_same_entity",
-                "register_alias_twice_different_entity"
+                "register_alias_twice_different_entity",
+                "redefine_component"
             ]
         }, {
             "id": "Stats",

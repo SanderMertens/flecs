@@ -2191,3 +2191,60 @@ void Pairs_set_exclusive_relation_twice() {
 
     ecs_fini(world);
 }
+
+void Pairs_add_exclusive_non_trivial_edge() {
+
+}
+
+void Pairs_add_exclusive_non_empty_table() {
+    ecs_world_t *world = ecs_init();    
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_add_pair(world, e, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e, Rel, ObjB));
+    test_assert( !ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_add_exclusive_non_empty_table_w_pairs() {
+    ecs_world_t *world = ecs_init();    
+
+    ECS_TAG(world, RelA);
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ECS_TAG(world, RelB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, RelA, ObjA);
+    ecs_add_pair(world, e, RelB, ObjA);
+
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e, Rel, ObjA));
+    
+    ecs_add_pair(world, e, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e, Rel, ObjB));
+    test_assert( !ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_fini(world);
+}

@@ -1074,18 +1074,17 @@ void World_register_alias_twice_different_entity() {
     ecs_use(world, f, "Foo");
 }
 
-void World_get_pipeline_stats_after_progress_no_systems() {
-    // Implement testcase
-}
+void World_redefine_component() {
+    ecs_world_t *world = ecs_init();
 
-void World_get_pipeline_stats_after_progress_1_system() {
-    // Implement testcase
-}
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
+        .entity.name = "flecs.core.Component",
+        .entity.symbol = "EcsComponent",
+        .size = ECS_SIZEOF(EcsComponent),
+        .alignment = ECS_ALIGNOF(EcsComponent)
+    });
 
-void World_get_pipeline_stats_after_progress_2_systems() {
-    // Implement testcase
-}
+    test_assert(c == ecs_id(EcsComponent));
 
-void World_get_pipeline_stats_after_progress_2_systems_one_merge() {
-    // Implement testcase
+    ecs_fini(world);
 }
