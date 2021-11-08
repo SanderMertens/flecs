@@ -852,6 +852,18 @@ const Position *p = e.get<Serializable, Position>();
 
 The `Tag` property is only interpreted when it is added to the relation part of a pair.
 
+### Exclusive relations
+The `Exclusive` property enforces that an entity can only have a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relation with the `Exclusive` property is the builtin `ChildOf` relation:
+
+```c
+ecs_add_pair(world, child, EcsChildOf, parent_a);
+ecs_add_pair(world, child, EcsChildOf, parent_b); // replaces (ChildOf, parent_a)
+```
+```cpp
+e.child_of(parent_a);
+e.child_of(parent_b); // replaces (ChildOf, parent_a)
+```
+
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.
 

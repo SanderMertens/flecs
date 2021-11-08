@@ -1528,7 +1528,8 @@
                "on_add_yield_existing_2_tables",
                "on_add_yield_existing_wildcard_pair",
                "on_set_yield_existing",
-               "filter_term"
+               "filter_term",
+               "on_add_remove_after_exclusive_add"
            ]
         }, {
             "id": "Observer",
