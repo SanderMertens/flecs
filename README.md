@@ -46,7 +46,7 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
 - [Relations Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
 
-Here is some awesome content provided by the community (thanks everyone! :heart:):
+Here is some awesome content provided by the community :heart: :
 - [Bringing Flecs to UE4](https://bebylon.dev/blog/ecs-flecs-ue4/)
 - [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
 - [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
@@ -118,31 +118,38 @@ int main(int argc, char *argv[]) {
 ```
 
 ## Addons
-Flecs has a modular architecture that makes it easy to only build the features you really need. Here is an overview of the optional addons. By default all addons are included. To customize a build, define `FLECS_CUSTOM_BUILD` + the addons you'd like to include!
+Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
+
+```c
+#define FLECS_CUSTOM_BUILD  // Don't build all addons
+#define FLECS_SYSTEM        // Build FLECS_SYSTEM
+```
+
+Here's an overview of all supported addons:
 
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
-Cpp           | C++11 API                                        | FLECS_CPP           |
-Module        | Organize game logic into reusable modules        | FLECS_MODULE        |
-System        | Create & run systems                             | FLECS_SYSTEM        |
-Pipeline      | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
-Timer         | Run systems at time intervals or at a rate       | FLECS_TIMER         |
-Meta          | Flecs reflection system                          | FLECS_META          |
-Meta_C        | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
-Expr          | String format optimized for ECS data             | FLECS_EXPR          |
-JSON          | JSON format                                      | FLECS_JSON          |
-Doc           | Add documentation to components, systems & more  | FLECS_DOC           |
-Coredoc       | Documentation for builtin components & modules   | FLECS_COREDOC       |
-Http          | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
-Rest          | REST API for showing entities in the browser     | FLECS_REST          |
-Parser        | Create entities & queries from strings           | FLECS_PARSER        |
-Plecs         | Small utility language for asset/scene loading   | FLECS_PLECS         |
-Rules         | Powerful prolog-like query language              | FLECS_RULES         |
-Snapshot      | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
-Stats         | See what's happening in a world with statistics  | FLECS_STATS         |
-Log           | Extended tracing and error logging               | FLECS_LOG           |
-App           | Flecs application framework                      | FLECS_APP           |
-OS API Impl   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
+[Cpp](https://flecs.docsforge.com/master/api-cpp/)           | C++11 API                                        | FLECS_CPP           |
+[Module](https://flecs.docsforge.com/master/api-module/)        | Organize game logic into reusable modules        | FLECS_MODULE        |
+[System](https://flecs.docsforge.com/master/api-systems/)        | Create & run systems                             | FLECS_SYSTEM        |
+[Pipeline](https://flecs.docsforge.com/master/api-pipeline/)      | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
+[Timer](https://flecs.docsforge.com/master/api-timers/)         | Run systems at time intervals or at a rate       | FLECS_TIMER         |
+[Meta](https://flecs.docsforge.com/master/api-meta/)          | Flecs reflection system                          | FLECS_META          |
+[Meta_C](https://flecs.docsforge.com/master/api-meta-c/)        | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
+[Expr](https://flecs.docsforge.com/master/api-expr/)          | String format optimized for ECS data             | FLECS_EXPR          |
+[JSON](https://flecs.docsforge.com/master/api-json/)          | JSON format                                      | FLECS_JSON          |
+[Doc](https://flecs.docsforge.com/master/api-doc/)           | Add documentation to components, systems & more  | FLECS_DOC           |
+[Coredoc](https://flecs.docsforge.com/master/api-coredoc/)       | Documentation for builtin components & modules   | FLECS_COREDOC       |
+[Http](https://flecs.docsforge.com/master/api-http/)          | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
+[Rest](https://flecs.docsforge.com/master/api-rest/)          | REST API for showing entities in the browser     | FLECS_REST          |
+[Parser](https://flecs.docsforge.com/master/api-parser/)        | Create entities & queries from strings           | FLECS_PARSER        |
+[Plecs](https://flecs.docsforge.com/master/api-plecs/)         | Small utility language for asset/scene loading   | FLECS_PLECS         |
+[Rules](https://flecs.docsforge.com/master/api-rules/)         | Powerful prolog-like query language              | FLECS_RULES         |
+[Snapshot](https://flecs.docsforge.com/master/api-snapshot/)      | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
+[Stats](https://flecs.docsforge.com/master/api-stats/)         | See what's happening in a world with statistics  | FLECS_STATS         |
+[Log](https://flecs.docsforge.com/master/api-log/)           | Extended tracing and error logging               | FLECS_LOG           |
+[App](https://flecs.docsforge.com/master/api-app/)           | Flecs application framework                      | FLECS_APP           |
+[OS API Impl](https://flecs.docsforge.com/master/api-os-api-impl/)   | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
 
 ## Flecs Hub
 Flecs Hub is a handy collection of repositories built with Flecs that showcase basic ways of how to build engine features like input handling, transformations and rendering:
@@ -173,9 +180,7 @@ The following language bindings have been developed with Flecs! Note that these 
 - [Twitter](https://twitter.com/ajmmertens)
 - [Reddit](https://www.reddit.com/r/flecs)
 
-## Supporting Flecs
+## Supporting Flecs ♥️
 Supporting Flecs goes a long way towards keeping the project going and the community alive! If you like the project, consider:
-- Giving it a star
+- Giving it a star 🌟
 - Becoming a sponsor: https://github.com/sponsors/SanderMertens
-
-Thanks a lot! ♥️
