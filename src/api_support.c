@@ -82,6 +82,10 @@ ecs_vector_t* expr_to_ids(
             term.role = ECS_AND;
         }
 
+        if (term.role == ECS_CASE) {
+            term.id = ECS_PAIR_OBJECT(term.id);
+        }
+
         ecs_id_t* elem = ecs_vector_add(&result, ecs_id_t);
         *elem = term.id | term.role;
 

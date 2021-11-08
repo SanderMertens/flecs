@@ -155,6 +155,7 @@ typedef int32_t ecs_size_t;
 #define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
+#define ecs_case(pred, obj) (ECS_CASE | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
 #define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))

@@ -558,36 +558,32 @@ int32_t get_pair_index(
         pair_offsets[column_index].index = result + 1;
         pair_offsets[column_index].count = count;
     }
-    
+
     return result;
 }
 
 static
 int32_t get_component_index(
     ecs_world_t *world,
-    ecs_table_t *table,
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
     ecs_oper_kind_t op,
     pair_offset_t *pair_offsets,
     int32_t count)
-{
+{    
     int32_t result = 0;
     ecs_entity_t component = *component_out;
 
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (component) {
         /* If requested component is a case, find the corresponding switch to
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
-            result = flecs_table_switch_from_case(
-                world, table, component);
+            ecs_entity_t sw = ECS_PAIR_RELATION(component);
+            result = ecs_type_index_of(table_type, 0, ECS_SWITCH | sw);
             ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
-
-            result += table->sw_column_offset;
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
             ecs_entity_t rel = ECS_PAIR_RELATION(component);
@@ -846,7 +842,7 @@ add_pair:
 
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
-            int32_t index = get_component_index(world, table, table_type, 
+            int32_t index = get_component_index(world, table_type, 
                 &component, c, op, pair_offsets, pair_cur + 1);
 
             if (index == -1) {
@@ -868,7 +864,7 @@ add_pair:
                 flecs_sparse_column_t *sc = ecs_vector_add(
                     &table_data->sparse_columns, flecs_sparse_column_t);
                 sc->signature_column_index = t;
-                sc->sw_case = component & ECS_COMPONENT_MASK;
+                sc->sw_case = ECS_PAIR_OBJECT(component);
                 sc->sw_column = NULL;
             }
 

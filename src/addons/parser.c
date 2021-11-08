@@ -896,7 +896,16 @@ parse_pair_object:
         goto error;
     }
 
-    term.role = ECS_PAIR;
+    if (term.role != 0) {
+        if (term.role != ECS_PAIR && term.role != ECS_CASE) {
+            ecs_parser_error(name, expr, (ptr - expr), 
+                "invalid combination of role '%s' with pair", 
+                    ecs_role_str(term.role));
+            goto error;
+        }
+    } else {
+        term.role = ECS_PAIR;
+    }
 
     ptr = ecs_parse_whitespace(ptr);
     goto parse_done; 

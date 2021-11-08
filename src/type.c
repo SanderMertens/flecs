@@ -1,30 +1,29 @@
 #include "private_api.h"
 
-/* -- Public API -- */
-
-static
-bool has_case(
-    const ecs_world_t *world,
-    ecs_entity_t sw_case,
-    ecs_entity_t e)
-{
-    const EcsType *type_ptr = ecs_get(world, e & ECS_COMPONENT_MASK, EcsType);
-    ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_type_has_id(world, type_ptr->normalized, sw_case, false);
-}
-
 static
 bool match_id(
     const ecs_world_t *world,
     ecs_entity_t id,
     ecs_entity_t match_with)
 {
+    (void)world;
+    
     if (ECS_HAS_ROLE(match_with, CASE)) {
-        ecs_entity_t sw_case = match_with & ECS_COMPONENT_MASK;
-        if (ECS_HAS_ROLE(id, SWITCH) && has_case(world, sw_case, id)) {
-            return 1;
+        ecs_entity_t sw = ECS_PAIR_RELATION(match_with);
+        if (id == (ECS_SWITCH | sw)) {
+#ifdef FLECS_SANITIZE
+            ecs_entity_t sw_case = ECS_PAIR_OBJECT(match_with);
+            const EcsType *sw_type = ecs_get(world, sw, EcsType);
+            ecs_assert(sw_type != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_type_has_id(world, sw_type->normalized, 
+                ecs_get_alive(world, sw_case), false) == true,
+                        ECS_INVALID_PARAMETER, NULL);
+            (void)sw_case;
+            (void)sw_type;
+#endif
+            return true;
         } else {
-            return 0;
+            return false;
         }
     } else {
         return ecs_id_match(id, match_with);

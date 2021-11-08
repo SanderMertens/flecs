@@ -1558,6 +1558,12 @@ ecs_table_t *traverse_from_expr(
                 return NULL;
             }
 
+            if (term.role == ECS_CASE) {
+                table = table_append(world, table, 
+                    ECS_SWITCH | ECS_PAIR_RELATION(term.id), diff);
+                term.id = ECS_CASE | ECS_PAIR_OBJECT(term.id);
+            }
+
             if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
                 table = table_append(world, table, term.id, diff);

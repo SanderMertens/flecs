@@ -141,6 +141,8 @@ public:
      * not an entity type (e.g. returned from entity::type). */
     Base& id(const flecs::type& type);
 
+    Base& id(const flecs::type& type, id_t id);
+
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
@@ -555,6 +557,12 @@ public:
     Base& term(const flecs::type& type) {
         this->term();
         *this->m_term = flecs::term(world()).id(type).move();
+        return *this;
+    }
+
+    Base& term(const flecs::type& type, flecs::id_t o) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(type, o).move();
         return *this;
     }
 

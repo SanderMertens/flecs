@@ -128,7 +128,6 @@ void Add_add_0_entity(void);
 void Add_remove_0_entity(void);
 
 // Testsuite 'Switch'
-void Switch_setup(void);
 void Switch_get_case_empty(void);
 void Switch_get_case_no_switch(void);
 void Switch_get_case_unset(void);
@@ -359,6 +358,10 @@ void Parser_trailing_space(void);
 void Parser_2_trailing_spaces(void);
 void Parser_template_type(void);
 void Parser_predicate_w_parens(void);
+void Parser_switch_id(void);
+void Parser_case_pair(void);
+void Parser_pair_w_invalid_role(void);
+void Parser_case_w_missing_obj(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -3591,6 +3594,22 @@ bake_test_case Parser_testcases[] = {
     {
         "predicate_w_parens",
         Parser_predicate_w_parens
+    },
+    {
+        "switch_id",
+        Parser_switch_id
+    },
+    {
+        "case_pair",
+        Parser_case_pair
+    },
+    {
+        "pair_w_invalid_role",
+        Parser_pair_w_invalid_role
+    },
+    {
+        "case_w_missing_obj",
+        Parser_case_w_missing_obj
     }
 };
 
@@ -10780,7 +10799,7 @@ static bake_test_suite suites[] = {
     },
     {
         "Switch",
-        Switch_setup,
+        NULL,
         NULL,
         34,
         Switch_testcases
@@ -10803,7 +10822,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        146,
+        150,
         Parser_testcases
     },
     {

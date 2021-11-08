@@ -263,6 +263,7 @@ typedef int32_t ecs_size_t;
 #define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
+#define ecs_case(pred, obj) (ECS_CASE | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
 #define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
@@ -15628,6 +15629,8 @@ public:
      * not an entity type (e.g. returned from entity::type). */
     Base& id(const flecs::type& type);
 
+    Base& id(const flecs::type& type, id_t id);
+
     /** Set (component) id to pair derived from relation id / object id */
     Base& id(id_t r, id_t o) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
@@ -16042,6 +16045,12 @@ public:
     Base& term(const flecs::type& type) {
         this->term();
         *this->m_term = flecs::term(world()).id(type).move();
+        return *this;
+    }
+
+    Base& term(const flecs::type& type, flecs::id_t o) {
+        this->term();
+        *this->m_term = flecs::term(world()).id(type, o).move();
         return *this;
     }
 
@@ -18392,6 +18401,15 @@ template<typename Base>
 inline Base& term_builder_i<Base>::id(const flecs::type& type) {
     ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
     m_term->pred.entity = type.id();
+    return *this;
+}
+
+template<typename Base>
+inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t obj) {
+    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+    m_term->pred.entity = type.id();
+    m_term->obj.entity = obj;
+    m_term->role = ECS_PAIR;
     return *this;
 }
 

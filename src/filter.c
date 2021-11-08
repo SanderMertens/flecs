@@ -286,13 +286,18 @@ int finalize_term_id(
     if (!obj && role != ECS_PAIR) {
         term->id = pred | role;
     } else {
-        if (role && role != ECS_PAIR) {
-            term_error(world, term, name, "invalid role for pair");
-            return -1;
+        if (role) {
+            if (role && role != ECS_PAIR && role != ECS_CASE) {
+                term_error(world, term, name, "invalid role for pair");
+                return -1;
+            }
+
+            term->role = role;
+        } else {
+            term->role = ECS_PAIR;
         }
 
-        term->id = ecs_pair(pred, obj);
-        term->role = ECS_PAIR;
+        term->id = term->role | ecs_entity_t_comb(obj, pred);
     }
 
     return 0;
@@ -384,9 +389,15 @@ int verify_term_consistency(
     ecs_id_t role = term->role;
     ecs_id_t id = term->id;
 
-    if (obj && (!role || (role != ECS_PAIR))) {
+    if (obj && (!role || (role != ECS_PAIR && role != ECS_CASE))) {
         term_error(world, term, name, 
             "invalid role for term with pair (expected ECS_PAIR)");
+        return -1;
+    }
+
+    if (role == ECS_CASE && !obj) {
+        term_error(world, term, name, 
+            "missing object for term with ECS_CASE role");
         return -1;
     }
 
@@ -400,13 +411,14 @@ int verify_term_consistency(
         return -1;
     }
 
-    if (obj && !(ECS_HAS_ROLE(id, PAIR))) {
+    if (obj && !ECS_HAS_ROLE(id, PAIR) && !ECS_HAS_ROLE(id, CASE)) {
         term_error(world, term, name, "term has object but id is not a pair");
         return -1;
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        if (id != ecs_pair(pred, obj)) {
+    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
+        role = ECS_ROLE_MASK & id;
+        if (id != (role | ecs_entity_t_comb(obj, pred))) {
             char *id_str = ecs_id_str(world, ecs_pair(pred, obj));
             term_error(world, term, name, 
                 "term id does not match pred/obj (%s)", id_str);

@@ -43,7 +43,7 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
     for (i = 0; i < count; i ++) {\
         ecs_term_t *term = &terms[i];\
         if (term->oper != EcsOr) {\
-            if (term->role == ECS_PAIR && term->obj.entity != EcsThis) {\
+            if ((term->role == ECS_PAIR || term->role == ECS_CASE) && term->obj.entity != EcsThis) {\
                 if (term->role) {\
                     test_int(ECS_ROLE_MASK & term->id, term->role);\
                 } else {\
@@ -3788,3 +3788,90 @@ void Parser_predicate_w_parens() {
     ecs_fini(world);
 }
 
+
+void Parser_switch_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Sw);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "SWITCH | Sw"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Sw, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].role, ECS_SWITCH);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_case_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, C1);
+    ECS_TAG(world, C2);
+    ECS_TYPE(world, Sw, C1, C2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "CASE | (Sw, C1)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Sw, EcsSelf);
+    test_obj(terms[0], C1, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].role, ECS_CASE);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_w_invalid_role() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, C1);
+    ECS_TAG(world, C2);
+    ECS_TYPE(world, Sw, C1, C2);
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "SWITCH | (Sw, C1)"
+    }) != 0);
+
+    ecs_fini(world);
+}
+
+void Parser_case_w_missing_obj() {
+   ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, C1);
+    ECS_TAG(world, C2);
+    ECS_TYPE(world, Sw, C1, C2);
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "CASE | Sw"
+    }) != 0);
+
+    ecs_fini(world);
+}

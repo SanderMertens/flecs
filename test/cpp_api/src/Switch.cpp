@@ -8,7 +8,7 @@ void Switch_add_case() {
     auto Movement = flecs::type(world, "Movement", 
         "Standing, Walking");
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_switch(Movement)
         .add_case(Standing);
 
@@ -29,7 +29,7 @@ void Switch_get_case() {
     auto Movement = flecs::type(world, "Movement", 
         "Standing, Walking");
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_switch(Movement)
         .add_case(Standing);
 
@@ -47,20 +47,59 @@ void Switch_system_w_case() {
     auto Movement = flecs::type(world, "Movement", 
         "Standing, Walking");
 
-    flecs::entity(world)
+    world.entity()
         .add_switch(Movement)
         .add_case(Walking);
 
-    flecs::entity(world)
+    world.entity()
         .add_switch(Movement)
         .add_case(Walking);
 
-    flecs::entity(world)
+    world.entity()
         .add_switch(Movement)
         .add_case(Standing);    
 
     int count = 0, invoke_count = 0;  
-    world.system<>(nullptr, "CASE | Walking")
+    world.system<>(nullptr, "CASE | (Movement, Walking)")
+        .iter([&](flecs::iter it) {
+            auto movement = it.term<flecs::entity_t>(1);
+
+            invoke_count ++;
+            for (auto i : it) {
+                test_assert(movement[i] == Walking.id());
+                count ++;
+            }
+        });
+
+    world.progress();
+
+    test_int(invoke_count, 2);
+    test_int(count, 2);
+}
+
+void Switch_system_w_case_builder() {
+    flecs::world world;
+
+    auto Standing = flecs::entity(world, "Standing");
+    auto Walking = flecs::entity(world, "Walking");
+    auto Movement = flecs::type(world, "Movement", 
+        "Standing, Walking");
+
+    world.entity()
+        .add_switch(Movement)
+        .add_case(Walking);
+
+    world.entity()
+        .add_switch(Movement)
+        .add_case(Walking);
+
+    world.entity()
+        .add_switch(Movement)
+        .add_case(Standing);    
+
+    int count = 0, invoke_count = 0;  
+    world.system<>()
+        .term(Movement, Walking).role(flecs::Case)
         .iter([&](flecs::iter it) {
             auto movement = it.term<flecs::entity_t>(1);
 
@@ -85,15 +124,15 @@ void Switch_system_w_switch() {
     auto Movement = flecs::type(world, "Movement", 
         "Standing, Walking");
 
-    auto e1 = flecs::entity(world)
+    auto e1 = world.entity()
         .add_switch(Movement)
         .add_case(Walking);
 
-    auto e2 = flecs::entity(world)
+    auto e2 = world.entity()
         .add_switch(Movement)
         .add_case(Walking);
 
-    auto e3 = flecs::entity(world)
+    auto e3 = world.entity()
         .add_switch(Movement)
         .add_case(Standing);    
 
@@ -124,6 +163,44 @@ struct Movement {
     struct Walking { };
 };
 
+void Switch_system_w_sw_type_builder() {
+    flecs::world world;
+
+    world.type().component<Movement>()
+        .add<Movement::Standing>()
+        .add<Movement::Walking>();
+
+    world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Walking>();
+
+    world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Walking>();
+
+    world.entity()
+        .add_switch<Movement>()
+        .add_case<Movement::Standing>();
+
+    int count = 0, invoke_count = 0;  
+    world.system<>()
+        .term<Movement, Movement::Walking>().role(flecs::Case)
+        .iter([&](flecs::iter it) {
+            auto movement = it.term<flecs::entity_t>(1);
+
+            invoke_count ++;
+            for (auto i : it) {
+                test_assert(movement[i] == world.id<Movement::Walking>());
+                count ++;
+            }
+        });
+
+    world.progress();
+
+    test_int(invoke_count, 2);
+    test_int(count, 2);
+}
+
 void Switch_add_case_w_type() {
     flecs::world world;
 
@@ -131,7 +208,7 @@ void Switch_add_case_w_type() {
         .add<Movement::Standing>()
         .add<Movement::Walking>();
 
-    auto e = flecs::entity(world)
+    auto e = world.entity()
         .add_switch(Movement)
         .add_case<Movement::Standing>();
 
@@ -212,3 +289,4 @@ void Switch_add_remove_switch_w_type() {
     test_assert(!e.has_switch<Movement>());
     test_assert(!e.has_case<Movement::Walking>());
 }
+

@@ -245,6 +245,8 @@
                 "add_case",
                 "get_case",
                 "system_w_case",
+                "system_w_case_builder",
+                "system_w_sw_type_builder",
                 "system_w_switch",
                 "add_case_w_type",
                 "add_switch_w_type",
