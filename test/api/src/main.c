@@ -587,6 +587,8 @@ void Hierarchies_cascade_after_recycled_parent_change(void);
 void Hierarchies_long_name_depth_0(void);
 void Hierarchies_long_name_depth_1(void);
 void Hierarchies_long_name_depth_2(void);
+void Hierarchies_ensure_1_parent_after_adding_2(void);
+void Hierarchies_ensure_child_alive_after_deleting_prev_parent(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -1247,6 +1249,9 @@ void Pairs_get_object_for_wildcard_from_self(void);
 void Pairs_get_object_for_wildcard_from_base(void);
 void Pairs_get_object_for_wildcard_from_nested_base(void);
 void Pairs_ignore_childof_from_base(void);
+void Pairs_add_exclusive_relation_twice(void);
+void Pairs_add_same_exclusive_relation_twice(void);
+void Pairs_set_exclusive_relation_twice(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -1802,7 +1807,6 @@ void System_w_FromParent_setup(void);
 void System_w_FromParent_1_column_from_container(void);
 void System_w_FromParent_2_column_1_from_container(void);
 void System_w_FromParent_3_column_2_from_container(void);
-void System_w_FromParent_3_column_2_from_different_container(void);
 void System_w_FromParent_2_column_1_from_container_w_not(void);
 void System_w_FromParent_2_column_1_from_container_w_not_prefab(void);
 void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void);
@@ -4486,6 +4490,14 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "long_name_depth_2",
         Hierarchies_long_name_depth_2
+    },
+    {
+        "ensure_1_parent_after_adding_2",
+        Hierarchies_ensure_1_parent_after_adding_2
+    },
+    {
+        "ensure_child_alive_after_deleting_prev_parent",
+        Hierarchies_ensure_child_alive_after_deleting_prev_parent
     }
 };
 
@@ -7008,6 +7020,18 @@ bake_test_case Pairs_testcases[] = {
     {
         "ignore_childof_from_base",
         Pairs_ignore_childof_from_base
+    },
+    {
+        "add_exclusive_relation_twice",
+        Pairs_add_exclusive_relation_twice
+    },
+    {
+        "add_same_exclusive_relation_twice",
+        Pairs_add_same_exclusive_relation_twice
+    },
+    {
+        "set_exclusive_relation_twice",
+        Pairs_set_exclusive_relation_twice
     }
 };
 
@@ -9134,10 +9158,6 @@ bake_test_case System_w_FromParent_testcases[] = {
         System_w_FromParent_3_column_2_from_container
     },
     {
-        "3_column_2_from_different_container",
-        System_w_FromParent_3_column_2_from_different_container
-    },
-    {
         "2_column_1_from_container_w_not",
         System_w_FromParent_2_column_1_from_container_w_not
     },
@@ -10850,7 +10870,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        81,
+        83,
         Hierarchies_testcases
     },
     {
@@ -10976,7 +10996,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        66,
+        69,
         Pairs_testcases
     },
     {
@@ -11088,7 +11108,7 @@ static bake_test_suite suites[] = {
         "System_w_FromParent",
         System_w_FromParent_setup,
         NULL,
-        20,
+        19,
         System_w_FromParent_testcases
     },
     {

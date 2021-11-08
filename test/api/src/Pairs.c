@@ -2126,3 +2126,69 @@ void Pairs_ignore_childof_from_base() {
 
     ecs_fini(world);
 }
+
+void Pairs_add_exclusive_relation_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_add_pair(world, e, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e, Rel, ObjB));
+    test_assert( !ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_add_same_exclusive_relation_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_set_exclusive_relation_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Start);
+    ECS_TAG(world, Stop);
+
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_set_pair(world, e, Position, Start, {10, 20});
+    test_assert( ecs_has_pair(world, e, ecs_id(Position), Start));
+
+    ecs_set_pair(world, e, Position, Stop, {20, 30});
+    test_assert( ecs_has_pair(world, e, ecs_id(Position), Stop));
+    test_assert( !ecs_has_pair(world, e, ecs_id(Position), Start));
+
+    const Position *p = ecs_get_pair(world, e, Position, Stop);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    p = ecs_get_pair(world, e, Position, Start);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
+

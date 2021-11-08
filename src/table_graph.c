@@ -317,7 +317,8 @@ static
 void add_id_to_ids(
     ecs_type_t type,
     ecs_entity_t add,
-    ecs_ids_t *out)
+    ecs_ids_t *out,
+    ecs_entity_t r_exclusive)
 {
     int32_t count = ecs_vector_count(type);
     ecs_id_t *array = ecs_vector_first(type, ecs_id_t);    
@@ -327,13 +328,22 @@ void add_id_to_ids(
     for (i = 0; i < count; i ++) {
         ecs_id_t e = array[i];
 
-        if (e >= add && !added) {
-            if (e != add) {
-                out->array[el ++] = add;
+        if (!added) {
+            if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
+                if (ECS_PAIR_RELATION(e) == r_exclusive) {
+                    out->array[el ++] = add;
+                    continue; /* don't add original element */
+                }
             }
-            added = true;
+
+            if (e >= add) {
+                if (e != add) {
+                    out->array[el ++] = add;
+                }
+                added = true;
+            }
         }
-        
+
         out->array[el ++] = e;
         ecs_assert(el <= out->count, ECS_INTERNAL_ERROR, NULL);
     }
@@ -671,13 +681,21 @@ ecs_table_t* find_or_create_table_with_id(
     } else {
         ecs_type_t type = node->type;
         int32_t count = ecs_vector_count(type);
+        ecs_entity_t r_exclusive = 0;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t r = ecs_pair_relation(world, id);
+            if (ecs_has_id(world, r, EcsExclusive)) {
+                r_exclusive = (uint32_t)r;
+            }
+        }
 
         ecs_ids_t ids = {
             .array = ecs_os_alloca_n(ecs_id_t, count + 1),
             .count = count + 1
         };
 
-        add_id_to_ids(type, id, &ids);
+        add_id_to_ids(type, id, &ids, r_exclusive);
 
         return flecs_table_find_or_create(world, &ids);
     }

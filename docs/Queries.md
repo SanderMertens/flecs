@@ -981,7 +981,7 @@ is equivalent to
 Position(super(ChildOf))
 ```
 
-#### Inclusive Substitution
+#### TransitiveSelf Substitution
 Substitution can do more than just searching supersets. It is for example possible to start the search on `This` itself, and when the component is not found on `This`, keep searching by following the `ChildOf` relation:
 
 ```c

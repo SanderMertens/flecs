@@ -2462,7 +2462,7 @@ void Rules_transitive_nonfinal_fact() {
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
-        "Inclusive(PartOf)\n"
+        "TransitiveSelf(PartOf)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n";
 
@@ -2495,7 +2495,7 @@ void Rules_transitive_nonfinal_fact_w_implicit_pred_subset() {
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
-        "Inclusive(ConnectedWith)\n"
+        "TransitiveSelf(ConnectedWith)\n"
         "IsA(PartOf, ConnectedWith)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n";
@@ -2914,7 +2914,7 @@ void Rules_implicit_is_a_transitive_pair_fact() {
 
     const char *small_rules = 
         "Transitive(PartOf)\n"
-        "Inclusive(PartOf)\n"
+        "TransitiveSelf(PartOf)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n"
         "IsA(MonaLisa, Painting)\n";
@@ -2948,7 +2948,7 @@ void Rules_implicit_is_a_transitive_pair_fact_w_implicit_pred_subset() {
 
     const char *small_rules = 
         "Transitive(ConnectedWith)\n"
-        "Inclusive(ConnectedWith)\n"
+        "TransitiveSelf(ConnectedWith)\n"
         "IsA(PartOf, ConnectedWith)\n"
         "PartOf(ArtCollection, Museum)\n"
         "PartOf(Painting, ArtCollection)\n"

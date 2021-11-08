@@ -875,7 +875,7 @@ FLECS_API extern const ecs_entity_t EcsThis;
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
 /* Can be added to transitive relation to indicate it is inclusive. */
-FLECS_API extern const ecs_entity_t EcsInclusive;
+FLECS_API extern const ecs_entity_t EcsTransitiveSelf;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not
@@ -886,6 +886,10 @@ FLECS_API extern const ecs_entity_t EcsFinal;
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
+
+/* Can be added to relation to indicate that the relationship can only occur
+ * once on an entity. Adding a 2nd instance will replace the 1st. */
+FLECS_API extern const ecs_entity_t EcsExclusive;
 
 /* Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;

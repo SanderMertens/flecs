@@ -80,7 +80,7 @@ void TransitiveRules_trans_X_Y() {
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
-    LINE "Inclusive(LocatedIn)"
+    LINE "TransitiveSelf(LocatedIn)"
     LINE "LocatedIn(UnitedStates, Earth)\n";
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
@@ -112,7 +112,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
-    LINE "Inclusive(LocatedIn)"
+    LINE "TransitiveSelf(LocatedIn)"
     LINE "LocatedIn(UnitedStates, Earth)"
     LINE "LocatedIn(SanFrancisco, UnitedStates)\n";
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
@@ -163,7 +163,7 @@ void TransitiveRules_trans_pred_This_X__pred_X() {
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
-    LINE "Inclusive(LocatedIn)"
+    LINE "TransitiveSelf(LocatedIn)"
     LINE "Location(Earth)";
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
@@ -198,7 +198,7 @@ void TransitiveRules_trans_constrained_x_y() {
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
-    LINE "Inclusive(LocatedIn)"
+    LINE "TransitiveSelf(LocatedIn)"
     LINE "Location(Universe)"
     LINE "Location(Earth)"
     LINE "LocatedIn(Earth, Universe)";

@@ -180,9 +180,10 @@ static const flecs::entity_t World = EcsWorld;
 static const flecs::entity_t Wildcard = EcsWildcard;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
-static const flecs::entity_t Inclusive = EcsInclusive;
+static const flecs::entity_t TransitiveSelf = EcsTransitiveSelf;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t Tag = EcsTag;
+static const flecs::entity_t Exclusive = EcsExclusive;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
@@ -192,7 +193,7 @@ static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t Name = EcsName;
 static const flecs::entity_t Symbol = EcsSymbol;
 
-/* Cleanup rules */
+/* Cleanup policies */
 static const flecs::entity_t OnDelete = EcsOnDelete;
 static const flecs::entity_t OnDeleteObject = EcsOnDeleteObject;
 static const flecs::entity_t Remove = EcsRemove;

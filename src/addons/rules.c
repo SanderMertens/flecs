@@ -871,7 +871,7 @@ ecs_rule_pair_t term_to_pair(
             result.final = true;
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsInclusive)) {
+        if (ecs_has_id(rule->world, pred_id, EcsTransitiveSelf)) {
             result.inclusive = true;
         }
     }

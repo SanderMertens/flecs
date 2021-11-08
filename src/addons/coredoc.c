@@ -50,7 +50,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsInclusive, "Inclusive relation property");
+    ecs_doc_set_brief(world, EcsTransitiveSelf, "TransitiveSelf relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
@@ -67,7 +67,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsInclusive, URL_ROOT "#inclusive-relations");
+    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#inclusive-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
     ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#relation-cleanup-properties");
