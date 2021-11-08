@@ -1252,6 +1252,8 @@ void Pairs_ignore_childof_from_base(void);
 void Pairs_add_exclusive_relation_twice(void);
 void Pairs_add_same_exclusive_relation_twice(void);
 void Pairs_set_exclusive_relation_twice(void);
+void Pairs_add_exclusive_non_empty_table(void);
+void Pairs_add_exclusive_non_empty_table_w_pairs(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -1877,6 +1879,7 @@ void World_is_entity_enabled(void);
 void World_ensure_empty_root(void);
 void World_register_alias_twice_same_entity(void);
 void World_register_alias_twice_different_entity(void);
+void World_redefine_component(void);
 
 // Testsuite 'Stats'
 void Stats_get_world_stats(void);
@@ -7033,6 +7036,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_exclusive_relation_twice",
         Pairs_set_exclusive_relation_twice
+    },
+    {
+        "add_exclusive_non_empty_table",
+        Pairs_add_exclusive_non_empty_table
+    },
+    {
+        "add_exclusive_non_empty_table_w_pairs",
+        Pairs_add_exclusive_non_empty_table_w_pairs
     }
 };
 
@@ -9413,6 +9424,10 @@ bake_test_case World_testcases[] = {
     {
         "register_alias_twice_different_entity",
         World_register_alias_twice_different_entity
+    },
+    {
+        "redefine_component",
+        World_redefine_component
     }
 };
 
@@ -11001,7 +11016,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        69,
+        71,
         Pairs_testcases
     },
     {
@@ -11141,7 +11156,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        35,
+        36,
         World_testcases
     },
     {
