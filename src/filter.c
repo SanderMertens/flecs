@@ -632,6 +632,7 @@ int ecs_filter_finalize(
     int32_t i, term_count = f->term_count, actual_count = 0;
     ecs_term_t *terms = f->terms;
     bool is_or = false, prev_or = false;
+    int32_t filter_terms = 0;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -660,9 +661,21 @@ int ecs_filter_finalize(
         if (term->id == EcsDisabled) {
             f->match_disabled = true;
         }
+
+        if (f->filter) {
+            term->inout = EcsInOutFilter;
+        }
+
+        if (term->inout == EcsInOutFilter) {
+            filter_terms ++;
+        }
     }
 
     f->term_count_actual = actual_count;
+
+    if (filter_terms == term_count) {
+        f->filter = true;
+    }
 
     return 0;
 }
@@ -708,6 +721,7 @@ int ecs_filter_init(
      * filter has been validated. */
     f.name = (char*)name;
     f.expr = (char*)expr;
+    f.filter = desc->filter;
 
     if (terms) {
         terms = desc->terms_buffer;
@@ -1193,6 +1207,13 @@ bool flecs_term_match_table(
         ecs_assert(id_out != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(subject_out != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        if (term->inout == EcsInOutFilter && ptr_out) {
+            ptr_out[0] = NULL;
+            size_out[0] = 0;
+            ptr_out = NULL;
+            size_out = NULL;
+        }
+
         populate_from_column(world, table, offset, term->id, column, 
             source, id_out, subject_out, size_out, ptr_out);
 
@@ -1528,10 +1549,17 @@ bool ecs_term_next(
     ecs_world_t *world = it->real_world;
 
     it->ids = &iter->id;
-    it->columns = &iter->column;
     it->subjects = &iter->subject;
-    it->sizes = &iter->size;
-    it->ptrs = &iter->ptr;
+
+    if (term->inout != EcsInOutFilter) {
+        it->sizes = &iter->size;
+        it->ptrs = &iter->ptr;
+        it->columns = &iter->column;
+    } else {
+        it->sizes = NULL;
+        it->ptrs = NULL;
+        it->columns = NULL;
+    }
 
     ecs_iter_t *chain_it = it->chain_it;
     if (chain_it) {
@@ -1700,6 +1728,8 @@ ecs_iter_t ecs_filter_iter(
         iter->filter.terms = NULL;
     }
 
+    it.is_filter = filter->filter;
+
     return it;
 error:
     return (ecs_iter_t){ 0 };
@@ -1740,7 +1770,7 @@ bool ecs_filter_next(
     ecs_filter_t *filter = &iter->filter;
     ecs_world_t *world = it->real_world;
     ecs_table_t *table;
-    bool match;
+    bool match, is_filter = it->is_filter;
     int i;
 
     if (!filter->terms) {
@@ -1770,6 +1800,7 @@ bool ecs_filter_next(
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t term_index = term->index;
+        bool term_is_filter = term->inout == EcsInOutFilter;
 
         do {
             ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -1785,14 +1816,21 @@ bool ecs_filter_next(
                     goto done;
                 }
 
+                ecs_size_t *sizes = &it->sizes[term_index * !is_filter];
+                void **ptrs = &it->ptrs[term_index * !is_filter];
+
+                sizes = (ecs_size_t*)((uintptr_t)sizes * !term_is_filter);
+                ptrs = (void**)((uintptr_t)ptrs * !term_is_filter);
+
                 /* Populate term data as flecs_filter_match_table skips it */
                 populate_from_column(world, table, 0, term->id, tr.column, source, 
                     &it->ids[term_index], 
                     &it->subjects[term_index],
-                    &it->sizes[term_index], 
-                    &it->ptrs[term_index]);
+                    sizes, ptrs);
 
-                it->columns[term_index] = tr.column + 1;
+                if (!term_is_filter) {
+                    it->columns[term_index] = tr.column + 1;
+                }
             } else {
                 /* Progress iterator to next match for table, if any */
                 table = it->table;
@@ -1801,7 +1839,9 @@ bool ecs_filter_next(
                 for (i = filter->term_count_actual - 1; i >= 0; i --) {
                     if (it->match_indices[i] > 0) {
                         it->match_indices[i] --;
-                        it->columns[i] ++;
+                        if (!term_is_filter) {
+                            it->columns[i] ++;
+                        }
                         break;
                     }
                 }
@@ -1811,7 +1851,7 @@ bool ecs_filter_next(
             match = flecs_filter_match_table(world, filter, table, table->type,
                 0, it->ids, it->columns, it->subjects, it->sizes, 
                 it->ptrs, it->match_indices, &iter->matches_left, 
-                first_match, term->index);
+                first_match, term_index);
 
             /* Check if there are any terms which have more matching columns */
             if (!first_match) {

@@ -355,7 +355,7 @@ struct ecs_query_t {
     ecs_map_t *groups;
 
     /* Handle to system (optional) */
-    ecs_entity_t system;   
+    ecs_entity_t system;
 
     /* Used for sorting */
     ecs_entity_t order_by_component;

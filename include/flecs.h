@@ -288,10 +288,11 @@ typedef struct ecs_iterable_t {
 
 /** Specify read/write access for term */
 typedef enum ecs_inout_kind_t {
-    EcsInOutDefault,
-    EcsInOut,
-    EcsIn,
-    EcsOut
+    EcsInOutDefault,  /* InOut for regular terms, In for shared terms */
+    EcsInOutFilter,   /* Term is neither read nor written */
+    EcsInOut,         /* Term is both read and written */
+    EcsIn,            /* Term is only read */
+    EcsOut,           /* Term is only written */
 } ecs_inout_kind_t;
 
 /** Specifies whether term identifier is a variable or entity */
@@ -370,6 +371,8 @@ struct ecs_filter_t {
     bool match_only_this;      /* Has only terms that match EcsThis */
     bool match_prefab;         /* Does filter match prefabs */
     bool match_disabled;       /* Does filter match disabled entities */
+
+    bool filter;               /* When true, data fields won't be populated */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -538,6 +541,11 @@ typedef struct ecs_filter_desc_t {
      * filter will determine based on whether the predicate is transitive and/or
      * final whether IsA substitution is required. */
     bool substitute_default;
+
+    /* When true, don't populate data fields of iterator. This is useful for
+     * filters that are only interested in finding the set of matching tables or
+     * entities, and not in the component data. */
+    bool filter;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;
@@ -950,7 +958,7 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
-FLECS_API extern const ecs_entity_t EcsOnTableNonEmpty;
+FLECS_API extern const ecs_entity_t EcsOnTableFilled;
 
 /* Event. Triggers when a trigger is created. */
 // FLECS_API extern const ecs_entity_t EcsOnCreateTrigger;

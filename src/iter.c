@@ -22,11 +22,17 @@ void flecs_iter_init(
     ecs_iter_t *it)
 {
     INIT_CACHE(it, ids, it->term_count);
-    INIT_CACHE(it, columns, it->term_count);
     INIT_CACHE(it, subjects, it->term_count);
-    INIT_CACHE(it, sizes, it->term_count);
-    INIT_CACHE(it, ptrs, it->term_count);
     INIT_CACHE(it, match_indices, it->term_count);
+    INIT_CACHE(it, columns, it->term_count);
+    
+    if (!it->is_filter) {
+        INIT_CACHE(it, sizes, it->term_count);
+        INIT_CACHE(it, ptrs, it->term_count);
+    } else {
+        it->sizes = NULL;
+        it->ptrs = NULL;
+    }
 
     it->is_valid = true;
 }
@@ -58,6 +64,11 @@ void flecs_iter_populate_term_data(
 {
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
+        goto no_data;
+    }
+
+    if (it->terms[t].inout == EcsInOutFilter) {
+        /* Filter terms may match with data but don't return it */
         goto no_data;
     }
 

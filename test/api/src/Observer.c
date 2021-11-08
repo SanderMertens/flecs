@@ -25,6 +25,64 @@ void Observer_w_value(ecs_iter_t *it) {
 }
 
 static
+void Observer_w_filter_term(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    test_assert(it->ptrs == NULL);
+    test_assert(it->sizes == NULL);
+}
+
+static
+void Observer_w_1_filter_term(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    test_assert(it->ptrs != NULL);
+    test_assert(it->sizes != NULL);
+
+    test_assert(it->ptrs[0] == NULL);
+    test_assert(it->sizes[0] == 0);
+
+    test_assert(it->ptrs[1] != NULL);
+    test_assert(it->sizes[1] != 0);
+
+    Velocity *v = ecs_term(it, Velocity, 2);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+static
+void Observer_w_2_filter_terms(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    test_assert(it->ptrs != NULL);
+    test_assert(it->sizes != NULL);
+
+    test_assert(it->ptrs[0] == NULL);
+    test_assert(it->sizes[0] == 0);
+
+    test_assert(it->ptrs[1] == NULL);
+    test_assert(it->sizes[1] == 0);
+
+    test_assert(it->ptrs[2] != NULL);
+    test_assert(it->sizes[2] != 0);
+
+    Mass *m = ecs_term(it, Mass, 3);
+    test_int(m[0], 100);
+}
+
+static
 void Observer_w_self(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -2028,6 +2086,119 @@ void Observer_write_in_unset() {
     const Velocity *v = ecs_get(world, e, Velocity);
     test_int(v->x, 2);
     test_int(v->y, 3);
+
+    ecs_fini(world);
+}
+
+void Observer_filter_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }},
+        .events = {EcsOnSet},
+        .callback = Observer_w_filter_term,
+        .ctx = &ctx
+    });
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e1 != 0);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_1_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity) }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer_w_1_filter_term,
+        .ctx = &ctx
+    });
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_set(world, 0, Velocity, {1, 2});
+    test_assert(e1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e1, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_3_terms_2_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Mass) }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer_w_2_filter_terms,
+        .ctx = &ctx
+    });
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_set(world, 0, Velocity, {1, 2});
+    test_assert(e1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e1, Mass, {100});
+    ecs_set(world, e1, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 3);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.c[0][2], ecs_id(Mass));
 
     ecs_fini(world);
 }

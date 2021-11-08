@@ -249,6 +249,7 @@ void Parser_out_component_implicit_subject(void);
 void Parser_out_component_explicit_subject(void);
 void Parser_out_pair_implicit_subject(void);
 void Parser_out_pair_explicit_subject(void);
+void Parser_inout_filter_component(void);
 void Parser_component_singleton(void);
 void Parser_this_singleton(void);
 void Parser_component_implicit_no_subject(void);
@@ -1102,6 +1103,12 @@ void Filter_chain_term_iter_w_term_iter(void);
 void Filter_chain_filter_iter_w_term_iter(void);
 void Filter_chain_w_term_iter_component(void);
 void Filter_filter_w_recycled_object_and_id(void);
+void Filter_term_iter_w_filter_term(void);
+void Filter_filter_iter_w_filter_term(void);
+void Filter_filter_iter_w_2_terms_1_filter(void);
+void Filter_filter_iter_w_3_terms_2_filter(void);
+void Filter_filter_iter_2_terms_filter_all(void);
+void Filter_filter_iter_2_terms_filter_all_w_out(void);
 
 // Testsuite 'FilterDefaultSubstitution'
 void FilterDefaultSubstitution_final_pred_no_args(void);
@@ -1166,6 +1173,9 @@ void Query_query_iter_20_components(void);
 void Query_iter_type_set(void);
 void Query_only_optional_from_entity(void);
 void Query_only_optional_from_entity_no_match(void);
+void Query_filter_term(void);
+void Query_2_terms_1_filter(void);
+void Query_3_terms_2_filter(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1346,6 +1356,9 @@ void Rules_terms_set(void);
 void Rules_value_set(void);
 void Rules_term_w_this_this_this(void);
 void Rules_term_w_x_x_x(void);
+void Rules_filter_term(void);
+void Rules_2_terms_1_filter(void);
+void Rules_3_terms_2_filter(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -1435,6 +1448,7 @@ void Trigger_on_add_yield_existing(void);
 void Trigger_on_add_yield_existing_2_tables(void);
 void Trigger_on_add_yield_existing_wildcard_pair(void);
 void Trigger_on_set_yield_existing(void);
+void Trigger_filter_term(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1483,6 +1497,9 @@ void Observer_unset_on_fini_3(void);
 void Observer_overlapping_unset_systems(void);
 void Observer_unset_move_to_nonempty_table(void);
 void Observer_write_in_unset(void);
+void Observer_filter_term(void);
+void Observer_2_terms_1_filter(void);
+void Observer_3_terms_2_filter(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -3134,6 +3151,10 @@ bake_test_case Parser_testcases[] = {
     {
         "out_pair_explicit_subject",
         Parser_out_pair_explicit_subject
+    },
+    {
+        "inout_filter_component",
+        Parser_inout_filter_component
     },
     {
         "component_singleton",
@@ -6419,6 +6440,30 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_recycled_object_and_id",
         Filter_filter_w_recycled_object_and_id
+    },
+    {
+        "term_iter_w_filter_term",
+        Filter_term_iter_w_filter_term
+    },
+    {
+        "filter_iter_w_filter_term",
+        Filter_filter_iter_w_filter_term
+    },
+    {
+        "filter_iter_w_2_terms_1_filter",
+        Filter_filter_iter_w_2_terms_1_filter
+    },
+    {
+        "filter_iter_w_3_terms_2_filter",
+        Filter_filter_iter_w_3_terms_2_filter
+    },
+    {
+        "filter_iter_2_terms_filter_all",
+        Filter_filter_iter_2_terms_filter_all
+    },
+    {
+        "filter_iter_2_terms_filter_all_w_out",
+        Filter_filter_iter_2_terms_filter_all_w_out
     }
 };
 
@@ -6665,6 +6710,18 @@ bake_test_case Query_testcases[] = {
     {
         "only_optional_from_entity_no_match",
         Query_only_optional_from_entity_no_match
+    },
+    {
+        "filter_term",
+        Query_filter_term
+    },
+    {
+        "2_terms_1_filter",
+        Query_2_terms_1_filter
+    },
+    {
+        "3_terms_2_filter",
+        Query_3_terms_2_filter
     }
 };
 
@@ -7375,6 +7432,18 @@ bake_test_case Rules_testcases[] = {
     {
         "term_w_x_x_x",
         Rules_term_w_x_x_x
+    },
+    {
+        "filter_term",
+        Rules_filter_term
+    },
+    {
+        "2_terms_1_filter",
+        Rules_2_terms_1_filter
+    },
+    {
+        "3_terms_2_filter",
+        Rules_3_terms_2_filter
     }
 };
 
@@ -7721,6 +7790,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_yield_existing",
         Trigger_on_set_yield_existing
+    },
+    {
+        "filter_term",
+        Trigger_filter_term
     }
 };
 
@@ -7908,6 +7981,18 @@ bake_test_case Observer_testcases[] = {
     {
         "write_in_unset",
         Observer_write_in_unset
+    },
+    {
+        "filter_term",
+        Observer_filter_term
+    },
+    {
+        "2_terms_1_filter",
+        Observer_2_terms_1_filter
+    },
+    {
+        "3_terms_2_filter",
+        Observer_3_terms_2_filter
     }
 };
 
@@ -10718,7 +10803,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        145,
+        146,
         Parser_testcases
     },
     {
@@ -10851,7 +10936,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        93,
+        99,
         Filter_testcases
     },
     {
@@ -10865,7 +10950,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        49,
+        52,
         Query_testcases
     },
     {
@@ -10879,7 +10964,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        110,
+        113,
         Rules_testcases
     },
     {
@@ -10893,14 +10978,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        68,
+        69,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        46,
+        49,
         Observer_testcases
     },
     {

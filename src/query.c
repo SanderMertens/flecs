@@ -2156,7 +2156,6 @@ void query_iter_init(
     }
 }
 
-
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -2371,6 +2370,7 @@ ecs_iter_t ecs_query_iter_page(
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
+        .is_filter = query->filter.filter,
         .iter.query = it,
         .next = ecs_query_next
     };

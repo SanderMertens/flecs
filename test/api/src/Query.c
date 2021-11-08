@@ -2079,3 +2079,116 @@ void Query_only_optional_from_entity_no_match() {
 
     ecs_fini(world);
 }
+
+void Query_filter_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(ecs_query_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs == NULL);
+    test_assert(it.sizes == NULL);
+    test_assert(it.columns != NULL);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Query_2_terms_1_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity) }
+        }
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(ecs_query_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs != NULL);
+    test_assert(it.sizes != NULL);
+    test_assert(it.columns != NULL);
+
+    test_assert(it.ptrs[0] == NULL);
+    test_assert(it.ptrs[1] != NULL);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Query_3_terms_2_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Mass) }
+        }
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+    ecs_set(world, e, Mass, {1});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(ecs_query_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+    test_assert(it.ids[2] == ecs_id(Mass));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs != NULL);
+    test_assert(it.sizes != NULL);
+    test_assert(it.columns != NULL);
+
+    test_assert(it.ptrs[0] == NULL);
+    test_assert(it.ptrs[1] == NULL);
+    test_assert(it.ptrs[2] != NULL);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}

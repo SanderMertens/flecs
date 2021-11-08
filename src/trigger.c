@@ -253,7 +253,7 @@ void init_iter(
             ecs_assert((row + count) <= ecs_vector_count(data->entities), 
                 ECS_INTERNAL_ERROR, NULL);
 
-            it->entities = ECS_OFFSET(entities, ECS_SIZEOF(ecs_entity_t) * row);
+            it->entities = &entities[row];
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
@@ -265,30 +265,33 @@ void init_iter(
             
             index ++;
             it->columns[0] = index;
-            it->sizes[0] = 0;
 
             if (storage_index == -1) {
                 it->columns[0] = 0;
             }
 
-            if (!subject && it->columns[0] && data && data->columns) {
-                ecs_column_t *col = &data->columns[storage_index];
-                it->ptrs[0] = ecs_vector_get_t(
-                    col->data, col->size, col->alignment, row);
-                it->sizes[0] = col->size;
-            } else if (subject) {
-                it->ptrs[0] = (void*)ecs_get_id(
-                    it->world, subject, it->event_id);
-                ecs_entity_t e = ecs_get_typeid(it->world, it->event_id);
-                const EcsComponent *comp = ecs_get(it->world, e, EcsComponent);
-                if (comp) {
-                    it->sizes[0] = comp->size;
-                } else {
-                    it->sizes[0] = 0;
+            if (!it->is_filter) {
+                it->sizes[0] = 0;
+                if (!subject && it->columns[0] && data && data->columns) {
+                    ecs_column_t *col = &data->columns[storage_index];
+                    it->ptrs[0] = ecs_vector_get_t(
+                        col->data, col->size, col->alignment, row);
+                    it->sizes[0] = col->size;
+                } else if (subject) {
+                    it->ptrs[0] = (void*)ecs_get_id(
+                        it->world, subject, it->event_id);
+                    ecs_entity_t e = ecs_get_typeid(it->world, it->event_id);
+                    const EcsComponent *comp = ecs_get(
+                        it->world, e, EcsComponent);
+                    if (comp) {
+                        it->sizes[0] = comp->size;
+                    } else {
+                        it->sizes[0] = 0;
+                    }
                 }
-                
-                it->subjects[0] = subject;
             }
+
+            it->subjects[0] = subject;
         } else {
             it->entities = entity;
         }
@@ -321,6 +324,9 @@ void notify_self_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    void **ptrs = it->ptrs;
+    ecs_size_t *sizes = it->sizes;
+
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
@@ -328,13 +334,25 @@ void notify_self_triggers(
             continue;
         }
 
+        bool is_filter = t->term.inout == EcsInOutFilter;
+
         it->system = t->entity;
         it->self = t->self;
         it->ctx = t->ctx;
         it->binding_ctx = t->binding_ctx;
         it->term_index = t->term.index;
         it->terms = &t->term;
-        t->action(it);                   
+        it->is_filter = is_filter;
+
+        if (is_filter) {
+            it->ptrs = NULL;
+            it->sizes = NULL;
+        }
+
+        t->action(it);
+
+        it->ptrs = ptrs;
+        it->sizes = sizes;
     }
 }
 

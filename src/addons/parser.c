@@ -43,6 +43,7 @@
 #define TOK_IN "in"
 #define TOK_OUT "out"
 #define TOK_INOUT "inout"
+#define TOK_INOUT_FILTER "filter"
 
 #define ECS_MAX_TOKEN_SIZE (256)
 
@@ -376,14 +377,16 @@ const char* parse_annotation(
         return NULL;
     }
 
-    if (!strcmp(token, "in")) {
+    if (!ecs_os_strcmp(token, TOK_IN)) {
         *inout_kind_out = EcsIn;
     } else
-    if (!strcmp(token, "out")) {
+    if (!ecs_os_strcmp(token, TOK_OUT)) {
         *inout_kind_out = EcsOut;
     } else
-    if (!strcmp(token, "inout")) {
+    if (!ecs_os_strcmp(token, TOK_INOUT)) {
         *inout_kind_out = EcsInOut;
+    } else if (!ecs_os_strcmp(token, TOK_INOUT_FILTER)) {
+        *inout_kind_out = EcsInOutFilter;
     }
 
     ptr = ecs_parse_whitespace(ptr);

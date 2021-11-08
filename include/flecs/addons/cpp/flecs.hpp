@@ -35,6 +35,7 @@ using ComponentLifecycle = EcsComponentLifecycle;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
+    InOutFilter = EcsInOutFilter,
     InOut = EcsInOut,
     In = EcsIn,
     Out = EcsOut

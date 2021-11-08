@@ -382,11 +382,12 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
     bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
     bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
+    
+    bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnTableFilled, "OnTableFilled", EcsFlecsCore);
 
     // bootstrap_entity(world, EcsOnCreateTable, "OnCreateTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteTable, "OnDeleteTable", EcsFlecsCore);
-    // bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
-    // bootstrap_entity(world, EcsOnTableNonEmpty, "OnTableNonEmpty", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnCreateTrigger, "OnCreateTrigger", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteTrigger, "OnDeleteTrigger", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteObservable, "OnDeleteObservable", EcsFlecsCore);

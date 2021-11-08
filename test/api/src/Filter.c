@@ -4202,3 +4202,227 @@ void Filter_filter_w_recycled_object_and_id() {
 
     ecs_fini(world);
 }
+
+void Filter_term_iter_w_filter_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
+        .id = ecs_id(Position),
+        .inout = EcsInOutFilter
+    });
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+    test_bool(ecs_term_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs == NULL);
+    test_assert(it.sizes == NULL);
+    test_assert(it.columns == NULL);
+
+    test_bool(ecs_term_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_w_filter_term() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
+    }), 0);
+
+    test_bool(f.filter, true);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs == NULL);
+    test_assert(it.sizes == NULL);
+    test_assert(it.columns != NULL);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_w_2_terms_1_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity) }
+        }
+    }), 0);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs != NULL);
+    test_assert(it.sizes != NULL);
+    test_assert(it.columns != NULL);
+
+    test_assert(it.ptrs[0] == NULL);
+    test_assert(it.ptrs[1] != NULL);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_w_3_terms_2_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity), .inout = EcsInOutFilter },
+            { .id = ecs_id(Mass) }
+        }
+    }), 0);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+    ecs_set(world, e, Mass, {1});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+    test_assert(it.ids[2] == ecs_id(Mass));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs != NULL);
+    test_assert(it.sizes != NULL);
+    test_assert(it.columns != NULL);
+
+    test_assert(it.ptrs[0] == NULL);
+    test_assert(it.ptrs[1] == NULL);
+    test_assert(it.ptrs[2] != NULL);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+
+void Filter_filter_iter_2_terms_filter_all() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutFilter },
+            { .id = ecs_id(Velocity) }
+        },
+        .filter = true
+    }), 0);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs == NULL);
+    test_assert(it.sizes == NULL);
+    test_assert(it.columns != NULL);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_2_terms_filter_all_w_out() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsOut },
+            { .id = ecs_id(Velocity) }
+        },
+        .filter = true
+    }), 0);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 1});
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != NULL);
+    test_assert(it.ids[0] == ecs_id(Position));
+    test_assert(it.ids[1] == ecs_id(Velocity));
+
+    test_int(it.count, 1);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e);
+
+    test_assert(it.ptrs == NULL);
+    test_assert(it.sizes == NULL);
+    test_assert(it.columns != NULL);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}

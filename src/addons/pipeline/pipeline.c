@@ -138,6 +138,9 @@ bool check_term_component(
 
     if ((subj->set.mask & EcsSelf) && subj->entity == EcsThis && term->oper != EcsNot) {
         switch(term->inout) {
+        case EcsInOutFilter:
+            /* Ignore terms that aren't read/written */
+            break;
         case EcsInOutDefault:
         case EcsInOut:
         case EcsIn:

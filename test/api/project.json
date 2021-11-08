@@ -270,7 +270,8 @@
                 "out_component_implicit_subject",
                 "out_component_explicit_subject",
                 "out_pair_implicit_subject",
-                "out_pair_explicit_subject",  
+                "out_pair_explicit_subject",
+                "inout_filter_component",
                 "component_singleton",
                 "this_singleton",
                 "component_implicit_no_subject",
@@ -1161,7 +1162,13 @@
                 "chain_term_iter_w_term_iter",
                 "chain_filter_iter_w_term_iter",
                 "chain_w_term_iter_component",
-                "filter_w_recycled_object_and_id"
+                "filter_w_recycled_object_and_id",
+                "term_iter_w_filter_term",
+                "filter_iter_w_filter_term",
+                "filter_iter_w_2_terms_1_filter",
+                "filter_iter_w_3_terms_2_filter",
+                "filter_iter_2_terms_filter_all",
+                "filter_iter_2_terms_filter_all_w_out"
             ]
         }, {
             "id": "FilterDefaultSubstitution",
@@ -1229,7 +1236,10 @@
                 "query_iter_20_components",
                 "iter_type_set",
                 "only_optional_from_entity",
-                "only_optional_from_entity_no_match"
+                "only_optional_from_entity_no_match",
+                "filter_term",
+                "2_terms_1_filter",
+                "3_terms_2_filter"
             ]
         }, {
             "id": "Pairs",
@@ -1413,7 +1423,10 @@
                 "terms_set",
                 "value_set",
                 "term_w_this_this_this",
-                "term_w_x_x_x"
+                "term_w_x_x_x",
+                "filter_term",
+                "2_terms_1_filter",
+                "3_terms_2_filter"
             ]
         }, {
             "id": "TransitiveRules",
@@ -1506,7 +1519,8 @@
                "on_add_yield_existing",
                "on_add_yield_existing_2_tables",
                "on_add_yield_existing_wildcard_pair",
-               "on_set_yield_existing"
+               "on_set_yield_existing",
+               "filter_term"
            ]
         }, {
             "id": "Observer",
@@ -1556,7 +1570,10 @@
                 "unset_on_fini_3",
                 "overlapping_unset_systems",
                 "unset_move_to_nonempty_table",
-                "write_in_unset"
+                "write_in_unset",
+                "filter_term",
+                "2_terms_1_filter",
+                "3_terms_2_filter"
             ]                
         }, {
             "id": "TriggerOnAdd",

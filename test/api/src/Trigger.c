@@ -20,6 +20,18 @@ void Trigger_w_value(ecs_iter_t *it) {
 }
 
 static
+void Trigger_w_filter_term(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    test_assert(it->ptrs == NULL);
+    test_assert(it->sizes == NULL);
+}
+
+static
 void Trigger_n_w_values(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -2737,6 +2749,37 @@ void Trigger_on_set_yield_existing() {
 
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Trigger_filter_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { .id = ecs_id(Position), .inout = EcsInOutFilter },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_filter_term,
+        .ctx = &ctx
+    });
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e1 != 0);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.c[0][0], ecs_id(Position));
 
     ecs_fini(world);
 }

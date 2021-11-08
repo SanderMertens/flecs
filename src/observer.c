@@ -12,6 +12,7 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual,
+    user_it.is_filter = o->filter.filter;
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
@@ -22,7 +23,8 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
-    ecs_term_t *term = &o->filter.terms[it->term_index];
+    int32_t term_index = it->term_index;
+    ecs_term_t *term = &o->filter.terms[term_index];
 
     if (term->oper == EcsNot) {
         table = it->other_table;
@@ -43,7 +45,7 @@ void observer_callback(ecs_iter_t *it) {
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
     user_it.columns[0] = 0;
-    user_it.columns[it->term_index] = it->columns[0];
+    user_it.columns[term_index] = it->columns[0];
 
     if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
         user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 

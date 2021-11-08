@@ -2863,6 +2863,7 @@ ecs_iter_t ecs_rule_iter(
     result.term_count = rule->filter.term_count;
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
+    result.is_filter = rule->filter.filter;
 
     return result;
 }
