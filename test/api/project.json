@@ -1440,7 +1440,9 @@
                 "term_w_x_x_x",
                 "filter_term",
                 "2_terms_1_filter",
-                "3_terms_2_filter"
+                "3_terms_2_filter",
+                "term_obj_w_this",
+                "term_subj_w_this"
             ]
         }, {
             "id": "TransitiveRules",

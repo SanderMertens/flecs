@@ -1373,6 +1373,8 @@ void Rules_term_w_x_x_x(void);
 void Rules_filter_term(void);
 void Rules_2_terms_1_filter(void);
 void Rules_3_terms_2_filter(void);
+void Rules_term_obj_w_this(void);
+void Rules_term_subj_w_this(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7519,6 +7521,14 @@ bake_test_case Rules_testcases[] = {
     {
         "3_terms_2_filter",
         Rules_3_terms_2_filter
+    },
+    {
+        "term_obj_w_this",
+        Rules_term_obj_w_this
+    },
+    {
+        "term_subj_w_this",
+        Rules_term_subj_w_this
     }
 };
 
@@ -11043,7 +11053,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        113,
+        115,
         Rules_testcases
     },
     {
