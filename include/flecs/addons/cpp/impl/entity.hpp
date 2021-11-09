@@ -1,3 +1,4 @@
+#include "../builders/filter.hpp"
 
 namespace flecs 
 {
@@ -8,27 +9,27 @@ flecs::entity ref<T>::entity() const {
 }
 
 template <typename Base>
-inline const Base& entity_builder<Base>::add_switch(const type& sw) const {
+inline Base& entity_builder_i<Base>::add_switch(const type& sw) {
     return add_switch(sw.id());
 }
 
 template <typename Base>
-inline const Base& entity_builder<Base>::remove_switch(const type& sw) const {
+inline Base& entity_builder_i<Base>::remove_switch(const type& sw) {
     return remove_switch(sw.id());
 }
 
 template <typename Base>
 template <typename Func, if_t< is_callable<Func>::value > >
-inline const Base& entity_builder<Base>::set(const Func& func) const {
+inline Base& entity_builder_i<Base>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
-        this->base_world(), this->base_id(), func);
+        this->world_v(), this->id_v(), func);
     return *this;
 }
 
 template <typename Base>
 template <typename T>
-inline const Base& entity_builder<Base>::component() const {
-    component_for_id<T>(this->base_world(), this->base_id());
+inline Base& entity_builder_i<Base>::component() {
+    component_for_id<T>(this->world_v(), this->id_v());
     return *this;
 }
 

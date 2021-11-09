@@ -1,3 +1,8 @@
+#include "../builders/filter.hpp"
+#include "../builders/query.hpp"
+#include "../builders/system.hpp"
+#include "../builders/trigger.hpp"
+#include "../builders/observer.hpp"
 
 namespace flecs 
 {
