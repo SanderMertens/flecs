@@ -1623,7 +1623,7 @@ void Entity_set_2_w_on_set() {
             velocity_set ++;
             test_int(v.x, 1);
             test_int(v.y, 2);
-        });        
+        });
 
     auto e = ecs.entity()
         .set([](Position& p, Velocity& v){
