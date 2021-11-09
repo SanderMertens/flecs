@@ -94,6 +94,14 @@ void _ecs_log(
     ...);
 
 FLECS_API
+void _ecs_logv(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args);
+
+FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *file,
@@ -137,6 +145,9 @@ void _ecs_parser_errorv(
 /* Base logging function. Accepts a custom level */
 #define ecs_log(level, ...)\
     _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_logv(level, fmt, args)\
+    _ecs_logv(level, __FILE__, __LINE__, fmt, args)
 
 /* Tracing. Used for logging of infrequent events  */
 #define _ecs_trace(file, line, ...) _ecs_log(0, file, line, __VA_ARGS__)

@@ -129,6 +129,19 @@ using Observer = EcsObserver;
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);
 
+/* Doc components */
+namespace doc {
+    using Description = EcsDocDescription;
+    static const flecs::entity_t Brief = EcsDocBrief;
+    static const flecs::entity_t Detail = EcsDocDetail;
+    static const flecs::entity_t Link = EcsDocLink;
+}
+
+/* REST components */
+namespace rest {
+    using Rest = EcsRest;
+}
+
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
@@ -203,6 +216,7 @@ static const flecs::entity_t Throw = EcsThrow;
 }
 
 #include "util.hpp"
+#include "log.hpp"
 #include "pair.hpp"
 #include "function_traits.hpp"
 #include "lifecycle_traits.hpp"

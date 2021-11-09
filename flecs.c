@@ -12522,8 +12522,7 @@ void ecs_colorize_buf(
     }
 }
 
-static
-void log_print(
+void _ecs_logv(
     int level,
     const char *file,
     int32_t line,
@@ -12559,7 +12558,7 @@ void _ecs_log(
 {
     va_list args;
     va_start(args, fmt);
-    log_print(level, file, line, fmt, args);
+    _ecs_logv(level, file, line, fmt, args);
     va_end(args);    
 }
 

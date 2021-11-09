@@ -515,6 +515,14 @@ void _ecs_log(
     ...);
 
 FLECS_API
+void _ecs_logv(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args);
+
+FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *file,
@@ -558,6 +566,9 @@ void _ecs_parser_errorv(
 /* Base logging function. Accepts a custom level */
 #define ecs_log(level, ...)\
     _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_logv(level, fmt, args)\
+    _ecs_logv(level, __FILE__, __LINE__, fmt, args)
 
 /* Tracing. Used for logging of infrequent events  */
 #define _ecs_trace(file, line, ...) _ecs_log(0, file, line, __VA_ARGS__)
@@ -10192,6 +10203,19 @@ using Observer = EcsObserver;
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);
 
+/* Doc components */
+namespace doc {
+    using Description = EcsDocDescription;
+    static const flecs::entity_t Brief = EcsDocBrief;
+    static const flecs::entity_t Detail = EcsDocDetail;
+    static const flecs::entity_t Link = EcsDocLink;
+}
+
+/* REST components */
+namespace rest {
+    using Rest = EcsRest;
+}
+
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
@@ -10645,6 +10669,41 @@ struct always_false {
 } // namespace _
 
 } // namespace flecs
+
+namespace flecs {
+namespace log {
+
+inline void set_level(int level) {
+    ecs_log_set_level(level);
+}
+
+inline void enable_colors(bool enabled) {
+    ecs_log_enable_colors(enabled);
+}
+
+inline void trace(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(0, fmt, args);
+    va_end(args);
+}
+
+inline void warn(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(-2, fmt, args);
+    va_end(args);
+}
+
+inline void err(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(-3, fmt, args);
+    va_end(args);
+}
+
+}
+}
 
 namespace flecs {
 
@@ -11895,7 +11954,6 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     id_t id = _::cpp_type<T>::id(world);
     flecs::set(world, entity, value, id);
 }
-    
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -11965,22 +12023,6 @@ public:
     world_t* c_ptr() const {
         return m_world;
     }
-
-    /** Enable tracing.
-     *
-     * @param level The tracing level.
-     */
-    static void enable_tracing(int level) {
-        ecs_log_set_level(level);
-    }
-
-    /** Enable tracing with colors.
-     *
-     * @param enabled Whether to enable tracing with colors.
-     */
-    static void enable_tracing_color(bool enabled) {
-        ecs_log_enable_colors(enabled);
-    }    
 
     void set_pipeline(const flecs::pipeline& pip) const;
 
@@ -18136,6 +18178,10 @@ inline void world::init_builtin_components() {
     component<TickSource>("flecs::system::TickSource");
     component<RateFilter>("flecs::timer::RateFilter");
     component<Timer>("flecs::timer::Timer");
+
+    component<doc::Description>("flecs::doc::Description");
+
+    component<rest::Rest>("flecs::rest::Rest");
 }
 
 template <typename T>

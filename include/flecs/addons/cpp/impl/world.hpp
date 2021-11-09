@@ -70,6 +70,10 @@ inline void world::init_builtin_components() {
     component<TickSource>("flecs::system::TickSource");
     component<RateFilter>("flecs::timer::RateFilter");
     component<Timer>("flecs::timer::Timer");
+
+    component<doc::Description>("flecs::doc::Description");
+
+    component<rest::Rest>("flecs::rest::Rest");
 }
 
 template <typename T>

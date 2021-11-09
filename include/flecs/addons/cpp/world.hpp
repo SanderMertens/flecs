@@ -90,7 +90,6 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     id_t id = _::cpp_type<T>::id(world);
     flecs::set(world, entity, value, id);
 }
-    
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -160,22 +159,6 @@ public:
     world_t* c_ptr() const {
         return m_world;
     }
-
-    /** Enable tracing.
-     *
-     * @param level The tracing level.
-     */
-    static void enable_tracing(int level) {
-        ecs_log_set_level(level);
-    }
-
-    /** Enable tracing with colors.
-     *
-     * @param enabled Whether to enable tracing with colors.
-     */
-    static void enable_tracing_color(bool enabled) {
-        ecs_log_enable_colors(enabled);
-    }    
 
     void set_pipeline(const flecs::pipeline& pip) const;
 
