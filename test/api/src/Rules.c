@@ -4209,5 +4209,55 @@ void Rules_3_terms_2_filter() {
 
     test_bool(ecs_rule_next(&it), false);
 
+    ecs_rule_fini(r);
     ecs_fini(world);
 }
+
+void Rules_term_obj_w_this() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+    ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
+
+    ecs_filter_desc_t desc = {};
+    desc.terms[0].pred.entity = TagA;
+    desc.terms[0].obj.entity = EcsThis;
+    desc.terms[0].obj.var = EcsVarIsVariable;
+    desc.terms[0].subj.entity = TagA;
+
+    ecs_rule_t *r = ecs_rule_init(world, &desc);
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_assert(ecs_rule_next(&it) == true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], TagA);
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+
+void Rules_term_subj_w_this() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, 0);
+    ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
+
+    ecs_filter_desc_t desc = {};
+    desc.terms[0].pred.entity = TagA;
+    desc.terms[0].obj.entity = TagA;
+    desc.terms[0].subj.entity = EcsThis;
+    desc.terms[0].subj.var = EcsVarIsVariable;
+
+    ecs_rule_t *r = ecs_rule_init(world, &desc);
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_assert(ecs_rule_next(&it) == true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], TagA);
+
+    ecs_rule_fini(r);
+    ecs_fini(world);
+}
+

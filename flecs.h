@@ -18162,8 +18162,7 @@ inline filter_iterator world::end() const {
 }
 
 /** All entities created in function are created in scope. All operations
-    * called in function (such as lookup) are relative to scope.
-    */
+ * called in function (such as lookup) are relative to scope. */
 template <typename Func>
 void scope(id_t parent, const Func& func);
 
