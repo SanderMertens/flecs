@@ -394,7 +394,7 @@ int32_t ecs_pipeline_update(
     return ecs_vector_count(pq->ops);
 }
 
-void ecs_pipeline_run(
+void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time)
@@ -405,7 +405,7 @@ void ecs_pipeline_run(
         pipeline = world->pipeline;
     }    
 
-    /* If the world is passed to ecs_pipeline_run, the function will take care
+    /* If the world is passed to ecs_run_pipeline, the function will take care
      * of staging, so the world should not be in staged mode when called. */
     if (ecs_poly_is(world, ecs_world_t)) {
         ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
@@ -624,7 +624,7 @@ bool ecs_progress(
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_pipeline_run(world, 0, delta_time);
+    ecs_run_pipeline(world, 0, delta_time);
 
     ecs_frame_end(world);
 

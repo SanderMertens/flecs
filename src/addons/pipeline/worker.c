@@ -24,7 +24,7 @@ void* worker(void *arg) {
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
-        ecs_pipeline_run(
+        ecs_run_pipeline(
             (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
@@ -245,7 +245,7 @@ void ecs_workers_progress(
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
 
-        ecs_pipeline_run(stage, pipeline, delta_time);
+        ecs_run_pipeline(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
     } else {
         int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);

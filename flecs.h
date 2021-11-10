@@ -7205,7 +7205,7 @@ void ecs_reset_clock(
  * @param pipeline The pipeline to run.
  */
 FLECS_API 
-void ecs_pipeline_run(
+void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time);    
@@ -10657,14 +10657,14 @@ struct extendable_impl<T, mixin_list<Mixin, Mixins...> > : Mixin<T>, extendable_
 template <typename Self>
 struct mixin {
 protected:
-    virtual Self& self() const = 0;
+    virtual Self& me() const = 0;
     virtual ~mixin() { }
 };
 
 // Base for extendable class. Accepts own type and list of mixins
 template <typename T, typename Mixins>
 struct extendable : extendable_impl<T, Mixins> {
-    T& self() const {
+    T& me() const {
         return *const_cast<T*>(static_cast<const T*>(this));
     }
 };
@@ -10682,7 +10682,6 @@ class id;
 class entity;
 class entity_view;
 class type;
-class pipeline;
 class iter;
 class term;
 class filter_iterator;
@@ -10822,18 +10821,6 @@ static const flecs::entity_t OnRemove = EcsOnRemove;
 static const flecs::entity_t OnSet = EcsOnSet;
 static const flecs::entity_t UnSet = EcsUnSet;
 
-/* Builtin pipeline tags */
-static const flecs::entity_t PreFrame = EcsPreFrame;
-static const flecs::entity_t OnLoad = EcsOnLoad;
-static const flecs::entity_t PostLoad = EcsPostLoad;
-static const flecs::entity_t PreUpdate = EcsPreUpdate;
-static const flecs::entity_t OnUpdate = EcsOnUpdate;
-static const flecs::entity_t OnValidate = EcsOnValidate;
-static const flecs::entity_t PostUpdate = EcsPostUpdate;
-static const flecs::entity_t PreStore = EcsPreStore;
-static const flecs::entity_t OnStore = EcsOnStore;
-static const flecs::entity_t PostFrame = EcsPostFrame;
-
 /** Builtin roles */
 static const flecs::entity_t Pair = ECS_PAIR;
 static const flecs::entity_t Switch = ECS_SWITCH;
@@ -10909,9 +10896,107 @@ struct system_m : mixin<T> {
 
 }
 
-// Active mixins
 namespace flecs {
-using Mixins = mixin_list<system_m>;
+
+class pipeline;
+
+/* Builtin pipeline tags */
+static const flecs::entity_t PreFrame = EcsPreFrame;
+static const flecs::entity_t OnLoad = EcsOnLoad;
+static const flecs::entity_t PostLoad = EcsPostLoad;
+static const flecs::entity_t PreUpdate = EcsPreUpdate;
+static const flecs::entity_t OnUpdate = EcsOnUpdate;
+static const flecs::entity_t OnValidate = EcsOnValidate;
+static const flecs::entity_t PostUpdate = EcsPostUpdate;
+static const flecs::entity_t PreStore = EcsPreStore;
+static const flecs::entity_t OnStore = EcsOnStore;
+static const flecs::entity_t PostFrame = EcsPostFrame;
+
+/** Pipeline mixin.
+ * Makes pipeline methods available on world instance.
+ */
+template<typename T>
+struct pipeline_m : mixin<T> {
+  /** Initialize mixin. */
+  void init() { }
+
+  /** Create a new pipeline.
+   *
+   * @tparam Args Arguments to pass into the constructor of flecs::system.
+   * @return System builder.
+   */
+  template <typename... Args>
+  flecs::pipeline pipeline(Args &&... args) const;
+
+  /** Set pipeline.
+   * @see ecs_set_pipeline
+   */
+  void set_pipeline(const flecs::pipeline& pip) const;
+
+  /** Get pipeline.
+   * @see ecs_get_pipeline
+   */
+  flecs::pipeline get_pipeline() const;
+
+  /** Progress world one tick.
+   * @see ecs_progress
+   */
+  bool progress(FLECS_FLOAT delta_time = 0.0) const;
+
+  /** Run pipeline.
+   * @see ecs_run_pipeline
+   */
+  void run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time = 0.0) const;
+
+  /** Set timescale
+   * @see ecs_set_time_scale
+   */
+  void set_time_scale(FLECS_FLOAT mul) const;
+
+  /** Get timescale
+   * @see ecs_get_time_scale
+   */
+  FLECS_FLOAT get_time_scale() const;
+
+  /** Get tick
+   * @return Monotonically increasing frame count.
+   */
+  int32_t get_tick() const;
+
+  /** Get target FPS
+   * @return Configured frames per second.
+   */
+  FLECS_FLOAT get_target_fps() const;
+
+  /** Reset simulation clock.
+   * @see ecs_reset_clock
+   */
+  void reset_clock() const;
+
+  /** Deactivate systems.
+   * @see ecs_deactivate_systems.
+   */
+  void deactivate_systems() const;
+
+  /** Set number of threads.
+   * @see ecs_set_threads
+   */
+  void set_threads(int32_t threads) const;
+
+  /** Set number of threads.
+   * @see ecs_get_threads
+   */
+  int32_t get_threads() const;
+};
+
+}
+
+// Mixins
+namespace flecs {
+using Mixins = mixin_list<
+    system_m, 
+    pipeline_m
+>;
 }
 
 
@@ -12140,16 +12225,6 @@ public:
         return m_world;
     }
 
-    void set_pipeline(const flecs::pipeline& pip) const;
-
-    /** Progress world, run all systems.
-     *
-     * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_time.
-     */
-    bool progress(FLECS_FLOAT delta_time = 0.0) const {
-        return ecs_progress(m_world, delta_time);
-    }
-
     /** Get last delta_time.
      */
     FLECS_FLOAT delta_time() const {
@@ -12420,24 +12495,6 @@ public:
         return ecs_stage_is_readonly(m_world);
     }
 
-    /** Set number of threads.
-     * This will distribute the load evenly across the configured number of 
-     * threads for each system.
-     *
-     * @param threads Number of threads.
-     */
-    void set_threads(int32_t threads) const {
-        ecs_set_threads(m_world, threads);
-    }
-
-    /** Get number of threads.
-     *
-     * @return Number of configured threads.
-     */
-    int32_t get_threads() const {
-        return ecs_get_threads(m_world);
-    }
-
     /** Set target FPS
      * This will ensure that the main loop (world::progress) does not run faster
      * than the specified frames per second.
@@ -12447,38 +12504,6 @@ public:
     void set_target_fps(FLECS_FLOAT target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
-
-    /** Get target FPS
-     *
-     * @return Configured frames per second.
-     */
-    FLECS_FLOAT get_target_fps() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->target_fps;
-    }
-
-    /** Get tick
-     *
-     * @return Monotonically increasing frame count.
-     */
-    int32_t get_tick() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->frame_count_total;
-    }
-
-    /** Set timescale
-     */
-    void set_time_scale(FLECS_FLOAT mul) const {
-        ecs_set_time_scale(m_world, mul);
-    }  
-
-    /** Get timescale
-     * @return Current time scale (default = 1.0)
-     */
-    FLECS_FLOAT get_time_scale() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->time_scale;
-    }        
 
     /** Set world context.
      * Set a context value that can be accessed by anyone that has a reference
@@ -12527,20 +12552,6 @@ public:
      */
     void enable_range_check(bool enabled) const {
         ecs_enable_range_check(m_world, enabled);
-    }
-
-    /** Disables inactive systems.
-     *
-     * This removes systems that are not matched with any entities from the main
-     * loop. Systems are only added to the main loop after they first match with
-     * entities, but are not removed automatically.
-     *
-     * This function allows an application to manually disable inactive systems
-     * which removes them from the main loop. Doing so will cause Flecs to
-     * rebuild the pipeline in the next iteration.
-     */
-    void deactivate_systems() {
-        ecs_deactivate_systems(m_world);
     }
 
     /** Set current scope.
@@ -12814,11 +12825,6 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
-
-    /** Create a pipeline.
-     */
-    template <typename... Args>
-    flecs::pipeline pipeline(Args &&... args) const;
 
     /** Create a module.
      */
@@ -18071,10 +18077,6 @@ void world::remove() const {
     e.remove<T>();
 }
 
-inline void world::set_pipeline(const flecs::pipeline& pip) const {
-    ecs_set_pipeline(m_world, pip.id());
-}
-
 template <typename T>
 inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
@@ -18093,11 +18095,6 @@ inline flecs::entity world::prefab(Args &&... args) const {
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline flecs::pipeline world::pipeline(Args &&... args) const {
-    return flecs::pipeline(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
@@ -18672,18 +18669,18 @@ public:
 // Mixin implementation
 template <typename T>
 void system_m<T>::init() {
-    this->self().template component<TickSource>("flecs::system::TickSource");
+    this->me().template component<TickSource>("flecs::system::TickSource");
 }
 
 template <typename T>
 inline system<> system_m<T>::system(flecs::entity e) const {
-    return flecs::system<>(this->self().m_world, e);
+    return flecs::system<>(this->me().m_world, e);
 }
 
 template <typename T>
 template <typename... Comps, typename... Args>
 inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(this->self(), std::forward<Args>(args)...);
+    return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
 }
 
 // Builder implementation
@@ -18706,6 +18703,81 @@ inline system<Components ...> system_builder<Components...>::each(Func&& func) c
 }
 
 } // namespace flecs
+
+namespace flecs {
+
+#define ECS_CPP_IMPL()
+
+template <typename T>
+template <typename... Args>
+inline flecs::pipeline pipeline_m<T>::pipeline(Args &&... args) const {
+    return flecs::pipeline(this->me(), std::forward<Args>(args)...);
+}
+
+template <typename T>
+inline void pipeline_m<T>::set_pipeline(const flecs::pipeline& pip) const {
+    return ecs_set_pipeline(this->me(), pip.id());
+}
+
+template <typename T>
+inline flecs::pipeline pipeline_m<T>::get_pipeline() const {
+    return flecs::pipeline(this->me(), ecs_set_pipeline(this->me()));
+}
+
+template <typename T>
+bool pipeline_m<T>::progress(FLECS_FLOAT delta_time) const {
+    return ecs_progress(this->me(), delta_time);
+}
+
+template <typename T>
+inline void pipeline_m<T>::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
+    return ecs_set_pipeline(this->me(), pip.id());
+}
+
+template <typename T>
+void pipeline_m<T>::set_time_scale(FLECS_FLOAT mul) const {
+    ecs_set_time_scale(this->me(), mul);
+}  
+
+template <typename T>
+FLECS_FLOAT pipeline_m<T>::get_time_scale() const {
+    const ecs_world_info_t *stats = ecs_get_world_info(this->me());
+    return stats->time_scale;
+}
+
+template <typename T>
+int32_t pipeline_m<T>::get_tick() const {
+    const ecs_world_info_t *stats = ecs_get_world_info(this->me());
+    return stats->frame_count_total;
+}
+
+template <typename T>
+FLECS_FLOAT pipeline_m<T>::get_target_fps() const {
+    const ecs_world_info_t *stats = ecs_get_world_info(this->me());
+    return stats->target_fps;
+} 
+
+template <typename T>
+void pipeline_m<T>::reset_clock() const {
+    ecs_reset_clock(this->me());
+}
+
+template <typename T>
+void pipeline_m<T>::deactivate_systems() const {
+    ecs_deactivate_systems(this->me());
+}
+
+template <typename T>
+void pipeline_m<T>::set_threads(int32_t threads) const {
+    ecs_set_threads(this->me(), threads);
+}
+
+template <typename T>
+int32_t pipeline_m<T>::get_threads() const {
+    return ecs_get_threads(this->me());
+}
+
+}
 #endif
 
 #endif

@@ -633,7 +633,7 @@ void Pipeline_run_pipeline() {
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
-    ecs_pipeline_run(world, P1, 1);
+    ecs_run_pipeline(world, P1, 1);
 
     test_int(stats->systems_ran_frame, 3);
     test_int(stats->merge_count_total, 1);
@@ -643,7 +643,7 @@ void Pipeline_run_pipeline() {
     test_int(sys_b_invoked, 1);
     test_int(sys_c_invoked, 1);
 
-    ecs_pipeline_run(world, P2, 1);
+    ecs_run_pipeline(world, P2, 1);
 
     test_int(stats->pipeline_build_count_total, 2);
 

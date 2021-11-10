@@ -160,16 +160,6 @@ public:
         return m_world;
     }
 
-    void set_pipeline(const flecs::pipeline& pip) const;
-
-    /** Progress world, run all systems.
-     *
-     * @param delta_time Custom delta_time. If 0 is provided, Flecs will automatically measure delta_time.
-     */
-    bool progress(FLECS_FLOAT delta_time = 0.0) const {
-        return ecs_progress(m_world, delta_time);
-    }
-
     /** Get last delta_time.
      */
     FLECS_FLOAT delta_time() const {
@@ -440,24 +430,6 @@ public:
         return ecs_stage_is_readonly(m_world);
     }
 
-    /** Set number of threads.
-     * This will distribute the load evenly across the configured number of 
-     * threads for each system.
-     *
-     * @param threads Number of threads.
-     */
-    void set_threads(int32_t threads) const {
-        ecs_set_threads(m_world, threads);
-    }
-
-    /** Get number of threads.
-     *
-     * @return Number of configured threads.
-     */
-    int32_t get_threads() const {
-        return ecs_get_threads(m_world);
-    }
-
     /** Set target FPS
      * This will ensure that the main loop (world::progress) does not run faster
      * than the specified frames per second.
@@ -467,38 +439,6 @@ public:
     void set_target_fps(FLECS_FLOAT target_fps) const {
         ecs_set_target_fps(m_world, target_fps);
     }
-
-    /** Get target FPS
-     *
-     * @return Configured frames per second.
-     */
-    FLECS_FLOAT get_target_fps() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->target_fps;
-    }
-
-    /** Get tick
-     *
-     * @return Monotonically increasing frame count.
-     */
-    int32_t get_tick() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->frame_count_total;
-    }
-
-    /** Set timescale
-     */
-    void set_time_scale(FLECS_FLOAT mul) const {
-        ecs_set_time_scale(m_world, mul);
-    }  
-
-    /** Get timescale
-     * @return Current time scale (default = 1.0)
-     */
-    FLECS_FLOAT get_time_scale() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->time_scale;
-    }        
 
     /** Set world context.
      * Set a context value that can be accessed by anyone that has a reference
@@ -547,20 +487,6 @@ public:
      */
     void enable_range_check(bool enabled) const {
         ecs_enable_range_check(m_world, enabled);
-    }
-
-    /** Disables inactive systems.
-     *
-     * This removes systems that are not matched with any entities from the main
-     * loop. Systems are only added to the main loop after they first match with
-     * entities, but are not removed automatically.
-     *
-     * This function allows an application to manually disable inactive systems
-     * which removes them from the main loop. Doing so will cause Flecs to
-     * rebuild the pipeline in the next iteration.
-     */
-    void deactivate_systems() {
-        ecs_deactivate_systems(m_world);
     }
 
     /** Set current scope.
@@ -834,11 +760,6 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
-
-    /** Create a pipeline.
-     */
-    template <typename... Args>
-    flecs::pipeline pipeline(Args &&... args) const;
 
     /** Create a module.
      */

@@ -30,7 +30,7 @@ typedef struct EcsPipelineQuery {
  *
  * Because multiple threads may run a pipeline, preparing the pipeline must 
  * happen synchronously, which is why this function is separate from 
- * ecs_pipeline_run. Not running the prepare step may cause systems to not get
+ * ecs_run_pipeline. Not running the prepare step may cause systems to not get
  * ran, or ran in the wrong order.
  *
  * If 0 is provided for the pipeline id, the default pipeline will be ran (this
