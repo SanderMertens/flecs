@@ -33,14 +33,14 @@ struct extendable_impl<T, mixin_list<Mixin, Mixins...> > : Mixin<T>, extendable_
 template <typename Self>
 struct mixin {
 protected:
-    virtual Self& self() const = 0;
+    virtual Self& me() const = 0;
     virtual ~mixin() { }
 };
 
 // Base for extendable class. Accepts own type and list of mixins
 template <typename T, typename Mixins>
 struct extendable : extendable_impl<T, Mixins> {
-    T& self() const {
+    T& me() const {
         return *const_cast<T*>(static_cast<const T*>(this));
     }
 };

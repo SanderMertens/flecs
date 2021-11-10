@@ -129,7 +129,7 @@ void ecs_reset_clock(
  * @param pipeline The pipeline to run.
  */
 FLECS_API 
-void ecs_pipeline_run(
+void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time);    

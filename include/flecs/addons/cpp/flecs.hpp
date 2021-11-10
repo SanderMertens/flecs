@@ -22,7 +22,6 @@ class id;
 class entity;
 class entity_view;
 class type;
-class pipeline;
 class iter;
 class term;
 class filter_iterator;
@@ -69,10 +68,14 @@ class each_invoker;
 
 // Addon forward declarations
 #include "addons/system/decl.hpp"
+#include "addons/pipeline/decl.hpp"
 
-// Active mixins
+// Mixins
 namespace flecs {
-using Mixins = mixin_list<system_m>;
+using Mixins = mixin_list<
+    system_m, 
+    pipeline_m
+>;
 }
 
 #include "log.hpp"
@@ -99,3 +102,4 @@ using Mixins = mixin_list<system_m>;
 
 // Addon implementations
 #include "addons/system/impl.hpp"
+#include "addons/pipeline/impl.hpp"

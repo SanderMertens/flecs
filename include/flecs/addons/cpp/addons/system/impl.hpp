@@ -163,18 +163,18 @@ public:
 // Mixin implementation
 template <typename T>
 void system_m<T>::init() {
-    this->self().template component<TickSource>("flecs::system::TickSource");
+    this->me().template component<TickSource>("flecs::system::TickSource");
 }
 
 template <typename T>
 inline system<> system_m<T>::system(flecs::entity e) const {
-    return flecs::system<>(this->self().m_world, e);
+    return flecs::system<>(this->me().m_world, e);
 }
 
 template <typename T>
 template <typename... Comps, typename... Args>
 inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(this->self(), std::forward<Args>(args)...);
+    return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
 }
 
 // Builder implementation

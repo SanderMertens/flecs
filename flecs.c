@@ -28710,7 +28710,7 @@ typedef struct EcsPipelineQuery {
  *
  * Because multiple threads may run a pipeline, preparing the pipeline must 
  * happen synchronously, which is why this function is separate from 
- * ecs_pipeline_run. Not running the prepare step may cause systems to not get
+ * ecs_run_pipeline. Not running the prepare step may cause systems to not get
  * ran, or ran in the wrong order.
  *
  * If 0 is provided for the pipeline id, the default pipeline will be ran (this
@@ -35722,7 +35722,7 @@ void* worker(void *arg) {
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
-        ecs_pipeline_run(
+        ecs_run_pipeline(
             (ecs_world_t*)stage, 
             world->pipeline, 
             world->stats.delta_time);
@@ -35943,7 +35943,7 @@ void ecs_workers_progress(
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
 
-        ecs_pipeline_run(stage, pipeline, delta_time);
+        ecs_run_pipeline(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
     } else {
         int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
@@ -36404,7 +36404,7 @@ int32_t ecs_pipeline_update(
     return ecs_vector_count(pq->ops);
 }
 
-void ecs_pipeline_run(
+void ecs_run_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     FLECS_FLOAT delta_time)
@@ -36415,7 +36415,7 @@ void ecs_pipeline_run(
         pipeline = world->pipeline;
     }    
 
-    /* If the world is passed to ecs_pipeline_run, the function will take care
+    /* If the world is passed to ecs_run_pipeline, the function will take care
      * of staging, so the world should not be in staged mode when called. */
     if (ecs_poly_is(world, ecs_world_t)) {
         ecs_assert(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
@@ -36634,7 +36634,7 @@ bool ecs_progress(
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
-    ecs_pipeline_run(world, 0, delta_time);
+    ecs_run_pipeline(world, 0, delta_time);
 
     ecs_frame_end(world);
 
