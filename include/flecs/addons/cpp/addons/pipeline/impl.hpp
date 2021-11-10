@@ -1,74 +1,77 @@
+#pragma once
 
 namespace flecs {
 
-#define ECS_CPP_IMPL()
+class pipeline : public type_base<pipeline> {
+public:
+    explicit pipeline(world_t *world, entity_t e) : type_base(world, e)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
 
-template <typename T>
+    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
+};
+
 template <typename... Args>
-inline flecs::pipeline pipeline_m<T>::pipeline(Args &&... args) const {
+inline flecs::pipeline pipeline_m_world::pipeline(Args &&... args) const {
     return flecs::pipeline(this->me(), std::forward<Args>(args)...);
 }
 
-template <typename T>
-inline void pipeline_m<T>::set_pipeline(const flecs::pipeline& pip) const {
+inline void pipeline_m_world::set_pipeline(const flecs::pipeline& pip) const {
     return ecs_set_pipeline(this->me(), pip.id());
 }
 
-template <typename T>
-inline flecs::pipeline pipeline_m<T>::get_pipeline() const {
-    return flecs::pipeline(this->me(), ecs_set_pipeline(this->me()));
+inline flecs::pipeline pipeline_m_world::get_pipeline() const {
+    return flecs::pipeline(this->me(), ecs_get_pipeline(this->me()));
 }
 
-template <typename T>
-bool pipeline_m<T>::progress(FLECS_FLOAT delta_time) const {
+inline bool pipeline_m_world::progress(FLECS_FLOAT delta_time) const {
     return ecs_progress(this->me(), delta_time);
 }
 
-template <typename T>
-inline void pipeline_m<T>::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
-    return ecs_set_pipeline(this->me(), pip.id());
+inline void pipeline_m_world::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
+    return ecs_run_pipeline(this->me(), pip.id(), delta_time);
 }
 
-template <typename T>
-void pipeline_m<T>::set_time_scale(FLECS_FLOAT mul) const {
+inline void pipeline_m_world::set_time_scale(FLECS_FLOAT mul) const {
     ecs_set_time_scale(this->me(), mul);
 }  
 
-template <typename T>
-FLECS_FLOAT pipeline_m<T>::get_time_scale() const {
+inline FLECS_FLOAT pipeline_m_world::get_time_scale() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->time_scale;
 }
 
-template <typename T>
-int32_t pipeline_m<T>::get_tick() const {
+inline int32_t pipeline_m_world::get_tick() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->frame_count_total;
 }
 
-template <typename T>
-FLECS_FLOAT pipeline_m<T>::get_target_fps() const {
+inline FLECS_FLOAT pipeline_m_world::get_target_fps() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->target_fps;
 } 
 
-template <typename T>
-void pipeline_m<T>::reset_clock() const {
+inline void pipeline_m_world::set_target_fps(FLECS_FLOAT target_fps) const {
+    ecs_set_target_fps(this->me(), target_fps);
+}
+
+inline void pipeline_m_world::reset_clock() const {
     ecs_reset_clock(this->me());
 }
 
-template <typename T>
-void pipeline_m<T>::deactivate_systems() const {
+inline void pipeline_m_world::deactivate_systems() const {
     ecs_deactivate_systems(this->me());
 }
 
-template <typename T>
-void pipeline_m<T>::set_threads(int32_t threads) const {
+inline void pipeline_m_world::set_threads(int32_t threads) const {
     ecs_set_threads(this->me(), threads);
 }
 
-template <typename T>
-int32_t pipeline_m<T>::get_threads() const {
+inline int32_t pipeline_m_world::get_threads() const {
     return ecs_get_threads(this->me());
 }
 

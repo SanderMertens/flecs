@@ -26,6 +26,15 @@ public:
         sync_from_flecs();
     }
 
+    explicit type_base(
+        world_t *world, entity_t e)
+    { 
+        ecs_type_desc_t desc = {};
+        desc.entity.entity = e;
+        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
+        sync_from_flecs();
+    }
+
     explicit type_base(world_t *world, type_t t)
         : m_entity( world, static_cast<flecs::id_t>(0) )
         , m_type( t ) { }
@@ -189,14 +198,6 @@ public:
     explicit type(world_t *world, type_t t) : type_base(world, t) { }
 
     type(type_t t) : type_base(t) { }
-};
-
-class pipeline : public type_base<pipeline> {
-public:
-    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
-    { 
-        this->entity().add(flecs::Pipeline);
-    }
 };
 
 } // namespace flecs

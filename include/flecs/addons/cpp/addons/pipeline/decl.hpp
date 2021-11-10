@@ -1,3 +1,4 @@
+#pragma once
 
 namespace flecs {
 
@@ -15,11 +16,12 @@ static const flecs::entity_t PreStore = EcsPreStore;
 static const flecs::entity_t OnStore = EcsOnStore;
 static const flecs::entity_t PostFrame = EcsPostFrame;
 
-/** Pipeline mixin.
- * Makes pipeline methods available on world instance.
- */
 template<typename T>
-struct pipeline_m : mixin<T> {
+struct pipeline_m : mixin<T> { };
+
+/** Pipeline mixin for flecs::world. */
+template<>
+struct pipeline_m<flecs::world> : mixin<flecs::world> {
   /** Initialize mixin. */
   void init() { }
 
@@ -66,6 +68,11 @@ struct pipeline_m : mixin<T> {
    */
   int32_t get_tick() const;
 
+  /** Set target FPS
+   * @see ecs_set_target_fps
+   */
+  void set_target_fps(FLECS_FLOAT target_fps) const;
+
   /** Get target FPS
    * @return Configured frames per second.
    */
@@ -91,5 +98,7 @@ struct pipeline_m : mixin<T> {
    */
   int32_t get_threads() const;
 };
+
+using pipeline_m_world = pipeline_m<flecs::world>;
 
 }

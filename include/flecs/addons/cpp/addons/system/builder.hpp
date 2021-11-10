@@ -27,12 +27,12 @@ public:
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system<Components...> iter(Func&& func) const;
+    system iter(Func&& func) const;
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system<Components...> each(Func&& func) const;
+    system each(Func&& func) const;
 
     ecs_system_desc_t m_desc;
 

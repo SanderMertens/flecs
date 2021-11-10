@@ -1,17 +1,20 @@
+#pragma once
 
 namespace flecs {
 
-template<typename ... Components>
+using TickSource = EcsTickSource;
+
 class system;
 
 template<typename ... Components>
 class system_builder;
 
-/** System mixin.
- * Makes system methods available on world instance.
- */
 template<typename T>
-struct system_m : mixin<T> {
+struct system_m : mixin<T> { };
+
+/** System mixin for flecs::world. */
+template<>
+struct system_m<flecs::world> : mixin<flecs::world> {
   /** Initialize mixin. */
   void init();
 
@@ -21,7 +24,7 @@ struct system_m : mixin<T> {
    * @param e The entity.
    * @return A system object.
    */
-  flecs::system<> system(flecs::entity e) const;
+  flecs::system system(flecs::entity e) const;
 
   /** Create a new system.
    * 
@@ -32,5 +35,7 @@ struct system_m : mixin<T> {
   template <typename... Components, typename... Args>
   flecs::system_builder<Components...> system(Args &&... args) const;
 };
+
+using system_m_world = system_m<flecs::world>;
 
 }

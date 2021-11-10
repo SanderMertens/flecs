@@ -63,15 +63,13 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-template <typename T>
 template <typename Module, typename... Args>
-inline flecs::entity module_m<T>::module(Args &&... args) const {
+inline flecs::entity module_m_world::module(Args &&... args) const {
     return flecs::module<Module>(this->me(), std::forward<Args>(args)...);
 }
 
-template <typename T>
 template <typename Module>
-inline flecs::entity module_m<T>::import() {
+inline flecs::entity module_m_world::import() {
     return flecs::import<Module>(this->me());
 }
 

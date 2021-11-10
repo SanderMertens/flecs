@@ -1116,7 +1116,7 @@ void System_update_rate_filter() {
 void System_default_ctor() {
     flecs::world world;
 
-    flecs::system<Position> sys_var;
+    flecs::system sys_var;
 
     int count = 0;
     auto sys = world.system<Position>()

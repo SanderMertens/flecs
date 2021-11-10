@@ -70,13 +70,15 @@ class each_invoker;
 #include "addons/module/decl.hpp"
 #include "addons/system/decl.hpp"
 #include "addons/pipeline/decl.hpp"
+#include "addons/timer/decl.hpp"
 
 // Mixins
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
     system_m, 
-    pipeline_m
+    pipeline_m,
+    timer_m
 >;
 }
 
@@ -105,3 +107,4 @@ using Mixins = mixin_list<
 #include "addons/module/impl.hpp"
 #include "addons/system/impl.hpp"
 #include "addons/pipeline/impl.hpp"
+#include "addons/timer/impl.hpp"

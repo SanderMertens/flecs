@@ -8,34 +8,13 @@ void SystemBuilder_builder_assign_same_type() {
 
     int32_t count = 0;
 
-    flecs::system<Position, Velocity> s = 
+    flecs::system s = 
         ecs.system<Position, Velocity>()
             .each([&](flecs::entity e, Position& p, Velocity& v) {
                 count ++;
                 test_assert(e == e1);
             });
 
-    test_int(count, 0);
-    s.run();
-    test_int(count, 1);
-}
-
-void SystemBuilder_builder_assign_from_empty() {
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>().add<Velocity>();
-    ecs.entity().add<Position>();
-
-    int32_t count = 0;
-
-    flecs::system<> s = ecs.system<>()
-        .term<Position>()
-        .term<Velocity>()
-        .each([&](flecs::entity e) {
-            count ++;
-            test_assert(e == e1);
-        });
-    
     test_int(count, 0);
     s.run();
     test_int(count, 1);
