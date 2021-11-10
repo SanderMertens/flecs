@@ -1,6 +1,5 @@
 #include "../builders/filter.hpp"
 #include "../builders/query.hpp"
-#include "../builders/system.hpp"
 #include "../builders/trigger.hpp"
 #include "../builders/observer.hpp"
 
@@ -71,13 +70,14 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-    component<TickSource>("flecs::system::TickSource");
     component<RateFilter>("flecs::timer::RateFilter");
     component<Timer>("flecs::timer::Timer");
 
     component<doc::Description>("flecs::doc::Description");
 
     component<rest::Rest>("flecs::rest::Rest");
+
+    this->init_mixins();
 }
 
 template <typename T>
@@ -186,15 +186,6 @@ inline flecs::type world::type(Args &&... args) const {
 template <typename... Args>
 inline flecs::pipeline world::pipeline(Args &&... args) const {
     return flecs::pipeline(*this, std::forward<Args>(args)...);
-}
-
-inline flecs::system<> world::system(flecs::entity e) const {
-    return flecs::system<>(m_world, e);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>

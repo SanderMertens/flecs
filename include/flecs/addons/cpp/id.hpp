@@ -5,7 +5,7 @@ namespace flecs {
  * A flecs id is an identifier that can store an entity id, an relation-object 
  * pair, or role annotated id (such as SWITCH | Movement).
  */
-class id : public world_base<id> {
+class id {
 public:
     explicit id(flecs::id_t value = 0) 
         : m_world(nullptr)
@@ -24,7 +24,7 @@ public:
         , m_id(ecs_pair(relation, object)) { }
 
     explicit id(const flecs::id& relation, const flecs::id& object)
-        : m_world(relation.world())
+        : m_world(relation.m_world)
         , m_id(ecs_pair(relation.m_id, object.m_id)) { }
 
     /** Test if id is pair (has relation, object) */
@@ -113,7 +113,12 @@ public:
     operator flecs::id_t() const {
         return m_id;
     }
+
+    flecs::world world() const {
+        return flecs::world(m_world);
+    }
     
+protected:
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
     flecs::world_t *m_world;
