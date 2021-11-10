@@ -10090,219 +10090,13 @@ ecs_entity_t ecs_module_init(
  * @file flecs.hpp
  * @brief Flecs C++ API.
  *
- * This is a C++11 wrapper around the Flecs C API.
+ * Modern, type safe C++11 API
  */
 
 #pragma once
 
-// The C++ API does not use STL, save for type_traits
+// C++ utilities
 #include <type_traits>
-
-// Allows overriding flecs_static_assert, which is useful when testing
-#ifndef flecs_static_assert
-#define flecs_static_assert(cond, str) static_assert(cond, str)
-#endif
-
-namespace flecs {
-
-////////////////////////////////////////////////////////////////////////////////
-//// Forward declarations and types
-////////////////////////////////////////////////////////////////////////////////
-
-using world_t = ecs_world_t;
-using id_t = ecs_id_t;
-using entity_t = ecs_entity_t;
-using type_t = ecs_type_t;
-using table_t = ecs_table_t;
-using snapshot_t = ecs_snapshot_t;
-using filter_t = ecs_filter_t;
-using query_t = ecs_query_t;
-using ref_t = ecs_ref_t;
-using iter_t = ecs_iter_t;
-using ComponentLifecycle = EcsComponentLifecycle;
-
-enum inout_kind_t {
-    InOutDefault = EcsInOutDefault,
-    InOutFilter = EcsInOutFilter,
-    InOut = EcsInOut,
-    In = EcsIn,
-    Out = EcsOut
-};
-
-enum oper_kind_t {
-    And = EcsAnd,
-    Or = EcsOr,
-    Not = EcsNot,
-    Optional = EcsOptional,
-    AndFrom = EcsAndFrom,
-    OrFrom = EcsOrFrom,
-    NotFrom = EcsNotFrom
-};
-
-enum var_kind_t {
-    VarDefault = EcsVarDefault,
-    VarIsEntity = EcsVarIsEntity,
-    VarIsVariable = EcsVarIsVariable
-};
-
-class world;
-class world_async_stage;
-class snapshot;
-class id;
-class entity;
-class entity_view;
-class type;
-class pipeline;
-class iter;
-class term;
-class filter_iterator;
-class world_filter;
-class snapshot_filter;
-class query_base;
-
-template<typename ... Components>
-class filter;
-
-template<typename ... Components>
-class query;
-
-template<typename ... Components>
-class system;
-
-template<typename ... Components>
-class trigger;
-
-template<typename ... Components>
-class observer;
-
-template <typename ... Components>
-class filter_builder;
-
-template <typename ... Components>
-class query_builder;
-
-template <typename ... Components>
-class system_builder;
-
-template <typename ... Components>
-class trigger_builder;
-
-template <typename ... Components>
-class observer_builder;
-
-namespace _
-{
-template <typename T, typename U = int>
-class cpp_type;
-
-template <typename Func, typename ... Components>
-class each_invoker;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Builtin components and tags 
-////////////////////////////////////////////////////////////////////////////////
-
-/* Builtin components */
-using Component = EcsComponent;
-using Type = EcsType;
-using Identifier = EcsIdentifier;
-using Timer = EcsTimer;
-using RateFilter = EcsRateFilter;
-using TickSource = EcsTickSource;
-using Query = EcsQuery;
-using Trigger = EcsTrigger;
-using Observer = EcsObserver;
-
-/* Builtin opaque components */
-static const flecs::entity_t System = ecs_id(EcsSystem);
-
-/* Doc components */
-namespace doc {
-    using Description = EcsDocDescription;
-    static const flecs::entity_t Brief = EcsDocBrief;
-    static const flecs::entity_t Detail = EcsDocDetail;
-    static const flecs::entity_t Link = EcsDocLink;
-}
-
-/* REST components */
-namespace rest {
-    using Rest = EcsRest;
-}
-
-/* Builtin set constants */
-static const uint8_t DefaultSet = EcsDefaultSet;
-static const uint8_t Self = EcsSelf;
-static const uint8_t SuperSet = EcsSuperSet;
-static const uint8_t SubSet = EcsSubSet;
-static const uint8_t Cascade = EcsCascade;
-static const uint8_t All = EcsAll;
-static const uint8_t Nothing = EcsNothing;
-static const uint8_t Parent = EcsParent;
-
-/* Builtin tag ids */
-static const flecs::entity_t Module = EcsModule;
-static const flecs::entity_t Prefab = EcsPrefab;
-static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t Inactive = EcsInactive;
-static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t Pipeline = EcsPipeline;
-
-/* Trigger tags */
-static const flecs::entity_t OnAdd = EcsOnAdd;
-static const flecs::entity_t OnRemove = EcsOnRemove;
-static const flecs::entity_t OnSet = EcsOnSet;
-static const flecs::entity_t UnSet = EcsUnSet;
-
-/* Builtin pipeline tags */
-static const flecs::entity_t PreFrame = EcsPreFrame;
-static const flecs::entity_t OnLoad = EcsOnLoad;
-static const flecs::entity_t PostLoad = EcsPostLoad;
-static const flecs::entity_t PreUpdate = EcsPreUpdate;
-static const flecs::entity_t OnUpdate = EcsOnUpdate;
-static const flecs::entity_t OnValidate = EcsOnValidate;
-static const flecs::entity_t PostUpdate = EcsPostUpdate;
-static const flecs::entity_t PreStore = EcsPreStore;
-static const flecs::entity_t OnStore = EcsOnStore;
-static const flecs::entity_t PostFrame = EcsPostFrame;
-
-/** Builtin roles */
-static const flecs::entity_t Pair = ECS_PAIR;
-static const flecs::entity_t Switch = ECS_SWITCH;
-static const flecs::entity_t Case = ECS_CASE;
-static const flecs::entity_t Owned = ECS_OVERRIDE;
-
-/* Builtin entity ids */
-static const flecs::entity_t Flecs = EcsFlecs;
-static const flecs::entity_t FlecsCore = EcsFlecsCore;
-static const flecs::entity_t World = EcsWorld;
-
-/* Relation properties */
-static const flecs::entity_t Wildcard = EcsWildcard;
-static const flecs::entity_t This = EcsThis;
-static const flecs::entity_t Transitive = EcsTransitive;
-static const flecs::entity_t TransitiveSelf = EcsTransitiveSelf;
-static const flecs::entity_t Final = EcsFinal;
-static const flecs::entity_t Tag = EcsTag;
-static const flecs::entity_t Exclusive = EcsExclusive;
-
-/* Builtin relationships */
-static const flecs::entity_t IsA = EcsIsA;
-static const flecs::entity_t ChildOf = EcsChildOf;
-
-/* Builtin identifiers */
-static const flecs::entity_t Name = EcsName;
-static const flecs::entity_t Symbol = EcsSymbol;
-
-/* Cleanup policies */
-static const flecs::entity_t OnDelete = EcsOnDelete;
-static const flecs::entity_t OnDeleteObject = EcsOnDeleteObject;
-static const flecs::entity_t Remove = EcsRemove;
-static const flecs::entity_t Delete = EcsDelete;
-static const flecs::entity_t Throw = EcsThrow;
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Flecs STL (FTL?)
 //// Minimalistic utilities that allow for STL like functionality without having
@@ -10348,6 +10142,11 @@ template<class Ty> inline void free_obj(Ty* _ptr) {
 } // namespace _
 
 } // namespace flecs
+
+// Allows overriding flecs_static_assert, which is useful when testing
+#ifndef flecs_static_assert
+#define flecs_static_assert(cond, str) static_assert(cond, str)
+#endif
 
 inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
 inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
@@ -10407,8 +10206,115 @@ using if_t = enable_if_t<V, int>;
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
+namespace _
+{
 
-// String handling
+// Utility to prevent static assert from immediately triggering
+template <class... T>
+struct always_false {
+    static const bool value = false;
+};
+
+} // namespace _
+
+} // namespace flecs
+
+// Array class. Simple std::array like utility that is mostly there to aid
+// template code where template expansion would lead to an array with size 0.
+
+namespace flecs {
+
+template <typename T>
+class array_iterator
+{
+public:
+    explicit array_iterator(T* value, int index) {
+        m_value = value;
+        m_index = index;
+    }
+
+    bool operator!=(array_iterator const& other) const
+    {
+        return m_index != other.m_index;
+    }
+
+    T & operator*() const
+    {
+        return m_value[m_index];
+    }
+
+    array_iterator& operator++()
+    {
+        ++m_index;
+        return *this;
+    }
+
+private:
+    T* m_value;
+    int m_index;
+};
+
+template <typename T, size_t Size, class Enable = void> 
+class array { };
+
+template <typename T, size_t Size>
+class array<T, Size, enable_if_t<Size != 0> > {
+public:
+    array() {};
+
+    array(const T (&elems)[Size]) {
+        int i = 0;
+        for (auto it = this->begin(); it != this->end(); ++ it) {
+            *it = elems[i ++];
+        }
+    }
+
+    T& operator[](size_t index) {
+        return m_array[index];
+    }
+
+    array_iterator<T> begin() {
+        return array_iterator<T>(m_array, 0);
+    }
+
+    array_iterator<T> end() {
+        return array_iterator<T>(m_array, Size);
+    }
+
+    size_t size() {
+        return Size;
+    }
+
+    T* ptr() {
+        return m_array;
+    }
+private:
+    T m_array[Size];
+};
+
+// Specialized class for zero-sized array
+template <typename T, size_t Size>
+class array<T, Size, enable_if_t<Size == 0>> {
+public:
+    array() {};
+    array(const T* (&elems)) { (void)elems; }
+    T operator[](size_t index) { abort(); (void)index; return T(); }
+    array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
+    array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
+
+    size_t size() {
+        return 0;
+    }
+
+    T* ptr() {
+        return NULL;
+    }
+};
+
+}
+// String utility that doesn't implicitly allocate memory.
+
+namespace flecs {
 
 class string_view;
 
@@ -10542,7 +10448,11 @@ public:
         : string(str) { }
 };
 
+}
 // Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
+
+namespace flecs {
+
 class stringstream {
 public:
     explicit stringstream() 
@@ -10582,107 +10492,428 @@ private:
     ecs_strbuf_t m_buf;
 };
 
-// Array class. Simple std::array like utility that is mostly there to aid
-// template code, where the expanded array size would be 0.
+}
+
+// Neat utility to inspect arguments & returntype of a function type
+// Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
+
+namespace flecs {
+namespace _ {
+
+template <typename ... Args>
+struct arg_list { };
+
+// Base type that contains the traits
+template <typename ReturnType, typename... Args>
+struct function_traits_defs
+{
+    static constexpr bool is_callable = true;
+    static constexpr size_t arity = sizeof...(Args);
+    using return_type = ReturnType;
+    using args = arg_list<Args ...>;
+};
+
+// Primary template for function_traits_impl
 template <typename T>
-class array_iterator
+struct function_traits_impl {
+    static constexpr bool is_callable = false;
+};
+
+// Template specializations for the different kinds of function types (whew)
+template <typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(Args...)>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(*)(Args...)>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...)>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const>
+    : function_traits_defs<ReturnType, Args...> {};    
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const&>
+    : function_traits_defs<ReturnType, Args...> {};
+    
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const&&>
+    : function_traits_defs<ReturnType, Args...> {};
+    
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile&>
+    : function_traits_defs<ReturnType, Args...> {};
+    
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile&&>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile>
+    : function_traits_defs<ReturnType, Args...> {};
+
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&>
+    : function_traits_defs<ReturnType, Args...> {};
+    
+template <typename ClassType, typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&&>
+    : function_traits_defs<ReturnType, Args...> {};
+
+// Primary template for function_traits_no_cv. If T is not a function, the
+// compiler will attempt to instantiate this template and fail, because its base
+// is undefined.
+template <typename T, typename V = void>
+struct function_traits_no_cv
+    : function_traits_impl<T> {};
+
+// Specialized template for function types
+template <typename T>
+struct function_traits_no_cv<T, decltype((void)&T::operator())>
+    : function_traits_impl<decltype(&T::operator())> {};
+ 
+// Front facing template that decays T before ripping it apart.
+template <typename T>
+struct function_traits
+    : function_traits_no_cv< decay_t<T> > {};
+
+} // _
+
+
+template <typename T>
+struct is_callable {
+    static constexpr bool value = _::function_traits<T>::is_callable;
+};
+
+template <typename T>
+struct arity {
+    static constexpr int value = _::function_traits<T>::arity;
+};
+
+template <typename T>
+using return_type_t = typename _::function_traits<T>::return_type;
+
+template <typename T>
+using arg_list_t = typename _::function_traits<T>::args;
+
+
+template<typename Func, typename ... Args>
+struct first_arg_impl;
+
+template<typename Func, typename T, typename ... Args>
+struct first_arg_impl<Func, _::arg_list<T, Args ...> > {
+    using type = T;
+};
+
+template<typename Func>
+struct first_arg {
+    using type = typename first_arg_impl<Func, arg_list_t<Func>>::type;
+};
+
+template <typename Func>
+using first_arg_t = typename first_arg<Func>::type;
+
+} // flecs
+// Utility for adding features (mixins) to a class without modifying its 
+// definition.
+
+namespace flecs {
+
+// Macro for mixin template type so we don't go cross-eyed
+#define FLECS_MIXIN template<typename Self> class
+
+// Template that can store a list of mixin templates
+template< FLECS_MIXIN ... Mixin>
+struct mixin_list { };
+
+// Used for last element in mixins list (see next)
+template <typename T, typename Mixin>
+struct extendable_impl { 
+    void init_mixins() { }
+};
+
+// Recursively unpack the elements in the mixin list. Add current mixin as base
+// base class, wrap remaining mixins in a new list & pass to self.
+template <typename T, FLECS_MIXIN Mixin, FLECS_MIXIN ... Mixins>
+struct extendable_impl<T, mixin_list<Mixin, Mixins...> > : Mixin<T>, extendable_impl<T, mixin_list< Mixins... >> {
+    using Base = extendable_impl<T, mixin_list< Mixins... >>;
+
+    void init_mixins() {
+        Mixin<T>::init();
+        Base::init_mixins();
+    }
+};
+
+// Base class for mixin implementations. The virtual method provides access to
+// the instance of the top-level type.
+template <typename Self>
+struct mixin {
+protected:
+    virtual Self& self() const = 0;
+    virtual ~mixin() { }
+};
+
+// Base for extendable class. Accepts own type and list of mixins
+template <typename T, typename Mixins>
+struct extendable : extendable_impl<T, Mixins> {
+    T& self() const {
+        return *const_cast<T*>(static_cast<const T*>(this));
+    }
+};
+
+}
+
+// Forward declarations
+namespace flecs 
 {
-public:
-    explicit array_iterator(T* value, int index) {
-        m_value = value;
-        m_index = index;
-    }
 
-    bool operator!=(array_iterator const& other) const
-    {
-        return m_index != other.m_index;
-    }
+class world;
+class world_async_stage;
+class snapshot;
+class id;
+class entity;
+class entity_view;
+class type;
+class pipeline;
+class iter;
+class term;
+class filter_iterator;
+class world_filter;
+class snapshot_filter;
+class query_base;
 
-    T & operator*() const
-    {
-        return m_value[m_index];
-    }
+template<typename ... Components>
+class filter;
 
-    array_iterator& operator++()
-    {
-        ++m_index;
-        return *this;
-    }
+template<typename ... Components>
+class query;
 
-private:
-    T* m_value;
-    int m_index;
-};
+template<typename ... Components>
+class trigger;
 
-template <typename T, size_t Size, class Enable = void> 
-class array { };
+template<typename ... Components>
+class observer;
 
-template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size != 0> > {
-public:
-    array() {};
+template <typename ... Components>
+class filter_builder;
 
-    array(const T (&elems)[Size]) {
-        int i = 0;
-        for (auto it = this->begin(); it != this->end(); ++ it) {
-            *it = elems[i ++];
-        }
-    }
+template <typename ... Components>
+class query_builder;
 
-    T& operator[](size_t index) {
-        return m_array[index];
-    }
+template <typename ... Components>
+class trigger_builder;
 
-    array_iterator<T> begin() {
-        return array_iterator<T>(m_array, 0);
-    }
+template <typename ... Components>
+class observer_builder;
 
-    array_iterator<T> end() {
-        return array_iterator<T>(m_array, Size);
-    }
-
-    size_t size() {
-        return Size;
-    }
-
-    T* ptr() {
-        return m_array;
-    }
-private:
-    T m_array[Size];
-};
-
-// Specialized class for zero-sized array
-template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size == 0>> {
-public:
-    array() {};
-    array(const T* (&elems)) { (void)elems; }
-    T operator[](size_t index) { abort(); (void)index; return T(); }
-    array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
-    array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
-
-    size_t size() {
-        return 0;
-    }
-
-    T* ptr() {
-        return NULL;
-    }
-};
-
-namespace _
+namespace _ 
 {
+template <typename T, typename U = int>
+class cpp_type;
 
-// Utility to prevent static assert from immediately triggering
-template <class... T>
-struct always_false {
-    static const bool value = false;
-};
-
+template <typename Func, typename ... Components>
+class each_invoker;
 } // namespace _
-
 } // namespace flecs
+
+// Types imported from C API
+////////////////////////////////////////////////////////////////////////////////
+//// Aliases for types/constants from C API
+////////////////////////////////////////////////////////////////////////////////
+
+namespace flecs {
+
+using world_t = ecs_world_t;
+using id_t = ecs_id_t;
+using entity_t = ecs_entity_t;
+using type_t = ecs_type_t;
+using table_t = ecs_table_t;
+using snapshot_t = ecs_snapshot_t;
+using filter_t = ecs_filter_t;
+using query_t = ecs_query_t;
+using ref_t = ecs_ref_t;
+using iter_t = ecs_iter_t;
+using ComponentLifecycle = EcsComponentLifecycle;
+
+enum inout_kind_t {
+    InOutDefault = EcsInOutDefault,
+    InOutFilter = EcsInOutFilter,
+    InOut = EcsInOut,
+    In = EcsIn,
+    Out = EcsOut
+};
+
+enum oper_kind_t {
+    And = EcsAnd,
+    Or = EcsOr,
+    Not = EcsNot,
+    Optional = EcsOptional,
+    AndFrom = EcsAndFrom,
+    OrFrom = EcsOrFrom,
+    NotFrom = EcsNotFrom
+};
+
+enum var_kind_t {
+    VarDefault = EcsVarDefault,
+    VarIsEntity = EcsVarIsEntity,
+    VarIsVariable = EcsVarIsVariable
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// Builtin components and tags 
+////////////////////////////////////////////////////////////////////////////////
+
+/* Builtin components */
+using Component = EcsComponent;
+using Type = EcsType;
+using Identifier = EcsIdentifier;
+using Timer = EcsTimer;
+using RateFilter = EcsRateFilter;
+using TickSource = EcsTickSource;
+using Query = EcsQuery;
+using Trigger = EcsTrigger;
+using Observer = EcsObserver;
+
+/* Builtin opaque components */
+static const flecs::entity_t System = ecs_id(EcsSystem);
+
+/* Doc components */
+namespace doc {
+    using Description = EcsDocDescription;
+    static const flecs::entity_t Brief = EcsDocBrief;
+    static const flecs::entity_t Detail = EcsDocDetail;
+    static const flecs::entity_t Link = EcsDocLink;
+}
+
+/* REST components */
+namespace rest {
+    using Rest = EcsRest;
+}
+
+/* Builtin set constants */
+static const uint8_t DefaultSet = EcsDefaultSet;
+static const uint8_t Self = EcsSelf;
+static const uint8_t SuperSet = EcsSuperSet;
+static const uint8_t SubSet = EcsSubSet;
+static const uint8_t Cascade = EcsCascade;
+static const uint8_t All = EcsAll;
+static const uint8_t Nothing = EcsNothing;
+static const uint8_t Parent = EcsParent;
+
+/* Builtin tag ids */
+static const flecs::entity_t Module = EcsModule;
+static const flecs::entity_t Prefab = EcsPrefab;
+static const flecs::entity_t Disabled = EcsDisabled;
+static const flecs::entity_t Inactive = EcsInactive;
+static const flecs::entity_t Monitor = EcsMonitor;
+static const flecs::entity_t Pipeline = EcsPipeline;
+
+/* Trigger tags */
+static const flecs::entity_t OnAdd = EcsOnAdd;
+static const flecs::entity_t OnRemove = EcsOnRemove;
+static const flecs::entity_t OnSet = EcsOnSet;
+static const flecs::entity_t UnSet = EcsUnSet;
+
+/* Builtin pipeline tags */
+static const flecs::entity_t PreFrame = EcsPreFrame;
+static const flecs::entity_t OnLoad = EcsOnLoad;
+static const flecs::entity_t PostLoad = EcsPostLoad;
+static const flecs::entity_t PreUpdate = EcsPreUpdate;
+static const flecs::entity_t OnUpdate = EcsOnUpdate;
+static const flecs::entity_t OnValidate = EcsOnValidate;
+static const flecs::entity_t PostUpdate = EcsPostUpdate;
+static const flecs::entity_t PreStore = EcsPreStore;
+static const flecs::entity_t OnStore = EcsOnStore;
+static const flecs::entity_t PostFrame = EcsPostFrame;
+
+/** Builtin roles */
+static const flecs::entity_t Pair = ECS_PAIR;
+static const flecs::entity_t Switch = ECS_SWITCH;
+static const flecs::entity_t Case = ECS_CASE;
+static const flecs::entity_t Owned = ECS_OVERRIDE;
+
+/* Builtin entity ids */
+static const flecs::entity_t Flecs = EcsFlecs;
+static const flecs::entity_t FlecsCore = EcsFlecsCore;
+static const flecs::entity_t World = EcsWorld;
+
+/* Relation properties */
+static const flecs::entity_t Wildcard = EcsWildcard;
+static const flecs::entity_t This = EcsThis;
+static const flecs::entity_t Transitive = EcsTransitive;
+static const flecs::entity_t TransitiveSelf = EcsTransitiveSelf;
+static const flecs::entity_t Final = EcsFinal;
+static const flecs::entity_t Tag = EcsTag;
+static const flecs::entity_t Exclusive = EcsExclusive;
+
+/* Builtin relationships */
+static const flecs::entity_t IsA = EcsIsA;
+static const flecs::entity_t ChildOf = EcsChildOf;
+
+/* Builtin identifiers */
+static const flecs::entity_t Name = EcsName;
+static const flecs::entity_t Symbol = EcsSymbol;
+
+/* Cleanup policies */
+static const flecs::entity_t OnDelete = EcsOnDelete;
+static const flecs::entity_t OnDeleteObject = EcsOnDeleteObject;
+static const flecs::entity_t Remove = EcsRemove;
+static const flecs::entity_t Delete = EcsDelete;
+static const flecs::entity_t Throw = EcsThrow;
+
+}
+
+// Addon forward declarations
+
+namespace flecs {
+
+template<typename ... Components>
+class system;
+
+template<typename ... Components>
+class system_builder;
+
+/** System mixin.
+ * Makes system methods available on world instance.
+ */
+template<typename T>
+struct system_m : mixin<T> {
+  /** Initialize mixin. */
+  void init();
+
+  /** Upcast entity to a system.
+   * The provided entity must be a system.
+   * 
+   * @param e The entity.
+   * @return A system object.
+   */
+  flecs::system<> system(flecs::entity e) const;
+
+  /** Create a new system.
+   * 
+   * @tparam Components The components to match on.
+   * @tparam Args Arguments to pass into the constructor of flecs::system.
+   * @return System builder.
+   */
+  template <typename... Components, typename... Args>
+  flecs::system_builder<Components...> system(Args &&... args) const;
+};
+
+}
+
+// Active mixins
+namespace flecs {
+using Mixins = mixin_list<system_m>;
+}
+
 
 namespace flecs {
 namespace log {
@@ -10836,135 +11067,6 @@ template <typename T>
 struct is_actual {
     static constexpr bool value = std::is_same<T, actual_type_t<T> >::value;
 };
-
-} // flecs
-
-// Neat utility to inspect arguments & returntype of a function type
-// Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
-
-namespace flecs {
-namespace _ {
-
-template <typename ... Args>
-struct arg_list { };
-
-// Base type that contains the traits
-template <typename ReturnType, typename... Args>
-struct function_traits_defs
-{
-    static constexpr bool is_callable = true;
-    static constexpr size_t arity = sizeof...(Args);
-    using return_type = ReturnType;
-    using args = arg_list<Args ...>;
-};
-
-// Primary template for function_traits_impl
-template <typename T>
-struct function_traits_impl {
-    static constexpr bool is_callable = false;
-};
-
-// Template specializations for the different kinds of function types (whew)
-template <typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(Args...)>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(*)(Args...)>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...)>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const>
-    : function_traits_defs<ReturnType, Args...> {};    
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const&>
-    : function_traits_defs<ReturnType, Args...> {};
-    
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const&&>
-    : function_traits_defs<ReturnType, Args...> {};
-    
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile&>
-    : function_traits_defs<ReturnType, Args...> {};
-    
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) volatile&&>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile>
-    : function_traits_defs<ReturnType, Args...> {};
-
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&>
-    : function_traits_defs<ReturnType, Args...> {};
-    
-template <typename ClassType, typename ReturnType, typename... Args>
-struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&&>
-    : function_traits_defs<ReturnType, Args...> {};
-
-// Primary template for function_traits_no_cv. If T is not a function, the
-// compiler will attempt to instantiate this template and fail, because its base
-// is undefined.
-template <typename T, typename V = void>
-struct function_traits_no_cv
-    : function_traits_impl<T> {};
-
-// Specialized template for function types
-template <typename T>
-struct function_traits_no_cv<T, decltype((void)&T::operator())>
-    : function_traits_impl<decltype(&T::operator())> {};
- 
-// Front facing template that decays T before ripping it apart.
-template <typename T>
-struct function_traits
-    : function_traits_no_cv< decay_t<T> > {};
-
-} // _
-
-
-template <typename T>
-struct is_callable {
-    static constexpr bool value = _::function_traits<T>::is_callable;
-};
-
-template <typename T>
-struct arity {
-    static constexpr int value = _::function_traits<T>::arity;
-};
-
-template <typename T>
-using return_type_t = typename _::function_traits<T>::return_type;
-
-template <typename T>
-using arg_list_t = typename _::function_traits<T>::args;
-
-
-template<typename Func, typename ... Args>
-struct first_arg_impl;
-
-template<typename Func, typename T, typename ... Args>
-struct first_arg_impl<Func, _::arg_list<T, Args ...> > {
-    using type = T;
-};
-
-template<typename Func>
-struct first_arg {
-    using type = typename first_arg_impl<Func, arg_list_t<Func>>::type;
-};
-
-template <typename Func>
-using first_arg_t = typename first_arg<Func>::type;
 
 } // flecs
 namespace flecs 
@@ -11973,7 +12075,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
  */
-class world final {
+class world final : public extendable<world, Mixins> {
 public:
     /** Create world.
      */
@@ -12728,15 +12830,6 @@ public:
     template <typename Module>
     flecs::entity import(); // Cannot be const because modules accept a non-const world
 
-    /** Create a system from an entity
-     */
-    flecs::system<> system(flecs::entity e) const;
-
-    /** Create a system.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::system_builder<Comps...> system(Args &&... args) const;
-
     /** Create a trigger.
      */
     template <typename... Comps, typename... Args>
@@ -12791,26 +12884,14 @@ public:
      */
     template <typename... Args>
     flecs::snapshot snapshot(Args &&... args) const;
-    
-private:
+
+public:
+    friend extendable<world, Mixins>;
+
     void init_builtin_components();
 
     world_t *m_world;
     bool m_owned;
-};
-
-// Downcast utility to make world available to classes in inheritance hierarchy
-template<typename Base>
-class world_base {
-public:
-    template<typename IBuilder>
-    static flecs::world world(const IBuilder *self) {
-        return flecs::world(static_cast<const Base*>(self)->m_world);
-    }
-
-    flecs::world world() const {
-        return flecs::world(static_cast<const Base*>(this)->m_world);
-    }
 };
 
 } // namespace flecs
@@ -12821,7 +12902,7 @@ namespace flecs {
  * A flecs id is an identifier that can store an entity id, an relation-object 
  * pair, or role annotated id (such as SWITCH | Movement).
  */
-class id : public world_base<id> {
+class id {
 public:
     explicit id(flecs::id_t value = 0) 
         : m_world(nullptr)
@@ -12840,7 +12921,7 @@ public:
         , m_id(ecs_pair(relation, object)) { }
 
     explicit id(const flecs::id& relation, const flecs::id& object)
-        : m_world(relation.world())
+        : m_world(relation.m_world)
         , m_id(ecs_pair(relation.m_id, object.m_id)) { }
 
     /** Test if id is pair (has relation, object) */
@@ -12929,7 +13010,12 @@ public:
     operator flecs::id_t() const {
         return m_id;
     }
+
+    flecs::world world() const {
+        return flecs::world(m_world);
+    }
     
+protected:
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
     flecs::world_t *m_world;
@@ -14095,7 +14181,9 @@ public:
     Base& set_name(const char *name) {
         ecs_set_name(this->world_v(), this->id_v(), name);
         return *this;
-    }    
+    }
+
+    virtual ~entity_builder_i() { }
 
 protected:
     virtual flecs::world_t* world_v() = 0;
@@ -16816,177 +16904,6 @@ private:
 namespace flecs 
 {
 
-////////////////////////////////////////////////////////////////////////////////
-//// Fluent interface to run a system manually
-////////////////////////////////////////////////////////////////////////////////
-
-class system_runner_fluent {
-public:
-    system_runner_fluent(
-        world_t *world, 
-        entity_t id, 
-        int32_t stage_current, 
-        int32_t stage_count, 
-        FLECS_FLOAT delta_time, 
-        void *param)
-        : m_stage(world)
-        , m_id(id)
-        , m_delta_time(delta_time)
-        , m_param(param)
-        , m_offset(0)
-        , m_limit(0)
-        , m_stage_current(stage_current)
-        , m_stage_count(stage_count) { }
-
-    system_runner_fluent& offset(int32_t offset) {
-        m_offset = offset;
-        return *this;
-    }
-
-    system_runner_fluent& limit(int32_t limit) {
-        m_limit = limit;
-        return *this;
-    }
-
-    system_runner_fluent& stage(flecs::world& stage) {
-        m_stage = stage.c_ptr();
-        return *this;
-    }
-
-    ~system_runner_fluent() {
-        if (m_stage_count) {
-            ecs_run_worker(
-                m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
-                m_param);            
-        } else {
-            ecs_run_w_filter(
-                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
-        }
-    }
-
-private:
-    world_t *m_stage;
-    entity_t m_id;
-    FLECS_FLOAT m_delta_time;
-    void *m_param;
-    int32_t m_offset;
-    int32_t m_limit;
-    int32_t m_stage_current;
-    int32_t m_stage_count;
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Register a system with Flecs
-////////////////////////////////////////////////////////////////////////////////
-
-template<typename ... Components>
-class system : public entity
-{
-public:
-    explicit system() 
-        : entity() { }
-
-    explicit system(flecs::world_t *world, flecs::entity_t id)
-        : entity(world, id) { }
-
-    /** Set system interval.
-     * This operation will cause the system to be ran at the specified interval.
-     *
-     * The timer is synchronous, and is incremented each frame by delta_time.
-     *
-     * @param interval The interval value.
-     */
-    void interval(FLECS_FLOAT interval) {
-        ecs_set_interval(m_world, m_id, interval);
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * provided tick source. The tick source may be any entity, including
-     * another system.
-     *
-     * @param tick_source The tick source.
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(const flecs::entity& tick_source, int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, tick_source.id());
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * frame tick frequency. If a tick source was provided, this just updates
-     * the rate of the system.
-     *
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, 0);
-    }    
-
-    /** Get interval.
-     * Get interval at which the system is running.
-     *
-     * @return The timer entity.
-     */
-    FLECS_FLOAT interval() {
-        return ecs_get_interval(m_world, m_id);
-    }
-
-    void enable() {
-        ecs_enable(m_world, m_id, true);
-    }
-
-    void disable() {
-        ecs_enable(m_world, m_id, false);
-    }
-
-    void ctx(void *ctx) {
-        if (ecs_has(m_world, m_id, EcsSystem)) {
-            ecs_system_desc_t desc = {};
-            desc.entity.entity = m_id;
-            desc.ctx = ctx;
-            ecs_system_init(m_world, &desc);
-        } else {
-            ecs_trigger_desc_t desc = {};
-            desc.entity.entity = m_id;
-            desc.ctx = ctx;
-            ecs_trigger_init(m_world, &desc);
-        }
-    }
-
-    void* ctx() const {
-        if (ecs_has(m_world, m_id, EcsSystem)) {
-            return ecs_get_system_ctx(m_world, m_id);
-        } else {
-            return ecs_get_trigger_ctx(m_world, m_id);
-        }
-    }
-
-    query_base query() const {
-        return query_base(m_world, ecs_system_get_query(m_world, m_id));
-    }
-
-    system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
-        return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
-    }
-
-    system_runner_fluent run_worker(
-        int32_t stage_current, 
-        int32_t stage_count, 
-        FLECS_FLOAT delta_time = 0.0f, 
-        void *param = nullptr) const 
-    {
-        return system_runner_fluent(
-            m_world, m_id, stage_current, stage_count, delta_time, param);
-    }
-};
-
-} // namespace flecs
-
-namespace flecs 
-{
-
 template<typename ... Components>
 class trigger : public entity
 {
@@ -17769,170 +17686,6 @@ public:
 namespace flecs 
 {
 
-// System builder interface
-template<typename Base, typename ... Components>
-class system_builder_i : public query_builder_i<Base, Components ...> {
-    using BaseClass = query_builder_i<Base, Components ...>;
-public:
-    system_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr)
-        , m_add_count(0) { }
-
-    system_builder_i(ecs_system_desc_t *desc) 
-        : BaseClass(&desc->query)
-        , m_desc(desc)
-        , m_add_count(0) { }
-
-    /** Specify string-based signature. */
-    Base& signature(const char *signature) {
-        m_desc->query.filter.expr = signature;
-        return *this;
-    }
-
-    /** Specify when the system should be ran.
-     *
-     * @param kind The kind that specifies when the system should be ran.
-     */
-    Base& kind(entity_t kind) {
-        m_desc->entity.add[0] = kind;
-        return *this;
-    }
-
-    /** Set system interval.
-     * This operation will cause the system to be ran at the specified interval.
-     *
-     * The timer is synchronous, and is incremented each frame by delta_time.
-     *
-     * @param interval The interval value.
-     */
-    Base& interval(FLECS_FLOAT interval) {
-        m_desc->interval = interval;
-        return *this;
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * provided tick source. The tick source may be any entity, including
-     * another system.
-     *
-     * @param tick_source The tick source.
-     * @param rate The multiple at which to run the system.
-     */
-    Base& rate(const entity_t tick_source, int32_t rate) {
-        m_desc->rate = rate;
-        m_desc->tick_source = tick_source;
-        return *this;
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * frame tick frequency. If a tick source was provided, this just updates
-     * the rate of the system.
-     *
-     * @param rate The multiple at which to run the system.
-     */
-    Base& rate(int32_t rate) {
-        m_desc->rate = rate;
-        return *this;
-    }
-    
-    /** Associate system with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
-    /** Set system context */
-    Base& ctx(void *ptr) {
-        m_desc->ctx = ptr;
-        return *this;
-    }
-
-protected:
-    virtual flecs::world_t* world_v() = 0;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_system_desc_t *m_desc;
-    int32_t m_add_count;
-};
-
-}
-
-namespace flecs 
-{
-
-template<typename ... Components>
-class system_builder final
-    : public system_builder_i<system_builder<Components ...>, Components ...>
-{
-    using Class = system_builder<Components ...>;
-public:
-    explicit system_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
-        : system_builder_i<Class, Components ...>(&m_desc)
-        , m_desc({})
-        , m_world(world)
-        { 
-            m_desc.entity.name = name;
-            m_desc.entity.sep = "::";
-            m_desc.entity.add[0] = flecs::OnUpdate;
-            m_desc.query.filter.expr = expr;
-            this->populate_filter_from_pack();
-        }
-
-    /* Iter (or each) is mandatory and always the last thing that 
-     * is added in the fluent method chain. Create system signature from both 
-     * template parameters and anything provided by the signature method. */
-    template <typename Func>
-    system<Components...> iter(Func&& func) const;
-
-    /* Each is similar to action, but accepts a function that operates on a
-     * single entity */
-    template <typename Func>
-    system<Components...> each(Func&& func) const;
-
-    ecs_system_desc_t m_desc;
-
-protected:
-    flecs::world_t* world_v() override { return m_world; }
-    flecs::world_t *m_world;
-
-private:
-    template <typename Invoker, typename Func>
-    entity_t build(Func&& func, bool is_each) const {
-        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
-
-        ecs_system_desc_t desc = m_desc;
-        desc.callback = Invoker::run;
-        desc.self = m_desc.self;
-        desc.query.filter.substitute_default = is_each;
-        desc.binding_ctx = ctx;
-        desc.binding_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-
-        entity_t e = ecs_system_init(m_world, &desc);
-
-        if (this->m_desc.query.filter.terms_buffer) {
-            ecs_os_free(m_desc.query.filter.terms_buffer);
-        }
-
-        return e;
-    }
-};
-
-}
-#pragma once
-
-#pragma once
-
-
-namespace flecs 
-{
-
 // Trigger builder interface
 template<typename Base, typename ... Components>
 class trigger_builder_i : public term_builder_i<Base> {
@@ -18229,13 +17982,14 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-    component<TickSource>("flecs::system::TickSource");
     component<RateFilter>("flecs::timer::RateFilter");
     component<Timer>("flecs::timer::Timer");
 
     component<doc::Description>("flecs::doc::Description");
 
     component<rest::Rest>("flecs::rest::Rest");
+
+    this->init_mixins();
 }
 
 template <typename T>
@@ -18344,15 +18098,6 @@ inline flecs::type world::type(Args &&... args) const {
 template <typename... Args>
 inline flecs::pipeline world::pipeline(Args &&... args) const {
     return flecs::pipeline(*this, std::forward<Args>(args)...);
-}
-
-inline flecs::system<> world::system(flecs::entity e) const {
-    return flecs::system<>(m_world, e);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::system_builder<Comps...> world::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
@@ -18562,24 +18307,6 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::system<Components...>(m_world, system);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::system<Components...>(m_world, system);
-}
-
-template <typename ... Components>    
-template <typename Func>
 inline observer<Components ...> observer_builder<Components...>::iter(Func&& func) const {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;
@@ -18615,6 +18342,370 @@ inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func)
 }
 
 }
+
+// Addon implementations
+#pragma once
+
+#pragma once
+
+
+namespace flecs 
+{
+
+// System builder interface
+template<typename Base, typename ... Components>
+class system_builder_i : public query_builder_i<Base, Components ...> {
+    using BaseClass = query_builder_i<Base, Components ...>;
+public:
+    system_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr)
+        , m_add_count(0) { }
+
+    system_builder_i(ecs_system_desc_t *desc) 
+        : BaseClass(&desc->query)
+        , m_desc(desc)
+        , m_add_count(0) { }
+
+    /** Specify string-based signature. */
+    Base& signature(const char *signature) {
+        m_desc->query.filter.expr = signature;
+        return *this;
+    }
+
+    /** Specify when the system should be ran.
+     *
+     * @param kind The kind that specifies when the system should be ran.
+     */
+    Base& kind(entity_t kind) {
+        m_desc->entity.add[0] = kind;
+        return *this;
+    }
+
+    /** Set system interval.
+     * This operation will cause the system to be ran at the specified interval.
+     *
+     * The timer is synchronous, and is incremented each frame by delta_time.
+     *
+     * @param interval The interval value.
+     */
+    Base& interval(FLECS_FLOAT interval) {
+        m_desc->interval = interval;
+        return *this;
+    }
+
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * provided tick source. The tick source may be any entity, including
+     * another system.
+     *
+     * @param tick_source The tick source.
+     * @param rate The multiple at which to run the system.
+     */
+    Base& rate(const entity_t tick_source, int32_t rate) {
+        m_desc->rate = rate;
+        m_desc->tick_source = tick_source;
+        return *this;
+    }
+
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * frame tick frequency. If a tick source was provided, this just updates
+     * the rate of the system.
+     *
+     * @param rate The multiple at which to run the system.
+     */
+    Base& rate(int32_t rate) {
+        m_desc->rate = rate;
+        return *this;
+    }
+    
+    /** Associate system with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ptr;
+        return *this;
+    }
+
+protected:
+    virtual flecs::world_t* world_v() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_system_desc_t *m_desc;
+    int32_t m_add_count;
+};
+
+}
+
+namespace flecs 
+{
+
+template<typename ... Components>
+class system_builder final
+    : public system_builder_i<system_builder<Components ...>, Components ...>
+{
+    using Class = system_builder<Components ...>;
+public:
+    explicit system_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
+        : system_builder_i<Class, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            m_desc.entity.add[0] = flecs::OnUpdate;
+            m_desc.query.filter.expr = expr;
+            this->populate_filter_from_pack();
+        }
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    system<Components...> iter(Func&& func) const;
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    system<Components...> each(Func&& func) const;
+
+    ecs_system_desc_t m_desc;
+
+protected:
+    flecs::world_t* world_v() override { return m_world; }
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func, bool is_each) const {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        ecs_system_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.self = m_desc.self;
+        desc.query.filter.substitute_default = is_each;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        entity_t e = ecs_system_init(m_world, &desc);
+
+        if (this->m_desc.query.filter.terms_buffer) {
+            ecs_os_free(m_desc.query.filter.terms_buffer);
+        }
+
+        return e;
+    }
+};
+
+}
+
+namespace flecs 
+{
+
+class system_runner_fluent {
+public:
+    system_runner_fluent(
+        world_t *world, 
+        entity_t id, 
+        int32_t stage_current, 
+        int32_t stage_count, 
+        FLECS_FLOAT delta_time, 
+        void *param)
+        : m_stage(world)
+        , m_id(id)
+        , m_delta_time(delta_time)
+        , m_param(param)
+        , m_offset(0)
+        , m_limit(0)
+        , m_stage_current(stage_current)
+        , m_stage_count(stage_count) { }
+
+    system_runner_fluent& offset(int32_t offset) {
+        m_offset = offset;
+        return *this;
+    }
+
+    system_runner_fluent& limit(int32_t limit) {
+        m_limit = limit;
+        return *this;
+    }
+
+    system_runner_fluent& stage(flecs::world& stage) {
+        m_stage = stage.c_ptr();
+        return *this;
+    }
+
+    ~system_runner_fluent() {
+        if (m_stage_count) {
+            ecs_run_worker(
+                m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
+                m_param);            
+        } else {
+            ecs_run_w_filter(
+                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
+        }
+    }
+
+private:
+    world_t *m_stage;
+    entity_t m_id;
+    FLECS_FLOAT m_delta_time;
+    void *m_param;
+    int32_t m_offset;
+    int32_t m_limit;
+    int32_t m_stage_current;
+    int32_t m_stage_count;
+};
+
+template<typename ... Components>
+class system : public entity
+{
+public:
+    explicit system() 
+        : entity() { }
+
+    explicit system(flecs::world_t *world, flecs::entity_t id)
+        : entity(world, id) { }
+
+    /** Set system interval.
+     * This operation will cause the system to be ran at the specified interval.
+     *
+     * The timer is synchronous, and is incremented each frame by delta_time.
+     *
+     * @param interval The interval value.
+     */
+    void interval(FLECS_FLOAT interval) {
+        ecs_set_interval(m_world, m_id, interval);
+    }
+
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * provided tick source. The tick source may be any entity, including
+     * another system.
+     *
+     * @param tick_source The tick source.
+     * @param rate The multiple at which to run the system.
+     */
+    void rate(const flecs::entity& tick_source, int32_t rate) {
+        ecs_set_rate(m_world, m_id, rate, tick_source.id());
+    }
+
+    /** Set system rate.
+     * This operation will cause the system to be ran at a multiple of the 
+     * frame tick frequency. If a tick source was provided, this just updates
+     * the rate of the system.
+     *
+     * @param rate The multiple at which to run the system.
+     */
+    void rate(int32_t rate) {
+        ecs_set_rate(m_world, m_id, rate, 0);
+    }    
+
+    /** Get interval.
+     * Get interval at which the system is running.
+     *
+     * @return The timer entity.
+     */
+    FLECS_FLOAT interval() {
+        return ecs_get_interval(m_world, m_id);
+    }
+
+    void enable() {
+        ecs_enable(m_world, m_id, true);
+    }
+
+    void disable() {
+        ecs_enable(m_world, m_id, false);
+    }
+
+    void ctx(void *ctx) {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            ecs_system_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_system_init(m_world, &desc);
+        } else {
+            ecs_trigger_desc_t desc = {};
+            desc.entity.entity = m_id;
+            desc.ctx = ctx;
+            ecs_trigger_init(m_world, &desc);
+        }
+    }
+
+    void* ctx() const {
+        if (ecs_has(m_world, m_id, EcsSystem)) {
+            return ecs_get_system_ctx(m_world, m_id);
+        } else {
+            return ecs_get_trigger_ctx(m_world, m_id);
+        }
+    }
+
+    query_base query() const {
+        return query_base(m_world, ecs_system_get_query(m_world, m_id));
+    }
+
+    system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
+        return system_runner_fluent(m_world, m_id, 0, 0, delta_time, param);
+    }
+
+    system_runner_fluent run_worker(
+        int32_t stage_current, 
+        int32_t stage_count, 
+        FLECS_FLOAT delta_time = 0.0f, 
+        void *param = nullptr) const 
+    {
+        return system_runner_fluent(
+            m_world, m_id, stage_current, stage_count, delta_time, param);
+    }
+};
+
+// Mixin implementation
+template <typename T>
+void system_m<T>::init() {
+    this->self().template component<TickSource>("flecs::system::TickSource");
+}
+
+template <typename T>
+inline system<> system_m<T>::system(flecs::entity e) const {
+    return flecs::system<>(this->self().m_world, e);
+}
+
+template <typename T>
+template <typename... Comps, typename... Args>
+inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
+    return flecs::system_builder<Comps...>(this->self(), std::forward<Args>(args)...);
+}
+
+// Builder implementation
+template <typename ... Components>    
+template <typename Func>
+inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
+    return flecs::system<Components...>(m_world, system);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
+    return flecs::system<Components...>(m_world, system);
+}
+
+} // namespace flecs
 #endif
 
 #endif

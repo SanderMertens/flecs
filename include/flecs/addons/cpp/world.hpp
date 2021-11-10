@@ -95,7 +95,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
  */
-class world final {
+class world final : public extendable<world, Mixins> {
 public:
     /** Create world.
      */
@@ -850,15 +850,6 @@ public:
     template <typename Module>
     flecs::entity import(); // Cannot be const because modules accept a non-const world
 
-    /** Create a system from an entity
-     */
-    flecs::system<> system(flecs::entity e) const;
-
-    /** Create a system.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::system_builder<Comps...> system(Args &&... args) const;
-
     /** Create a trigger.
      */
     template <typename... Comps, typename... Args>
@@ -913,26 +904,14 @@ public:
      */
     template <typename... Args>
     flecs::snapshot snapshot(Args &&... args) const;
-    
-private:
+
+public:
+    friend extendable<world, Mixins>;
+
     void init_builtin_components();
 
     world_t *m_world;
     bool m_owned;
-};
-
-// Downcast utility to make world available to classes in inheritance hierarchy
-template<typename Base>
-class world_base {
-public:
-    template<typename IBuilder>
-    static flecs::world world(const IBuilder *self) {
-        return flecs::world(static_cast<const Base*>(self)->m_world);
-    }
-
-    flecs::world world() const {
-        return flecs::world(static_cast<const Base*>(this)->m_world);
-    }
 };
 
 } // namespace flecs

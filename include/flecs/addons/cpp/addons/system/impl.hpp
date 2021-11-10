@@ -1,10 +1,7 @@
+#include "builder.hpp"
 
 namespace flecs 
 {
-
-////////////////////////////////////////////////////////////////////////////////
-//// Fluent interface to run a system manually
-////////////////////////////////////////////////////////////////////////////////
 
 class system_runner_fluent {
 public:
@@ -60,11 +57,6 @@ private:
     int32_t m_stage_current;
     int32_t m_stage_count;
 };
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Register a system with Flecs
-////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Components>
 class system : public entity
@@ -167,5 +159,41 @@ public:
             m_world, m_id, stage_current, stage_count, delta_time, param);
     }
 };
+
+// Mixin implementation
+template <typename T>
+void system_m<T>::init() {
+    this->self().template component<TickSource>("flecs::system::TickSource");
+}
+
+template <typename T>
+inline system<> system_m<T>::system(flecs::entity e) const {
+    return flecs::system<>(this->self().m_world, e);
+}
+
+template <typename T>
+template <typename... Comps, typename... Args>
+inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
+    return flecs::system_builder<Comps...>(this->self(), std::forward<Args>(args)...);
+}
+
+// Builder implementation
+template <typename ... Components>    
+template <typename Func>
+inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
+    return flecs::system<Components...>(m_world, system);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
+    return flecs::system<Components...>(m_world, system);
+}
 
 } // namespace flecs

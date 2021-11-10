@@ -569,7 +569,9 @@ public:
     Base& set_name(const char *name) {
         ecs_set_name(this->world_v(), this->id_v(), name);
         return *this;
-    }    
+    }
+
+    virtual ~entity_builder_i() { }
 
 protected:
     virtual flecs::world_t* world_v() = 0;
