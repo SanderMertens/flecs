@@ -1,7 +1,11 @@
 namespace flecs {
 
 template <typename T>
-struct module_m : mixin<T> {
+struct module_m : mixin<T> { };
+
+/** Module mixin for flecs::world */
+template <>
+struct module_m<flecs::world> : mixin<flecs::world> {
   void init() { }
 
   /** Create a module.
@@ -21,5 +25,7 @@ struct module_m : mixin<T> {
   template <typename Module>
   flecs::entity import();
 };
+
+using module_m_world = module_m<flecs::world>;
 
 }

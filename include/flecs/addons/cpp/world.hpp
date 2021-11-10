@@ -430,16 +430,6 @@ public:
         return ecs_stage_is_readonly(m_world);
     }
 
-    /** Set target FPS
-     * This will ensure that the main loop (world::progress) does not run faster
-     * than the specified frames per second.
-     *
-     * @param target_fps Target frames per second.
-     */
-    void set_target_fps(FLECS_FLOAT target_fps) const {
-        ecs_set_target_fps(m_world, target_fps);
-    }
-
     /** Set world context.
      * Set a context value that can be accessed by anyone that has a reference
      * to the world.

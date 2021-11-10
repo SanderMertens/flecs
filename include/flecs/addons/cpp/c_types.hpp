@@ -48,9 +48,6 @@ enum var_kind_t {
 using Component = EcsComponent;
 using Type = EcsType;
 using Identifier = EcsIdentifier;
-using Timer = EcsTimer;
-using RateFilter = EcsRateFilter;
-using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
 using Observer = EcsObserver;

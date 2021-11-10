@@ -539,7 +539,6 @@
             "id": "SystemBuilder",
             "testcases": [
                 "builder_assign_same_type",
-                "builder_assign_from_empty",
                 "builder_build_to_auto",
                 "builder_build_n_statements",
                 "1_type",

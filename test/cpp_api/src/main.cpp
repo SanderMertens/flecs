@@ -513,7 +513,6 @@ void FilterBuilder_name_arg(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
-void SystemBuilder_builder_assign_from_empty(void);
 void SystemBuilder_builder_build_to_auto(void);
 void SystemBuilder_builder_build_n_statements(void);
 void SystemBuilder_1_type(void);
@@ -2708,10 +2707,6 @@ bake_test_case SystemBuilder_testcases[] = {
         SystemBuilder_builder_assign_same_type
     },
     {
-        "builder_assign_from_empty",
-        SystemBuilder_builder_assign_from_empty
-    },
-    {
         "builder_build_to_auto",
         SystemBuilder_builder_build_to_auto
     },
@@ -3629,7 +3624,7 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        20,
+        19,
         SystemBuilder_testcases
     },
     {

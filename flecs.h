@@ -10774,9 +10774,6 @@ enum var_kind_t {
 using Component = EcsComponent;
 using Type = EcsType;
 using Identifier = EcsIdentifier;
-using Timer = EcsTimer;
-using RateFilter = EcsRateFilter;
-using TickSource = EcsTickSource;
 using Query = EcsQuery;
 using Trigger = EcsTrigger;
 using Observer = EcsObserver;
@@ -10862,7 +10859,11 @@ static const flecs::entity_t Throw = EcsThrow;
 namespace flecs {
 
 template <typename T>
-struct module_m : mixin<T> {
+struct module_m : mixin<T> { };
+
+/** Module mixin for flecs::world */
+template <>
+struct module_m<flecs::world> : mixin<flecs::world> {
   void init() { }
 
   /** Create a module.
@@ -10883,21 +10884,26 @@ struct module_m : mixin<T> {
   flecs::entity import();
 };
 
+using module_m_world = module_m<flecs::world>;
+
 }
+#pragma once
 
 namespace flecs {
 
-template<typename ... Components>
+using TickSource = EcsTickSource;
+
 class system;
 
 template<typename ... Components>
 class system_builder;
 
-/** System mixin.
- * Makes system methods available on world instance.
- */
 template<typename T>
-struct system_m : mixin<T> {
+struct system_m : mixin<T> { };
+
+/** System mixin for flecs::world. */
+template<>
+struct system_m<flecs::world> : mixin<flecs::world> {
   /** Initialize mixin. */
   void init();
 
@@ -10907,7 +10913,7 @@ struct system_m : mixin<T> {
    * @param e The entity.
    * @return A system object.
    */
-  flecs::system<> system(flecs::entity e) const;
+  flecs::system system(flecs::entity e) const;
 
   /** Create a new system.
    * 
@@ -10919,7 +10925,10 @@ struct system_m : mixin<T> {
   flecs::system_builder<Components...> system(Args &&... args) const;
 };
 
+using system_m_world = system_m<flecs::world>;
+
 }
+#pragma once
 
 namespace flecs {
 
@@ -10937,11 +10946,12 @@ static const flecs::entity_t PreStore = EcsPreStore;
 static const flecs::entity_t OnStore = EcsOnStore;
 static const flecs::entity_t PostFrame = EcsPostFrame;
 
-/** Pipeline mixin.
- * Makes pipeline methods available on world instance.
- */
 template<typename T>
-struct pipeline_m : mixin<T> {
+struct pipeline_m : mixin<T> { };
+
+/** Pipeline mixin for flecs::world. */
+template<>
+struct pipeline_m<flecs::world> : mixin<flecs::world> {
   /** Initialize mixin. */
   void init() { }
 
@@ -10988,6 +10998,11 @@ struct pipeline_m : mixin<T> {
    */
   int32_t get_tick() const;
 
+  /** Set target FPS
+   * @see ecs_set_target_fps
+   */
+  void set_target_fps(FLECS_FLOAT target_fps) const;
+
   /** Get target FPS
    * @return Configured frames per second.
    */
@@ -11014,6 +11029,84 @@ struct pipeline_m : mixin<T> {
   int32_t get_threads() const;
 };
 
+using pipeline_m_world = pipeline_m<flecs::world>;
+
+}
+#pragma once
+
+namespace flecs {
+
+using Timer = EcsTimer;
+using RateFilter = EcsRateFilter;
+
+struct timer;
+
+template<typename T>
+struct timer_m : mixin<T> { };
+
+/** Timer mixin for flecs::world. */
+template<>
+struct timer_m<flecs::world> : mixin<flecs::world> {
+  void init();
+};
+
+/** Shared functions between flecs::system and flecs::timer mixins. */
+template<typename T>
+struct timer_m_base : mixin<T> {
+  void init() { }
+
+  /** Set interval.
+   * @see ecs_set_interval
+   */
+  void interval(FLECS_FLOAT interval);
+
+  /** Get interval.
+   * @see ecs_get_interval.
+   */
+  FLECS_FLOAT interval();
+
+  /** Set timeout.
+   * @see ecs_set_timeout
+   */
+  void timeout(FLECS_FLOAT timeout);
+
+  /** Get timeout.
+   * @see ecs_get_timeout
+   */
+  FLECS_FLOAT timeout();
+
+  /** Set system rate (system is its own tick source).
+   * @see ecs_set_rate
+   */
+  void rate(int32_t rate);
+
+  /** Start timer.
+   * @see ecs_start_timer
+   */
+  void start();
+
+  /** Stop timer.
+   * @see ecs_start_timer
+   */
+  void stop();
+
+  /** Set external tick source.
+   * @see ecs_set_tick_source
+   */
+  void set_tick_source(flecs::entity e);
+};
+
+/** Timer mixin for flecs::timer. */
+template<>
+struct timer_m<flecs::timer> : timer_m_base<flecs::timer> { };
+
+/** Timer mixin for flecs::system. */
+template<>
+struct timer_m<flecs::system> : timer_m_base<flecs::system> { };
+
+using timer_m_world = timer_m<flecs::world>;
+using timer_m_system = timer_m<flecs::system>;
+
 }
 
 // Mixins
@@ -11021,7 +11114,8 @@ namespace flecs {
 using Mixins = mixin_list<
     module_m,
     system_m, 
-    pipeline_m
+    pipeline_m,
+    timer_m
 >;
 }
 
@@ -12519,16 +12613,6 @@ public:
      */
     bool is_readonly() const {
         return ecs_stage_is_readonly(m_world);
-    }
-
-    /** Set target FPS
-     * This will ensure that the main loop (world::progress) does not run faster
-     * than the specified frames per second.
-     *
-     * @param target_fps Target frames per second.
-     */
-    void set_target_fps(FLECS_FLOAT target_fps) const {
-        ecs_set_target_fps(m_world, target_fps);
     }
 
     /** Set world context.
@@ -15658,6 +15742,15 @@ public:
         sync_from_flecs();
     }
 
+    explicit type_base(
+        world_t *world, entity_t e)
+    { 
+        ecs_type_desc_t desc = {};
+        desc.entity.entity = e;
+        m_entity = flecs::entity(world, ecs_type_init(world, &desc));
+        sync_from_flecs();
+    }
+
     explicit type_base(world_t *world, type_t t)
         : m_entity( world, static_cast<flecs::id_t>(0) )
         , m_type( t ) { }
@@ -15821,14 +15914,6 @@ public:
     explicit type(world_t *world, type_t t) : type_base(world, t) { }
 
     type(type_t t) : type_base(t) { }
-};
-
-class pipeline : public type_base<pipeline> {
-public:
-    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
-    { 
-        this->entity().add(flecs::Pipeline);
-    }
 };
 
 } // namespace flecs
@@ -17929,9 +18014,6 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-    component<RateFilter>("flecs::timer::RateFilter");
-    component<Timer>("flecs::timer::Timer");
-
     component<doc::Description>("flecs::doc::Description");
 
     component<rest::Rest>("flecs::rest::Rest");
@@ -18337,19 +18419,19 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-template <typename T>
 template <typename Module, typename... Args>
-inline flecs::entity module_m<T>::module(Args &&... args) const {
+inline flecs::entity module_m_world::module(Args &&... args) const {
     return flecs::module<Module>(this->me(), std::forward<Args>(args)...);
 }
 
-template <typename T>
 template <typename Module>
-inline flecs::entity module_m<T>::import() {
+inline flecs::entity module_m_world::import() {
     return flecs::import<Module>(this->me());
 }
 
 }
+#pragma once
+
 #pragma once
 
 #pragma once
@@ -18477,12 +18559,12 @@ public:
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    system<Components...> iter(Func&& func) const;
+    system iter(Func&& func) const;
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    system<Components...> each(Func&& func) const;
+    system each(Func&& func) const;
 
     ecs_system_desc_t m_desc;
 
@@ -18573,58 +18655,13 @@ private:
     int32_t m_stage_count;
 };
 
-template<typename ... Components>
-class system : public entity
+struct system : entity, extendable<system, Mixins>
 {
-public:
     explicit system() 
         : entity() { }
 
     explicit system(flecs::world_t *world, flecs::entity_t id)
         : entity(world, id) { }
-
-    /** Set system interval.
-     * This operation will cause the system to be ran at the specified interval.
-     *
-     * The timer is synchronous, and is incremented each frame by delta_time.
-     *
-     * @param interval The interval value.
-     */
-    void interval(FLECS_FLOAT interval) {
-        ecs_set_interval(m_world, m_id, interval);
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * provided tick source. The tick source may be any entity, including
-     * another system.
-     *
-     * @param tick_source The tick source.
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(const flecs::entity& tick_source, int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, tick_source.id());
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * frame tick frequency. If a tick source was provided, this just updates
-     * the rate of the system.
-     *
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, 0);
-    }    
-
-    /** Get interval.
-     * Get interval at which the system is running.
-     *
-     * @return The timer entity.
-     */
-    FLECS_FLOAT interval() {
-        return ecs_get_interval(m_world, m_id);
-    }
 
     void enable() {
         ecs_enable(m_world, m_id, true);
@@ -18676,115 +18713,178 @@ public:
 };
 
 // Mixin implementation
-template <typename T>
-void system_m<T>::init() {
+inline void system_m_world::init() {
     this->me().template component<TickSource>("flecs::system::TickSource");
 }
 
-template <typename T>
-inline system<> system_m<T>::system(flecs::entity e) const {
-    return flecs::system<>(this->me().m_world, e);
+inline system system_m_world::system(flecs::entity e) const {
+    return flecs::system(this->me().m_world, e);
 }
 
-template <typename T>
 template <typename... Comps, typename... Args>
-inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
+inline system_builder<Comps...> system_m_world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
 }
 
 // Builder implementation
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
+inline system system_builder<Components...>::iter(Func&& func) const {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::system<Components...>(m_world, system);
+    return flecs::system(m_world, system);
 }
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
+inline system system_builder<Components...>::each(Func&& func) const {
     using Invoker = typename _::each_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::system<Components...>(m_world, system);
+    return flecs::system(m_world, system);
 }
 
 } // namespace flecs
+#pragma once
 
 namespace flecs {
 
-#define ECS_CPP_IMPL()
+class pipeline : public type_base<pipeline> {
+public:
+    explicit pipeline(world_t *world, entity_t e) : type_base(world, e)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
 
-template <typename T>
+    explicit pipeline(world_t *world, const char *name) : type_base(world, name)
+    { 
+        this->entity().add(flecs::Pipeline);
+    }
+};
+
 template <typename... Args>
-inline flecs::pipeline pipeline_m<T>::pipeline(Args &&... args) const {
+inline flecs::pipeline pipeline_m_world::pipeline(Args &&... args) const {
     return flecs::pipeline(this->me(), std::forward<Args>(args)...);
 }
 
-template <typename T>
-inline void pipeline_m<T>::set_pipeline(const flecs::pipeline& pip) const {
+inline void pipeline_m_world::set_pipeline(const flecs::pipeline& pip) const {
     return ecs_set_pipeline(this->me(), pip.id());
 }
 
-template <typename T>
-inline flecs::pipeline pipeline_m<T>::get_pipeline() const {
-    return flecs::pipeline(this->me(), ecs_set_pipeline(this->me()));
+inline flecs::pipeline pipeline_m_world::get_pipeline() const {
+    return flecs::pipeline(this->me(), ecs_get_pipeline(this->me()));
 }
 
-template <typename T>
-bool pipeline_m<T>::progress(FLECS_FLOAT delta_time) const {
+inline bool pipeline_m_world::progress(FLECS_FLOAT delta_time) const {
     return ecs_progress(this->me(), delta_time);
 }
 
-template <typename T>
-inline void pipeline_m<T>::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
-    return ecs_set_pipeline(this->me(), pip.id());
+inline void pipeline_m_world::run_pipeline(const flecs::pipeline& pip, FLECS_FLOAT delta_time) const {
+    return ecs_run_pipeline(this->me(), pip.id(), delta_time);
 }
 
-template <typename T>
-void pipeline_m<T>::set_time_scale(FLECS_FLOAT mul) const {
+inline void pipeline_m_world::set_time_scale(FLECS_FLOAT mul) const {
     ecs_set_time_scale(this->me(), mul);
 }  
 
-template <typename T>
-FLECS_FLOAT pipeline_m<T>::get_time_scale() const {
+inline FLECS_FLOAT pipeline_m_world::get_time_scale() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->time_scale;
 }
 
-template <typename T>
-int32_t pipeline_m<T>::get_tick() const {
+inline int32_t pipeline_m_world::get_tick() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->frame_count_total;
 }
 
-template <typename T>
-FLECS_FLOAT pipeline_m<T>::get_target_fps() const {
+inline FLECS_FLOAT pipeline_m_world::get_target_fps() const {
     const ecs_world_info_t *stats = ecs_get_world_info(this->me());
     return stats->target_fps;
 } 
 
-template <typename T>
-void pipeline_m<T>::reset_clock() const {
+inline void pipeline_m_world::set_target_fps(FLECS_FLOAT target_fps) const {
+    ecs_set_target_fps(this->me(), target_fps);
+}
+
+inline void pipeline_m_world::reset_clock() const {
     ecs_reset_clock(this->me());
 }
 
-template <typename T>
-void pipeline_m<T>::deactivate_systems() const {
+inline void pipeline_m_world::deactivate_systems() const {
     ecs_deactivate_systems(this->me());
 }
 
-template <typename T>
-void pipeline_m<T>::set_threads(int32_t threads) const {
+inline void pipeline_m_world::set_threads(int32_t threads) const {
     ecs_set_threads(this->me(), threads);
 }
 
-template <typename T>
-int32_t pipeline_m<T>::get_threads() const {
+inline int32_t pipeline_m_world::get_threads() const {
     return ecs_get_threads(this->me());
 }
+
+}
+#pragma once
+
+namespace flecs {
+
+#define me_ this->me()
+#define world_ me_.world()
+
+// Timer class
+struct timer : extendable<timer, Mixins>, entity {
+    template <typename ... Args>
+    timer(Args&&... args) : entity(std::forward<Args>(args)...) { }
+};
+
+// Mixin functions for flecs::system and flecs::timer
+inline void timer_m_world::init() {
+    me_.template component<RateFilter>("flecs::timer::RateFilter");
+    me_.template component<Timer>("flecs::timer::Timer");
+}
+
+template <typename T>
+inline void timer_m_base<T>::interval(FLECS_FLOAT interval) {
+    ecs_set_interval(world_, me_, interval);
+}
+
+template <typename T>
+inline FLECS_FLOAT timer_m_base<T>::interval() {
+    return ecs_get_interval(world_, me_);
+}
+
+template <typename T>
+inline void timer_m_base<T>::timeout(FLECS_FLOAT timeout) {
+    ecs_set_timeout(world_, me_, timeout);
+}
+
+template <typename T>
+inline FLECS_FLOAT timer_m_base<T>::timeout() {
+    return ecs_get_timeout(world_, me_);
+}
+
+template <typename T>
+inline void timer_m_base<T>::rate(int32_t rate) {
+    ecs_set_rate(world_, me_, rate, 0);
+}
+
+template <typename T>
+inline void timer_m_base<T>::start() {
+    ecs_start_timer(world_, me_);
+}
+
+template <typename T>
+inline void timer_m_base<T>::stop() {
+    ecs_stop_timer(world_, me_);
+}
+
+template <typename T>
+inline void timer_m_base<T>::set_tick_source(flecs::entity e) {
+    ecs_set_tick_source(world_, me_, e);
+}
+
+#undef world_
+#undef me_
 
 }
 #endif

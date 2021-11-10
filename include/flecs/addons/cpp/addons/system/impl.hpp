@@ -1,3 +1,5 @@
+#pragma once
+
 #include "builder.hpp"
 
 namespace flecs 
@@ -58,58 +60,13 @@ private:
     int32_t m_stage_count;
 };
 
-template<typename ... Components>
-class system : public entity
+struct system : entity, extendable<system, Mixins>
 {
-public:
     explicit system() 
         : entity() { }
 
     explicit system(flecs::world_t *world, flecs::entity_t id)
         : entity(world, id) { }
-
-    /** Set system interval.
-     * This operation will cause the system to be ran at the specified interval.
-     *
-     * The timer is synchronous, and is incremented each frame by delta_time.
-     *
-     * @param interval The interval value.
-     */
-    void interval(FLECS_FLOAT interval) {
-        ecs_set_interval(m_world, m_id, interval);
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * provided tick source. The tick source may be any entity, including
-     * another system.
-     *
-     * @param tick_source The tick source.
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(const flecs::entity& tick_source, int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, tick_source.id());
-    }
-
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
-     * frame tick frequency. If a tick source was provided, this just updates
-     * the rate of the system.
-     *
-     * @param rate The multiple at which to run the system.
-     */
-    void rate(int32_t rate) {
-        ecs_set_rate(m_world, m_id, rate, 0);
-    }    
-
-    /** Get interval.
-     * Get interval at which the system is running.
-     *
-     * @return The timer entity.
-     */
-    FLECS_FLOAT interval() {
-        return ecs_get_interval(m_world, m_id);
-    }
 
     void enable() {
         ecs_enable(m_world, m_id, true);
@@ -161,39 +118,36 @@ public:
 };
 
 // Mixin implementation
-template <typename T>
-void system_m<T>::init() {
+inline void system_m_world::init() {
     this->me().template component<TickSource>("flecs::system::TickSource");
 }
 
-template <typename T>
-inline system<> system_m<T>::system(flecs::entity e) const {
-    return flecs::system<>(this->me().m_world, e);
+inline system system_m_world::system(flecs::entity e) const {
+    return flecs::system(this->me().m_world, e);
 }
 
-template <typename T>
 template <typename... Comps, typename... Args>
-inline system_builder<Comps...> system_m<T>::system(Args &&... args) const {
+inline system_builder<Comps...> system_m_world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
 }
 
 // Builder implementation
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::iter(Func&& func) const {
+inline system system_builder<Components...>::iter(Func&& func) const {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::system<Components...>(m_world, system);
+    return flecs::system(m_world, system);
 }
 
 template <typename ... Components>    
 template <typename Func>
-inline system<Components ...> system_builder<Components...>::each(Func&& func) const {
+inline system system_builder<Components...>::each(Func&& func) const {
     using Invoker = typename _::each_invoker<
         typename std::decay<Func>::type, Components...>;
     flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::system<Components...>(m_world, system);
+    return flecs::system(m_world, system);
 }
 
 } // namespace flecs

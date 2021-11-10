@@ -70,9 +70,6 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-    component<RateFilter>("flecs::timer::RateFilter");
-    component<Timer>("flecs::timer::Timer");
-
     component<doc::Description>("flecs::doc::Description");
 
     component<rest::Rest>("flecs::rest::Rest");
