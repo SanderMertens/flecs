@@ -10859,6 +10859,31 @@ static const flecs::entity_t Throw = EcsThrow;
 }
 
 // Addon forward declarations
+namespace flecs {
+
+template <typename T>
+struct module_m : mixin<T> {
+  void init() { }
+
+  /** Create a module.
+   * 
+   * @tparam Module module class.
+   * @tparam Args arguments to pass to module constructor.
+   * @return Module entity.
+   */
+  template <typename Module, typename... Args>
+  flecs::entity module(Args &&... args) const;
+
+  /** Import a module.
+   * 
+   * @tparam Module module class.
+   * @return Module entity.
+   */
+  template <typename Module>
+  flecs::entity import();
+};
+
+}
 
 namespace flecs {
 
@@ -10994,6 +11019,7 @@ struct pipeline_m : mixin<T> {
 // Mixins
 namespace flecs {
 using Mixins = mixin_list<
+    module_m,
     system_m, 
     pipeline_m
 >;
@@ -12825,16 +12851,6 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
-
-    /** Create a module.
-     */
-    template <typename Module, typename... Args>
-    flecs::entity module(Args &&... args) const;
-
-    /** Import a module.
-     */
-    template <typename Module>
-    flecs::entity import(); // Cannot be const because modules accept a non-const world
 
     /** Create a trigger.
      */
@@ -15816,81 +15832,6 @@ public:
 };
 
 } // namespace flecs
-
-namespace flecs 
-{
-
-////////////////////////////////////////////////////////////////////////////////
-//// Define a module
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-flecs::entity module(const flecs::world& world) {
-    flecs::entity result = world.id<T>().entity();
-    ecs_set_scope(world, result);
-    return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Import a module
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T>
-ecs_entity_t do_import(world& world, const char *symbol) {
-    ecs_trace("import %s", _::name_helper<T>::name());
-    ecs_log_push();
-
-    ecs_entity_t scope = ecs_get_scope(world);
-    ecs_set_scope(world, 0);
-
-    // Initialize module component type & don't allow it to be registered as a
-    // tag, as this would prevent calling emplace()
-    auto m_c = component<T>(world, nullptr, false);
-    ecs_add_id(world, m_c, EcsModule);
-
-    world.emplace<T>(world);
-
-    ecs_set_scope(world, scope);
-
-    // // It should now be possible to lookup the module
-    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
-    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
-    ecs_assert(m == m_c, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_log_pop();     
-
-    return m;
-}
-
-template <typename T>
-flecs::entity import(world& world) {
-    char *symbol = _::symbol_helper<T>::symbol();
-
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol, true);
-    
-    if (!_::cpp_type<T>::registered()) {
-
-        /* Module is registered with world, initialize static data */
-        if (m) {
-            _::cpp_type<T>::init(world.c_ptr(), m, false);
-        
-        /* Module is not yet registered, register it now */
-        } else {
-            m = do_import<T>(world, symbol);
-        }
-
-    /* Module has been registered, but could have been for another world. Import
-     * if module hasn't been registered for this world. */
-    } else if (!m) {
-        m = do_import<T>(world, symbol);
-    }
-
-    ecs_os_free(symbol);
-
-    return flecs::entity(world, m);
-}
-
-} // namespace flecs
 #pragma once
 
 namespace flecs 
@@ -18142,16 +18083,6 @@ inline flecs::term world::term(Args &&... args) const {
     return flecs::term(*this, std::forward<Args>(args)...).id<R, O>();
 }
 
-template <typename Module, typename... Args>
-inline flecs::entity world::module(Args &&... args) const {
-    return flecs::module<Module>(*this, std::forward<Args>(args)...);
-}
-
-template <typename Module>
-inline flecs::entity world::import() {
-    return flecs::import<Module>(*this);
-}
-
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) const {
     return flecs::component<T>(*this, std::forward<Args>(args)...);
@@ -18341,6 +18272,84 @@ inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func)
 }
 
 // Addon implementations
+
+namespace flecs {
+
+template <typename T>
+flecs::entity module(const flecs::world& world) {
+    flecs::entity result = world.id<T>().entity();
+    ecs_set_scope(world, result);
+    return result;
+}
+
+template <typename T>
+ecs_entity_t do_import(world& world, const char *symbol) {
+    ecs_trace("import %s", _::name_helper<T>::name());
+    ecs_log_push();
+
+    ecs_entity_t scope = ecs_get_scope(world);
+    ecs_set_scope(world, 0);
+
+    // Initialize module component type & don't allow it to be registered as a
+    // tag, as this would prevent calling emplace()
+    auto m_c = component<T>(world, nullptr, false);
+    ecs_add_id(world, m_c, EcsModule);
+
+    world.emplace<T>(world);
+
+    ecs_set_scope(world, scope);
+
+    // // It should now be possible to lookup the module
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
+    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
+    ecs_assert(m == m_c, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_log_pop();     
+
+    return m;
+}
+
+template <typename T>
+flecs::entity import(world& world) {
+    char *symbol = _::symbol_helper<T>::symbol();
+
+    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol, true);
+    
+    if (!_::cpp_type<T>::registered()) {
+
+        /* Module is registered with world, initialize static data */
+        if (m) {
+            _::cpp_type<T>::init(world.c_ptr(), m, false);
+        
+        /* Module is not yet registered, register it now */
+        } else {
+            m = do_import<T>(world, symbol);
+        }
+
+    /* Module has been registered, but could have been for another world. Import
+     * if module hasn't been registered for this world. */
+    } else if (!m) {
+        m = do_import<T>(world, symbol);
+    }
+
+    ecs_os_free(symbol);
+
+    return flecs::entity(world, m);
+}
+
+template <typename T>
+template <typename Module, typename... Args>
+inline flecs::entity module_m<T>::module(Args &&... args) const {
+    return flecs::module<Module>(this->me(), std::forward<Args>(args)...);
+}
+
+template <typename T>
+template <typename Module>
+inline flecs::entity module_m<T>::import() {
+    return flecs::import<Module>(this->me());
+}
+
+}
 #pragma once
 
 #pragma once
