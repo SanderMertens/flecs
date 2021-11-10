@@ -224,16 +224,6 @@ inline flecs::term world::term(Args &&... args) const {
     return flecs::term(*this, std::forward<Args>(args)...).id<R, O>();
 }
 
-template <typename Module, typename... Args>
-inline flecs::entity world::module(Args &&... args) const {
-    return flecs::module<Module>(*this, std::forward<Args>(args)...);
-}
-
-template <typename Module>
-inline flecs::entity world::import() {
-    return flecs::import<Module>(*this);
-}
-
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) const {
     return flecs::component<T>(*this, std::forward<Args>(args)...);

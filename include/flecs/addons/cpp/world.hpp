@@ -761,16 +761,6 @@ public:
     template <typename... Args>
     flecs::type type(Args &&... args) const;
 
-    /** Create a module.
-     */
-    template <typename Module, typename... Args>
-    flecs::entity module(Args &&... args) const;
-
-    /** Import a module.
-     */
-    template <typename Module>
-    flecs::entity import(); // Cannot be const because modules accept a non-const world
-
     /** Create a trigger.
      */
     template <typename... Comps, typename... Args>

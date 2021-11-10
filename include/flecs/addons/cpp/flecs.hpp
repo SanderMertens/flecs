@@ -67,12 +67,14 @@ class each_invoker;
 #include "c_types.hpp"
 
 // Addon forward declarations
+#include "addons/module/decl.hpp"
 #include "addons/system/decl.hpp"
 #include "addons/pipeline/decl.hpp"
 
 // Mixins
 namespace flecs {
 using Mixins = mixin_list<
+    module_m,
     system_m, 
     pipeline_m
 >;
@@ -90,7 +92,6 @@ using Mixins = mixin_list<
 #include "component.hpp"
 #include "invoker.hpp"
 #include "type.hpp"
-#include "module.hpp"
 #include "term.hpp"
 #include "filter.hpp"
 #include "snapshot.hpp"
@@ -101,5 +102,6 @@ using Mixins = mixin_list<
 #include "impl.hpp"
 
 // Addon implementations
+#include "addons/module/impl.hpp"
 #include "addons/system/impl.hpp"
 #include "addons/pipeline/impl.hpp"

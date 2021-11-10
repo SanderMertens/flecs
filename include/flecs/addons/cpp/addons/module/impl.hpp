@@ -1,10 +1,5 @@
 
-namespace flecs 
-{
-
-////////////////////////////////////////////////////////////////////////////////
-//// Define a module
-////////////////////////////////////////////////////////////////////////////////
+namespace flecs {
 
 template <typename T>
 flecs::entity module(const flecs::world& world) {
@@ -12,10 +7,6 @@ flecs::entity module(const flecs::world& world) {
     ecs_set_scope(world, result);
     return result;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-//// Import a module
-////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
@@ -72,4 +63,16 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-} // namespace flecs
+template <typename T>
+template <typename Module, typename... Args>
+inline flecs::entity module_m<T>::module(Args &&... args) const {
+    return flecs::module<Module>(this->me(), std::forward<Args>(args)...);
+}
+
+template <typename T>
+template <typename Module>
+inline flecs::entity module_m<T>::import() {
+    return flecs::import<Module>(this->me());
+}
+
+}
