@@ -164,7 +164,7 @@ void WorldFactory_query_w_expr() {
     ecs.component<Position>();
     ecs.component<Velocity>();
 
-    auto q = ecs.query<>("Position, [in] Velocity");
+    auto q = ecs.query_builder<>().expr("Position, [in] Velocity").build();
 
     auto e = ecs.entity()
         .set<Position>({10, 20})

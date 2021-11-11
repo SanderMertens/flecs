@@ -14,7 +14,7 @@ void Query_action() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<Position, Velocity> q(world);
+    auto q = world.query<Position, Velocity>();
 
     q.iter([](flecs::iter& it, Position *p, Velocity *v) {
         for (auto i : it) {
@@ -38,7 +38,7 @@ void Query_action_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<Position, const Velocity> q(world);
+    auto q = world.query<Position, const Velocity>();
 
     q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
         for (auto i : it) {
@@ -69,7 +69,9 @@ void Query_action_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::query<Position> q(world, "Velocity(self|super)");
+    auto q = world.query_builder<Position>()
+        .expr("Velocity(self|super)")
+        .build();
 
     q.iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
@@ -119,7 +121,7 @@ void Query_action_optional() {
     auto e4 = flecs::entity(world)
         .set<Position>({70, 80});
 
-    flecs::query<Position, Velocity*, Mass*> q(world);
+    auto q = world.query<Position, Velocity*, Mass*>();
 
     q.iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
         if (it.is_set(2) && it.is_set(3)) {
@@ -162,7 +164,7 @@ void Query_each() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<Position, Velocity> q(world);
+    auto q = world.query<Position, Velocity>();
 
     q.each([](flecs::entity e, Position& p, Velocity& v) {
         p.x += v.x;
@@ -184,7 +186,7 @@ void Query_each_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<Position, const Velocity> q(world);
+    auto q = world.query<Position, const Velocity>();
 
     q.each([](flecs::entity e, Position& p, const Velocity& v) {
         p.x += v.x;
@@ -217,7 +219,7 @@ void Query_each_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::query<Position, const Velocity> q(world);
+    auto q = world.query<Position, const Velocity>();
 
     q.each([](flecs::entity e, Position& p, const Velocity& v) {
         p.x += v.x;
@@ -260,7 +262,7 @@ void Query_each_optional() {
     auto e4 = flecs::entity(world)
         .set<Position>({70, 80});
 
-    flecs::query<Position, Velocity*, Mass*> q(world);
+    auto q = world.query<Position, Velocity*, Mass*>();
 
     q.each([](flecs::entity e, Position& p, Velocity* v, Mass *m) {
         if (v && m) {
@@ -299,7 +301,7 @@ void Query_signature() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<> q(world, "Position, Velocity");
+    auto q = world.query_builder<>().expr("Position, Velocity").build();
 
     q.iter([](flecs::iter& it) {
         auto p = it.term<Position>(1);
@@ -326,7 +328,7 @@ void Query_signature_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    flecs::query<> q(world, "Position, [in] Velocity");
+    auto q = world.query_builder<>().expr("Position, [in] Velocity").build();
 
     q.iter([](flecs::iter& it) {
         auto p = it.term<Position>(1);
@@ -360,7 +362,9 @@ void Query_signature_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    flecs::query<> q(world, "Position, [in] Velocity(self|super)");
+    auto q = world.query_builder<>()
+        .expr("Position, [in] Velocity(self|super)")
+        .build();
     
     q.iter([](flecs::iter&it) {
         auto p = it.term<Position>(1);
@@ -411,7 +415,7 @@ void Query_signature_optional() {
     auto e4 = flecs::entity(world)
         .set<Position>({70, 80});
 
-    flecs::query<> q(world, "Position, ?Velocity, ?Mass");
+    auto q = world.query_builder<>().expr("Position, ?Velocity, ?Mass").build();
 
     q.iter([](flecs::iter& it) {
         auto p = it.term<Position>(1);
@@ -458,8 +462,8 @@ void Query_subquery() {
     auto e2 = flecs::entity(world)
         .set<Velocity>({1, 2});        
 
-    flecs::query<Position> q(world);
-    flecs::query<Velocity> sq(world, q);
+    auto q = world.query<Position>();
+    auto sq = world.query_builder<Velocity>().parent(q).build();
 
     sq.each([](flecs::entity e, Velocity& v) {
         v.x ++;
@@ -485,8 +489,8 @@ void Query_subquery_w_expr() {
     auto e2 = flecs::entity(world)
         .set<Velocity>({1, 2});        
 
-    flecs::query<Position> q(world);
-    flecs::query<> sq(world, q, "Velocity");
+    auto q = world.query<Position>();
+    auto sq = world.query_builder<>().parent(q).expr("Velocity").build();
 
     sq.iter([](flecs::iter it) {
         auto v = it.term<Velocity>(1);
@@ -512,7 +516,9 @@ void Query_query_single_pair() {
     flecs::entity(world).add<Pair, Position>();
     auto e2 = flecs::entity(world).add<Pair, Velocity>();
     
-    flecs::query<> q(world, "(Pair, Velocity)");
+    auto q = world.query_builder<>()
+        .expr("(Pair, Velocity)")
+        .build();
 
     int32_t table_count = 0;
     int32_t entity_count = 0;
@@ -617,9 +623,8 @@ void Query_changed() {
 void Query_orphaned() {
     flecs::world world;
 
-    auto q = flecs::query<Position>(world);
-
-    auto sq = world.query<Position>(q);
+    auto q = world.query<Position>();
+    auto sq = world.query_builder<Position>().parent(q).build();
     
     test_assert(!q.orphaned());
     test_assert(!sq.orphaned());
@@ -657,7 +662,7 @@ void Query_expr_w_template() {
     test_str(comp.name(), "Template<int>");
 
     int count = 0;
-    auto q = world.query<Position>("Template<int>");
+    auto q = world.query_builder<Position>().expr("Template<int>").build();
 
     world.entity()
         .set<Position>({10, 20})

@@ -1,5 +1,4 @@
 #include "../builders/filter.hpp"
-#include "../builders/query.hpp"
 #include "../builders/trigger.hpp"
 #include "../builders/observer.hpp"
 
@@ -194,16 +193,6 @@ inline flecs::filter<Comps...> world::filter(Args &&... args) const {
 template <typename... Comps, typename... Args>
 inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
     return flecs::filter_builder<Comps...>(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>

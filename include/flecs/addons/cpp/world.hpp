@@ -771,16 +771,6 @@ public:
     template <typename... Comps, typename... Args>
     flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
 
-    /** Create a query.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::query<Comps...> query(Args &&... args) const;
-
-    /** Create a query builder.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::query_builder<Comps...> query_builder(Args &&... args) const;
-
     /** Create a term 
      */
     template<typename... Args>
