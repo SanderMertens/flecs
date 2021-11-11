@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../builders/query_i.hpp"
+#include "../query/builder_i.hpp"
 
 namespace flecs 
 {

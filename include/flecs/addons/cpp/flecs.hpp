@@ -27,13 +27,9 @@ class term;
 class filter_iterator;
 class world_filter;
 class snapshot_filter;
-class query_base;
 
 template<typename ... Components>
 class filter;
-
-template<typename ... Components>
-class query;
 
 template<typename ... Components>
 class trigger;
@@ -43,9 +39,6 @@ class observer;
 
 template <typename ... Components>
 class filter_builder;
-
-template <typename ... Components>
-class query_builder;
 
 template <typename ... Components>
 class trigger_builder;
@@ -67,15 +60,17 @@ class each_invoker;
 #include "c_types.hpp"
 
 // Addon forward declarations
-#include "addons/module/decl.hpp"
-#include "addons/system/decl.hpp"
-#include "addons/pipeline/decl.hpp"
-#include "addons/timer/decl.hpp"
+#include "mixins/module/decl.hpp"
+#include "mixins/query/decl.hpp"
+#include "mixins/system/decl.hpp"
+#include "mixins/pipeline/decl.hpp"
+#include "mixins/timer/decl.hpp"
 
 // Mixins
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
+    query_m,
     system_m, 
     pipeline_m,
     timer_m
@@ -98,13 +93,13 @@ using Mixins = mixin_list<
 #include "filter.hpp"
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
-#include "query.hpp"
 #include "trigger.hpp"
 #include "observer.hpp"
 #include "impl.hpp"
 
 // Addon implementations
-#include "addons/module/impl.hpp"
-#include "addons/system/impl.hpp"
-#include "addons/pipeline/impl.hpp"
-#include "addons/timer/impl.hpp"
+#include "mixins/module/impl.hpp"
+#include "mixins/query/impl.hpp"
+#include "mixins/system/impl.hpp"
+#include "mixins/pipeline/impl.hpp"
+#include "mixins/timer/impl.hpp"

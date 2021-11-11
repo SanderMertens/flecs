@@ -1,8 +1,8 @@
 #pragma once
 
-#include "query_i.hpp"
+#include "builder_i.hpp"
 
-namespace flecs 
+namespace flecs
 {
 
 template<typename ... Components>

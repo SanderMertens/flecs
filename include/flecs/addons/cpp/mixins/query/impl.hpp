@@ -1,6 +1,10 @@
+#pragma once
 
-namespace flecs 
-{
+#include "builder.hpp"
+
+namespace flecs {
+
+#define me_ this->me()
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
@@ -99,7 +103,6 @@ protected:
     query_t *m_query;
 };
 
-
 template<typename ... Components>
 class query : public query_base {
     using Terms = typename _::term_ptrs<Components...>::array;
@@ -109,25 +112,6 @@ public:
 
     query(world_t *world, query_t *q)
         : query_base(world, q) { }
-
-    explicit query(const world& world, const char *expr = nullptr) 
-        : query_base(world.c_ptr())
-    {
-        auto qb = world.query_builder<Components ...>()
-            .expr(expr);
-
-        m_query = qb;
-    }
-
-    explicit query(const world& world, query_base& parent, const char *expr = nullptr) 
-        : query_base(world.c_ptr())    
-    {
-        auto qb = world.query_builder<Components ...>()
-            .parent(parent)
-            .expr(expr);
-
-        m_query = qb;
-    }
 
     template <typename Func>
     void each(Func&& func) const {
@@ -164,5 +148,44 @@ private:
         }
     }
 };
+
+// Mixin implementation
+template <typename... Comps, typename... Args>
+inline flecs::query<Comps...> query_m_world::query(Args &&... args) const {
+    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...)
+        .build();
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... args) const {
+    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...);
+}
+
+// Builder implementation
+template <typename ... Components>
+inline query_builder_base<Components...>::operator query<Components ...>() const {
+    ecs_query_t *query = *this;
+    return flecs::query<Components...>(m_world, query);
+}
+
+template <typename ... Components>
+inline query_builder<Components ...>::operator query<>() const {
+    ecs_query_t *query = *this;
+    return flecs::query<>(this->m_world, query);
+}
+
+template <typename ... Components>
+inline query<Components ...> query_builder_base<Components...>::build() const {
+    ecs_query_t *query = *this;
+    return flecs::query<Components...>(m_world, query);
+}
+
+template <typename Base, typename ... Components>
+inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
+    m_desc->parent = parent.c_ptr();
+    return *static_cast<Base*>(this);
+}
+
+#undef me_
 
 } // namespace flecs
