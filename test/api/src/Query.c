@@ -730,7 +730,7 @@ void Query_query_optional_owned() {
 
     ecs_entity_t e3 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity(self)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);

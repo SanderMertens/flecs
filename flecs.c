@@ -5952,6 +5952,16 @@ ecs_table_t *traverse_from_expr(
                 break;
             }
 
+            if (term.pred.set.mask == EcsDefaultSet) {
+                term.pred.set.mask = EcsSelf;
+            }
+            if (term.subj.set.mask == EcsDefaultSet) {
+                term.subj.set.mask = EcsSelf;
+            }
+            if (term.obj.set.mask == EcsDefaultSet) {
+                term.obj.set.mask = EcsSelf;
+            }
+
             if (ecs_term_finalize(world, name, &term)) {
                 if (error) {
                     *error = true;
@@ -18027,12 +18037,9 @@ ecs_rule_t* ecs_rule_init(
 {
     ecs_rule_t *result = ecs_poly_new(ecs_rule_t);
 
-    ecs_filter_desc_t local_desc = *desc;
-    local_desc.substitute_default = true;
-
     /* Parse the signature expression. This initializes the columns array which
      * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, &local_desc)) {
+    if (ecs_filter_init(world, &result->filter, desc)) {
         goto error;
     }
 
@@ -30851,98 +30858,12 @@ void term_error(
 }
 
 static
-ecs_entity_t term_id_entity(
-    const ecs_world_t *world,
-    ecs_term_id_t *term_id)
-{
-    if (term_id->entity && term_id->entity != EcsThis && 
-        term_id->entity != EcsWildcard) 
-    {
-        if (!(term_id->entity & ECS_ROLE_MASK)) {
-            return term_id->entity;
-        } else {
-            return 0;
-        }
-    } else if (term_id->name) {
-        if (term_id->var == EcsVarIsEntity || 
-           (term_id->var == EcsVarDefault && 
-            !ecs_identifier_is_var(term_id->name))) 
-        {
-            return ecs_lookup_fullpath(world, term_id->name);
-        } else {
-            return 0;
-        }
-    } else {
-        return 0;
-    }
-}
-
-static
-void finalize_default_substitution(
-    const ecs_world_t *world,
-    ecs_term_t *terms,
-    int32_t term_count)
-{
-    int i;
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_id_t *pred = &terms[i].pred;
-        ecs_term_id_t *subj = &terms[i].subj;
-        ecs_term_id_t *obj = &terms[i].obj;
-
-        bool pred_transitive = false;
-        if (pred->set.mask == EcsDefaultSet) {
-            ecs_entity_t e = term_id_entity(world, pred);
-            if (e) {
-                if (ecs_has_id(world, e, EcsFinal)) {
-                    /* Final predicates are never substituted */
-                    pred->set.mask = EcsSelf;
-                } else {
-                    pred->set.mask = EcsSelf|EcsSuperSet;
-                    pred->set.relation = EcsIsA;
-                }
-                pred_transitive = ecs_has_id(world, e, EcsTransitive);
-            }
-        }
-
-        if (subj->set.mask == EcsDefaultSet) {
-            /* By default subjects are substituted with their supersets */
-            subj->set.mask = EcsSelf|EcsSuperSet;
-            subj->set.relation = EcsIsA;
-        }
-
-        if (obj->set.mask == EcsDefaultSet) {
-            /* By default subjects are substituted with their supersets */
-            if (!pred_transitive) {
-                obj->set.mask = EcsSelf|EcsSuperSet;
-                obj->set.relation = EcsIsA;
-            } else {
-                /* If query is transitive substitute object. If object is fixed
-                 * insert SubSet ("is <subj> <rel> <obj>"). If object is a
-                 * variable, insert SuperSet ("find <rel> <obj> for <subj>") */
-                ecs_entity_t e = term_id_entity(world, obj);
-                obj->set.relation = EcsIsA;
-                if (!e) {
-                    obj->set.mask = EcsSelf|EcsSuperSet;
-                } else {
-                    obj->set.mask = EcsSelf|EcsSubSet;
-                }
-            }
-        }
-    }
-}
-
-static
-int finalize_term_identifier(
+int finalize_term_set(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_id_t *identifier,
     const char *name)
 {
-    /* Default set is Self */
-    if (identifier->set.mask == EcsDefaultSet) {
-        identifier->set.mask |= EcsSelf;
-    }
-
     if (identifier->set.mask & EcsParent) {
         identifier->set.mask |= EcsSuperSet;
         identifier->set.relation = EcsChildOf;
@@ -30981,6 +30902,16 @@ int finalize_term_identifier(
         return -1;
     }
 
+    return 0;
+}
+
+static
+int finalize_term_var(
+    const ecs_world_t *world,
+    ecs_term_t *term,
+    ecs_term_id_t *identifier,
+    const char *name)
+{
     if (identifier->var == EcsVarDefault) {
         const char *var = ecs_identifier_is_var(identifier->name);
         if (ecs_identifier_is_var(identifier->name)) {
@@ -31025,18 +30956,123 @@ int finalize_term_identifier(
 }
 
 static
+int finalize_term_identifier(
+    const ecs_world_t *world,
+    ecs_term_t *term,
+    ecs_term_id_t *identifier,
+    const char *name)
+{
+    if (finalize_term_set(world, term, identifier, name)) {
+        return -1;
+    }
+    if (finalize_term_var(world, term, identifier, name)) {
+        return -1;
+    }
+    return 0;
+}
+
+static
+bool term_can_inherit(
+    ecs_term_t *term) 
+{
+    /* Hardcoded components that can't be inherited. TODO: replace with
+     * relationship property. */
+    if (term->pred.entity == EcsChildOf ||
+       (term->id == ecs_pair(ecs_id(EcsIdentifier), EcsName)) ||
+       (term->id == EcsPrefab) ||
+       (term->id == EcsDisabled))
+    {
+        return false;
+    }
+    return true;
+}
+
+static
+ecs_entity_t term_id_entity(
+    const ecs_world_t *world,
+    ecs_term_id_t *term_id)
+{
+    if (term_id->entity && term_id->entity != EcsThis && 
+        term_id->entity != EcsWildcard) 
+    {
+        if (!(term_id->entity & ECS_ROLE_MASK)) {
+            return term_id->entity;
+        } else {
+            return 0;
+        }
+    } else if (term_id->name) {
+        if (term_id->var == EcsVarIsEntity || 
+           (term_id->var == EcsVarDefault && 
+            !ecs_identifier_is_var(term_id->name))) 
+        {
+            ecs_entity_t e = ecs_lookup_fullpath(world, term_id->name);
+            if (e != EcsWildcard && e != EcsThis) {
+                return e;
+            }
+            return 0;
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+static
+int finalize_term_vars(
+    const ecs_world_t *world,
+    ecs_term_t *term,
+    const char *name)
+{
+    if (finalize_term_var(world, term, &term->pred, name)) {
+        return -1;
+    }
+    if (finalize_term_var(world, term, &term->subj, name)) {
+        return -1;
+    }
+    if (finalize_term_var(world, term, &term->obj, name)) {
+        return -1;
+    }
+    return 0;
+}
+
+static
 int finalize_term_identifiers(
     const ecs_world_t *world,
     ecs_term_t *term,
     const char *name)
 {
-    if (finalize_term_identifier(world, term, &term->pred, name)) {
+    /* By default select subsets for predicates. For example, when the term 
+     * matches "Tree", also include "Oak", "Pine", "Elm". */
+    if (term->pred.set.mask == EcsDefaultSet) {
+        ecs_entity_t e = term_id_entity(world, &term->pred);
+
+        if (e && !ecs_has_id(world, e, EcsFinal)) {
+            term->pred.set.mask = EcsSelf|EcsSubSet;
+        } else {
+            /* If predicate is final, don't search subsets */
+            term->pred.set.mask = EcsSelf;
+        }
+    }
+
+    /* By default select supersets for subjects. For example, when an entity has
+     * (IsA, SpaceShip), also search the components of SpaceShip. */
+    if (term->subj.set.mask == EcsDefaultSet) {
+        term->subj.set.mask = EcsSelf|EcsSuperSet;
+    }
+
+    /* By default select self for objects. */
+    if (term->obj.set.mask == EcsDefaultSet) {
+        term->obj.set.mask = EcsSelf;
+    }
+
+    if (finalize_term_set(world, term, &term->pred, name)) {
         return -1;
     }
-    if (finalize_term_identifier(world, term, &term->subj, name)) {
+    if (finalize_term_set(world, term, &term->subj, name)) {
         return -1;
     }
-    if (finalize_term_identifier(world, term, &term->obj, name)) {
+    if (finalize_term_set(world, term, &term->obj, name)) {
         return -1;
     }
 
@@ -31111,7 +31147,9 @@ int finalize_term_id(
         term->pred.entity = pred;
         term->obj.entity = obj;
 
-        finalize_term_identifier(world, term, &term->obj, name);
+        if (finalize_term_identifier(world, term, &term->obj, name)) {
+            return -1;
+        }
     }
 
     if (!obj && role != ECS_PAIR) {
@@ -31219,6 +31257,7 @@ int verify_term_consistency(
     ecs_entity_t obj = entity_from_identifier(&term->obj);
     ecs_id_t role = term->role;
     ecs_id_t id = term->id;
+    bool wildcard = pred == EcsWildcard || obj == EcsWildcard;
 
     if (obj && (!role || (role != ECS_PAIR && role != ECS_CASE))) {
         term_error(world, term, name, 
@@ -31248,20 +31287,26 @@ int verify_term_consistency(
     }
 
     if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
-        role = ECS_ROLE_MASK & id;
-        if (id != (role | ecs_entity_t_comb(obj, pred))) {
-            char *id_str = ecs_id_str(world, ecs_pair(pred, obj));
-            term_error(world, term, name, 
-                "term id does not match pred/obj (%s)", id_str);
-            ecs_os_free(id_str);
+        if (!wildcard) {
+            role = ECS_ROLE_MASK & id;
+            if (id != (role | ecs_entity_t_comb(
+                term->obj.entity, term->pred.entity))) 
+            {
+                char *id_str = ecs_id_str(world, ecs_pair(pred, obj));
+                term_error(world, term, name, 
+                    "term id does not match pred/obj (%s)", id_str);
+                ecs_os_free(id_str);
+                return -1;
+            }
+        }
+    } else if (term->pred.entity != (id & ECS_COMPONENT_MASK)) {
+        if (!wildcard) {
+            char *pred_str = ecs_get_fullpath(world, term->pred.entity);
+            term_error(world, term, name, "term id does not match pred '%s'",
+                pred_str);
+            ecs_os_free(pred_str);
             return -1;
         }
-    } else if (pred != (id & ECS_COMPONENT_MASK)) {
-        char *pred_str = ecs_get_fullpath(world, pred);
-        term_error(world, term, name, "term id does not match pred '%s'",
-            pred_str);
-        ecs_os_free(pred_str);
-        return -1;
     }
 
     return 0;
@@ -31407,7 +31452,7 @@ int ecs_term_finalize(
     const char *name,
     ecs_term_t *term)
 {
-    if (finalize_term_identifiers(world, term, name)) {
+    if (finalize_term_vars(world, term, name)) {
         return -1;
     }
 
@@ -31418,6 +31463,17 @@ int ecs_term_finalize(
     } else {
         if (populate_from_term_id(world, term, name)) {
             return -1;
+        }
+    }
+
+    if (finalize_term_identifiers(world, term, name)) {
+        return -1;
+    }
+
+    if (!term_can_inherit(term)) {
+        if (term->subj.set.relation == EcsIsA) {
+            term->subj.set.relation = 0;
+            term->subj.set.mask = EcsSelf;
         }
     }
 
@@ -31629,17 +31685,6 @@ int ecs_filter_init(
 #else
         ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
 #endif
-    }
-
-    /* If default substitution is enabled, replace DefaultSet with SuperSet */
-    if (desc->substitute_default) {
-        finalize_default_substitution(world, terms, term_count);
-    } else {
-        for (i = 0; i < term_count; i ++) {
-            if (terms[i].subj.set.mask == EcsDefaultSet) {
-                terms[i].subj.set.mask = EcsSelf;
-            }            
-        }
     }
 
     /* Ensure all fields are consistent and properly filled out */
@@ -38271,9 +38316,7 @@ bool ecs_term_is_readonly(
                 return true;
             }
 
-            if ((subj->set.mask != EcsSelf) && 
-                (subj->set.mask != EcsDefaultSet)) 
-            {
+            if (!(subj->set.mask & EcsSelf)) {
                 return true;
             }
         }
@@ -39549,6 +39592,16 @@ ecs_vector_t* expr_to_ids(
             goto error;
         }
 
+        if (term.pred.set.mask == EcsDefaultSet) {
+            term.pred.set.mask = EcsSelf;
+        }
+        if (term.subj.set.mask == EcsDefaultSet) {
+            term.subj.set.mask = EcsSelf;
+        }
+        if (term.obj.set.mask == EcsDefaultSet) {
+            term.obj.set.mask = EcsSelf;
+        }
+
         if (ecs_term_finalize(world, name, &term)) {
             goto error;
         }
@@ -40075,11 +40128,13 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsExclusive);
+
     flecs_bootstrap_tag(world, EcsOnDelete);
     flecs_bootstrap_tag(world, EcsOnDeleteObject);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsThrow);
+
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 
     /* Builtin relations */

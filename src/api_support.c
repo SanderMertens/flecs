@@ -57,6 +57,16 @@ ecs_vector_t* expr_to_ids(
             goto error;
         }
 
+        if (term.pred.set.mask == EcsDefaultSet) {
+            term.pred.set.mask = EcsSelf;
+        }
+        if (term.subj.set.mask == EcsDefaultSet) {
+            term.subj.set.mask = EcsSelf;
+        }
+        if (term.obj.set.mask == EcsDefaultSet) {
+            term.obj.set.mask = EcsSelf;
+        }
+
         if (ecs_term_finalize(world, name, &term)) {
             goto error;
         }

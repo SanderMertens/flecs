@@ -1177,21 +1177,6 @@
                 "filter_iter_2_terms_filter_all_w_out"
             ]
         }, {
-            "id": "FilterDefaultSubstitution",
-            "testcases": [
-                "final_pred_no_args",
-                "nonfinal_pred_no_args",
-                "final_transitive_pred",
-                "nonfinal_transitive_pred",
-                "final_transitive_pred_final_obj",
-                "nonfinal_transitive_pred_final_obj",
-                "nonfinal_transitive_pred_var_obj",
-                "nonfinal_pred_no_args_explicit_self_pred",
-                "implicit_subj_w_self",
-                "explicit_subj_w_self",
-                "transitive_pred_w_self_obj"
-            ]
-        }, {
             "id": "Query",
             "testcases": [
                 "query_changed_after_new",

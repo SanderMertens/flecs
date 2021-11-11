@@ -1033,7 +1033,7 @@ void SystemMisc_one_named_column_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == EcsSelf);
+    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
     test_assert(term->subj.entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Position));
@@ -1041,7 +1041,7 @@ void SystemMisc_one_named_column_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == EcsSelf);
+    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
     test_assert(term->subj.entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Velocity));
@@ -1070,7 +1070,7 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_term_t *
     term = &f.terms[0];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == EcsSelf);
+    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
     test_assert(term->subj.entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Position));
@@ -1078,7 +1078,7 @@ void SystemMisc_two_named_columns_of_two() {
 
     term = &f.terms[1];
     test_assert(term->oper == EcsAnd);
-    test_assert(term->subj.set.mask == EcsSelf);
+    test_assert(term->subj.set.mask == (EcsSelf|EcsSuperSet));
     test_assert(term->subj.entity == EcsThis);
     test_assert(term->inout == EcsInOutDefault);
     test_assert(term->id == ecs_id(Velocity));
@@ -1452,7 +1452,7 @@ void SystemMisc_rw_in_implicit_any() {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_term_is_readonly(&it, 1) == false);
-    test_assert(ecs_term_is_readonly(&it, 2) == true);
+    test_assert(ecs_term_is_readonly(&it, 2) == false);
 
     ecs_fini(world);
 }

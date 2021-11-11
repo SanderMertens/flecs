@@ -503,7 +503,7 @@ void TriggerOnAdd_override_after_add_in_on_add() {
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 2});
 
-    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position);
+    ECS_TRIGGER(world, AddVelocity, EcsOnAdd, Position(self));
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .entity = {AddVelocity}, .ctx = &ecs_id(Velocity)

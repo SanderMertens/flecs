@@ -266,9 +266,7 @@ bool ecs_term_is_readonly(
                 return true;
             }
 
-            if ((subj->set.mask != EcsSelf) && 
-                (subj->set.mask != EcsDefaultSet)) 
-            {
+            if (!(subj->set.mask & EcsSelf)) {
                 return true;
             }
         }

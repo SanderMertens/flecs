@@ -4042,7 +4042,7 @@ void Rules_term_w_this_this_this() {
     
     test_int(it.term_count, 1);
     test_assert(it.terms != NULL);
-    test_int(it.terms[0].id, ecs_pair(EcsWildcard, EcsWildcard));
+    test_int(it.terms[0].id, ecs_pair(EcsThis, EcsThis));
 
     test_assert(ecs_rule_next(&it));
     test_int(it.term_count, 1);
