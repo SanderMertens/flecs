@@ -1170,3 +1170,491 @@ void Query_iter_type() {
         test_assert(it.type().has<Position>());
     });
 }
+
+void Query_instanced_query_w_singleton_each() {
+    flecs::world ecs;
+
+    ecs.set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().set<Position>({40, 50}); e4.set<Self>({e4});
+    auto e5 = ecs.entity().set<Position>({50, 60}); e5.set<Self>({e5});
+
+    e4.add<Tag>();
+    e5.add<Tag>();
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .arg(3).singleton()
+        .instanced()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
+        test_assert(e == s.value);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 5);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+}
+
+void Query_instanced_query_w_base_each() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().is_a(base).set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().is_a(base).set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().is_a(base).set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().is_a(base).set<Position>({40, 50}).add<Tag>(); e4.set<Self>({e4});
+    auto e5 = ecs.entity().is_a(base).set<Position>({50, 60}).add<Tag>(); e5.set<Self>({e5});
+    auto e6 = ecs.entity().set<Position>({60, 70}).set<Velocity>({2, 3}); e6.set<Self>({e6});
+    auto e7 = ecs.entity().set<Position>({70, 80}).set<Velocity>({4, 5}); e7.set<Self>({e7});
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .instanced()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
+        test_assert(e == s.value);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 7);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+
+    test_assert(e6.get([](const Position& p) {
+        test_int(p.x, 62);
+        test_int(p.y, 73);
+    }));
+
+    test_assert(e7.get([](const Position& p) {
+        test_int(p.x, 74);
+        test_int(p.y, 85);
+    }));
+}
+
+void Query_un_instanced_query_w_singleton_each() {
+    flecs::world ecs;
+
+    ecs.set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().set<Position>({40, 50}); e4.set<Self>({e4});
+    auto e5 = ecs.entity().set<Position>({50, 60}); e5.set<Self>({e5});
+
+    e4.add<Tag>();
+    e5.add<Tag>();
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .arg(3).singleton()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
+        test_assert(e == s.value);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 5);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+}
+
+void Query_un_instanced_query_w_base_each() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().is_a(base).set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().is_a(base).set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().is_a(base).set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().is_a(base).set<Position>({40, 50}).add<Tag>(); e4.set<Self>({e4});
+    auto e5 = ecs.entity().is_a(base).set<Position>({50, 60}).add<Tag>(); e5.set<Self>({e5});
+    auto e6 = ecs.entity().set<Position>({60, 70}).set<Velocity>({2, 3}); e6.set<Self>({e6});
+    auto e7 = ecs.entity().set<Position>({70, 80}).set<Velocity>({4, 5}); e7.set<Self>({e7});
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
+        test_assert(e == s.value);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 7);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+
+    test_assert(e6.get([](const Position& p) {
+        test_int(p.x, 62);
+        test_int(p.y, 73);
+    }));
+
+    test_assert(e7.get([](const Position& p) {
+        test_int(p.x, 74);
+        test_int(p.y, 85);
+    }));
+}
+
+void Query_instanced_query_w_singleton_iter() {
+    flecs::world ecs;
+
+    ecs.set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().set<Position>({40, 50}); e4.set<Self>({e4});
+    auto e5 = ecs.entity().set<Position>({50, 60}); e5.set<Self>({e5});
+
+    e4.add<Tag>();
+    e5.add<Tag>();
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .arg(3).singleton()
+        .instanced()
+        .build();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
+        test_assert(it.count() > 1);
+
+        for (auto i : it) {
+            p[i].x += v->x;
+            p[i].y += v->y;
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+
+    test_int(count, 5);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+}
+
+void Query_instanced_query_w_base_iter() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().is_a(base).set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().is_a(base).set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().is_a(base).set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().is_a(base).set<Position>({40, 50}).add<Tag>(); e4.set<Self>({e4});
+    auto e5 = ecs.entity().is_a(base).set<Position>({50, 60}).add<Tag>(); e5.set<Self>({e5});
+    auto e6 = ecs.entity().set<Position>({60, 70}).set<Velocity>({2, 3}); e6.set<Self>({e6});
+    auto e7 = ecs.entity().set<Position>({70, 80}).set<Velocity>({4, 5}); e7.set<Self>({e7});
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .instanced()
+        .build();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
+        test_assert(it.count() > 1);
+
+        for (auto i : it) {
+            if (it.is_owned(3)) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            } else {
+                p[i].x += v->x;
+                p[i].y += v->y;
+            }
+
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+
+    test_int(count, 7);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+
+    test_assert(e6.get([](const Position& p) {
+        test_int(p.x, 62);
+        test_int(p.y, 73);
+    }));
+
+    test_assert(e7.get([](const Position& p) {
+        test_int(p.x, 74);
+        test_int(p.y, 85);
+    }));
+}
+
+void Query_un_instanced_query_w_singleton_iter() {
+    flecs::world ecs;
+
+    ecs.set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().set<Position>({40, 50}); e4.set<Self>({e4});
+    auto e5 = ecs.entity().set<Position>({50, 60}); e5.set<Self>({e5});
+
+    e4.add<Tag>();
+    e5.add<Tag>();
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .arg(3).singleton()
+        .build();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
+        test_assert(it.count() == 1);
+
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+
+    test_int(count, 5);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+}
+
+void Query_un_instanced_query_w_base_iter() {
+    flecs::world ecs;
+
+    auto base = ecs.entity().set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity().is_a(base).set<Position>({10, 20}); e1.set<Self>({e1});
+    auto e2 = ecs.entity().is_a(base).set<Position>({20, 30}); e2.set<Self>({e2});
+    auto e3 = ecs.entity().is_a(base).set<Position>({30, 40}); e3.set<Self>({e3});
+    auto e4 = ecs.entity().is_a(base).set<Position>({40, 50}).add<Tag>(); e4.set<Self>({e4});
+    auto e5 = ecs.entity().is_a(base).set<Position>({50, 60}).add<Tag>(); e5.set<Self>({e5});
+    auto e6 = ecs.entity().set<Position>({60, 70}).set<Velocity>({2, 3}); e6.set<Self>({e6});
+    auto e7 = ecs.entity().set<Position>({70, 80}).set<Velocity>({4, 5}); e7.set<Self>({e7});
+
+    auto q = ecs.query_builder<Self, Position, const Velocity>()
+        .build();
+
+    int32_t count = 0;
+    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+            test_assert(it.entity(i) == s[i].value);
+            count ++;
+        }
+    });
+
+    test_int(count, 7);
+
+    test_assert(e1.get([](const Position& p) {
+        test_int(p.x, 11);
+        test_int(p.y, 22);
+    }));
+
+    test_assert(e2.get([](const Position& p) {
+        test_int(p.x, 21);
+        test_int(p.y, 32);
+    }));
+
+    test_assert(e3.get([](const Position& p) {
+        test_int(p.x, 31);
+        test_int(p.y, 42);
+    }));
+
+    test_assert(e4.get([](const Position& p) {
+        test_int(p.x, 41);
+        test_int(p.y, 52);
+    }));
+
+    test_assert(e5.get([](const Position& p) {
+        test_int(p.x, 51);
+        test_int(p.y, 62);
+    }));
+
+    test_assert(e6.get([](const Position& p) {
+        test_int(p.x, 62);
+        test_int(p.y, 73);
+    }));
+
+    test_assert(e7.get([](const Position& p) {
+        test_int(p.x, 74);
+        test_int(p.y, 85);
+    }));
+}

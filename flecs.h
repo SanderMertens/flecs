@@ -16020,6 +16020,21 @@ public:
         m_desc->expr = expr;
         return *this;
     }
+    
+    Base& arg(int32_t term_index) {
+        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+        int32_t prev_index = m_term_index;
+        m_term_index = term_index - 1;
+        this->term();
+        m_term_index = prev_index;
+        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }
+
+    Base& instanced(bool value = true) {
+        m_desc->instanced = value;
+        return *this;
+    }
 
     Base& term() {
         if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
@@ -16045,16 +16060,6 @@ public:
         m_term_index ++;
         return *this;
     }
-    
-    Base& arg(int32_t term_index) {
-        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
-        int32_t prev_index = m_term_index;
-        m_term_index = term_index - 1;
-        this->term();
-        m_term_index = prev_index;
-        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
-        return *this;
-    }    
 
     template<typename T>
     Base& term() {
@@ -16604,6 +16609,9 @@ private:
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         ecs_system_desc_t desc = m_desc;
+        if (is_each) {
+            desc.query.filter.instanced = true;
+        }
         desc.callback = Invoker::run;
         desc.self = m_desc.self;
         desc.binding_ctx = ctx;
@@ -16718,6 +16726,9 @@ private:
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         ecs_observer_desc_t desc = m_desc;
+        if (is_each) {
+            desc.filter.instanced = true;
+        }
         desc.callback = Invoker::run;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
@@ -17511,30 +17522,33 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), ecs_query_next);
+        iterate<_::each_invoker>(true, std::forward<Func>(func), ecs_query_next);
     } 
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
+        iterate<_::each_invoker>(true, std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
+        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
     }
 
     template <typename Func>
     void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(std::forward<Func>(func), 
+        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_world, m_query);
+        if (force_instanced) {
+            it.is_instanced = true;
+        }
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }

@@ -480,6 +480,21 @@ public:
         m_desc->expr = expr;
         return *this;
     }
+    
+    Base& arg(int32_t term_index) {
+        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+        int32_t prev_index = m_term_index;
+        m_term_index = term_index - 1;
+        this->term();
+        m_term_index = prev_index;
+        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }
+
+    Base& instanced(bool value = true) {
+        m_desc->instanced = value;
+        return *this;
+    }
 
     Base& term() {
         if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
@@ -505,16 +520,6 @@ public:
         m_term_index ++;
         return *this;
     }
-    
-    Base& arg(int32_t term_index) {
-        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
-        int32_t prev_index = m_term_index;
-        m_term_index = term_index - 1;
-        this->term();
-        m_term_index = prev_index;
-        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
-        return *this;
-    }    
 
     template<typename T>
     Base& term() {
@@ -1064,6 +1069,9 @@ private:
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         ecs_system_desc_t desc = m_desc;
+        if (is_each) {
+            desc.query.filter.instanced = true;
+        }
         desc.callback = Invoker::run;
         desc.self = m_desc.self;
         desc.binding_ctx = ctx;
@@ -1178,6 +1186,9 @@ private:
         auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
 
         ecs_observer_desc_t desc = m_desc;
+        if (is_each) {
+            desc.filter.instanced = true;
+        }
         desc.callback = Invoker::run;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
