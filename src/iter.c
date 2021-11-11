@@ -217,6 +217,9 @@ void flecs_iter_next_row(
         }
     }
 
+    if (it->entities) {
+        it->entities ++;
+    }
     it->offset ++;
 }
 

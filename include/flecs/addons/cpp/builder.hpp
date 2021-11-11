@@ -481,11 +481,6 @@ public:
         return *this;
     }
 
-    Base& substitute_default(bool value = true) {
-        m_desc->substitute_default = value;
-        return *this;
-    }
-
     Base& term() {
         if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
             if (m_term_index == ECS_TERM_DESC_CACHE_SIZE) {
@@ -1071,7 +1066,6 @@ private:
         ecs_system_desc_t desc = m_desc;
         desc.callback = Invoker::run;
         desc.self = m_desc.self;
-        desc.query.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
@@ -1185,7 +1179,6 @@ private:
 
         ecs_observer_desc_t desc = m_desc;
         desc.callback = Invoker::run;
-        desc.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);

@@ -31801,7 +31801,8 @@ void filter_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_term_id_t *id,
-    bool is_subject)
+    bool is_subject,
+    uint8_t default_set_mask)
 {
     if (id->name) {
         ecs_strbuf_appendstr(buf, id->name);
@@ -31814,7 +31815,7 @@ void filter_str_add_id(
             id_added = true;
         }
 
-        if (id->set.mask != EcsSelf) {
+        if (id->set.mask != default_set_mask) {
             if (id_added) {
                 ecs_strbuf_list_push(buf, ":", "|");
             } else {
@@ -31856,6 +31857,10 @@ void term_str_w_strbuf(
     const ecs_term_id_t *subj = &term->subj;
     const ecs_term_id_t *obj = &term->obj;
 
+    const uint8_t def_pred_mask = EcsSelf|EcsSubSet;
+    const uint8_t def_subj_mask = EcsSelf|EcsSuperSet;
+    const uint8_t def_obj_mask = EcsSelf;
+
     bool pred_set = ecs_term_id_is_set(&term->pred);
     bool subj_set = ecs_term_id_is_set(subj);
     bool obj_set = ecs_term_id_is_set(obj);
@@ -31872,24 +31877,24 @@ void term_str_w_strbuf(
     }
 
     if (!subj_set) {
-        filter_str_add_id(world, buf, &term->pred, false);
+        filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "()");
-    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
+    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == def_subj_mask)
     {
         if (term->id) {
             char *str = ecs_id_str(world, term->id);
             ecs_strbuf_appendstr(buf, str);
             ecs_os_free(str);
         } else if (pred_set) {
-            filter_str_add_id(world, buf, &term->pred, false);   
+            filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);   
         }
     } else {
-        filter_str_add_id(world, buf, &term->pred, false);
+        filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "(");
-        filter_str_add_id(world, buf, &term->subj, true);
+        filter_str_add_id(world, buf, &term->subj, true, def_subj_mask);
         if (obj_set) {
             ecs_strbuf_appendstr(buf, ",");
-            filter_str_add_id(world, buf, &term->obj, false);
+            filter_str_add_id(world, buf, &term->obj, false, def_obj_mask);
         }
         ecs_strbuf_appendstr(buf, ")");
     }
@@ -36751,13 +36756,11 @@ bool ecs_query_next(
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
     bool is_instanced = it->is_instanced;
-
-    if (is_instanced) {
+    if (!is_instanced) {
         int32_t instance_count = it->instance_count;
         int32_t count = it->count;
         int32_t offset = it->offset;
-
-        if (instance_count > count && offset < instance_count) {
+        if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
             flecs_iter_next_row(it);
             return true;
@@ -38267,6 +38270,9 @@ void flecs_iter_next_row(
         }
     }
 
+    if (it->entities) {
+        it->entities ++;
+    }
     it->offset ++;
 }
 

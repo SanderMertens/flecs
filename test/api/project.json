@@ -1230,7 +1230,9 @@
                 "only_optional_from_entity_no_match",
                 "filter_term",
                 "2_terms_1_filter",
-                "3_terms_2_filter"
+                "3_terms_2_filter",
+                "no_instancing_w_singleton",
+                "no_instancing_w_shared"
             ]
         }, {
             "id": "Pairs",

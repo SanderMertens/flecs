@@ -963,7 +963,8 @@ void filter_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_term_id_t *id,
-    bool is_subject)
+    bool is_subject,
+    uint8_t default_set_mask)
 {
     if (id->name) {
         ecs_strbuf_appendstr(buf, id->name);
@@ -976,7 +977,7 @@ void filter_str_add_id(
             id_added = true;
         }
 
-        if (id->set.mask != EcsSelf) {
+        if (id->set.mask != default_set_mask) {
             if (id_added) {
                 ecs_strbuf_list_push(buf, ":", "|");
             } else {
@@ -1018,6 +1019,10 @@ void term_str_w_strbuf(
     const ecs_term_id_t *subj = &term->subj;
     const ecs_term_id_t *obj = &term->obj;
 
+    const uint8_t def_pred_mask = EcsSelf|EcsSubSet;
+    const uint8_t def_subj_mask = EcsSelf|EcsSuperSet;
+    const uint8_t def_obj_mask = EcsSelf;
+
     bool pred_set = ecs_term_id_is_set(&term->pred);
     bool subj_set = ecs_term_id_is_set(subj);
     bool obj_set = ecs_term_id_is_set(obj);
@@ -1034,24 +1039,24 @@ void term_str_w_strbuf(
     }
 
     if (!subj_set) {
-        filter_str_add_id(world, buf, &term->pred, false);
+        filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "()");
-    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == EcsSelf)
+    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == def_subj_mask)
     {
         if (term->id) {
             char *str = ecs_id_str(world, term->id);
             ecs_strbuf_appendstr(buf, str);
             ecs_os_free(str);
         } else if (pred_set) {
-            filter_str_add_id(world, buf, &term->pred, false);   
+            filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);   
         }
     } else {
-        filter_str_add_id(world, buf, &term->pred, false);
+        filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "(");
-        filter_str_add_id(world, buf, &term->subj, true);
+        filter_str_add_id(world, buf, &term->subj, true, def_subj_mask);
         if (obj_set) {
             ecs_strbuf_appendstr(buf, ",");
-            filter_str_add_id(world, buf, &term->obj, false);
+            filter_str_add_id(world, buf, &term->obj, false, def_obj_mask);
         }
         ecs_strbuf_appendstr(buf, ")");
     }
