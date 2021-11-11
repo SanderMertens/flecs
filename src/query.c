@@ -2367,8 +2367,9 @@ ecs_iter_t ecs_query_iter_page(
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .is_filter = query->filter.filter,
+        .is_instanced = query->filter.instanced,
         .iter.query = it,
-        .next = ecs_query_next
+        .next = ecs_query_next,
     };
 error:
     return (ecs_iter_t){ 0 };
@@ -2771,6 +2772,20 @@ bool ecs_query_next(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
+    bool is_instanced = it->is_instanced;
+
+    if (is_instanced) {
+        int32_t instance_count = it->instance_count;
+        int32_t count = it->count;
+        int32_t offset = it->offset;
+
+        if (instance_count > count && offset < instance_count) {
+            ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
+            flecs_iter_next_row(it);
+            return true;
+        }
+    }
+
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_query_t *query = iter->query;
@@ -2856,10 +2871,18 @@ bool ecs_query_next(
         it->sizes = match->sizes;
         it->references = match->references;
         it->frame_offset += prev_count;
+        it->instance_count = 0;
 
         flecs_iter_init(it);
 
-        flecs_iter_populate_data(world, it, it->ptrs, NULL);
+        if (flecs_iter_populate_data(world, it, it->ptrs, NULL) && 
+            !is_instanced && it->count)
+        {
+            /* iterator is not instanced and contains mixed data, return results
+             * one by one. */
+            it->instance_count = it->count;
+            it->count = 1;
+        }
 
         if (query->flags & EcsQueryHasOutColumns) {
             if (table) {

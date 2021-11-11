@@ -2605,6 +2605,7 @@ struct ecs_filter_t {
     bool match_disabled;       /* Does filter match disabled entities */
 
     bool filter;               /* When true, data fields won't be populated */
+    bool instanced;            /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -2977,13 +2978,15 @@ struct ecs_iter_t {
     FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
 
-    int32_t frame_offset;         /* Offset relative to frame */
+    int32_t frame_offset;         /* Offset relative to start of iteration */
     int32_t offset;               /* Offset relative to current table */
-    int32_t count;                /* Number of entities to process by system */
-    int32_t total_count;          /* Total number of entities in table */
+    int32_t count;                /* Number of entities to iterate */
+    int32_t instance_count;       /* Number of entities to iterate before next table */
+    int32_t total_count;          /* Number of entities in table */
 
     bool is_valid;                /* Set to true after first next() */
     bool is_filter;               /* When true, data fields are not set */
+    bool is_instanced;            /* When true, owned terms are always returned as arrays */
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
@@ -3322,6 +3325,13 @@ typedef struct ecs_filter_desc_t {
      * filters that are only interested in finding the set of matching tables or
      * entities, and not in the component data. */
     bool filter;
+
+    /* When true, terms returned by an iterator may either contain 1 or N 
+     * elements, where terms with N elements are owned, and terms with 1 element 
+     * are shared, for example from a parent or base entity. When false, the 
+     * iterator will at most return 1 element when the result contains both 
+     * owned and shared terms. */ 
+    bool instanced;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;

@@ -525,6 +525,9 @@ ecs_entity_t ecs_system_init(
         if (desc->binding_ctx) {
             system->binding_ctx = desc->binding_ctx;
         }
+        if (desc->query.filter.instanced) {
+            system->query->filter.instanced = true;
+        }
     }
 
     return result;

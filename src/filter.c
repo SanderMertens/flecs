@@ -734,6 +734,7 @@ int ecs_filter_init(
     f.name = (char*)name;
     f.expr = (char*)expr;
     f.filter = desc->filter;
+    f.instanced = desc->instanced;
 
     if (terms) {
         terms = desc->terms_buffer;

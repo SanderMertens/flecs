@@ -1242,8 +1242,9 @@ void Sorting_sort_shared_component() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter.expr = "Position(self|super)",
+        .filter.instanced = true,
         .order_by_component = ecs_id(Position),
-        .order_by = compare_position
+        .order_by = compare_position,
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);

@@ -302,13 +302,15 @@ struct ecs_iter_t {
     FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
 
-    int32_t frame_offset;         /* Offset relative to frame */
+    int32_t frame_offset;         /* Offset relative to start of iteration */
     int32_t offset;               /* Offset relative to current table */
-    int32_t count;                /* Number of entities to process by system */
-    int32_t total_count;          /* Total number of entities in table */
+    int32_t count;                /* Number of entities to iterate */
+    int32_t instance_count;       /* Number of entities to iterate before next table */
+    int32_t total_count;          /* Number of entities in table */
 
     bool is_valid;                /* Set to true after first next() */
     bool is_filter;               /* When true, data fields are not set */
+    bool is_instanced;            /* When true, owned terms are always returned as arrays */
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
