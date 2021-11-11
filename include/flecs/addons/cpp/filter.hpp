@@ -129,10 +129,6 @@ public:
         auto qb = world.filter_builder<Components ...>()
             .expr(expr);
 
-        if (!expr) {
-            qb.substitute_default();
-        }
-
         flecs::filter_t f = qb;
         ecs_filter_move(&m_filter, &f);
         m_filter_ptr = &m_filter;

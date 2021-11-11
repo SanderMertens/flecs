@@ -1169,6 +1169,8 @@ void Query_only_optional_from_entity_no_match(void);
 void Query_filter_term(void);
 void Query_2_terms_1_filter(void);
 void Query_3_terms_2_filter(void);
+void Query_no_instancing_w_singleton(void);
+void Query_no_instancing_w_shared(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6707,6 +6709,14 @@ bake_test_case Query_testcases[] = {
     {
         "3_terms_2_filter",
         Query_3_terms_2_filter
+    },
+    {
+        "no_instancing_w_singleton",
+        Query_no_instancing_w_singleton
+    },
+    {
+        "no_instancing_w_shared",
+        Query_no_instancing_w_shared
     }
 };
 
@@ -10972,7 +10982,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        52,
+        54,
         Query_testcases
     },
     {

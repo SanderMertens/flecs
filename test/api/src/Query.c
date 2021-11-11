@@ -2192,3 +2192,186 @@ void Query_3_terms_2_filter() {
 
     ecs_fini(world);
 }
+
+void Query_no_instancing_w_singleton() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, $Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e1);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e2);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e3);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e4);
+        test_int(p->x, 40);
+        test_int(p->y, 50);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e5);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_no_instancing_w_shared() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_set(world, 0, Velocity, {1, 2});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add_pair(world, e2, EcsIsA, base);
+    ecs_add_pair(world, e3, EcsIsA, base);
+    ecs_add_pair(world, e4, EcsIsA, base);
+    ecs_add_pair(world, e5, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e1);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e2);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e3);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e4);
+        test_int(p->x, 40);
+        test_int(p->y, 50);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e5);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

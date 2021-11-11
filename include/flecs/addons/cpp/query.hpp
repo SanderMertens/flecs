@@ -116,10 +116,6 @@ public:
         auto qb = world.query_builder<Components ...>()
             .expr(expr);
 
-        if (!expr) {
-            qb.substitute_default();
-        }
-
         m_query = qb;
     }
 
@@ -129,10 +125,6 @@ public:
         auto qb = world.query_builder<Components ...>()
             .parent(parent)
             .expr(expr);
-
-        if (!expr) {
-            qb.substitute_default();
-        }
 
         m_query = qb;
     }

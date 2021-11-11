@@ -2773,13 +2773,11 @@ bool ecs_query_next(
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
     bool is_instanced = it->is_instanced;
-
-    if (is_instanced) {
+    if (!is_instanced) {
         int32_t instance_count = it->instance_count;
         int32_t count = it->count;
         int32_t offset = it->offset;
-
-        if (instance_count > count && offset < instance_count) {
+        if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
             flecs_iter_next_row(it);
             return true;
