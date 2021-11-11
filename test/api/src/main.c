@@ -1116,19 +1116,6 @@ void Filter_filter_iter_w_3_terms_2_filter(void);
 void Filter_filter_iter_2_terms_filter_all(void);
 void Filter_filter_iter_2_terms_filter_all_w_out(void);
 
-// Testsuite 'FilterDefaultSubstitution'
-void FilterDefaultSubstitution_final_pred_no_args(void);
-void FilterDefaultSubstitution_nonfinal_pred_no_args(void);
-void FilterDefaultSubstitution_final_transitive_pred(void);
-void FilterDefaultSubstitution_nonfinal_transitive_pred(void);
-void FilterDefaultSubstitution_final_transitive_pred_final_obj(void);
-void FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj(void);
-void FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj(void);
-void FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred(void);
-void FilterDefaultSubstitution_implicit_subj_w_self(void);
-void FilterDefaultSubstitution_explicit_subj_w_self(void);
-void FilterDefaultSubstitution_transitive_pred_w_self_obj(void);
-
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
 void Query_query_changed_after_delete(void);
@@ -6512,53 +6499,6 @@ bake_test_case Filter_testcases[] = {
     }
 };
 
-bake_test_case FilterDefaultSubstitution_testcases[] = {
-    {
-        "final_pred_no_args",
-        FilterDefaultSubstitution_final_pred_no_args
-    },
-    {
-        "nonfinal_pred_no_args",
-        FilterDefaultSubstitution_nonfinal_pred_no_args
-    },
-    {
-        "final_transitive_pred",
-        FilterDefaultSubstitution_final_transitive_pred
-    },
-    {
-        "nonfinal_transitive_pred",
-        FilterDefaultSubstitution_nonfinal_transitive_pred
-    },
-    {
-        "final_transitive_pred_final_obj",
-        FilterDefaultSubstitution_final_transitive_pred_final_obj
-    },
-    {
-        "nonfinal_transitive_pred_final_obj",
-        FilterDefaultSubstitution_nonfinal_transitive_pred_final_obj
-    },
-    {
-        "nonfinal_transitive_pred_var_obj",
-        FilterDefaultSubstitution_nonfinal_transitive_pred_var_obj
-    },
-    {
-        "nonfinal_pred_no_args_explicit_self_pred",
-        FilterDefaultSubstitution_nonfinal_pred_no_args_explicit_self_pred
-    },
-    {
-        "implicit_subj_w_self",
-        FilterDefaultSubstitution_implicit_subj_w_self
-    },
-    {
-        "explicit_subj_w_self",
-        FilterDefaultSubstitution_explicit_subj_w_self
-    },
-    {
-        "transitive_pred_w_self_obj",
-        FilterDefaultSubstitution_transitive_pred_w_self_obj
-    }
-};
-
 bake_test_case Query_testcases[] = {
     {
         "query_changed_after_new",
@@ -11029,13 +10969,6 @@ static bake_test_suite suites[] = {
         Filter_testcases
     },
     {
-        "FilterDefaultSubstitution",
-        NULL,
-        NULL,
-        11,
-        FilterDefaultSubstitution_testcases
-    },
-    {
         "Query",
         NULL,
         NULL,
@@ -11291,5 +11224,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 65);
+    return bake_test_run("api", argc, argv, suites, 64);
 }

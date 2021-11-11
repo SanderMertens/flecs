@@ -2519,12 +2519,9 @@ ecs_rule_t* ecs_rule_init(
 {
     ecs_rule_t *result = ecs_poly_new(ecs_rule_t);
 
-    ecs_filter_desc_t local_desc = *desc;
-    local_desc.substitute_default = true;
-
     /* Parse the signature expression. This initializes the columns array which
      * contains the information about which components/pairs are requested. */
-    if (ecs_filter_init(world, &result->filter, &local_desc)) {
+    if (ecs_filter_init(world, &result->filter, desc)) {
         goto error;
     }
 

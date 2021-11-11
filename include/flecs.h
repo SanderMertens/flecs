@@ -538,11 +538,6 @@ typedef struct ecs_filter_desc_t {
     ecs_term_t *terms_buffer;
     int32_t terms_buffer_count;
 
-    /* Use default substitution rules where appropriate. When enabled, the
-     * filter will determine based on whether the predicate is transitive and/or
-     * final whether IsA substitution is required. */
-    bool substitute_default;
-
     /* When true, don't populate data fields of iterator. This is useful for
      * filters that are only interested in finding the set of matching tables or
      * entities, and not in the component data. */
