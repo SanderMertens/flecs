@@ -368,6 +368,14 @@ void Query_each_pair_object(void);
 void Query_iter_pair_object(void);
 void Query_iter_query_in_system(void);
 void Query_iter_type(void);
+void Query_instanced_query_w_singleton_each(void);
+void Query_instanced_query_w_base_each(void);
+void Query_un_instanced_query_w_singleton_each(void);
+void Query_un_instanced_query_w_base_each(void);
+void Query_instanced_query_w_singleton_iter(void);
+void Query_instanced_query_w_base_iter(void);
+void Query_un_instanced_query_w_singleton_iter(void);
+void Query_un_instanced_query_w_base_iter(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -2122,6 +2130,38 @@ bake_test_case Query_testcases[] = {
     {
         "iter_type",
         Query_iter_type
+    },
+    {
+        "instanced_query_w_singleton_each",
+        Query_instanced_query_w_singleton_each
+    },
+    {
+        "instanced_query_w_base_each",
+        Query_instanced_query_w_base_each
+    },
+    {
+        "un_instanced_query_w_singleton_each",
+        Query_un_instanced_query_w_singleton_each
+    },
+    {
+        "un_instanced_query_w_base_each",
+        Query_un_instanced_query_w_base_each
+    },
+    {
+        "instanced_query_w_singleton_iter",
+        Query_instanced_query_w_singleton_iter
+    },
+    {
+        "instanced_query_w_base_iter",
+        Query_instanced_query_w_base_iter
+    },
+    {
+        "un_instanced_query_w_singleton_iter",
+        Query_un_instanced_query_w_singleton_iter
+    },
+    {
+        "un_instanced_query_w_base_iter",
+        Query_un_instanced_query_w_base_iter
     }
 };
 
@@ -3513,7 +3553,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        45,
+        53,
         Query_testcases
     },
     {
