@@ -637,8 +637,10 @@ void Move(ecs_iter_t *it) {
 // Use each() function that iterates each individual entity
 auto move_sys = world.system<Position, Velocity>()
     .iter([](flecs::iter it, Position *p, Velocity *v) {
-        p[i].x += v[i].x * it.delta_time();
-        p[i].y += v[i].y * it.delta_time();
+        for (int i : it) {
+            p[i].x += v[i].x * it.delta_time();
+            p[i].y += v[i].y * it.delta_time();
+        }
     });
 
     // Just like with filters & queries, systems have both the iter() and
