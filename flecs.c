@@ -1881,11 +1881,14 @@ void flecs_iter_init(
 void flecs_iter_fini(
     ecs_iter_t *it);
 
-void flecs_iter_populate_data(
+bool flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
     void **ptrs,
     ecs_size_t *sizes);
+
+void flecs_iter_next_row(
+    ecs_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API
@@ -24349,6 +24352,9 @@ ecs_entity_t ecs_system_init(
         if (desc->binding_ctx) {
             system->binding_ctx = desc->binding_ctx;
         }
+        if (desc->query.filter.instanced) {
+            system->query->filter.instanced = true;
+        }
     }
 
     return result;
@@ -31559,6 +31565,7 @@ int ecs_filter_init(
     f.name = (char*)name;
     f.expr = (char*)expr;
     f.filter = desc->filter;
+    f.instanced = desc->instanced;
 
     if (terms) {
         terms = desc->terms_buffer;
@@ -36293,8 +36300,9 @@ ecs_iter_t ecs_query_iter_page(
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
         .is_filter = query->filter.filter,
+        .is_instanced = query->filter.instanced,
         .iter.query = it,
-        .next = ecs_query_next
+        .next = ecs_query_next,
     };
 error:
     return (ecs_iter_t){ 0 };
@@ -36697,6 +36705,20 @@ bool ecs_query_next(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
+    bool is_instanced = it->is_instanced;
+
+    if (is_instanced) {
+        int32_t instance_count = it->instance_count;
+        int32_t count = it->count;
+        int32_t offset = it->offset;
+
+        if (instance_count > count && offset < instance_count) {
+            ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
+            flecs_iter_next_row(it);
+            return true;
+        }
+    }
+
     ecs_query_iter_t *iter = &it->iter.query;
     ecs_page_iter_t *piter = &iter->page_iter;
     ecs_query_t *query = iter->query;
@@ -36782,10 +36804,18 @@ bool ecs_query_next(
         it->sizes = match->sizes;
         it->references = match->references;
         it->frame_offset += prev_count;
+        it->instance_count = 0;
 
         flecs_iter_init(it);
 
-        flecs_iter_populate_data(world, it, it->ptrs, NULL);
+        if (flecs_iter_populate_data(world, it, it->ptrs, NULL) && 
+            !is_instanced && it->count)
+        {
+            /* iterator is not instanced and contains mixed data, return results
+             * one by one. */
+            it->instance_count = it->count;
+            it->count = 1;
+        }
 
         if (query->flags & EcsQueryHasOutColumns) {
             if (table) {
@@ -38029,7 +38059,7 @@ error:
 }
 
 static
-void flecs_iter_populate_term_data(
+bool flecs_iter_populate_term_data(
     ecs_world_t *world,
     ecs_iter_t *it,
     int32_t t,
@@ -38066,7 +38096,7 @@ void flecs_iter_populate_term_data(
              * should already have been assigned. This saves us from having
              * to do additional lookups to find the component size. */
             ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
-            return;
+            return true;
         } else {
             ecs_entity_t subj = it->subjects[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
@@ -38138,7 +38168,7 @@ void flecs_iter_populate_term_data(
 has_data:
     if (ptr_out) ptr_out[0] = ecs_vector_get_t(vec, size, align, row);
     if (size_out) size_out[0] = size;
-    return;
+    return column < 0;
 
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
@@ -38154,21 +38184,45 @@ has_switch: {
 no_data:
     if (ptr_out) ptr_out[0] = NULL;
     if (size_out) size_out[0] = 0;
+    return false;
 }
 
-void flecs_iter_populate_data(
+bool flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
     void **ptrs,
     ecs_size_t *sizes)
 {
     int t, term_count = it->term_count;
+    bool has_shared = false;
     for (t = 0; t < term_count; t ++) {
         int32_t column = it->columns[t];
-        flecs_iter_populate_term_data(world, it, t, column,
+        has_shared |= flecs_iter_populate_term_data(world, it, t, column,
             &ptrs[t * (ptrs != NULL)], 
             &sizes[t * (sizes != NULL)]);
     }
+
+    return has_shared;
+}
+
+void flecs_iter_next_row(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->offset < it->total_count, ECS_INTERNAL_ERROR, NULL);
+
+    int t, term_count = it->term_count;
+    for (t = 0; t < term_count; t ++) {
+        int32_t column = it->columns[t];
+        if (column >= 0) {
+            void *ptr = it->ptrs[t];
+            if (ptr) {
+                it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);
+            }
+        }
+    }
+
+    it->offset ++;
 }
 
 /* --- Public API --- */

@@ -669,6 +669,10 @@ void Prefab_prefab_in_system_expr() {
     ECS_PREFAB(world, Prefab1, Velocity);
     ECS_PREFAB(world, Prefab2, Velocity);
     ECS_SYSTEM(world, Prefab_w_shared, EcsOnUpdate, Position, Velocity(self|super), Mass, (IsA, Prefab1));
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = Prefab_w_shared,
+        .query.filter.instanced = true
+    });
 
     ecs_set(world, Prefab1, Velocity, {1, 2});
     ecs_set(world, Prefab2, Velocity, {1, 2});

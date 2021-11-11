@@ -373,6 +373,7 @@ struct ecs_filter_t {
     bool match_disabled;       /* Does filter match disabled entities */
 
     bool filter;               /* When true, data fields won't be populated */
+    bool instanced;            /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -546,6 +547,13 @@ typedef struct ecs_filter_desc_t {
      * filters that are only interested in finding the set of matching tables or
      * entities, and not in the component data. */
     bool filter;
+
+    /* When true, terms returned by an iterator may either contain 1 or N 
+     * elements, where terms with N elements are owned, and terms with 1 element 
+     * are shared, for example from a parent or base entity. When false, the 
+     * iterator will at most return 1 element when the result contains both 
+     * owned and shared terms. */ 
+    bool instanced;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;

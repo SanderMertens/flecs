@@ -570,11 +570,14 @@ void flecs_iter_init(
 void flecs_iter_fini(
     ecs_iter_t *it);
 
-void flecs_iter_populate_data(
+bool flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
     void **ptrs,
     ecs_size_t *sizes);
+
+void flecs_iter_next_row(
+    ecs_iter_t *it);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API
