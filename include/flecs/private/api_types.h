@@ -311,6 +311,7 @@ struct ecs_iter_t {
     bool is_valid;                /* Set to true after first next() */
     bool is_filter;               /* When true, data fields are not set */
     bool is_instanced;            /* When true, owned terms are always returned as arrays */
+    bool has_shared;              /* Iterator may set this when iterator has shared terms */
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */

@@ -576,8 +576,12 @@ bool flecs_iter_populate_data(
     void **ptrs,
     ecs_size_t *sizes);
 
-void flecs_iter_next_row(
+bool flecs_iter_next_row(
     ecs_iter_t *it);
+
+bool flecs_iter_next_instanced(
+    ecs_iter_t *it,
+    bool result);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Time API

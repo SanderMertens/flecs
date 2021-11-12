@@ -310,6 +310,14 @@ void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
 void System_system_w_self(void);
+void System_instanced_query_w_singleton_each(void);
+void System_instanced_query_w_base_each(void);
+void System_un_instanced_query_w_singleton_each(void);
+void System_un_instanced_query_w_base_each(void);
+void System_instanced_query_w_singleton_iter(void);
+void System_instanced_query_w_base_iter(void);
+void System_un_instanced_query_w_singleton_iter(void);
+void System_un_instanced_query_w_base_iter(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -1908,6 +1916,38 @@ bake_test_case System_testcases[] = {
     {
         "system_w_self",
         System_system_w_self
+    },
+    {
+        "instanced_query_w_singleton_each",
+        System_instanced_query_w_singleton_each
+    },
+    {
+        "instanced_query_w_base_each",
+        System_instanced_query_w_base_each
+    },
+    {
+        "un_instanced_query_w_singleton_each",
+        System_un_instanced_query_w_singleton_each
+    },
+    {
+        "un_instanced_query_w_base_each",
+        System_un_instanced_query_w_base_each
+    },
+    {
+        "instanced_query_w_singleton_iter",
+        System_instanced_query_w_singleton_iter
+    },
+    {
+        "instanced_query_w_base_iter",
+        System_instanced_query_w_base_iter
+    },
+    {
+        "un_instanced_query_w_singleton_iter",
+        System_un_instanced_query_w_singleton_iter
+    },
+    {
+        "un_instanced_query_w_base_iter",
+        System_un_instanced_query_w_base_iter
     }
 };
 
@@ -3539,7 +3579,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        42,
+        50,
         System_testcases
     },
     {

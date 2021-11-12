@@ -131,7 +131,8 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), ecs_query_next);
+        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+            ecs_query_next_instanced);
     } 
 
     template <typename Func>

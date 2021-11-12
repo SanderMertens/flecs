@@ -2307,6 +2307,11 @@ void Query_no_instancing_w_shared() {
     ecs_add_pair(world, e4, EcsIsA, base);
     ecs_add_pair(world, e5, EcsIsA, base);
 
+    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
+    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_set(world, e6, Velocity, {2, 3});
+    ecs_set(world, e7, Velocity, {4, 5});
+
     ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
     test_assert(q != NULL);
 
@@ -2369,6 +2374,24 @@ void Query_no_instancing_w_shared() {
         test_int(p->y, 60);
         test_int(v->x, 1);
         test_int(v->y, 2);
+    }
+
+    test_assert(ecs_query_next(&it));
+    {
+        Position *p = ecs_term(&it, Position, 1);
+        Velocity *v = ecs_term(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e6);
+        test_int(p[0].x, 60);
+        test_int(p[0].y, 70);
+        test_int(v[0].x, 2);
+        test_int(v[0].y, 3);
+
+        test_int(it.entities[1], e7);
+        test_int(p[1].x, 70);
+        test_int(p[1].y, 80);
+        test_int(v[1].x, 4);
+        test_int(v[1].y, 5);
     }
 
     test_assert(!ecs_query_next(&it));

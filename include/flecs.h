@@ -2864,6 +2864,13 @@ FLECS_API
 bool ecs_query_next(
     ecs_iter_t *iter);
 
+/** Same as ecs_query_next, but always do instanced iteration.
+ * See "instanced" property of ecs_filter_desc_t.
+ */
+FLECS_API
+bool ecs_query_next_instanced(
+    ecs_iter_t *iter);
+
 /** Progress the query iterator for a worker thread.
  * This operation is similar to ecs_query_next, but provides the ability to 
  * divide entities up across multiple worker threads. The operation accepts a
