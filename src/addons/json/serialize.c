@@ -1029,6 +1029,9 @@ int ecs_iter_to_json_buf(
     json_member(buf, "results");
     json_array_push(buf);
 
+    /* Use instancing for improved performance */
+    it->is_instanced = true;
+
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {
         serialize_iter_result(world, it, buf, desc);
