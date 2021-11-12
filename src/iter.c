@@ -200,27 +200,50 @@ bool flecs_iter_populate_data(
     return has_shared;
 }
 
-void flecs_iter_next_row(
+bool flecs_iter_next_row(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->offset < it->total_count, ECS_INTERNAL_ERROR, NULL);
 
-    int t, term_count = it->term_count;
-    for (t = 0; t < term_count; t ++) {
-        int32_t column = it->columns[t];
-        if (column >= 0) {
-            void *ptr = it->ptrs[t];
-            if (ptr) {
-                it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);
+    bool is_instanced = it->is_instanced;
+    if (!is_instanced) {
+        int32_t instance_count = it->instance_count;
+        int32_t count = it->count;
+        int32_t offset = it->offset;
+        if (instance_count > count && offset < (instance_count - 1)) {
+            ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
+            int t, term_count = it->term_count;
+            for (t = 0; t < term_count; t ++) {
+                int32_t column = it->columns[t];
+                if (column >= 0) {
+                    void *ptr = it->ptrs[t];
+                    if (ptr) {
+                        it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);
+                    }
+                }
             }
+
+            if (it->entities) {
+                it->entities ++;
+            }
+            it->offset ++;
+
+            return true;
         }
     }
 
-    if (it->entities) {
-        it->entities ++;
+    return false;
+}
+
+bool flecs_iter_next_instanced(
+    ecs_iter_t *it,
+    bool result)
+{
+    if (result && !it->is_instanced && it->count && it->has_shared) {
+        it->instance_count = it->count;
+        it->count = 1;
     }
-    it->offset ++;
+    return result;
 }
 
 /* --- Public API --- */
