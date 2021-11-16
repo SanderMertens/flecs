@@ -11,7 +11,8 @@ void observer_callback(ecs_iter_t *it) {
     }
 
     ecs_iter_t user_it = *it;
-    user_it.term_count = o->filter.term_count_actual,
+    user_it.term_count = o->filter.term_count_actual;
+    user_it.terms = o->filter.terms;
     user_it.is_filter = o->filter.filter;
     user_it.ids = NULL;
     user_it.columns = NULL;
@@ -23,8 +24,8 @@ void observer_callback(ecs_iter_t *it) {
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
-    int32_t term_index = it->term_index;
-    ecs_term_t *term = &o->filter.terms[term_index];
+    int32_t pivot_term = it->term_index;
+    ecs_term_t *term = &o->filter.terms[pivot_term];
 
     if (term->oper == EcsNot) {
         table = it->other_table;
@@ -45,11 +46,10 @@ void observer_callback(ecs_iter_t *it) {
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
     user_it.columns[0] = 0;
-    user_it.columns[term_index] = it->columns[0];
+    user_it.columns[pivot_term] = it->columns[0];
 
-    if (flecs_filter_match_table(world, &o->filter, table, type, user_it.offset,
-        user_it.ids, user_it.columns, user_it.subjects, user_it.sizes, 
-        user_it.ptrs, NULL, NULL, false, -1)) 
+    if (flecs_filter_match_table(world, &o->filter, table, type,
+        user_it.ids, user_it.columns, user_it.subjects, NULL, NULL, false, -1)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
@@ -59,8 +59,7 @@ void observer_callback(ecs_iter_t *it) {
             }
 
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, true, 
-                -1)) 
+                prev_type, NULL, NULL, NULL, NULL, NULL, true, -1)) 
             {
                 goto done;
             }
@@ -76,6 +75,9 @@ void observer_callback(ecs_iter_t *it) {
                 }
             }
         }
+
+        flecs_iter_populate_data(world, &user_it, 
+            it->table, it->offset, it->count, user_it.ptrs, user_it.sizes);
 
         user_it.ids[it->term_index] = it->event_id;
         user_it.system = o->entity;
@@ -174,8 +176,12 @@ ecs_entity_t ecs_observer_init(
                 .match_disabled = observer->filter.match_disabled
             };
 
-            ecs_os_memcpy(trigger_desc.events, observer->events, 
-                ECS_SIZEOF(ecs_entity_t) * observer->event_count);
+            if (observer->filter.filter) {
+                trigger_desc.term.inout = EcsInOutFilter;
+            }
+
+            ecs_os_memcpy_n(trigger_desc.events, observer->events, ecs_entity_t,
+                observer->event_count);
 
             observer->triggers[i] = ecs_trigger_init(world, &trigger_desc);
         }

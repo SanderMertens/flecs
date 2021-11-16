@@ -744,7 +744,6 @@ int32_t move_entity(
         flecs_notify_on_remove(
             world, src_table, dst_table, src_row, 1, diff);
 
-
         flecs_table_move(world, entity, entity, dst_table, dst_data, dst_row, 
             src_table, src_data, src_row, construct);                
     }

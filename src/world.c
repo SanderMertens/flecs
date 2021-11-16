@@ -1332,9 +1332,8 @@ FLECS_FLOAT insert_sleep(
      * previous frame, and subtracting it from target_delta_time. */
     FLECS_FLOAT sleep = target_delta_time - delta_time;
 
-    /* Pick a sleep interval that is 20 times lower than the time one frame
-     * should take. This means that this function at most iterates 20 times in
-     * a busy loop */
+    /* Pick a sleep interval that is 4 times smaller than the time one frame
+     * should take. */
     FLECS_FLOAT sleep_time = sleep / (FLECS_FLOAT)4.0;
 
     do {

@@ -62,13 +62,17 @@ bool flecs_iter_populate_term_data(
     void **ptr_out,
     ecs_size_t *size_out)
 {
+    bool is_shared = false;
+
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
         goto no_data;
     }
 
+    ecs_assert(it->terms != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutFilter) {
-        /* Filter terms may match with data but don't return it */
         goto no_data;
     }
 
@@ -79,6 +83,8 @@ bool flecs_iter_populate_term_data(
     int32_t row;
 
     if (column < 0) {
+        is_shared = true;
+
         /* Data is not from This */
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
@@ -163,7 +169,7 @@ bool flecs_iter_populate_term_data(
 has_data:
     if (ptr_out) ptr_out[0] = ecs_vector_get_t(vec, size, align, row);
     if (size_out) size_out[0] = size;
-    return column < 0;
+    return is_shared;
 
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
@@ -182,12 +188,37 @@ no_data:
     return false;
 }
 
-bool flecs_iter_populate_data(
+void flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count,
     void **ptrs,
     ecs_size_t *sizes)
 {
+    it->table = table;
+    it->offset = offset;
+    it->count = count;
+
+    if (table) {
+        it->type = it->table->type;
+        if (!count) {
+            count = it->count = ecs_table_count(table);
+        }
+        if (count) {
+            it->entities = ecs_vector_get(
+                table->storage.entities, ecs_entity_t, offset);
+        } else {
+            it->entities = NULL;
+        }
+    }
+
+    if (it->is_filter) {
+        it->has_shared = false;
+        return;
+    }
+
     int t, term_count = it->term_count;
     bool has_shared = false;
     for (t = 0; t < term_count; t ++) {
@@ -197,7 +228,7 @@ bool flecs_iter_populate_data(
             &sizes[t * (sizes != NULL)]);
     }
 
-    return has_shared;
+    it->has_shared = has_shared;
 }
 
 bool flecs_iter_next_row(
@@ -210,6 +241,7 @@ bool flecs_iter_next_row(
         int32_t instance_count = it->instance_count;
         int32_t count = it->count;
         int32_t offset = it->offset;
+
         if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
             int t, term_count = it->term_count;
@@ -239,8 +271,8 @@ bool flecs_iter_next_instanced(
     ecs_iter_t *it,
     bool result)
 {
+    it->instance_count = it->count;
     if (result && !it->is_instanced && it->count && it->has_shared) {
-        it->instance_count = it->count;
         it->count = 1;
     }
     return result;

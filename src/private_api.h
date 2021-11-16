@@ -528,12 +528,9 @@ bool flecs_term_match_table(
     const ecs_term_t *term,
     const ecs_table_t *table,
     ecs_type_t type,
-    int32_t offset,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
-    ecs_size_t *size_out,
-    void **ptr_out,
     int32_t *match_indices,
     bool first);
 
@@ -543,12 +540,9 @@ bool flecs_filter_match_table(
     const ecs_filter_t *filter,
     const ecs_table_t *table,
     ecs_type_t type,
-    int32_t offset,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
-    ecs_size_t *sizes,
-    void **ptrs,
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
@@ -570,9 +564,12 @@ void flecs_iter_init(
 void flecs_iter_fini(
     ecs_iter_t *it);
 
-bool flecs_iter_populate_data(
+void flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count,
     void **ptrs,
     ecs_size_t *sizes);
 

@@ -580,13 +580,126 @@ void MultiThread_6_thread_2_entity() {
     ecs_fini(world);
 }
 
-
 void MultiThread_6_thread_5_entity() {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
 
     int i, ENTITIES = 5, THREADS = 6;
+    ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        handles[i] = ecs_new(world, Position);
+        ecs_set(world, handles[i], Position, {0});
+    }
+
+    ecs_set_threads(world, THREADS);
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
+    }
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_2_thread_1_entity_instanced() {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .callback = Progress,
+        .query.filter = {
+            .expr = "Position",
+            .instanced = true
+        }
+    });
+    test_assert(s != 0);
+
+    int i, ENTITIES = 1, THREADS = 2;
+    ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        handles[i] = ecs_new(world, Position);
+        ecs_set(world, handles[i], Position, {0});
+    }
+
+    ecs_set_threads(world, THREADS);
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
+    }
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_2_thread_5_entity_instanced() {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .callback = Progress,
+        .query.filter = {
+            .expr = "Position",
+            .instanced = true
+        }
+    });
+    test_assert(s != 0);
+
+    int i, ENTITIES = 5, THREADS = 2;
+    ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        handles[i] = ecs_new(world, Position);
+        ecs_set(world, handles[i], Position, {0});
+    }
+
+    ecs_set_threads(world, THREADS);
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 1);
+    }
+
+    ecs_progress(world, 0);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        test_int(ecs_get(world, handles[i], Position)->x, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void MultiThread_2_thread_10_entity_instanced() {
+    ecs_world_t *world = ecs_init();
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.add = {EcsOnUpdate},
+        .callback = Progress,
+        .query.filter = {
+            .expr = "Position",
+            .instanced = true
+        }
+    });
+    test_assert(s != 0);
+
+    int i, ENTITIES = 10, THREADS = 2;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -919,4 +1032,3 @@ void MultiThread_fini_after_set_threads() {
     // Make sure code doesn't crash
     test_assert(true);
 }
-

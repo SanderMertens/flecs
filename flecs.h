@@ -2802,7 +2802,7 @@ typedef struct ecs_filter_iter_t {
 
     /* For EcsFilterIterEvalIndex */ 
     ecs_term_iter_t term_iter;
-    int32_t min_term_index;
+    int32_t pivot_term;
     int32_t matches_left;
 } ecs_filter_iter_t;
 
@@ -2987,6 +2987,7 @@ struct ecs_iter_t {
     bool is_valid;                /* Set to true after first next() */
     bool is_filter;               /* When true, data fields are not set */
     bool is_instanced;            /* When true, owned terms are always returned as arrays */
+    bool has_shared;              /* Iterator may set this when iterator has shared terms */
 
     ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
@@ -5522,6 +5523,13 @@ FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *it);
 
+/** Same as ecs_filter_next, but always instanced.
+ * See instanced property of ecs_filter_desc_t.
+ */
+FLECS_API
+bool ecs_filter_next_instanced(
+    ecs_iter_t *it);
+
 /** Move resources of one filter to another. */
 FLECS_API
 void ecs_filter_move(
@@ -5661,6 +5669,13 @@ ecs_iter_t ecs_query_iter_page(
  */
 FLECS_API
 bool ecs_query_next(
+    ecs_iter_t *iter);
+
+/** Same as ecs_query_next, but always instanced.
+ * See "instanced" property of ecs_filter_desc_t.
+ */
+FLECS_API
+bool ecs_query_next_instanced(
     ecs_iter_t *iter);
 
 /** Progress the query iterator for a worker thread.
@@ -17522,7 +17537,8 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), ecs_query_next);
+        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+            ecs_query_next_instanced);
     } 
 
     template <typename Func>

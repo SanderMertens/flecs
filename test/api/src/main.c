@@ -1058,6 +1058,7 @@ void Filter_term_iter_pair_w_rel_wildcard_n_matches_w_data(void);
 void Filter_term_iter_pair_w_obj_wildcard_n_matches(void);
 void Filter_term_iter_pair_w_obj_wildcard_n_matches_w_data(void);
 void Filter_term_iter_w_superset(void);
+void Filter_term_iter_w_superset_base_w_2_components(void);
 void Filter_term_iter_w_superset_childof(void);
 void Filter_term_iter_w_superset_self(void);
 void Filter_term_iter_w_superset_self_childof(void);
@@ -1115,6 +1116,10 @@ void Filter_filter_iter_w_2_terms_1_filter(void);
 void Filter_filter_iter_w_3_terms_2_filter(void);
 void Filter_filter_iter_2_terms_filter_all(void);
 void Filter_filter_iter_2_terms_filter_all_w_out(void);
+void Filter_filter_instanced_w_singleton(void);
+void Filter_filter_instanced_w_base(void);
+void Filter_filter_no_instancing_w_singleton(void);
+void Filter_filter_no_instancing_w_base(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1975,6 +1980,9 @@ void MultiThread_6_thread_1_entity(void);
 void MultiThread_6_thread_2_entity(void);
 void MultiThread_6_thread_5_entity(void);
 void MultiThread_6_thread_10_entity(void);
+void MultiThread_2_thread_1_entity_instanced(void);
+void MultiThread_2_thread_5_entity_instanced(void);
+void MultiThread_2_thread_10_entity_instanced(void);
 void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void);
 void MultiThread_2_thread_test_combs_100_entity(void);
 void MultiThread_3_thread_test_combs_100_entity(void);
@@ -6272,6 +6280,10 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_w_superset
     },
     {
+        "term_iter_w_superset_base_w_2_components",
+        Filter_term_iter_w_superset_base_w_2_components
+    },
+    {
         "term_iter_w_superset_childof",
         Filter_term_iter_w_superset_childof
     },
@@ -6498,6 +6510,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_2_terms_filter_all_w_out",
         Filter_filter_iter_2_terms_filter_all_w_out
+    },
+    {
+        "filter_instanced_w_singleton",
+        Filter_filter_instanced_w_singleton
+    },
+    {
+        "filter_instanced_w_base",
+        Filter_filter_instanced_w_base
+    },
+    {
+        "filter_no_instancing_w_singleton",
+        Filter_filter_no_instancing_w_singleton
+    },
+    {
+        "filter_no_instancing_w_base",
+        Filter_filter_no_instancing_w_base
     }
 };
 
@@ -9778,6 +9806,18 @@ bake_test_case MultiThread_testcases[] = {
         MultiThread_6_thread_10_entity
     },
     {
+        "2_thread_1_entity_instanced",
+        MultiThread_2_thread_1_entity_instanced
+    },
+    {
+        "2_thread_5_entity_instanced",
+        MultiThread_2_thread_5_entity_instanced
+    },
+    {
+        "2_thread_10_entity_instanced",
+        MultiThread_2_thread_10_entity_instanced
+    },
+    {
         "2_thread_test_combs_100_entity_w_next_worker",
         MultiThread_2_thread_test_combs_100_entity_w_next_worker
     },
@@ -10975,7 +11015,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        99,
+        104,
         Filter_testcases
     },
     {
@@ -11157,7 +11197,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        36,
+        39,
         MultiThread_testcases
     },
     {

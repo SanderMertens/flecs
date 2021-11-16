@@ -3866,30 +3866,6 @@ void push_columns(
     ecs_os_memcpy_n(dst_cols, src_cols, int32_t, it->rule->filter.term_count);
 }
 
-/* Set iterator data from table */
-static
-void set_iter_table(
-    ecs_iter_t *it,
-    ecs_table_t *table,
-    int32_t offset)
-{
-    /* Tell the iterator how many entities there are */
-    it->count = ecs_table_count(table);
-    ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
-
-    /* Set the entities array */
-    ecs_entity_t *entities = ecs_vector_first(
-        table->storage.entities, ecs_entity_t);
-    ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    it->entities = &entities[offset];
-
-    /* Set table parameters */
-    it->table = table;
-    it->type = table->type;
-
-    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);  
-}
-
 /* Populate iterator with data before yielding to application */
 static
 void populate_iterator(
@@ -3901,29 +3877,23 @@ void populate_iterator(
     ecs_world_t *world = rule->world;
     int32_t r = op->r_in;
     ecs_rule_reg_t *regs = get_register_frame(it, op->frame);
+    ecs_table_t *table = NULL;
+    int32_t count = 0;
+    int32_t offset = 0;
 
     /* If the input register for the yield does not point to a variable,
      * the rule doesn't contain a this (.) variable. In that case, the
      * iterator doesn't contain any data, and this function will simply
      * return true or false. An application will still be able to obtain
      * the variables that were resolved. */
-    if (r == UINT8_MAX) {
-        iter->count = 0;
-    } else {
+    if (r != UINT8_MAX) {
         ecs_rule_var_t *var = &rule->variables[r];
         ecs_rule_reg_t *reg = &regs[r];
 
         if (var->kind == EcsRuleVarKindTable) {
-            ecs_table_t *table = table_reg_get(rule, regs, r);
-            int32_t count = regs[r].count;
-            int32_t offset = regs[r].offset;
-
-            set_iter_table(iter, table, offset);
-
-            if (count) {
-                iter->offset = offset;
-                iter->count = count;
-            }
+            table = table_reg_get(rule, regs, r);
+            count = regs[r].count;
+            offset = regs[r].offset;
         } else {
             /* If a single entity is returned, simply return the
              * iterator with count 1 and a pointer to the entity id */
@@ -3934,14 +3904,13 @@ void populate_iterator(
             ecs_record_t *record = ecs_eis_get(world, e);
 
             bool is_monitored;
-            int32_t offset = iter->offset = flecs_record_to_row(
-                record->row, &is_monitored);
+            offset = flecs_record_to_row(record->row, &is_monitored);
 
             /* If an entity is not stored in a table, it could not have
              * been matched by anything */
             ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-            set_iter_table(iter, record->table, offset);
-            iter->count = 1;
+            table = record->table;
+            count = 1;
         }
     }
 
@@ -3973,7 +3942,6 @@ void populate_iterator(
         ecs_entity_t subj = iter->subjects[i];
         int32_t c = ++ iter->columns[i];
 
-        // printf("%d: col %d, subj = %d (this = %d)\n", i, c, subj, EcsThis);
         if (!subj) {
             if (iter->terms[i].subj.entity != EcsThis) {
                 iter->columns[i] = 0;
@@ -3983,7 +3951,8 @@ void populate_iterator(
         }
     }
 
-    flecs_iter_populate_data(world, iter, iter->ptrs, iter->sizes);
+    flecs_iter_populate_data(world, iter, table, offset, count, 
+        iter->ptrs, iter->sizes);
 }
 
 static
