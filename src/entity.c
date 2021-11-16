@@ -3112,7 +3112,8 @@ bool ecs_has_id(
         }
 
         return ecs_type_match(
-            world, table, table->type, 0, id, EcsIsA, 0, 0, NULL, NULL) != -1;
+            world, table, table->type, 0, id, EcsIsA, 0, 0, 
+                NULL, NULL, NULL) != -1;
     }
 error:
     return false;
@@ -3162,7 +3163,7 @@ ecs_entity_t ecs_get_object_for_id(
 
     if (rel) {
         int32_t column = ecs_type_match(
-            world, table, table->type, 0, id, rel, 0, 0, &subject, NULL);
+            world, table, table->type, 0, id, rel, 0, 0, &subject, NULL, NULL);
         if (column == -1) {
             return 0;
         }

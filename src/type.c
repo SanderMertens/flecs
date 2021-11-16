@@ -42,6 +42,7 @@ int32_t search_type(
     int32_t max_depth,
     int32_t depth,
     ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
     int32_t *count_out)
 {
     if (!id) {
@@ -57,20 +58,28 @@ int32_t search_type(
     }
 
     int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t), tid;
 
     if (depth >= min_depth) {
         if (table && !offset && !(ECS_HAS_ROLE(id, CASE))) {
             ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
             if (tr) {
+                int32_t column = tr->column;
                 if (count_out) {
                     *count_out = tr->count;
                 }
-                return tr->column;
+                if (id_out) {
+                    *id_out = ids[column];
+                }
+                return column;
             }
         } else {
             for (i = offset; i < count; i ++) {
-                if (match_id(world, ids[i], id)) {
+                tid = ids[i];
+                if (match_id(world, tid, id)) {
+                    if (id_out) {
+                        *id_out = tid;
+                    }
                     return i;
                 }
             }
@@ -84,12 +93,12 @@ int32_t search_type(
         int32_t ret;
 
         for (i = 0; i < count; i ++) {
-            ecs_entity_t e = ids[i];
-            if (!ECS_HAS_RELATION(e, rel)) {
+            tid = ids[i];
+            if (!ECS_HAS_RELATION(tid, rel)) {
                 continue;
             }
 
-            ecs_entity_t obj = ecs_pair_object(world, e);
+            ecs_entity_t obj = ecs_pair_object(world, tid);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_table_t *obj_table = ecs_get_table(world, obj);
@@ -98,10 +107,13 @@ int32_t search_type(
             }
 
             if ((ret = search_type(world, obj_table, obj_table->type, 0, id, 
-                rel, min_depth, max_depth, depth + 1, subject_out, NULL)) != -1)
+                rel, min_depth, max_depth, depth + 1, subject_out, id_out, NULL)) != -1)
             {
                 if (subject_out && !*subject_out) {
                     *subject_out = obj;
+                }
+                if (id_out && !*id_out) {
+                    *id_out = tid;
                 }
                 return ret;
 
@@ -109,10 +121,13 @@ int32_t search_type(
              * is not IsA, try substituting the object type with IsA */
             } else if (rel != EcsIsA) {
                 if ((ret = search_type(world, obj_table, obj_table->type, 0, 
-                    id, EcsIsA, 1, 0, 0, subject_out, NULL)) != -1) 
+                    id, EcsIsA, 1, 0, 0, subject_out, id_out, NULL)) != -1) 
                 {
                     if (subject_out && !*subject_out) {
                         *subject_out = obj;
+                    }
+                    if (id_out && !*id_out) {
+                        *id_out = tid;
                     }
                     return ret;
                 }
@@ -132,7 +147,7 @@ bool ecs_type_has_id(
     ecs_poly_assert(world, ecs_world_t);
     
     return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, 
-        NULL, NULL) != -1;
+        NULL, NULL, NULL) != -1;
 }
 
 int32_t ecs_type_index_of(
@@ -140,7 +155,8 @@ int32_t ecs_type_index_of(
     int32_t offset, 
     ecs_id_t id)
 {
-    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, NULL, NULL);
+    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, 
+        NULL, NULL, NULL);
 }
 
 int32_t ecs_type_match(
@@ -153,6 +169,7 @@ int32_t ecs_type_match(
     int32_t min_depth,
     int32_t max_depth,
     ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
     int32_t *count_out)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -162,7 +179,7 @@ int32_t ecs_type_match(
     }
 
     return search_type(world, table, type, offset, id, rel, min_depth, 
-        max_depth, 0, subject_out, count_out);
+        max_depth, 0, subject_out, id_out, count_out);
 }
 
 char* ecs_type_str(
