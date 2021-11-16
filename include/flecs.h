@@ -2723,6 +2723,13 @@ FLECS_API
 bool ecs_filter_next(
     ecs_iter_t *it);
 
+/** Same as ecs_filter_next, but always instanced.
+ * See instanced property of ecs_filter_desc_t.
+ */
+FLECS_API
+bool ecs_filter_next_instanced(
+    ecs_iter_t *it);
+
 /** Move resources of one filter to another. */
 FLECS_API
 void ecs_filter_move(
@@ -2864,7 +2871,7 @@ FLECS_API
 bool ecs_query_next(
     ecs_iter_t *iter);
 
-/** Same as ecs_query_next, but always do instanced iteration.
+/** Same as ecs_query_next, but always instanced.
  * See "instanced" property of ecs_filter_desc_t.
  */
 FLECS_API

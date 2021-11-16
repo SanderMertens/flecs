@@ -2852,17 +2852,10 @@ bool ecs_query_next_instanced(
                 continue;
             }
 
-            ecs_entity_t *entity_buffer = ecs_vector_first(
-                table->storage.entities, ecs_entity_t); 
-            it->entities = &entity_buffer[cur.first];
-            it->offset = cur.first;
-            it->count = cur.count;
             it->total_count = cur.count;
-        }
-
-        it->table = match->table;
-        if (it->table) {
-            it->type = it->table->type;
+        } else {
+            cur.count = 0;
+            cur.first = 0;
         }
 
         it->ids = match->ids;
@@ -2874,8 +2867,7 @@ bool ecs_query_next_instanced(
         it->instance_count = 0;
 
         flecs_iter_init(it);
-
-        it->has_shared = flecs_iter_populate_data(world, it, it->ptrs, NULL);
+        flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, it->ptrs, NULL);
 
         if (query->flags & EcsQueryHasOutColumns) {
             if (table) {
@@ -2902,7 +2894,7 @@ bool ecs_query_next_worker(
     int32_t current,
     int32_t total)
 {
-    int32_t per_worker, first, prev_offset = it->offset;
+    int32_t per_worker, instances_per_worker, first, prev_offset = it->offset;
     ecs_world_t *world = it->world;
 
     do {
@@ -2911,9 +2903,10 @@ bool ecs_query_next_worker(
         }
 
         int32_t count = it->count;
+        int32_t instance_count = it->instance_count;
         per_worker = count / total;
+        instances_per_worker = instance_count / total;
         first = per_worker * current;
-
         count -= per_worker * total;
 
         if (count) {
@@ -2927,7 +2920,7 @@ bool ecs_query_next_worker(
 
         if (!per_worker && !(it->iter.query.query->flags & EcsQueryNeedsTables)) {
             if (current == 0) {
-                flecs_iter_populate_data(world, it, it->ptrs, NULL);
+                flecs_iter_populate_data(world, it, it->table, it->offset, it->count, it->ptrs, NULL);
                 return true;
             } else {
                 return false;
@@ -2935,13 +2928,12 @@ bool ecs_query_next_worker(
         }
     } while (!per_worker);
 
+    it->instance_count = instances_per_worker;
     it->frame_offset -= prev_offset;
-    it->count = per_worker;
-    it->offset += first;
-    it->entities = &it->entities[first];
     it->frame_offset += first;
 
-    flecs_iter_populate_data(world, it, it->ptrs, NULL);
+    flecs_iter_populate_data(
+        world, it, it->table, it->offset + first, per_worker, it->ptrs, NULL);
 
     return true;
 }

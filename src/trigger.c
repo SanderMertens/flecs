@@ -371,8 +371,7 @@ void notify_set_triggers(
         }
 
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
-            it->offset, it->ids, it->columns, it->subjects, it->sizes, 
-            it->ptrs, NULL, true))
+            it->ids, it->columns, it->subjects, NULL, true))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */

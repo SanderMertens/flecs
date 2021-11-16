@@ -1118,6 +1118,7 @@
                 "term_iter_pair_w_obj_wildcard_n_matches",
                 "term_iter_pair_w_obj_wildcard_n_matches_w_data",
                 "term_iter_w_superset",
+                "term_iter_w_superset_base_w_2_components",
                 "term_iter_w_superset_childof",
                 "term_iter_w_superset_self",
                 "term_iter_w_superset_self_childof",
@@ -1174,7 +1175,11 @@
                 "filter_iter_w_2_terms_1_filter",
                 "filter_iter_w_3_terms_2_filter",
                 "filter_iter_2_terms_filter_all",
-                "filter_iter_2_terms_filter_all_w_out"
+                "filter_iter_2_terms_filter_all_w_out",
+                "filter_instanced_w_singleton",
+                "filter_instanced_w_base",
+                "filter_no_instancing_w_singleton",
+                "filter_no_instancing_w_base"
             ]
         }, {
             "id": "Query",
@@ -2087,6 +2092,9 @@
                 "6_thread_2_entity",
                 "6_thread_5_entity",
                 "6_thread_10_entity",
+                "2_thread_1_entity_instanced",
+                "2_thread_5_entity_instanced",
+                "2_thread_10_entity_instanced",
                 "2_thread_test_combs_100_entity_w_next_worker",
                 "2_thread_test_combs_100_entity",
                 "3_thread_test_combs_100_entity",

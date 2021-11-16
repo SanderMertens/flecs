@@ -14,4 +14,6 @@ void App_app_w_frame_action() {
 
     int result = ecs_app_run(world, &(ecs_app_desc_t) { });
     test_int(result, 10);
+
+    ecs_fini(world);
 }

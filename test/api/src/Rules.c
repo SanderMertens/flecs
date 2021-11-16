@@ -4126,6 +4126,8 @@ void Rules_filter_term() {
 
     test_bool(ecs_rule_next(&it), false);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -4164,6 +4166,8 @@ void Rules_2_terms_1_filter() {
     test_assert(it.ptrs[1] != NULL);
 
     test_bool(ecs_rule_next(&it), false);
+    
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -4210,6 +4214,7 @@ void Rules_3_terms_2_filter() {
     test_bool(ecs_rule_next(&it), false);
 
     ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -4233,7 +4238,10 @@ void Rules_term_obj_w_this() {
     test_int(it.count, 1);
     test_int(it.entities[0], TagA);
 
+    test_assert(ecs_rule_next(&it) == false);
+
     ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -4257,7 +4265,9 @@ void Rules_term_subj_w_this() {
     test_int(it.count, 1);
     test_int(it.entities[0], TagA);
 
+    test_assert(ecs_rule_next(&it) == false);
+
     ecs_rule_fini(r);
+
     ecs_fini(world);
 }
-

@@ -81,6 +81,8 @@ int32_t search_type(
         ECS_PAIR_RELATION(id) != ecs_id(EcsIdentifier) &&
         ECS_PAIR_RELATION(id) != EcsChildOf)
     {
+        int32_t ret;
+
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = ids[i];
             if (!ECS_HAS_RELATION(e, rel)) {
@@ -95,24 +97,24 @@ int32_t search_type(
                 continue;
             }
 
-            if ((search_type(world, obj_table, obj_table->type, 0, id, 
-                rel, min_depth, max_depth, depth + 1, subject_out, NULL) != -1))
+            if ((ret = search_type(world, obj_table, obj_table->type, 0, id, 
+                rel, min_depth, max_depth, depth + 1, subject_out, NULL)) != -1)
             {
                 if (subject_out && !*subject_out) {
                     *subject_out = obj;
                 }
-                return i;
+                return ret;
 
             /* If the id could not be found on the object and the relationship
              * is not IsA, try substituting the object type with IsA */
             } else if (rel != EcsIsA) {
-                if (search_type(world, obj_table, obj_table->type, 0, 
-                    id, EcsIsA, 1, 0, 0, subject_out, NULL) != -1) 
+                if ((ret = search_type(world, obj_table, obj_table->type, 0, 
+                    id, EcsIsA, 1, 0, 0, subject_out, NULL)) != -1) 
                 {
                     if (subject_out && !*subject_out) {
                         *subject_out = obj;
                     }
-                    return i;
+                    return ret;
                 }
             }
         }

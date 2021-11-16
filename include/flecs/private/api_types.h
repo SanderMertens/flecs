@@ -126,7 +126,7 @@ typedef struct ecs_filter_iter_t {
 
     /* For EcsFilterIterEvalIndex */ 
     ecs_term_iter_t term_iter;
-    int32_t min_term_index;
+    int32_t pivot_term;
     int32_t matches_left;
 } ecs_filter_iter_t;
 
