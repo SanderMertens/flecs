@@ -257,7 +257,7 @@ void init_iter(
 
             ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                it->event_id, EcsIsA, 0, 0, &subject, NULL);
+                it->event_id, EcsIsA, 0, 0, &subject, NULL, NULL);
 
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
             int32_t storage_index = ecs_table_type_to_storage_index(

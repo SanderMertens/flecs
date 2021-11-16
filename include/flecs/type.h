@@ -47,6 +47,7 @@ int32_t ecs_type_match(
     int32_t min_depth,
     int32_t max_depth,
     ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
     int32_t *count_out);
 
 #ifdef __cplusplus

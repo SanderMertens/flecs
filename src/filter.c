@@ -1137,7 +1137,7 @@ bool flecs_term_match_table(
 
     ecs_entity_t subj_entity = subj->entity;
     if (!subj_entity) {
-        id_out[0] = term->id;
+        id_out[0] = term->id; /* no source corresponds with Nothing set mask */
         return true;
     }
 
@@ -1159,7 +1159,7 @@ bool flecs_term_match_table(
 
     column = ecs_type_match(world, match_table, match_type,
         column, term->id, subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, &source, match_index_out);
+        subj->set.max_depth, &source, id_out, match_index_out);
 
     bool result = column != -1;
 
@@ -1181,18 +1181,10 @@ bool flecs_term_match_table(
         }
     }
 
-    if (id_out) {
-        if (column >= 0) {
-            if (source) {
-                id_out[0] = ecs_vector_get(ecs_get_type(world, source), ecs_id_t, column)[0];
-            } else {
-                id_out[0] = ecs_vector_get(match_type, ecs_id_t, column)[0];
-            }
-        } else {
-            id_out[0] = term->id;
-        }
+    if (id_out && column < 0) {
+        id_out[0] = term->id;
     }
-    
+
     if (column_out) {
         if (column >= 0) {
             column ++;
@@ -1499,7 +1491,7 @@ bool term_iter_next(
             /* Test if following the relation finds the id */
             int32_t index = ecs_type_match(world, table, table->type, 0, 
                 term->id, subj->set.relation, subj->set.min_depth, 
-                subj->set.max_depth, &source, NULL);
+                subj->set.max_depth, &source, &iter->id, NULL);
 
             if (index == -1) {
                 source = 0;
@@ -1509,8 +1501,6 @@ bool term_iter_next(
             ecs_assert(source != 0, ECS_INTERNAL_ERROR, NULL);
 
             iter->column = (index + 1) * -1;
-            iter->id = ecs_vector_get(
-                ecs_get_type(world, source), ecs_id_t, index)[0];
         }
 
         break;

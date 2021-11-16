@@ -472,8 +472,8 @@ void diff_insert_isa(
                 ecs_id_t base_id = append_from->array[j];
                 /* We still have to make sure the id isn't overridden by the
                  * current table */
-                if (ecs_type_match(
-                    world, table, type, 0, base_id, 0, 0, 0, NULL, NULL) == -1) 
+                if (ecs_type_match(world, table, type, 0, base_id, 0, 0, 0, 
+                    NULL, NULL, NULL) == -1) 
                 {
                     ids_append(append_to, base_id);
                 }
@@ -491,7 +491,9 @@ void diff_insert_isa(
             continue;
         }
 
-        if (ecs_type_match(world, table, type, 0, id, 0, 0, 0, NULL, NULL) == -1) {
+        if (ecs_type_match(world, table, type, 0, id, 0, 0, 0, 
+            NULL, NULL, NULL) == -1) 
+        {
             ids_append(append_to, id);
         }
     }
@@ -561,7 +563,7 @@ void diff_insert_removed(
          * the removed component was an override. Removed overrides reexpose the
          * base component, thus "changing" the value which requires an OnSet. */
         if (ecs_type_match(world, table, table->type, 0, id, EcsIsA,
-            1, 0, NULL, NULL) != -1)
+            1, 0, NULL, NULL, NULL) != -1)
         {
             ids_append(&diff->on_set, id);
             return;
