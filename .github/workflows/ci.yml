@@ -180,7 +180,7 @@ jobs:
         run: |
           scan-build --status-bugs bake
 
-  analyze-sanitized:
+  analyze-sanitized-c:
     timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
@@ -201,10 +201,32 @@ jobs:
 
       - name: run tests
         run: |
-          bake examples/os_api/bake
           bake run test/api --cfg sanitize
-          bake run test/cpp_api --cfg sanitize
+          bake run test/meta --cfg sanitize
           bake run test/collections --cfg sanitize
+
+  analyze-sanitized-cpp:
+    timeout-minutes: 30
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macOS-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake run test/cpp_api --cfg sanitize
 
   buildsystem-cmake:
     timeout-minutes: 10
