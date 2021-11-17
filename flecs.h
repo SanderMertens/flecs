@@ -6956,11 +6956,13 @@ extern "C" {
             .add = {EcsPipeline}\
         },\
         .ids_expr = #__VA_ARGS__\
-    });
+    });\
+    ecs_id(id) = id;
 
 #define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
-    (void)id
+    ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    (void)id;\
+    (void)ecs_id(id)
     
 #endif
 
@@ -9691,8 +9693,7 @@ void FlecsRestImport(
 
 /* Use for declaring entity, tag, prefab / any other entity identifier */
 #define ECS_DECLARE(id)\
-    ecs_entity_t id;\
-    ecs_entity_t ecs_id(id)
+    ecs_entity_t id, ecs_id(id);\
 
 #define ECS_ENTITY_DEFINE(world, id, ...)\
     id = ecs_entity_init(world, &(ecs_entity_desc_t){\
