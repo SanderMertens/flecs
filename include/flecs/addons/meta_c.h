@@ -13,9 +13,6 @@
 #define FLECS_PARSER
 #endif
 
-#include "meta.h"
-#include "parser.h"
-
 #ifndef FLECS_META_C_H
 #define FLECS_META_C_H
 

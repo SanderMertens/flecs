@@ -1,0 +1,15 @@
+{
+    "id": "pipeline",
+    "type": "application",
+    "value": {
+        "author": "Jane Doe",
+        "description": "A simple hello world flecs application",
+        "use": [
+            "flecs"
+        ],
+        "use_amalgamate": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_PIPELINE", "FLECS_LOG"]
+    }
+}

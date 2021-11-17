@@ -539,31 +539,30 @@ ecs_world_t *ecs_init(void) {
     ecs_trace("#[bold]import addons");
     ecs_log_push();
     ecs_trace("use ecs_mini to create world without importing addons");
-#ifdef FLECS_SYSTEM_H
+#ifdef FLECS_SYSTEM
     ECS_IMPORT(world, FlecsSystem);
 #endif
-#ifdef FLECS_PIPELINE_H
+#ifdef FLECS_PIPELINE
     ECS_IMPORT(world, FlecsPipeline);
 #endif
-#ifdef FLECS_TIMER_H
+#ifdef FLECS_TIMER
     ECS_IMPORT(world, FlecsTimer);
 #endif
-#ifdef FLECS_META_H
+#ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
-#ifdef FLECS_DOC_H
+#ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
 #endif
-#ifdef FLECS_COREDOC_H
+#ifdef FLECS_COREDOC
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
-#ifdef FLECS_REST_H
+#ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
-
     return world;
 }
 

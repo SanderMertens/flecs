@@ -11785,31 +11785,30 @@ ecs_world_t *ecs_init(void) {
     ecs_trace("#[bold]import addons");
     ecs_log_push();
     ecs_trace("use ecs_mini to create world without importing addons");
-#ifdef FLECS_SYSTEM_H
+#ifdef FLECS_SYSTEM
     ECS_IMPORT(world, FlecsSystem);
 #endif
-#ifdef FLECS_PIPELINE_H
+#ifdef FLECS_PIPELINE
     ECS_IMPORT(world, FlecsPipeline);
 #endif
-#ifdef FLECS_TIMER_H
+#ifdef FLECS_TIMER
     ECS_IMPORT(world, FlecsTimer);
 #endif
-#ifdef FLECS_META_H
+#ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
-#ifdef FLECS_DOC_H
+#ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
 #endif
-#ifdef FLECS_COREDOC_H
+#ifdef FLECS_COREDOC
     ECS_IMPORT(world, FlecsCoreDoc);
 #endif
-#ifdef FLECS_REST_H
+#ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();
 #endif
-
     return world;
 }
 
@@ -13158,6 +13157,7 @@ ecs_entity_t ecs_observer_init(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
+    ecs_check(desc->callback != NULL, ECS_INVALID_OPERATION, NULL);
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
@@ -13417,7 +13417,7 @@ error:
     return;
 }
 
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
@@ -13711,7 +13711,7 @@ void remove_table_node(
     node->prev = NULL;
     node->next = NULL;
 
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
     if (query->list.first == NULL && query->system && !query->world->is_fini) {
         ecs_system_activate(query->world, query->system, false, NULL);
     }
@@ -13731,7 +13731,7 @@ void insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
     if (!query->list.first && query->system) {
         ecs_system_activate(query->world, query->system, true, NULL);
     }
@@ -28574,8 +28574,6 @@ error:
 #endif
 
 
-#ifdef FLECS_STATS
-
 #ifdef FLECS_SYSTEM
 #endif
 
@@ -28646,6 +28644,8 @@ void ecs_workers_progress(
 
 #endif
 #endif
+
+#ifdef FLECS_STATS
 
 static
 int32_t t_next(
@@ -36443,7 +36443,7 @@ ecs_query_t* build_pipeline_query(
 }
 
 static 
-void EcsOnUpdatePipeline(
+void OnUpdatePipeline(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -36630,7 +36630,15 @@ void FlecsPipelineImport(
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_OBSERVER(world, EcsOnUpdatePipeline, EcsOnSet, Pipeline, Type);
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .entity.name = "OnUpdatePipeline",
+        .filter.terms = {
+            { .id = EcsPipeline },
+            { .id = ecs_id(EcsType) }
+        },
+        .events = { EcsOnSet },
+        .callback = OnUpdatePipeline
+    });
 
     /* Create the builtin pipeline */
     world->pipeline = ecs_type_init(world, &(ecs_type_desc_t){
@@ -38728,7 +38736,15 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    ECS_OBSERVER(world, EnableMonitor, EcsMonitor, System, !Disabled);
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .entity.name = "EnableMonitor",
+        .filter.terms = {
+            { .id = ecs_id(EcsSystem) },
+            { .id = EcsDisabled, .oper = EcsNot },
+        },
+        .events = {EcsMonitor},
+        .callback = EnableMonitor
+    });
 }
 
 #endif

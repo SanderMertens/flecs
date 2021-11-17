@@ -559,7 +559,15 @@ void FlecsSystemImport(
             .dtor = ecs_colsystem_dtor
         });
 
-    ECS_OBSERVER(world, EnableMonitor, EcsMonitor, System, !Disabled);
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .entity.name = "EnableMonitor",
+        .filter.terms = {
+            { .id = ecs_id(EcsSystem) },
+            { .id = EcsDisabled, .oper = EcsNot },
+        },
+        .events = {EcsMonitor},
+        .callback = EnableMonitor
+    });
 }
 
 #endif

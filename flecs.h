@@ -3171,6 +3171,134 @@ void ecs_default_ctor(
 
 #endif
 /**
+ * @file hashmap.h
+ * @brief Hashmap datastructure.
+ *
+ * Datastructure that computes a hash to store & retrieve values. Similar to
+ * ecs_map_t, but allows for arbitrary keytypes.
+ */
+
+#ifndef FLECS_HASHMAP_H
+#define FLECS_HASHMAP_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct {
+    ecs_hash_value_action_t hash;
+    ecs_compare_action_t compare;
+    ecs_size_t key_size;
+    ecs_size_t value_size;
+    ecs_map_t *impl;
+} ecs_hashmap_t;
+
+typedef struct {
+    ecs_map_iter_t it;
+    struct ecs_hm_bucket_t *bucket;
+    int32_t index;
+} flecs_hashmap_iter_t;
+
+typedef struct {
+    void *key;
+    void *value;
+    uint64_t hash;
+} flecs_hashmap_result_t;
+
+FLECS_DBG_API
+ecs_hashmap_t _flecs_hashmap_new(
+    ecs_size_t key_size,
+    ecs_size_t value_size,
+    ecs_hash_value_action_t hash,
+    ecs_compare_action_t compare);
+
+#define flecs_hashmap_new(K, V, compare, hash)\
+    _flecs_hashmap_new(ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
+
+FLECS_DBG_API
+void flecs_hashmap_free(
+    ecs_hashmap_t map);
+
+FLECS_DBG_API
+void* _flecs_hashmap_get(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_get(map, key, V)\
+    (V*)_flecs_hashmap_get(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+flecs_hashmap_result_t _flecs_hashmap_ensure(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_ensure(map, key, V)\
+    _flecs_hashmap_ensure(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _flecs_hashmap_set(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    void *key,
+    ecs_size_t value_size,
+    const void *value);
+
+#define flecs_hashmap_set(map, key, value)\
+    _flecs_hashmap_set(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
+
+FLECS_DBG_API
+void _flecs_hashmap_remove(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_remove(map, key, V)\
+    _flecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+
+FLECS_DBG_API
+void _flecs_hashmap_remove_w_hash(
+    const ecs_hashmap_t map,
+    ecs_size_t key_size,
+    const void *key,
+    ecs_size_t value_size,
+    uint64_t hash);
+
+#define flecs_hashmap_remove_w_hash(map, key, V, hash)\
+    _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
+
+FLECS_DBG_API
+ecs_hashmap_t flecs_hashmap_copy(
+    const ecs_hashmap_t src);
+
+FLECS_DBG_API
+flecs_hashmap_iter_t flecs_hashmap_iter(
+    ecs_hashmap_t map);
+
+FLECS_DBG_API
+void* _flecs_hashmap_next(
+    flecs_hashmap_iter_t *it,
+    ecs_size_t key_size,
+    void *key_out,
+    ecs_size_t value_size);
+
+#define flecs_hashmap_next(map, V)\
+    (V*)_flecs_hashmap_next(map, 0, NULL, ECS_SIZEOF(V))
+
+#define flecs_hashmap_next_w_key(map, K, key, V)\
+    (V*)_flecs_hashmap_next(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/**
  * @file type.h
  * @brief Type API.
  *
@@ -6526,9 +6654,608 @@ void* ecs_record_get_column(
 
 /** @} */
 
+#ifdef FLECS_APP
+/**
+ * @file app.h
+ * @brief App addon.
+ *
+ * The app addon is a wrapper around the application's main loop. Its main
+ * purpose is to provide a hook to modules that need to take control of the
+ * main loop, as is for example the case with native applications that use
+ * emscripten with webGL.
+ */
 
-/* Include enabled addons */
+#ifdef FLECS_APP
 
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
+#endif
+
+#ifndef FLECS_APP_H
+#define FLECS_APP_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Used with ecs_app_run. */
+typedef struct ecs_app_desc_t {
+    FLECS_FLOAT target_fps;   /* Target FPS. */
+    FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
+    int32_t threads;          /* Number of threads. */
+    bool enable_rest;         /* Allows HTTP clients to access ECS data */
+} ecs_app_desc_t;
+
+/** Run application.
+ * This will run the application with the parameters specified in desc. After
+ * the application quits (ecs_quit is called) the world will be cleaned up.
+ * 
+ * @param world The world.
+ * @param desc Application parameters.
+ */
+FLECS_API
+int ecs_app_run(
+    ecs_world_t *world,
+    const ecs_app_desc_t *desc);
+
+/** Callback type for frame action. */
+typedef int(*ecs_frame_action_t)(
+    ecs_world_t *world, 
+    const ecs_app_desc_t *desc);
+
+/** Default frame callback.
+ * This function will call ecs_progress until it returns a non-zero value (the
+ * application called ecs_quit). It is the default frame callback that will be
+ * used by ecs_app_run, unless it is overridden.
+ * 
+ * Applications, though typically modules, can override the frame callback by
+ * using the ecs_app_set_frame_action function. This enables a module to take
+ * control of the main loop when necessary.
+ * 
+ * All worlds share the same frame accallbacktion. When a module attempts to 
+ * overwrite a frame callback (except the default one), an error will be thrown. 
+ * This prevents applications from importing modules with conflicting 
+ * requirements (e.g. two modules that * both need control over the main loop).
+ * 
+ * A custom frame callback may call this function once after or before it has 
+ * ran its own logic.
+ * 
+ * @param world The world.
+ * @param desc The desc struct passed to ecs_app_run.
+ * @return value returned by ecs_progress
+ */
+FLECS_API
+int ecs_app_run_frame(
+    ecs_world_t *world,
+    const ecs_app_desc_t *desc);
+
+/** Set custom frame action.
+ * See ecs_app_run_frame.
+ * 
+ * @param callback The frame action.
+ */
+FLECS_API
+int ecs_app_set_frame_action(
+    ecs_frame_action_t callback);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif // FLECS_APP
+#endif
+#ifdef FLECS_REST
+/**
+ * @file rest.h
+ * @brief REST API addon.
+ *
+ * A small REST API that uses the HTTP server and JSON serializer to provide
+ * access to application data for remote applications.
+ * 
+ * The endpoints exposed by the REST API are:
+ * 
+ * /entity/<path>
+ *   The entity endpoint requests data from an entity. The path is the entity
+ *   path or name of the entity to query for. The format of the response is
+ *   the same as what is returned by ecs_entity_to_json.
+ * 
+ *   Example:
+ *     /entity/my_entity
+ *     /entity/parent/child
+ *     /entity/420
+ * 
+ * /query?q=<query>
+ *   The query endpoint requests data for a query. The implementation uses the
+ *   rules query engine. The format of the response is the same as what is
+ *   returned by ecs_iter_to_json.
+ * 
+ *   Example:
+ *     /query?q=Position
+ *     /query?q=Position%2CVelocity
+ */
+
+#ifdef FLECS_REST
+
+/* Used for the HTTP server */
+#ifndef FLECS_HTTP
+#define FLECS_HTTP
+#endif
+
+/* Used for building the JSON replies */
+#ifndef FLECS_JSON
+#define FLECS_JSON
+#endif
+
+/* Query engine used */
+#ifndef FLECS_RULES
+#define FLECS_RULES
+#endif
+
+/* For the REST system */
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
+#endif
+
+#ifndef FLECS_REST_H
+#define FLECS_REST_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define ECS_REST_DEFAULT_PORT (27750)
+
+/* Component that instantiates the REST API */
+FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
+
+typedef struct {
+    uint16_t port;        /* Port of server (optional, default = 27750) */
+    char *ipaddr;         /* Interface address (optional, default = 0.0.0.0) */
+    void *impl;
+} EcsRest;
+
+/* Module import */
+FLECS_API
+void FlecsRestImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_TIMER
+/**
+ * @file timer.h
+ * @brief Timer module.
+ *
+ * Timers can be used to trigger actions at periodic or one-shot intervals. They
+ * are typically used together with systems and pipelines.
+ */
+
+#ifdef FLECS_TIMER
+
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
+#endif
+
+#ifndef FLECS_TIMER_H
+#define FLECS_TIMER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Components
+////////////////////////////////////////////////////////////////////////////////
+
+/** Component used for one shot/interval timer functionality */
+typedef struct EcsTimer {
+    FLECS_FLOAT timeout;         /* Timer timeout period */
+    FLECS_FLOAT time;            /* Incrementing time value */
+    int32_t fired_count;         /* Number of times ticked */
+    bool active;                 /* Is the timer active or not */
+    bool single_shot;            /* Is this a single shot timer */
+} EcsTimer;
+
+/* Apply a rate filter to a tick source */
+typedef struct EcsRateFilter {
+    ecs_entity_t src;            /* Source of the rate filter */
+    int32_t rate;                /* Rate of the rate filter */
+    int32_t tick_count;          /* Number of times the rate filter ticked */
+    FLECS_FLOAT time_elapsed;    /* Time elapsed since last tick */
+} EcsRateFilter;
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Timer API
+////////////////////////////////////////////////////////////////////////////////
+
+/** Set timer timeout.
+ * This operation executes any systems associated with the timer after the
+ * specified timeout value. If the entity contains an existing timer, the 
+ * timeout value will be reset. The timer can be started and stopped with 
+ * ecs_start_timer and ecs_stop_timer.
+ *
+ * The timer is synchronous, and is incremented each frame by delta_time.
+ *
+ * The tick_source entity will be be a tick source after this operation. Tick
+ * sources can be read by getting the EcsTickSource component. If the tick
+ * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source is a system, the system will tick when the timer ticks.
+ *
+ * @param world The world.
+ * @param tick_source The timer for which to set the timeout (0 to create one).
+ * @param timeout The timeout value.
+ * @return The timer entity.
+ */
+FLECS_API
+ecs_entity_t ecs_set_timeout(
+    ecs_world_t *world,
+    ecs_entity_t tick_source,
+    FLECS_FLOAT timeout);
+
+/** Get current timeout value for the specified timer.
+ * This operation returns the value set by ecs_set_timeout. If no timer is
+ * active for this entity, the operation returns 0.
+ *
+ * After the timeout expires the EcsTimer component is removed from the entity.
+ * This means that if ecs_get_timeout is invoked after the timer is expired, the
+ * operation will return 0.
+ *
+ * The timer is synchronous, and is incremented each frame by delta_time.
+ *
+ * The tick_source entity will be be a tick source after this operation. Tick
+ * sources can be read by getting the EcsTickSource component. If the tick
+ * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source is a system, the system will tick when the timer ticks.
+ *
+ * @param world The world.
+ * @param tick_source The timer.
+ * @return The current timeout value, or 0 if no timer is active.
+ */
+FLECS_API
+FLECS_FLOAT ecs_get_timeout(
+    const ecs_world_t *world,
+    ecs_entity_t tick_source);
+
+/** Set timer interval.
+ * This operation will continously invoke systems associated with the timer 
+ * after the interval period expires. If the entity contains an existing timer,
+ * the interval value will be reset.
+ *
+ * The timer is synchronous, and is incremented each frame by delta_time.
+ *
+ * The tick_source entity will be be a tick source after this operation. Tick
+ * sources can be read by getting the EcsTickSource component. If the tick
+ * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source is a system, the system will tick when the timer ticks. 
+ *
+ * @param world The world.
+ * @param tick_source The timer for which to set the interval (0 to create one).
+ * @param interval The interval value.
+ * @return The timer entity.
+ */
+FLECS_API
+ecs_entity_t ecs_set_interval(
+    ecs_world_t *world,
+    ecs_entity_t tick_source,
+    FLECS_FLOAT interval);   
+
+/** Get current interval value for the specified timer.
+ * This operation returns the value set by ecs_set_interval. If the entity is
+ * not a timer, the operation will return 0.
+ *
+ * @param world The world.
+ * @param tick_source The timer for which to set the interval.
+ * @return The current interval value, or 0 if no timer is active.
+ */
+FLECS_API
+FLECS_FLOAT ecs_get_interval(
+    const ecs_world_t *world,
+    ecs_entity_t tick_source);
+
+/** Start timer.
+ * This operation resets the timer and starts it with the specified timeout. The
+ * entity must have the EcsTimer component (added by ecs_set_timeout and 
+ * ecs_set_interval). If the entity does not have the EcsTimer component this
+ * operation will assert.
+ *
+ * @param world The world.
+ * @param tick_source The timer to start.
+ */
+FLECS_API
+void ecs_start_timer(
+    ecs_world_t *world,
+    ecs_entity_t tick_source);
+
+/** Stop timer
+ * This operation stops a timer from triggering. The entity must have the 
+ * EcsTimer component or this operation will assert.
+ *
+ * @param world The world.
+ * @param tick_source The timer to stop.
+ */
+FLECS_API
+void ecs_stop_timer(
+    ecs_world_t *world,
+    ecs_entity_t tick_source);
+
+/** Set rate filter.
+ * This operation initializes a rate filter. Rate filters sample tick sources
+ * and tick at a configurable multiple. A rate filter is a tick source itself,
+ * which means that rate filters can be chained.
+ *
+ * Rate filters enable deterministic system execution which cannot be achieved
+ * with interval timers alone. For example, if timer A has interval 2.0 and
+ * timer B has interval 4.0, it is not guaranteed that B will tick at exactly
+ * twice the multiple of A. This is partly due to the indeterministic nature of
+ * timers, and partly due to floating point rounding errors. 
+ *
+ * Rate filters can be combined with timers (or other rate filters) to ensure 
+ * that a system ticks at an exact multiple of a tick source (which can be
+ * another system). If a rate filter is created with a rate of 1 it will tick
+ * at the exact same time as its source.
+ *
+ * If no tick source is provided, the rate filter will use the frame tick as
+ * source, which corresponds with the number of times ecs_progress is called.
+ *
+ * The tick_source entity will be be a tick source after this operation. Tick
+ * sources can be read by getting the EcsTickSource component. If the tick
+ * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source is a system, the system will tick when the timer ticks.  
+ *
+ * @param world The world.
+ * @param tick_source The rate filter entity (0 to create one).
+ * @param rate The rate to apply.
+ * @param source The tick source (0 to use frames)
+ * @return The filter entity.
+ */
+FLECS_API
+ecs_entity_t ecs_set_rate(
+    ecs_world_t *world,
+    ecs_entity_t tick_source,
+    int32_t rate,
+    ecs_entity_t source);
+
+/** Assign tick source to system.
+ * Systems can be their own tick source, which can be any of the tick sources
+ * (one shot timers, interval times and rate filters). However, in some cases it
+ * is must be guaranteed that different systems tick on the exact same frame.
+ * 
+ * This cannot be guaranteed by giving two systems the same interval/rate filter
+ * as it is possible that one system is (for example) disabled, which would
+ * cause the systems to go out of sync. To provide these guarantees, systems
+ * must use the same tick source, which is what this operation enables.
+ *
+ * When two systems share the same tick source, it is guaranteed that they tick
+ * in the same frame. The provided tick source can be any entity that is a tick
+ * source, including another system. If the provided entity is not a tick source
+ * the system will not be ran.
+ *
+ * To disassociate a tick source from a system, use 0 for the tick_source 
+ * parameter.
+ *
+ * @param world The world.
+ * @param system The system to associate with the timer.
+ * @param tick_source The tick source to associate with the system.
+ */ 
+FLECS_API
+void ecs_set_tick_source(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    ecs_entity_t tick_source);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Module
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void FlecsTimerImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_PIPELINE
+/**
+ * @file pipeline.h
+ * @brief Pipeline module.
+ *
+ * The pipeline module provides support for running systems automatically and
+ * on multiple threads. A pipeline is a collection of tags that can be added to
+ * systems. When ran, a pipeline will query for all systems that have the tags
+ * that belong to a pipeline, and run them.
+ *
+ * The module defines a number of builtin tags (EcsPreUpdate, EcsOnUpdate, 
+ * EcsPostUpdate etc.) that are registered with the builtin pipeline. The 
+ * builtin pipeline is ran by default when calling ecs_progress(). An 
+ * application can set a custom pipeline with the ecs_set_pipeline function.
+ */
+
+#ifdef FLECS_PIPELINE
+
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#define FLECS_SYSTEM
+
+#ifndef FLECS_PIPELINE_H
+#define FLECS_PIPELINE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef FLECS_LEGACY
+#define ECS_PIPELINE_DEFINE(world, id, ...)\
+    id = ecs_type_init(world, &(ecs_type_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .add = {EcsPipeline}\
+        },\
+        .ids_expr = #__VA_ARGS__\
+    });\
+    ecs_id(id) = id;
+
+#define ECS_PIPELINE(world, id, ...) \
+    ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
+    (void)id;\
+    (void)ecs_id(id)
+    
+#endif
+
+/** Set a custom pipeline.
+ * This operation sets the pipeline to run when ecs_progress is invoked.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to set.
+ */
+FLECS_API
+void ecs_set_pipeline(
+    ecs_world_t *world,
+    ecs_entity_t pipeline);       
+
+/** Get the current pipeline.
+ * This operation gets the current pipeline.
+ *
+ * @param world The world.
+ * @return The current pipeline.
+ */
+FLECS_API
+ecs_entity_t ecs_get_pipeline(
+    const ecs_world_t *world);  
+
+/** Progress a world.
+ * This operation progresses the world by running all systems that are both
+ * enabled and periodic on their matching entities.
+ *
+ * An application can pass a delta_time into the function, which is the time
+ * passed since the last frame. This value is passed to systems so they can
+ * update entity values proportional to the elapsed time since their last
+ * invocation.
+ *
+ * When an application passes 0 to delta_time, ecs_progress will automatically
+ * measure the time passed since the last frame. If an application does not uses
+ * time management, it should pass a non-zero value for delta_time (1.0 is
+ * recommended). That way, no time will be wasted measuring the time.
+ *
+ * @param world The world to progress.
+ * @param delta_time The time passed since the last frame.
+ * @return false if ecs_quit has been called, true otherwise.
+ */
+FLECS_API
+bool ecs_progress(
+    ecs_world_t *world,
+    FLECS_FLOAT delta_time);   
+
+/** Set time scale.
+ * Increase or decrease simulation speed by the provided multiplier.
+ *
+ * @param world The world.
+ * @param scale The scale to apply (default = 1).
+ */
+FLECS_API 
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    FLECS_FLOAT scale);
+
+/** Reset world clock.
+ * Reset the clock that keeps track of the total time passed in the simulation.
+ *
+ * @param world The world.
+ */
+FLECS_API
+void ecs_reset_clock(
+    ecs_world_t *world);
+
+/** Run pipeline.
+ * This will run all systems in the provided pipeline. This operation may be
+ * invoked from multiple threads, and only when staging is disabled, as the
+ * pipeline manages staging and, if necessary, synchronization between threads.
+ *
+ * If 0 is provided for the pipeline id, the default pipeline will be ran (this
+ * is either the builtin pipeline or the pipeline set with set_pipeline()). 
+ *
+ * When using progress() this operation will be invoked automatically for the
+ * default pipeline (either the builtin pipeline or the pipeline set with 
+ * set_pipeline()). An application may run additional pipelines.
+ *
+ * Note: calling this function from an application currently only works in
+ * single threaded applications with a single stage.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline to run.
+ */
+FLECS_API 
+void ecs_pipeline_run(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    FLECS_FLOAT delta_time);    
+    
+/** Deactivate systems that are not matched with tables.
+ * By default Flecs deactivates systems that are not matched with any tables.
+ * However, once a system has been matched with a table it remains activated, to
+ * prevent systems from continuously becoming active and inactive.
+ *
+ * To re-deactivate systems, an application can invoke this function, which will
+ * deactivate all systems that are not matched with any tables.
+ *
+ * @param world The world.
+ */
+FLECS_API
+void ecs_deactivate_systems(
+    ecs_world_t *world);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Threading
+////////////////////////////////////////////////////////////////////////////////
+
+/** Set number of worker threads.
+ * Setting this value to a value higher than 1 will start as many threads and
+ * will cause systems to evenly distribute matched entities across threads. The
+ * operation may be called multiple times to reconfigure the number of threads
+ * used, but never while running a system / pipeline. */
+FLECS_API
+void ecs_set_threads(
+    ecs_world_t *world,
+    int32_t threads);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Module
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void FlecsPipelineImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
 #ifdef FLECS_SYSTEM
 /**
  * @file system.h
@@ -6545,120 +7272,8 @@ void* ecs_record_get_column(
 #define FLECS_MODULE
 #endif
 
-/**
- * @file module.h
- * @brief Module addon.
- *
- * The module addon allows for creating and importing modules. Flecs modules 
- * enable applications to organize components and systems into reusable units of
- * code that can easily be across projects.
- */
-
-#ifdef FLECS_MODULE
-
-#ifndef FLECS_MODULE_H
-#define FLECS_MODULE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Import a module.
- * This operation will load a modules and store the public module handles in the
- * handles_out out parameter. The module name will be used to verify if the
- * module was already loaded, in which case it won't be reimported. The name
- * will be translated from PascalCase to an entity path (pascal.case) before the
- * lookup occurs.
- *
- * Module contents will be stored as children of the module entity. This 
- * prevents modules from accidentally defining conflicting identifiers. This is
- * enforced by setting the scope before and after loading the module to the 
- * module entity id.
- *
- * A more convenient way to import a module is by using the ECS_IMPORT macro.
- *
- * @param world The world.
- * @param module The module import function.
- * @param module_name The name of the module.
- * @return The module entity.
- */
-FLECS_API
-ecs_entity_t ecs_import(
-    ecs_world_t *world,
-    ecs_module_action_t module,
-    const char *module_name);
-
-/* Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the 
- * module from a dynamic library.
- *
- * A library may contain multiple modules, which is why both a library name and
- * a module name need to be provided. If only a library name is provided, the
- * library name will be reused for the module name.
- *
- * The library will be looked up using a canonical name, which is in the same
- * form as a module, like `flecs.components.transform`. To transform this
- * identifier to a platform specific library name, the operation relies on the
- * module_to_dl callback of the os_api which the application has to override if
- * the default does not yield the correct library name.
- *
- * @param world The world.
- * @param library_name The name of the library to load.
- * @param module_name The name of the module to load.
- */
-FLECS_API
-ecs_entity_t ecs_import_from_library(
-    ecs_world_t *world,
-    const char *library_name,
-    const char *module_name);
-
-/** Register a new module.
- */
-FLECS_API
-ecs_entity_t ecs_module_init(
-    ecs_world_t *world,
-    const ecs_component_desc_t *desc);
-
-/** Define module
- */
-#define ECS_MODULE(world, id)\
-    ecs_entity_t ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsModule}\
-        }\
-    });\
-    ecs_set_scope(world, ecs_id(id));\
-    (void)ecs_id(id);
-
-/** Wrapper around ecs_import.
- * This macro provides a convenient way to load a module with the world. It can
- * be used like this:
- *
- * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
- * 
- * This macro will define entity and type handles for the component associated
- * with the module. The module component will be created as a singleton. 
- * 
- * The contents of a module component are module specific, although they
- * typically contain handles to the content of the module.
- */
-#define ECS_IMPORT(world, id) \
-    char *FLECS__##id##_name = ecs_module_path_from_c(#id);\
-    ecs_id_t ecs_id(id) = ecs_import(world, id##Import, FLECS__##id##_name);\
-    ecs_os_free(FLECS__##id##_name);\
-    (void)ecs_id(id)
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-
-#ifndef FLECS_SYSTEMS_H
-#define FLECS_SYSTEMS_H
+#ifndef FLECS_SYSTEM_H
+#define FLECS_SYSTEM_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -6918,423 +7533,36 @@ void FlecsSystemImport(
 
 #endif
 #endif
-#ifdef FLECS_PIPELINE
+#ifdef FLECS_COREDOC
 /**
- * @file pipeline.h
- * @brief Pipeline module.
+ * @file coredoc.h
+ * @brief Core doc module.
  *
- * The pipeline module provides support for running systems automatically and
- * on multiple threads. A pipeline is a collection of tags that can be added to
- * systems. When ran, a pipeline will query for all systems that have the tags
- * that belong to a pipeline, and run them.
- *
- * The module defines a number of builtin tags (EcsPreUpdate, EcsOnUpdate, 
- * EcsPostUpdate etc.) that are registered with the builtin pipeline. The 
- * builtin pipeline is ran by default when calling ecs_progress(). An 
- * application can set a custom pipeline with the ecs_set_pipeline function.
+ * The core doc module imports documentation and reflection data for core
+ * components, tags and systems.
  */
 
-#ifdef FLECS_PIPELINE
+#ifdef FLECS_COREDOC
 
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
+#ifndef FLECS_DOC
+#define FLECS_DOC
 #endif
 
+#ifndef FLECS_META
+#define FLECS_META
+#endif
 
-#ifndef FLECS_PIPELINE_H
-#define FLECS_PIPELINE_H
+#ifndef FLECS_COREDOC_H
+#define FLECS_COREDOC_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef FLECS_LEGACY
-#define ECS_PIPELINE_DEFINE(world, id, ...)\
-    id = ecs_type_init(world, &(ecs_type_desc_t){\
-        .entity = {\
-            .name = #id,\
-            .add = {EcsPipeline}\
-        },\
-        .ids_expr = #__VA_ARGS__\
-    });\
-    ecs_id(id) = id;
-
-#define ECS_PIPELINE(world, id, ...) \
-    ecs_entity_t ecs_id(id), ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
-    (void)id;\
-    (void)ecs_id(id)
-    
-#endif
-
-/** Set a custom pipeline.
- * This operation sets the pipeline to run when ecs_progress is invoked.
- *
- * @param world The world.
- * @param pipeline The pipeline to set.
- */
-FLECS_API
-void ecs_set_pipeline(
-    ecs_world_t *world,
-    ecs_entity_t pipeline);       
-
-/** Get the current pipeline.
- * This operation gets the current pipeline.
- *
- * @param world The world.
- * @return The current pipeline.
- */
-FLECS_API
-ecs_entity_t ecs_get_pipeline(
-    const ecs_world_t *world);  
-
-/** Progress a world.
- * This operation progresses the world by running all systems that are both
- * enabled and periodic on their matching entities.
- *
- * An application can pass a delta_time into the function, which is the time
- * passed since the last frame. This value is passed to systems so they can
- * update entity values proportional to the elapsed time since their last
- * invocation.
- *
- * When an application passes 0 to delta_time, ecs_progress will automatically
- * measure the time passed since the last frame. If an application does not uses
- * time management, it should pass a non-zero value for delta_time (1.0 is
- * recommended). That way, no time will be wasted measuring the time.
- *
- * @param world The world to progress.
- * @param delta_time The time passed since the last frame.
- * @return false if ecs_quit has been called, true otherwise.
- */
-FLECS_API
-bool ecs_progress(
-    ecs_world_t *world,
-    FLECS_FLOAT delta_time);   
-
-/** Set time scale.
- * Increase or decrease simulation speed by the provided multiplier.
- *
- * @param world The world.
- * @param scale The scale to apply (default = 1).
- */
-FLECS_API 
-void ecs_set_time_scale(
-    ecs_world_t *world,
-    FLECS_FLOAT scale);
-
-/** Reset world clock.
- * Reset the clock that keeps track of the total time passed in the simulation.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_reset_clock(
-    ecs_world_t *world);
-
-/** Run pipeline.
- * This will run all systems in the provided pipeline. This operation may be
- * invoked from multiple threads, and only when staging is disabled, as the
- * pipeline manages staging and, if necessary, synchronization between threads.
- *
- * If 0 is provided for the pipeline id, the default pipeline will be ran (this
- * is either the builtin pipeline or the pipeline set with set_pipeline()). 
- *
- * When using progress() this operation will be invoked automatically for the
- * default pipeline (either the builtin pipeline or the pipeline set with 
- * set_pipeline()). An application may run additional pipelines.
- *
- * Note: calling this function from an application currently only works in
- * single threaded applications with a single stage.
- *
- * @param world The world.
- * @param pipeline The pipeline to run.
- */
-FLECS_API 
-void ecs_pipeline_run(
-    ecs_world_t *world,
-    ecs_entity_t pipeline,
-    FLECS_FLOAT delta_time);    
-    
-/** Deactivate systems that are not matched with tables.
- * By default Flecs deactivates systems that are not matched with any tables.
- * However, once a system has been matched with a table it remains activated, to
- * prevent systems from continuously becoming active and inactive.
- *
- * To re-deactivate systems, an application can invoke this function, which will
- * deactivate all systems that are not matched with any tables.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_deactivate_systems(
-    ecs_world_t *world);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Threading
-////////////////////////////////////////////////////////////////////////////////
-
-/** Set number of worker threads.
- * Setting this value to a value higher than 1 will start as many threads and
- * will cause systems to evenly distribute matched entities across threads. The
- * operation may be called multiple times to reconfigure the number of threads
- * used, but never while running a system / pipeline. */
-FLECS_API
-void ecs_set_threads(
-    ecs_world_t *world,
-    int32_t threads);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module
-////////////////////////////////////////////////////////////////////////////////
+/* Module import */
 
 FLECS_API
-void FlecsPipelineImport(
-    ecs_world_t *world);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-#endif
-#ifdef FLECS_TIMER
-/**
- * @file timer.h
- * @brief Timer module.
- *
- * Timers can be used to trigger actions at periodic or one-shot intervals. They
- * are typically used together with systems and pipelines.
- */
-
-#ifdef FLECS_TIMER
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
-#ifndef FLECS_TIMER_H
-#define FLECS_TIMER_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Components
-////////////////////////////////////////////////////////////////////////////////
-
-/** Component used for one shot/interval timer functionality */
-typedef struct EcsTimer {
-    FLECS_FLOAT timeout;         /* Timer timeout period */
-    FLECS_FLOAT time;            /* Incrementing time value */
-    int32_t fired_count;         /* Number of times ticked */
-    bool active;                 /* Is the timer active or not */
-    bool single_shot;            /* Is this a single shot timer */
-} EcsTimer;
-
-/* Apply a rate filter to a tick source */
-typedef struct EcsRateFilter {
-    ecs_entity_t src;            /* Source of the rate filter */
-    int32_t rate;                /* Rate of the rate filter */
-    int32_t tick_count;          /* Number of times the rate filter ticked */
-    FLECS_FLOAT time_elapsed;    /* Time elapsed since last tick */
-} EcsRateFilter;
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Timer API
-////////////////////////////////////////////////////////////////////////////////
-
-/** Set timer timeout.
- * This operation executes any systems associated with the timer after the
- * specified timeout value. If the entity contains an existing timer, the 
- * timeout value will be reset. The timer can be started and stopped with 
- * ecs_start_timer and ecs_stop_timer.
- *
- * The timer is synchronous, and is incremented each frame by delta_time.
- *
- * The tick_source entity will be be a tick source after this operation. Tick
- * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks.
- *
- * @param world The world.
- * @param tick_source The timer for which to set the timeout (0 to create one).
- * @param timeout The timeout value.
- * @return The timer entity.
- */
-FLECS_API
-ecs_entity_t ecs_set_timeout(
-    ecs_world_t *world,
-    ecs_entity_t tick_source,
-    FLECS_FLOAT timeout);
-
-/** Get current timeout value for the specified timer.
- * This operation returns the value set by ecs_set_timeout. If no timer is
- * active for this entity, the operation returns 0.
- *
- * After the timeout expires the EcsTimer component is removed from the entity.
- * This means that if ecs_get_timeout is invoked after the timer is expired, the
- * operation will return 0.
- *
- * The timer is synchronous, and is incremented each frame by delta_time.
- *
- * The tick_source entity will be be a tick source after this operation. Tick
- * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks.
- *
- * @param world The world.
- * @param tick_source The timer.
- * @return The current timeout value, or 0 if no timer is active.
- */
-FLECS_API
-FLECS_FLOAT ecs_get_timeout(
-    const ecs_world_t *world,
-    ecs_entity_t tick_source);
-
-/** Set timer interval.
- * This operation will continously invoke systems associated with the timer 
- * after the interval period expires. If the entity contains an existing timer,
- * the interval value will be reset.
- *
- * The timer is synchronous, and is incremented each frame by delta_time.
- *
- * The tick_source entity will be be a tick source after this operation. Tick
- * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks. 
- *
- * @param world The world.
- * @param tick_source The timer for which to set the interval (0 to create one).
- * @param interval The interval value.
- * @return The timer entity.
- */
-FLECS_API
-ecs_entity_t ecs_set_interval(
-    ecs_world_t *world,
-    ecs_entity_t tick_source,
-    FLECS_FLOAT interval);   
-
-/** Get current interval value for the specified timer.
- * This operation returns the value set by ecs_set_interval. If the entity is
- * not a timer, the operation will return 0.
- *
- * @param world The world.
- * @param tick_source The timer for which to set the interval.
- * @return The current interval value, or 0 if no timer is active.
- */
-FLECS_API
-FLECS_FLOAT ecs_get_interval(
-    const ecs_world_t *world,
-    ecs_entity_t tick_source);
-
-/** Start timer.
- * This operation resets the timer and starts it with the specified timeout. The
- * entity must have the EcsTimer component (added by ecs_set_timeout and 
- * ecs_set_interval). If the entity does not have the EcsTimer component this
- * operation will assert.
- *
- * @param world The world.
- * @param tick_source The timer to start.
- */
-FLECS_API
-void ecs_start_timer(
-    ecs_world_t *world,
-    ecs_entity_t tick_source);
-
-/** Stop timer
- * This operation stops a timer from triggering. The entity must have the 
- * EcsTimer component or this operation will assert.
- *
- * @param world The world.
- * @param tick_source The timer to stop.
- */
-FLECS_API
-void ecs_stop_timer(
-    ecs_world_t *world,
-    ecs_entity_t tick_source);
-
-/** Set rate filter.
- * This operation initializes a rate filter. Rate filters sample tick sources
- * and tick at a configurable multiple. A rate filter is a tick source itself,
- * which means that rate filters can be chained.
- *
- * Rate filters enable deterministic system execution which cannot be achieved
- * with interval timers alone. For example, if timer A has interval 2.0 and
- * timer B has interval 4.0, it is not guaranteed that B will tick at exactly
- * twice the multiple of A. This is partly due to the indeterministic nature of
- * timers, and partly due to floating point rounding errors. 
- *
- * Rate filters can be combined with timers (or other rate filters) to ensure 
- * that a system ticks at an exact multiple of a tick source (which can be
- * another system). If a rate filter is created with a rate of 1 it will tick
- * at the exact same time as its source.
- *
- * If no tick source is provided, the rate filter will use the frame tick as
- * source, which corresponds with the number of times ecs_progress is called.
- *
- * The tick_source entity will be be a tick source after this operation. Tick
- * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks.  
- *
- * @param world The world.
- * @param tick_source The rate filter entity (0 to create one).
- * @param rate The rate to apply.
- * @param source The tick source (0 to use frames)
- * @return The filter entity.
- */
-FLECS_API
-ecs_entity_t ecs_set_rate(
-    ecs_world_t *world,
-    ecs_entity_t tick_source,
-    int32_t rate,
-    ecs_entity_t source);
-
-/** Assign tick source to system.
- * Systems can be their own tick source, which can be any of the tick sources
- * (one shot timers, interval times and rate filters). However, in some cases it
- * is must be guaranteed that different systems tick on the exact same frame.
- * 
- * This cannot be guaranteed by giving two systems the same interval/rate filter
- * as it is possible that one system is (for example) disabled, which would
- * cause the systems to go out of sync. To provide these guarantees, systems
- * must use the same tick source, which is what this operation enables.
- *
- * When two systems share the same tick source, it is guaranteed that they tick
- * in the same frame. The provided tick source can be any entity that is a tick
- * source, including another system. If the provided entity is not a tick source
- * the system will not be ran.
- *
- * To disassociate a tick source from a system, use 0 for the tick_source 
- * parameter.
- *
- * @param world The world.
- * @param system The system to associate with the timer.
- * @param tick_source The tick source to associate with the system.
- */ 
-FLECS_API
-void ecs_set_tick_source(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_entity_t tick_source);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Module
-////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-void FlecsTimerImport(
+void FlecsCoreDocImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus
@@ -7364,7 +7592,6 @@ void FlecsTimerImport(
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -7461,27 +7688,236 @@ void FlecsDocImport(
 
 #endif
 #endif
-#ifdef FLECS_COREDOC
+#ifdef FLECS_JSON
 /**
- * @file coredoc.h
- * @brief Core doc module.
+ * @file json.h
+ * @brief JSON parser addon.
  *
- * The core doc module imports documentation and reflection data for core
- * components, tags and systems.
+ * Parse expression strings into component values. Entity identifiers, 
+ * enumerations and bitmasks are encoded as strings.
  */
 
-#ifdef FLECS_COREDOC
+#ifdef FLECS_JSON
 
-#ifndef FLECS_DOC
-#define FLECS_DOC
+#ifndef FLECS_EXPR
+#define FLECS_EXPR
 #endif
+
+#ifndef FLECS_JSON_H
+#define FLECS_JSON_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Used with ecs_parse_json. */
+typedef struct ecs_parse_json_desc_t {
+    const char *name; /* Name of expression (used for logging) */
+    const char *expr; /* Full expression (used for logging) */
+} ecs_parse_json_desc_t;
+
+/** Parse JSON string into value.
+ * This operation parses a JSON expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * @param world The world.
+ * @param ptr The pointer to the expression to parse.
+ * @param type The type of the expression to parse.
+ * @param data_out Pointer to the memory to write to.
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char* ecs_parse_json(
+    const ecs_world_t *world,
+    const char *ptr,
+    ecs_entity_t type,
+    void *data_out,
+    const ecs_parse_json_desc_t *desc);
+
+/** Serialize value into JSON string.
+ * This operation serializes a value of the provided type to a JSON string. The 
+ * memory pointed to must be large enough to contain a value of the used type.
+ * 
+ * If count is 0, the function will serialize a single value, not wrapped in
+ * array brackets. If count is >= 1, the operation will serialize values to a
+ * a comma-separated list inside of array brackets.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param count The number of elements to serialize.
+ * @return String with JSON expression, or NULL if failed.
+ */
+FLECS_API
+char* ecs_array_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    int32_t count);
+
+/** Serialize value into JSON string buffer.
+ * Same as ecs_array_to_json_buf, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param count The number of elements to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_array_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    int32_t count,
+    ecs_strbuf_t *buf_out);
+
+/** Serialize value into JSON string.
+ * Same as ecs_array_to_json, with count = 0.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with JSON expression, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into JSON string buffer.
+ * Same as ecs_ptr_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf_out);
+
+/** Serialize entity into JSON string.
+ * This creates a JSON object with the entity's (path) name, which components
+ * and tags the entity has, and the component values.
+ * 
+ * The operation may fail if the entity contains components with invalid values.
+ * 
+ * @param world The world.
+ * @param entity The entity to serialize to JSON.
+ * @return A JSON string with the serialized entity data, or NULL if failed.
+ */
+FLECS_API
+char* ecs_entity_to_json(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Serialize entity into JSON string buffer.
+ * Same as ecs_entity_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param entity The entity to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_entity_to_json_buf(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_strbuf_t *buf_out);
+
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_iter_to_json_desc_t {
+    bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
+    bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
+    bool dont_serialize_subjects;  /* Exclude subjects from result */
+    bool dont_serialize_variables; /* Exclude variables from result */
+    bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
+    bool dont_serialize_values;    /* Exclude component values from result */
+    bool dont_serialize_entities;  /* Exclude entities (for This terms) */
+    bool measure_eval_duration;    /* Include evaluation duration */
+} ecs_iter_to_json_desc_t;
+
+/** Serialize iterator into JSON string.
+ * This operation will iterate the contents of the iterator and serialize them
+ * to JSON. The function acccepts iterators from any source.
+ * 
+ * @param world The world.
+ * @param iter The iterator to serialize to JSON.
+ * @return A JSON string with the serialized iterator data, or NULL if failed.
+ */
+FLECS_API
+char* ecs_iter_to_json(
+    const ecs_world_t *world,
+    ecs_iter_t *iter,
+    const ecs_iter_to_json_desc_t *desc);
+
+/** Serialize iterator into JSON string buffer.
+ * Same as ecs_iter_to_json, but serializes to an ecs_strbuf_t instance.
+ * 
+ * @param world The world.
+ * @param iter The iterator to serialize.
+ * @param buf_out The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_iter_to_json_buf(
+    const ecs_world_t *world,
+    ecs_iter_t *iter,
+    ecs_strbuf_t *buf_out,
+    const ecs_iter_to_json_desc_t *desc);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
+#endif
+#ifdef FLECS_EXPR
+/**
+ * @file expr.h
+ * @brief Flecs expression parser addon.
+ *
+ * Parse expression strings into component values. The notation is similar to
+ * JSON but with a smaller footprint, native support for (large) integer types,
+ * character types, enumerations, bitmasks and entity identifiers.
+ * 
+ * Examples:
+ * 
+ * Member names:
+ *   {x: 10, y: 20}
+ * 
+ * No member names (uses member ordering):
+ *   {10, 20}
+ * 
+ * Enum values:
+ *   {color: Red}
+ * 
+ * Bitmask values:
+ *   {toppings: Lettuce|Tomato}
+ * 
+ * Collections:
+ *   {points: [10, 20, 30]}
+ * 
+ * Nested objects:
+ *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
+ * 
+ */
+
+#ifdef FLECS_EXPR
 
 #ifndef FLECS_META
 #define FLECS_META
 #endif
-
-#ifndef FLECS_COREDOC_H
-#define FLECS_COREDOC_H
 
 /**
  * @file meta.h
@@ -7541,135 +7977,6 @@ void FlecsDocImport(
 
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
-#endif
-
-/**
- * @file hashmap.h
- * @brief Hashmap datastructure.
- *
- * Datastructure that computes a hash to store & retrieve values. Similar to
- * ecs_map_t, but allows for arbitrary keytypes.
- */
-
-#ifndef FLECS_HASHMAP_H
-#define FLECS_HASHMAP_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct {
-    ecs_hash_value_action_t hash;
-    ecs_compare_action_t compare;
-    ecs_size_t key_size;
-    ecs_size_t value_size;
-    ecs_map_t *impl;
-} ecs_hashmap_t;
-
-typedef struct {
-    ecs_map_iter_t it;
-    struct ecs_hm_bucket_t *bucket;
-    int32_t index;
-} flecs_hashmap_iter_t;
-
-typedef struct {
-    void *key;
-    void *value;
-    uint64_t hash;
-} flecs_hashmap_result_t;
-
-FLECS_DBG_API
-ecs_hashmap_t _flecs_hashmap_new(
-    ecs_size_t key_size,
-    ecs_size_t value_size,
-    ecs_hash_value_action_t hash,
-    ecs_compare_action_t compare);
-
-#define flecs_hashmap_new(K, V, compare, hash)\
-    _flecs_hashmap_new(ECS_SIZEOF(K), ECS_SIZEOF(V), compare, hash)
-
-FLECS_DBG_API
-void flecs_hashmap_free(
-    ecs_hashmap_t map);
-
-FLECS_DBG_API
-void* _flecs_hashmap_get(
-    const ecs_hashmap_t map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size);
-
-#define flecs_hashmap_get(map, key, V)\
-    (V*)_flecs_hashmap_get(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
-
-FLECS_DBG_API
-flecs_hashmap_result_t _flecs_hashmap_ensure(
-    const ecs_hashmap_t map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size);
-
-#define flecs_hashmap_ensure(map, key, V)\
-    _flecs_hashmap_ensure(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
-
-FLECS_DBG_API
-void _flecs_hashmap_set(
-    const ecs_hashmap_t map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
-    const void *value);
-
-#define flecs_hashmap_set(map, key, value)\
-    _flecs_hashmap_set(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
-
-FLECS_DBG_API
-void _flecs_hashmap_remove(
-    const ecs_hashmap_t map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size);
-
-#define flecs_hashmap_remove(map, key, V)\
-    _flecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
-
-FLECS_DBG_API
-void _flecs_hashmap_remove_w_hash(
-    const ecs_hashmap_t map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size,
-    uint64_t hash);
-
-#define flecs_hashmap_remove_w_hash(map, key, V, hash)\
-    _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
-
-FLECS_DBG_API
-ecs_hashmap_t flecs_hashmap_copy(
-    const ecs_hashmap_t src);
-
-FLECS_DBG_API
-flecs_hashmap_iter_t flecs_hashmap_iter(
-    ecs_hashmap_t map);
-
-FLECS_DBG_API
-void* _flecs_hashmap_next(
-    flecs_hashmap_iter_t *it,
-    ecs_size_t key_size,
-    void *key_out,
-    ecs_size_t value_size);
-
-#define flecs_hashmap_next(map, V)\
-    (V*)_flecs_hashmap_next(map, 0, NULL, ECS_SIZEOF(V))
-
-#define flecs_hashmap_next_w_key(map, K, key, V)\
-    (V*)_flecs_hashmap_next(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 
 #ifndef FLECS_META_H
@@ -8109,341 +8416,9 @@ void FlecsMetaImport(
 
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Module import */
-
-FLECS_API
-void FlecsCoreDocImport(
-    ecs_world_t *world);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-#endif
-#ifdef FLECS_META
-#endif
-#ifdef FLECS_META_C
-/**
- * @file meta_c.h
- * @brief Utility macro's for populating reflection data in C.
- */
-
-#ifdef FLECS_META_C
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
 #endif
-
-/**
- * @file parser.h
- * @brief Parser addon.
- *
- * The parser addon parses string expressions into lists of terms, and can be
- * used to construct filters, queries and types.
- */
-
-#ifdef FLECS_PARSER
-
-#ifndef FLECS_PARSER_H
-#define FLECS_PARSER_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Skip whitespace characters.
- * This function skips whitespace characters. Does not skip newlines.
- * 
- * @param ptr Pointer to (potential) whitespaces to skip.
- * @return Pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_whitespace(
-    const char *ptr);
-
-/** Skip whitespace and newline characters.
- * This function skips whitespace characters.
- * 
- * @param ptr Pointer to (potential) whitespaces to skip.
- * @return Pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_eol_and_whitespace(
-    const char *ptr);
-
-/** Parse digit.
- * This function will parse until the first non-digit character is found. The
- * provided expression must contain at least one digit character.
- * 
- * @param ptr The expression to parse.
- * @param token The output buffer.
- * @return Pointer to the first non-digit character.
- */
-FLECS_API
-const char* ecs_parse_digit(
-    const char *ptr,
-    char *token);
-
-/** Skip whitespaces and comments.
- * This function skips whitespace characters and comments (single line, //).
- * 
- * @param ptr pointer to (potential) whitespaces/comments to skip.
- * @return pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_fluff(
-    const char *ptr,
-    char **last_comment);
-
-/** Parse a single token.
- * This function can be used as simple tokenizer by other parsers.
- * 
- * @param name of program (used for logging).
- * @param expr pointer to token to parse.
- * @param ptr pointer to first character to parse.
- * @param token_out Parsed token (buffer should be ECS_MAX_TOKEN_SIZE large)
- * @return Pointer to the next token, or NULL if error occurred.
- */
-FLECS_API
-const char* ecs_parse_token(
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    char *token_out);
-
-/** Parse term in expression.
- * This operation parses a single term in an expression and returns a pointer
- * to the next term expression.
- *
- * If the returned pointer points to the 0-terminator, the expression is fully 
- * parsed. The function would typically be called in a while loop:
- *
- * const char *ptr = expr;
- * while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) { }
- *
- * The operation does not attempt to find entity ids from the names in the
- * expression. Use the ecs_term_resolve_ids function to resolve the identifiers
- * in the parsed term.
- *
- * The returned term will in most cases contain allocated resources, which
- * should freed (or used) by the application. To free the resources for a term,
- * use the ecs_term_free function.
- *
- * The parser accepts expressions in the legacy string format.
- *
- * @param world The world.
- * @param name The name of the expression (optional, improves error logs)
- * @param expr The expression to parse (optional, improves error logs)
- * @param ptr The pointer to the current term (must be in expr).
- * @param term_out Out parameter for the term.
- * @return pointer to next term if successful, NULL if failed.
- */
-FLECS_API
-char* ecs_parse_term(
-    const ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    ecs_term_t *term_out);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-
-#endif // FLECS_PARSER_H
-
-#endif // FLECS_PARSER
-
-#ifndef FLECS_META_C_H
-#define FLECS_META_C_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Public API */
-
-/* Macro that controls behavior of API. Usually set in module header. When the
- * macro is not defined, it defaults to IMPL. */
-
-/* Define variables used by reflection utilities. This should only be defined
- * by the module itself, not by the code importing the module */
-/* #define ECS_META_IMPL IMPL */
-
-/* Don't define variables used by reflection utilities but still declare the
- * variable for the component id. This enables the reflection utilities to be
- * used for global component variables, even if no reflection is used. */
-/* #define ECS_META_IMPL DECLARE */
-
-/* Don't define variables used by reflection utilities. This generates an extern
- * variable for the component identifier. */
-/* #define ECS_META_IMPL EXTERN */
-
-/** Declare component with descriptor */
-#define ECS_META_COMPONENT(world, name)\
-    ECS_COMPONENT_DEFINE(world, name);\
-    ecs_meta_from_desc(world, ecs_id(name),\
-        FLECS__##name##_kind, FLECS__##name##_desc)
-
-/** ECS_STRUCT(name, body) */
-#define ECS_STRUCT(name, ...)\
-    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
-
-/** ECS_ENUM(name, body) */
-#define ECS_ENUM(name, ...)\
-    ECS_ENUM_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__)
-
-/** ECS_BITMASK(name, body) */
-#define ECS_BITMASK(name, ...)\
-    ECS_ENUM_TYPE(name, __VA_ARGS__);\
-    ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__)
-
-/** Macro used to mark part of type for which no reflection data is created */
-#define ECS_PRIVATE
-
-/** Populate meta information from type descriptor. */
-FLECS_API
-int ecs_meta_from_desc(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_type_kind_t kind,
-    const char *desc);
-
-
-/* Private API */
-
-/* Utilities to switch beteen IMPL, DECLARE and EXTERN variants */
-#define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
-    base ## impl(name, type_desc)
-
-#define ECS_META_IMPL_CALL(base, impl, name, type_desc)\
-    ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)
-
-/* ECS_STRUCT implementation */
-#define ECS_STRUCT_TYPE(name, ...)\
-    typedef struct __VA_ARGS__ name
-
-#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
-
-#define ECS_STRUCT_IMPL(name, type_desc)\
-    static const char *FLECS__##name##_desc = type_desc;\
-    static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_STRUCT_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_STRUCT_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
-
-
-/* ECS_ENUM implementation */
-#define ECS_ENUM_TYPE(name, ...)\
-    typedef enum __VA_ARGS__ name
-
-#define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
-
-#define ECS_ENUM_IMPL(name, type_desc)\
-    static const char *FLECS__##name##_desc = type_desc;\
-    static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_ENUM_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_ENUM_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
-
-
-/* ECS_BITMASK implementation */
-#define ECS_BITMASK_TYPE(name, ...)\
-    typedef enum __VA_ARGS__ name
-
-#define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
-
-#define ECS_BITMASK_IMPL(name, type_desc)\
-    static const char *FLECS__##name##_desc = type_desc;\
-    static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_BITMASK_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
-
-#define ECS_BITMASK_EXTERN(name, type_desc)\
-    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
-
-
-/* Symbol export utility macro's */
-#if (defined(_MSC_VER) || defined(__MINGW32__))
-#define FLECS_META_C_EXPORT __declspec(dllexport)
-#define FLECS_META_C_IMPORT __declspec(dllimport)
-#else
-#define FLECS_META_C_EXPORT __attribute__((__visibility__("default")))
-#define FLECS_META_C_IMPORT
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // FLECS_META_C_H
-
-#endif // FLECS_META_C
-#endif
-#ifdef FLECS_EXPR
-/**
- * @file expr.h
- * @brief Flecs expression parser addon.
- *
- * Parse expression strings into component values. The notation is similar to
- * JSON but with a smaller footprint, native support for (large) integer types,
- * character types, enumerations, bitmasks and entity identifiers.
- * 
- * Examples:
- * 
- * Member names:
- *   {x: 10, y: 20}
- * 
- * No member names (uses member ordering):
- *   {10, 20}
- * 
- * Enum values:
- *   {color: Red}
- * 
- * Bitmask values:
- *   {toppings: Lettuce|Tomato}
- * 
- * Collections:
- *   {points: [10, 20, 30]}
- * 
- * Nested objects:
- *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
- * 
- */
-
-#ifdef FLECS_EXPR
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
-
 
 #ifndef FLECS_EXPR_H
 #define FLECS_EXPR_H
@@ -8613,202 +8588,161 @@ const char *ecs_parse_expr_token(
 
 #endif
 #endif
-#ifdef FLECS_JSON
+#ifdef FLECS_META_C
 /**
- * @file json.h
- * @brief JSON parser addon.
- *
- * Parse expression strings into component values. Entity identifiers, 
- * enumerations and bitmasks are encoded as strings.
+ * @file meta_c.h
+ * @brief Utility macro's for populating reflection data in C.
  */
 
-#ifdef FLECS_JSON
+#ifdef FLECS_META_C
 
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
+#ifndef FLECS_META
+#define FLECS_META
 #endif
 
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
 
-#ifndef FLECS_JSON_H
-#define FLECS_JSON_H
+#ifndef FLECS_META_C_H
+#define FLECS_META_C_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Used with ecs_parse_json. */
-typedef struct ecs_parse_json_desc_t {
-    const char *name; /* Name of expression (used for logging) */
-    const char *expr; /* Full expression (used for logging) */
-} ecs_parse_json_desc_t;
+/* Public API */
 
-/** Parse JSON string into value.
- * This operation parses a JSON expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
- * 
- * @param world The world.
- * @param ptr The pointer to the expression to parse.
- * @param type The type of the expression to parse.
- * @param data_out Pointer to the memory to write to.
- * @param desc Configuration parameters for deserializer.
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
+/* Macro that controls behavior of API. Usually set in module header. When the
+ * macro is not defined, it defaults to IMPL. */
+
+/* Define variables used by reflection utilities. This should only be defined
+ * by the module itself, not by the code importing the module */
+/* #define ECS_META_IMPL IMPL */
+
+/* Don't define variables used by reflection utilities but still declare the
+ * variable for the component id. This enables the reflection utilities to be
+ * used for global component variables, even if no reflection is used. */
+/* #define ECS_META_IMPL DECLARE */
+
+/* Don't define variables used by reflection utilities. This generates an extern
+ * variable for the component identifier. */
+/* #define ECS_META_IMPL EXTERN */
+
+/** Declare component with descriptor */
+#define ECS_META_COMPONENT(world, name)\
+    ECS_COMPONENT_DEFINE(world, name);\
+    ecs_meta_from_desc(world, ecs_id(name),\
+        FLECS__##name##_kind, FLECS__##name##_desc)
+
+/** ECS_STRUCT(name, body) */
+#define ECS_STRUCT(name, ...)\
+    ECS_STRUCT_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** ECS_ENUM(name, body) */
+#define ECS_ENUM(name, ...)\
+    ECS_ENUM_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** ECS_BITMASK(name, body) */
+#define ECS_BITMASK(name, ...)\
+    ECS_ENUM_TYPE(name, __VA_ARGS__);\
+    ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__)
+
+/** Macro used to mark part of type for which no reflection data is created */
+#define ECS_PRIVATE
+
+/** Populate meta information from type descriptor. */
 FLECS_API
-const char* ecs_parse_json(
-    const ecs_world_t *world,
-    const char *ptr,
-    ecs_entity_t type,
-    void *data_out,
-    const ecs_parse_json_desc_t *desc);
+int ecs_meta_from_desc(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_type_kind_t kind,
+    const char *desc);
 
-/** Serialize value into JSON string.
- * This operation serializes a value of the provided type to a JSON string. The 
- * memory pointed to must be large enough to contain a value of the used type.
- * 
- * If count is 0, the function will serialize a single value, not wrapped in
- * array brackets. If count is >= 1, the operation will serialize values to a
- * a comma-separated list inside of array brackets.
- * 
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @param count The number of elements to serialize.
- * @return String with JSON expression, or NULL if failed.
- */
-FLECS_API
-char* ecs_array_to_json(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data,
-    int32_t count);
 
-/** Serialize value into JSON string buffer.
- * Same as ecs_array_to_json_buf, but serializes to an ecs_strbuf_t instance.
- * 
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @param count The number of elements to serialize.
- * @param buf_out The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_array_to_json_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data,
-    int32_t count,
-    ecs_strbuf_t *buf_out);
+/* Private API */
 
-/** Serialize value into JSON string.
- * Same as ecs_array_to_json, with count = 0.
- * 
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @return String with JSON expression, or NULL if failed.
- */
-FLECS_API
-char* ecs_ptr_to_json(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data);
+/* Utilities to switch beteen IMPL, DECLARE and EXTERN variants */
+#define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
+    base ## impl(name, type_desc)
 
-/** Serialize value into JSON string buffer.
- * Same as ecs_ptr_to_json, but serializes to an ecs_strbuf_t instance.
- * 
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @param buf_out The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_ptr_to_json_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data,
-    ecs_strbuf_t *buf_out);
+#define ECS_META_IMPL_CALL(base, impl, name, type_desc)\
+    ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)
 
-/** Serialize entity into JSON string.
- * This creates a JSON object with the entity's (path) name, which components
- * and tags the entity has, and the component values.
- * 
- * The operation may fail if the entity contains components with invalid values.
- * 
- * @param world The world.
- * @param entity The entity to serialize to JSON.
- * @return A JSON string with the serialized entity data, or NULL if failed.
- */
-FLECS_API
-char* ecs_entity_to_json(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
+/* ECS_STRUCT implementation */
+#define ECS_STRUCT_TYPE(name, ...)\
+    typedef struct __VA_ARGS__ name
 
-/** Serialize entity into JSON string buffer.
- * Same as ecs_entity_to_json, but serializes to an ecs_strbuf_t instance.
- * 
- * @param world The world.
- * @param entity The entity to serialize.
- * @param buf_out The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_strbuf_t *buf_out);
+#define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
 
-/** Used with ecs_iter_to_json. */
-typedef struct ecs_iter_to_json_desc_t {
-    bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
-    bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
-    bool dont_serialize_subjects;  /* Exclude subjects from result */
-    bool dont_serialize_variables; /* Exclude variables from result */
-    bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
-    bool dont_serialize_values;    /* Exclude component values from result */
-    bool dont_serialize_entities;  /* Exclude entities (for This terms) */
-    bool measure_eval_duration;    /* Include evaluation duration */
-} ecs_iter_to_json_desc_t;
+#define ECS_STRUCT_IMPL(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
-/** Serialize iterator into JSON string.
- * This operation will iterate the contents of the iterator and serialize them
- * to JSON. The function acccepts iterators from any source.
- * 
- * @param world The world.
- * @param iter The iterator to serialize to JSON.
- * @return A JSON string with the serialized iterator data, or NULL if failed.
- */
-FLECS_API
-char* ecs_iter_to_json(
-    const ecs_world_t *world,
-    ecs_iter_t *iter,
-    const ecs_iter_to_json_desc_t *desc);
+#define ECS_STRUCT_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
-/** Serialize iterator into JSON string buffer.
- * Same as ecs_iter_to_json, but serializes to an ecs_strbuf_t instance.
- * 
- * @param world The world.
- * @param iter The iterator to serialize.
- * @param buf_out The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_iter_to_json_buf(
-    const ecs_world_t *world,
-    ecs_iter_t *iter,
-    ecs_strbuf_t *buf_out,
-    const ecs_iter_to_json_desc_t *desc);
+#define ECS_STRUCT_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
+
+/* ECS_ENUM implementation */
+#define ECS_ENUM_TYPE(name, ...)\
+    typedef enum __VA_ARGS__ name
+
+#define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
+
+#define ECS_ENUM_IMPL(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_ENUM_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_ENUM_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
+
+/* ECS_BITMASK implementation */
+#define ECS_BITMASK_TYPE(name, ...)\
+    typedef enum __VA_ARGS__ name
+
+#define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
+
+#define ECS_BITMASK_IMPL(name, type_desc)\
+    static const char *FLECS__##name##_desc = type_desc;\
+    static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_BITMASK_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+
+#define ECS_BITMASK_EXTERN(name, type_desc)\
+    FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
+
+
+/* Symbol export utility macro's */
+#if (defined(_MSC_VER) || defined(__MINGW32__))
+#define FLECS_META_C_EXPORT __declspec(dllexport)
+#define FLECS_META_C_IMPORT __declspec(dllimport)
+#else
+#define FLECS_META_C_EXPORT __attribute__((__visibility__("default")))
+#define FLECS_META_C_IMPORT
+#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif // FLECS_META_C_H
 
+#endif // FLECS_META_C
 #endif
-#endif
-#ifdef FLECS_MODULE
+#ifdef FLECS_META
 #endif
 #ifdef FLECS_PLECS
 /**
@@ -8891,8 +8825,6 @@ int ecs_plecs_from_file(
 #endif
 
 #endif
-#endif
-#ifdef FLECS_PARSER
 #endif
 #ifdef FLECS_RULES
 
@@ -9094,9 +9026,6 @@ void ecs_snapshot_free(
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
-#ifdef FLECS_SYSTEM
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9290,98 +9219,126 @@ void ecs_gauge_reduce(
 
 #endif
 #endif
-#ifdef FLECS_APP
+#ifdef FLECS_PARSER
 /**
- * @file app.h
- * @brief App addon.
+ * @file parser.h
+ * @brief Parser addon.
  *
- * The app addon is a wrapper around the application's main loop. Its main
- * purpose is to provide a hook to modules that need to take control of the
- * main loop, as is for example the case with native applications that use
- * emscripten with webGL.
+ * The parser addon parses string expressions into lists of terms, and can be
+ * used to construct filters, queries and types.
  */
 
-#ifdef FLECS_APP
+#ifdef FLECS_PARSER
 
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
-#ifndef FLECS_APP_H
-#define FLECS_APP_H
-
+#ifndef FLECS_PARSER_H
+#define FLECS_PARSER_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Used with ecs_app_run. */
-typedef struct ecs_app_desc_t {
-    FLECS_FLOAT target_fps;   /* Target FPS. */
-    FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
-    int32_t threads;          /* Number of threads. */
-    bool enable_rest;         /* Allows HTTP clients to access ECS data */
-} ecs_app_desc_t;
-
-/** Run application.
- * This will run the application with the parameters specified in desc. After
- * the application quits (ecs_quit is called) the world will be cleaned up.
+/** Skip whitespace characters.
+ * This function skips whitespace characters. Does not skip newlines.
  * 
+ * @param ptr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_whitespace(
+    const char *ptr);
+
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ * 
+ * @param ptr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_eol_and_whitespace(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ * 
+ * @param ptr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* ecs_parse_digit(
+    const char *ptr,
+    char *token);
+
+/** Skip whitespaces and comments.
+ * This function skips whitespace characters and comments (single line, //).
+ * 
+ * @param ptr pointer to (potential) whitespaces/comments to skip.
+ * @return pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* ecs_parse_fluff(
+    const char *ptr,
+    char **last_comment);
+
+/** Parse a single token.
+ * This function can be used as simple tokenizer by other parsers.
+ * 
+ * @param name of program (used for logging).
+ * @param expr pointer to token to parse.
+ * @param ptr pointer to first character to parse.
+ * @param token_out Parsed token (buffer should be ECS_MAX_TOKEN_SIZE large)
+ * @return Pointer to the next token, or NULL if error occurred.
+ */
+FLECS_API
+const char* ecs_parse_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token_out);
+
+/** Parse term in expression.
+ * This operation parses a single term in an expression and returns a pointer
+ * to the next term expression.
+ *
+ * If the returned pointer points to the 0-terminator, the expression is fully 
+ * parsed. The function would typically be called in a while loop:
+ *
+ * const char *ptr = expr;
+ * while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) { }
+ *
+ * The operation does not attempt to find entity ids from the names in the
+ * expression. Use the ecs_term_resolve_ids function to resolve the identifiers
+ * in the parsed term.
+ *
+ * The returned term will in most cases contain allocated resources, which
+ * should freed (or used) by the application. To free the resources for a term,
+ * use the ecs_term_free function.
+ *
+ * The parser accepts expressions in the legacy string format.
+ *
  * @param world The world.
- * @param desc Application parameters.
+ * @param name The name of the expression (optional, improves error logs)
+ * @param expr The expression to parse (optional, improves error logs)
+ * @param ptr The pointer to the current term (must be in expr).
+ * @param term_out Out parameter for the term.
+ * @return pointer to next term if successful, NULL if failed.
  */
 FLECS_API
-int ecs_app_run(
-    ecs_world_t *world,
-    const ecs_app_desc_t *desc);
-
-/** Callback type for frame action. */
-typedef int(*ecs_frame_action_t)(
-    ecs_world_t *world, 
-    const ecs_app_desc_t *desc);
-
-/** Default frame callback.
- * This function will call ecs_progress until it returns a non-zero value (the
- * application called ecs_quit). It is the default frame callback that will be
- * used by ecs_app_run, unless it is overridden.
- * 
- * Applications, though typically modules, can override the frame callback by
- * using the ecs_app_set_frame_action function. This enables a module to take
- * control of the main loop when necessary.
- * 
- * All worlds share the same frame accallbacktion. When a module attempts to 
- * overwrite a frame callback (except the default one), an error will be thrown. 
- * This prevents applications from importing modules with conflicting 
- * requirements (e.g. two modules that * both need control over the main loop).
- * 
- * A custom frame callback may call this function once after or before it has 
- * ran its own logic.
- * 
- * @param world The world.
- * @param desc The desc struct passed to ecs_app_run.
- * @return value returned by ecs_progress
- */
-FLECS_API
-int ecs_app_run_frame(
-    ecs_world_t *world,
-    const ecs_app_desc_t *desc);
-
-/** Set custom frame action.
- * See ecs_app_run_frame.
- * 
- * @param callback The frame action.
- */
-FLECS_API
-int ecs_app_set_frame_action(
-    ecs_frame_action_t callback);
+char* ecs_parse_term(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    ecs_term_t *term_out);
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-#endif
+#endif // FLECS_PARSER_H
 
-#endif // FLECS_APP
+#endif // FLECS_PARSER
 #endif
 #ifdef FLECS_OS_API_IMPL
 /**
@@ -9408,6 +9365,119 @@ void ecs_set_os_api_impl(void);
 #endif // FLECS_OS_API_IMPL_H
 
 #endif // FLECS_OS_API_IMPL
+#endif
+#ifdef FLECS_MODULE
+/**
+ * @file module.h
+ * @brief Module addon.
+ *
+ * The module addon allows for creating and importing modules. Flecs modules 
+ * enable applications to organize components and systems into reusable units of
+ * code that can easily be across projects.
+ */
+
+#ifdef FLECS_MODULE
+
+#ifndef FLECS_MODULE_H
+#define FLECS_MODULE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Import a module.
+ * This operation will load a modules and store the public module handles in the
+ * handles_out out parameter. The module name will be used to verify if the
+ * module was already loaded, in which case it won't be reimported. The name
+ * will be translated from PascalCase to an entity path (pascal.case) before the
+ * lookup occurs.
+ *
+ * Module contents will be stored as children of the module entity. This 
+ * prevents modules from accidentally defining conflicting identifiers. This is
+ * enforced by setting the scope before and after loading the module to the 
+ * module entity id.
+ *
+ * A more convenient way to import a module is by using the ECS_IMPORT macro.
+ *
+ * @param world The world.
+ * @param module The module import function.
+ * @param module_name The name of the module.
+ * @return The module entity.
+ */
+FLECS_API
+ecs_entity_t ecs_import(
+    ecs_world_t *world,
+    ecs_module_action_t module,
+    const char *module_name);
+
+/* Import a module from a library.
+ * Similar to ecs_import, except that this operation will attempt to load the 
+ * module from a dynamic library.
+ *
+ * A library may contain multiple modules, which is why both a library name and
+ * a module name need to be provided. If only a library name is provided, the
+ * library name will be reused for the module name.
+ *
+ * The library will be looked up using a canonical name, which is in the same
+ * form as a module, like `flecs.components.transform`. To transform this
+ * identifier to a platform specific library name, the operation relies on the
+ * module_to_dl callback of the os_api which the application has to override if
+ * the default does not yield the correct library name.
+ *
+ * @param world The world.
+ * @param library_name The name of the library to load.
+ * @param module_name The name of the module to load.
+ */
+FLECS_API
+ecs_entity_t ecs_import_from_library(
+    ecs_world_t *world,
+    const char *library_name,
+    const char *module_name);
+
+/** Register a new module.
+ */
+FLECS_API
+ecs_entity_t ecs_module_init(
+    ecs_world_t *world,
+    const ecs_component_desc_t *desc);
+
+/** Define module
+ */
+#define ECS_MODULE(world, id)\
+    ecs_entity_t ecs_id(id) = ecs_module_init(world, &(ecs_component_desc_t){\
+        .entity = {\
+            .name = #id,\
+            .add = {EcsModule}\
+        }\
+    });\
+    ecs_set_scope(world, ecs_id(id));\
+    (void)ecs_id(id);
+
+/** Wrapper around ecs_import.
+ * This macro provides a convenient way to load a module with the world. It can
+ * be used like this:
+ *
+ * ECS_IMPORT(world, FlecsSystemsPhysics, 0);
+ * 
+ * This macro will define entity and type handles for the component associated
+ * with the module. The module component will be created as a singleton. 
+ * 
+ * The contents of a module component are module specific, although they
+ * typically contain handles to the content of the module.
+ */
+#define ECS_IMPORT(world, id) \
+    char *FLECS__##id##_name = ecs_module_path_from_c(#id);\
+    ecs_id_t ecs_id(id) = ecs_import(world, id##Import, FLECS__##id##_name);\
+    ecs_os_free(FLECS__##id##_name);\
+    (void)ecs_id(id)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
 #endif
 #ifdef FLECS_HTTP
 /**
@@ -9592,90 +9662,6 @@ const char* ecs_http_get_param(
 #endif // FLECS_HTTP_H
 
 #endif // FLECS_HTTP
-#endif
-#ifdef FLECS_REST
-/**
- * @file rest.h
- * @brief REST API addon.
- *
- * A small REST API that uses the HTTP server and JSON serializer to provide
- * access to application data for remote applications.
- * 
- * The endpoints exposed by the REST API are:
- * 
- * /entity/<path>
- *   The entity endpoint requests data from an entity. The path is the entity
- *   path or name of the entity to query for. The format of the response is
- *   the same as what is returned by ecs_entity_to_json.
- * 
- *   Example:
- *     /entity/my_entity
- *     /entity/parent/child
- *     /entity/420
- * 
- * /query?q=<query>
- *   The query endpoint requests data for a query. The implementation uses the
- *   rules query engine. The format of the response is the same as what is
- *   returned by ecs_iter_to_json.
- * 
- *   Example:
- *     /query?q=Position
- *     /query?q=Position%2CVelocity
- */
-
-#ifdef FLECS_REST
-
-/* Used for the HTTP server */
-#ifndef FLECS_HTTP
-#define FLECS_HTTP
-#endif
-
-/* Used for building the JSON replies */
-#ifndef FLECS_JSON
-#define FLECS_JSON
-#endif
-
-/* Query engine used */
-#ifndef FLECS_RULES
-#define FLECS_RULES
-#endif
-
-/* For the REST system */
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
-#endif
-
-
-#ifndef FLECS_REST_H
-#define FLECS_REST_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define ECS_REST_DEFAULT_PORT (27750)
-
-/* Component that instantiates the REST API */
-FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
-
-typedef struct {
-    uint16_t port;        /* Port of server (optional, default = 27750) */
-    char *ipaddr;         /* Interface address (optional, default = 0.0.0.0) */
-    void *impl;
-} EcsRest;
-
-/* Module import */
-FLECS_API
-void FlecsRestImport(
-    ecs_world_t *world);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
 #endif
 
 /**

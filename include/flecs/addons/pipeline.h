@@ -15,11 +15,11 @@
 
 #ifdef FLECS_PIPELINE
 
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
 #endif
 
-#include "system.h"
+#define FLECS_SYSTEM
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H

@@ -537,7 +537,7 @@ ecs_query_t* build_pipeline_query(
 }
 
 static 
-void EcsOnUpdatePipeline(
+void OnUpdatePipeline(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
@@ -724,7 +724,15 @@ void FlecsPipelineImport(
     });
 
     /* When the Pipeline tag is added a pipeline will be created */
-    ECS_OBSERVER(world, EcsOnUpdatePipeline, EcsOnSet, Pipeline, Type);
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .entity.name = "OnUpdatePipeline",
+        .filter.terms = {
+            { .id = EcsPipeline },
+            { .id = ecs_id(EcsType) }
+        },
+        .events = { EcsOnSet },
+        .callback = OnUpdatePipeline
+    });
 
     /* Create the builtin pipeline */
     world->pipeline = ecs_type_init(world, &(ecs_type_desc_t){

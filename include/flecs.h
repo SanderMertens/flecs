@@ -445,6 +445,7 @@ struct ecs_observer_t {
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
+#include "flecs/private/hashmap.h"          /* Hashmap */
 #include "flecs/type.h"                     /* Type API */
 
 
@@ -3724,44 +3725,41 @@ void* ecs_record_get_column(
 
 /** @} */
 
-
-/* Include enabled addons */
-
-#ifdef FLECS_SYSTEM
-#include "flecs/addons/system.h"
+#ifdef FLECS_APP
+#include "flecs/addons/app.h"
 #endif
-#ifdef FLECS_PIPELINE
-#include "flecs/addons/pipeline.h"
+#ifdef FLECS_REST
+#include "flecs/addons/rest.h"
 #endif
 #ifdef FLECS_TIMER
 #include "flecs/addons/timer.h"
 #endif
-#ifdef FLECS_DOC
-#include "flecs/addons/doc.h"
+#ifdef FLECS_PIPELINE
+#include "flecs/addons/pipeline.h"
+#endif
+#ifdef FLECS_SYSTEM
+#include "flecs/addons/system.h"
 #endif
 #ifdef FLECS_COREDOC
 #include "flecs/addons/coredoc.h"
 #endif
-#ifdef FLECS_META
-#include "flecs/addons/meta.h"
-#endif
-#ifdef FLECS_META_C
-#include "flecs/addons/meta_c.h"
-#endif
-#ifdef FLECS_EXPR
-#include "flecs/addons/expr.h"
+#ifdef FLECS_DOC
+#include "flecs/addons/doc.h"
 #endif
 #ifdef FLECS_JSON
 #include "flecs/addons/json.h"
 #endif
-#ifdef FLECS_MODULE
-#include "flecs/addons/module.h"
+#ifdef FLECS_EXPR
+#include "flecs/addons/expr.h"
+#endif
+#ifdef FLECS_META_C
+#include "flecs/addons/meta_c.h"
+#endif
+#ifdef FLECS_META
+#include "flecs/addons/meta.h"
 #endif
 #ifdef FLECS_PLECS
 #include "flecs/addons/plecs.h"
-#endif
-#ifdef FLECS_PARSER
-#include "flecs/addons/parser.h"
 #endif
 #ifdef FLECS_RULES
 #include "flecs/addons/rules.h"
@@ -3772,17 +3770,17 @@ void* ecs_record_get_column(
 #ifdef FLECS_STATS
 #include "flecs/addons/stats.h"
 #endif
-#ifdef FLECS_APP
-#include "flecs/addons/app.h"
+#ifdef FLECS_PARSER
+#include "flecs/addons/parser.h"
 #endif
 #ifdef FLECS_OS_API_IMPL
 #include "flecs/addons/os_api_impl.h"
 #endif
+#ifdef FLECS_MODULE
+#include "flecs/addons/module.h"
+#endif
 #ifdef FLECS_HTTP
 #include "flecs/addons/http.h"
-#endif
-#ifdef FLECS_REST
-#include "flecs/addons/rest.h"
 #endif
 
 #include "flecs/addons/flecs_c.h"

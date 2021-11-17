@@ -4,6 +4,7 @@ bin
 .vscode
 gcov
 .idea
+deps
 cmake-build-debug
 bazel-bin
 bazel-flecs

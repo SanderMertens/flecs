@@ -19,9 +19,6 @@
 #ifndef FLECS_COREDOC_H
 #define FLECS_COREDOC_H
 
-#include "doc.h"
-#include "meta.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

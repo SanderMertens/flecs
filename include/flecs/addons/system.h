@@ -13,10 +13,8 @@
 #define FLECS_MODULE
 #endif
 
-#include "../addons/module.h"
-
-#ifndef FLECS_SYSTEMS_H
-#define FLECS_SYSTEMS_H
+#ifndef FLECS_SYSTEM_H
+#define FLECS_SYSTEM_H
 
 #ifdef __cplusplus
 extern "C" {
