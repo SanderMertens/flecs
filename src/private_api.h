@@ -669,36 +669,70 @@ void flecs_observable_fini(
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Safe(r) integer casting
+////////////////////////////////////////////////////////////////////////////////
+
+#define FLECS_CONVERSION_ERR(T, value)\
+    "illegal conversion from value " #value " to type " #T
+
+#define flecs_signed_char__ (CHAR_MIN < 0)
+#define flecs_signed_short__ true
+#define flecs_signed_int__ true
+#define flecs_signed_long__ true
+#define flecs_signed_size_t__ false
+#define flecs_signed_int8_t__ true
+#define flecs_signed_int16_t__ true
+#define flecs_signed_int32_t__ true
+#define flecs_signed_int64_t__ true
+#define flecs_signed_intptr_t__ true
+#define flecs_signed_uint8_t__ false
+#define flecs_signed_uint16_t__ false
+#define flecs_signed_uint32_t__ false
+#define flecs_signed_uint64_t__ false
+#define flecs_signed_uintptr_t__ false
+#define flecs_signed_ecs_size_t__ true
+#define flecs_signed_ecs_entity_t__ false
+
+uint64_t _flecs_ito(
+    size_t dst_size,
+    bool dst_signed,
+    bool lt_zero,
+    uint64_t value,
+    const char *err);
+
+#ifndef NDEBUG
+#define flecs_ito(T, value)\
+    (T)_flecs_ito(\
+        sizeof(T),\
+        flecs_signed_##T##__,\
+        value < 0,\
+        (uint64_t)value,\
+        FLECS_CONVERSION_ERR(T, value))
+
+#define flecs_uto(T, value)\
+    (T)_flecs_ito(\
+        sizeof(T),\
+        flecs_signed_##T##__,\
+        false,\
+        (uint64_t)value,\
+        FLECS_CONVERSION_ERR(T, value))
+#else
+#define flecs_ito(T, value) (T)value
+#define flecs_uto(T, value) (T)value
+#endif
+
+#define flecs_itosize(value) flecs_ito(size_t, value)
+#define flecs_utosize(value) flecs_uto(ecs_size_t, value)
+#define flecs_itoi16(value) flecs_ito(int16_t, value)
+#define flecs_itoi32(value) flecs_ito(int32_t, value)
+
+////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
 uint64_t flecs_hash(
     const void *data,
     ecs_size_t length);
-
-/* Convert 64 bit signed integer to 16 bit */
-int8_t flecs_to_i8(
-    int64_t v);
-
-/* Convert 64 bit signed integer to 16 bit */
-int16_t flecs_to_i16(
-    int64_t v);
-
-/* Convert 64 bit signed integer to 32 bit */
-int32_t flecs_to_i32(
-    int64_t v);
-
-/* Convert 64 bit unsigned integer to 32 bit */
-uint32_t flecs_to_u32(
-    uint64_t v);        
-
-/* Convert signed integer to size_t */
-size_t flecs_to_size_t(
-    int64_t size);
-
-/* Convert size_t to ecs_size_t */
-ecs_size_t flecs_from_size_t(
-    size_t size);    
 
 /* Get next power of 2 */
 int32_t flecs_next_pow_of_2(

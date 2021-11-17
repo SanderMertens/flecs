@@ -335,7 +335,7 @@ bool flecs_defer_set(
             ecs_copy_ctor_t copy;
             if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
                 copy(world, id, &c_info->lifecycle, &entity, &entity, 
-                    op->is._1.value, value, flecs_to_size_t(size), 1, 
+                    op->is._1.value, value, flecs_itosize(size), 1, 
                         c_info->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
@@ -344,7 +344,7 @@ bool flecs_defer_set(
             ecs_xtor_t ctor;
             if (c_info && (ctor = c_info->lifecycle.ctor)) {
                 ctor(world, id, &entity, op->is._1.value, 
-                    flecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                    flecs_itosize(size), 1, c_info->lifecycle.ctx);
             }
         }
 

@@ -351,6 +351,7 @@ int ecs_log_last_error(void);
 #define ECS_ALREADY_DEFINED (8)
 #define ECS_MISSING_OS_API (9)
 #define ECS_OPERATION_FAILED (10)
+#define ECS_INVALID_CONVERSION (11)
 
 #define ECS_INCONSISTENT_NAME (20)
 #define ECS_NAME_IN_USE (21)

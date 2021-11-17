@@ -13,7 +13,7 @@ char* ecs_module_path_from_c(
 
     for (ptr = c_name; (ch = *ptr); ptr++) {
         if (isupper(ch)) {
-            ch = flecs_to_i8(tolower(ch));
+            ch = flecs_ito(char, tolower(ch));
             if (ptr != c_name) {
                 ecs_strbuf_appendstrn(&str, ".", 1);
             }
@@ -93,11 +93,11 @@ ecs_entity_t ecs_import_from_library(
                 capitalize = true;
             } else {
                 if (capitalize) {
-                    *bptr = flecs_to_i8(toupper(ch));
+                    *bptr = flecs_ito(char, toupper(ch));
                     bptr ++;
                     capitalize = false;
                 } else {
-                    *bptr = flecs_to_i8(tolower(ch));
+                    *bptr = flecs_ito(char, tolower(ch));
                     bptr ++;
                 }
             }

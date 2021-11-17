@@ -179,8 +179,8 @@ void flecs_table_init_data(
             ecs_assert(component != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(component->size != 0, ECS_INTERNAL_ERROR, NULL);
 
-            storage->columns[i].size = flecs_to_i16(component->size);
-            storage->columns[i].alignment = flecs_to_i16(component->alignment);
+            storage->columns[i].size = flecs_itoi16(component->size);
+            storage->columns[i].alignment = flecs_itoi16(component->alignment);
         }
     }
 
@@ -445,7 +445,7 @@ void ctor_component(
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
 
         ctor(world, cdata->component, entities, ptr, 
-            flecs_to_size_t(size), count, ctx);
+            flecs_itosize(size), count, ctx);
     }
 }
 
@@ -474,7 +474,7 @@ void dtor_component(
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         dtor(world, cdata->component, &entities[row], ptr,
-            flecs_to_size_t(size), count, ctx);
+            flecs_itosize(size), count, ctx);
     }
 }
 
@@ -909,12 +909,12 @@ void grow_column(
 
         /* First construct elements (old and new) in new buffer */
         ctor(world, c_info->component, entities, new_buffer, 
-            flecs_to_size_t(size), construct ? new_count : count, 
+            flecs_itosize(size), construct ? new_count : count, 
             c_info->lifecycle.ctx);
         
         /* Move old elements */
         move(world, c_info->component, entities, entities, 
-            new_buffer, old_buffer, flecs_to_size_t(size), count, 
+            new_buffer, old_buffer, flecs_itosize(size), count, 
             c_info->lifecycle.ctx);
 
         /* Free old vector */
@@ -933,7 +933,7 @@ void grow_column(
             /* If new elements need to be constructed and component has a
              * constructor, construct */
             ctor(world, c_info->component, &entities[count], elem, 
-                flecs_to_size_t(size), to_add, c_info->lifecycle.ctx);
+                flecs_itosize(size), to_add, c_info->lifecycle.ctx);
         }
 
         column->data = vec;
@@ -1267,7 +1267,7 @@ void flecs_table_delete(
                     ecs_size_t alignment = c_info->alignment;
                     dtor(world, c_info->component, &entity_to_delete,
                         ecs_vector_last_t(columns[i].data, size, alignment),
-                        flecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                        flecs_itosize(size), 1, c_info->lifecycle.ctx);
                 }        
             }
         }
@@ -1293,7 +1293,7 @@ void flecs_table_delete(
                 if (c_info && (move_dtor = c_info->lifecycle.move_dtor)) {
                     move_dtor(world, c_info->component, &c_info->lifecycle,
                         &entity_to_move, &entity_to_delete, dst, src, 
-                        flecs_to_size_t(size), 1, c_info->lifecycle.ctx);
+                        flecs_itosize(size), 1, c_info->lifecycle.ctx);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
@@ -1443,7 +1443,7 @@ void flecs_table_move(
                     /* ctor + move + dtor */
                     callback(world, new_component, &cdata->lifecycle, 
                         &dst_entity, &src_entity, 
-                        dst, src, flecs_to_size_t(size), 1, ctx);
+                        dst, src, flecs_itosize(size), 1, ctx);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
@@ -1453,7 +1453,7 @@ void flecs_table_move(
                     void *ctx = cdata->lifecycle.ctx;
                     copy(world, new_component, &cdata->lifecycle, 
                         &dst_entity, &src_entity, 
-                        dst, src, flecs_to_size_t(size), 1, ctx);
+                        dst, src, flecs_itosize(size), 1, ctx);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
@@ -1714,7 +1714,7 @@ void merge_column(
         ecs_move_t move;
         if (c_info && (move = c_info->lifecycle.move)) {
             move(world, c_info->component, entities, entities, 
-                dst_ptr, src_ptr, flecs_to_size_t(size), src_count, 
+                dst_ptr, src_ptr, flecs_itosize(size), src_count, 
                 c_info->lifecycle.ctx);
         } else {
             ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
@@ -2132,8 +2132,8 @@ void* ecs_record_get_column(
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int16_t size = c->size;
-    ecs_check(!flecs_from_size_t(c_size) || 
-        flecs_from_size_t(c_size) == c->size, 
+    ecs_check(!flecs_utosize(c_size) || 
+        flecs_utosize(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
     void *array = ecs_vector_first_t(c->data, c->size, c->alignment);

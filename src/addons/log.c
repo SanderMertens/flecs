@@ -211,7 +211,7 @@ void _ecs_parser_errorv(
     const char *fmt,
     va_list args)
 {
-    int32_t column = flecs_to_i32(column_arg);
+    int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
@@ -344,6 +344,8 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
     ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_OPERATION_FAILED);
+    ECS_ERR_STR(ECS_INVALID_CONVERSION);
     ECS_ERR_STR(ECS_MODULE_UNDEFINED);
     ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
     ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
@@ -352,7 +354,6 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
     ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
     ECS_ERR_STR(ECS_OUT_OF_RANGE);
-    ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_MISSING_OS_API);
     ECS_ERR_STR(ECS_UNSUPPORTED);
     ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);

@@ -413,7 +413,7 @@ size_t ecs_iter_column_size(
     ecs_column_t *columns = table->storage.columns;
     ecs_column_t *column = &columns[storage_index];
     
-    return flecs_to_size_t(column->size);
+    return flecs_ito(size_t, column->size);
 error:
     return 0;
 }

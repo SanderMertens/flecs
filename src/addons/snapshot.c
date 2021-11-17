@@ -68,12 +68,12 @@ ecs_data_t* duplicate_data(
             ecs_xtor_t ctor = cdata->lifecycle.ctor;
             if (ctor) {
                 ctor((ecs_world_t*)world, component, entities, dst_ptr, 
-                    flecs_to_size_t(size), count, ctx);
+                    flecs_itosize(size), count, ctx);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
             copy((ecs_world_t*)world, component, entities, entities, dst_ptr, 
-                src_ptr, flecs_to_size_t(size), count, ctx);
+                src_ptr, flecs_itosize(size), count, ctx);
 
             column->data = dst_vec;
         } else {

@@ -502,7 +502,7 @@ bool override_from_base(
             void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
                 copy(world, component, &entities[row], &base,
-                    data_ptr, base_ptr, flecs_to_size_t(data_size), 1, ctx);
+                    data_ptr, base_ptr, flecs_itosize(data_size), 1, ctx);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
@@ -1021,11 +1021,11 @@ const ecs_entity_t* new_w_data(
             if (cdata && is_move && (move = cdata->lifecycle.move)) {
                 ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
                 move(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_to_size_t(size), count, cdata->lifecycle.ctx);
+                    flecs_itosize(size), count, cdata->lifecycle.ctx);
             } else if (cdata && !is_move && (copy = cdata->lifecycle.copy)) {
                 ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
                 copy(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_to_size_t(size), count, cdata->lifecycle.ctx);
+                    flecs_itosize(size), count, cdata->lifecycle.ctx);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             } 
@@ -1253,7 +1253,7 @@ void flecs_notify_on_set(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
                 void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
-                on_set(world, id, entities, ptr, flecs_to_size_t(size), 
+                on_set(world, id, entities, ptr, flecs_itosize(size), 
                     count, info->lifecycle.ctx);
             }
         }
@@ -2031,8 +2031,8 @@ ecs_entity_t ecs_component_init(
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent, &added);
 
     if (added) {
-        ptr->size = flecs_from_size_t(desc->size);
-        ptr->alignment = flecs_from_size_t(desc->alignment);
+        ptr->size = flecs_utosize(desc->size);
+        ptr->alignment = flecs_utosize(desc->alignment);
         if (!ptr->size) {
             ecs_trace("#[green]tag#[reset] %s created", 
                 ecs_get_name(world, result));
@@ -2041,10 +2041,10 @@ ecs_entity_t ecs_component_init(
                 ecs_get_name(world, result));
         }
     } else {
-        if (ptr->size != flecs_from_size_t(desc->size)) {
+        if (ptr->size != flecs_utosize(desc->size)) {
             ecs_abort(ECS_INVALID_COMPONENT_SIZE, desc->entity.name);
         }
-        if (ptr->alignment != flecs_from_size_t(desc->alignment)) {
+        if (ptr->alignment != flecs_utosize(desc->alignment)) {
             ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, desc->entity.name);
         }
     }
@@ -2881,7 +2881,7 @@ ecs_entity_t assign_ptr_w_id(
     }
 
     if (flecs_defer_set(world, stage, EcsOpSet, entity, id, 
-        flecs_from_size_t(size), ptr, NULL, NULL))
+        flecs_utosize(size), ptr, NULL, NULL))
     {
         return entity;
     }
@@ -2901,7 +2901,7 @@ ecs_entity_t assign_ptr_w_id(
                     move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                         cdata->lifecycle.ctx);
                 } else {
-                    ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
+                    ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             } else {
                 ecs_copy_t copy = cdata->lifecycle.copy;
@@ -2909,11 +2909,11 @@ ecs_entity_t assign_ptr_w_id(
                     copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
                         cdata->lifecycle.ctx);
                 } else {
-                    ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
+                    ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             }
         } else {
-            ecs_os_memcpy(dst, ptr, flecs_from_size_t(size));
+            ecs_os_memcpy(dst, ptr, flecs_utosize(size));
         }
     } else {
         memset(dst, 0, size);
@@ -3644,7 +3644,7 @@ void free_value(
         void *ptr;
         int i;
         for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-            dtor(world, id, &entities[i], ptr, flecs_to_size_t(size), 1, 
+            dtor(world, id, &entities[i], ptr, flecs_itosize(size), 1, 
                 info->lifecycle.ctx);
         }
     }
@@ -3785,12 +3785,12 @@ bool flecs_defer_flush(
                     break;
                 case EcsOpSet:
                     assign_ptr_w_id(world, e, 
-                        op->id, flecs_to_size_t(op->is._1.size), 
+                        op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, true);
                     break;
                 case EcsOpMut:
                     assign_ptr_w_id(world, e, 
-                        op->id, flecs_to_size_t(op->is._1.size), 
+                        op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, false);
                     break;
                 case EcsOpModified:

@@ -772,6 +772,7 @@ int ecs_log_last_error(void);
 #define ECS_ALREADY_DEFINED (8)
 #define ECS_MISSING_OS_API (9)
 #define ECS_OPERATION_FAILED (10)
+#define ECS_INVALID_CONVERSION (11)
 
 #define ECS_INCONSISTENT_NAME (20)
 #define ECS_NAME_IN_USE (21)
@@ -18043,7 +18044,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     
     while (-1 != (cur = ecs_type_match(
-        real_world, table, type, cur, pattern, 0, 0, 0, NULL, NULL))) 
+        real_world, table, type, cur, pattern, 0, 0, 0, NULL, NULL, NULL))) 
     {
         flecs::id ent(m_world, ids[cur]);
         func(ent);

@@ -1,46 +1,38 @@
 #include "private_api.h"
 
-int8_t flecs_to_i8(
-    int64_t v)
-{
-    ecs_assert(v < INT8_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int8_t)v;
-}
+#ifndef NDEBUG
+static int64_t s_min[] = { 
+    [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
+static int64_t s_max[] = { 
+    [1] = INT8_MAX, [2] = INT16_MAX, [4] = INT32_MAX, [8] = INT64_MAX };
+static uint64_t u_max[] = { 
+    [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
 
-int16_t flecs_to_i16(
-    int64_t v)
+uint64_t _flecs_ito(
+    size_t size,
+    bool is_signed,
+    bool lt_zero,
+    uint64_t u,
+    const char *err)
 {
-    ecs_assert(v < INT16_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int16_t)v;
-}
+    union {
+        uint64_t u;
+        int64_t s;
+    } v;
 
-int32_t flecs_to_i32(
-    int64_t v)
-{
-    ecs_assert(v < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)v;
-}
+    v.u = u;
 
-uint32_t flecs_to_u32(
-    uint64_t v)
-{
-    ecs_assert(v < UINT32_MAX, ECS_INTERNAL_ERROR, NULL);
-    return (uint32_t)v;    
-}
+    if (is_signed) {
+        ecs_assert(v.s >= s_min[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s <= s_max[size], ECS_INVALID_CONVERSION, err);
+    } else {
+        ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, err);
+        ecs_assert(u <= u_max[size], ECS_INVALID_CONVERSION, err);
+    }
 
-size_t flecs_to_size_t(
-    int64_t size)
-{
-    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
-    return (size_t)size;
+    return u;
 }
-
-ecs_size_t flecs_from_size_t(
-    size_t size)
-{
-   ecs_assert(size < INT32_MAX, ECS_INTERNAL_ERROR, NULL); 
-   return (ecs_size_t)size;
-}
+#endif
 
 int32_t flecs_next_pow_of_2(
     int32_t n)

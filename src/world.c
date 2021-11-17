@@ -672,7 +672,7 @@ void ecs_default_ctor(
     void *ptr, size_t size, int32_t count, void *ctx)
 {
     (void)world; (void)component; (void)entity_ptr; (void)ctx;
-    ecs_os_memset(ptr, 0, flecs_from_size_t(size) * count);
+    ecs_os_memset(ptr, 0, flecs_uto(ecs_size_t, size) * count);
 }
 
 static
@@ -749,7 +749,7 @@ void default_dtor(
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
     callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    ecs_os_memcpy(dst_ptr, src_ptr, flecs_from_size_t(size) * count);
+    ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, size) * count);
 }
 
 static

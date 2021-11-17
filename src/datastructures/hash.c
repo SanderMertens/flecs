@@ -328,7 +328,7 @@ uint64_t flecs_hash(
 
     hashlittle2(
         data,
-        flecs_to_size_t(length),
+        flecs_ito(size_t, length),
         &h_1,
         &h_2);
 

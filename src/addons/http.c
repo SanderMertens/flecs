@@ -144,9 +144,9 @@ ecs_size_t http_send(
     int flags)
 {
 #ifndef _MSC_VER
-    return flecs_to_i32(send(sock, buf, flecs_to_size_t(size), flags));
+    return flecs_itoi32(send(sock, buf, flecs_itosize(size), flags));
 #else
-    return flecs_to_i32(send(sock, buf, size, flags));
+    return flecs_itoi32(send(sock, buf, size, flags));
 #endif
 }
 
@@ -158,9 +158,9 @@ ecs_size_t http_recv(
     int flags)
 {
 #ifndef _MSC_VER
-    return flecs_to_i32(recv(sock, buf, flecs_to_size_t(size), flags));
+    return flecs_itoi32(recv(sock, buf, flecs_itosize(size), flags));
 #else
-    return flecs_to_i32(recv(sock, buf, size, flags));
+    return flecs_itoi32(recv(sock, buf, size, flags));
 #endif
 }
 
