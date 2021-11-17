@@ -34,8 +34,6 @@
 #define FLECS_META
 #endif
 
-#include "meta.h"
-
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
 #endif

@@ -3749,14 +3749,17 @@ void* ecs_record_get_column(
 #ifdef FLECS_JSON
 #include "flecs/addons/json.h"
 #endif
+#if defined(FLECS_EXPR) || defined(FLECS_META_C)
+#define FLECS_META
+#endif
+#ifdef FLECS_META
+#include "flecs/addons/meta.h"
+#endif
 #ifdef FLECS_EXPR
 #include "flecs/addons/expr.h"
 #endif
 #ifdef FLECS_META_C
 #include "flecs/addons/meta_c.h"
-#endif
-#ifdef FLECS_META
-#include "flecs/addons/meta.h"
 #endif
 #ifdef FLECS_PLECS
 #include "flecs/addons/plecs.h"
@@ -3773,14 +3776,14 @@ void* ecs_record_get_column(
 #ifdef FLECS_PARSER
 #include "flecs/addons/parser.h"
 #endif
+#ifdef FLECS_HTTP
+#include "flecs/addons/http.h"
+#endif
 #ifdef FLECS_OS_API_IMPL
 #include "flecs/addons/os_api_impl.h"
 #endif
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"
-#endif
-#ifdef FLECS_HTTP
-#include "flecs/addons/http.h"
 #endif
 
 #include "flecs/addons/flecs_c.h"

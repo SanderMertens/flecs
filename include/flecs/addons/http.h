@@ -19,6 +19,10 @@
 
 #ifdef FLECS_HTTP
 
+#ifndef FLECS_OS_API_IMPL
+#define FLECS_OS_API_IMPL
+#endif
+
 #ifndef FLECS_HTTP_H
 #define FLECS_HTTP_H
 

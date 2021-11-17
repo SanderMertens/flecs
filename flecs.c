@@ -22499,20 +22499,46 @@ void FlecsTimerImport(
     flecs_bootstrap_component(world, EcsRateFilter);
 
     /* Add EcsTickSource to timers and rate filters */
-    ECS_SYSTEM(world, AddTickSource, EcsPreFrame, 
-        [in] Timer || RateFilter, [out] !flecs.system.TickSource);
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "AddTickSource", .add = { EcsPreFrame } },
+        .query.filter.terms = {
+            { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsOr, .inout = EcsIn },
+            { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
+        },
+        .callback = AddTickSource
+    });
 
     /* Timer handling */
-    ECS_SYSTEM(world, ProgressTimers, EcsPreFrame, 
-        Timer, flecs.system.TickSource);
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "ProgressTimers", .add = { EcsPreFrame } },
+        .query.filter.terms = {
+            { .id = ecs_id(EcsTimer) },
+            { .id = ecs_id(EcsTickSource) }
+        },
+        .callback = ProgressTimers
+    });
 
     /* Rate filter handling */
-    ECS_SYSTEM(world, ProgressRateFilters, EcsPreFrame, 
-        [in] RateFilter, [out] flecs.system.TickSource);
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "ProgressRateFilters", .add = { EcsPreFrame } },
+        .query.filter.terms = {
+            { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
+            { .id = ecs_id(EcsTickSource), .inout = EcsOut }
+        },
+        .callback = ProgressRateFilters
+    });
 
     /* TickSource without a timer or rate filter just increases each frame */
-    ECS_SYSTEM(world, ProgressTickSource, EcsPreFrame, 
-        [out] flecs.system.TickSource, !RateFilter, !Timer);
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity = { .name = "ProgressTickSource", .add = { EcsPreFrame } },
+        .query.filter.terms = {
+            { .id = ecs_id(EcsTickSource), .inout = EcsOut },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsNot },
+            { .id = ecs_id(EcsTimer), .oper = EcsNot }
+        },
+        .callback = ProgressTickSource
+    });
 }
 
 #endif
@@ -34014,6 +34040,9 @@ const char* ecs_http_get_param(
 ecs_http_server_t* ecs_http_server_init(
     const ecs_http_server_desc_t *desc) 
 {
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED, 
+        "missing OS API implementation");
+
     ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
     srv->lock = ecs_os_mutex_new();
 
@@ -34035,6 +34064,8 @@ ecs_http_server_t* ecs_http_server_init(
 #endif
 
     return srv;
+error:
+    return NULL;
 }
 
 void ecs_http_server_fini(

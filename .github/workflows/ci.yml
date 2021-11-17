@@ -399,6 +399,10 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_REST
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_REST
 
+      - name: custom_build tests
+        run: |
+          bake runall test/custom_builds
+
   flecs-amalgamated:
     timeout-minutes: 10
     runs-on: ubuntu-latest

@@ -825,6 +825,9 @@ const char* ecs_http_get_param(
 ecs_http_server_t* ecs_http_server_init(
     const ecs_http_server_desc_t *desc) 
 {
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED, 
+        "missing OS API implementation");
+
     ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
     srv->lock = ecs_os_mutex_new();
 
@@ -846,6 +849,8 @@ ecs_http_server_t* ecs_http_server_init(
 #endif
 
     return srv;
+error:
+    return NULL;
 }
 
 void ecs_http_server_fini(

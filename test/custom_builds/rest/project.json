@@ -1,5 +1,5 @@
 {
-    "id": "system",
+    "id": "rest",
     "type": "application",
     "value": {
         "public": false,
@@ -9,6 +9,6 @@
         "use-amalgamate": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SYSTEM"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_REST"]
     }
 }

@@ -6,7 +6,7 @@
         "use": [
             "flecs"
         ],
-        "use_amalgamate": true
+        "use-amalgamate": true
     },
     "lang.c": {
         "defines": ["FLECS_CUSTOM_BUILD"]
