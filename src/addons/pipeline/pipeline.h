@@ -2,7 +2,6 @@
 #define FLECS_PIPELINE_PRIVATE_H
 
 #include "../../private_api.h"
-#include "../system/system.h"
 
 /** Instruction data for pipeline.
  * This type is the element type in the "ops" vector of a pipeline and contains

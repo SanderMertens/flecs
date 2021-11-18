@@ -1,7 +1,7 @@
 #include "flecs.h"
+#include "../system/system.h"
 
 #ifdef FLECS_PIPELINE
-
 #include "pipeline.h"
 
 static ECS_DTOR(EcsPipelineQuery, ptr, {
