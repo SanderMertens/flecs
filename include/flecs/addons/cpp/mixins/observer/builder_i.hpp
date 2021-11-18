@@ -1,6 +1,6 @@
 #pragma once
 
-#include "filter_i.hpp"
+#include "../../builders/filter_i.hpp"
 
 namespace flecs 
 {

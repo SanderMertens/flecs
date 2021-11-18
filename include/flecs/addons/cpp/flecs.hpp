@@ -34,9 +34,6 @@ class filter;
 template<typename ... Components>
 class trigger;
 
-template<typename ... Components>
-class observer;
-
 template <typename ... Components>
 class filter_builder;
 
@@ -65,6 +62,7 @@ class each_invoker;
 #include "mixins/system/decl.hpp"
 #include "mixins/pipeline/decl.hpp"
 #include "mixins/timer/decl.hpp"
+#include "mixins/observer/decl.hpp"
 
 // Mixins
 namespace flecs {
@@ -73,7 +71,8 @@ using Mixins = mixin_list<
     query_m,
     system_m, 
     pipeline_m,
-    timer_m
+    timer_m,
+    observer_m
 >;
 }
 
@@ -94,7 +93,6 @@ using Mixins = mixin_list<
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
 #include "trigger.hpp"
-#include "observer.hpp"
 #include "impl.hpp"
 
 // Addon implementations
@@ -103,3 +101,4 @@ using Mixins = mixin_list<
 #include "mixins/system/impl.hpp"
 #include "mixins/pipeline/impl.hpp"
 #include "mixins/timer/impl.hpp"
+#include "mixins/observer/impl.hpp"

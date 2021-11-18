@@ -756,11 +756,6 @@ public:
     template <typename... Comps, typename... Args>
     flecs::trigger_builder<Comps...> trigger(Args &&... args) const;
 
-    /** Create an observer.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::observer_builder<Comps...> observer(Args &&... args) const;
-
     /** Create a filter.
      */
     template <typename... Comps, typename... Args>

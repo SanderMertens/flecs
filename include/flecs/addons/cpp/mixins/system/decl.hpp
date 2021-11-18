@@ -4,7 +4,7 @@ namespace flecs {
 
 using TickSource = EcsTickSource;
 
-class system;
+struct system;
 
 template<typename ... Components>
 class system_builder;
@@ -29,7 +29,7 @@ struct system_m<flecs::world> : mixin<flecs::world> {
   /** Create a new system.
    * 
    * @tparam Components The components to match on.
-   * @tparam Args Arguments to pass into the constructor of flecs::system.
+   * @tparam Args Arguments passed to the constructor of flecs::system_builder.
    * @return System builder.
    */
   template <typename... Components, typename... Args>
