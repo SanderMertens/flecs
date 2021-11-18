@@ -1,16 +1,16 @@
 #pragma once
 
-#include "trigger_i.hpp"
+#include "builder_i.hpp"
 
 namespace flecs 
 {
 
 template<typename ... Components>
-class trigger_builder final
-    : public trigger_builder_i<trigger_builder<Components...>, Components...>
+struct trigger_builder final
+    : trigger_builder_i<trigger_builder<Components...>, Components...>
 {
     using Class = trigger_builder<Components...>;
-public:
+
     explicit trigger_builder(flecs::world_t* world, const char *name = nullptr, flecs::id_t the_id = 0)
         : trigger_builder_i<Class, Components...>(&m_desc)
         , m_desc({})
@@ -31,12 +31,12 @@ public:
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    trigger<Components...> iter(Func&& func);
+    trigger iter(Func&& func);
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    trigger<Components...> each(Func&& func);
+    trigger each(Func&& func);
 
     ecs_trigger_desc_t m_desc;
 

@@ -6,8 +6,8 @@ namespace flecs
 {
 
 template<typename ... Components>
-class filter_builder_base
-    : public filter_builder_i<filter_builder_base<Components...>, Components ...>
+struct filter_builder_base
+    : filter_builder_i<filter_builder_base<Components...>, Components ...>
 {
 public:
     filter_builder_base(flecs::world_t *world) 

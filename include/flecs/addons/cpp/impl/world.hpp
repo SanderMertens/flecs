@@ -1,5 +1,4 @@
 #include "../builders/filter.hpp"
-#include "../builders/trigger.hpp"
 
 namespace flecs 
 {
@@ -64,7 +63,6 @@ inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
-    component<Trigger>("flecs::core::Trigger");
     component<Query>("flecs::core::Query");
 
     component<doc::Description>("flecs::doc::Description");
@@ -171,11 +169,6 @@ inline flecs::entity world::prefab(Args &&... args) const {
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::trigger_builder<Comps...> world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
