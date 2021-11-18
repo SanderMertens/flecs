@@ -48,10 +48,13 @@ private:
         ecs_system_desc_t desc = m_desc;
         desc.callback = Invoker::run;
         desc.self = m_desc.self;
-        desc.query.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        if (is_each) {
+            desc.query.filter.instanced = true;
+        }
 
         entity_t e = ecs_system_init(m_world, &desc);
 

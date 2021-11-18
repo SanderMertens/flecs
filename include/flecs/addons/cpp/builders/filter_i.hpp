@@ -13,13 +13,13 @@ public:
         : m_term_index(term_index)
         , m_desc(desc) { }
 
-    Base& expr(const char *expr) {
-        m_desc->expr = expr;
+    Base& instanced() {
+        m_desc->instanced = true;
         return *this;
     }
 
-    Base& substitute_default(bool value = true) {
-        m_desc->substitute_default = value;
+    Base& expr(const char *expr) {
+        m_desc->expr = expr;
         return *this;
     }
 

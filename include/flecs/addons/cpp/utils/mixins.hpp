@@ -23,7 +23,7 @@ struct extendable_impl<T, mixin_list<Mixin, Mixins...> > : Mixin<T>, extendable_
     using Base = extendable_impl<T, mixin_list< Mixins... >>;
 
     void init_mixins() {
-        Mixin<T>::init();
+        Mixin<T>::init(); // Run mixin innitializion after top-level ctor
         Base::init_mixins();
     }
 };
