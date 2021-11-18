@@ -38,24 +38,6 @@ inline filter<Components ...> filter_builder_base<Components...>::build() const 
 
 template <typename ... Components>    
 template <typename Func>
-inline observer<Components ...> observer_builder<Components...>::iter(Func&& func) const {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::observer<Components...>(m_world, observer);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline observer<Components ...> observer_builder<Components...>::each(Func&& func) const {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::observer<Components...>(m_world, observer);
-}
-
-template <typename ... Components>    
-template <typename Func>
 inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func) {
     using Invoker = typename _::iter_invoker<
         typename std::decay<Func>::type, Components...>;

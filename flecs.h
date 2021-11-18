@@ -10647,7 +10647,7 @@ struct extendable_impl<T, mixin_list<Mixin, Mixins...> > : Mixin<T>, extendable_
     using Base = extendable_impl<T, mixin_list< Mixins... >>;
 
     void init_mixins() {
-        Mixin<T>::init();
+        Mixin<T>::init(); // Run mixin innitializion after top-level ctor
         Base::init_mixins();
     }
 };
@@ -10693,9 +10693,6 @@ class filter;
 
 template<typename ... Components>
 class trigger;
-
-template<typename ... Components>
-class observer;
 
 template <typename ... Components>
 class filter_builder;
@@ -10926,7 +10923,7 @@ namespace flecs {
 
 using TickSource = EcsTickSource;
 
-class system;
+struct system;
 
 template<typename ... Components>
 class system_builder;
@@ -10951,7 +10948,7 @@ struct system_m<flecs::world> : mixin<flecs::world> {
   /** Create a new system.
    * 
    * @tparam Components The components to match on.
-   * @tparam Args Arguments to pass into the constructor of flecs::system.
+   * @tparam Args Arguments passed to the constructor of flecs::system_builder.
    * @return System builder.
    */
   template <typename... Components, typename... Args>
@@ -11141,6 +11138,37 @@ using timer_m_world = timer_m<flecs::world>;
 using timer_m_system = timer_m<flecs::system>;
 
 }
+#pragma once
+
+namespace flecs {
+
+struct observer;
+
+template<typename ... Components>
+class observer_builder;
+
+template<typename T>
+struct observer_m : mixin<T> { };
+
+/** Observer mixin for flecs::world. */
+template<>
+struct observer_m<flecs::world> : mixin<flecs::world> {
+  /** Initialize mixin. */
+  void init();
+
+  /** Create a new observer.
+   * 
+   * @tparam Components The components to match on.
+   * @tparam Args Arguments passed to the constructor of flecs::observer_builder.
+   * @return Observer builder.
+   */
+  template <typename... Components, typename... Args>
+  flecs::observer_builder<Components...> observer(Args &&... args) const;
+};
+
+using observer_m_world = observer_m<flecs::world>;
+
+}
 
 // Mixins
 namespace flecs {
@@ -11149,7 +11177,8 @@ using Mixins = mixin_list<
     query_m,
     system_m, 
     pipeline_m,
-    timer_m
+    timer_m,
+    observer_m
 >;
 }
 
@@ -12974,11 +13003,6 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::trigger_builder<Comps...> trigger(Args &&... args) const;
-
-    /** Create an observer.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::observer_builder<Comps...> observer(Args &&... args) const;
 
     /** Create a filter.
      */
@@ -16816,33 +16840,6 @@ public:
 
 } // namespace flecs
 
-namespace flecs 
-{
-
-template<typename ... Components>
-class observer : public entity
-{
-public:
-    explicit observer() 
-        : entity() { }
-
-    explicit observer(flecs::world_t *world, flecs::entity_t id)
-        : entity(world, id) { }
-
-    void ctx(void *ctx) {
-        ecs_observer_desc_t desc = {};
-        desc.entity.entity = m_id;
-        desc.ctx = ctx;
-        ecs_observer_init(m_world, &desc);
-    }
-
-    void* ctx() const {
-        return ecs_get_observer_ctx(m_world, m_id);
-    }
-};
-
-} // namespace flecs
-
 
 
 namespace flecs 
@@ -16935,6 +16932,11 @@ public:
     filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
         , m_desc(desc) { }
+
+    Base& instanced() {
+        m_desc->instanced = true;
+        return *this;
+    }
 
     Base& expr(const char *expr) {
         m_desc->expr = expr;
@@ -17506,122 +17508,6 @@ private:
 };
 
 }
-#pragma once
-
-#pragma once
-
-
-namespace flecs 
-{
-
-// Observer builder interface
-template<typename Base, typename ... Components>
-class observer_builder_i : public filter_builder_i<Base, Components ...> {
-    using BaseClass = filter_builder_i<Base, Components ...>;
-public:
-    observer_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr)
-        , m_event_count(0) { }
-
-    observer_builder_i(ecs_observer_desc_t *desc) 
-        : BaseClass(&desc->filter)
-        , m_desc(desc)
-        , m_event_count(0) { }
-
-    /** Specify when the event(s) for which the trigger run.
-     * @param kind The kind that specifies when the system should be ran.
-     */
-    Base& event(entity_t kind) {
-        m_desc->events[m_event_count ++] = kind;
-        return *this;
-    }
-
-    /** Associate observer with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
-    /** Set system context */
-    Base& ctx(void *ptr) {
-        m_desc->ctx = ptr;
-        return *this;
-    }    
-
-protected:
-    virtual flecs::world_t* world_v() = 0;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_observer_desc_t *m_desc;
-    int32_t m_event_count;
-};
-
-}
-
-namespace flecs 
-{
-
-template<typename ... Components>
-class observer_builder final
-    : public observer_builder_i<observer_builder<Components ...>, Components ...>
-{
-    using Class = observer_builder<Components ...>;
-public:
-    explicit observer_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
-        : observer_builder_i<Class, Components ...>(&m_desc)
-        , m_desc({})
-        , m_world(world)
-        { 
-            m_desc.entity.name = name;
-            m_desc.entity.sep = "::";
-            m_desc.filter.expr = expr;
-            this->populate_filter_from_pack();
-        }
-
-    /* Iter (or each) is mandatory and always the last thing that 
-     * is added in the fluent method chain. Create system signature from both 
-     * template parameters and anything provided by the signature method. */
-    template <typename Func>
-    observer<Components...> iter(Func&& func) const;
-
-    /* Each is similar to action, but accepts a function that operates on a
-     * single entity */
-    template <typename Func>
-    observer<Components...> each(Func&& func) const;
-
-    ecs_observer_desc_t m_desc;
-
-protected:
-    flecs::world_t* world_v() override { return m_world; }
-    flecs::world_t *m_world;
-
-private:
-    template <typename Invoker, typename Func>
-    entity_t build(Func&& func, bool is_each) const {
-        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
-
-        ecs_observer_desc_t desc = m_desc;
-        desc.callback = Invoker::run;
-        desc.binding_ctx = ctx;
-        desc.binding_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-
-        ecs_entity_t result = ecs_observer_init(m_world, &desc);
-
-        if (this->m_desc.filter.terms_buffer) {
-            ecs_os_free(m_desc.filter.terms_buffer);
-        }
-
-        return result;
-    }
-};
-
-}
 
 namespace flecs 
 {
@@ -17687,7 +17573,6 @@ inline void world::init_builtin_components() {
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
     component<Trigger>("flecs::core::Trigger");
-    component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
     component<doc::Description>("flecs::doc::Description");
@@ -17799,11 +17684,6 @@ inline flecs::type world::type(Args &&... args) const {
 template <typename... Comps, typename... Args>
 inline flecs::trigger_builder<Comps...> world::trigger(Args &&... args) const {
     return flecs::trigger_builder<Comps...>(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::observer_builder<Comps...> world::observer(Args &&... args) const {
-    return flecs::observer_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
@@ -17955,24 +17835,6 @@ template <typename ... Components>
 inline filter<Components ...> filter_builder_base<Components...>::build() const {
     ecs_filter_t filter = *this;
     return flecs::filter<Components...>(m_world, &filter);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline observer<Components ...> observer_builder<Components...>::iter(Func&& func) const {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::observer<Components...>(m_world, observer);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline observer<Components ...> observer_builder<Components...>::each(Func&& func) const {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::observer<Components...>(m_world, observer);
 }
 
 template <typename ... Components>    
@@ -18590,6 +18452,10 @@ private:
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
 
+        if (is_each) {
+            desc.query.filter.instanced = true;
+        }
+
         entity_t e = ecs_system_init(m_world, &desc);
 
         if (this->m_desc.query.filter.terms_buffer) {
@@ -18892,6 +18758,184 @@ inline void timer_m_base<T>::set_tick_source(flecs::entity e) {
 #undef me_
 
 }
+#pragma once
+
+#pragma once
+
+#pragma once
+
+
+namespace flecs 
+{
+
+// Observer builder interface
+template<typename Base, typename ... Components>
+class observer_builder_i : public filter_builder_i<Base, Components ...> {
+    using BaseClass = filter_builder_i<Base, Components ...>;
+public:
+    observer_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr)
+        , m_event_count(0) { }
+
+    observer_builder_i(ecs_observer_desc_t *desc) 
+        : BaseClass(&desc->filter)
+        , m_desc(desc)
+        , m_event_count(0) { }
+
+    /** Specify when the event(s) for which the trigger run.
+     * @param kind The kind that specifies when the system should be ran.
+     */
+    Base& event(entity_t kind) {
+        m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Associate observer with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ptr;
+        return *this;
+    }    
+
+protected:
+    virtual flecs::world_t* world_v() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_observer_desc_t *m_desc;
+    int32_t m_event_count;
+};
+
+}
+
+namespace flecs 
+{
+
+template<typename ... Components>
+class observer_builder final
+    : public observer_builder_i<observer_builder<Components ...>, Components ...>
+{
+    using Class = observer_builder<Components ...>;
+public:
+    explicit observer_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
+        : observer_builder_i<Class, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            m_desc.filter.expr = expr;
+            this->populate_filter_from_pack();
+        }
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    observer iter(Func&& func) const;
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    observer each(Func&& func) const;
+
+    ecs_observer_desc_t m_desc;
+
+protected:
+    flecs::world_t* world_v() override { return m_world; }
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func, bool is_each) const {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        ecs_observer_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        if (is_each) {
+            desc.filter.instanced = true;
+        }
+
+        ecs_entity_t result = ecs_observer_init(m_world, &desc);
+
+        if (this->m_desc.filter.terms_buffer) {
+            ecs_os_free(m_desc.filter.terms_buffer);
+        }
+
+        return result;
+    }
+};
+
+}
+
+namespace flecs 
+{
+
+struct observer : public entity
+{
+    explicit observer() 
+        : entity() { }
+
+    explicit observer(flecs::world_t *world, flecs::entity_t id)
+        : entity(world, id) { }
+
+    void ctx(void *ctx) {
+        ecs_observer_desc_t desc = {};
+        desc.entity.entity = m_id;
+        desc.ctx = ctx;
+        ecs_observer_init(m_world, &desc);
+    }
+
+    void* ctx() const {
+        return ecs_get_observer_ctx(m_world, m_id);
+    }
+};
+
+// Mixin implementation
+
+inline void observer_m_world::init() {
+    this->me().template component<Observer>("flecs::core::Observer");
+}
+
+template <typename... Comps, typename... Args>
+inline observer_builder<Comps...> observer_m_world::observer(Args &&... args) const {
+    return flecs::observer_builder<Comps...>(this->me(), std::forward<Args>(args)...);
+}
+
+// Builder implementation
+
+template <typename ... Components>    
+template <typename Func>
+inline observer observer_builder<Components...>::iter(Func&& func) const {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), false);
+    return flecs::observer(m_world, observer);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline observer observer_builder<Components...>::each(Func&& func) const {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), true);
+    return flecs::observer(m_world, observer);
+}
+
+} // namespace flecs
 #endif
 
 #endif

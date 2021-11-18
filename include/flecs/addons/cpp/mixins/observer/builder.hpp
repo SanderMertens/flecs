@@ -1,6 +1,6 @@
 #pragma once
 
-#include "observer_i.hpp"
+#include "builder_i.hpp"
 
 namespace flecs 
 {
@@ -26,12 +26,12 @@ public:
      * is added in the fluent method chain. Create system signature from both 
      * template parameters and anything provided by the signature method. */
     template <typename Func>
-    observer<Components...> iter(Func&& func) const;
+    observer iter(Func&& func) const;
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
-    observer<Components...> each(Func&& func) const;
+    observer each(Func&& func) const;
 
     ecs_observer_desc_t m_desc;
 
