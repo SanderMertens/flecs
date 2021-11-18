@@ -751,11 +751,6 @@ public:
     template <typename... Args>
     flecs::type type(Args &&... args) const;
 
-    /** Create a trigger.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::trigger_builder<Comps...> trigger(Args &&... args) const;
-
     /** Create a filter.
      */
     template <typename... Comps, typename... Args>

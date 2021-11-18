@@ -29,19 +29,10 @@ class world_filter;
 class snapshot_filter;
 
 template<typename ... Components>
-class filter;
-
-template<typename ... Components>
-class trigger;
+struct filter;
 
 template <typename ... Components>
-class filter_builder;
-
-template <typename ... Components>
-class trigger_builder;
-
-template <typename ... Components>
-class observer_builder;
+struct filter_builder;
 
 namespace _ 
 {
@@ -62,6 +53,7 @@ class each_invoker;
 #include "mixins/system/decl.hpp"
 #include "mixins/pipeline/decl.hpp"
 #include "mixins/timer/decl.hpp"
+#include "mixins/trigger/decl.hpp"
 #include "mixins/observer/decl.hpp"
 
 // Mixins
@@ -72,6 +64,7 @@ using Mixins = mixin_list<
     system_m, 
     pipeline_m,
     timer_m,
+    trigger_m,
     observer_m
 >;
 }
@@ -92,7 +85,6 @@ using Mixins = mixin_list<
 #include "filter.hpp"
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
-#include "trigger.hpp"
 #include "impl.hpp"
 
 // Addon implementations
@@ -101,4 +93,5 @@ using Mixins = mixin_list<
 #include "mixins/system/impl.hpp"
 #include "mixins/pipeline/impl.hpp"
 #include "mixins/timer/impl.hpp"
+#include "mixins/trigger/impl.hpp"
 #include "mixins/observer/impl.hpp"

@@ -1,15 +1,15 @@
 #pragma once
 
-#include "term_i.hpp"
+#include "../../builders/term_i.hpp"
 
 namespace flecs 
 {
 
 // Trigger builder interface
 template<typename Base, typename ... Components>
-class trigger_builder_i : public term_builder_i<Base> {
+struct trigger_builder_i : term_builder_i<Base> {
     using BaseClass = term_builder_i<Base>;
-public:
+
     trigger_builder_i()
         : BaseClass(nullptr)
         , m_desc(nullptr)
