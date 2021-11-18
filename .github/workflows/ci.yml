@@ -103,7 +103,7 @@ jobs:
           bake/bake examples/os_api/bake --strict --cfg release
 
   test-unix:
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -127,7 +127,7 @@ jobs:
           bake test
 
   test-windows:
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: windows-latest
 
     steps:
@@ -152,7 +152,7 @@ jobs:
           bake/bake run test\collections
 
   analyze-scan-build:
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     env:
       CC: clang-10
