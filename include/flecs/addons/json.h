@@ -12,8 +12,6 @@
 #define FLECS_EXPR
 #endif
 
-#include "expr.h"
-
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
 

@@ -1,8 +1,6 @@
 
 #include "../private_api.h"
 
-#ifdef FLECS_STATS
-
 #ifdef FLECS_SYSTEM
 #include "../addons/system/system.h"
 #endif
@@ -10,6 +8,8 @@
 #ifdef FLECS_PIPELINE
 #include "../addons/pipeline/pipeline.h"
 #endif
+
+#ifdef FLECS_STATS
 
 static
 int32_t t_next(

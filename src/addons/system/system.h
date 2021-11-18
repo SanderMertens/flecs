@@ -1,6 +1,8 @@
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
+#ifdef FLECS_SYSTEM
+
 #include "../../private_api.h"
 
 typedef struct EcsSystem {
@@ -45,5 +47,7 @@ ecs_entity_t ecs_run_intern(
     int32_t offset,
     int32_t limit,
     void *param);
+
+#endif
 
 #endif

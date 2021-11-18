@@ -45,14 +45,9 @@
 #endif
 
 /* For the REST system */
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
 #endif
-
-#include "http.h"
-#include "json.h"
-#include "rules.h"
-#include "system.h"
 
 #ifndef FLECS_REST_H
 #define FLECS_REST_H

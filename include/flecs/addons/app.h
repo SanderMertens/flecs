@@ -17,8 +17,6 @@
 #ifndef FLECS_APP_H
 #define FLECS_APP_H
 
-#include "pipeline.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

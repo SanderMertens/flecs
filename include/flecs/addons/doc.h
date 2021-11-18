@@ -17,8 +17,6 @@
 #define FLECS_MODULE
 #endif
 
-#include "module.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -38,9 +38,6 @@
 #define FLECS_PARSER
 #endif
 
-#include "meta.h"
-#include "parser.h"
-
 #ifndef FLECS_EXPR_H
 #define FLECS_EXPR_H
 

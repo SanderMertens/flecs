@@ -58,9 +58,6 @@
 #define FLECS_MODULE
 #endif
 
-#include "module.h"
-#include "../private/hashmap.h"
-
 #ifndef FLECS_META_H
 #define FLECS_META_H
 

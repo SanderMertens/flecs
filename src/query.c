@@ -1,6 +1,6 @@
 #include "private_api.h"
 
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
 #include "addons/system/system.h"
 #endif
 
@@ -247,7 +247,7 @@ void remove_table_node(
     node->prev = NULL;
     node->next = NULL;
 
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
     if (query->list.first == NULL && query->system && !query->world->is_fini) {
         ecs_system_activate(query->world, query->system, false, NULL);
     }
@@ -267,7 +267,7 @@ void insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-#ifdef FLECS_SYSTEMS_H
+#ifdef FLECS_SYSTEM
     if (!query->list.first && query->system) {
         ecs_system_activate(query->world, query->system, true, NULL);
     }
