@@ -123,8 +123,10 @@ jobs:
 
       - name: run tests
         run: |
-          bake examples/os_api/bake
-          bake test
+          bake run test/api -- -j 4
+          bake run test/meta -- -j 4
+          bake run test/collections -- -j 4
+          bake run test/cpp_api -- -j 4
 
   test-windows:
     timeout-minutes: 30
@@ -201,9 +203,9 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/api --cfg sanitize
-          bake run test/meta --cfg sanitize
-          bake run test/collections --cfg sanitize
+          bake run test/api --cfg sanitize -- -j 4
+          bake run test/meta --cfg sanitize -- -j 4
+          bake run test/collections --cfg sanitize -- -j 4
 
   analyze-sanitized-cpp:
     timeout-minutes: 30
@@ -226,7 +228,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/cpp_api --cfg sanitize
+          bake run test/cpp_api --cfg sanitize -- -j 4
 
   buildsystem-cmake:
     timeout-minutes: 10
