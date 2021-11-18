@@ -46,10 +46,13 @@ private:
 
         ecs_observer_desc_t desc = m_desc;
         desc.callback = Invoker::run;
-        desc.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        if (is_each) {
+            desc.filter.instanced = true;
+        }
 
         ecs_entity_t result = ecs_observer_init(m_world, &desc);
 

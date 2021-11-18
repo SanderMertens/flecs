@@ -10687,13 +10687,9 @@ class term;
 class filter_iterator;
 class world_filter;
 class snapshot_filter;
-class query_base;
 
 template<typename ... Components>
 class filter;
-
-template<typename ... Components>
-class query;
 
 template<typename ... Components>
 class trigger;
@@ -10703,9 +10699,6 @@ class observer;
 
 template <typename ... Components>
 class filter_builder;
-
-template <typename ... Components>
-class query_builder;
 
 template <typename ... Components>
 class trigger_builder;
@@ -10885,6 +10878,46 @@ struct module_m<flecs::world> : mixin<flecs::world> {
 };
 
 using module_m_world = module_m<flecs::world>;
+
+}
+namespace flecs {
+
+class query_base;
+
+template<typename ... Components>
+class query;
+
+template<typename ... Components>
+class query_builder;
+
+template <typename T>
+struct query_m : mixin<T> { };
+
+/** Query mixin for flecs::world */
+template <>
+struct query_m<flecs::world> : mixin<flecs::world> {
+  void init() { }
+
+    /** Create a query.
+     * @see ecs_query_init
+     */
+    template <typename... Comps, typename... Args>
+    flecs::query<Comps...> query(Args &&... args) const;
+
+    /** Create a subquery.
+     * @see ecs_query_init
+     */
+    template <typename... Comps, typename... Args>
+    flecs::query<Comps...> query(flecs::query_base& parent, Args &&... args) const;
+
+    /** Create a query builder.
+     * @see ecs_query_init
+     */
+    template <typename... Comps, typename... Args>
+    flecs::query_builder<Comps...> query_builder(Args &&... args) const;
+};
+
+using query_m_world = query_m<flecs::world>;
 
 }
 #pragma once
@@ -11113,6 +11146,7 @@ using timer_m_system = timer_m<flecs::system>;
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
+    query_m,
     system_m, 
     pipeline_m,
     timer_m
@@ -12955,16 +12989,6 @@ public:
      */
     template <typename... Comps, typename... Args>
     flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
-
-    /** Create a query.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::query<Comps...> query(Args &&... args) const;
-
-    /** Create a query builder.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 
     /** Create a term 
      */
@@ -16768,174 +16792,6 @@ inline filter_iterator snapshot::end() {
 namespace flecs 
 {
 
-////////////////////////////////////////////////////////////////////////////////
-//// Persistent queries
-////////////////////////////////////////////////////////////////////////////////
-
-class query_base {
-public:
-    query_base()
-        : m_world(nullptr)
-        , m_query(nullptr) { }    
-    
-    query_base(world_t *world, query_t *query = nullptr)
-        : m_world(world)
-        , m_query(query) { }
-
-    /** Get pointer to C query object.
-     */
-    query_t* c_ptr() const {
-        return m_query;
-    }
-
-    /** Returns whether the query data changed since the last iteration.
-     * This operation must be invoked before obtaining the iterator, as this will
-     * reset the changed state. The operation will return true after:
-     * - new entities have been matched with
-     * - matched entities were deleted
-     * - matched components were changed
-     * 
-     * @return true if entities changed, otherwise false.
-     */
-    bool changed() {
-        return ecs_query_changed(m_query);
-    }
-
-    /** Returns whether query is orphaned.
-     * When the parent query of a subquery is deleted, it is left in an orphaned
-     * state. The only valid operation on an orphaned query is deleting it. Only
-     * subqueries can be orphaned.
-     *
-     * @return true if query is orphaned, otherwise false.
-     */
-    bool orphaned() {
-        return ecs_query_orphaned(m_query);
-    }
-
-    /** Free the query.
-     */
-    void destruct() {
-        ecs_query_fini(m_query);
-        m_world = nullptr;
-        m_query = nullptr;
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        while (ecs_query_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }  
-
-    template <typename Func>
-    void each_term(const Func& func) {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
-
-        for (int i = 0; i < f->term_count; i ++) {
-            flecs::term t(m_world, f->terms[i]);
-            func(t);
-        }
-    }
-
-    filter_base filter() {
-        return filter_base(m_world, ecs_query_get_filter(m_query));
-    }
-
-    flecs::term term(int32_t index) {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
-        return flecs::term(m_world, f->terms[index]);
-    }
-
-    int32_t term_count() {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        return f->term_count;   
-    }
-
-    flecs::string str() {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        char *result = ecs_filter_str(m_world, f);
-        return flecs::string(result);
-    }
-
-protected:
-    world_t *m_world;
-    query_t *m_query;
-};
-
-
-template<typename ... Components>
-class query : public query_base {
-    using Terms = typename _::term_ptrs<Components...>::array;
-
-public:
-    query() { }
-
-    query(world_t *world, query_t *q)
-        : query_base(world, q) { }
-
-    explicit query(const world& world, const char *expr = nullptr) 
-        : query_base(world.c_ptr())
-    {
-        auto qb = world.query_builder<Components ...>()
-            .expr(expr);
-
-        m_query = qb;
-    }
-
-    explicit query(const world& world, query_base& parent, const char *expr = nullptr) 
-        : query_base(world.c_ptr())    
-    {
-        auto qb = world.query_builder<Components ...>()
-            .parent(parent)
-            .expr(expr);
-
-        m_query = qb;
-    }
-
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
-            ecs_query_next_instanced);
-    } 
-
-    template <typename Func>
-    void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
-            ecs_query_next_worker, stage_current, stage_count);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
-    }
-
-    template <typename Func>
-    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
-            ecs_query_next_worker, stage_current, stage_count);
-    }
-
-private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        if (force_instanced) {
-            it.is_instanced = true;
-        }
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
-        }
-    }
-};
-
-} // namespace flecs
-
-namespace flecs 
-{
-
 template<typename ... Components>
 class trigger : public entity
 {
@@ -17082,11 +16938,6 @@ public:
 
     Base& expr(const char *expr) {
         m_desc->expr = expr;
-        return *this;
-    }
-
-    Base& substitute_default(bool value = true) {
-        m_desc->substitute_default = value;
         return *this;
     }
 
@@ -17544,180 +17395,6 @@ inline flecs::type iter::type() const {
 namespace flecs 
 {
 
-// Query builder interface
-template<typename Base, typename ... Components>
-class query_builder_i : public filter_builder_i<Base, Components ...> {
-    using BaseClass = filter_builder_i<Base, Components ...>;
-public:
-    query_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr) { }
-
-    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
-        : BaseClass(&desc->filter, term_index)
-        , m_desc(desc) { }
-
-    /** Sort the output of a query.
-     * This enables sorting of entities across matched tables. As a result of this
-     * operation, the order of entities in the matched tables may be changed. 
-     * Resorting happens when a query iterator is obtained, and only if the table
-     * data has changed.
-     *
-     * If multiple queries that match the same (sub)set of tables specify different 
-     * sorting functions, resorting is likely to happen every time an iterator is
-     * obtained, which can significantly slow down iterations.
-     *
-     * The sorting function will be applied to the specified component. Resorting
-     * only happens if that component has changed, or when the entity order in the
-     * table has changed. If no component is provided, resorting only happens when
-     * the entity order changes.
-     *
-     * @tparam T The component used to sort.
-     * @param compare The compare function used to sort the components.
-     */      
-    template <typename T>
-    Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
-        ecs_order_by_action_t cmp = reinterpret_cast<ecs_order_by_action_t>(compare);
-        return this->order_by(_::cpp_type<T>::id(this->world_v()), cmp);
-    }
-
-    /** Sort the output of a query.
-     * Same as order_by<T>, but with component identifier.
-     *
-     * @param component The component used to sort.
-     * @param compare The compare function used to sort the components.
-     */    
-    Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
-        m_desc->order_by_component = component;
-        return *this;
-    }
-
-    /** Group and sort matched tables.
-     * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
-     * operation only sorts matched tables. This can be useful of a query needs to
-     * enforce a certain iteration order upon the tables it is iterating, for 
-     * example by giving a certain component or tag a higher priority.
-     *
-     * The sorting function assigns a "rank" to each type, which is then used to
-     * sort the tables. Tables with higher ranks will appear later in the iteration.
-     * 
-     * Resorting happens when a query iterator is obtained, and only if the set of
-     * matched tables for a query has changed. If table sorting is enabled together
-     * with entity sorting, table sorting takes precedence, and entities will be
-     * sorted within each set of tables that are assigned the same rank.
-     *
-     * @tparam T The component used to determine the group rank.
-     * @param rank The rank action.
-     */
-    template <typename T>
-    Base& group_by(uint64_t(*rank)(flecs::world_t*, flecs::type_t type, flecs::id_t id, void* ctx)) {
-        ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
-        return this->group_by(_::cpp_type<T>::id(this->world_v()), rnk);
-    }
-
-    /** Group and sort matched tables.
-     * Same as group_by<T>, but with component identifier.
-     *
-     * @param component The component used to determine the group rank.
-     * @param rank The rank action.
-     */
-    Base& group_by(flecs::entity_t component, uint64_t(*rank)(flecs::world_t*, flecs::type_t type, flecs::id_t id, void* ctx)) {
-        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
-        m_desc->group_by_id = component;
-        return *this;
-    } 
-
-    /** Specify parent query (creates subquery) */
-    Base& parent(const query_base& parent);
-    
-protected:
-    virtual flecs::world_t* world_v() = 0;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_query_desc_t *m_desc;
-};
-
-}
-
-namespace flecs 
-{
-
-template<typename ... Components>
-class query_builder_base
-    : public query_builder_i<query_builder_base<Components...>, Components ...>
-{
-public:
-    query_builder_base(flecs::world_t *world) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
-        , m_desc({})
-        , m_world(world)
-    { 
-        this->populate_filter_from_pack();
-    }
-
-    query_builder_base(const query_builder_base& f) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
-    {
-        m_world = f.m_world;
-        m_desc = f.m_desc;
-    }
-
-    query_builder_base(query_builder_base&& f) 
-        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
-    {
-        m_world = f.m_world;
-        m_desc = f.m_desc;
-    }
-
-    operator query<Components ...>() const;
-
-    operator ecs_query_t*() const {
-        ecs_query_t *result = ecs_query_init(this->m_world, &this->m_desc);
-
-        if (!result) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        if (this->m_desc.filter.terms_buffer) {
-            ecs_os_free(m_desc.filter.terms_buffer);
-        }
-        
-        return result;
-    }    
-
-    query<Components ...> build() const;
-
-    ecs_query_desc_t m_desc;
-
-    flecs::world_t* world_v() override { return m_world; }
-
-protected:
-    flecs::world_t *m_world;
-};
-
-template<typename ... Components>
-class query_builder final : public query_builder_base<Components...> {
-public:
-    query_builder(flecs::world_t *world)
-        : query_builder_base<Components ...>(world) { }
-
-    operator query<>() const;
-};
-
-}
-#pragma once
-
-#pragma once
-
-
-namespace flecs 
-{
-
 // Trigger builder interface
 template<typename Base, typename ... Components>
 class trigger_builder_i : public term_builder_i<Base> {
@@ -17930,7 +17607,6 @@ private:
 
         ecs_observer_desc_t desc = m_desc;
         desc.callback = Invoker::run;
-        desc.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
@@ -18140,16 +17816,6 @@ inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) co
     return flecs::filter_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
-template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query<Comps...>(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(*this, std::forward<Args>(args)...);
-}
-
 template <typename... Args>
 inline flecs::term world::term(Args &&... args) const {
     return flecs::term(*this, std::forward<Args>(args)...);
@@ -18291,30 +17957,6 @@ inline filter<Components ...> filter_builder_base<Components...>::build() const 
     return flecs::filter<Components...>(m_world, &filter);
 }
 
-template <typename ... Components>
-inline query_builder_base<Components...>::operator query<Components ...>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
-template <typename ... Components>
-inline query_builder<Components ...>::operator query<>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<>(this->m_world, query);
-}
-
-template <typename ... Components>
-inline query<Components ...> query_builder_base<Components...>::build() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
-template <typename Base, typename ... Components>
-inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
-    m_desc->parent = parent.c_ptr();
-    return *static_cast<Base*>(this);
-}
-
 template <typename ... Components>    
 template <typename Func>
 inline observer<Components ...> observer_builder<Components...>::iter(Func&& func) const {
@@ -18430,6 +18072,370 @@ inline flecs::entity module_m_world::import() {
 }
 
 }
+#pragma once
+
+#pragma once
+
+#pragma once
+
+
+namespace flecs 
+{
+
+// Query builder interface
+template<typename Base, typename ... Components>
+class query_builder_i : public filter_builder_i<Base, Components ...> {
+    using BaseClass = filter_builder_i<Base, Components ...>;
+public:
+    query_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr) { }
+
+    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
+        : BaseClass(&desc->filter, term_index)
+        , m_desc(desc) { }
+
+    /** Sort the output of a query.
+     * This enables sorting of entities across matched tables. As a result of this
+     * operation, the order of entities in the matched tables may be changed. 
+     * Resorting happens when a query iterator is obtained, and only if the table
+     * data has changed.
+     *
+     * If multiple queries that match the same (sub)set of tables specify different 
+     * sorting functions, resorting is likely to happen every time an iterator is
+     * obtained, which can significantly slow down iterations.
+     *
+     * The sorting function will be applied to the specified component. Resorting
+     * only happens if that component has changed, or when the entity order in the
+     * table has changed. If no component is provided, resorting only happens when
+     * the entity order changes.
+     *
+     * @tparam T The component used to sort.
+     * @param compare The compare function used to sort the components.
+     */      
+    template <typename T>
+    Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
+        ecs_order_by_action_t cmp = reinterpret_cast<ecs_order_by_action_t>(compare);
+        return this->order_by(_::cpp_type<T>::id(this->world_v()), cmp);
+    }
+
+    /** Sort the output of a query.
+     * Same as order_by<T>, but with component identifier.
+     *
+     * @param component The component used to sort.
+     * @param compare The compare function used to sort the components.
+     */    
+    Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
+        m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
+        m_desc->order_by_component = component;
+        return *this;
+    }
+
+    /** Group and sort matched tables.
+     * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
+     * operation only sorts matched tables. This can be useful of a query needs to
+     * enforce a certain iteration order upon the tables it is iterating, for 
+     * example by giving a certain component or tag a higher priority.
+     *
+     * The sorting function assigns a "rank" to each type, which is then used to
+     * sort the tables. Tables with higher ranks will appear later in the iteration.
+     * 
+     * Resorting happens when a query iterator is obtained, and only if the set of
+     * matched tables for a query has changed. If table sorting is enabled together
+     * with entity sorting, table sorting takes precedence, and entities will be
+     * sorted within each set of tables that are assigned the same rank.
+     *
+     * @tparam T The component used to determine the group rank.
+     * @param rank The rank action.
+     */
+    template <typename T>
+    Base& group_by(uint64_t(*rank)(flecs::world_t*, flecs::type_t type, flecs::id_t id, void* ctx)) {
+        ecs_group_by_action_t rnk = reinterpret_cast<ecs_group_by_action_t>(rank);
+        return this->group_by(_::cpp_type<T>::id(this->world_v()), rnk);
+    }
+
+    /** Group and sort matched tables.
+     * Same as group_by<T>, but with component identifier.
+     *
+     * @param component The component used to determine the group rank.
+     * @param rank The rank action.
+     */
+    Base& group_by(flecs::entity_t component, uint64_t(*rank)(flecs::world_t*, flecs::type_t type, flecs::id_t id, void* ctx)) {
+        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(rank);
+        m_desc->group_by_id = component;
+        return *this;
+    } 
+
+    /** Specify parent query (creates subquery) */
+    Base& parent(const query_base& parent);
+    
+protected:
+    virtual flecs::world_t* world_v() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_query_desc_t *m_desc;
+};
+
+}
+
+namespace flecs
+{
+
+template<typename ... Components>
+class query_builder_base
+    : public query_builder_i<query_builder_base<Components...>, Components ...>
+{
+public:
+    query_builder_base(flecs::world_t *world) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+    { 
+        this->populate_filter_from_pack();
+    }
+
+    query_builder_base(const query_builder_base& f) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
+    {
+        m_world = f.m_world;
+        m_desc = f.m_desc;
+    }
+
+    query_builder_base(query_builder_base&& f) 
+        : query_builder_i<query_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
+    {
+        m_world = f.m_world;
+        m_desc = f.m_desc;
+    }
+
+    operator query<Components ...>() const;
+
+    operator ecs_query_t*() const {
+        ecs_query_t *result = ecs_query_init(this->m_world, &this->m_desc);
+
+        if (!result) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (this->m_desc.filter.terms_buffer) {
+            ecs_os_free(m_desc.filter.terms_buffer);
+        }
+        
+        return result;
+    }    
+
+    query<Components ...> build() const;
+
+    ecs_query_desc_t m_desc;
+
+    flecs::world_t* world_v() override { return m_world; }
+
+protected:
+    flecs::world_t *m_world;
+};
+
+template<typename ... Components>
+class query_builder final : public query_builder_base<Components...> {
+public:
+    query_builder(flecs::world_t *world)
+        : query_builder_base<Components ...>(world) { }
+
+    operator query<>() const;
+};
+
+}
+
+namespace flecs {
+
+#define me_ this->me()
+
+////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+class query_base {
+public:
+    query_base()
+        : m_world(nullptr)
+        , m_query(nullptr) { }    
+    
+    query_base(world_t *world, query_t *query = nullptr)
+        : m_world(world)
+        , m_query(query) { }
+
+    /** Get pointer to C query object.
+     */
+    query_t* c_ptr() const {
+        return m_query;
+    }
+
+    /** Returns whether the query data changed since the last iteration.
+     * This operation must be invoked before obtaining the iterator, as this will
+     * reset the changed state. The operation will return true after:
+     * - new entities have been matched with
+     * - matched entities were deleted
+     * - matched components were changed
+     * 
+     * @return true if entities changed, otherwise false.
+     */
+    bool changed() {
+        return ecs_query_changed(m_query);
+    }
+
+    /** Returns whether query is orphaned.
+     * When the parent query of a subquery is deleted, it is left in an orphaned
+     * state. The only valid operation on an orphaned query is deleting it. Only
+     * subqueries can be orphaned.
+     *
+     * @return true if query is orphaned, otherwise false.
+     */
+    bool orphaned() {
+        return ecs_query_orphaned(m_query);
+    }
+
+    /** Free the query.
+     */
+    void destruct() {
+        ecs_query_fini(m_query);
+        m_world = nullptr;
+        m_query = nullptr;
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
+        while (ecs_query_next(&it)) {
+            _::iter_invoker<Func>(func).invoke(&it);
+        }
+    }  
+
+    template <typename Func>
+    void each_term(const Func& func) {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        for (int i = 0; i < f->term_count; i ++) {
+            flecs::term t(m_world, f->terms[i]);
+            func(t);
+        }
+    }
+
+    filter_base filter() {
+        return filter_base(m_world, ecs_query_get_filter(m_query));
+    }
+
+    flecs::term term(int32_t index) {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
+        return flecs::term(m_world, f->terms[index]);
+    }
+
+    int32_t term_count() {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        return f->term_count;   
+    }
+
+    flecs::string str() {
+        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        char *result = ecs_filter_str(m_world, f);
+        return flecs::string(result);
+    }
+
+protected:
+    world_t *m_world;
+    query_t *m_query;
+};
+
+template<typename ... Components>
+class query : public query_base {
+    using Terms = typename _::term_ptrs<Components...>::array;
+
+public:
+    query() { }
+
+    query(world_t *world, query_t *q)
+        : query_base(world, q) { }
+
+    template <typename Func>
+    void each(Func&& func) const {
+        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+            ecs_query_next_instanced);
+    } 
+
+    template <typename Func>
+    void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
+        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
+    }
+
+    template <typename Func>
+    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
+        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
+            ecs_query_next_worker, stage_current, stage_count);
+    }
+
+private:
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = ecs_query_iter(m_world, m_query);
+        if (force_instanced) {
+            it.is_instanced = true;
+        }
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
+        }
+    }
+};
+
+// Mixin implementation
+template <typename... Comps, typename... Args>
+inline flecs::query<Comps...> query_m_world::query(Args &&... args) const {
+    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...)
+        .build();
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... args) const {
+    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...);
+}
+
+// Builder implementation
+template <typename ... Components>
+inline query_builder_base<Components...>::operator query<Components ...>() const {
+    ecs_query_t *query = *this;
+    return flecs::query<Components...>(m_world, query);
+}
+
+template <typename ... Components>
+inline query_builder<Components ...>::operator query<>() const {
+    ecs_query_t *query = *this;
+    return flecs::query<>(this->m_world, query);
+}
+
+template <typename ... Components>
+inline query<Components ...> query_builder_base<Components...>::build() const {
+    ecs_query_t *query = *this;
+    return flecs::query<Components...>(m_world, query);
+}
+
+template <typename Base, typename ... Components>
+inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
+    m_desc->parent = parent.c_ptr();
+    return *static_cast<Base*>(this);
+}
+
+#undef me_
+
+} // namespace flecs
 #pragma once
 
 #pragma once
@@ -18580,7 +18586,6 @@ private:
         ecs_system_desc_t desc = m_desc;
         desc.callback = Invoker::run;
         desc.self = m_desc.self;
-        desc.query.filter.substitute_default = is_each;
         desc.binding_ctx = ctx;
         desc.binding_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Invoker>);
