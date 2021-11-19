@@ -1,21 +1,9 @@
+#pragma once
 
-#ifdef FLECS_DEPRECATED
-#include "../addons/deprecated/type.hpp"
-#else
-template <typename Base>
-class type_deprecated { };
-#endif
-
-namespace flecs 
-{
-
-////////////////////////////////////////////////////////////////////////////////
-//// A collection of component ids used to describe the contents of a table
-////////////////////////////////////////////////////////////////////////////////
+namespace flecs {
 
 template <typename Base>
-class type_base : public type_deprecated<type> {
-public:
+struct type_base {
     explicit type_base(
         world_t *world, const char *name = nullptr, const char *expr = nullptr)
     { 
@@ -189,8 +177,7 @@ private:
     table_t *m_table = nullptr;
 };
 
-class type : public type_base<type> { 
-public:
+struct type : type_base<type> { 
     explicit type(
         world_t *world, const char *name = nullptr, const char *expr = nullptr)
     : type_base(world, name, expr) { }
@@ -200,4 +187,4 @@ public:
     type(type_t t) : type_base(t) { }
 };
 
-} // namespace flecs
+}

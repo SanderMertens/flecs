@@ -1,21 +1,18 @@
 #pragma once
 
-#include "builders/entity_i.hpp"
+#include "mixins/entity/builder_i.hpp"
+#include "entity_view.hpp"
 
 namespace flecs
 {
 
 /** Entity class
  * This class provides access to entities. */
-class entity : 
-    public entity_view,
-    public entity_builder_i<entity>
+struct entity : entity_view, entity_builder_i<entity>
 {
-public:
     /** Default constructor.
      */
-    entity()
-        : flecs::entity_view() { }
+    entity() : flecs::entity_view() { }
 
     /** Create entity.
      *
@@ -267,16 +264,6 @@ protected:
 
     flecs::entity_t id_v() override {
         return m_id;
-    }
-};
-
-/** Prefab class */
-class prefab final : public entity {
-public:
-    explicit prefab(world_t *world, const char *name = nullptr) 
-        : entity(world, name)
-    {
-        this->add(flecs::Prefab);
     }
 };
 

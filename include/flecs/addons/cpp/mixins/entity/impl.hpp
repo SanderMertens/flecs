@@ -1,7 +1,6 @@
 #pragma once
 
-namespace flecs 
-{
+namespace flecs {
 
 template <typename T>
 flecs::entity ref<T>::entity() const {
@@ -179,5 +178,23 @@ inline flecs::entity entity_view::lookup(const char *path) const {
     auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
     return flecs::entity(m_world, id);
 }
+
+
+#define me_ this->me()
+
+// Entity mixin implementation
+template <typename... Args>
+inline flecs::entity entity_m_world::entity(Args &&... args) const {
+    return flecs::entity(me_, std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline flecs::entity entity_m_world::prefab(Args &&... args) const {
+    flecs::entity result = flecs::entity(me_, std::forward<Args>(args)...);
+    result.add(flecs::Prefab);
+    return result;
+}
+
+#undef me_
 
 }

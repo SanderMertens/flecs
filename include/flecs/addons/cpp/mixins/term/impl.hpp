@@ -7,8 +7,7 @@ namespace flecs {
 #define me_ this->me()
 
 // Class that describes a term
-class term final : public term_builder_i<term> {
-public:
+struct term final : term_builder_i<term> {
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})

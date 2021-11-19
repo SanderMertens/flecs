@@ -6,10 +6,12 @@ namespace flecs
 {
 
 template<typename ... Components>
-class observer_builder final
-    : public observer_builder_i<observer_builder<Components ...>, Components ...>
+struct observer_builder final
+    : observer_builder_i<observer_builder<Components ...>, Components ...>
 {
+private:
     using Class = observer_builder<Components ...>;
+    
 public:
     explicit observer_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
         : observer_builder_i<Class, Components ...>(&m_desc)

@@ -60,7 +60,7 @@ protected:
 };
 
 template<typename ... Components>
-class filter_builder final : public filter_builder_base<Components...> {
+struct filter_builder final : filter_builder_base<Components...> {
 public:
     filter_builder(flecs::world_t *world)
         : filter_builder_base<Components ...>(world) { }

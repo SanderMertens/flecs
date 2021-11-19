@@ -5,7 +5,7 @@ namespace flecs {
 struct observer;
 
 template<typename ... Components>
-class observer_builder;
+struct observer_builder;
 
 template<typename T>
 struct observer_m : mixin<T> { };

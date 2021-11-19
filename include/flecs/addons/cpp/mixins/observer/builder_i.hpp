@@ -7,9 +7,8 @@ namespace flecs
 
 // Observer builder interface
 template<typename Base, typename ... Components>
-class observer_builder_i : public filter_builder_i<Base, Components ...> {
+struct observer_builder_i : filter_builder_i<Base, Components ...> {
     using BaseClass = filter_builder_i<Base, Components ...>;
-public:
     observer_builder_i()
         : BaseClass(nullptr)
         , m_desc(nullptr)
