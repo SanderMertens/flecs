@@ -1170,3 +1170,506 @@ void Switch_match_switch_on_base_instance() {
 
     ecs_fini(world);
 }
+
+void Switch_switch_w_bitset_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, true);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Walking);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, false);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_switch_w_bitset_query_inv() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, true);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Running);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, true);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_switch_w_bitset_query_2_elems() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, true);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Walking);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, true);
+
+    ecs_entity_t e0 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e0, ECS_CASE | Walking);
+    ecs_set(world, e0, Position, {11, 22});
+    ecs_enable_component(world, e0, Position, false);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_switch_w_bitset_query_2_elems_skip() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, true);
+
+    ecs_entity_t e0 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e0, ECS_CASE | Walking);
+    ecs_set(world, e0, Position, {11, 22});
+    ecs_enable_component(world, e0, Position, false);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Walking);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, true);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_switch_w_bitset_query_elems_interleaved() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, false);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Running);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, true);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+    ecs_enable_component(world, e3, Position, false);
+
+    ecs_entity_t e4 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e4, ECS_CASE | Running);
+    ecs_set(world, e4, Position, {13, 23});
+    ecs_enable_component(world, e4, Position, true);
+
+    ecs_entity_t e5 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e5, ECS_CASE | Walking);
+    ecs_set(world, e5, Position, {13, 23});
+    ecs_enable_component(world, e5, Position, true);
+
+    ecs_entity_t e6 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e6, ECS_CASE | Running);
+    ecs_set(world, e6, Position, {13, 23});
+    ecs_enable_component(world, e6, Position, true);
+
+    ecs_entity_t e7 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e7, ECS_CASE | Walking);
+    ecs_set(world, e7, Position, {13, 23});
+    ecs_enable_component(world, e7, Position, false);
+
+    ecs_entity_t e8 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e8, ECS_CASE | Walking);
+    ecs_set(world, e8, Position, {13, 23});
+    ecs_enable_component(world, e8, Position, true);
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e5);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e8);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Switch_switch_w_bitset_query_elems_interleaved_2_types() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    ECS_TYPE(world, Movement, Walking, Running, Jumping);
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_enable_component(world, e1, Position, false);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Running);
+    ecs_set(world, e2, Position, {11, 22});
+    ecs_enable_component(world, e2, Position, true);
+
+    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_set(world, e3, Position, {13, 23});
+    ecs_enable_component(world, e3, Position, false);
+
+    ecs_entity_t e4 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e4, ECS_CASE | Running);
+    ecs_set(world, e4, Position, {13, 23});
+    ecs_enable_component(world, e4, Position, true);
+
+    ecs_entity_t e5 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e5, ECS_CASE | Walking);
+    ecs_set(world, e5, Position, {13, 23});
+    ecs_enable_component(world, e5, Position, true);
+
+    ecs_entity_t e6 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e6, ECS_CASE | Running);
+    ecs_set(world, e6, Position, {13, 23});
+    ecs_enable_component(world, e6, Position, true);
+
+    ecs_entity_t e7 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e7, ECS_CASE | Walking);
+    ecs_set(world, e7, Position, {13, 23});
+    ecs_enable_component(world, e7, Position, false);
+
+    ecs_entity_t e8 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e8, ECS_CASE | Walking);
+    ecs_set(world, e8, Position, {13, 23});
+    ecs_enable_component(world, e8, Position, true);
+
+
+    ecs_entity_t e1_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e1_2, ECS_CASE | Walking);
+    ecs_set(world, e1_2, Position, {10, 20});
+    ecs_enable_component(world, e1_2, Position, false);
+    ecs_add_id(world, e1_2, Tag);
+
+    ecs_entity_t e2_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2_2, ECS_CASE | Running);
+    ecs_set(world, e2_2, Position, {11, 22});
+    ecs_enable_component(world, e2_2, Position, true);
+    ecs_add_id(world, e2_2, Tag);
+
+    ecs_entity_t e3_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e3_2, ECS_CASE | Walking);
+    ecs_set(world, e3_2, Position, {13, 23});
+    ecs_enable_component(world, e3_2, Position, false);
+    ecs_add_id(world, e3_2, Tag);
+
+    ecs_entity_t e4_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e4_2, ECS_CASE | Running);
+    ecs_set(world, e4_2, Position, {13, 23});
+    ecs_enable_component(world, e4_2, Position, true);
+    ecs_add_id(world, e4_2, Tag);
+
+    ecs_entity_t e5_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e5_2, ECS_CASE | Walking);
+    ecs_set(world, e5_2, Position, {13, 23});
+    ecs_enable_component(world, e5_2, Position, true);
+    ecs_add_id(world, e5_2, Tag);
+
+    ecs_entity_t e6_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e6_2, ECS_CASE | Running);
+    ecs_set(world, e6_2, Position, {13, 23});
+    ecs_enable_component(world, e6_2, Position, true);
+    ecs_add_id(world, e6_2, Tag);
+
+    ecs_entity_t e7_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e7_2, ECS_CASE | Walking);
+    ecs_set(world, e7_2, Position, {13, 23});
+    ecs_enable_component(world, e7_2, Position, false);
+    ecs_add_id(world, e7_2, Tag);
+
+    ecs_entity_t e8_2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e8_2, ECS_CASE | Walking);
+    ecs_set(world, e8_2, Position, {13, 23});
+    ecs_enable_component(world, e8_2, Position, true);
+    ecs_add_id(world, e8_2, Tag);
+
+    Position *p;
+    ecs_entity_t *c;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e5);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e8);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e5_2);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e8_2);
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 13);
+    test_int(p->y, 23);
+    c = ecs_term(&it, ecs_entity_t, 2);
+    test_assert(c != NULL);
+    test_assert(c[0] == Walking);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}

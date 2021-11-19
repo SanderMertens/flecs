@@ -2476,7 +2476,8 @@ int sparse_column_next(
     ecs_query_table_match_t *matched_table,
     ecs_vector_t *sparse_columns,
     ecs_query_iter_t *iter,
-    ecs_page_cursor_t *cur)
+    ecs_page_cursor_t *cur,
+    bool filter)
 {
     bool first_iteration = false;
     int32_t sparse_smallest;
@@ -2496,16 +2497,29 @@ int sparse_column_next(
     ecs_entity_t case_smallest = column->sw_case;
 
     /* Find next entity to iterate in sparse column */
-    int32_t first;
-    if (first_iteration) {
-        first = flecs_switch_first(sw_smallest, case_smallest);
+    int32_t first, sparse_first = iter->sparse_first;
+
+    if (!filter) {
+        if (first_iteration) {
+            first = flecs_switch_first(sw_smallest, case_smallest);
+        } else {
+            first = flecs_switch_next(sw_smallest, sparse_first);
+        }
     } else {
-        first = flecs_switch_next(sw_smallest, iter->sparse_first);
+        int32_t cur_first = cur->first, cur_count = cur->count;
+        first = cur_first;
+        while (flecs_switch_get(sw_smallest, first) != case_smallest) {
+            first ++;
+            if (first >= (cur_first + cur_count)) {
+                first = -1;
+                break;
+            }
+        }
     }
 
     if (first == -1) {
         goto done;
-    }    
+    }
 
     /* Check if entity matches with other sparse columns, if any */
     int32_t i, count = ecs_vector_count(sparse_columns);
@@ -2708,8 +2722,12 @@ int bitset_column_next(
 
         /* Make sure last element doesn't exceed total number of elements in 
          * the table */
-        if (elem_count > bs_elem_count) {
-            elem_count = bs_elem_count;
+        if (elem_count > (bs_elem_count - first)) {
+            elem_count = (bs_elem_count - first);
+            if (!elem_count) {
+                iter->bitset_first = 0;
+                goto done;
+            }
         }
         
         cur->first = first;
@@ -2722,6 +2740,8 @@ int bitset_column_next(
 
     return 0;
 done:
+    iter->sparse_smallest = 0;
+    iter->sparse_first = 0;
     return -1;
 }
 
@@ -2823,25 +2843,47 @@ bool ecs_query_next_instanced(
             ecs_vector_t *bitset_columns = match->bitset_columns;
             ecs_vector_t *sparse_columns = match->sparse_columns;
 
-            if (bitset_columns) {
-                if (bitset_column_next(table, bitset_columns, iter, 
-                    &cur) == -1) 
-                {
-                    /* No more enabled components for table */
-                    continue; 
-                } else {
-                    next = node;
-                }
-            }
+            if (bitset_columns || sparse_columns) {
+                bool found = false;
 
-            if (sparse_columns) {
-                if (sparse_column_next(table, match,
-                    sparse_columns, iter, &cur) == -1)
-                {
-                    /* No more elements in sparse column */
-                    continue;    
-                } else {
-                    next = node;
+                do {
+                    found = false;
+
+                    if (bitset_columns) {
+                        if (bitset_column_next(table, bitset_columns, iter, 
+                            &cur) == -1) 
+                        {
+                            /* No more enabled components for table */
+                            break;
+                        } else {
+                            found = true;
+                            next = node;
+                        }
+                    }
+
+                    if (sparse_columns) {
+                        if (sparse_column_next(table, match,
+                            sparse_columns, iter, &cur, found) == -1)
+                        {
+                            /* No more elements in sparse column */
+                            if (found) {
+                                /* Try again */
+                                next = node->next;
+                                found = false;
+                            } else {
+                                /* Nothing found */
+                                break;
+                            }
+                        } else {
+                            found = true;
+                            next = node;
+                            iter->bitset_first = cur.first + cur.count;
+                        }
+                    }
+                } while (!found);
+
+                if (!found) {
+                    continue;
                 }
             }
 

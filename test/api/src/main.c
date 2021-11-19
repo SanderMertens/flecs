@@ -162,6 +162,12 @@ void Switch_recycled_tags(void);
 void Switch_query_recycled_tags(void);
 void Switch_single_case(void);
 void Switch_match_switch_on_base_instance(void);
+void Switch_switch_w_bitset_query(void);
+void Switch_switch_w_bitset_query_inv(void);
+void Switch_switch_w_bitset_query_2_elems(void);
+void Switch_switch_w_bitset_query_2_elems_skip(void);
+void Switch_switch_w_bitset_query_elems_interleaved(void);
+void Switch_switch_w_bitset_query_elems_interleaved_2_types(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -2836,6 +2842,30 @@ bake_test_case Switch_testcases[] = {
     {
         "match_switch_on_base_instance",
         Switch_match_switch_on_base_instance
+    },
+    {
+        "switch_w_bitset_query",
+        Switch_switch_w_bitset_query
+    },
+    {
+        "switch_w_bitset_query_inv",
+        Switch_switch_w_bitset_query_inv
+    },
+    {
+        "switch_w_bitset_query_2_elems",
+        Switch_switch_w_bitset_query_2_elems
+    },
+    {
+        "switch_w_bitset_query_2_elems_skip",
+        Switch_switch_w_bitset_query_2_elems_skip
+    },
+    {
+        "switch_w_bitset_query_elems_interleaved",
+        Switch_switch_w_bitset_query_elems_interleaved
+    },
+    {
+        "switch_w_bitset_query_elems_interleaved_2_types",
+        Switch_switch_w_bitset_query_elems_interleaved_2_types
     }
 };
 
@@ -10861,7 +10891,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        34,
+        40,
         Switch_testcases
     },
     {

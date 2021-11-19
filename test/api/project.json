@@ -177,7 +177,13 @@
                 "recycled_tags",
                 "query_recycled_tags",
                 "single_case",
-                "match_switch_on_base_instance"
+                "match_switch_on_base_instance",
+                "switch_w_bitset_query",
+                "switch_w_bitset_query_inv",
+                "switch_w_bitset_query_2_elems",
+                "switch_w_bitset_query_2_elems_skip",
+                "switch_w_bitset_query_elems_interleaved",
+                "switch_w_bitset_query_elems_interleaved_2_types"
             ]
         }, {
             "id": "EnabledComponents",
