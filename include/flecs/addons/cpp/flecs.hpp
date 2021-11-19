@@ -23,7 +23,6 @@ class entity;
 class entity_view;
 class type;
 class iter;
-class term;
 class filter_iterator;
 class world_filter;
 class snapshot_filter;
@@ -43,6 +42,7 @@ class each_invoker;
 
 // Addon forward declarations
 #include "mixins/module/decl.hpp"
+#include "mixins/term/decl.hpp"
 #include "mixins/filter/decl.hpp"
 #include "mixins/query/decl.hpp"
 #include "mixins/system/decl.hpp"
@@ -55,6 +55,7 @@ class each_invoker;
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
+    term_m,
     filter_m,
     query_m,
     system_m, 
@@ -77,13 +78,13 @@ using Mixins = mixin_list<
 #include "component.hpp"
 #include "invoker.hpp"
 #include "type.hpp"
-#include "term.hpp"
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
 #include "impl.hpp"
 
 // Addon implementations
 #include "mixins/module/impl.hpp"
+#include "mixins/term/impl.hpp"
 #include "mixins/filter/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/system/impl.hpp"

@@ -3,11 +3,10 @@
 namespace flecs 
 {
 
-template<typename Base>
-
 /** Term identifier builder.
  * A term identifier is either the predicate (pred), subject (subj) or object
  * (obj) of a term. Use the term builder to select the term identifier. */
+template<typename Base>
 struct term_id_builder_i {
     term_id_builder_i() : m_term_id(nullptr) { }
 
@@ -114,8 +113,7 @@ private:
 
 /** Term builder. A term is a single element of a query expression. */
 template<typename Base>
-class term_builder_i : public term_id_builder_i<Base> {
-public:
+struct term_builder_i : term_id_builder_i<Base> {
     term_builder_i() : m_term(nullptr) { }
 
     term_builder_i(ecs_term_t *term_ptr) { 
