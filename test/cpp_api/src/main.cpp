@@ -266,6 +266,7 @@ void Type_has_pair_type(void);
 void Type_has_pair_entity(void);
 void Type_get(void);
 void Type_get_out_of_range(void);
+void Type_has_from_stage(void);
 
 // Testsuite 'System'
 void System_action(void);
@@ -1745,6 +1746,10 @@ bake_test_case Type_testcases[] = {
     {
         "get_out_of_range",
         Type_get_out_of_range
+    },
+    {
+        "has_from_stage",
+        Type_has_from_stage
     }
 };
 
@@ -3572,7 +3577,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        8,
+        9,
         Type_testcases
     },
     {

@@ -124,3 +124,25 @@ void Type_get_out_of_range() {
     test_expect_abort();
     type.get(2);
 }
+
+struct MyStruct {
+    int Field;
+};
+
+void Type_has_from_stage() {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.system()
+        .iter([&](flecs::iter &it){
+            test_assert(it.type().has(it.world().id<MyStruct>()) == false);
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    ecs.progress(1.0f);
+
+    test_int(count, 1);
+}

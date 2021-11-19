@@ -16836,11 +16836,13 @@ public:
     }
 
     bool has(id_t id) {
-        return ecs_type_has_id(world(), m_type, id, false);
+        const flecs::world_t *w = ecs_get_world(world());
+        return ecs_type_has_id(w, m_type, id, false);
     }
 
     bool has(id_t relation, id_t object) {
-        return ecs_type_has_id(world(), m_type, 
+        const flecs::world_t *w = ecs_get_world(world());
+        return ecs_type_has_id(w, m_type, 
             ecs_pair(relation, object), false);
     }    
 
@@ -16861,7 +16863,8 @@ public:
     }
 
     flecs::string str() const {
-        char *str = ecs_type_str(world(), m_type);
+        const flecs::world_t *w = ecs_get_world(world());
+        char *str = ecs_type_str(w, m_type);
         return flecs::string(str);
     }
 
