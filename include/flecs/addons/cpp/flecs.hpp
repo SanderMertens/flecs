@@ -18,10 +18,6 @@ namespace flecs
 class world;
 class world_async_stage;
 class snapshot;
-class id;
-class entity;
-class entity_view;
-class type;
 class iter;
 class filter_iterator;
 class world_filter;
@@ -40,7 +36,11 @@ class each_invoker;
 // Types imported from C API
 #include "c_types.hpp"
 
-// Addon forward declarations
+// Mixin forward declarations
+#include "mixins/id/decl.hpp"
+#include "mixins/entity/decl.hpp"
+#include "mixins/component/decl.hpp"
+#include "mixins/type/decl.hpp"
 #include "mixins/module/decl.hpp"
 #include "mixins/term/decl.hpp"
 #include "mixins/filter/decl.hpp"
@@ -51,9 +51,13 @@ class each_invoker;
 #include "mixins/trigger/decl.hpp"
 #include "mixins/observer/decl.hpp"
 
-// Mixins
+// Mixins (remove from list to disable)
 namespace flecs {
 using Mixins = mixin_list<
+    id_m,
+    entity_m,
+    component_m,
+    type_m,
     module_m,
     term_m,
     filter_m,
@@ -69,20 +73,23 @@ using Mixins = mixin_list<
 #include "log.hpp"
 #include "pair.hpp"
 #include "lifecycle_traits.hpp"
-#include "iter.hpp"
 #include "world.hpp"
-#include "id.hpp"
-#include "entity_view.hpp"
+
+#include "iter.hpp"
+#include "invoker.hpp"
+
 #include "ref.hpp"
 #include "entity.hpp"
 #include "component.hpp"
-#include "invoker.hpp"
 #include "type.hpp"
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
-#include "impl.hpp"
 
-// Addon implementations
+// Mixin implementations
+#include "mixins/id/impl.hpp"
+#include "mixins/entity/impl.hpp"
+#include "mixins/component/impl.hpp"
+#include "mixins/type/impl.hpp"
 #include "mixins/module/impl.hpp"
 #include "mixins/term/impl.hpp"
 #include "mixins/filter/impl.hpp"
@@ -92,3 +99,5 @@ using Mixins = mixin_list<
 #include "mixins/timer/impl.hpp"
 #include "mixins/trigger/impl.hpp"
 #include "mixins/observer/impl.hpp"
+
+#include "impl.hpp"

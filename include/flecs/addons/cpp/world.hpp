@@ -186,30 +186,6 @@ public:
         return ecs_should_quit(m_world);
     }
 
-    /** Get id from a type.
-     */
-    template <typename T>
-    flecs::id id() const;
-
-    /** Id factory.
-     */
-    template <typename ... Args>
-    flecs::id id(Args&&... args) const;
-
-    /** Get pair id from relation, object
-     */
-    template <typename R, typename O>
-    flecs::id pair() const;
-
-    /** Get pair id from relation, object
-     */
-    template <typename R>
-    flecs::id pair(entity_t o) const;
-
-    /** Get pair id from relation, object
-     */
-    flecs::id pair(entity_t r, entity_t o) const;
-
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it
      * can still use Flecs features such as FPS limiting and time measurements.
@@ -714,26 +690,6 @@ public:
         func();
         ecs_defer_end(m_world);
     }
-
-    /** Create a prefab.
-     */
-    template <typename... Args>
-    flecs::entity entity(Args &&... args) const;
-
-    /** Create an entity.
-     */
-    template <typename... Args>
-    flecs::entity prefab(Args &&... args) const;
-
-    /** Create a type.
-     */
-    template <typename... Args>
-    flecs::type type(Args &&... args) const;      
-
-    /** Register a component.
-     */
-    template <typename T, typename... Args>
-    flecs::entity component(Args &&... args) const;
 
     /** Create a snapshot.
      */

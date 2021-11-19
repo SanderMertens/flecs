@@ -5,7 +5,7 @@ namespace flecs {
 struct trigger;
 
 template<typename ... Components>
-class trigger_builder;
+struct trigger_builder;
 
 template<typename T>
 struct trigger_m : mixin<T> { };

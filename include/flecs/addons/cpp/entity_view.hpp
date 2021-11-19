@@ -11,8 +11,7 @@ namespace flecs
  *
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
-class entity_view : public id, public extendable<entity_view, Mixins> {
-public:
+struct entity_view : public id, public extendable<entity_view, Mixins> {
     entity_view() : flecs::id() { }
 
     /** Wrap an existing entity id.

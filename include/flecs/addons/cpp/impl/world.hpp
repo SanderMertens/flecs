@@ -11,41 +11,6 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
     emplace<T>(world, entity, self, std::forward<Args>(args)...);
 }
 
-/** Get id from a type. */
-template <typename T>
-inline flecs::id world::id() const {
-    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
-}
-
-template <typename ... Args>
-inline flecs::id world::id(Args&&... args) const {
-    return flecs::id(m_world, std::forward<Args>(args)...);
-}
-
-template <typename R, typename O>
-inline flecs::id world::pair() const {
-    return flecs::id(
-        m_world, 
-        ecs_pair(
-            _::cpp_type<R>::id(m_world), 
-            _::cpp_type<O>::id(m_world)));
-}
-
-template <typename R>
-inline flecs::id world::pair(entity_t o) const {
-    return flecs::id(
-        m_world,
-        ecs_pair(
-            _::cpp_type<R>::id(m_world), 
-            o));
-}
-
-inline flecs::id world::pair(entity_t r, entity_t o) const {
-    return flecs::id(
-        m_world,
-        ecs_pair(r, o));
-}    
-
 inline filter_iterator world::begin() const {
     return filter_iterator(*this, ecs_filter_next);
 }
@@ -152,26 +117,6 @@ void world::remove() const {
 template <typename T>
 inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
-}
-
-template <typename... Args>
-inline flecs::entity world::entity(Args &&... args) const {
-    return flecs::entity(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline flecs::entity world::prefab(Args &&... args) const {
-    return flecs::prefab(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline flecs::type world::type(Args &&... args) const {
-    return flecs::type(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline flecs::entity world::component(Args &&... args) const {
-    return flecs::component<T>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
