@@ -16,9 +16,6 @@ inline void world::init_builtin_components() {
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
     component<Query>("flecs::core::Query");
-    component<doc::Description>("flecs::doc::Description");
-    component<rest::Rest>("flecs::rest::Rest");
-
     this->init_mixins();
 }
 

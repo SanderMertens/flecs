@@ -9,7 +9,7 @@
 
 // C++ utilities
 #include <type_traits>
-#include "utils/util.hpp"
+#include "utils/utils.hpp"
 
 // Forward declarations
 namespace flecs 
@@ -47,6 +47,8 @@ struct each_invoker;
 #include "mixins/trigger/decl.hpp"
 #include "mixins/observer/decl.hpp"
 #include "mixins/snapshot/decl.hpp"
+#include "mixins/doc/decl.hpp"
+#include "mixins/rest/decl.hpp"
 
 // Mixins (remove from list to disable)
 namespace flecs {
@@ -64,7 +66,9 @@ using Mixins = mixin_list<
     timer_m,
     trigger_m,
     observer_m,
-    snapshot_m
+    snapshot_m,
+    doc_m,
+    rest_m
 >;
 }
 
@@ -94,5 +98,7 @@ using Mixins = mixin_list<
 #include "mixins/trigger/impl.hpp"
 #include "mixins/observer/impl.hpp"
 #include "mixins/snapshot/impl.hpp"
+#include "mixins/doc/impl.hpp"
+#include "mixins/rest/impl.hpp"
 
 #include "impl.hpp"
