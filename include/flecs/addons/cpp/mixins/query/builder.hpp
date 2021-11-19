@@ -6,8 +6,8 @@ namespace flecs
 {
 
 template<typename ... Components>
-class query_builder_base
-    : public query_builder_i<query_builder_base<Components...>, Components ...>
+struct query_builder_base
+    : query_builder_i<query_builder_base<Components...>, Components ...>
 {
 public:
     query_builder_base(flecs::world_t *world) 
@@ -59,8 +59,7 @@ protected:
 };
 
 template<typename ... Components>
-class query_builder final : public query_builder_base<Components...> {
-public:
+struct query_builder final : query_builder_base<Components...> {
     query_builder(flecs::world_t *world)
         : query_builder_base<Components ...>(world) { }
 

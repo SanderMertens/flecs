@@ -679,8 +679,7 @@
         }, {
             "id": "Snapshot",
             "testcases": [
-                "simple_snapshot",
-                "snapshot_iter"
+                "simple_snapshot"
             ]
         }, {
             "id": "WorldFactory",

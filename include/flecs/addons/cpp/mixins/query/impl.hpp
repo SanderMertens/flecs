@@ -10,8 +10,7 @@ namespace flecs {
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
 
-class query_base {
-public:
+struct query_base {
     query_base()
         : m_world(nullptr)
         , m_query(nullptr) { }    
@@ -104,7 +103,8 @@ protected:
 };
 
 template<typename ... Components>
-class query : public query_base {
+struct query : query_base {
+private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
 public:

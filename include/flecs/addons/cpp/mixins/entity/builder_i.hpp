@@ -4,8 +4,7 @@ namespace flecs
 {
 
 template <typename Base>
-class entity_builder_i {
-public:
+struct entity_builder_i {
     /** Add a component to an entity.
      * To ensure the component is initialized, it should have a constructor.
      * 

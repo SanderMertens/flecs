@@ -1,13 +1,8 @@
+#pragma once
 
-namespace flecs 
-{
+namespace flecs {
 
-////////////////////////////////////////////////////////////////////////////////
-//// Snapshots make a copy of the world state that can be restored
-////////////////////////////////////////////////////////////////////////////////
-
-class snapshot final {
-public:
+struct snapshot final {
     explicit snapshot(const world& world)
         : m_world( world )
         , m_snapshot( nullptr ) { }
@@ -76,12 +71,19 @@ public:
         return m_snapshot;
     }
 
-    filter_iterator begin();
-
-    filter_iterator end();
 private:
     const world& m_world;
     snapshot_t *m_snapshot;
 };
 
-} // namespace flecs
+#define me_ this->me()
+
+// Snapshot mixin implementation
+template <typename... Args>
+inline flecs::snapshot snapshot_m_world::snapshot(Args &&... args) const {
+    return flecs::snapshot(me_, std::forward<Args>(args)...);
+}
+
+#undef me_
+
+}

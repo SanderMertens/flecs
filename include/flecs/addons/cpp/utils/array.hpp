@@ -4,9 +4,8 @@
 namespace flecs {
 
 template <typename T>
-class array_iterator
+struct array_iterator
 {
-public:
     explicit array_iterator(T* value, int index) {
         m_value = value;
         m_index = index;
@@ -34,11 +33,10 @@ private:
 };
 
 template <typename T, size_t Size, class Enable = void> 
-class array { };
+struct array final { };
 
 template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size != 0> > {
-public:
+struct array<T, Size, enable_if_t<Size != 0> > final {
     array() {};
 
     array(const T (&elems)[Size]) {
@@ -73,8 +71,7 @@ private:
 
 // Specialized class for zero-sized array
 template <typename T, size_t Size>
-class array<T, Size, enable_if_t<Size == 0>> {
-public:
+struct array<T, Size, enable_if_t<Size == 0>> final {
     array() {};
     array(const T* (&elems)) { (void)elems; }
     T operator[](size_t index) { abort(); (void)index; return T(); }

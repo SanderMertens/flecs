@@ -7,7 +7,7 @@ using TickSource = EcsTickSource;
 struct system;
 
 template<typename ... Components>
-class system_builder;
+struct system_builder;
 
 template<typename T>
 struct system_m : mixin<T> { };

@@ -2,13 +2,12 @@
 
 namespace flecs {
 
-class string_view;
+struct string_view;
 
 // This removes dependencies on std::string (and therefore STL) and allows the 
 // API to return allocated strings without incurring additional allocations when
 // wrapping in an std::string.
-class string {
-public:
+struct string {
     explicit string() 
         : m_str(nullptr)
         , m_const_str("")
@@ -128,8 +127,7 @@ protected:
 // a const char*, so an application won't have to think about whether to call
 // c_str() or not. The string_view is a thin wrapper around a string that forces
 // the API to indicate explicitly when a string is owned or not.
-class string_view : public string {
-public:
+struct string_view : string {
     explicit string_view(const char *str)
         : string(str) { }
 };

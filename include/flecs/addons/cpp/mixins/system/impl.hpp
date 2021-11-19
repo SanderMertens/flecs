@@ -5,8 +5,7 @@
 namespace flecs 
 {
 
-class system_runner_fluent {
-public:
+struct system_runner_fluent {
     system_runner_fluent(
         world_t *world, 
         entity_t id, 

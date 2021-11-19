@@ -16,8 +16,7 @@ struct term_ptr {
 };
 
 template <typename ... Components>
-class term_ptrs {
-public:
+struct term_ptrs {
     using array = flecs::array<_::term_ptr, sizeof...(Components)>;
 
     bool populate(const ecs_iter_t *iter) {
@@ -43,7 +42,7 @@ private:
     }  
 };    
 
-class invoker { };
+struct invoker { };
 
 // Template that figures out from the template parameters of a query/system
 // how to pass the value to the each callback
@@ -63,7 +62,7 @@ protected:
 // If type is not a pointer, return a reference to the type (default case)
 template <typename T>
 struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > > 
-    : public each_column_base 
+    : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
         : each_column_base(term, row) { }
@@ -78,7 +77,7 @@ struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > >
 // A typical scenario where this happens is when using flecs::pair types.
 template <typename T>
 struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> > 
-    : public each_column_base 
+    : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
         : each_column_base(term, row) { }
@@ -91,7 +90,7 @@ struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> >
 // If type is a pointer (indicating an optional value) return the type as is
 template <typename T>
 struct each_column<T, if_t< is_pointer<T>::value > > 
-    : public each_column_base 
+    : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
         : each_column_base(term, row) { }
@@ -127,8 +126,7 @@ struct each_ref_column : public each_column<T> {
 };
 
 template <typename Func, typename ... Components>
-class each_invoker : public invoker {
-public:    
+struct each_invoker : public invoker {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -227,7 +225,8 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-class iter_invoker : public invoker {
+struct iter_invoker : invoker {
+private:
     static constexpr bool IterOnly = arity<Func>::value == 1;
 
     using Terms = typename term_ptrs<Components ...>::array;
@@ -309,11 +308,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Args>
-class entity_with_invoker_impl;
+struct entity_with_invoker_impl;
 
 template<typename ... Args>
-class entity_with_invoker_impl<arg_list<Args ...>> {
-public:
+struct entity_with_invoker_impl<arg_list<Args ...>> {
     using ColumnArray = flecs::array<int32_t, sizeof...(Args)>;
     using ConstPtrArray = flecs::array<const void*, sizeof...(Args)>;
     using PtrArray = flecs::array<void*, sizeof...(Args)>;
@@ -478,13 +476,13 @@ private:
 };
 
 template <typename Func, typename U = int>
-class entity_with_invoker {
+struct entity_with_invoker {
     static_assert(function_traits<Func>::value, "type is not callable");
 };
 
 template <typename Func>
-class entity_with_invoker<Func, if_t< is_callable<Func>::value > >
-    : public entity_with_invoker_impl< arg_list_t<Func> >
+struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
+    : entity_with_invoker_impl< arg_list_t<Func> >
 {
     static_assert(function_traits<Func>::arity > 0,
         "function must have at least one argument");

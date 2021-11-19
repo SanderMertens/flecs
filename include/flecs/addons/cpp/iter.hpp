@@ -6,8 +6,7 @@ namespace flecs
  * This class can be used when a system does not know the type of a column at
  * compile time.
  */
-class unsafe_column {
-public:
+struct unsafe_column {
     unsafe_column(void* array, size_t size, size_t count, bool is_shared = false)
         : m_array(array)
         , m_size(size)
@@ -38,8 +37,7 @@ protected:
  * @tparam T component type of the column.
  */
 template <typename T>
-class column {
-public:
+struct column {
     static_assert(std::is_empty<T>::value == false, 
         "invalid type for column, cannot iterate empty type");
 
@@ -112,9 +110,8 @@ namespace _ {
  * @tparam T of the iterator
  */
 template <typename T>
-class range_iterator
+struct range_iterator
 {
-public:
     explicit range_iterator(T value)
         : m_value(value){}
 
@@ -142,16 +139,6 @@ private:
 
 } // namespace flecs
 
-#ifdef FLECS_DEPRECATED
-#include "../addons/deprecated/iter.hpp"
-#else
-namespace flecs
-{
-template <typename Base>
-class iter_deprecated { };
-}
-#endif
-
 namespace flecs
 {
 
@@ -159,8 +146,10 @@ namespace flecs
 
 /** Class that enables iterating over table columns.
  */
-class iter : public iter_deprecated<iter> {
+struct iter {
+private:
     using row_iterator = _::range_iterator<size_t>;
+    
 public:
     /** Construct iterator from C iterator object.
      * This operation is typically not invoked directly by the user.

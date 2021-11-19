@@ -44,9 +44,7 @@ struct term_id_builder_i {
      */
     Base& name(const char *name) {
         ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
-        // Const cast is safe, when the value is actually used to construct a
-        // query, it will be duplicated.
-        m_term_id->name = const_cast<char*>(name);
+        m_term_id->name = ecs_os_strdup(name);
         return *this;
     }
 
