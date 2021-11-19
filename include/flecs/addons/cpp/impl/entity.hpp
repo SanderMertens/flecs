@@ -1,4 +1,4 @@
-#include "../builders/filter.hpp"
+#pragma once
 
 namespace flecs 
 {
@@ -101,18 +101,6 @@ inline flecs::entity entity_view::set_stage(world_t *stage) {
 
 inline flecs::type entity_view::type() const {
     return flecs::type(m_world, ecs_get_type(m_world, m_id));
-}
-
-template <typename Func>
-inline void entity_view::children(Func&& func) const {
-    flecs::world world(m_world);
-
-    auto f = world.filter_builder<>()
-        .term(flecs::ChildOf, m_id)
-        .term(flecs::Prefab).oper(flecs::Optional)
-        .build();
-
-    f.each(std::move(func));
 }
 
 template <typename Func>

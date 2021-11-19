@@ -1,3 +1,5 @@
+#pragma once
+
 #include "builders/entity_i.hpp"
 
 namespace flecs

@@ -1,11 +1,12 @@
+#pragma once
+
 #include "builder.hpp"
 
 namespace flecs 
 {
 
-class trigger : public entity
+struct trigger : public entity
 {
-public:
     explicit trigger() 
         : entity() { }
 

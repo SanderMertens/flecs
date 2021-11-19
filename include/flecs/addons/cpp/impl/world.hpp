@@ -1,4 +1,4 @@
-#include "../builders/filter.hpp"
+#pragma once
 
 namespace flecs 
 {
@@ -171,16 +171,6 @@ inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
 }
 
-template <typename... Comps, typename... Args>
-inline flecs::filter<Comps...> world::filter(Args &&... args) const {
-    return flecs::filter<Comps...>(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(*this, std::forward<Args>(args)...);
-}
-
 template <typename... Args>
 inline flecs::term world::term(Args &&... args) const {
     return flecs::term(*this, std::forward<Args>(args)...);
@@ -204,83 +194,6 @@ inline flecs::entity world::component(Args &&... args) const {
 template <typename... Args>
 inline flecs::snapshot world::snapshot(Args &&... args) const {
     return flecs::snapshot(*this, std::forward<Args>(args)...);
-}
-
-template <typename T, typename Func>
-inline void world::each(Func&& func) const {
-    ecs_term_t t = {};
-    t.id = _::cpp_type<T>::id();
-    ecs_iter_t it = ecs_term_iter(m_world, &t);
-
-    while (ecs_term_next(&it)) {
-        _::each_invoker<Func, T>(func).invoke(&it);
-    }
-}
-
-template <typename Func>
-inline void world::each(flecs::id_t term_id, Func&& func) const {
-    ecs_term_t t = {};
-    t.id = term_id;
-    ecs_iter_t it = ecs_term_iter(m_world, &t);
-
-    while (ecs_term_next(&it)) {
-        _::each_invoker<Func>(func).invoke(&it);
-    }
-}
-
-namespace _ {
-
-// Each with entity parameter
-template<typename Func, typename ... Args>
-struct filter_invoker_w_ent;
-
-template<typename Func, typename E, typename ... Args>
-struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
-{
-    filter_invoker_w_ent(const flecs::world& world, Func&& func) {
-        flecs::filter<Args ...> f(world);
-        f.each(std::move(func));
-    }
-};
-
-// Each without entity parameter
-template<typename Func, typename ... Args>
-struct filter_invoker_no_ent;
-
-template<typename Func, typename ... Args>
-struct filter_invoker_no_ent<Func, arg_list<Args ...> >
-{
-    filter_invoker_no_ent(const flecs::world& world, Func&& func) {
-        flecs::filter<Args ...> f(world);
-        f.each(std::move(func));
-    }
-};
-
-// Switch between function with & without entity parameter
-template<typename Func, typename T = int>
-class filter_invoker;
-
-template <typename Func>
-class filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-public:
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, std::move(func));
-    }
-};
-
-template <typename Func>
-class filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-public:
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, std::move(func));
-    }
-};
-
-}
-
-template <typename Func>
-inline void world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(*this, std::move(func));
 }
 
 } // namespace flecs

@@ -1,3 +1,5 @@
+#pragma once
+
 namespace flecs {
 
 class query_base;
