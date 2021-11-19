@@ -10689,19 +10689,10 @@ class world_filter;
 class snapshot_filter;
 
 template<typename ... Components>
-class filter;
-
-template<typename ... Components>
-class trigger;
+struct filter;
 
 template <typename ... Components>
-class filter_builder;
-
-template <typename ... Components>
-class trigger_builder;
-
-template <typename ... Components>
-class observer_builder;
+struct filter_builder;
 
 namespace _ 
 {
@@ -10846,6 +10837,8 @@ static const flecs::entity_t Throw = EcsThrow;
 }
 
 // Addon forward declarations
+#pragma once
+
 namespace flecs {
 
 template <typename T>
@@ -10877,6 +10870,44 @@ struct module_m<flecs::world> : mixin<flecs::world> {
 using module_m_world = module_m<flecs::world>;
 
 }
+#pragma once
+
+namespace flecs {
+
+struct filter_base;
+
+template<typename ... Components>
+struct filter;
+
+template<typename ... Components>
+struct filter_builder;
+
+template <typename T>
+struct filter_m : mixin<T> { };
+
+/** Filter mixin for flecs::world */
+template <>
+struct filter_m<flecs::world> : mixin<flecs::world> {
+  void init() { }
+
+    /** Create a filter.
+     * @see ecs_filter_init
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter<Comps...> filter(Args &&... args) const;
+
+    /** Create a filter builder.
+     * @see ecs_filter_init
+     */
+    template <typename... Comps, typename... Args>
+    flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
+};
+
+using filter_m_world = filter_m<flecs::world>;
+
+}
+#pragma once
+
 namespace flecs {
 
 class query_base;
@@ -11142,6 +11173,37 @@ using timer_m_system = timer_m<flecs::system>;
 
 namespace flecs {
 
+struct trigger;
+
+template<typename ... Components>
+class trigger_builder;
+
+template<typename T>
+struct trigger_m : mixin<T> { };
+
+/** Observer mixin for flecs::world. */
+template<>
+struct trigger_m<flecs::world> : mixin<flecs::world> {
+  /** Initialize mixin. */
+  void init();
+
+  /** Create a new trigger.
+   * 
+   * @tparam Components The components to match on.
+   * @tparam Args Arguments passed to the constructor of flecs::trigger_builder.
+   * @return Trigger builder.
+   */
+  template <typename... Components, typename... Args>
+  flecs::trigger_builder<Components...> trigger(Args &&... args) const;
+};
+
+using trigger_m_world = trigger_m<flecs::world>;
+
+}
+#pragma once
+
+namespace flecs {
+
 struct observer;
 
 template<typename ... Components>
@@ -11174,10 +11236,12 @@ using observer_m_world = observer_m<flecs::world>;
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
+    filter_m,
     query_m,
     system_m, 
     pipeline_m,
     timer_m,
+    trigger_m,
     observer_m
 >;
 }
@@ -12998,21 +13062,6 @@ public:
      */
     template <typename... Args>
     flecs::type type(Args &&... args) const;
-
-    /** Create a trigger.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::trigger_builder<Comps...> trigger(Args &&... args) const;
-
-    /** Create a filter.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::filter<Comps...> filter(Args &&... args) const;
-
-    /** Create a filter builder.
-     */
-    template <typename... Comps, typename... Args>
-    flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
 
     /** Create a term 
      */
@@ -15975,8 +16024,7 @@ template<typename Base>
 /** Term identifier builder.
  * A term identifier is either the predicate (pred), subject (subj) or object
  * (obj) of a term. Use the term builder to select the term identifier. */
-class term_id_builder_i {
-public:
+struct term_id_builder_i {
     term_id_builder_i() : m_term_id(nullptr) { }
 
     virtual ~term_id_builder_i() { }
@@ -16446,178 +16494,6 @@ namespace flecs
 {
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Ad hoc queries (filters)
-////////////////////////////////////////////////////////////////////////////////
-
-class filter_base {
-public:
-    filter_base(world_t *world = nullptr)
-        : m_world(world)
-        , m_filter({})
-        , m_filter_ptr(nullptr) { }
-
-    filter_base(world_t *world, const ecs_filter_t *filter)
-        : m_world(world)
-        , m_filter({})
-        , m_filter_ptr(filter) { }
-
-    filter_base(world_t *world, ecs_filter_t *filter)
-        : m_world(world)
-        , m_filter_ptr(&m_filter) {
-            ecs_filter_move(&m_filter, filter);
-        }
-
-    /** Get pointer to C filter object.
-     */
-    const filter_t* c_ptr() const {
-        return m_filter_ptr;
-    }
-
-    filter_base(const filter_base& obj) {
-        this->m_world = obj.m_world;
-        if (obj.m_filter_ptr) {
-            this->m_filter_ptr = &this->m_filter;
-        } else {
-            this->m_filter_ptr = nullptr;
-        }
-        ecs_filter_copy(&m_filter, &obj.m_filter);
-    }
-
-    filter_base& operator=(const filter_base& obj) {
-        this->m_world = obj.m_world;
-        if (obj.m_filter_ptr) {
-            this->m_filter_ptr = &this->m_filter;
-        } else {
-            this->m_filter_ptr = nullptr;
-        }
-        ecs_filter_copy(&m_filter, &obj.m_filter);
-        return *this; 
-    }
-
-    filter_base(filter_base&& obj) {
-        this->m_world = obj.m_world;
-        if (obj.m_filter_ptr) {
-            this->m_filter_ptr = &this->m_filter;
-        } else {
-            this->m_filter_ptr = nullptr;
-        }
-        ecs_filter_move(&m_filter, &obj.m_filter);
-    }
-
-    filter_base& operator=(filter_base&& obj) {
-        this->m_world = obj.m_world;
-        if (obj.m_filter_ptr) {
-            this->m_filter_ptr = &this->m_filter;
-        } else {
-            this->m_filter_ptr = nullptr;
-        }
-        ecs_filter_move(&m_filter, &obj.m_filter);
-        return *this; 
-    }
-
-    /** Free the filter.
-     */
-    ~filter_base() {
-        ecs_filter_fini(&m_filter);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        while (ecs_filter_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }  
-
-    template <typename Func>
-    void each_term(const Func& func) {
-        for (int i = 0; i < m_filter_ptr->term_count; i ++) {
-            flecs::term t(m_world, m_filter_ptr->terms[i]);
-            func(t);
-        }
-    }
-
-    flecs::term term(int32_t index) {
-        return flecs::term(m_world, m_filter_ptr->terms[index]);
-    }
-
-    int32_t term_count() {
-        return m_filter_ptr->term_count;
-    }
-
-    flecs::string str() {
-        char *result = ecs_filter_str(m_world, m_filter_ptr);
-        return flecs::string(result);
-    }
-
-protected:
-    world_t *m_world;
-    filter_t m_filter;
-    const filter_t *m_filter_ptr;
-};
-
-
-template<typename ... Components>
-class filter : public filter_base {
-    using Terms = typename _::term_ptrs<Components...>::array;
-
-public:
-    filter() { }
-
-    filter(world_t *world, filter_t *f)
-        : filter_base(world, f) { }
-
-    explicit filter(const world& world, const char *expr = nullptr) 
-        : filter_base(world.c_ptr())
-    {
-        auto qb = world.filter_builder<Components ...>()
-            .expr(expr);
-
-        flecs::filter_t f = qb;
-        ecs_filter_move(&m_filter, &f);
-        m_filter_ptr = &m_filter;
-    }
-
-    filter(const filter& obj) : filter_base(obj) { }
-
-    filter& operator=(const filter& obj) {
-        *this = obj;
-        return *this;
-    }
-
-    filter(filter&& obj) : filter_base(std::move(obj)) { }
-
-    filter& operator=(filter&& obj) {
-        filter_base(std::move(obj));
-        return *this;
-    }
-
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    } 
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
-    }
-
-private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(std::move(func)).invoke(&it);
-        }
-    }
-};
-
-}
-
-namespace flecs 
-{
-
-////////////////////////////////////////////////////////////////////////////////
 //// Snapshots make a copy of the world state that can be restored
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16813,33 +16689,6 @@ inline filter_iterator snapshot::end() {
 
 }
 
-namespace flecs 
-{
-
-template<typename ... Components>
-class trigger : public entity
-{
-public:
-    explicit trigger() 
-        : entity() { }
-
-    explicit trigger(flecs::world_t *world, flecs::entity_t id)
-        : entity(world, id) { }
-
-    void ctx(void *ctx) {
-        ecs_trigger_desc_t desc = {};
-        desc.entity.entity = m_id;
-        desc.ctx = ctx;
-        ecs_trigger_init(m_world, &desc);
-    }
-
-    void* ctx() const {
-        return ecs_get_trigger_ctx(m_world, m_id);
-    }
-};
-
-} // namespace flecs
-
 
 
 namespace flecs 
@@ -16917,231 +16766,7 @@ inline flecs::entity id::remove_generation() const {
 }
 
 }
-#pragma once
-
-#pragma once
-
-
-namespace flecs 
-{
-
-// Filter builder interface
-template<typename Base, typename ... Components>
-class filter_builder_i : public term_builder_i<Base> {
-public:
-    filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
-        : m_term_index(term_index)
-        , m_desc(desc) { }
-
-    Base& instanced() {
-        m_desc->instanced = true;
-        return *this;
-    }
-
-    Base& expr(const char *expr) {
-        m_desc->expr = expr;
-        return *this;
-    }
-
-    Base& term() {
-        if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
-            if (m_term_index == ECS_TERM_DESC_CACHE_SIZE) {
-                m_desc->terms_buffer = ecs_os_calloc_n(
-                    ecs_term_t, m_term_index + 1);
-                ecs_os_memcpy_n(m_desc->terms_buffer, m_desc->terms, 
-                    ecs_term_t, m_term_index);
-                ecs_os_memset_n(m_desc->terms, 0, 
-                    ecs_term_t, ECS_TERM_DESC_CACHE_SIZE);
-            } else {
-                m_desc->terms_buffer = ecs_os_realloc_n(m_desc->terms_buffer, 
-                    ecs_term_t, m_term_index + 1);
-            }
-
-            m_desc->terms_buffer_count = m_term_index + 1;
-
-            this->set_term(&m_desc->terms_buffer[m_term_index]);
-        } else {
-            this->set_term(&m_desc->terms[m_term_index]);
-        }
-
-        m_term_index ++;
-        return *this;
-    }
-    
-    Base& arg(int32_t term_index) {
-        ecs_assert(term_index > 0, ECS_INVALID_PARAMETER, NULL);
-        int32_t prev_index = m_term_index;
-        m_term_index = term_index - 1;
-        this->term();
-        m_term_index = prev_index;
-        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
-        return *this;
-    }    
-
-    template<typename T>
-    Base& term() {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id<T>().move();
-        return *this;
-    }
-
-    Base& term(id_t id) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(id).move();
-        return *this;
-    }   
-
-    template<typename R, typename O>
-    Base& term() {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id<R, O>().move();
-        return *this;
-    }
-
-    template<typename R>
-    Base& term(id_t o) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id<R>(o).move();
-        return *this;
-    }     
-
-    Base& term(id_t r, id_t o) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(r, o).move();
-        return *this;
-    }
-
-    Base& term(const flecs::type& type) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type).move();
-        return *this;
-    }
-
-    Base& term(const flecs::type& type, flecs::id_t o) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).id(type, o).move();
-        return *this;
-    }
-
-    Base& term(const char *expr) {
-        this->term();
-        *this->m_term = flecs::term(this->world_v()).expr(expr).move();
-        return *this;
-    }
-
-    Base& term(flecs::term& term) {
-        this->term();
-        *this->m_term = term.move();
-        return *this;
-    }
-
-    Base& term(flecs::term&& term) {
-        this->term();
-        *this->m_term = term.move();
-        return *this;
-    }    
-
-    void populate_filter_from_pack() {
-        flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(this->world_v()))...
-        });
-
-        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
-            (this->template type_to_inout<Components>())...
-        });
-
-        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
-            (this->template type_to_oper<Components>())...
-        });
-
-        size_t i = 0;
-        for (auto id : ids) {
-            this->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
-            i ++;
-        }
-    }
-
-protected:
-    virtual flecs::world_t* world_v() = 0;
-    int32_t m_term_index;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_filter_desc_t *m_desc;
-};
-
-}
-
-namespace flecs 
-{
-
-template<typename ... Components>
-class filter_builder_base
-    : public filter_builder_i<filter_builder_base<Components...>, Components ...>
-{
-public:
-    filter_builder_base(flecs::world_t *world) 
-        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc)
-        , m_desc({})
-        , m_world(world)
-    { 
-        this->populate_filter_from_pack();
-    }
-
-    filter_builder_base(const filter_builder_base& f) 
-        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
-    {
-        m_world = f.m_world;
-        m_desc = f.m_desc;
-    }
-
-    filter_builder_base(filter_builder_base&& f) 
-        : filter_builder_i<filter_builder_base<Components...>, Components ...>(&m_desc, f.m_term_index)
-    {
-        m_world = f.m_world;
-        m_desc = f.m_desc;
-    }
-
-    operator filter<Components ...>() const;
-
-    operator ecs_filter_t() const {
-        ecs_filter_t f;
-
-        int res = ecs_filter_init(this->m_world, &f, &this->m_desc);
-        if (res != 0) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        if (this->m_desc.terms_buffer) {
-            ecs_os_free(this->m_desc.terms_buffer);
-        }
-
-        return f;
-    }
-
-    filter<Components ...> build() const;
-
-    ecs_filter_desc_t m_desc;
-
-    flecs::world_t* world_v() override { return m_world; }
-
-protected:
-    flecs::world_t *m_world;
-};
-
-template<typename ... Components>
-class filter_builder final : public filter_builder_base<Components...> {
-public:
-    filter_builder(flecs::world_t *world)
-        : filter_builder_base<Components ...>(world) { }
-
-    operator filter<>() const;
-};
-
-}
+#include "../builders/filter.hpp"
 
 namespace flecs 
 {
@@ -17389,125 +17014,7 @@ inline flecs::type iter::type() const {
 }
 
 } // namespace flecs
-#pragma once
-
-#pragma once
-
-
-namespace flecs 
-{
-
-// Trigger builder interface
-template<typename Base, typename ... Components>
-class trigger_builder_i : public term_builder_i<Base> {
-    using BaseClass = term_builder_i<Base>;
-public:
-    trigger_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr)
-        , m_event_count(0) { }
-
-    trigger_builder_i(ecs_trigger_desc_t *desc) 
-        : BaseClass(&desc->term)
-        , m_desc(desc)
-        , m_event_count(0) { }
-
-    /** Specify when the event(s) for which the trigger run.
-     * @param kind The kind that specifies when the system should be ran.
-     */
-    Base& event(entity_t kind) {
-        m_desc->events[m_event_count ++] = kind;
-        return *this;
-    }
-
-    /** Associate trigger with entity */
-    Base& self(flecs::entity self) {
-        m_desc->self = self;
-        return *this;
-    }
-
-    /** Set system context */
-    Base& ctx(void *ptr) {
-        m_desc->ctx = ptr;
-        return *this;
-    }
-
-protected:
-    virtual flecs::world_t* world_v() = 0;
-
-private:
-    operator Base&() {
-        return *static_cast<Base*>(this);
-    }
-
-    ecs_trigger_desc_t *m_desc;
-    int32_t m_event_count;
-};
-
-}
-
-namespace flecs 
-{
-
-template<typename ... Components>
-class trigger_builder final
-    : public trigger_builder_i<trigger_builder<Components...>, Components...>
-{
-    using Class = trigger_builder<Components...>;
-public:
-    explicit trigger_builder(flecs::world_t* world, const char *name = nullptr, flecs::id_t the_id = 0)
-        : trigger_builder_i<Class, Components...>(&m_desc)
-        , m_desc({})
-        , m_world(world)
-        { 
-            m_desc.entity.name = name;
-            m_desc.entity.sep = "::";
-            this->template populate_term_from_pack<Components...>();
-            
-            if (the_id) {
-                /* Id should not be set if term is populated from template */
-                ecs_assert(!m_desc.term.id, ECS_INVALID_PARAMETER, NULL);
-                this->id(the_id);
-            }
-        }
-
-    /* Iter (or each) is mandatory and always the last thing that 
-     * is added in the fluent method chain. Create system signature from both 
-     * template parameters and anything provided by the signature method. */
-    template <typename Func>
-    trigger<Components...> iter(Func&& func);
-
-    /* Each is similar to action, but accepts a function that operates on a
-     * single entity */
-    template <typename Func>
-    trigger<Components...> each(Func&& func);
-
-    ecs_trigger_desc_t m_desc;
-
-protected:
-    flecs::world_t* world_v() override { return m_world; }
-    flecs::world_t *m_world;
-
-private:
-    template <typename Invoker, typename Func>
-    entity_t build(Func&& func) {
-        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
-
-        ecs_trigger_desc_t desc = m_desc;
-        desc.callback = Invoker::run;
-        desc.binding_ctx = ctx;
-        desc.binding_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
-
-        entity_t result = ecs_trigger_init(m_world, &desc);
-
-        ecs_term_fini(&m_desc.term);
-        
-        return result;
-    }
-};
-
-}
+#include "../builders/filter.hpp"
 
 namespace flecs 
 {
@@ -17572,7 +17079,6 @@ inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
-    component<Trigger>("flecs::core::Trigger");
     component<Query>("flecs::core::Query");
 
     component<doc::Description>("flecs::doc::Description");
@@ -17679,11 +17185,6 @@ inline flecs::entity world::prefab(Args &&... args) const {
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
     return flecs::type(*this, std::forward<Args>(args)...);
-}
-
-template <typename... Comps, typename... Args>
-inline flecs::trigger_builder<Comps...> world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(*this, std::forward<Args>(args)...);
 }
 
 template <typename... Comps, typename... Args>
@@ -17819,45 +17320,10 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
     return *this;
 }
 
-template <typename ... Components>
-inline filter_builder_base<Components...>::operator filter<Components ...>() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<Components...>(m_world, &filter);
-}
-
-template <typename ... Components>
-inline filter_builder<Components ...>::operator filter<>() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<>(this->m_world, &filter);
-}
-
-template <typename ... Components>
-inline filter<Components ...> filter_builder_base<Components...>::build() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<Components...>(m_world, &filter);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline trigger<Components ...> trigger_builder<Components...>::iter(Func&& func) {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
-    return flecs::trigger<Components...>(m_world, trigger);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline trigger<Components ...> trigger_builder<Components...>::each(Func&& func) {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
-    return flecs::trigger<Components...>(m_world, trigger);
-}
-
 }
 
 // Addon implementations
+#pragma once
 
 namespace flecs {
 
@@ -17936,10 +17402,211 @@ inline flecs::entity module_m_world::import() {
 }
 #pragma once
 
+namespace flecs 
+{
+
+struct filter_base {
+    filter_base(world_t *world = nullptr)
+        : m_world(world)
+        , m_filter({})
+        , m_filter_ptr(nullptr) { }
+
+    filter_base(world_t *world, const ecs_filter_t *filter)
+        : m_world(world)
+        , m_filter({})
+        , m_filter_ptr(filter) { }
+
+    filter_base(world_t *world, ecs_filter_t *filter)
+        : m_world(world)
+        , m_filter_ptr(&m_filter) {
+            ecs_filter_move(&m_filter, filter);
+        }
+
+    /** Get pointer to C filter object.
+     */
+    const filter_t* c_ptr() const {
+        return m_filter_ptr;
+    }
+
+    filter_base(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        if (obj.m_filter_ptr) {
+            this->m_filter_ptr = &this->m_filter;
+        } else {
+            this->m_filter_ptr = nullptr;
+        }
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(const filter_base& obj) {
+        this->m_world = obj.m_world;
+        if (obj.m_filter_ptr) {
+            this->m_filter_ptr = &this->m_filter;
+        } else {
+            this->m_filter_ptr = nullptr;
+        }
+        ecs_filter_copy(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+    filter_base(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        if (obj.m_filter_ptr) {
+            this->m_filter_ptr = &this->m_filter;
+        } else {
+            this->m_filter_ptr = nullptr;
+        }
+        ecs_filter_move(&m_filter, &obj.m_filter);
+    }
+
+    filter_base& operator=(filter_base&& obj) {
+        this->m_world = obj.m_world;
+        if (obj.m_filter_ptr) {
+            this->m_filter_ptr = &this->m_filter;
+        } else {
+            this->m_filter_ptr = nullptr;
+        }
+        ecs_filter_move(&m_filter, &obj.m_filter);
+        return *this; 
+    }
+
+    /** Free the filter.
+     */
+    ~filter_base() {
+        ecs_filter_fini(&m_filter);
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
+        while (ecs_filter_next(&it)) {
+            _::iter_invoker<Func>(func).invoke(&it);
+        }
+    }  
+
+    template <typename Func>
+    void each_term(const Func& func) {
+        for (int i = 0; i < m_filter_ptr->term_count; i ++) {
+            flecs::term t(m_world, m_filter_ptr->terms[i]);
+            func(t);
+        }
+    }
+
+    flecs::term term(int32_t index) {
+        return flecs::term(m_world, m_filter_ptr->terms[index]);
+    }
+
+    int32_t term_count() {
+        return m_filter_ptr->term_count;
+    }
+
+    flecs::string str() {
+        char *result = ecs_filter_str(m_world, m_filter_ptr);
+        return flecs::string(result);
+    }
+
+protected:
+    world_t *m_world;
+    filter_t m_filter;
+    const filter_t *m_filter_ptr;
+};
+
+
+template<typename ... Components>
+struct filter : filter_base {
+private:
+    using Terms = typename _::term_ptrs<Components...>::array;
+
+public:
+    filter() { }
+
+    filter(world_t *world, filter_t *f)
+        : filter_base(world, f) { }
+
+    explicit filter(const world& world, const char *expr = nullptr) 
+        : filter_base(world.c_ptr())
+    {
+        auto qb = world.filter_builder<Components ...>()
+            .expr(expr);
+
+        flecs::filter_t f = qb;
+        ecs_filter_move(&m_filter, &f);
+        m_filter_ptr = &m_filter;
+    }
+
+    filter(const filter& obj) : filter_base(obj) { }
+
+    filter& operator=(const filter& obj) {
+        *this = obj;
+        return *this;
+    }
+
+    filter(filter&& obj) : filter_base(std::move(obj)) { }
+
+    filter& operator=(filter&& obj) {
+        filter_base(std::move(obj));
+        return *this;
+    }
+
+    template <typename Func>
+    void each(Func&& func) const {
+        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
+    } 
+
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
+    }
+
+private:
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(std::move(func)).invoke(&it);
+        }
+    }
+};
+
+// Mixin implementation
+template <typename... Comps, typename... Args>
+inline flecs::filter<Comps...> filter_m_world::filter(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(me_, std::forward<Args>(args)...)
+        .build();
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::filter_builder<Comps...> filter_m_world::filter_builder(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(me_, std::forward<Args>(args)...);
+}
+
+// Builder implementation
+template <typename ... Components>
+inline filter_builder_base<Components...>::operator filter<Components ...>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter_builder<Components ...>::operator filter<>() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<>(this->m_world, &filter);
+}
+
+template <typename ... Components>
+inline filter<Components ...> filter_builder_base<Components...>::build() const {
+    ecs_filter_t filter = *this;
+    return flecs::filter<Components...>(m_world, &filter);
+}
+
+}
 #pragma once
 
 #pragma once
 
+#pragma once
+
+#include "../filter/filter_i.hpp"
 
 namespace flecs 
 {
@@ -18764,6 +18431,184 @@ inline void timer_m_base<T>::set_tick_source(flecs::entity e) {
 
 #pragma once
 
+
+namespace flecs 
+{
+
+// Trigger builder interface
+template<typename Base, typename ... Components>
+struct trigger_builder_i : term_builder_i<Base> {
+    using BaseClass = term_builder_i<Base>;
+
+    trigger_builder_i()
+        : BaseClass(nullptr)
+        , m_desc(nullptr)
+        , m_event_count(0) { }
+
+    trigger_builder_i(ecs_trigger_desc_t *desc) 
+        : BaseClass(&desc->term)
+        , m_desc(desc)
+        , m_event_count(0) { }
+
+    /** Specify when the event(s) for which the trigger run.
+     * @param kind The kind that specifies when the system should be ran.
+     */
+    Base& event(entity_t kind) {
+        m_desc->events[m_event_count ++] = kind;
+        return *this;
+    }
+
+    /** Associate trigger with entity */
+    Base& self(flecs::entity self) {
+        m_desc->self = self;
+        return *this;
+    }
+
+    /** Set system context */
+    Base& ctx(void *ptr) {
+        m_desc->ctx = ptr;
+        return *this;
+    }
+
+protected:
+    virtual flecs::world_t* world_v() = 0;
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+
+    ecs_trigger_desc_t *m_desc;
+    int32_t m_event_count;
+};
+
+}
+
+namespace flecs 
+{
+
+template<typename ... Components>
+struct trigger_builder final
+    : trigger_builder_i<trigger_builder<Components...>, Components...>
+{
+    using Class = trigger_builder<Components...>;
+
+    explicit trigger_builder(flecs::world_t* world, const char *name = nullptr, flecs::id_t the_id = 0)
+        : trigger_builder_i<Class, Components...>(&m_desc)
+        , m_desc({})
+        , m_world(world)
+        { 
+            m_desc.entity.name = name;
+            m_desc.entity.sep = "::";
+            this->template populate_term_from_pack<Components...>();
+            
+            if (the_id) {
+                /* Id should not be set if term is populated from template */
+                ecs_assert(!m_desc.term.id, ECS_INVALID_PARAMETER, NULL);
+                this->id(the_id);
+            }
+        }
+
+    /* Iter (or each) is mandatory and always the last thing that 
+     * is added in the fluent method chain. Create system signature from both 
+     * template parameters and anything provided by the signature method. */
+    template <typename Func>
+    trigger iter(Func&& func);
+
+    /* Each is similar to action, but accepts a function that operates on a
+     * single entity */
+    template <typename Func>
+    trigger each(Func&& func);
+
+    ecs_trigger_desc_t m_desc;
+
+protected:
+    flecs::world_t* world_v() override { return m_world; }
+    flecs::world_t *m_world;
+
+private:
+    template <typename Invoker, typename Func>
+    entity_t build(Func&& func) {
+        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+
+        ecs_trigger_desc_t desc = m_desc;
+        desc.callback = Invoker::run;
+        desc.binding_ctx = ctx;
+        desc.binding_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Invoker>);
+
+        entity_t result = ecs_trigger_init(m_world, &desc);
+
+        ecs_term_fini(&m_desc.term);
+        
+        return result;
+    }
+};
+
+}
+
+namespace flecs 
+{
+
+struct trigger : public entity
+{
+    explicit trigger() 
+        : entity() { }
+
+    explicit trigger(flecs::world_t *world, flecs::entity_t id)
+        : entity(world, id) { }
+
+    void ctx(void *ctx) {
+        ecs_trigger_desc_t desc = {};
+        desc.entity.entity = m_id;
+        desc.ctx = ctx;
+        ecs_trigger_init(m_world, &desc);
+    }
+
+    void* ctx() const {
+        return ecs_get_trigger_ctx(m_world, m_id);
+    }
+};
+
+// Mixin implementation
+
+inline void trigger_m_world::init() {
+    this->me().template component<Trigger>("flecs::core::Trigger");
+}
+
+template <typename... Comps, typename... Args>
+inline trigger_builder<Comps...> trigger_m_world::trigger(Args &&... args) const {
+    return flecs::trigger_builder<Comps...>(this->me(), std::forward<Args>(args)...);
+}
+
+// Builder implementation
+
+template <typename ... Components>    
+template <typename Func>
+inline trigger trigger_builder<Components...>::iter(Func&& func) {
+    using Invoker = typename _::iter_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
+    return flecs::trigger(m_world, trigger);
+}
+
+template <typename ... Components>    
+template <typename Func>
+inline trigger trigger_builder<Components...>::each(Func&& func) {
+    using Invoker = typename _::each_invoker<
+        typename std::decay<Func>::type, Components...>;
+    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
+    return flecs::trigger(m_world, trigger);
+}
+
+} // namespace flecs
+#pragma once
+
+#pragma once
+
+#pragma once
+
+#include "../filter/filter_i.hpp"
 
 namespace flecs 
 {

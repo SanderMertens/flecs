@@ -28,12 +28,6 @@ class filter_iterator;
 class world_filter;
 class snapshot_filter;
 
-template<typename ... Components>
-struct filter;
-
-template <typename ... Components>
-struct filter_builder;
-
 namespace _ 
 {
 template <typename T, typename U = int>
@@ -49,6 +43,7 @@ class each_invoker;
 
 // Addon forward declarations
 #include "mixins/module/decl.hpp"
+#include "mixins/filter/decl.hpp"
 #include "mixins/query/decl.hpp"
 #include "mixins/system/decl.hpp"
 #include "mixins/pipeline/decl.hpp"
@@ -60,6 +55,7 @@ class each_invoker;
 namespace flecs {
 using Mixins = mixin_list<
     module_m,
+    filter_m,
     query_m,
     system_m, 
     pipeline_m,
@@ -82,13 +78,13 @@ using Mixins = mixin_list<
 #include "invoker.hpp"
 #include "type.hpp"
 #include "term.hpp"
-#include "filter.hpp"
 #include "snapshot.hpp"
 #include "filter_iterator.hpp"
 #include "impl.hpp"
 
 // Addon implementations
 #include "mixins/module/impl.hpp"
+#include "mixins/filter/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/system/impl.hpp"
 #include "mixins/pipeline/impl.hpp"

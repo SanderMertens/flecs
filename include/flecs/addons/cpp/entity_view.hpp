@@ -1,3 +1,5 @@
+#pragma once
+
 namespace flecs
 {
 
@@ -9,7 +11,7 @@ namespace flecs
  *
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
-class entity_view : public id {
+class entity_view : public id, public extendable<entity_view, Mixins> {
 public:
     entity_view() : flecs::id() { }
 
@@ -476,17 +478,6 @@ public:
         const ecs_world_info_t *stats = ecs_get_world_info(m_world);
         return stats->delta_time;
     }
-
-    /** Return iterator to entity children.
-     * Enables depth-first iteration over entity children.
-     * 
-     * The operation accepts function with the signature:
-     *   void(*)(flecs::entity e)
-     *
-     * @param func Function used to iterate over children.
-     */
-    template <typename Func>
-    void children(Func&& func) const;
 
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is
