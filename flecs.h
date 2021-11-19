@@ -10747,19 +10747,6 @@ using Observer = EcsObserver;
 /* Builtin opaque components */
 static const flecs::entity_t System = ecs_id(EcsSystem);
 
-/* Doc components */
-namespace doc {
-    using Description = EcsDocDescription;
-    static const flecs::entity_t Brief = EcsDocBrief;
-    static const flecs::entity_t Detail = EcsDocDetail;
-    static const flecs::entity_t Link = EcsDocLink;
-}
-
-/* REST components */
-namespace rest {
-    using Rest = EcsRest;
-}
-
 /* Builtin set constants */
 static const uint8_t DefaultSet = EcsDefaultSet;
 static const uint8_t Self = EcsSelf;
@@ -11549,6 +11536,50 @@ flecs::snapshot snapshot(Args &&... args) const;
 using snapshot_m_world = snapshot_m<flecs::world>;
 
 }
+#pragma once
+
+namespace flecs {
+
+namespace doc {
+    using Description = EcsDocDescription;
+    static const flecs::entity_t Brief = EcsDocBrief;
+    static const flecs::entity_t Detail = EcsDocDetail;
+    static const flecs::entity_t Link = EcsDocLink;
+}
+
+template <typename T>
+struct doc_m : mixin<T> { };
+
+/** Doc mixin for flecs::world */
+template <>
+struct doc_m<flecs::world> : mixin<flecs::world> {
+  void init();
+};
+
+using doc_m_world = doc_m<flecs::world>;
+
+}
+#pragma once
+
+namespace flecs {
+
+/* REST components */
+namespace rest {
+    using Rest = EcsRest;
+}
+
+template <typename T>
+struct rest_m : mixin<T> { };
+
+/** Rest mixin for flecs::world */
+template <>
+struct rest_m<flecs::world> : mixin<flecs::world> {
+  void init();
+};
+
+using rest_m_world = rest_m<flecs::world>;
+
+}
 
 // Mixins (remove from list to disable)
 namespace flecs {
@@ -11566,7 +11597,9 @@ using Mixins = mixin_list<
     timer_m,
     trigger_m,
     observer_m,
-    snapshot_m
+    snapshot_m,
+    doc_m,
+    rest_m
 >;
 }
 
@@ -18794,6 +18827,34 @@ inline flecs::snapshot snapshot_m_world::snapshot(Args &&... args) const {
 #undef me_
 
 }
+#pragma once
+
+namespace flecs {
+
+#define me_ this->me()
+
+// Doc mixin implementation
+inline void doc_m_world::init() {
+    me_.template component<doc::Description>("flecs::doc::Description");
+}
+
+#undef me_
+
+}
+#pragma once
+
+namespace flecs {
+
+#define me_ this->me()
+
+// Rest mixin implementation
+inline void rest_m_world::init() {
+    me_.template component<rest::Rest>("flecs::rest::Rest");
+}
+
+#undef me_
+
+}
 
 
 
@@ -18891,9 +18952,6 @@ inline void world::init_builtin_components() {
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
     component<Query>("flecs::core::Query");
-    component<doc::Description>("flecs::doc::Description");
-    component<rest::Rest>("flecs::rest::Rest");
-
     this->init_mixins();
 }
 
