@@ -1,6 +1,10 @@
-#include "builders/term_i.hpp"
+#pragma once
+
+#include "builder_i.hpp"
 
 namespace flecs {
+
+#define me_ this->me()
 
 // Class that describes a term
 class term final : public term_builder_i<term> {
@@ -114,5 +118,40 @@ protected:
 private:
     flecs::world_t *m_world;
 };
+
+// Term mixin implementation
+template <typename... Args>
+inline flecs::term term_m_world::term(Args &&... args) const {
+    return flecs::term(me_, std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+inline flecs::term term_m_world::term(Args &&... args) const {
+    return flecs::term(me_, std::forward<Args>(args)...).id<T>();
+}
+
+template <typename R, typename O, typename... Args>
+inline flecs::term term_m_world::term(Args &&... args) const {
+    return flecs::term(me_, std::forward<Args>(args)...).id<R, O>();
+}
+
+// Builder implementation
+template<typename Base>
+inline Base& term_builder_i<Base>::id(const flecs::type& type) {
+    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+    m_term->pred.entity = type.id();
+    return *this;
+}
+
+template<typename Base>
+inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
+    ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+    m_term->pred.entity = type.id();
+    m_term->obj.entity = o;
+    m_term->role = ECS_PAIR;
+    return *this;
+}
+
+#undef me_
 
 }

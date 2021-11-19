@@ -728,22 +728,7 @@ public:
     /** Create a type.
      */
     template <typename... Args>
-    flecs::type type(Args &&... args) const;
-
-    /** Create a term 
-     */
-    template<typename... Args>
-    flecs::term term(Args &&... args) const;
-
-    /** Create a term for a type
-     */
-    template<typename T, typename... Args>
-    flecs::term term(Args &&... args) const;  
-
-    /** Create a term for a pair
-     */
-    template<typename R, typename O, typename... Args>
-    flecs::term term(Args &&... args) const;        
+    flecs::type type(Args &&... args) const;      
 
     /** Register a component.
      */
