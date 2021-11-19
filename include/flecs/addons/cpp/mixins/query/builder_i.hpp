@@ -7,8 +7,10 @@ namespace flecs
 
 // Query builder interface
 template<typename Base, typename ... Components>
-class query_builder_i : public filter_builder_i<Base, Components ...> {
+struct query_builder_i : filter_builder_i<Base, Components ...> {
+private:
     using BaseClass = filter_builder_i<Base, Components ...>;
+    
 public:
     query_builder_i()
         : BaseClass(nullptr)

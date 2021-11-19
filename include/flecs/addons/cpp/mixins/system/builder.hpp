@@ -6,10 +6,12 @@ namespace flecs
 {
 
 template<typename ... Components>
-class system_builder final
-    : public system_builder_i<system_builder<Components ...>, Components ...>
+struct system_builder final
+    : system_builder_i<system_builder<Components ...>, Components ...>
 {
+private:
     using Class = system_builder<Components ...>;
+
 public:
     explicit system_builder(flecs::world_t* world, const char *name = nullptr, const char *expr = nullptr) 
         : system_builder_i<Class, Components ...>(&m_desc)

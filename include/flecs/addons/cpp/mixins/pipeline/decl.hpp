@@ -2,7 +2,7 @@
 
 namespace flecs {
 
-class pipeline;
+struct pipeline;
 
 /* Builtin pipeline tags */
 static const flecs::entity_t PreFrame = EcsPreFrame;

@@ -95,8 +95,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
  */
-class world final : public extendable<world, Mixins> {
-public:
+struct world final : extendable<world, Mixins> {
     /** Create world.
      */
     explicit world() 
@@ -567,9 +566,6 @@ public:
         return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
     }
 
-    flecs::filter_iterator begin() const;
-    flecs::filter_iterator end() const;
-
     /** Enable locking.
      * 
      * @param enabled True if locking should be enabled, false if not.
@@ -690,11 +686,6 @@ public:
         func();
         ecs_defer_end(m_world);
     }
-
-    /** Create a snapshot.
-     */
-    template <typename... Args>
-    flecs::snapshot snapshot(Args &&... args) const;
 
 public:
     friend extendable<world, Mixins>;

@@ -185,8 +185,7 @@ void register_lifecycle_actions(
 // registered with the world using the same id. If the id does exist, the class
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
-class cpp_type_size {
-public:
+struct cpp_type_size {
     static size_t size(bool allow_tag) {
         // C++ types that have no members still have a size. Use std::is_empty
         // to check if the type is empty. If so, use 0 for the component size.
@@ -211,8 +210,7 @@ public:
 };
 
 template <typename T>
-class cpp_type_impl {
-public:
+struct cpp_type_impl {
     // Initialize component identifier
     static void init(world_t* world, entity_t entity, bool allow_tag = true) {
         // If an identifier was already set, check for consistency
@@ -460,14 +458,13 @@ template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
 
 // Regular type
 template <typename T>
-class cpp_type<T, if_not_t< is_pair<T>::value >> 
-    : public cpp_type_impl<base_type_t<T>> { };
+struct cpp_type<T, if_not_t< is_pair<T>::value >> 
+    : cpp_type_impl<base_type_t<T>> { };
 
 // Pair type
 template <typename T>
-class cpp_type<T, if_t< is_pair<T>::value >>
+struct cpp_type<T, if_t< is_pair<T>::value >>
 {
-public:
     // Override id method to return id of pair
     static id_t id(world_t *world = nullptr) {
         return ecs_pair(

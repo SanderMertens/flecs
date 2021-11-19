@@ -2,8 +2,7 @@
 
 namespace flecs {
 
-class pipeline : public type_base<pipeline> {
-public:
+struct pipeline : type_base<pipeline> {
     explicit pipeline(world_t *world, entity_t e) : type_base(world, e)
     { 
         this->entity().add(flecs::Pipeline);

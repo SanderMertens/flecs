@@ -640,7 +640,6 @@ void ImplicitComponents_implicit_const_ref(void);
 
 // Testsuite 'Snapshot'
 void Snapshot_simple_snapshot(void);
-void Snapshot_snapshot_iter(void);
 
 // Testsuite 'WorldFactory'
 void WorldFactory_entity(void);
@@ -3178,10 +3177,6 @@ bake_test_case Snapshot_testcases[] = {
     {
         "simple_snapshot",
         Snapshot_simple_snapshot
-    },
-    {
-        "snapshot_iter",
-        Snapshot_snapshot_iter
     }
 };
 
@@ -3673,7 +3668,7 @@ static bake_test_suite suites[] = {
         "Snapshot",
         NULL,
         NULL,
-        2,
+        1,
         Snapshot_testcases
     },
     {

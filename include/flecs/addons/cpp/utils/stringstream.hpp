@@ -2,8 +2,7 @@
 
 namespace flecs {
 
-class stringstream {
-public:
+struct stringstream {
     explicit stringstream() 
         : m_buf({}) { }
 

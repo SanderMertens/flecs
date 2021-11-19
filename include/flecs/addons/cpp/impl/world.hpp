@@ -11,19 +11,6 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
     emplace<T>(world, entity, self, std::forward<Args>(args)...);
 }
 
-inline filter_iterator world::begin() const {
-    return filter_iterator(*this, ecs_filter_next);
-}
-
-inline filter_iterator world::end() const {
-    return filter_iterator(ecs_filter_next);
-}
-
-/** All entities created in function are created in scope. All operations
- * called in function (such as lookup) are relative to scope. */
-template <typename Func>
-void scope(id_t parent, const Func& func);
-
 inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Type>("flecs::core::Type");
@@ -117,11 +104,6 @@ void world::remove() const {
 template <typename T>
 inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
-}
-
-template <typename... Args>
-inline flecs::snapshot world::snapshot(Args &&... args) const {
-    return flecs::snapshot(*this, std::forward<Args>(args)...);
 }
 
 } // namespace flecs

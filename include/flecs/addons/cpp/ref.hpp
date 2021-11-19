@@ -2,8 +2,7 @@ namespace flecs
 {
 
 template <typename T>
-class ref {
-public:
+struct ref {
     ref()
         : m_world( nullptr )
         , m_entity( 0 )

@@ -2,13 +2,13 @@
 
 namespace flecs {
 
-class query_base;
+struct query_base;
 
 template<typename ... Components>
-class query;
+struct query;
 
 template<typename ... Components>
-class query_builder;
+struct query_builder;
 
 template <typename T>
 struct query_m : mixin<T> { };
