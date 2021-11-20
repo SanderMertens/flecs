@@ -1126,6 +1126,13 @@ void Filter_filter_instanced_w_singleton(void);
 void Filter_filter_instanced_w_base(void);
 void Filter_filter_no_instancing_w_singleton(void);
 void Filter_filter_no_instancing_w_base(void);
+void Filter_filter_no_this_tag(void);
+void Filter_filter_no_this_component(void);
+void Filter_filter_no_this_tag_2_ents(void);
+void Filter_filter_no_this_component_2_ents(void);
+void Filter_filter_no_this_tag_2_ents_1_not(void);
+void Filter_filter_no_this_component_2_ents_1_not(void);
+void Filter_filter_no_this_component_1_not(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6556,6 +6563,34 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_no_instancing_w_base",
         Filter_filter_no_instancing_w_base
+    },
+    {
+        "filter_no_this_tag",
+        Filter_filter_no_this_tag
+    },
+    {
+        "filter_no_this_component",
+        Filter_filter_no_this_component
+    },
+    {
+        "filter_no_this_tag_2_ents",
+        Filter_filter_no_this_tag_2_ents
+    },
+    {
+        "filter_no_this_component_2_ents",
+        Filter_filter_no_this_component_2_ents
+    },
+    {
+        "filter_no_this_tag_2_ents_1_not",
+        Filter_filter_no_this_tag_2_ents_1_not
+    },
+    {
+        "filter_no_this_component_2_ents_1_not",
+        Filter_filter_no_this_component_2_ents_1_not
+    },
+    {
+        "filter_no_this_component_1_not",
+        Filter_filter_no_this_component_1_not
     }
 };
 
@@ -11045,7 +11080,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        104,
+        111,
         Filter_testcases
     },
     {

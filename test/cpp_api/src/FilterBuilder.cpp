@@ -1589,3 +1589,27 @@ void FilterBuilder_term_after_arg() {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_name_arg() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("Foo").set<Position>({10, 20});
+
+    auto f = ecs.filter_builder<Position>()
+        .arg(1).subj().name("Foo")
+        .build();
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it, Position* p) {
+        count ++;
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_assert(it.term_source(1) == e);
+    });
+
+    test_int(count, 1);
+}
+
+void FilterBuilder_name_arg_unfinished_builder() {
+    // Implement testcase
+}

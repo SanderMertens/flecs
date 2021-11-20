@@ -2604,6 +2604,7 @@ struct ecs_filter_t {
     bool match_only_this;      /* Has only terms that match EcsThis */
     bool match_prefab;         /* Does filter match prefabs */
     bool match_disabled;       /* Does filter match disabled entities */
+    bool match_anything;       /* False if filter has no/only Not terms */
 
     bool filter;               /* When true, data fields won't be populated */
     bool instanced;            /* See ecs_filter_desc_t */
@@ -2790,20 +2791,18 @@ typedef struct ecs_term_iter_t {
     void *ptr;
 } ecs_term_iter_t;
 
-typedef enum ecs_filter_iter_kind_t {
-    EcsFilterIterEvalIndex,
-    EcsFilterIterEvalChain,
-    EcsFilterIterEvalNone
-} ecs_filter_iter_kind_t;
+typedef enum ecs_iter_kind_t {
+    EcsIterEvalIndex,
+    EcsIterEvalChain,
+    EcsIterEvalCondition,
+    EcsIterEvalNone
+} ecs_iter_kind_t;
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
-    ecs_filter_iter_kind_t kind;
-
-    /* For EcsFilterIterEvalIndex */ 
+    ecs_iter_kind_t kind; 
     ecs_term_iter_t term_iter;
-    int32_t pivot_term;
     int32_t matches_left;
 } ecs_filter_iter_t;
 

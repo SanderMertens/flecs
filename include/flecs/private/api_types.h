@@ -113,20 +113,18 @@ typedef struct ecs_term_iter_t {
     void *ptr;
 } ecs_term_iter_t;
 
-typedef enum ecs_filter_iter_kind_t {
-    EcsFilterIterEvalIndex,
-    EcsFilterIterEvalChain,
-    EcsFilterIterEvalNone
-} ecs_filter_iter_kind_t;
+typedef enum ecs_iter_kind_t {
+    EcsIterEvalIndex,
+    EcsIterEvalChain,
+    EcsIterEvalCondition,
+    EcsIterEvalNone
+} ecs_iter_kind_t;
 
 /** Filter-iterator specific data */
 typedef struct ecs_filter_iter_t {
     ecs_filter_t filter;
-    ecs_filter_iter_kind_t kind;
-
-    /* For EcsFilterIterEvalIndex */ 
+    ecs_iter_kind_t kind; 
     ecs_term_iter_t term_iter;
-    int32_t pivot_term;
     int32_t matches_left;
 } ecs_filter_iter_t;
 

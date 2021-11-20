@@ -1185,7 +1185,14 @@
                 "filter_instanced_w_singleton",
                 "filter_instanced_w_base",
                 "filter_no_instancing_w_singleton",
-                "filter_no_instancing_w_base"
+                "filter_no_instancing_w_base",
+                "filter_no_this_tag",
+                "filter_no_this_component",
+                "filter_no_this_tag_2_ents",
+                "filter_no_this_component_2_ents",
+                "filter_no_this_tag_2_ents_1_not",
+                "filter_no_this_component_2_ents_1_not",
+                "filter_no_this_component_1_not"
             ]
         }, {
             "id": "Query",

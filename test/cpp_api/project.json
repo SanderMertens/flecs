@@ -532,7 +532,9 @@
                 "world_each_filter_2_components_no_entity",
                 "10_terms",
                 "20_terms",
-                "term_after_arg"
+                "term_after_arg",
+                "name_arg",
+                "name_arg_unfinished_builder"
             ]         
         }, {
             "id": "SystemBuilder",
@@ -555,7 +557,9 @@
                 "string_term",
                 "singleton_term",
                 "10_terms",
-                "20_terms"
+                "20_terms",
+                "name_arg",
+                "name_arg_unfinished_builder"
             ]  
         }, {
             "id": "Observer",

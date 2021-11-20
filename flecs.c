@@ -1850,7 +1850,6 @@ bool flecs_filter_match_table(
     ecs_world_t *world,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
-    ecs_type_t type,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
@@ -13094,16 +13093,13 @@ void observer_callback(ecs_iter_t *it) {
         prev_table = &world->store.root;
     }
 
-    ecs_type_t type = table->type;
-    ecs_type_t prev_type = prev_table->type;
-
     /* Populate the column for the term that triggered. This will allow the
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
     user_it.columns[0] = 0;
     user_it.columns[pivot_term] = it->columns[0];
 
-    if (flecs_filter_match_table(world, &o->filter, table, type,
+    if (flecs_filter_match_table(world, &o->filter, table,
         user_it.ids, user_it.columns, user_it.subjects, NULL, NULL, false, -1)) 
     {
         /* Monitor observers only trigger when the filter matches for the first
@@ -13114,7 +13110,7 @@ void observer_callback(ecs_iter_t *it) {
             }
 
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                prev_type, NULL, NULL, NULL, NULL, NULL, true, -1)) 
+                NULL, NULL, NULL, NULL, NULL, true, -1)) 
             {
                 goto done;
             }
@@ -21191,6 +21187,10 @@ int ecs_filter_finalize(
         if (term->inout == EcsInOutFilter) {
             filter_terms ++;
         }
+
+        if (term->oper != EcsNot || term->subj.entity != EcsThis) {
+            f->match_anything = false;
+        }
     }
 
     f->term_count_actual = actual_count;
@@ -21245,6 +21245,7 @@ int ecs_filter_init(
     f.expr = (char*)expr;
     f.filter = desc->filter;
     f.instanced = desc->instanced;
+    f.match_anything = true;
 
     if (terms) {
         terms = desc->terms_buffer;
@@ -21609,6 +21610,9 @@ bool flecs_term_match_table(
         } else {
             match_type = NULL;
         }
+    } else {
+        /* If filter contains This terms, a table must be provided */
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_entity_t source;
@@ -21669,7 +21673,6 @@ bool flecs_filter_match_table(
     ecs_world_t *world,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
-    ecs_type_t type,
     ecs_id_t *ids,
     int32_t *columns,
     ecs_entity_t *subjects,
@@ -21680,6 +21683,11 @@ bool flecs_filter_match_table(
 {
     ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
         ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t type = NULL;
+    if (table) {
+        type = table->type;
+    }
 
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
@@ -21726,6 +21734,9 @@ bool flecs_filter_match_table(
             } else {
                 match_type = NULL;
             }
+        } else {
+            /* If filter contains This terms, table must be provided */
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
         bool result = flecs_term_match_table(world, term, match_table, 
@@ -22093,7 +22104,7 @@ ecs_iter_t ecs_filter_iter(
 
     /* Find term that represents smallest superset */
     if (filter->match_this) {
-        iter->kind = EcsFilterIterEvalIndex;
+        iter->kind = EcsIterEvalIndex;
 
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
@@ -22123,16 +22134,18 @@ ecs_iter_t ecs_filter_iter(
             }
         }
 
-        iter->pivot_term = pivot_term;
-
         if (pivot_term == -1) {
             term_iter_init_wildcard(world, &iter->term_iter);
         } else {
             term_iter_init(world, &terms[pivot_term], &iter->term_iter);
         }
     } else {
-        /* If filter has no this terms, no tables need to be evaluated */
-        iter->kind = EcsFilterIterEvalNone;
+        if (!filter->match_anything) {
+            iter->kind = EcsIterEvalCondition;
+            term_iter_init_no_data(&iter->term_iter);
+        } else {
+            iter->kind = EcsIterEvalNone;
+        }
     }
 
     if (filter->terms == filter->term_cache) {
@@ -22165,7 +22178,7 @@ ecs_iter_t ecs_filter_chain_iter(
     ecs_filter_iter_t *iter = &it.iter.filter;
     init_filter_iter(it.world, &it, filter);
 
-    iter->kind = EcsFilterIterEvalChain;
+    iter->kind = EcsIterEvalChain;
 
     if (filter->terms == filter->term_cache) {
         /* See ecs_filter_iter */
@@ -22200,7 +22213,7 @@ bool ecs_filter_next_instanced(
     ecs_filter_iter_t *iter = &it->iter.filter;
     ecs_filter_t *filter = &iter->filter;
     ecs_world_t *world = it->real_world;
-    ecs_table_t *table;
+    ecs_table_t *table = NULL;
     bool match;
     int i;
 
@@ -22211,43 +22224,53 @@ bool ecs_filter_next_instanced(
     flecs_iter_init(it);
 
     ecs_iter_t *chain_it = it->chain_it;
-    if (chain_it) {
-        ecs_iter_next_action_t next = chain_it->next;
+    ecs_iter_kind_t kind = iter->kind;
 
+    if (chain_it) {
+        ecs_assert(kind == EcsIterEvalChain, ECS_INVALID_PARAMETER, NULL);
+        
+        ecs_iter_next_action_t next = chain_it->next;
         do {
             if (!next(chain_it)) {
                 goto done;
             }
 
             table = chain_it->table;
-            match = flecs_filter_match_table(world, filter, table, table->type,
+            match = flecs_filter_match_table(world, filter, table,
                 it->ids, it->columns, it->subjects, it->match_indices, NULL, 
                 true, -1);
         } while (!match);
 
         goto yield;
-    } else if (iter->kind == EcsFilterIterEvalIndex) {
+    } else if (kind == EcsIterEvalIndex || kind == EcsIterEvalCondition) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t pivot_term = term->index;
         bool term_is_filter = term->inout == EcsInOutFilter;
 
         do {
-            ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
-            bool first_match = iter->matches_left == 0;
+            int32_t matches_left = iter->matches_left;
+            if (matches_left < 0) {
+                goto done;
+            }
 
+            bool first_match = matches_left == 0;
             if (first_match) {
-                /* Find new match, starting with the leading term */
-                if (!term_iter_next(world, term_iter, 
-                    filter->match_prefab, filter->match_disabled)) 
-                {
-                    goto done;
-                }
+                if (kind != EcsIterEvalCondition) {
+                    /* Find new match, starting with the leading term */
+                    if (!term_iter_next(world, term_iter, 
+                        filter->match_prefab, filter->match_disabled)) 
+                    {
+                        goto done;
+                    }
 
-                table = it->table = term_iter->table;
-                it->ids[pivot_term] = term_iter->id;
-                it->subjects[pivot_term] = term_iter->subject;
-                it->columns[pivot_term] = term_iter->column;
+                    table = it->table = term_iter->table;
+                    if (pivot_term != -1) {
+                        it->ids[pivot_term] = term_iter->id;
+                        it->subjects[pivot_term] = term_iter->subject;
+                        it->columns[pivot_term] = term_iter->column;
+                    }
+                }
             } else {
                 /* Progress iterator to next match for table, if any */
                 table = it->table;
@@ -22265,20 +22288,26 @@ bool ecs_filter_next_instanced(
             }
 
             /* Match the remainder of the terms */
-            match = flecs_filter_match_table(world, filter, table, table->type,
+            match = flecs_filter_match_table(world, filter, table,
                 it->ids, it->columns, it->subjects,
-                it->match_indices, &iter->matches_left, first_match, 
+                it->match_indices, &matches_left, first_match, 
                 pivot_term);
+            
+            if (kind == EcsIterEvalCondition && !matches_left) {
+                matches_left --;
+            }
 
             /* Check if there are any terms which have more matching columns */
             if (!first_match) {
-                iter->matches_left = 0;
+                matches_left = 0;
                 for (i = 0; i < filter->term_count_actual; i ++) {
                     if (it->match_indices[i] > 0) {
-                        iter->matches_left += it->match_indices[i];
+                        matches_left += it->match_indices[i];
                     }
                 }
             }
+
+            iter->matches_left = matches_left;
         } while (!match);
 
         goto yield;

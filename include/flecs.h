@@ -371,6 +371,7 @@ struct ecs_filter_t {
     bool match_only_this;      /* Has only terms that match EcsThis */
     bool match_prefab;         /* Does filter match prefabs */
     bool match_disabled;       /* Does filter match disabled entities */
+    bool match_anything;       /* False if filter has no/only Not terms */
 
     bool filter;               /* When true, data fields won't be populated */
     bool instanced;            /* See ecs_filter_desc_t */

@@ -469,3 +469,22 @@ void SystemBuilder_20_terms() {
 
     test_int(count, 1);
 }
+
+void SystemBuilder_system_component() {
+    flecs::world ecs;
+
+    auto s = ecs.system<const Position>("MySystem")
+        .arg(1).subj().name("MySystem")
+        .iter([](flecs::iter& Iter, const Position* Config)
+        { });
+
+    test_assert(s.has<Position>());
+}
+
+void SystemBuilder_name_arg() {
+    // Implement testcase
+}
+
+void SystemBuilder_name_arg_unfinished_builder() {
+    // Implement testcase
+}
