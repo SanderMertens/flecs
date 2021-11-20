@@ -908,6 +908,7 @@ void Pipeline_random_read_after_random_write_w_not_write(void);
 void Pipeline_random_read_after_random_write_w_not_read(void);
 void Pipeline_random_read_after_random_write_w_wildcard(void);
 void Pipeline_random_in_after_random_inout_after_random_out(void);
+void Pipeline_stage_write_before_read(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -5710,6 +5711,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "random_in_after_random_inout_after_random_out",
         Pipeline_random_in_after_random_inout_after_random_out
+    },
+    {
+        "stage_write_before_read",
+        Pipeline_stage_write_before_read
     }
 };
 
@@ -11059,7 +11064,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        29,
+        30,
         Pipeline_testcases
     },
     {

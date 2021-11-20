@@ -961,7 +961,8 @@
                 "random_read_after_random_write_w_not_write",
                 "random_read_after_random_write_w_not_read",
                 "random_read_after_random_write_w_wildcard",
-                "random_in_after_random_inout_after_random_out"
+                "random_in_after_random_inout_after_random_out",
+                "stage_write_before_read"
             ]
         }, {
             "id": "SystemMisc",

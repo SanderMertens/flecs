@@ -1008,3 +1008,51 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline() {
 
     ecs_fini(world);
 }
+
+void Pipeline_stage_write_before_read() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysA", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysA
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysB", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position(), Position",
+        .callback = SysB
+    });
+    ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysC", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysC
+    });
+
+    test_assert(s1 != 0);
+    test_assert(s2 != 0);
+    test_assert(s3 != 0);
+
+    ecs_new(world, Position);
+
+    ecs_progress(world, 1);  
+
+    test_int(sys_a_invoked, 1);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(ecs_get_pipeline_stats(world, 
+        ecs_get_pipeline(world), &stats), true);
+
+    test_int(ecs_vector_count(stats.systems), 5);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], s2);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+
+    ecs_fini(world);
+}

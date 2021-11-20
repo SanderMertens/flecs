@@ -36225,6 +36225,36 @@ bool check_term(
 }
 
 static
+bool check_terms(
+    ecs_filter_t *filter,
+    bool is_active,
+    write_state_t *ws)
+{
+    bool needs_merge = false;
+    ecs_term_t *terms = filter->terms;
+    int32_t t, term_count = filter->term_count;
+
+    /* Check This terms first. This way if a term indicating writing to a stage
+     * was added before the term, it won't cause merging. */
+    for (t = 0; t < term_count; t ++) {
+        ecs_term_t *term = &terms[t];
+        if (term->subj.entity == EcsThis) {
+            needs_merge |= check_term(term, is_active, ws);
+        }
+    }
+
+    /* Now check staged terms */
+    for (t = 0; t < term_count; t ++) {
+        ecs_term_t *term = &terms[t];
+        if (term->subj.entity != EcsThis) {
+            needs_merge |= check_term(term, is_active, ws);
+        }
+    }
+
+    return needs_merge;
+}
+
+static
 bool build_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline,
@@ -36270,12 +36300,7 @@ bool build_pipeline(
             bool needs_merge = false;
             bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
-            
-            ecs_term_t *terms = q->filter.terms;
-            int32_t t, term_count = q->filter.term_count;
-            for (t = 0; t < term_count; t ++) {
-                needs_merge |= check_term(&terms[t], is_active, &ws);
-            }
+            needs_merge = check_terms(&q->filter, is_active, &ws);
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
@@ -36287,9 +36312,7 @@ bool build_pipeline(
                  * should not insert unnecessary merges.  */
                 needs_merge = false;
                 if (is_active) {
-                    for (t = 0; t < term_count; t ++) {
-                        needs_merge |= check_term(&terms[t], true, &ws);
-                    }
+                    needs_merge = check_terms(&q->filter, true, &ws);
                 }
 
                 /* The component states were just reset, so if we conclude that
