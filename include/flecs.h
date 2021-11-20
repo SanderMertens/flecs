@@ -145,6 +145,7 @@ typedef struct ecs_iter_t ecs_iter_t;
 
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
+typedef struct ecs_mut_ref_t ecs_mut_ref_t;
 
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
@@ -1715,6 +1716,24 @@ FLECS_API
 const void* ecs_get_ref_w_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get a mutable reference to a component.
+ * This operation is similar to ecs_get_id but it stores temporary
+ * information in a `ecs_mut_ref_t` value which allows subsequent lookups to be
+ * faster.
+ *
+ * @param world The world.
+ * @param ref Pointer to a ecs_mut_ref_t value. Must be initialized.
+ * @param entity The entity.
+ * @param id The id of the component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ */
+FLECS_API
+void* ecs_get_mut_ref_w_id(
+    const ecs_world_t *world,
+    ecs_mut_ref_t *ref,
     ecs_entity_t entity,
     ecs_id_t id);
 

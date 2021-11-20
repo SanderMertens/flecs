@@ -73,6 +73,17 @@ struct ecs_ref_t {
     const void *ptr;        /* Cached ptr */
 };
 
+
+struct ecs_mut_ref_t {
+    ecs_entity_t entity;    /* Entity of the reference */
+    ecs_entity_t component; /* Component of the reference */
+    void *table;            /* Last known table */
+    int32_t row;            /* Last known location in table */
+    int32_t alloc_count;    /* Last known alloc count of table */
+    ecs_record_t *record;   /* Pointer to record, if in main stage */
+    void *ptr;        /* Cached ptr */
+};
+
 /** Array of entity ids that, other than a type, can live on the stack */
 typedef struct ecs_ids_t {
     ecs_id_t *array;        /* An array with entity ids */

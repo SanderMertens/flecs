@@ -2687,9 +2687,9 @@ const void* ecs_get_ref_w_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!entity || !ref->entity || entity == ref->entity, 
+    ecs_check(!entity || !ref->entity || entity == ref->entity,
         ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!id || !ref->component || id == ref->component, 
+    ecs_check(!id || !ref->component || id == ref->component,
         ECS_INVALID_PARAMETER, NULL);
     ecs_record_t *record = ref->record;
 
@@ -2725,12 +2725,68 @@ const void* ecs_get_ref_w_id(
     ref->row = record->row;
     ref->alloc_count = table->alloc_count;
 
-    if (table) {
-        bool is_monitored;
-        row = flecs_record_to_row(row, &is_monitored);
-        ref->ptr = get_component(world, table, row, id);
-    }
+    ecs_check(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_monitored;
+    row = flecs_record_to_row(row, &is_monitored);
+    ref->ptr = get_component(world, table, row, id);
+  
+    ref->record = record;
+    return ref->ptr;
+error:
+    return NULL;
+}
 
+void* ecs_get_mut_ref_w_id(
+    const ecs_world_t *world,
+    ecs_mut_ref_t *ref,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!entity || !ref->entity || entity == ref->entity,
+              ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id || !ref->component || id == ref->component,
+              ECS_INVALID_PARAMETER, NULL);
+    ecs_record_t *record = ref->record;
+  
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+  
+    entity |= ref->entity;
+  
+    if (!record) {
+      record = ecs_eis_get(world, entity);
+    }
+  
+    if (!record || !record->table) {
+      goto error;
+    }
+  
+    ecs_table_t *table = record->table;
+  
+    if (ref->record == record &&
+        ref->table == table &&
+        ref->row == record->row &&
+        ref->alloc_count == table->alloc_count)
+    {
+      return ref->ptr;
+    }
+  
+    id |= ref->component;
+  
+    int32_t row = record->row;
+    ref->entity = entity;
+    ref->component = id;
+    ref->table = table;
+    ref->row = record->row;
+    ref->alloc_count = table->alloc_count;
+  
+    ecs_check(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_monitored;
+    row = flecs_record_to_row(row, &is_monitored);
+    ref->ptr = get_component(world, table, row, id);
+  
     ref->record = record;
     return ref->ptr;
 error:

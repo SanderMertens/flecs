@@ -649,7 +649,7 @@ public:
     const T* get() {
         if (m_entity) {
             ecs_get_ref_w_id(
-                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
+                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));
         }
 
         return static_cast<T*>(m_ref.ptr);
@@ -661,6 +661,57 @@ private:
     world_t *m_world;
     entity_t m_entity;
     flecs::ref_t m_ref;
+};
+
+
+template <typename T>
+class mut_ref {
+public:
+  mut_ref()
+      : m_world( nullptr )
+        , m_entity( 0 )
+        , m_ref() { }
+  
+  mut_ref(world_t *world, entity_t entity)
+      : m_world( world )
+        , m_entity( entity )
+        , m_ref()
+  {
+    auto comp_id = _::cpp_type<T>::id(world);
+
+    ecs_assert(_::cpp_type<T>::size() != 0,
+               ECS_INVALID_PARAMETER, NULL);
+
+    ecs_get_mut_ref_w_id(
+        m_world, &m_ref, m_entity, comp_id);
+  }
+  
+  const T* get() {
+    const T* result = static_cast<const T*>(ecs_get_mut_ref_w_id(
+        m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
+    
+    ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return result;
+  }
+
+  const T* operator->() {
+    return get();
+  }
+  
+  template <typename Func>
+  bool set(const Func& func) {
+    func(*(T *)get());
+
+    ecs_modified_id(m_world, m_entity, m_ref.component);
+
+    return true;
+  }
+  
+private:
+  world_t *m_world;
+  entity_t m_entity;
+  flecs::mut_ref_t m_ref;
 };
 
 /** Entity class
