@@ -533,8 +533,7 @@
                 "10_terms",
                 "20_terms",
                 "term_after_arg",
-                "name_arg",
-                "name_arg_unfinished_builder"
+                "name_arg"
             ]         
         }, {
             "id": "SystemBuilder",
@@ -558,8 +557,7 @@
                 "singleton_term",
                 "10_terms",
                 "20_terms",
-                "name_arg",
-                "name_arg_unfinished_builder"
+                "name_arg"
             ]  
         }, {
             "id": "Observer",

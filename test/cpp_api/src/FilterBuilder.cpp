@@ -1609,7 +1609,3 @@ void FilterBuilder_name_arg() {
 
     test_int(count, 1);
 }
-
-void FilterBuilder_name_arg_unfinished_builder() {
-    // Implement testcase
-}

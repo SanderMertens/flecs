@@ -510,7 +510,6 @@ void FilterBuilder_10_terms(void);
 void FilterBuilder_20_terms(void);
 void FilterBuilder_term_after_arg(void);
 void FilterBuilder_name_arg(void);
-void FilterBuilder_name_arg_unfinished_builder(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -533,7 +532,6 @@ void SystemBuilder_singleton_term(void);
 void SystemBuilder_10_terms(void);
 void SystemBuilder_20_terms(void);
 void SystemBuilder_name_arg(void);
-void SystemBuilder_name_arg_unfinished_builder(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -2701,10 +2699,6 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "name_arg",
         FilterBuilder_name_arg
-    },
-    {
-        "name_arg_unfinished_builder",
-        FilterBuilder_name_arg_unfinished_builder
     }
 };
 
@@ -2788,10 +2782,6 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "name_arg",
         SystemBuilder_name_arg
-    },
-    {
-        "name_arg_unfinished_builder",
-        SystemBuilder_name_arg_unfinished_builder
     }
 };
 
@@ -3632,14 +3622,14 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        64,
+        63,
         FilterBuilder_testcases
     },
     {
         "SystemBuilder",
         NULL,
         NULL,
-        21,
+        20,
         SystemBuilder_testcases
     },
     {

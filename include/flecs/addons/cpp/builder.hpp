@@ -44,9 +44,7 @@ public:
      */
     Base& name(const char *name) {
         ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
-        // Const cast is safe, when the value is actually used to construct a
-        // query, it will be duplicated.
-        m_term_id->name = const_cast<char*>(name);
+        m_term_id->name = ecs_os_strdup(name);
         return *this;
     }
 
@@ -59,9 +57,7 @@ public:
     /** Set the current term id to be a variable. */
     Base& var(const char *name) {
         ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
-        // Const cast is safe, when the value is actually used to construct a
-        // query, it will be duplicated.
-        m_term_id->name = const_cast<char*>(name);
+        m_term_id->name = ecs_os_strdup(name);
         return var(); // Default to VarIsVariable
     }
 

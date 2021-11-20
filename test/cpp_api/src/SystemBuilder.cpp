@@ -470,7 +470,7 @@ void SystemBuilder_20_terms() {
     test_int(count, 1);
 }
 
-void SystemBuilder_system_component() {
+void SystemBuilder_name_arg() {
     flecs::world ecs;
 
     auto s = ecs.system<const Position>("MySystem")
@@ -479,12 +479,4 @@ void SystemBuilder_system_component() {
         { });
 
     test_assert(s.has<Position>());
-}
-
-void SystemBuilder_name_arg() {
-    // Implement testcase
-}
-
-void SystemBuilder_name_arg_unfinished_builder() {
-    // Implement testcase
 }
