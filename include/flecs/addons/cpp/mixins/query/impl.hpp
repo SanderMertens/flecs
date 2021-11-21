@@ -4,7 +4,7 @@
 
 namespace flecs {
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
@@ -103,7 +103,7 @@ protected:
 };
 
 template<typename ... Components>
-struct query : query_base {
+struct query final : query_base {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
@@ -152,13 +152,13 @@ private:
 // Mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> query_m_world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...)
+    return flecs::query_builder<Comps...>(flecs_me_, std::forward<Args>(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(me_, std::forward<Args>(args)...);
+    return flecs::query_builder<Comps...>(flecs_me_, std::forward<Args>(args)...);
 }
 
 // Builder implementation
@@ -186,6 +186,6 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
     return *static_cast<Base*>(this);
 }
 
-#undef me_
+#undef flecs_me_
 
 } // namespace flecs

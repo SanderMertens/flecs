@@ -4,7 +4,7 @@
 
 namespace flecs {
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 // Class that describes a term
 struct term final : term_builder_i<term> {
@@ -121,17 +121,17 @@ private:
 // Term mixin implementation
 template <typename... Args>
 inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(me_, std::forward<Args>(args)...);
+    return flecs::term(flecs_me_, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
 inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(me_, std::forward<Args>(args)...).id<T>();
+    return flecs::term(flecs_me_, std::forward<Args>(args)...).id<T>();
 }
 
 template <typename R, typename O, typename... Args>
 inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(me_, std::forward<Args>(args)...).id<R, O>();
+    return flecs::term(flecs_me_, std::forward<Args>(args)...).id<R, O>();
 }
 
 // Builder implementation
@@ -151,6 +151,6 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
     return *this;
 }
 
-#undef me_
+#undef flecs_me_
 
 }

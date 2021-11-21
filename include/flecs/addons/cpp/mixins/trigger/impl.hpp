@@ -5,13 +5,13 @@
 namespace flecs 
 {
 
-struct trigger : public entity
+struct trigger final : public entity_base
 {
     explicit trigger() 
-        : entity() { }
+        : entity_base() { }
 
     explicit trigger(flecs::world_t *world, flecs::entity_t id)
-        : entity(world, id) { }
+        : entity_base(world, id) { }
 
     void ctx(void *ctx) {
         ecs_trigger_desc_t desc = {};

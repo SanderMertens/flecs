@@ -2,13 +2,13 @@
 
 namespace flecs {
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 // Doc mixin implementation
 inline void doc_m_world::init() {
-    me_.template component<doc::Description>("flecs::doc::Description");
+    flecs_me_.template component<doc::Description>("flecs::doc::Description");
 }
 
-#undef me_
+#undef flecs_me_
 
 }
