@@ -59,21 +59,14 @@ private:
     int32_t m_stage_count;
 };
 
-struct system : entity, extendable<system, Mixins>
+struct system final : entity_base, extendable<system, Mixins>
 {
     explicit system() 
-        : entity() { }
+        : entity_base() { }
 
     explicit system(flecs::world_t *world, flecs::entity_t id)
-        : entity(world, id) { }
+        : entity_base(world, id) { }
 
-    void enable() {
-        ecs_enable(m_world, m_id, true);
-    }
-
-    void disable() {
-        ecs_enable(m_world, m_id, false);
-    }
 
     void ctx(void *ctx) {
         if (ecs_has(m_world, m_id, EcsSystem)) {

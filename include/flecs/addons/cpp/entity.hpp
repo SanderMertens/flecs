@@ -8,17 +8,17 @@ namespace flecs
 
 /** Entity class
  * This class provides access to entities. */
-struct entity : entity_view, entity_builder_i<entity>
+struct entity_base : entity_view, entity_builder_i<entity>
 {
     /** Default constructor.
      */
-    entity() : flecs::entity_view() { }
+    entity_base() : flecs::entity_view() { }
 
     /** Create entity.
      *
      * @param world The world in which to create the entity.
      */
-    explicit entity(world_t *world) 
+    explicit entity_base(world_t *world) 
         : flecs::entity_view() 
     {
         m_world = world;
@@ -34,7 +34,7 @@ struct entity : entity_view, entity_builder_i<entity>
      * @param world The world in which to create the entity.
      * @param name The entity name.
      */
-    explicit entity(world_t *world, const char *name) 
+    explicit entity_base(world_t *world, const char *name) 
         : flecs::entity_view()
     { 
         m_world = world;
@@ -50,7 +50,7 @@ struct entity : entity_view, entity_builder_i<entity>
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(world_t *world, entity_t id)
+    explicit entity_base(world_t *world, entity_t id)
         : flecs::entity_view()
     {
         m_world = world;
@@ -61,7 +61,7 @@ struct entity : entity_view, entity_builder_i<entity>
      * 
      * @param id The entity_t value to convert.
      */
-    explicit entity(entity_t id) 
+    explicit entity_base(entity_t id) 
         : flecs::entity_view( nullptr, id ) { }
 
     /** Get entity id.
@@ -240,6 +240,20 @@ struct entity : entity_view, entity_builder_i<entity>
         ecs_delete(m_world, m_id);
     }
 
+protected:
+    flecs::world_t* world_v() override {
+        return m_world;
+    }
+
+    flecs::entity_t id_v() override {
+        return m_id;
+    }
+};
+
+struct entity final : entity_base {
+    template <typename ... Args>
+    entity(Args&&... args) : entity_base(std::forward<Args>(args)...) { }
+
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
      * belongs to a world, but the entity id is 0.
@@ -255,15 +269,6 @@ struct entity : entity_view, entity_builder_i<entity>
     static
     flecs::entity null() {
         return flecs::entity(static_cast<entity_t>(0));
-    }
-
-protected:
-    flecs::world_t* world_v() override {
-        return m_world;
-    }
-
-    flecs::entity_t id_v() override {
-        return m_id;
     }
 };
 

@@ -180,21 +180,21 @@ inline flecs::entity entity_view::lookup(const char *path) const {
 }
 
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 // Entity mixin implementation
 template <typename... Args>
 inline flecs::entity entity_m_world::entity(Args &&... args) const {
-    return flecs::entity(me_, std::forward<Args>(args)...);
+    return flecs::entity(flecs_me_, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
 inline flecs::entity entity_m_world::prefab(Args &&... args) const {
-    flecs::entity result = flecs::entity(me_, std::forward<Args>(args)...);
+    flecs::entity result = flecs::entity(flecs_me_, std::forward<Args>(args)...);
     result.add(flecs::Prefab);
     return result;
 }
 
-#undef me_
+#undef flecs_me_
 
 }

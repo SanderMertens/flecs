@@ -11,7 +11,7 @@ namespace flecs
  *
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
-struct entity_view : public id, public extendable<entity_view, Mixins> {
+struct entity_view : public id {
     entity_view() : flecs::id() { }
 
     /** Wrap an existing entity id.
@@ -127,6 +127,29 @@ struct entity_view : public id, public extendable<entity_view, Mixins> {
     template <typename Rel, typename Func>
     void each(const Func& func) const { 
         return each(_::cpp_type<Rel>::id(m_world), func);
+    }
+
+    /** Iterate children for entity.
+     * The function parameter must match the following signature:
+     *   void(*)(flecs::entity object)
+     *
+     * @param func The function invoked for each child.     
+     */
+    template <typename Func>
+    void children(Func&& func) const {
+        flecs::world world(m_world);
+
+        ecs_filter_t f;
+        ecs_filter_desc_t desc = {};
+        desc.terms[0].id = ecs_pair(flecs::ChildOf, m_id);
+        desc.terms[1].id = flecs::Prefab;
+        desc.terms[1].oper = EcsOptional;
+        ecs_filter_init(m_world, &f, &desc);
+
+        ecs_iter_t it = ecs_filter_iter(m_world, &f);
+        while (ecs_filter_next(&it)) {
+            _::each_invoker<Func>(std::move(func)).invoke(&it);
+        }
     }
 
     /** Get component value.

@@ -2,13 +2,13 @@
 
 namespace flecs {
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 // Rest mixin implementation
 inline void rest_m_world::init() {
-    me_.template component<rest::Rest>("flecs::rest::Rest");
+    flecs_me_.template component<rest::Rest>("flecs::rest::Rest");
 }
 
-#undef me_
+#undef flecs_me_
 
 }

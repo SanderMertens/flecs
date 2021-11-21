@@ -574,13 +574,13 @@ struct entity_builder_i {
 
     virtual ~entity_builder_i() { }
 
-protected:
-    virtual flecs::world_t* world_v() = 0;
-    virtual flecs::entity_t id_v() = 0;
-
     operator Base&() {
         return *static_cast<Base*>(this);
     }
+
+protected:
+    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::entity_t id_v() = 0;
 };
 
 }

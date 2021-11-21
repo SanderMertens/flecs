@@ -76,14 +76,14 @@ private:
     snapshot_t *m_snapshot;
 };
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 // Snapshot mixin implementation
 template <typename... Args>
 inline flecs::snapshot snapshot_m_world::snapshot(Args &&... args) const {
-    return flecs::snapshot(me_, std::forward<Args>(args)...);
+    return flecs::snapshot(flecs_me_, std::forward<Args>(args)...);
 }
 
-#undef me_
+#undef flecs_me_
 
 }

@@ -56,42 +56,42 @@ inline flecs::world id::world() const {
 
 // Id mixin implementation
 
-#define me_ this->me()
+#define flecs_me_ this->me()
 
 template <typename T>
 inline flecs::id id_m_world::id() const {
-    return flecs::id(me_, _::cpp_type<T>::id(me_));
+    return flecs::id(flecs_me_, _::cpp_type<T>::id(flecs_me_));
 }
 
 template <typename ... Args>
 inline flecs::id id_m_world::id(Args&&... args) const {
-    return flecs::id(me_, std::forward<Args>(args)...);
+    return flecs::id(flecs_me_, std::forward<Args>(args)...);
 }
 
 template <typename R, typename O>
 inline flecs::id id_m_world::pair() const {
     return flecs::id(
-        me_, 
+        flecs_me_, 
         ecs_pair(
-            _::cpp_type<R>::id(me_), 
-            _::cpp_type<O>::id(me_)));
+            _::cpp_type<R>::id(flecs_me_), 
+            _::cpp_type<O>::id(flecs_me_)));
 }
 
 template <typename R>
 inline flecs::id id_m_world::pair(entity_t o) const {
     return flecs::id(
-        me_,
+        flecs_me_,
         ecs_pair(
-            _::cpp_type<R>::id(me_), 
+            _::cpp_type<R>::id(flecs_me_), 
             o));
 }
 
 inline flecs::id id_m_world::pair(entity_t r, entity_t o) const {
     return flecs::id(
-        me_,
+        flecs_me_,
         ecs_pair(r, o));
 }
 
-#undef me_
+#undef flecs_me_
 
 }
