@@ -94,28 +94,6 @@ void ecs_enable_system(
 
 /* -- Public API -- */
 
-void ecs_enable(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    bool enabled)
-{
-    ecs_poly_assert(world, ecs_world_t);
-
-    const EcsType *type_ptr = ecs_get( world, entity, EcsType);
-    if (type_ptr) {
-        /* If entity is a type, disable all entities in the type */
-        ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
-            ecs_enable(world, *e, enabled);
-        });
-    } else {
-        if (enabled) {
-            ecs_remove_id(world, entity, EcsDisabled);
-        } else {
-            ecs_add_id(world, entity, EcsDisabled);
-        }
-    }
-}
-
 ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -436,6 +414,9 @@ ecs_entity_t ecs_system_init(
 
         system->tick_source = desc->tick_source;
 
+        system->multi_threaded = desc->multi_threaded;
+        system->no_staging = desc->no_staging;
+
         /* If tables have been matched with this system it is active, and we
          * should activate the in terms, if any. This will ensure that any
          * OnDemand systems get enabled. */
@@ -515,7 +496,6 @@ ecs_entity_t ecs_system_init(
             }
         }
 
-        /* Override the existing callback or context */
         if (desc->callback) {
             system->action = desc->callback;
         }
@@ -527,6 +507,12 @@ ecs_entity_t ecs_system_init(
         }
         if (desc->query.filter.instanced) {
             system->query->filter.instanced = true;
+        }
+        if (desc->multi_threaded) {
+            system->multi_threaded = desc->multi_threaded;
+        }
+        if (desc->no_staging) {
+            system->no_staging = desc->no_staging;
         }
     }
 

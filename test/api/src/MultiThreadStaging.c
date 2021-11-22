@@ -32,6 +32,11 @@ void MultiThreadStaging_2_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Add_to_current,
+        .multi_threaded = true
+    });
+
     IterData ctx = {.component = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
 
@@ -70,6 +75,11 @@ void MultiThreadStaging_3_threads_add_to_current() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Add_to_current,
+        .multi_threaded = true
+    });
 
     IterData ctx = {.component = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
@@ -110,6 +120,11 @@ void MultiThreadStaging_4_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Add_to_current,
+        .multi_threaded = true
+    });
+
     IterData ctx = {.component = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
 
@@ -149,6 +164,11 @@ void MultiThreadStaging_5_threads_add_to_current() {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Add_to_current,
+        .multi_threaded = true
+    });
+
     IterData ctx = {.component = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
 
@@ -187,6 +207,11 @@ void MultiThreadStaging_6_threads_add_to_current() {
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Add_to_current,
+        .multi_threaded = true
+    });
 
     IterData ctx = {.component = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
@@ -247,6 +272,11 @@ void MultiThreadStaging_2_threads_on_add() {
     ECS_TRIGGER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, Velocity());
 
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = AddVelocity,
+        .multi_threaded = true
+    });
+
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
 
@@ -283,6 +313,11 @@ void MultiThreadStaging_new_w_count() {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, New_w_count, EcsOnUpdate, Position());
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = New_w_count,
+        .multi_threaded = true
+    });
 
     ecs_set_threads(world, 2);
 

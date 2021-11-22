@@ -7,17 +7,32 @@ void Pipeline_setup() {
 static int sys_a_invoked;
 static int sys_b_invoked;
 static int sys_c_invoked;
+static int sys_d_invoked;
+static int sys_e_invoked;
+static int sys_f_invoked;
 
 void SysA(ecs_iter_t *it) { 
-    sys_a_invoked ++; 
+    ecs_os_ainc(&sys_a_invoked);
 }
 void SysB(ecs_iter_t *it) { 
     test_assert(sys_a_invoked != 0);
-    sys_b_invoked ++; 
+    ecs_os_ainc(&sys_b_invoked);
 }
 void SysC(ecs_iter_t *it) { 
     test_assert(sys_b_invoked != 0);
-    sys_c_invoked ++; 
+    ecs_os_ainc(&sys_c_invoked);
+}
+void SysD(ecs_iter_t *it) { 
+    test_assert(sys_c_invoked != 0);
+    ecs_os_ainc(&sys_d_invoked);
+}
+void SysE(ecs_iter_t *it) { 
+    test_assert(sys_d_invoked != 0);
+    ecs_os_ainc(&sys_e_invoked);
+}
+void SysF(ecs_iter_t *it) { 
+    test_assert(sys_d_invoked != 0);
+    ecs_os_ainc(&sys_f_invoked);
 }
 
 void Pipeline_system_order_same_phase() {
@@ -1053,6 +1068,85 @@ void Pipeline_stage_write_before_read() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], 0); /* merge */
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+
+    ecs_fini(world);
+}
+
+void Pipeline_mixed_multithreaded() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysA", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysA,
+        .multi_threaded = true
+    });
+    ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysB", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysB
+    });
+    ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysC", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysC
+    });
+    ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysD", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysD,
+        .multi_threaded = true
+    });
+    ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysE", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysE,
+        .multi_threaded = true
+    });
+    ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "SysF", .add = {EcsOnUpdate} },
+        .query.filter.expr = "Position",
+        .callback = SysF
+    });
+
+    test_assert(s1 != 0);
+    test_assert(s2 != 0);
+    test_assert(s3 != 0);
+    test_assert(s4 != 0);
+    test_assert(s5 != 0);
+    test_assert(s6 != 0);
+
+    ecs_new(world, Position);
+    ecs_new(world, Position);
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 1);
+
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 1);
+    test_int(sys_c_invoked, 1);
+    test_int(sys_d_invoked, 2);
+    test_int(sys_e_invoked, 2);
+    test_int(sys_f_invoked, 1);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(ecs_get_pipeline_stats(world, 
+        ecs_get_pipeline(world), &stats), true);
+
+    test_int(ecs_vector_count(stats.systems), 10);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s1);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[2], s2);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[5], s4);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[6], s5);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], s6);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
 
     ecs_fini(world);
 }

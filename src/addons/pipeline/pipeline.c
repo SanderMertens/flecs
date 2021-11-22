@@ -275,6 +275,9 @@ bool build_pipeline(
         ecs_vector_free(pq->ops);
     }
 
+    bool multi_threaded = true;
+    bool first = true;
+
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
@@ -291,6 +294,18 @@ bool build_pipeline(
             bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
             needs_merge = check_terms(&q->filter, is_active, &ws);
+
+            if (is_active) {
+                if (first) {
+                    multi_threaded = sys[i].multi_threaded;
+                    first = false;
+                }
+
+                if (sys[i].multi_threaded != multi_threaded) {
+                    needs_merge = true;
+                    multi_threaded = sys[i].multi_threaded;
+                }
+            }
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
@@ -313,6 +328,7 @@ bool build_pipeline(
             if (!op) {
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
+                op->multi_threaded = multi_threaded;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -446,8 +462,10 @@ void ecs_run_pipeline(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
 
-            ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
-                delta_time, 0, 0, NULL);
+            if (!stage_index || op->multi_threaded) {
+                ecs_run_intern(world, stage, e, &sys[i], stage_index, 
+                    stage_count, delta_time, 0, 0, NULL);
+            }
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;

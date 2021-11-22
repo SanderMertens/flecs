@@ -109,7 +109,14 @@ typedef struct ecs_system_desc_t {
     int32_t rate;
 
     /* External tick soutce that determines when system ticks */
-    ecs_entity_t tick_source;     
+    ecs_entity_t tick_source;
+
+    /* If true, system will be ran on multiple threads */
+    bool multi_threaded;
+
+    /* If true, system will have access to actuall world. Cannot be true at the
+     * same time as multi_threaded. */
+    bool no_staging;
 } ecs_system_desc_t;
 
 /* Create a system */

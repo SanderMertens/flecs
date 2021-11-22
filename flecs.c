@@ -7951,6 +7951,26 @@ error:
     return 0;
 }
 
+void ecs_enable(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool enabled)
+{
+    const EcsType *type_ptr = ecs_get(world, entity, EcsType);
+    if (type_ptr) {
+        /* If entity is a type, disable all entities in the type */
+        ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
+            ecs_enable(world, *e, enabled);
+        });
+    } else {
+        if (enabled) {
+            ecs_remove_id(world, entity, EcsDisabled);
+        } else {
+            ecs_add_id(world, entity, EcsDisabled);
+        }
+    }
+}
+
 bool ecs_defer_begin(
     ecs_world_t *world)
 {
@@ -12901,6 +12921,10 @@ typedef struct EcsSystem {
     ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     
+    /* Schedule parameters */
+    bool multi_threaded;
+    bool no_staging;
+
     int32_t invoke_count;           /* Number of times system is invoked */
     FLECS_FLOAT time_spent;         /* Time spent on running system */
     FLECS_FLOAT time_passed;        /* Time passed since last invocation */
@@ -12950,6 +12974,7 @@ ecs_entity_t ecs_run_intern(
  * information about the set of systems that need to be ran before a merge. */
 typedef struct ecs_pipeline_op_t {
     int32_t count;              /* Number of systems to run before merge */
+    bool multi_threaded;        /* Whether systems can be ran multi threaded */
 } ecs_pipeline_op_t;
 
 typedef struct EcsPipelineQuery {
@@ -13590,6 +13615,9 @@ bool build_pipeline(
         ecs_vector_free(pq->ops);
     }
 
+    bool multi_threaded = true;
+    bool first = true;
+
     /* Iterate systems in pipeline, add ops for running / merging */
     ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
@@ -13606,6 +13634,18 @@ bool build_pipeline(
             bool is_active = !ecs_has_id(
                 world, it.entities[i], EcsInactive);
             needs_merge = check_terms(&q->filter, is_active, &ws);
+
+            if (is_active) {
+                if (first) {
+                    multi_threaded = sys[i].multi_threaded;
+                    first = false;
+                }
+
+                if (sys[i].multi_threaded != multi_threaded) {
+                    needs_merge = true;
+                    multi_threaded = sys[i].multi_threaded;
+                }
+            }
 
             if (needs_merge) {
                 /* After merge all components will be merged, so reset state */
@@ -13628,6 +13668,7 @@ bool build_pipeline(
             if (!op) {
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
+                op->multi_threaded = multi_threaded;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -13761,8 +13802,10 @@ void ecs_run_pipeline(
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
 
-            ecs_run_intern(world, stage, e, &sys[i], stage_index, stage_count, 
-                delta_time, 0, 0, NULL);
+            if (!stage_index || op->multi_threaded) {
+                ecs_run_intern(world, stage, e, &sys[i], stage_index, 
+                    stage_count, delta_time, 0, 0, NULL);
+            }
 
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
@@ -23991,28 +24034,6 @@ void ecs_enable_system(
 
 /* -- Public API -- */
 
-void ecs_enable(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    bool enabled)
-{
-    ecs_poly_assert(world, ecs_world_t);
-
-    const EcsType *type_ptr = ecs_get( world, entity, EcsType);
-    if (type_ptr) {
-        /* If entity is a type, disable all entities in the type */
-        ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
-            ecs_enable(world, *e, enabled);
-        });
-    } else {
-        if (enabled) {
-            ecs_remove_id(world, entity, EcsDisabled);
-        } else {
-            ecs_add_id(world, entity, EcsDisabled);
-        }
-    }
-}
-
 ecs_entity_t ecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -24333,6 +24354,9 @@ ecs_entity_t ecs_system_init(
 
         system->tick_source = desc->tick_source;
 
+        system->multi_threaded = desc->multi_threaded;
+        system->no_staging = desc->no_staging;
+
         /* If tables have been matched with this system it is active, and we
          * should activate the in terms, if any. This will ensure that any
          * OnDemand systems get enabled. */
@@ -24412,7 +24436,6 @@ ecs_entity_t ecs_system_init(
             }
         }
 
-        /* Override the existing callback or context */
         if (desc->callback) {
             system->action = desc->callback;
         }
@@ -24424,6 +24447,12 @@ ecs_entity_t ecs_system_init(
         }
         if (desc->query.filter.instanced) {
             system->query->filter.instanced = true;
+        }
+        if (desc->multi_threaded) {
+            system->multi_threaded = desc->multi_threaded;
+        }
+        if (desc->no_staging) {
+            system->no_staging = desc->no_staging;
         }
     }
 
@@ -29010,20 +29039,43 @@ error:
 
 #ifdef FLECS_APP
 
-static ecs_frame_action_t frame_action;
+static
+int default_run_action(
+    ecs_world_t *world,
+    ecs_app_desc_t *desc)
+{
+    if (desc->init) {
+        desc->init(world);
+    }
 
-int ecs_app_run(
+    int result;
+    while ((result = ecs_app_run_frame(world, desc)) == 0) { }
+    return result;
+}
+
+static
+int default_frame_action(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {
-    ecs_set_target_fps(world, desc->target_fps);
-    ecs_set_threads(world, desc->threads);
+    return !ecs_progress(world, desc->delta_time);
+}
 
-    ecs_frame_action_t callback = frame_action;
-    if (!callback) {
-        callback = ecs_app_run_frame;
+static ecs_app_run_action_t run_action = default_run_action;
+static ecs_app_frame_action_t frame_action = default_frame_action;
+
+int ecs_app_run(
+    ecs_world_t *world,
+    ecs_app_desc_t *desc)
+{
+    /* Don't set FPS & threads if custom run action is set, as the platform on
+     * which the app is running may not support it. */
+    if (!run_action) {
+        ecs_set_target_fps(world, desc->target_fps);
+        ecs_set_threads(world, desc->threads);
     }
 
+    /* REST server enables connecting to app with explorer */
     if (desc->enable_rest) {
 #ifdef FLECS_REST
         ecs_set(world, EcsWorld, EcsRest, {.port = 0});
@@ -29032,23 +29084,33 @@ int ecs_app_run(
 #endif
     }
 
-    int result;
-    while ((result = callback(world, desc)) == 0) { }
-
-    return result;
+    return run_action(world, desc);
 }
 
 int ecs_app_run_frame(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {
-    return !ecs_progress(world, desc->delta_time);
+    return frame_action(world, desc);
+}
+
+int ecs_app_set_run_action(
+    ecs_app_run_action_t callback)
+{
+    if (run_action != default_run_action) {
+        ecs_err("run action already set");
+        return -1;
+    }
+
+    run_action = callback;
+
+    return 0;
 }
 
 int ecs_app_set_frame_action(
-    ecs_frame_action_t callback)
+    ecs_app_frame_action_t callback)
 {
-    if (frame_action) {
+    if (frame_action != default_frame_action) {
         ecs_err("frame action already set");
         return -1;
     }
