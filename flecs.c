@@ -12986,6 +12986,7 @@ typedef struct EcsPipelineQuery {
     int32_t match_count;
     int32_t rebuild_count;
     ecs_entity_t last_system;
+    bool no_staging;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13210,6 +13211,16 @@ bool ecs_stop_threads(
 
 /* -- Private functions -- */
 
+static
+bool must_stage(
+    const ecs_world_t *world) 
+{
+    ecs_entity_t pipeline = world->pipeline;
+    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    return !pq->no_staging;
+}
+
 void ecs_worker_begin(
     ecs_world_t *world)
 {
@@ -13217,7 +13228,7 @@ void ecs_worker_begin(
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    if (stage_count == 1) {
+    if (stage_count == 1 && must_stage(world)) {
         ecs_staging_begin(world);
     }
 }
@@ -13233,9 +13244,13 @@ bool ecs_worker_sync(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        ecs_staging_end(world);
+        if (must_stage(world)) {
+            ecs_staging_end(world);
+        }
         ecs_pipeline_update(world, world->pipeline, false);
-        ecs_staging_begin(world);
+        if (must_stage(world)) {
+            ecs_staging_begin(world);
+        }
 
     /* Synchronize all workers. The last worker to reach the sync point will
      * signal the main thread, which will perform the merge. */
@@ -13256,7 +13271,9 @@ void ecs_worker_end(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        ecs_staging_end(world);
+        if (must_stage(world)) {
+            ecs_staging_end(world);
+        }
 
     /* Synchronize all workers. The last worker to reach the sync point will
      * signal the main thread, which will perform the merge. */
@@ -13282,7 +13299,6 @@ void ecs_workers_progress(
         ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
-
         ecs_run_pipeline(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
     } else {
@@ -13298,7 +13314,9 @@ void ecs_workers_progress(
 
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
-            ecs_staging_begin(world);
+            if (!pq->no_staging) {
+                ecs_staging_begin(world);
+            }
 
             /* Signal workers that they should start running systems */
             world->workers_waiting = 0;
@@ -13308,9 +13326,14 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            ecs_staging_end(world);
+            if (!pq->no_staging) {
+                ecs_staging_end(world);
+            }
 
             if (ecs_pipeline_update(world, pipeline, false)) {
+                /* Refetch, in case pipeline itself has moved */
+                pq = ecs_get(world, pipeline, EcsPipelineQuery);
+
                 /* Pipeline has changed, reset position in pipeline */
                 ecs_iter_t it;
                 ecs_pipeline_reset_iter(world, pq, &it, &op, &op_last);
@@ -13706,13 +13729,21 @@ bool build_pipeline(
 
     /* Find the system ran last this frame (helps workers reset iter) */
     ecs_entity_t last_system = 0;
+    op = ecs_vector_first(ops, ecs_pipeline_op_t);
+    int32_t i, ran_since_merge = 0, op_index = 0, cur = 0;
+    
     it = ecs_query_iter(world, pq->query);
-    int i;
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
         for (i = 0; i < it.count; i ++) {
+            if (ran_since_merge == op[op_index].count) {
+                ran_since_merge = 0;
+                op_index ++;
+            }
+
             if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
                 last_system = it.entities[i];
+                cur = op_index;
 
                 /* Can't break from loop yet. It's possible that previously
                  * inactive systems that ran before the last ran system are now
@@ -13725,6 +13756,7 @@ bool build_pipeline(
     pq->match_count = pq->query->match_count;
     pq->ops = ops;
     pq->last_system = last_system;
+    pq->no_staging = op[cur].no_staging;
 
     return true;
 }
@@ -13848,7 +13880,12 @@ void ecs_run_pipeline(
             ecs_entity_t e = it.entities[i];
 
             if (!stage_index || op->multi_threaded) {
-                ecs_run_intern(world, stage, e, &sys[i], stage_index, 
+                ecs_stage_t *s = NULL;
+                if (!op->no_staging) {
+                    s = stage;
+                }
+
+                ecs_run_intern(world, s, e, &sys[i], stage_index, 
                     stage_count, delta_time, 0, 0, NULL);
             }
 
@@ -24128,11 +24165,16 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
-    ecs_defer_begin(stage->thread_ctx);
+    ecs_world_t *thread_ctx = world;
+    if (stage) {
+        thread_ctx = stage->thread_ctx;
+    }
+
+    ecs_defer_begin(thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(
-        stage->thread_ctx, system_data->query, offset, limit);
+        thread_ctx, system_data->query, offset, limit);
 
     it.system = system;
     it.self = system_data->self;
@@ -24156,13 +24198,13 @@ ecs_entity_t ecs_run_intern(
         }
     }
 
-    ecs_defer_end(stage->thread_ctx);
-
     if (measure_time) {
         system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
 
     system_data->invoke_count ++;
+
+    ecs_defer_end(thread_ctx);
 
     return it.interrupted_by;
 }

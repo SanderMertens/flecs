@@ -965,6 +965,7 @@
                 "stage_write_before_read",
                 "mixed_multithreaded",
                 "mixed_staging",
+                "no_staging_system_create_query",
                 "single_threaded_pipeline_change",
                 "multi_threaded_pipeline_change",
                 "activate_after_add"
