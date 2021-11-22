@@ -190,7 +190,7 @@ void on_set_rest(
 }
 
 static
-void dequeue_rest(ecs_iter_t *it) {
+void DequeueRest(ecs_iter_t *it) {
     EcsRest *rest = ecs_term(it, EcsRest, 1);
 
     if (it->delta_system_time > (FLECS_FLOAT)1.0) {
@@ -225,7 +225,7 @@ void FlecsRestImport(
         .on_set = on_set_rest
     });
 
-    ECS_SYSTEM(world, dequeue_rest, EcsPostFrame, EcsRest);
+    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
 }
 
 #endif

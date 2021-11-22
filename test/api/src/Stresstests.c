@@ -101,6 +101,16 @@ void create_delete_entity_random_components_staged(
     ECS_SYSTEM(world, Add_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
 
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = Add_random,
+        .multi_threaded = true
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = Delete_above_1000,
+        .multi_threaded = true
+    });
+
     IterData ctx = {.component = ecs_id(Position), .component_2 = ecs_id(Velocity), .component_3 = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);
 
@@ -135,6 +145,16 @@ void set_entity_random_components(
     ECS_SYSTEM(world, Set_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = Set_random,
+        .multi_threaded = true
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity.entity = Delete_above_1000,
+        .multi_threaded = true
+    });
 
     IterData ctx = {.component = ecs_id(Position), .component_2 = ecs_id(Velocity), .component_3 = ecs_id(Rotation)};
     ecs_set_context(world, &ctx);

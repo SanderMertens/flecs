@@ -248,13 +248,18 @@ void ecs_workers_progress(
         ecs_run_pipeline(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
     } else {
-        int32_t i, sync_count = ecs_pipeline_update(world, pipeline, true);
+        ecs_pipeline_update(world, pipeline, true);
+
+        const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+        ecs_vector_t *ops = pq->ops;
+        ecs_pipeline_op_t *op = ecs_vector_first(ops, ecs_pipeline_op_t);
+        ecs_pipeline_op_t *op_last = ecs_vector_last(ops, ecs_pipeline_op_t);
 
         /* Make sure workers are running and ready */
         wait_for_workers(world);
 
         /* Synchronize n times for each op in the pipeline */
-        for (i = 0; i < sync_count; i ++) {
+        for (; op <= op_last; op ++) {
             ecs_staging_begin(world);
 
             /* Signal workers that they should start running systems */
@@ -267,11 +272,11 @@ void ecs_workers_progress(
             /* Merge */
             ecs_staging_end(world);
 
-            int32_t update_count;
-            if ((update_count = ecs_pipeline_update(world, pipeline, false))) {
-                /* The number of operations in the pipeline could have changed
-                 * as result of the merge */
-                sync_count = update_count;
+            if (ecs_pipeline_update(world, pipeline, false)) {
+                /* Pipeline has changed, reset position in pipeline */
+                ecs_iter_t it;
+                ecs_pipeline_reset_iter(world, pq, &it, &op, &op_last);
+                op --;
             }
         }
     }
@@ -280,7 +285,6 @@ void ecs_workers_progress(
         world->stats.system_time_total += (FLECS_FLOAT)ecs_time_measure(&start);
     }    
 }
-
 
 /* -- Public functions -- */
 

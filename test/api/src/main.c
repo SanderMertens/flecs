@@ -910,6 +910,10 @@ void Pipeline_random_read_after_random_write_w_wildcard(void);
 void Pipeline_random_in_after_random_inout_after_random_out(void);
 void Pipeline_stage_write_before_read(void);
 void Pipeline_mixed_multithreaded(void);
+void Pipeline_mixed_staging(void);
+void Pipeline_single_threaded_pipeline_change(void);
+void Pipeline_multi_threaded_pipeline_change(void);
+void Pipeline_activate_after_add(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_setup(void);
@@ -5720,6 +5724,22 @@ bake_test_case Pipeline_testcases[] = {
     {
         "mixed_multithreaded",
         Pipeline_mixed_multithreaded
+    },
+    {
+        "mixed_staging",
+        Pipeline_mixed_staging
+    },
+    {
+        "single_threaded_pipeline_change",
+        Pipeline_single_threaded_pipeline_change
+    },
+    {
+        "multi_threaded_pipeline_change",
+        Pipeline_multi_threaded_pipeline_change
+    },
+    {
+        "activate_after_add",
+        Pipeline_activate_after_add
     }
 };
 
@@ -11069,7 +11089,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        31,
+        35,
         Pipeline_testcases
     },
     {

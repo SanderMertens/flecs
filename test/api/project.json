@@ -963,7 +963,11 @@
                 "random_read_after_random_write_w_wildcard",
                 "random_in_after_random_inout_after_random_out",
                 "stage_write_before_read",
-                "mixed_multithreaded"
+                "mixed_multithreaded",
+                "mixed_staging",
+                "single_threaded_pipeline_change",
+                "multi_threaded_pipeline_change",
+                "activate_after_add"
             ]
         }, {
             "id": "SystemMisc",
