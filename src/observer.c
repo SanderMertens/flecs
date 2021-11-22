@@ -42,11 +42,11 @@ void observer_callback(ecs_iter_t *it) {
     /* Populate the column for the term that triggered. This will allow the
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
-    user_it.columns[0] = 0;
+    user_it.columns[0] = 0;    
     user_it.columns[pivot_term] = it->columns[0];
 
     if (flecs_filter_match_table(world, &o->filter, table,
-        user_it.ids, user_it.columns, user_it.subjects, NULL, NULL, false, -1)) 
+        user_it.ids, user_it.columns, user_it.subjects, NULL, NULL, false, -1))
     {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */

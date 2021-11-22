@@ -45,6 +45,9 @@ int32_t search_type(
     ecs_id_t *id_out,
     int32_t *count_out)
 {
+    ecs_assert(offset >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(depth >= 0, ECS_INTERNAL_ERROR, NULL);
+
     if (!id) {
         return -1;
     }

@@ -1146,6 +1146,7 @@ bool flecs_term_match_table(
         return true;
     }
 
+    /* If source is not This, search in table of source */
     if (subj_entity != EcsThis) {
         match_table = ecs_get_table(world, subj_entity);
         if (match_table) {
@@ -1160,11 +1161,21 @@ bool flecs_term_match_table(
 
     ecs_entity_t source;
 
+    /* If first = false, we're searching from an offset. This supports returning
+     * multiple results when using wildcard filters. */
     int32_t column = 0;
     if (!first && column_out && column_out[0] != 0) {
-        column = column_out[0] - 1;
+        column = column_out[0];
+        if (column < 0) {
+            /* In case column is not from This, flip sign */
+            column = -column;
+        }
+
+        /* Remove base 1 offset */
+        column --;
     }
 
+    /* Find location, source and id of match in table type */
     column = ecs_type_match(world, match_table, match_type,
         column, term->id, subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source, id_out, match_index_out);
