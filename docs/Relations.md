@@ -253,7 +253,7 @@ auto q = world.query_builder()
   .term(Likes, flecs::Wildcard)
   .build();
 
-q.iter([]flecs::iter& it) {
+q.iter([](flecs::iter& it) {
   auto id = it.term_id(1);
 
   for (auto i : it) {
