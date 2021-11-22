@@ -157,13 +157,6 @@ ecs_size_t http_send(
 #endif
 }
 
-uint64_t _flecs_ito(
-    size_t dst_size,
-    bool dst_signed,
-    bool lt_zero,
-    uint64_t value,
-    const char *err);
-
 static
 ecs_size_t http_recv(
     ecs_http_socket_t sock,

@@ -20,6 +20,7 @@ typedef struct EcsSystem {
     int32_t invoke_count;           /* Number of times system is invoked */
     FLECS_FLOAT time_spent;         /* Time spent on running system */
     FLECS_FLOAT time_passed;        /* Time passed since last invocation */
+    int32_t last_frame;             /* Last frame for which the system was considered */
 
     ecs_entity_t self;              /* Entity associated with system */
 

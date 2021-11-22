@@ -275,7 +275,8 @@ bool build_pipeline(
         ecs_vector_free(pq->ops);
     }
 
-    bool multi_threaded = true;
+    bool multi_threaded = false;
+    bool no_staging = false;
     bool first = true;
 
     /* Iterate systems in pipeline, add ops for running / merging */
@@ -298,12 +299,17 @@ bool build_pipeline(
             if (is_active) {
                 if (first) {
                     multi_threaded = sys[i].multi_threaded;
+                    no_staging = sys[i].no_staging;
                     first = false;
                 }
 
                 if (sys[i].multi_threaded != multi_threaded) {
                     needs_merge = true;
                     multi_threaded = sys[i].multi_threaded;
+                }
+                if (sys[i].no_staging != no_staging) {
+                    needs_merge = true;
+                    no_staging = sys[i].no_staging;
                 }
             }
 
@@ -328,12 +334,15 @@ bool build_pipeline(
             if (!op) {
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
-                op->multi_threaded = multi_threaded;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
              * the query used to run the pipeline. */
             if (is_active) {
+                if (!op->count) {
+                    op->multi_threaded = multi_threaded;
+                    op->no_staging = no_staging;
+                }
                 op->count ++;
             }
         }
@@ -341,44 +350,68 @@ bool build_pipeline(
 
     ecs_map_free(ws.components);
 
+    /* Find the system ran last this frame (helps workers reset iter) */
+    ecs_entity_t last_system = 0;
+    it = ecs_query_iter(world, pq->query);
+    int i;
+    while (ecs_query_next(&it)) {
+        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
+        for (i = 0; i < it.count; i ++) {
+            if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
+                last_system = it.entities[i];
+
+                /* Can't break from loop yet. It's possible that previously
+                 * inactive systems that ran before the last ran system are now
+                 * active. */
+            }
+        }
+    }
+
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
     pq->ops = ops;
+    pq->last_system = last_system;
 
     return true;
 }
 
-static
-int32_t iter_reset(
+int32_t ecs_pipeline_reset_iter(
     ecs_world_t *world,
     const EcsPipelineQuery *pq,
     ecs_iter_t *iter_out,
     ecs_pipeline_op_t **op_out,
-    ecs_entity_t move_to)
+    ecs_pipeline_op_t **last_op_out)
 {
     ecs_pipeline_op_t *op = ecs_vector_first(pq->ops, ecs_pipeline_op_t);
-    int32_t ran_since_merge = 0;
+    int32_t i, ran_since_merge = 0, op_index = 0;
 
+    if (!pq->last_system) {
+        /* It's possible that all systems that were ran were removed entirely
+         * from the pipeline (they could have been deleted or disabled). In that
+         * case (which should be very rare) the pipeline can't make assumptions
+         * about where to continue, so end frame. */
+        return -1;
+    }
+
+    /* Move iterator to last ran system */
     *iter_out = ecs_query_iter(world, pq->query);
     while (ecs_query_next(iter_out)) {
-        int32_t i;
-        for(i = 0; i < iter_out->count; i ++) {
-            ecs_entity_t e = iter_out->entities[i];
-
+        for (i = 0; i < iter_out->count; i ++) {
             ran_since_merge ++;
-            if (ran_since_merge == op->count) {
+            if (ran_since_merge == op[op_index].count) {
                 ran_since_merge = 0;
-                op ++;
+                op_index ++;
             }
 
-            if (e == move_to) {
-                *op_out = op;
+            if (iter_out->entities[i] == pq->last_system) {
+                *op_out = &op[op_index];
+                *last_op_out = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
                 return i;
             }
         }
     }
 
-    ecs_abort(ECS_UNSUPPORTED, NULL);
+    ecs_abort(ECS_INTERNAL_ERROR, NULL);
 
     return -1;
 }
@@ -405,9 +438,7 @@ int32_t ecs_pipeline_update(
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    build_pipeline(world, pipeline, pq);
-
-    return ecs_vector_count(pq->ops);
+    return build_pipeline(world, pipeline, pq);
 }
 
 void ecs_run_pipeline(
@@ -467,6 +498,8 @@ void ecs_run_pipeline(
                     stage_count, delta_time, 0, 0, NULL);
             }
 
+            sys[i].last_frame = world->stats.frame_count_total + 1;
+
             ran_since_merge ++;
             world->stats.systems_ran_frame ++;
 
@@ -480,8 +513,7 @@ void ecs_run_pipeline(
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
                 if (ecs_worker_sync(stage->thread_ctx)) {
-                    i = iter_reset(world, pq, &it, &op, e);
-                    op_last = ecs_vector_last(pq->ops, ecs_pipeline_op_t);
+                    i = ecs_pipeline_reset_iter(world, pq, &it, &op, &op_last);
                     sys = ecs_term(&it, EcsSystem, 1);
                 }
             }
@@ -520,7 +552,7 @@ ecs_query_t* build_pipeline_query(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     const char *name,
-    bool with_inactive)
+    bool not_inactive)
 {
     const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -528,7 +560,7 @@ ecs_query_t* build_pipeline_query(
     int32_t type_count = ecs_vector_count(type_ptr->normalized);
     int32_t term_count = 1;
 
-    if (with_inactive) {
+    if (not_inactive) {
         term_count ++;
     }
 
@@ -545,7 +577,7 @@ ecs_query_t* build_pipeline_query(
         }
     };
 
-    if (with_inactive) {
+    if (not_inactive) {
         terms[1] = (ecs_term_t){
             .inout = EcsIn,
             .oper = EcsNot,
@@ -592,7 +624,7 @@ void OnUpdatePipeline(
             ecs_get_name(world, pipeline));
         ecs_log_push();
 
-        /* Build signature for pipeline quey that matches EcsSystems, has the
+        /* Build signature for pipeline query that matches EcsSystems, has the
          * pipeline phases as OR columns, and ignores systems with EcsInactive. 
          * Note that EcsDisabled is automatically ignored 
          * by the regular query matching */
@@ -629,6 +661,7 @@ void OnUpdatePipeline(
         pq->build_query = build_query;
         pq->match_count = -1;
         pq->ops = NULL;
+        pq->last_system = 0;
 
         ecs_log_pop();
     }

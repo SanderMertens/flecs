@@ -9,6 +9,7 @@
 typedef struct ecs_pipeline_op_t {
     int32_t count;              /* Number of systems to run before merge */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
+    bool no_staging;            /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
 typedef struct EcsPipelineQuery {
@@ -17,6 +18,7 @@ typedef struct EcsPipelineQuery {
     ecs_vector_t *ops;
     int32_t match_count;
     int32_t rebuild_count;
+    ecs_entity_t last_system;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,6 +47,13 @@ int32_t ecs_pipeline_update(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     bool start_of_frame); 
+
+int32_t ecs_pipeline_reset_iter(
+    ecs_world_t *world,
+    const EcsPipelineQuery *pq,
+    ecs_iter_t *iter_out,
+    ecs_pipeline_op_t **op_out,
+    ecs_pipeline_op_t **last_op_out);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API
