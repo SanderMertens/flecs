@@ -8,6 +8,7 @@
  * information about the set of systems that need to be ran before a merge. */
 typedef struct ecs_pipeline_op_t {
     int32_t count;              /* Number of systems to run before merge */
+    bool multi_threaded;        /* Whether systems can be ran multi threaded */
 } ecs_pipeline_op_t;
 
 typedef struct EcsPipelineQuery {

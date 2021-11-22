@@ -6677,17 +6677,40 @@ void* ecs_record_get_column(
 extern "C" {
 #endif
 
+/** Callback type for init action. */
+typedef int(*ecs_app_init_action_t)(
+    ecs_world_t *world);
+
 /** Used with ecs_app_run. */
 typedef struct ecs_app_desc_t {
     FLECS_FLOAT target_fps;   /* Target FPS. */
     FLECS_FLOAT delta_time;   /* Frame time increment (0 for measured values) */
     int32_t threads;          /* Number of threads. */
     bool enable_rest;         /* Allows HTTP clients to access ECS data */
+
+    ecs_app_init_action_t init; /* If set, function is ran before starting the
+                                 * main loop. */
+
+    void *ctx;                /* Reserved for custom run/frame actions */
 } ecs_app_desc_t;
+
+/** Callback type for run action. */
+typedef int(*ecs_app_run_action_t)(
+    ecs_world_t *world, 
+    ecs_app_desc_t *desc);
+
+/** Callback type for frame action. */
+typedef int(*ecs_app_frame_action_t)(
+    ecs_world_t *world, 
+    const ecs_app_desc_t *desc);
 
 /** Run application.
  * This will run the application with the parameters specified in desc. After
  * the application quits (ecs_quit is called) the world will be cleaned up.
+ * 
+ * If a custom run action is set, it will be invoked by this operation. The
+ * default run action calls the frame action in a loop until it returns a
+ * non-zero value.
  * 
  * @param world The world.
  * @param desc Application parameters.
@@ -6695,29 +6718,11 @@ typedef struct ecs_app_desc_t {
 FLECS_API
 int ecs_app_run(
     ecs_world_t *world,
-    const ecs_app_desc_t *desc);
-
-/** Callback type for frame action. */
-typedef int(*ecs_frame_action_t)(
-    ecs_world_t *world, 
-    const ecs_app_desc_t *desc);
+    ecs_app_desc_t *desc);
 
 /** Default frame callback.
- * This function will call ecs_progress until it returns a non-zero value (the
- * application called ecs_quit). It is the default frame callback that will be
- * used by ecs_app_run, unless it is overridden.
- * 
- * Applications, though typically modules, can override the frame callback by
- * using the ecs_app_set_frame_action function. This enables a module to take
- * control of the main loop when necessary.
- * 
- * All worlds share the same frame accallbacktion. When a module attempts to 
- * overwrite a frame callback (except the default one), an error will be thrown. 
- * This prevents applications from importing modules with conflicting 
- * requirements (e.g. two modules that * both need control over the main loop).
- * 
- * A custom frame callback may call this function once after or before it has 
- * ran its own logic.
+ * This operation will run a single frame. By default this operation will invoke
+ * ecs_progress directly, unless a custom frame action is set.
  * 
  * @param world The world.
  * @param desc The desc struct passed to ecs_app_run.
@@ -6728,6 +6733,15 @@ int ecs_app_run_frame(
     ecs_world_t *world,
     const ecs_app_desc_t *desc);
 
+/** Set custom run action.
+ * See ecs_app_run.
+ * 
+ * @param callback The run action.
+ */
+FLECS_API
+int ecs_app_set_run_action(
+    ecs_app_run_action_t callback);
+
 /** Set custom frame action.
  * See ecs_app_run_frame.
  * 
@@ -6735,7 +6749,7 @@ int ecs_app_run_frame(
  */
 FLECS_API
 int ecs_app_set_frame_action(
-    ecs_frame_action_t callback);
+    ecs_app_frame_action_t callback);
 
 #ifdef __cplusplus
 }
@@ -7367,7 +7381,14 @@ typedef struct ecs_system_desc_t {
     int32_t rate;
 
     /* External tick soutce that determines when system ticks */
-    ecs_entity_t tick_source;     
+    ecs_entity_t tick_source;
+
+    /* If true, system will be ran on multiple threads */
+    bool multi_threaded;
+
+    /* If true, system will have access to actuall world. Cannot be true at the
+     * same time as multi_threaded. */
+    bool no_staging;
 } ecs_system_desc_t;
 
 /* Create a system */

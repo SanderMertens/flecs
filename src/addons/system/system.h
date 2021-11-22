@@ -13,6 +13,10 @@ typedef struct EcsSystem {
     ecs_system_status_action_t status_action; /* Status action */   
     ecs_entity_t tick_source;       /* Tick source associated with system */
     
+    /* Schedule parameters */
+    bool multi_threaded;
+    bool no_staging;
+
     int32_t invoke_count;           /* Number of times system is invoked */
     FLECS_FLOAT time_spent;         /* Time spent on running system */
     FLECS_FLOAT time_passed;        /* Time passed since last invocation */

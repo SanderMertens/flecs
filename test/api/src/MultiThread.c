@@ -1,5 +1,7 @@
 #include <api.h>
 
+ECS_COMPONENT_DECLARE(Position);
+
 void MultiThread_setup() {
     ecs_log_set_level(-3);
 }
@@ -13,10 +15,23 @@ void Progress(ecs_iter_t *it) {
     }
 }
 
-void MultiThread_2_thread_10_entity() {
+static
+ecs_world_t* init_world(void) {
     ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
+
     ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = Progress,
+        .multi_threaded = true
+    });
+
+    return world;
+}
+
+void MultiThread_2_thread_10_entity() {
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 2;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -44,9 +59,7 @@ void MultiThread_2_thread_10_entity() {
 
 
 void MultiThread_2_thread_1_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 2;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -73,9 +86,7 @@ void MultiThread_2_thread_1_entity() {
 }
 
 void MultiThread_2_thread_2_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 2;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -102,9 +113,7 @@ void MultiThread_2_thread_2_entity() {
 }
 
 void MultiThread_2_thread_5_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 2;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -132,9 +141,7 @@ void MultiThread_2_thread_5_entity() {
 
 
 void MultiThread_3_thread_10_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 3;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -162,9 +169,7 @@ void MultiThread_3_thread_10_entity() {
 
 
 void MultiThread_3_thread_1_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 3;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -192,9 +197,7 @@ void MultiThread_3_thread_1_entity() {
 
 
 void MultiThread_3_thread_2_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 3;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -222,9 +225,7 @@ void MultiThread_3_thread_2_entity() {
 
 
 void MultiThread_3_thread_5_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 3;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -252,9 +253,7 @@ void MultiThread_3_thread_5_entity() {
 
 
 void MultiThread_4_thread_10_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 4;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -282,9 +281,7 @@ void MultiThread_4_thread_10_entity() {
 
 
 void MultiThread_4_thread_1_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 4;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -312,9 +309,7 @@ void MultiThread_4_thread_1_entity() {
 
 
 void MultiThread_4_thread_2_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 4;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -342,9 +337,7 @@ void MultiThread_4_thread_2_entity() {
 
 
 void MultiThread_4_thread_5_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 4;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -372,9 +365,7 @@ void MultiThread_4_thread_5_entity() {
 
 
 void MultiThread_5_thread_10_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 5;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -402,9 +393,7 @@ void MultiThread_5_thread_10_entity() {
 
 
 void MultiThread_5_thread_1_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 5;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -432,9 +421,7 @@ void MultiThread_5_thread_1_entity() {
 
 
 void MultiThread_5_thread_2_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 5;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -462,9 +449,7 @@ void MultiThread_5_thread_2_entity() {
 
 
 void MultiThread_5_thread_5_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 5;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -492,9 +477,7 @@ void MultiThread_5_thread_5_entity() {
 
 
 void MultiThread_6_thread_10_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 6;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -522,9 +505,7 @@ void MultiThread_6_thread_10_entity() {
 
 
 void MultiThread_6_thread_1_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 6;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -552,9 +533,7 @@ void MultiThread_6_thread_1_entity() {
 
 
 void MultiThread_6_thread_2_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 6;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -581,9 +560,7 @@ void MultiThread_6_thread_2_entity() {
 }
 
 void MultiThread_6_thread_5_entity() {
-    ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
-    ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
+    ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 6;
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
@@ -611,7 +588,7 @@ void MultiThread_6_thread_5_entity() {
 
 void MultiThread_2_thread_1_entity_instanced() {
     ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
         .entity.add = {EcsOnUpdate},
@@ -619,7 +596,8 @@ void MultiThread_2_thread_1_entity_instanced() {
         .query.filter = {
             .expr = "Position",
             .instanced = true
-        }
+        },
+        .multi_threaded = true
     });
     test_assert(s != 0);
 
@@ -649,7 +627,7 @@ void MultiThread_2_thread_1_entity_instanced() {
 
 void MultiThread_2_thread_5_entity_instanced() {
     ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
         .entity.add = {EcsOnUpdate},
@@ -657,7 +635,8 @@ void MultiThread_2_thread_5_entity_instanced() {
         .query.filter = {
             .expr = "Position",
             .instanced = true
-        }
+        },
+        .multi_threaded = true
     });
     test_assert(s != 0);
 
@@ -687,7 +666,7 @@ void MultiThread_2_thread_5_entity_instanced() {
 
 void MultiThread_2_thread_10_entity_instanced() {
     ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t) {
         .entity.add = {EcsOnUpdate},
@@ -695,7 +674,8 @@ void MultiThread_2_thread_10_entity_instanced() {
         .query.filter = {
             .expr = "Position",
             .instanced = true
-        }
+        },
+        .multi_threaded = true
     });
     test_assert(s != 0);
 
@@ -753,14 +733,20 @@ void TestAll(ecs_iter_t *it) {
     }
 }
 
+
 static
 void test_combs_100_entity(int THREADS) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = TestAll,
+        .multi_threaded = true
+    });
 
     int i, ENTITIES = 100;
 
@@ -785,7 +771,7 @@ void test_combs_100_entity(int THREADS) {
 void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
 
@@ -841,12 +827,17 @@ static
 void test_combs_100_entity_2_types(int THREADS) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = TestAll,
+        .multi_threaded = true
+    });
 
     int i, ENTITIES = 100;
 
@@ -898,12 +889,17 @@ void MultiThread_6_thread_test_combs_100_entity_2_types() {
 void MultiThread_change_thread_count() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_TYPE(world, Type, Position, Velocity);
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = TestAll,
+        .multi_threaded = true
+    });
 
     int i, ENTITIES = 100;
 
@@ -954,9 +950,14 @@ void QuitSystem(ecs_iter_t *it) {
 void MultiThread_multithread_quit() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Position);
 
     ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = QuitSystem,
+        .multi_threaded = true
+    });
 
     ecs_bulk_new(world, Position, 100);
 
@@ -978,6 +979,11 @@ void MultiThread_schedule_w_tasks() {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, MtTask, EcsOnUpdate, 0);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = MtTask,
+        .multi_threaded = true
+    });
 
     ecs_set_threads(world, 2);
 
@@ -1006,9 +1012,14 @@ void PeriodicDummySystem(ecs_iter_t * it) {
 void MultiThread_reactive_system() {    
     ecs_world_t * world = ecs_init();
 
-    ECS_COMPONENT(world, Position);        
+    ECS_COMPONENT_DEFINE(world, Position);        
     ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
     ECS_TRIGGER(world, ReactiveDummySystem, EcsOnSet, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = PeriodicDummySystem,
+        .multi_threaded = true
+    });
 
     ecs_bulk_new(world, Position, 2);
     ecs_set_threads(world, 2);
