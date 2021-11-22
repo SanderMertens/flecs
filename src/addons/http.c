@@ -53,8 +53,11 @@ typedef int ecs_http_socket_t;
 /* Max length of request method */
 #define ECS_HTTP_METHOD_LEN_MAX (8) 
 
-/* Dequeue count before connection purge */
-#define ECS_HTTP_CONNECTION_PURGE_COUNT (10)
+/* Timeout (s) before connection purge */
+#define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
+
+/* Minimum interval between dequeueing requests (ms) */
+#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (100)
 
 /* Max length of headers in reply */
 #define ECS_HTTP_REPLY_HEADER_SIZE (1024)
@@ -84,6 +87,8 @@ struct ecs_http_server_t {
 
     uint16_t port;
     const char *ipaddr;
+
+    FLECS_FLOAT delta_time; /* used to not lock request queue too often */
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -128,7 +133,7 @@ typedef struct {
     ecs_http_connection_t pub;
     ecs_http_fragment_t frag;
     ecs_http_socket_t sock;
-    int32_t dequeue_count; /* used to purge inactive connections */
+    FLECS_FLOAT dequeue_timeout; /* used to purge inactive connections */
 } ecs_http_connection_impl_t;
 
 typedef struct {
@@ -144,11 +149,20 @@ ecs_size_t http_send(
     int flags)
 {
 #ifndef _MSC_VER
-    return flecs_itoi32(send(sock, buf, flecs_itosize(size), flags));
+    ssize_t send_bytes = send(sock, buf, flecs_itosize(size), flags);
+    return flecs_itoi32(send_bytes);
 #else
-    return flecs_itoi32(send(sock, buf, size, flags));
+    int send_bytes = send(sock, buf, size, flags);
+    return flecs_itoi32(send_bytes);
 #endif
 }
+
+uint64_t _flecs_ito(
+    size_t dst_size,
+    bool dst_signed,
+    bool lt_zero,
+    uint64_t value,
+    const char *err);
 
 static
 ecs_size_t http_recv(
@@ -157,11 +171,21 @@ ecs_size_t http_recv(
     ecs_size_t size,
     int flags)
 {
+    ecs_size_t ret;
 #ifndef _MSC_VER
-    return flecs_itoi32(recv(sock, buf, flecs_itosize(size), flags));
+    ssize_t recv_bytes = recv(sock, buf, flecs_itosize(size), flags);
+    ret = flecs_itoi32(recv_bytes);
 #else
-    return flecs_itoi32(recv(sock, buf, size, flags));
+    int recv_bytes = recv(sock, buf, size, flags);
+    ret = flecs_itoi32(recv_bytes);
 #endif
+    if (ret == -1) {
+        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), sock);
+    } else if (ret == 0) {
+        ecs_dbg("recv: received 0 bytes (sock = %d)", sock);
+    }
+
+    return ret;
 }
 
 static
@@ -627,15 +651,18 @@ void init_connection(
         ecs_os_strcpy(remote_port, "unknown");
     }
 
+    ecs_dbg("http: connection established from '%s:%s'", 
+        remote_host, remote_port);
+
     conn->pub.server = srv;
     conn->sock = sock_conn;
     recv_request(conn);
 
-    ecs_dbg("http: connection established from '%s:%s'", 
+    ecs_dbg("http: request received from '%s:%s'", 
         remote_host, remote_port);
 }
 
-static 
+static
 int accept_connections(
     ecs_http_server_t* srv, 
     const struct sockaddr* addr, 
@@ -774,7 +801,8 @@ void handle_request(
 
 static
 void dequeue_requests(
-    ecs_http_server_t *srv)
+    ecs_http_server_t *srv,
+    float delta_time)
 {
     ecs_os_mutex_lock(srv->lock);
 
@@ -789,8 +817,12 @@ void dequeue_requests(
     for (i = count - 1; i >= 0; i --) {
         ecs_http_connection_impl_t *conn = flecs_sparse_get_dense(
             srv->connections, ecs_http_connection_impl_t, i);
-        conn->dequeue_count ++;
-        if (conn->dequeue_count > ECS_HTTP_CONNECTION_PURGE_COUNT) {
+        conn->dequeue_timeout += delta_time;
+        if (conn->dequeue_timeout > 
+            (FLECS_FLOAT)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) 
+        {
+            ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
+                conn->pub.host, conn->pub.port, conn->sock);
             connection_free(conn);
         }
     }
@@ -924,12 +956,19 @@ error:
 }
 
 void ecs_http_server_dequeue(
-    ecs_http_server_t* srv)
+    ecs_http_server_t* srv,
+    float delta_time)
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
-    dequeue_requests(srv);
+    
+    srv->delta_time += delta_time;
+    if ((1000 * srv->delta_time) > (FLECS_FLOAT)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
+        dequeue_requests(srv, srv->delta_time);
+        srv->delta_time = 0;
+    }
+
 error:
     return;
 }

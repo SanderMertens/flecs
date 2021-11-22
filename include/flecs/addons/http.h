@@ -144,7 +144,8 @@ int ecs_http_server_start(
  */
 FLECS_API
 void ecs_http_server_dequeue(
-    ecs_http_server_t* server);
+    ecs_http_server_t* server,
+    float delta_time);
 
 /** Stop server. 
  * After this operation no new requests can be received.

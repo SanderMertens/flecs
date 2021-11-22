@@ -203,7 +203,7 @@ void dequeue_rest(ecs_iter_t *it) {
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
-            ecs_http_server_dequeue(ctx->srv);
+            ecs_http_server_dequeue(ctx->srv, it->delta_time);
         }
     } 
 }

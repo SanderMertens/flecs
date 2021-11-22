@@ -720,10 +720,10 @@ uint64_t _flecs_ito(
 #define flecs_uto(T, value) (T)value
 #endif
 
-#define flecs_itosize(value) flecs_ito(size_t, value)
-#define flecs_utosize(value) flecs_uto(ecs_size_t, value)
-#define flecs_itoi16(value) flecs_ito(int16_t, value)
-#define flecs_itoi32(value) flecs_ito(int32_t, value)
+#define flecs_itosize(value) flecs_ito(size_t, (value))
+#define flecs_utosize(value) flecs_uto(ecs_size_t, (value))
+#define flecs_itoi16(value) flecs_ito(int16_t, (value))
+#define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
