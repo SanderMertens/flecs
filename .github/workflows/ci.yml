@@ -403,6 +403,7 @@ jobs:
 
       - name: custom_build tests
         run: |
+          bake rebuild test/custom_builds --strict
           bake runall test/custom_builds
 
   flecs-amalgamated:

@@ -20,7 +20,9 @@ public:
         { 
             m_desc.entity.name = name;
             m_desc.entity.sep = "::";
+#ifdef FLECS_PIPELINE
             m_desc.entity.add[0] = flecs::OnUpdate;
+#endif
             m_desc.query.filter.expr = expr;
             this->populate_filter_from_pack();
         }
