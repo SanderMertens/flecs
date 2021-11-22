@@ -1165,8 +1165,6 @@ void Pipeline_mixed_multithreaded() {
 }
 
 void Pipeline_mixed_staging() {
-    test_quarantine("22 Nov 2021");
-    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1468,6 +1466,42 @@ void Pipeline_activate_after_add() {
     ecs_progress(world, 0);
 
     test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static ecs_query_t *q_result;
+
+static
+void CreateQuery(ecs_iter_t *it) {
+    test_assert(it->real_world == it->world);
+    q_result = ecs_query_new(it->world, "Position");
+}
+
+void Pipeline_no_staging_system_create_query() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .name = "CreateQuery", .add = {EcsOnUpdate} },
+        .callback = CreateQuery,
+        .no_staging = true
+    });
+
+    test_assert(s != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(q_result != NULL);
+
+    ecs_pipeline_stats_t stats = {0};
+    test_bool(ecs_get_pipeline_stats(world, 
+        ecs_get_pipeline(world), &stats), true);
+
+    test_int(ecs_vector_count(stats.systems), 2);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s);
+    test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
 
     ecs_fini(world);
 }

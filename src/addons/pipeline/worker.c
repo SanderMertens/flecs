@@ -172,6 +172,16 @@ bool ecs_stop_threads(
 
 /* -- Private functions -- */
 
+static
+bool must_stage(
+    const ecs_world_t *world) 
+{
+    ecs_entity_t pipeline = world->pipeline;
+    const EcsPipelineQuery *pq = ecs_get(world, pipeline, EcsPipelineQuery);
+    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    return !pq->no_staging;
+}
+
 void ecs_worker_begin(
     ecs_world_t *world)
 {
@@ -179,7 +189,7 @@ void ecs_worker_begin(
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
     
-    if (stage_count == 1) {
+    if (stage_count == 1 && must_stage(world)) {
         ecs_staging_begin(world);
     }
 }
@@ -195,9 +205,13 @@ bool ecs_worker_sync(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        ecs_staging_end(world);
+        if (must_stage(world)) {
+            ecs_staging_end(world);
+        }
         ecs_pipeline_update(world, world->pipeline, false);
-        ecs_staging_begin(world);
+        if (must_stage(world)) {
+            ecs_staging_begin(world);
+        }
 
     /* Synchronize all workers. The last worker to reach the sync point will
      * signal the main thread, which will perform the merge. */
@@ -218,7 +232,9 @@ void ecs_worker_end(
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
-        ecs_staging_end(world);
+        if (must_stage(world)) {
+            ecs_staging_end(world);
+        }
 
     /* Synchronize all workers. The last worker to reach the sync point will
      * signal the main thread, which will perform the merge. */
@@ -244,7 +260,6 @@ void ecs_workers_progress(
         ecs_pipeline_update(world, pipeline, true);
         ecs_entity_t old_scope = ecs_set_scope(world, 0);
         ecs_world_t *stage = ecs_get_stage(world, 0);
-
         ecs_run_pipeline(stage, pipeline, delta_time);
         ecs_set_scope(world, old_scope);
     } else {
@@ -260,7 +275,9 @@ void ecs_workers_progress(
 
         /* Synchronize n times for each op in the pipeline */
         for (; op <= op_last; op ++) {
-            ecs_staging_begin(world);
+            if (!pq->no_staging) {
+                ecs_staging_begin(world);
+            }
 
             /* Signal workers that they should start running systems */
             world->workers_waiting = 0;
@@ -270,9 +287,14 @@ void ecs_workers_progress(
             wait_for_sync(world);
 
             /* Merge */
-            ecs_staging_end(world);
+            if (!pq->no_staging) {
+                ecs_staging_end(world);
+            }
 
             if (ecs_pipeline_update(world, pipeline, false)) {
+                /* Refetch, in case pipeline itself has moved */
+                pq = ecs_get(world, pipeline, EcsPipelineQuery);
+
                 /* Pipeline has changed, reset position in pipeline */
                 ecs_iter_t it;
                 ecs_pipeline_reset_iter(world, pq, &it, &op, &op_last);

@@ -19,6 +19,7 @@ typedef struct EcsPipelineQuery {
     int32_t match_count;
     int32_t rebuild_count;
     ecs_entity_t last_system;
+    bool no_staging;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////

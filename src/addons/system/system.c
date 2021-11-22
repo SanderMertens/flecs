@@ -141,11 +141,16 @@ ecs_entity_t ecs_run_intern(
         ecs_os_get_time(&time_start);
     }
 
-    ecs_defer_begin(stage->thread_ctx);
+    ecs_world_t *thread_ctx = world;
+    if (stage) {
+        thread_ctx = stage->thread_ctx;
+    }
+
+    ecs_defer_begin(thread_ctx);
 
     /* Prepare the query iterator */
     ecs_iter_t it = ecs_query_iter_page(
-        stage->thread_ctx, system_data->query, offset, limit);
+        thread_ctx, system_data->query, offset, limit);
 
     it.system = system;
     it.self = system_data->self;
@@ -169,13 +174,13 @@ ecs_entity_t ecs_run_intern(
         }
     }
 
-    ecs_defer_end(stage->thread_ctx);
-
     if (measure_time) {
         system_data->time_spent += (FLECS_FLOAT)ecs_time_measure(&time_start);
     }
 
     system_data->invoke_count ++;
+
+    ecs_defer_end(thread_ctx);
 
     return it.interrupted_by;
 }

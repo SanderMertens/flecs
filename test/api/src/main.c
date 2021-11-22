@@ -911,6 +911,7 @@ void Pipeline_random_in_after_random_inout_after_random_out(void);
 void Pipeline_stage_write_before_read(void);
 void Pipeline_mixed_multithreaded(void);
 void Pipeline_mixed_staging(void);
+void Pipeline_no_staging_system_create_query(void);
 void Pipeline_single_threaded_pipeline_change(void);
 void Pipeline_multi_threaded_pipeline_change(void);
 void Pipeline_activate_after_add(void);
@@ -5728,6 +5729,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "mixed_staging",
         Pipeline_mixed_staging
+    },
+    {
+        "no_staging_system_create_query",
+        Pipeline_no_staging_system_create_query
     },
     {
         "single_threaded_pipeline_change",
@@ -11089,7 +11094,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        35,
+        36,
         Pipeline_testcases
     },
     {
