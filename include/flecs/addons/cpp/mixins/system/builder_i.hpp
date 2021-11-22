@@ -37,6 +37,24 @@ public:
         return *this;
     }
 
+    /** Specify whether system can run on multiple threads.
+     *
+     * @param value If false system will always run on a single thread.
+     */
+    Base& multi_threaded(bool value = true) {
+        m_desc->multi_threaded = value;
+        return *this;
+    }
+
+    /** Specify whether system should be ran in staged context.
+     *
+     * @param value If false system will always run staged.
+     */
+    Base& no_staging(bool value = true) {
+        m_desc->no_staging = value;
+        return *this;
+    }
+
     /** Set system interval.
      * This operation will cause the system to be ran at the specified interval.
      *
