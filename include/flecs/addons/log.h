@@ -162,7 +162,7 @@ void _ecs_parser_errorv(
 #define ecs_err(...) _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Fatal. Used when an issue occurs, and the application cannot continue. */
-#define _ecs_fatal(file, line, ...) _ecs_log(-3, file, line, __VA_ARGS__)
+#define _ecs_fatal(file, line, ...) _ecs_log(-4, file, line, __VA_ARGS__)
 #define ecs_fatal(...) _ecs_fatal(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Optionally include warnings about using deprecated features */

@@ -615,7 +615,11 @@ ecs_rule_reg_t* get_register_frame(
     ecs_rule_iter_t *it,
     int32_t frame)    
 {
-    return &it->registers[frame * it->rule->variable_count];
+    if (it->registers) {
+        return &it->registers[frame * it->rule->variable_count];
+    } else {
+        return NULL;
+    }
 }
 
 /* Get register array for current stack frame. The stack frame is determined by

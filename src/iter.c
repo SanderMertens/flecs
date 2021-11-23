@@ -221,11 +221,28 @@ void flecs_iter_populate_data(
 
     int t, term_count = it->term_count;
     bool has_shared = false;
-    for (t = 0; t < term_count; t ++) {
-        int32_t column = it->columns[t];
-        has_shared |= flecs_iter_populate_term_data(world, it, t, column,
-            &ptrs[t * (ptrs != NULL)], 
-            &sizes[t * (sizes != NULL)]);
+
+    if (ptrs && sizes) {
+        for (t = 0; t < term_count; t ++) {
+            int32_t column = it->columns[t];
+            has_shared |= flecs_iter_populate_term_data(world, it, t, column,
+                &ptrs[t], 
+                &sizes[t]);
+        }
+    } else {
+        for (t = 0; t < term_count; t ++) {
+            int32_t column = it->columns[t];
+            void **ptr = NULL;
+            if (ptrs) {
+                ptr = &ptrs[t];
+            }
+            ecs_size_t *size = NULL;
+            if (sizes) {
+                size = &sizes[t];
+            }
+            has_shared |= flecs_iter_populate_term_data(world, it, t, column,
+                ptr, size);
+        }
     }
 
     it->has_shared = has_shared;

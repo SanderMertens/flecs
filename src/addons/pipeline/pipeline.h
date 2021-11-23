@@ -19,7 +19,6 @@ typedef struct EcsPipelineQuery {
     int32_t match_count;
     int32_t rebuild_count;
     ecs_entity_t last_system;
-    bool no_staging;
 } EcsPipelineQuery;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +43,7 @@ typedef struct EcsPipelineQuery {
  * @param pipeline The pipeline to run.
  * @return The number of elements in the pipeline.
  */
-int32_t ecs_pipeline_update(
+bool ecs_pipeline_update(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     bool start_of_frame); 
@@ -63,8 +62,13 @@ int32_t ecs_pipeline_reset_iter(
 void ecs_worker_begin(
     ecs_world_t *world);
 
-bool ecs_worker_sync(
-    ecs_world_t *world);
+int32_t ecs_worker_sync(
+    ecs_world_t *world,
+    const EcsPipelineQuery *pq,
+    ecs_iter_t *it,
+    int32_t i,
+    ecs_pipeline_op_t **op_out,
+    ecs_pipeline_op_t **last_op_out);
 
 void ecs_worker_end(
     ecs_world_t *world);

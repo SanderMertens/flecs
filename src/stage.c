@@ -514,6 +514,8 @@ bool ecs_staging_begin(
      * allowed to enqueue commands from stages */
     world->is_readonly = true;
 
+    ecs_dbg_3("staging: begin");
+
     return is_readonly;
 }
 
@@ -525,6 +527,8 @@ void ecs_staging_end(
 
     /* After this it is safe again to mutate the world directly */
     world->is_readonly = false;
+
+    ecs_dbg_3("staging: end");
 
     do_auto_merge(world);
 error:

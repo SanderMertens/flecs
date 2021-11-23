@@ -334,6 +334,8 @@ bool build_pipeline(
             if (!op) {
                 op = ecs_vector_add(&ops, ecs_pipeline_op_t);
                 op->count = 0;
+                op->multi_threaded = false;
+                op->no_staging = false;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -354,14 +356,35 @@ bool build_pipeline(
     ecs_entity_t last_system = 0;
     op = ecs_vector_first(ops, ecs_pipeline_op_t);
     int32_t i, ran_since_merge = 0, op_index = 0, cur = 0;
+
+    /* Add schedule to debug tracing */
+    ecs_dbg("#[green]pipeline#[reset] rebuild:");
+    ecs_log_push();
+
+    ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
+        op->multi_threaded, !op->no_staging);
+    ecs_log_push();
     
     it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
         for (i = 0; i < it.count; i ++) {
+#ifndef NDEBUG
+            char *path = ecs_get_fullpath(world, it.entities[i]);
+            ecs_dbg("#[green]system#[reset] %s", path);
+            ecs_os_free(path);
+#endif
+            ran_since_merge ++;
             if (ran_since_merge == op[op_index].count) {
+                ecs_dbg("#[magenta]merge#[reset]");
+                ecs_log_pop();
                 ran_since_merge = 0;
                 op_index ++;
+                if (op_index < ecs_vector_count(ops)) {
+                    ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:",
+                        op[op_index].multi_threaded, !op[op_index].no_staging);
+                }
+                ecs_log_push();
             }
 
             if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
@@ -375,11 +398,13 @@ bool build_pipeline(
         }
     }
 
+    ecs_log_pop();
+    ecs_log_pop();
+
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
     pq->ops = ops;
     pq->last_system = last_system;
-    pq->no_staging = op[cur].no_staging;
 
     return true;
 }
@@ -425,7 +450,7 @@ int32_t ecs_pipeline_reset_iter(
     return -1;
 }
 
-int32_t ecs_pipeline_update(
+bool ecs_pipeline_update(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     bool start_of_frame)
@@ -493,7 +518,7 @@ void ecs_run_pipeline(
     int32_t stage_count = ecs_get_stage_count(world);
 
     ecs_worker_begin(stage->thread_ctx);
-    
+
     ecs_iter_t it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
@@ -501,6 +526,10 @@ void ecs_run_pipeline(
         int32_t i;
         for(i = 0; i < it.count; i ++) {
             ecs_entity_t e = it.entities[i];
+
+            if (!stage_index) {
+                ecs_dbg_3("pipeline: run system %s", ecs_get_name(world, e));
+            }
 
             if (!stage_index || op->multi_threaded) {
                 ecs_stage_t *s = NULL;
@@ -519,17 +548,18 @@ void ecs_run_pipeline(
 
             if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
-                op++;
+
+                if (!stage_index) {
+                    ecs_dbg_3("merge");
+                }
 
                 /* If the set of matched systems changed as a result of the
                  * merge, we have to reset the iterator and move it to our
                  * current position (system). If there are a lot of systems
                  * in the pipeline this can be an expensive operation, but
                  * should happen infrequently. */
-                if (ecs_worker_sync(stage->thread_ctx)) {
-                    i = ecs_pipeline_reset_iter(world, pq, &it, &op, &op_last);
-                    sys = ecs_term(&it, EcsSystem, 1);
-                }
+                i = ecs_worker_sync(world, pq, &it, i, &op, &op_last);
+                sys = ecs_term(&it, EcsSystem, 1);
             }
         }
     }
@@ -689,7 +719,11 @@ bool ecs_progress(
 {
     float delta_time = ecs_frame_begin(world, user_delta_time);
 
+    ecs_dbg_3("#[normal]begin progress(dt = %.2f)", (double)delta_time);
+
     ecs_run_pipeline(world, 0, delta_time);
+
+    ecs_dbg_3("#[normal]end progress");
 
     ecs_frame_end(world);
 

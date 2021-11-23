@@ -18,34 +18,47 @@ static bool sys_d_real_world;
 static bool sys_e_real_world;
 static bool sys_f_real_world;
 
+static bool sys_a_world_readonly;
+static bool sys_b_world_readonly;
+static bool sys_c_world_readonly;
+static bool sys_d_world_readonly;
+static bool sys_e_world_readonly;
+static bool sys_f_world_readonly;
+
 void SysA(ecs_iter_t *it) { 
     ecs_os_ainc(&sys_a_invoked);
     sys_a_real_world = it->world == it->real_world;
+    sys_a_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 void SysB(ecs_iter_t *it) { 
     test_assert(sys_a_invoked != 0);
     ecs_os_ainc(&sys_b_invoked);
     sys_b_real_world = it->world == it->real_world;
+    sys_b_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 void SysC(ecs_iter_t *it) { 
     test_assert(sys_b_invoked != 0);
     ecs_os_ainc(&sys_c_invoked);
     sys_c_real_world = it->world == it->real_world;
+    sys_c_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 void SysD(ecs_iter_t *it) { 
     test_assert(sys_c_invoked != 0);
     ecs_os_ainc(&sys_d_invoked);
     sys_d_real_world = it->world == it->real_world;
+    sys_d_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 void SysE(ecs_iter_t *it) { 
     test_assert(sys_d_invoked != 0);
     ecs_os_ainc(&sys_e_invoked);
     sys_e_real_world = it->world == it->real_world;
+    sys_e_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 void SysF(ecs_iter_t *it) { 
     test_assert(sys_d_invoked != 0);
     ecs_os_ainc(&sys_f_invoked);
     sys_f_real_world = it->world == it->real_world;
+    sys_f_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 
 void Pipeline_system_order_same_phase() {
@@ -1214,20 +1227,44 @@ void Pipeline_mixed_staging() {
     ecs_new(world, Position);
 
     ecs_progress(world, 1);
-
     test_int(sys_a_invoked, 1);
     test_int(sys_b_invoked, 1);
     test_int(sys_c_invoked, 1);
     test_int(sys_d_invoked, 1);
     test_int(sys_e_invoked, 1);
     test_int(sys_f_invoked, 1);
-
     test_int(sys_a_real_world, true);
     test_int(sys_b_real_world, false);
     test_int(sys_c_real_world, false);
     test_int(sys_d_real_world, true);
     test_int(sys_e_real_world, true);
     test_int(sys_f_real_world, false);
+    test_int(sys_a_world_readonly, false);
+    test_int(sys_b_world_readonly, true);
+    test_int(sys_c_world_readonly, true);
+    test_int(sys_d_world_readonly, false);
+    test_int(sys_e_world_readonly, false);
+    test_int(sys_f_world_readonly, true);
+
+    ecs_progress(world, 1);
+    test_int(sys_a_invoked, 2);
+    test_int(sys_b_invoked, 2);
+    test_int(sys_c_invoked, 2);
+    test_int(sys_d_invoked, 2);
+    test_int(sys_e_invoked, 2);
+    test_int(sys_f_invoked, 2);
+    test_int(sys_a_real_world, true);
+    test_int(sys_b_real_world, false);
+    test_int(sys_c_real_world, false);
+    test_int(sys_d_real_world, true);
+    test_int(sys_e_real_world, true);
+    test_int(sys_f_real_world, false);
+    test_int(sys_a_world_readonly, false);
+    test_int(sys_b_world_readonly, true);
+    test_int(sys_c_world_readonly, true);
+    test_int(sys_d_world_readonly, false);
+    test_int(sys_e_world_readonly, false);
+    test_int(sys_f_world_readonly, true);
 
     ecs_pipeline_stats_t stats = {0};
     test_bool(ecs_get_pipeline_stats(world, 

@@ -45,6 +45,39 @@ void ecs_os_fini(void) {
     }
 }
 
+#ifndef _MSC_VER
+#include <execinfo.h>
+#define ECS_BT_BUF_SIZE 100
+static
+void dump_backtrace(
+    FILE *stream) 
+{
+    int nptrs;
+    void *buffer[ECS_BT_BUF_SIZE];
+    char **strings;
+
+    nptrs = backtrace(buffer, ECS_BT_BUF_SIZE);
+
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings == NULL) {
+        return;
+    }
+
+    for (int j = 3; j < nptrs; j++) {
+        fprintf(stream, "%s\n", strings[j]);
+    }
+
+    free(strings);
+}
+#elif
+static
+void dump_backtrace(
+    FILE *stream)
+{ 
+    (void)stream;
+}
+#endif
+
 static
 void log_msg(
     int32_t level,
@@ -113,6 +146,10 @@ void log_msg(
     fputs(msg, stream);
 
     fputs("\n", stream);
+
+    if (level == -4) {
+        dump_backtrace(stream);
+    }
 }
 
 void ecs_os_dbg(
