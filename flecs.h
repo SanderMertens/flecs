@@ -12236,7 +12236,7 @@ ecs_move_ctor_t move_dtor() {
 } // _
 } // flecs
 
-namespace flecs 
+namespace flecs
 {
 
 /** Static helper functions to assign a component value */
@@ -12712,16 +12712,21 @@ struct world final : extendable<world, Mixins> {
 
     /** Set singleton component.
      */
-    template <typename T>
+    template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(const T& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), value);
     }
 
-    template <typename T>
+    template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
             std::forward<T&&>(value));
-    } 
+    }
+    
+    /** Set singleton component inside a callback.
+     */
+    template <typename Func, if_t< is_callable<Func>::value > = 0 >
+    void set(const Func& func);
 
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
@@ -12743,6 +12748,11 @@ struct world final : extendable<world, Mixins> {
      */
     template <typename T>
     const T* get() const;
+    
+    /** Get singleton component inside a callback.
+     */
+    template <typename Func, if_t< is_callable<Func>::value > = 0 >
+    void get(const Func& func);
 
     /** Test if world has singleton component.
      */
@@ -17066,6 +17076,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term() {
         this->term();
         *this->m_term = flecs::term(this->world_v()).id<T>().move();
+        this->m_term->oper = static_cast<ecs_oper_kind_t>(this->template type_to_inout<T>());
         return *this;
     }
 
@@ -19119,6 +19130,20 @@ void world::remove() const {
 template <typename T>
 inline flecs::entity world::singleton() {
     return flecs::entity(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename Func, if_t< is_callable<Func>::value > >
+void world::get(const Func& func) {
+    static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
+    _::entity_with_invoker<Func>::invoke_get(
+        this->m_world, this->singleton<first_arg_t<Func>>(), func);
+}
+
+template <typename Func, if_t< is_callable<Func>::value > >
+void world::set(const Func& func) {
+    static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
+    _::entity_with_invoker<Func>::invoke_get_mut(
+        this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
 } // namespace flecs

@@ -1546,6 +1546,8 @@
                "readonly_term",
                "trigger_on_prefab",
                "trigger_on_disabled",
+               "trigger_on_prefab_tag",
+               "trigger_on_disabled_tag",
                "trigger_cleanup_2_w_self_super_id",
                "on_add_yield_existing",
                "on_add_yield_existing_2_tables",

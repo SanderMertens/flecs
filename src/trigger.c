@@ -616,6 +616,13 @@ ecs_entity_t ecs_trigger_init(
         trigger->match_prefab = desc->match_prefab;
         trigger->match_disabled = desc->match_disabled;
 
+        if (trigger->term.id == EcsPrefab) {
+            trigger->match_prefab = true;
+        }
+        if (trigger->term.id == EcsDisabled) {
+            trigger->match_disabled = true;
+        }
+
         comp->trigger = trigger;
 
         /* Trigger must have at least one event */

@@ -1476,6 +1476,8 @@ void Trigger_iter_type_set(void);
 void Trigger_readonly_term(void);
 void Trigger_trigger_on_prefab(void);
 void Trigger_trigger_on_disabled(void);
+void Trigger_trigger_on_prefab_tag(void);
+void Trigger_trigger_on_disabled_tag(void);
 void Trigger_trigger_cleanup_2_w_self_super_id(void);
 void Trigger_on_add_yield_existing(void);
 void Trigger_on_add_yield_existing_2_tables(void);
@@ -7950,6 +7952,14 @@ bake_test_case Trigger_testcases[] = {
         Trigger_trigger_on_disabled
     },
     {
+        "trigger_on_prefab_tag",
+        Trigger_trigger_on_prefab_tag
+    },
+    {
+        "trigger_on_disabled_tag",
+        Trigger_trigger_on_disabled_tag
+    },
+    {
         "trigger_cleanup_2_w_self_super_id",
         Trigger_trigger_cleanup_2_w_self_super_id
     },
@@ -11165,7 +11175,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        70,
+        72,
         Trigger_testcases
     },
     {

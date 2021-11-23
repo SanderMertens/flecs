@@ -1,6 +1,6 @@
 #include <api.h>
 
-ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Position);
 
 void MultiThread_setup() {
     ecs_log_set_level(-3);

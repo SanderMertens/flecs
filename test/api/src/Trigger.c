@@ -2542,6 +2542,42 @@ void Trigger_trigger_on_disabled() {
     ecs_fini(world);
 }
 
+void Trigger_trigger_on_prefab_tag() {
+    ecs_world_t *world = ecs_init();
+
+    Probe ctx_1 = {0};
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { EcsPrefab },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    ecs_new_w_id(world, EcsPrefab);
+    test_int(ctx_1.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Trigger_trigger_on_disabled_tag() {
+    ecs_world_t *world = ecs_init();
+
+    Probe ctx_1 = {0};
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = { EcsDisabled },
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_1
+    });
+
+    ecs_new_w_id(world, EcsDisabled);
+    test_int(ctx_1.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Trigger_trigger_cleanup_2_w_self_super_id() {
     ecs_world_t * world = ecs_init();
 
