@@ -89,7 +89,7 @@ void* _ecs_map_ensure(
     ecs_map_key_t key);
 
 #define ecs_map_ensure(map, T, key)\
-    (T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key)
+    ((T*)_ecs_map_ensure(map, sizeof(T), (ecs_map_key_t)key))
 
 /** Set element. */
 FLECS_API
@@ -107,9 +107,11 @@ FLECS_API
 void ecs_map_free(
     ecs_map_t *map);
 
-/** Remove key from map. */
+/** Remove key from map.
+ * Returns number of remaining elements.
+ */
 FLECS_API
-void ecs_map_remove(
+int32_t ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key);
 

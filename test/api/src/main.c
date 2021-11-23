@@ -1485,6 +1485,11 @@ void Trigger_on_add_yield_existing_wildcard_pair(void);
 void Trigger_on_set_yield_existing(void);
 void Trigger_filter_term(void);
 void Trigger_on_add_remove_after_exclusive_add(void);
+void Trigger_on_add_base(void);
+void Trigger_on_remove_base(void);
+void Trigger_on_set_base(void);
+void Trigger_on_unset_base(void);
+void Trigger_on_add_base_superset_trigger(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7987,6 +7992,26 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_remove_after_exclusive_add",
         Trigger_on_add_remove_after_exclusive_add
+    },
+    {
+        "on_add_base",
+        Trigger_on_add_base
+    },
+    {
+        "on_remove_base",
+        Trigger_on_remove_base
+    },
+    {
+        "on_set_base",
+        Trigger_on_set_base
+    },
+    {
+        "on_unset_base",
+        Trigger_on_unset_base
+    },
+    {
+        "on_add_base_superset_trigger",
+        Trigger_on_add_base_superset_trigger
     }
 };
 
@@ -11180,7 +11205,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        72,
+        77,
         Trigger_testcases
     },
     {

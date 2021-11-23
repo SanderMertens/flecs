@@ -360,7 +360,7 @@ void* _ecs_map_set(
     }
 }
 
-void ecs_map_remove(
+int32_t ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key)
 {
@@ -368,16 +368,18 @@ void ecs_map_remove(
 
     ecs_bucket_t * bucket = get_bucket(map, key);
     if (!bucket) {
-        return;
+        return map->count;
     }
 
     int32_t i, bucket_count = bucket->count;
     for (i = 0; i < bucket_count; i ++) {
         if (bucket->keys[i] == key) {
             remove_from_bucket(bucket, map->elem_size, key, i);
-            map->count --;
+            return --map->count;
         }
-    } 
+    }
+
+    return map->count;
 }
 
 int32_t ecs_map_count(

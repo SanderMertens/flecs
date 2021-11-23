@@ -1095,6 +1095,8 @@ void Pipeline_stage_write_before_read() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[3], s3);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[4], 0); /* merge */
 
+    ecs_pipeline_stats_fini(&stats);
+
     ecs_fini(world);
 }
 
@@ -1173,6 +1175,8 @@ void Pipeline_mixed_multithreaded() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], s6);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
+
+    ecs_pipeline_stats_fini(&stats);
 
     ecs_fini(world);
 }
@@ -1281,6 +1285,8 @@ void Pipeline_mixed_staging() {
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[7], 0); /* merge */
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[8], s6);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[9], 0); /* merge */
+
+    ecs_pipeline_stats_fini(&stats);
 
     ecs_fini(world);
 }
@@ -1539,6 +1545,8 @@ void Pipeline_no_staging_system_create_query() {
     test_int(ecs_vector_count(stats.systems), 2);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[0], s);
     test_int(ecs_vector_get(stats.systems, ecs_entity_t, 0)[1], 0); /* merge */
+
+    ecs_pipeline_stats_fini(&stats);
 
     ecs_fini(world);
 }

@@ -97,7 +97,8 @@ typedef struct ecs_type_info_t {
 typedef enum ecs_table_eventkind_t {
     EcsTableQueryMatch,
     EcsTableQueryUnmatch,
-    EcsTableTriggerMatch,
+    EcsTableTriggersForId,
+    EcsTableNoTriggersForId,
     EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
@@ -387,18 +388,21 @@ struct ecs_query_t {
 };
 
 /** All triggers for a specific (component) id */
-typedef struct ecs_id_triggers_t {
+typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
     ecs_map_t *triggers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
     ecs_map_t *set_triggers; /* map<trigger_id, trigger_t> */
-} ecs_id_triggers_t;
+
+    /* Number of active triggers for (component) id */
+    int32_t trigger_count;
+} ecs_event_id_record_t;
 
 /** All triggers for a specific event */
-typedef struct ecs_event_triggers_t {
-    ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
-} ecs_event_triggers_t;
+typedef struct ecs_event_record_t {
+    ecs_map_t *event_ids;     /* map<id, ecs_event_id_record_t> */
+} ecs_event_record_t;
 
 /** Types for deferred operations */
 typedef enum ecs_defer_op_kind_t {
@@ -500,7 +504,7 @@ typedef struct ecs_table_record_t {
 /* Payload for id index which contains all datastructures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id */
-    ecs_table_cache_t cache;
+    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
 
     /* All tables for which an outgoing (add) edge to the id was created */
     ecs_map_t *add_refs;

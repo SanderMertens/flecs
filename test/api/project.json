@@ -1554,7 +1554,12 @@
                "on_add_yield_existing_wildcard_pair",
                "on_set_yield_existing",
                "filter_term",
-               "on_add_remove_after_exclusive_add"
+               "on_add_remove_after_exclusive_add",
+               "on_add_base",
+               "on_remove_base",
+               "on_set_base",
+               "on_unset_base",
+               "on_add_base_superset_trigger"
            ]
         }, {
             "id": "Observer",

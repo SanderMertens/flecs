@@ -2,6 +2,17 @@
 #include "private_api.h"
 
 static
+void flecs_notify_on_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_table_diff_t *diff,
+    bool run_on_set);
+
+static
 const ecs_entity_t* new_w_data(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -817,7 +828,6 @@ void update_component_monitor_w_array(
             {
                 update_component_monitor_w_array(world, entity, rel, entities);
             }
-
         }
         
         if (ECS_HAS_RELATION(id, EcsIsA)) {
@@ -1161,7 +1171,7 @@ error:
 
 
 /* -- Private functions -- */
-
+static
 void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1741,7 +1751,9 @@ int traverse_add(
 
     /* Commit entity to destination table */
     if (src_table != table) {
+        ecs_defer_begin(world);
         commit(world, result, &info, table, &diff, true);
+        ecs_defer_end(world);
     }
 
     /* Set name */
