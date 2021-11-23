@@ -280,10 +280,8 @@ ecs_table_t *create_table(
     flecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
-    result->id = flecs_sparse_last_id(world->store.tables);
-
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
+    result->id = flecs_sparse_last_id(world->store.tables);
     init_table(world, result, entities);
 
 #ifndef NDEBUG

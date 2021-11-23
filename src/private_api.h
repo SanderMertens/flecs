@@ -173,9 +173,10 @@ void flecs_triggers_notify(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
+    ecs_id_t set_id,
     void *param);
 
-ecs_id_triggers_t* flecs_triggers_for_id(
+ecs_event_id_record_t* flecs_triggers_for_id(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
@@ -305,17 +306,7 @@ bool flecs_defer_purge(
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Notifications
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_notify_on_add(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_t *other_table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_table_diff_t *diff,
-    bool run_on_set);   
+//////////////////////////////////////////////////////////////////////////////// 
 
 void flecs_notify_on_remove(
     ecs_world_t *world,

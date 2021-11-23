@@ -33,6 +33,51 @@ ecs_entity_t get_actual_event(
 }
 
 static
+void unregister_event_trigger(
+    ecs_event_record_t *evt,
+    ecs_id_t id)
+{
+    if (ecs_map_remove(evt->event_ids, id) == 0) {
+        ecs_map_free(evt->event_ids);
+        evt->event_ids = NULL;
+    }
+}
+
+static
+void inc_trigger_count(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_event_record_t *evt,
+    ecs_id_t id,
+    int32_t value)
+{
+    ecs_event_id_record_t *idt = ecs_map_ensure(
+        evt->event_ids, ecs_event_id_record_t, id);
+    ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t result = idt->trigger_count + value;
+    if (result == 1) {
+        /* Notify framework that there are triggers for the event/id. This 
+         * allows parts of the code to skip event evaluation early */
+        flecs_notify_tables(world, id, &(ecs_table_event_t){
+            .kind = EcsTableTriggersForId,
+            .event = event
+        });
+    } else if (result == 0) {
+        /* Ditto, but the reverse */
+        flecs_notify_tables(world, id, &(ecs_table_event_t){
+            .kind = EcsTableNoTriggersForId,
+            .event = event
+        });
+
+        /* Remove admin for id for event */
+        if (!idt->triggers && !idt->set_triggers) {
+            unregister_event_trigger(evt, id);
+        }
+    }
+}
+
+static
 void register_trigger_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
@@ -40,49 +85,42 @@ void register_trigger_for_id(
     ecs_id_t id,
     bool register_for_set)
 {
-    ecs_sparse_t *triggers = observable->triggers;
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t term_id = trigger->term.id;
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
         ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
 
         /* Get triggers for event */
-        ecs_event_triggers_t *evt = flecs_sparse_ensure(
-            triggers, ecs_event_triggers_t, event);
+        ecs_event_record_t *evt = flecs_sparse_ensure(
+            events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!evt->triggers) {
-            evt->triggers = ecs_map_new(ecs_id_triggers_t, 1);
+        if (!evt->event_ids) {
+            evt->event_ids = ecs_map_new(ecs_event_id_record_t, 1);
         }
 
-        /* Get triggers for (component) id */
-        ecs_id_triggers_t *idt = ecs_map_ensure(
-            evt->triggers, ecs_id_triggers_t, id);
+        /* Get triggers for (component) id for event */
+        ecs_event_id_record_t *idt = ecs_map_ensure(
+            evt->event_ids, ecs_event_id_record_t, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_t *id_triggers = NULL;
-
+        ecs_map_t **triggers;
         if (!register_for_set) {
-            if (!(id_triggers = idt->triggers)) {
-                id_triggers = idt->triggers = ecs_map_new(ecs_trigger_t*, 1);
-            }
+            triggers = &idt->triggers;
         } else {
-            if (!(id_triggers = idt->set_triggers)) {
-                id_triggers = idt->set_triggers = 
-                    ecs_map_new(ecs_trigger_t*, 1);
-            }
+            triggers = &idt->set_triggers;
         }
 
-        ecs_trigger_t **elem = ecs_map_ensure(
-            id_triggers, ecs_trigger_t*, trigger->id);
-        *elem = trigger;
+        if (!triggers[0]) {
+            triggers[0] = ecs_map_new(ecs_trigger_t*, 1);
+        }
 
-        // First trigger of its kind, send table notification
-        flecs_notify_tables(world, id, &(ecs_table_event_t){
-            .kind = EcsTableTriggerMatch,
-            .event = trigger->events[i]
-        });
+        ecs_map_ensure(triggers[0], ecs_trigger_t*, trigger->id)[0] = trigger;
+
+        inc_trigger_count(world, event, evt, term_id, 1);
     }
 }
 
@@ -104,53 +142,49 @@ void register_trigger(
 
 static
 void unregister_trigger_for_id(
+    ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_trigger_t *trigger,
     ecs_id_t id,
     bool unregister_for_set)
 {
-    ecs_sparse_t *triggers = observable->triggers;
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t term_id = trigger->term.id;
 
     int i;
     for (i = 0; i < trigger->event_count; i ++) {
         ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
 
         /* Get triggers for event */
-        ecs_event_triggers_t *evt = flecs_sparse_get(
-            triggers, ecs_event_triggers_t, event);
+        ecs_event_record_t *evt = flecs_sparse_get(
+            events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Get triggers for (component) id */
-        ecs_id_triggers_t *idt = ecs_map_get(
-            evt->triggers, ecs_id_triggers_t, id);
+        ecs_event_id_record_t *idt = ecs_map_get(
+            evt->event_ids, ecs_event_id_record_t, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_t *id_triggers;
-
+        ecs_map_t **id_triggers;
         if (unregister_for_set) {
-            id_triggers = idt->set_triggers;
+            id_triggers = &idt->set_triggers;
         } else {
-            id_triggers = idt->triggers;
+            id_triggers = &idt->triggers;
         }
 
-        ecs_map_remove(id_triggers, trigger->id);
+        if (ecs_map_remove(id_triggers[0], trigger->id) == 0) {
+            ecs_map_free(id_triggers[0]);
+            id_triggers[0] = NULL;
+        }
 
-        if (!ecs_map_count(id_triggers)) {
-            ecs_map_free(id_triggers);
+        inc_trigger_count(world, event, evt, term_id, -1);
 
-            if (unregister_for_set) {
-                idt->set_triggers = NULL;
-            } else {
-                idt->triggers = NULL;
-            }
-
-            if (!idt->triggers && !idt->set_triggers) {
-                ecs_map_remove(evt->triggers, id);
-                if (!ecs_map_count(evt->triggers)) {
-                    ecs_map_free(evt->triggers);
-                    evt->triggers = NULL;
-                }
+        if (id != term_id) {
+            /* Id is different from term_id in case of a set trigger. If they're
+             * the same, inc_trigger_count could already have done cleanup */
+            if (!idt->triggers && !idt->set_triggers && !idt->trigger_count) {
+                unregister_event_trigger(evt, id);
             }
         }
     }
@@ -158,15 +192,16 @@ void unregister_trigger_for_id(
 
 static
 void unregister_trigger(
+    ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_trigger_t *trigger)
 {    
     ecs_term_t *term = &trigger->term;
     if (term->subj.set.mask & EcsSelf) {
-        unregister_trigger_for_id(observable, trigger, term->id, false);
+        unregister_trigger_for_id(world, observable, trigger, term->id, false);
     } else {
         ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
-        unregister_trigger_for_id(observable, trigger, pair, true);
+        unregister_trigger_for_id(world, observable, trigger, pair, true);
     }
 }
 
@@ -182,14 +217,14 @@ ecs_map_t* get_triggers_for_event(
     ecs_observable_t *observable = ecs_get_observable(object);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_sparse_t *triggers = observable->triggers;
-    ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_event_triggers_t *evt = flecs_sparse_get(
-        triggers, ecs_event_triggers_t, event);
+    const ecs_event_record_t *evt = flecs_sparse_get(
+        events, ecs_event_record_t, event);
     
     if (evt) {
-        return evt->triggers;
+        return evt->event_ids;
     }
 
 error:
@@ -197,14 +232,14 @@ error:
 }
 
 static
-ecs_id_triggers_t* get_triggers_for_id(
+ecs_event_id_record_t* get_triggers_for_id(
     const ecs_map_t *evt,
     ecs_id_t id)
 {
-    return ecs_map_get(evt, ecs_id_triggers_t, id);
+    return ecs_map_get(evt, ecs_event_id_record_t, id);
 }
 
-ecs_id_triggers_t* flecs_triggers_for_id(
+ecs_event_id_record_t* flecs_triggers_for_id(
     const ecs_poly_t *object,
     ecs_id_t id,
     ecs_entity_t event)
@@ -255,43 +290,24 @@ void init_iter(
 
             it->entities = &entities[row];
 
-            ecs_entity_t subject = 0;
             int32_t index = ecs_type_match(it->world, table, table->type, 0, 
-                it->event_id, EcsIsA, 0, 0, &subject, NULL, NULL);
-
-            ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-            int32_t storage_index = ecs_table_type_to_storage_index(
-                table, index);
+                it->event_id, EcsIsA, 0, 0, it->subjects, NULL, NULL);
             
-            index ++;
-            it->columns[0] = index;
-
-            if (storage_index == -1) {
+            if (index == -1) {
                 it->columns[0] = 0;
+            } else if (it->subjects[0]) {
+                it->columns[0] = -index - 1;
+            } else {
+                it->columns[0] = index + 1;
             }
 
-            if (!it->is_filter) {
-                it->sizes[0] = 0;
-                if (!subject && it->columns[0] && data && data->columns) {
-                    ecs_column_t *col = &data->columns[storage_index];
-                    it->ptrs[0] = ecs_vector_get_t(
-                        col->data, col->size, col->alignment, row);
-                    it->sizes[0] = col->size;
-                } else if (subject) {
-                    it->ptrs[0] = (void*)ecs_get_id(
-                        it->world, subject, it->event_id);
-                    ecs_entity_t e = ecs_get_typeid(it->world, it->event_id);
-                    const EcsComponent *comp = ecs_get(
-                        it->world, e, EcsComponent);
-                    if (comp) {
-                        it->sizes[0] = comp->size;
-                    } else {
-                        it->sizes[0] = 0;
-                    }
-                }
-            }
-
-            it->subjects[0] = subject;
+            ecs_term_t term = {
+                .id = it->event_id
+            };
+            it->terms = &term;
+            it->term_count = 1;
+            flecs_iter_populate_data(it->world, it, table, row, count, 
+                it->ptrs, it->sizes);
         } else {
             it->entities = entity;
         }
@@ -404,15 +420,24 @@ void notify_triggers_for_id(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    bool *iter_set)
+    bool *iter_set,
+    ecs_id_t set_id)
 {
-    const ecs_id_triggers_t *idt = get_triggers_for_id(evt, event_id);
-    if (idt) {
-        if (idt->triggers) {
-            init_iter(it, entity, table, row, count, iter_set);
-            notify_self_triggers(it, idt->triggers);
+    if (!set_id) {
+        const ecs_event_id_record_t *idt = get_triggers_for_id(evt, event_id);
+        if (idt) {
+            if (idt->triggers) {
+                init_iter(it, entity, table, row, count, iter_set);
+                notify_self_triggers(it, idt->triggers);
+            }
+            if (idt->set_triggers) {
+                init_iter(it, entity, table, row, count, iter_set);
+                notify_set_triggers(it, idt->set_triggers);
+            }
         }
-        if (idt->set_triggers) {
+    } else {
+        const ecs_event_id_record_t *idt = get_triggers_for_id(evt, set_id);
+        if (idt && idt->set_triggers) {
             init_iter(it, entity, table, row, count, iter_set);
             notify_set_triggers(it, idt->set_triggers);
         }
@@ -460,6 +485,7 @@ void flecs_triggers_notify(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
+    ecs_id_t set_id, 
     void *param)
 {
     if (!ids || !ids->count) {
@@ -472,7 +498,7 @@ void flecs_triggers_notify(
         observable = world;
     }
 
-    ecs_entity_t trigger_event = event; 
+    ecs_entity_t trigger_event = event;
 
     do {
         const ecs_map_t *evt = get_triggers_for_event(observable, trigger_event);
@@ -506,24 +532,28 @@ void flecs_triggers_notify(
 
             it.event_id = id;
 
-            notify_triggers_for_id(
-                evt, id, &it, &entity, table, row, count, &iter_set);
+            notify_triggers_for_id(evt, id, &it, &entity, table, row, count, 
+                &iter_set, set_id);
+
+            if (set_id) {
+                continue;
+            }
 
             if (ECS_HAS_ROLE(id, PAIR)) {
                 ecs_entity_t pred = ECS_PAIR_RELATION(id);
                 ecs_entity_t obj = ECS_PAIR_OBJECT(id);
 
                 notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
-                    &it, &entity, table, row, count, &iter_set);
+                    &it, &entity, table, row, count, &iter_set, set_id);
 
                 notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
-                    &it, &entity, table, row, count, &iter_set);
+                    &it, &entity, table, row, count, &iter_set, set_id);
 
                 notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
-                    &it, &entity, table, row, count, &iter_set);
+                    &it, &entity, table, row, count, &iter_set, set_id);
             } else {
                 notify_triggers_for_id(evt, EcsWildcard, 
-                    &it, &entity, table, row, count, &iter_set);
+                    &it, &entity, table, row, count, &iter_set, set_id);
             }
         }
 
@@ -692,7 +722,7 @@ void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {    
-    unregister_trigger(trigger->observable, trigger);
+    unregister_trigger(world, trigger->observable, trigger);
     ecs_term_fini(&trigger->term);
 
     if (trigger->ctx_free) {

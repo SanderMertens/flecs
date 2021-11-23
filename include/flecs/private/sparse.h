@@ -122,7 +122,7 @@ bool flecs_sparse_exists(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
-/** Test if id is alive, which requires the generation count tp match. */
+/** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
 bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,

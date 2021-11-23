@@ -274,7 +274,7 @@ bool flecs_sparse_exists(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
-/** Test if id is alive, which requires the generation count tp match. */
+/** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
 bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
@@ -650,7 +650,8 @@ typedef struct ecs_type_info_t {
 typedef enum ecs_table_eventkind_t {
     EcsTableQueryMatch,
     EcsTableQueryUnmatch,
-    EcsTableTriggerMatch,
+    EcsTableTriggersForId,
+    EcsTableNoTriggersForId,
     EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
@@ -940,18 +941,21 @@ struct ecs_query_t {
 };
 
 /** All triggers for a specific (component) id */
-typedef struct ecs_id_triggers_t {
+typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
     ecs_map_t *triggers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
     ecs_map_t *set_triggers; /* map<trigger_id, trigger_t> */
-} ecs_id_triggers_t;
+
+    /* Number of active triggers for (component) id */
+    int32_t trigger_count;
+} ecs_event_id_record_t;
 
 /** All triggers for a specific event */
-typedef struct ecs_event_triggers_t {
-    ecs_map_t *triggers;     /* map<component_id, ecs_id_triggers_t> */
-} ecs_event_triggers_t;
+typedef struct ecs_event_record_t {
+    ecs_map_t *event_ids;     /* map<id, ecs_event_id_record_t> */
+} ecs_event_record_t;
 
 /** Types for deferred operations */
 typedef enum ecs_defer_op_kind_t {
@@ -1053,7 +1057,7 @@ typedef struct ecs_table_record_t {
 /* Payload for id index which contains all datastructures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id */
-    ecs_table_cache_t cache;
+    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
 
     /* All tables for which an outgoing (add) edge to the id was created */
     ecs_map_t *add_refs;
@@ -1484,9 +1488,10 @@ void flecs_triggers_notify(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
+    ecs_id_t set_id,
     void *param);
 
-ecs_id_triggers_t* flecs_triggers_for_id(
+ecs_event_id_record_t* flecs_triggers_for_id(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
@@ -1616,17 +1621,7 @@ bool flecs_defer_purge(
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Notifications
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_notify_on_add(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_t *other_table,
-    ecs_data_t *data,
-    int32_t row,
-    int32_t count,
-    ecs_table_diff_t *diff,
-    bool run_on_set);   
+//////////////////////////////////////////////////////////////////////////////// 
 
 void flecs_notify_on_remove(
     ecs_world_t *world,
@@ -2385,11 +2380,17 @@ void init_table(
     flecs_register_table(world, table);
     flecs_table_init_data(world, table);
 
+<<<<<<< HEAD
     /* Register component info flags for all columns */
     flecs_table_notify(world, table, &(ecs_table_event_t){
         .kind = EcsTableComponentInfo
     });    
 }
+=======
+<<<<<<< HEAD
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t id = ids[i];
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
 static
 ecs_table_t *create_table(
@@ -2400,7 +2401,25 @@ ecs_table_t *create_table(
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
     result->id = flecs_sparse_last_id(world->store.tables);
 
+<<<<<<< HEAD
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+=======
+            const EcsComponent *component = flecs_component_from_id(world, id);
+            ecs_assert(component != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(component->size != 0, ECS_INTERNAL_ERROR, NULL);
+=======
+static
+ecs_table_t *create_table(
+    ecs_world_t *world,
+    ecs_ids_t *entities,
+    flecs_hashmap_result_t table_elem)
+{
+    ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+    result->id = flecs_sparse_last_id(world->store.tables);
+    init_table(world, result, entities);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
     init_table(world, result, entities);
 
@@ -3193,9 +3212,18 @@ void flecs_table_clear_add_edge(
     }
 }
 
+<<<<<<< HEAD
 void flecs_table_clear_remove_edge(
     ecs_table_t *table,
     ecs_id_t id)
+=======
+static
+<<<<<<< HEAD
+void fast_delete(
+    ecs_column_t *columns,
+    int32_t column_count,
+    int32_t index) 
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 {
     ecs_edge_t *edge = get_edge(&table->node.remove, id);
     if (edge) {
@@ -3204,14 +3232,94 @@ void flecs_table_clear_remove_edge(
     }
 }
 
+<<<<<<< HEAD
 /* Public convenience functions for traversing table graph */
 ecs_table_t* ecs_table_add_id(
+=======
+void flecs_table_delete(
+=======
+void unregister_event_trigger(
+    ecs_event_record_t *evt,
+    ecs_id_t id)
+{
+    if (ecs_map_remove(evt->event_ids, id) == 0) {
+        ecs_map_free(evt->event_ids);
+        evt->event_ids = NULL;
+    }
+}
+
+static
+void inc_trigger_count(
+    ecs_world_t *world,
+    ecs_entity_t event,
+    ecs_event_record_t *evt,
+    ecs_id_t id,
+    int32_t value)
+{
+    ecs_event_id_record_t *idt = ecs_map_ensure(
+        evt->event_ids, ecs_event_id_record_t, id);
+    ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t result = idt->trigger_count + value;
+    if (result == 1) {
+        /* Notify framework that there are triggers for the event/id. This 
+         * allows parts of the code to skip event evaluation early */
+        flecs_notify_tables(world, id, &(ecs_table_event_t){
+            .kind = EcsTableTriggersForId,
+            .event = event
+        });
+    } else if (result == 0) {
+        /* Ditto, but the reverse */
+        flecs_notify_tables(world, id, &(ecs_table_event_t){
+            .kind = EcsTableNoTriggersForId,
+            .event = event
+        });
+
+        /* Remove admin for id for event */
+        if (!idt->triggers && !idt->set_triggers) {
+            unregister_event_trigger(evt, id);
+        }
+    }
+}
+
+static
+void register_trigger_for_id(
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id)
 {
+<<<<<<< HEAD
     return flecs_table_traverse_add(world, table, &id, NULL);
 }
+=======
+<<<<<<< HEAD
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+=======
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t term_id = trigger->term.id;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+
+    ecs_vector_t *v_entities = data->entities;
+    int32_t count = ecs_vector_count(v_entities);
+
+<<<<<<< HEAD
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+    count --;
+    ecs_assert(index <= count, ECS_INTERNAL_ERROR, NULL);
+
+    /* Move last entity id to index */
+    ecs_entity_t *entities = ecs_vector_first(v_entities, ecs_entity_t);
+    ecs_entity_t entity_to_move = entities[count];
+    ecs_entity_t entity_to_delete = entities[index];
+    entities[index] = entity_to_move;
+    ecs_vector_remove_last(v_entities);
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
 ecs_table_t* ecs_table_remove_id(
     ecs_world_t *world,
@@ -3227,14 +3335,65 @@ int32_t count_events(
 {
     int32_t i;
 
+<<<<<<< HEAD
     for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
         if (!events[i]) {
             break;
+=======
+    /* Update record of moved entity in entity index */
+    if (index != count) {
+        if (record_to_move) {
+            if (record_to_move->row >= 0) {
+                record_to_move->row = index + 1;
+            } else {
+                record_to_move->row = -(index + 1);
+            }
+            ecs_assert(record_to_move->table != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
+=======
+        /* Get triggers for event */
+        ecs_event_record_t *evt = flecs_sparse_ensure(
+            events, ecs_event_record_t, event);
+        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!evt->event_ids) {
+            evt->event_ids = ecs_map_new(ecs_event_id_record_t, 1);
+        }
+
+        /* Get triggers for (component) id for event */
+        ecs_event_id_record_t *idt = ecs_map_ensure(
+            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_map_t **triggers;
+        if (!register_for_set) {
+            triggers = &idt->triggers;
+        } else {
+            triggers = &idt->set_triggers;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
         }
     }
 
+<<<<<<< HEAD
     return i;
 }
+=======
+<<<<<<< HEAD
+    /* If the table is monitored indicate that there has been a change */
+    mark_table_dirty(table, 0);    
+=======
+        if (!triggers[0]) {
+            triggers[0] = ecs_map_new(ecs_trigger_t*, 1);
+        }
+
+        ecs_map_ensure(triggers[0], ecs_trigger_t*, trigger->id)[0] = trigger;
+
+        inc_trigger_count(world, event, evt, term_id, 1);
+    }
+}
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
 static
 ecs_entity_t get_actual_event(
@@ -3249,6 +3408,7 @@ ecs_entity_t get_actual_event(
             event = EcsOnAdd;
         }
     }
+<<<<<<< HEAD
 
     return event;
 }
@@ -3284,9 +3444,62 @@ void register_trigger_for_id(
 
         ecs_map_t *id_triggers = NULL;
 
+<<<<<<< HEAD
         if (!register_for_set) {
             if (!(id_triggers = idt->triggers)) {
                 id_triggers = idt->triggers = ecs_map_new(ecs_trigger_t*, 1);
+=======
+                ecs_vector_remove_last(vec);
+=======
+}
+
+static
+void unregister_trigger_for_id(
+    ecs_world_t *world,
+    ecs_observable_t *observable,
+    ecs_trigger_t *trigger,
+    ecs_id_t id,
+    bool unregister_for_set)
+{
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t term_id = trigger->term.id;
+
+    int i;
+    for (i = 0; i < trigger->event_count; i ++) {
+        ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
+
+        /* Get triggers for event */
+        ecs_event_record_t *evt = flecs_sparse_get(
+            events, ecs_event_record_t, event);
+        ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Get triggers for (component) id */
+        ecs_event_id_record_t *idt = ecs_map_get(
+            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_map_t **id_triggers;
+        if (unregister_for_set) {
+            id_triggers = &idt->set_triggers;
+        } else {
+            id_triggers = &idt->triggers;
+        }
+
+        if (ecs_map_remove(id_triggers[0], trigger->id) == 0) {
+            ecs_map_free(id_triggers[0]);
+            id_triggers[0] = NULL;
+        }
+
+        inc_trigger_count(world, event, evt, term_id, -1);
+
+        if (id != term_id) {
+            /* Id is different from term_id in case of a set trigger. If they're
+             * the same, inc_trigger_count could already have done cleanup */
+            if (!idt->triggers && !idt->set_triggers && !idt->trigger_count) {
+                unregister_event_trigger(evt, id);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
             }
         } else {
             if (!(id_triggers = idt->set_triggers)) {
@@ -3295,6 +3508,7 @@ void register_trigger_for_id(
             }
         }
 
+<<<<<<< HEAD
         ecs_trigger_t **elem = ecs_map_ensure(
             id_triggers, ecs_trigger_t*, trigger->id);
         *elem = trigger;
@@ -3304,9 +3518,18 @@ void register_trigger_for_id(
             .kind = EcsTableTriggerMatch,
             .event = trigger->events[i]
         });
+=======
+<<<<<<< HEAD
+    /* Remove elements from switch columns */
+    ecs_sw_column_t *sw_columns = data->sw_columns;
+    int32_t sw_column_count = table->sw_column_count;
+    for (i = 0; i < sw_column_count; i ++) {
+        flecs_switch_remove(sw_columns[i].data, index);
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     }
 }
 
+<<<<<<< HEAD
 static
 void register_trigger(
     ecs_world_t *world,
@@ -3320,6 +3543,27 @@ void register_trigger(
     if (trigger->term.subj.set.mask & EcsSuperSet) {
         ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         register_trigger_for_id(world, observable, trigger, pair, true);
+=======
+    /* Remove elements from bitset columns */
+    ecs_bs_column_t *bs_columns = data->bs_columns;
+    int32_t bs_column_count = table->bs_column_count;
+    for (i = 0; i < bs_column_count; i ++) {
+        flecs_bitset_remove(&bs_columns[i].data, index);
+=======
+static
+void unregister_trigger(
+    ecs_world_t *world,
+    ecs_observable_t *observable,
+    ecs_trigger_t *trigger)
+{    
+    ecs_term_t *term = &trigger->term;
+    if (term->subj.set.mask & EcsSelf) {
+        unregister_trigger_for_id(world, observable, trigger, term->id, false);
+    } else {
+        ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
+        unregister_trigger_for_id(world, observable, trigger, pair, true);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     }
 }
 
@@ -3337,6 +3581,7 @@ void unregister_trigger_for_id(
     for (i = 0; i < trigger->event_count; i ++) {
         ecs_entity_t event = get_actual_event(trigger, trigger->events[i]);
 
+<<<<<<< HEAD
         /* Get triggers for event */
         ecs_event_triggers_t *evt = flecs_sparse_get(
             triggers, ecs_event_triggers_t, event);
@@ -3346,9 +3591,27 @@ void unregister_trigger_for_id(
         ecs_id_triggers_t *idt = ecs_map_get(
             evt->triggers, ecs_id_triggers_t, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
+=======
+<<<<<<< HEAD
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+
+=======
+    ecs_sparse_t *events = observable->events;
+    ecs_assert(events != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_event_record_t *evt = flecs_sparse_get(
+        events, ecs_event_record_t, event);
+    
+    if (evt) {
+        return evt->event_ids;
+    }
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
         ecs_map_t *id_triggers;
 
+<<<<<<< HEAD
         if (unregister_for_set) {
             id_triggers = idt->set_triggers;
         } else {
@@ -3356,6 +3619,39 @@ void unregister_trigger_for_id(
         }
 
         ecs_map_remove(id_triggers, trigger->id);
+=======
+<<<<<<< HEAD
+        if (new_component == old_component) {
+            ecs_column_t *new_column = &new_columns[i_new];
+            ecs_column_t *old_column = &old_columns[i_old];
+            int16_t size = new_column->size;
+            ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+
+            int16_t alignment = new_column->alignment;
+            void *dst = ecs_vector_get_t(
+                new_column->data, size, alignment, new_index);
+            void *src = ecs_vector_get_t(
+                old_column->data, size, alignment, old_index);
+=======
+static
+ecs_event_id_record_t* get_triggers_for_id(
+    const ecs_map_t *evt,
+    ecs_id_t id)
+{
+    return ecs_map_get(evt, ecs_event_id_record_t, id);
+}
+
+ecs_event_id_record_t* flecs_triggers_for_id(
+    const ecs_poly_t *object,
+    ecs_id_t id,
+    ecs_entity_t event)
+{
+    const ecs_map_t *evt = get_triggers_for_event(object, event);
+    if (!evt) {
+        return NULL;
+    }
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
         if (!ecs_map_count(id_triggers)) {
             ecs_map_free(id_triggers);
@@ -3453,7 +3749,13 @@ void init_iter(
         return;
     }
 
+<<<<<<< HEAD
     flecs_iter_init(it);
+=======
+<<<<<<< HEAD
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
     *iter_set = true;
 
@@ -3490,6 +3792,7 @@ void init_iter(
             if (storage_index == -1) {
                 it->columns[0] = 0;
             }
+<<<<<<< HEAD
 
             if (!it->is_filter) {
                 it->sizes[0] = 0;
@@ -3509,6 +3812,33 @@ void init_iter(
                     } else {
                         it->sizes[0] = 0;
                     }
+=======
+=======
+            int32_t index = ecs_type_match(it->world, table, table->type, 0, 
+                it->event_id, EcsIsA, 0, 0, it->subjects, NULL, NULL);
+            
+            if (index == -1) {
+                it->columns[0] = 0;
+            } else if (it->subjects[0]) {
+                it->columns[0] = -index - 1;
+            } else {
+                it->columns[0] = index + 1;
+            }
+
+            ecs_term_t term = {
+                .id = it->event_id
+            };
+            it->terms = &term;
+            it->term_count = 1;
+            flecs_iter_populate_data(it->world, it, table, row, count, 
+                it->ptrs, it->sizes);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+        } else {
+            if (new_component < old_component) {
+                if (construct) {
+                    ctor_component(world, new_table->c_info[i_new],
+                        &new_columns[i_new], &dst_entity, new_index, 1);
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
                 }
             }
 
@@ -3578,9 +3908,18 @@ void notify_self_triggers(
 }
 
 static
+<<<<<<< HEAD
 void notify_set_triggers(
     ecs_iter_t *it,
     const ecs_map_t *triggers)
+=======
+void swap_switch_columns(
+    ecs_table_t *table,
+<<<<<<< HEAD
+    ecs_data_t *data,
+    int32_t row_1,
+    int32_t row_2)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -3591,6 +3930,7 @@ void notify_set_triggers(
             continue;
         }
 
+<<<<<<< HEAD
         if (flecs_term_match_table(it->world, &t->term, it->table, it->type, 
             it->ids, it->columns, it->subjects, NULL, true))
         {
@@ -3613,6 +3953,36 @@ void notify_set_triggers(
 
             it->event_id = event_id;
         }                
+=======
+    for (i = 0; i < column_count; i ++) {
+        ecs_switch_t *sw = columns[i].data;
+        flecs_switch_swap(sw, row_1, row_2);
+=======
+    int32_t row,
+    int32_t count,
+    bool *iter_set,
+    ecs_id_t set_id)
+{
+    if (!set_id) {
+        const ecs_event_id_record_t *idt = get_triggers_for_id(evt, event_id);
+        if (idt) {
+            if (idt->triggers) {
+                init_iter(it, entity, table, row, count, iter_set);
+                notify_self_triggers(it, idt->triggers);
+            }
+            if (idt->set_triggers) {
+                init_iter(it, entity, table, row, count, iter_set);
+                notify_set_triggers(it, idt->set_triggers);
+            }
+        }
+    } else {
+        const ecs_event_id_record_t *idt = get_triggers_for_id(evt, set_id);
+        if (idt && idt->set_triggers) {
+            init_iter(it, entity, table, row, count, iter_set);
+            notify_set_triggers(it, idt->set_triggers);
+        }
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     }
 }
 
@@ -3678,20 +4048,55 @@ void flecs_triggers_notify(
     ecs_entity_t event,
     ecs_entity_t entity,
     ecs_table_t *table,
+<<<<<<< HEAD
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
     void *param)
 {
     if (!ids || !ids->count) {
+=======
+<<<<<<< HEAD
+    ecs_data_t *data,
+    int32_t row_1,
+    int32_t row_2)
+{    
+    (void)world;
+
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
+    
+    if (row_1 == row_2) {
+=======
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count,
+    ecs_id_t set_id, 
+    void *param)
+{
+    if (!ids || !ids->count) {
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
         return;
     }
 
     ecs_assert(ids->array != NULL, ECS_INTERNAL_ERROR, NULL);
 
+<<<<<<< HEAD
     if (!observable) {
         observable = world;
     }
+=======
+<<<<<<< HEAD
+    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
+    ecs_record_t *record_ptr_1 = record_ptrs[row_1];
+    ecs_record_t *record_ptr_2 = record_ptrs[row_2];
+=======
+    ecs_entity_t trigger_event = event;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
     ecs_entity_t trigger_event = event; 
 
@@ -3725,20 +4130,66 @@ void flecs_triggers_notify(
             ecs_id_t id = ids_array[i];
             bool iter_set = false;
 
+<<<<<<< HEAD
             it.event_id = id;
+=======
+<<<<<<< HEAD
+        ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+=======
+            notify_triggers_for_id(evt, id, &it, &entity, table, row, count, 
+                &iter_set, set_id);
+
+            if (set_id) {
+                continue;
+            }
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
             notify_triggers_for_id(
                 evt, id, &it, &entity, table, row, count, &iter_set);
 
+<<<<<<< HEAD
             if (ECS_HAS_ROLE(id, PAIR)) {
                 ecs_entity_t pred = ECS_PAIR_RELATION(id);
                 ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+=======
+<<<<<<< HEAD
+        void *el_1 = ECS_OFFSET(ptr, size * row_1);
+        void *el_2 = ECS_OFFSET(ptr, size * row_2);
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
                 notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
                     &it, &entity, table, row, count, &iter_set);
 
+<<<<<<< HEAD
                 notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
                     &it, &entity, table, row, count, &iter_set);
+=======
+static
+void merge_vector(
+    ecs_vector_t **dst_out,
+    ecs_vector_t *src,
+    int16_t size,
+    int16_t alignment)
+{
+    ecs_vector_t *dst = *dst_out;
+    int32_t dst_count = ecs_vector_count(dst);
+=======
+                notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
+                    &it, &entity, table, row, count, &iter_set, set_id);
+
+                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
+                    &it, &entity, table, row, count, &iter_set, set_id);
+
+                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
+                    &it, &entity, table, row, count, &iter_set, set_id);
+            } else {
+                notify_triggers_for_id(evt, EcsWildcard, 
+                    &it, &entity, table, row, count, &iter_set, set_id);
+            }
+        }
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
                 notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
                     &it, &entity, table, row, count, &iter_set);
@@ -3817,8 +4268,24 @@ ecs_entity_t ecs_trigger_init(
             goto error;
         }
 
+<<<<<<< HEAD
         /* Currently triggers are not supported for specific entities */
         ecs_check(term.subj.entity == EcsThis, ECS_UNSUPPORTED, NULL);
+=======
+<<<<<<< HEAD
+    ecs_column_t *old_columns = old_data->columns;
+    ecs_column_t *new_columns = new_data->columns;
+=======
+        if (trigger->term.id == EcsPrefab) {
+            trigger->match_prefab = true;
+        }
+        if (trigger->term.id == EcsDisabled) {
+            trigger->match_disabled = true;
+        }
+
+        comp->trigger = trigger;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
         ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
         trigger->id = flecs_sparse_last_id(world->triggers);
@@ -3875,6 +4342,24 @@ ecs_entity_t ecs_trigger_init(
             if (desc->binding_ctx) {
                 ((ecs_trigger_t*)comp->trigger)->binding_ctx = desc->binding_ctx;
             }
+<<<<<<< HEAD
+=======
+
+<<<<<<< HEAD
+            /* Old column does not occur in new table, remove */
+            ecs_vector_free(column->data);
+            column->data = NULL;
+=======
+void flecs_trigger_fini(
+    ecs_world_t *world,
+    ecs_trigger_t *trigger)
+{    
+    unregister_trigger(world, trigger->observable, trigger);
+    ecs_term_fini(&trigger->term);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+
+            i_old ++;
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
         }
     }
 
@@ -3909,6 +4394,7 @@ void* ecs_get_trigger_binding_ctx(
     }      
 }
 
+<<<<<<< HEAD
 void flecs_trigger_fini(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
@@ -3918,7 +4404,40 @@ void flecs_trigger_fini(
 
     if (trigger->ctx_free) {
         trigger->ctx_free(trigger->ctx);
+=======
+<<<<<<< HEAD
+        /* Construct new values */
+        ecs_type_info_t *c_info = new_table->c_info[i_new];
+        if (c_info) {
+            ctor_component(world, c_info, column, 
+                entities, 0, old_count + new_count);
+        }
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     }
+=======
+static
+void flecs_notify_on_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    ecs_data_t *data,
+    int32_t row,
+    int32_t count,
+    ecs_table_diff_t *diff,
+    bool run_on_set);
+
+static
+const ecs_entity_t* new_w_data(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_entity_t *entities,
+    ecs_ids_t *component_ids,
+    int32_t count,
+    void **c_info,
+    bool move,
+    int32_t *row_out,
+    ecs_table_diff_t *diff);
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
 
     if (trigger->binding_ctx_free) {
         trigger->binding_ctx_free(trigger->binding_ctx);
@@ -4744,7 +5263,6 @@ void update_component_monitor_w_array(
             {
                 update_component_monitor_w_array(world, entity, rel, entities);
             }
-
         }
         
         if (ECS_HAS_RELATION(id, EcsIsA)) {
@@ -5088,7 +5606,7 @@ error:
 
 
 /* -- Private functions -- */
-
+static
 void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -5668,7 +6186,9 @@ int traverse_add(
 
     /* Commit entity to destination table */
     if (src_table != table) {
+        ecs_defer_begin(world);
         commit(world, result, &info, table, &diff, true);
+        ecs_defer_end(world);
     }
 
     /* Set name */
@@ -7820,6 +8340,2321 @@ error:
     return false;
 }
 
+<<<<<<< HEAD
+=======
+static
+ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
+    ecs_defer_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_defer_op_t);
+    ecs_os_memset(result, 0, ECS_SIZEOF(ecs_defer_op_t));
+    return result;
+}
+
+static
+bool defer_add_remove(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_defer_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    if (stage->defer) {
+        if (!id) {
+            return true;
+        }
+
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = op_kind;
+        op->id = id;
+        op->is._1.entity = entity;
+
+        if (op_kind == EcsOpNew) {
+            world->new_count ++;
+        } else if (op_kind == EcsOpAdd) {
+            world->add_count ++;
+        } else if (op_kind == EcsOpRemove) {
+            world->remove_count ++;
+        }
+
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    
+    return false;
+}
+
+static
+void merge_stages(
+    ecs_world_t *world,
+    bool force_merge)
+{
+    bool is_stage = ecs_poly_is(world, ecs_stage_t);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    bool measure_frame_time = world->measure_frame_time;
+
+    ecs_time_t t_start;
+    if (measure_frame_time) {
+        ecs_os_get_time(&t_start);
+    }
+
+    if (is_stage) {
+        /* Check for consistency if force_merge is enabled. In practice this
+         * function will never get called with force_merge disabled for just
+         * a single stage. */
+        if (force_merge || stage->auto_merge) {
+            ecs_defer_end((ecs_world_t*)stage);
+        }
+    } else {
+        /* Merge stages. Only merge if the stage has auto_merging turned on, or 
+         * if this is a forced merge (like when ecs_merge is called) */
+        int32_t i, count = ecs_get_stage_count(world);
+        for (i = 0; i < count; i ++) {
+            ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
+            ecs_poly_assert(s, ecs_stage_t);
+            if (force_merge || s->auto_merge) {
+                ecs_defer_end((ecs_world_t*)s);
+            }
+        }
+    }
+
+    flecs_eval_component_monitors(world);
+
+    if (measure_frame_time) {
+        world->stats.merge_time_total += 
+            (FLECS_FLOAT)ecs_time_measure(&t_start);
+    }
+
+    world->stats.merge_count_total ++; 
+
+    /* If stage is asynchronous, deferring is always enabled */
+    if (stage->asynchronous) {
+        ecs_defer_begin((ecs_world_t*)stage);
+    }
+}
+
+static
+void do_auto_merge(
+    ecs_world_t *world)
+{
+    merge_stages(world, false);
+}
+
+static
+void do_manual_merge(
+    ecs_world_t *world)
+{
+    merge_stages(world, true);
+}
+
+bool flecs_defer_none(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    (void)world;
+    return (++ stage->defer) == 1;
+}
+
+bool flecs_defer_modified(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpModified;
+        op->id = id;
+        op->is._1.entity = entity;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    
+    return false;
+}
+
+bool flecs_defer_clone(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t src,
+    bool clone_value)
+{   
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpClone;
+        op->id = src;
+        op->is._1.entity = entity;
+        op->is._1.clone_value = clone_value;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    
+    return false;   
+}
+
+bool flecs_defer_delete(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpDelete;
+        op->is._1.entity = entity;
+        world->delete_count ++;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
+bool flecs_defer_clear(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpClear;
+        op->is._1.entity = entity;
+        world->clear_count ++;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
+bool flecs_defer_on_delete_action(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_id_t id,
+    ecs_entity_t action)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpOnDeleteAction;
+        op->id = id;
+        op->is._1.entity = action;
+        world->clear_count ++;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
+bool flecs_defer_enable(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    bool enable)
+{
+    (void)world;
+    if (stage->defer) {
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = enable ? EcsOpEnable : EcsOpDisable;
+        op->is._1.entity = entity;
+        op->id = id;
+        return true;
+    } else {
+        stage->defer ++;
+    }
+    return false;
+}
+
+bool flecs_defer_bulk_new(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    int32_t count,
+    ecs_id_t id,
+    const ecs_entity_t **ids_out)
+{
+    if (stage->defer) {
+        ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
+        world->bulk_new_count ++;
+
+        /* Use ecs_new_id as this is thread safe */
+        int i;
+        for (i = 0; i < count; i ++) {
+            ids[i] = ecs_new_id(world);
+        }
+
+        *ids_out = ids;
+
+        /* Store data in op */
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = EcsOpBulkNew;
+        op->id = id;
+        op->is._n.entities = ids;
+        op->is._n.count = count;
+
+        return true;
+    } else {
+        stage->defer ++;
+    }
+
+    return false;
+}
+
+bool flecs_defer_new(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{   
+    return defer_add_remove(world, stage, EcsOpNew, entity, id);
+}
+
+bool flecs_defer_add(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{   
+    return defer_add_remove(world, stage, EcsOpAdd, entity, id);
+}
+
+bool flecs_defer_remove(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    return defer_add_remove(world, stage, EcsOpRemove, entity, id);
+}
+
+bool flecs_defer_set(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_defer_op_kind_t op_kind,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value,
+    void **value_out,
+    bool *is_added)
+{
+    if (stage->defer) {
+        world->set_count ++;
+        if (!size) {
+            const EcsComponent *cptr = flecs_component_from_id(world, id);
+            ecs_check(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
+            size = cptr->size;
+        }
+
+        ecs_defer_op_t *op = new_defer_op(stage);
+        op->kind = op_kind;
+        op->id = id;
+        op->is._1.entity = entity;
+        op->is._1.size = size;
+        op->is._1.value = ecs_os_malloc(size);
+
+        if (!value) {
+            value = ecs_get_id(world, entity, id);
+            if (is_added) {
+                *is_added = value == NULL;
+            }
+        }
+
+        const ecs_type_info_t *c_info = NULL;
+        ecs_entity_t real_id = ecs_get_typeid(world, id);
+        if (real_id) {
+            c_info = flecs_get_c_info(world, real_id);
+        }
+
+        if (value) {
+            ecs_copy_ctor_t copy;
+            if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
+                copy(world, id, &c_info->lifecycle, &entity, &entity, 
+                    op->is._1.value, value, flecs_itosize(size), 1, 
+                        c_info->lifecycle.ctx);
+            } else {
+                ecs_os_memcpy(op->is._1.value, value, size);
+            }
+        } else {
+            ecs_xtor_t ctor;
+            if (c_info && (ctor = c_info->lifecycle.ctor)) {
+                ctor(world, id, &entity, op->is._1.value, 
+                    flecs_itosize(size), 1, c_info->lifecycle.ctx);
+            }
+        }
+
+        if (value_out) {
+            *value_out = op->is._1.value;
+        }
+
+        return true;
+    } else {
+        stage->defer ++;
+    }
+
+error:
+    return false;
+}
+
+void flecs_stage_merge_post_frame(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    /* Execute post frame actions */
+    ecs_vector_each(stage->post_frame_actions, ecs_action_elem_t, action, {
+        action->action(world, action->ctx);
+    });
+
+    ecs_vector_free(stage->post_frame_actions);
+    stage->post_frame_actions = NULL;
+}
+
+void flecs_stage_init(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    ecs_poly_assert(world, ecs_world_t);
+
+    ecs_poly_init(stage, ecs_stage_t);
+
+    stage->world = world;
+    stage->thread_ctx = world;
+    stage->auto_merge = true;
+    stage->asynchronous = false;
+}
+
+void flecs_stage_deinit(
+    ecs_world_t *world,
+    ecs_stage_t *stage)
+{
+    (void)world;
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_poly_assert(stage, ecs_stage_t);
+
+    /* Make sure stage has no unmerged data */
+    ecs_assert(ecs_vector_count(stage->defer_queue) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_poly_fini(stage, ecs_stage_t);
+
+    ecs_vector_free(stage->defer_queue);
+}
+
+void ecs_set_stages(
+    ecs_world_t *world,
+    int32_t stage_count)
+{
+    ecs_poly_assert(world, ecs_world_t);
+
+    ecs_stage_t *stages;
+    int32_t i, count = ecs_vector_count(world->worker_stages);
+
+    if (count && count != stage_count) {
+        stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+
+        for (i = 0; i < count; i ++) {
+            /* If stage contains a thread handle, ecs_set_threads was used to
+             * create the stages. ecs_set_threads and ecs_set_stages should not
+             * be mixed. */
+            ecs_poly_assert(&stages[i], ecs_stage_t);
+            ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
+            flecs_stage_deinit(world, &stages[i]);
+        }
+
+        ecs_vector_free(world->worker_stages);
+    }
+    
+    if (stage_count) {
+        world->worker_stages = ecs_vector_new(ecs_stage_t, stage_count);
+
+        for (i = 0; i < stage_count; i ++) {
+            ecs_stage_t *stage = ecs_vector_add(
+                &world->worker_stages, ecs_stage_t);
+            flecs_stage_init(world, stage);
+            stage->id = 1 + i; /* 0 is reserved for main/temp stage */
+
+            /* Set thread_ctx to stage, as this stage might be used in a
+             * multithreaded context */
+            stage->thread_ctx = (ecs_world_t*)stage;
+        }
+    } else {
+        /* Set to NULL to prevent double frees */
+        world->worker_stages = NULL;
+    }
+
+    /* Regardless of whether the stage was just initialized or not, when the
+     * ecs_set_stages function is called, all stages inherit the auto_merge
+     * property from the world */
+    for (i = 0; i < stage_count; i ++) {
+        ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+        stage->auto_merge = world->stage.auto_merge;
+    }
+error:
+    return;
+}
+
+int32_t ecs_get_stage_count(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return ecs_vector_count(world->worker_stages);
+}
+
+int32_t ecs_get_stage_id(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_poly_is(world, ecs_stage_t)) {
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+
+        /* Index 0 is reserved for main stage */
+        return stage->id - 1;
+    } else if (ecs_poly_is(world, ecs_world_t)) {
+        return 0;
+    } else {
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return 0;
+}
+
+ecs_world_t* ecs_get_stage(
+    const ecs_world_t *world,
+    int32_t stage_id)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_vector_count(world->worker_stages) > stage_id, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return (ecs_world_t*)ecs_vector_get(
+        world->worker_stages, ecs_stage_t, stage_id);
+error:
+    return NULL;
+}
+
+bool ecs_staging_begin(
+    ecs_world_t *world)
+{
+    ecs_poly_assert(world, ecs_world_t);
+
+    int32_t i, count = ecs_get_stage_count(world);
+    for (i = 0; i < count; i ++) {
+        ecs_defer_begin(ecs_get_stage(world, i));
+    }
+
+    bool is_readonly = world->is_readonly;
+
+    /* From this point on, the world is "locked" for mutations, and it is only 
+     * allowed to enqueue commands from stages */
+    world->is_readonly = true;
+
+    ecs_dbg_3("staging: begin");
+
+    return is_readonly;
+}
+
+void ecs_staging_end(
+    ecs_world_t *world)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(world->is_readonly == true, ECS_INVALID_OPERATION, NULL);
+
+    /* After this it is safe again to mutate the world directly */
+    world->is_readonly = false;
+
+    ecs_dbg_3("staging: end");
+
+    do_auto_merge(world);
+error:
+    return;
+}
+
+void ecs_merge(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_poly_is(world, ecs_world_t) || 
+               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
+    do_manual_merge(world);
+error:
+    return;
+}
+
+void ecs_set_automerge(
+    ecs_world_t *world,
+    bool auto_merge)
+{
+    /* If a world is provided, set auto_merge globally for the world. This
+     * doesn't actually do anything (the main stage never merges) but it serves
+     * as the default for when stages are created. */
+    if (ecs_poly_is(world, ecs_world_t)) {
+        world->stage.auto_merge = auto_merge;
+
+        /* Propagate change to all stages */
+        int i, stage_count = ecs_get_stage_count(world);
+        for (i = 0; i < stage_count; i ++) {
+            ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
+            stage->auto_merge = auto_merge;
+        }
+
+    /* If a stage is provided, override the auto_merge value for the individual
+     * stage. This allows an application to control per-stage which stage should
+     * be automatically merged and which one shouldn't */
+    } else {
+        ecs_poly_assert(world, ecs_stage_t);
+        ecs_stage_t *stage = (ecs_stage_t*)world;
+        stage->auto_merge = auto_merge;
+    }
+}
+
+bool ecs_stage_is_readonly(
+    const ecs_world_t *stage)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    if (ecs_poly_is(stage, ecs_stage_t)) {
+        if (((ecs_stage_t*)stage)->asynchronous) {
+            return false;
+        }
+    }
+
+    if (world->is_readonly) {
+        if (ecs_poly_is(stage, ecs_world_t)) {
+            return true;
+        }
+    } else {
+        if (ecs_poly_is(stage, ecs_stage_t)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ecs_world_t* ecs_async_stage_new(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
+    flecs_stage_init(world, stage);
+
+    stage->id = -1;
+    stage->auto_merge = false;
+    stage->asynchronous = true;
+
+    ecs_defer_begin((ecs_world_t*)stage);
+
+    return (ecs_world_t*)stage;
+}
+
+void ecs_async_stage_free(
+    ecs_world_t *world)
+{
+    ecs_poly_assert(world, ecs_stage_t);
+    ecs_stage_t *stage = (ecs_stage_t*)world;
+    ecs_check(stage->asynchronous == true, ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_deinit(stage->world, stage);
+    ecs_os_free(stage);
+error:
+    return;
+}
+
+bool ecs_stage_is_async(
+    ecs_world_t *stage)
+{
+    if (!stage) {
+        return false;
+    }
+    
+    if (!ecs_poly_is(stage, ecs_stage_t)) {
+        return false;
+    }
+
+    return ((ecs_stage_t*)stage)->asynchronous;
+}
+
+bool ecs_is_deferred(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->defer != 0;
+error:
+    return false;
+}
+
+/** Resize the vector buffer */
+static
+ecs_vector_t* resize(
+    ecs_vector_t *vector,
+    int16_t offset,
+    int32_t size)
+{
+    ecs_vector_t *result = ecs_os_realloc(vector, offset + size);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, 0);
+    return result;
+}
+
+/* -- Public functions -- */
+
+ecs_vector_t* _ecs_vector_new(
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    ecs_assert(elem_size != 0, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_vector_t *result =
+        ecs_os_malloc(offset + elem_size * elem_count);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    result->count = 0;
+    result->size = elem_count;
+#ifndef NDEBUG
+    result->elem_size = elem_size;
+#endif
+    return result;
+}
+
+ecs_vector_t* _ecs_vector_from_array(
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count,
+    void *array)
+{
+    ecs_assert(elem_size != 0, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_vector_t *result =
+        ecs_os_malloc(offset + elem_size * elem_count);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    ecs_os_memcpy(ECS_OFFSET(result, offset), array, elem_size * elem_count);
+
+    result->count = elem_count;
+    result->size = elem_count;
+#ifndef NDEBUG
+    result->elem_size = elem_size;
+#endif
+    return result;   
+}
+
+void ecs_vector_free(
+    ecs_vector_t *vector)
+{
+    ecs_os_free(vector);
+}
+
+void ecs_vector_clear(
+    ecs_vector_t *vector)
+{
+    if (vector) {
+        vector->count = 0;
+    }
+}
+
+void _ecs_vector_zero(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    void *array = ECS_OFFSET(vector, offset);
+    ecs_os_memset(array, 0, elem_size * vector->count);
+}
+
+void ecs_vector_assert_size(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size)
+{
+    (void)elem_size;
+    
+    if (vector) {
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+void* _ecs_vector_addn(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    ecs_assert(array_inout != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    if (elem_count == 1) {
+        return _ecs_vector_add(array_inout, elem_size, offset);
+    }
+    
+    ecs_vector_t *vector = *array_inout;
+    if (!vector) {
+        vector = _ecs_vector_new(elem_size, offset, 1);
+        *array_inout = vector;
+    }
+
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t max_count = vector->size;
+    int32_t old_count = vector->count;
+    int32_t new_count = old_count + elem_count;
+
+    if ((new_count - 1) >= max_count) {
+        if (!max_count) {
+            max_count = elem_count;
+        } else {
+            while (max_count < new_count) {
+                max_count *= 2;
+            }
+        }
+
+        vector = resize(vector, offset, max_count * elem_size);
+        vector->size = max_count;
+        *array_inout = vector;
+    }
+
+    vector->count = new_count;
+
+    return ECS_OFFSET(vector, offset + elem_size * old_count);
+}
+
+void* _ecs_vector_add(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    ecs_assert(array_inout != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_vector_t *vector = *array_inout;
+    int32_t count, size;
+
+    if (vector) {
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        count = vector->count;
+        size = vector->size;
+
+        if (count >= size) {
+            size *= 2;
+            if (!size) {
+                size = 2;
+            }
+            vector = resize(vector, offset, size * elem_size);
+            *array_inout = vector;
+            vector->size = size;
+        }
+
+        vector->count = count + 1;
+        return ECS_OFFSET(vector, offset + elem_size * count);
+    }
+
+    vector = _ecs_vector_new(elem_size, offset, 2);
+    *array_inout = vector;
+    vector->count = 1;
+    vector->size = 2;
+    return ECS_OFFSET(vector, offset);
+}
+
+int32_t _ecs_vector_move_index(
+    ecs_vector_t **dst,
+    ecs_vector_t *src,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index)
+{
+    if (dst && *dst) {
+        ecs_dbg_assert((*dst)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    }
+    ecs_dbg_assert(src->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+    void *dst_elem = _ecs_vector_add(dst, elem_size, offset);
+    void *src_elem = _ecs_vector_get(src, elem_size, offset, index);
+
+    ecs_os_memcpy(dst_elem, src_elem, elem_size);
+    return _ecs_vector_remove(src, elem_size, offset, index);
+}
+
+void ecs_vector_remove_last(
+    ecs_vector_t *vector)
+{
+    if (vector && vector->count) vector->count --;
+}
+
+bool _ecs_vector_pop(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset,
+    void *value)
+{
+    if (!vector) {
+        return false;
+    }
+
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t count = vector->count;
+    if (!count) {
+        return false;
+    }
+
+    void *elem = ECS_OFFSET(vector, offset + (count - 1) * elem_size);
+
+    if (value) {
+        ecs_os_memcpy(value, elem, elem_size);
+    }
+
+    ecs_vector_remove_last(vector);
+
+    return true;
+}
+
+int32_t _ecs_vector_remove(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index)
+{
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t count = vector->count;
+    void *buffer = ECS_OFFSET(vector, offset);
+    void *elem = ECS_OFFSET(buffer, index * elem_size);
+
+    ecs_assert(index < count, ECS_INVALID_PARAMETER, NULL);
+
+    count --;
+    if (index != count) {
+        void *last_elem = ECS_OFFSET(buffer, elem_size * count);
+        ecs_os_memcpy(elem, last_elem, elem_size);
+    }
+
+    vector->count = count;
+
+    return count;
+}
+
+void _ecs_vector_reclaim(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    ecs_vector_t *vector = *array_inout;
+
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t size = vector->size;
+    int32_t count = vector->count;
+
+    if (count < size) {
+        size = count;
+        vector = resize(vector, offset, size * elem_size);
+        vector->size = size;
+        *array_inout = vector;
+    }
+}
+
+int32_t ecs_vector_count(
+    const ecs_vector_t *vector)
+{
+    if (!vector) {
+        return 0;
+    }
+    return vector->count;
+}
+
+int32_t ecs_vector_size(
+    const ecs_vector_t *vector)
+{
+    if (!vector) {
+        return 0;
+    }
+    return vector->size;
+}
+
+int32_t _ecs_vector_set_size(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    ecs_vector_t *vector = *array_inout;
+
+    if (!vector) {
+        *array_inout = _ecs_vector_new(elem_size, offset, elem_count);
+        return elem_count;
+    } else {
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t result = vector->size;
+
+        if (elem_count < vector->count) {
+            elem_count = vector->count;
+        }
+
+<<<<<<< HEAD
+        if (result < elem_count) {
+            elem_count = flecs_next_pow_of_2(elem_count);
+            vector = resize(vector, offset, elem_count * elem_size);
+            vector->size = elem_count;
+            *array_inout = vector;
+            result = elem_count;
+        }
+
+        return result;
+    }
+=======
+int32_t ecs_map_remove(
+    ecs_map_t *map,
+    ecs_map_key_t key)
+{
+    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_bucket_t * bucket = get_bucket(map, key);
+    if (!bucket) {
+        return map->count;
+    }
+
+    int32_t i, bucket_count = bucket->count;
+    for (i = 0; i < bucket_count; i ++) {
+        if (bucket->keys[i] == key) {
+            remove_from_bucket(bucket, map->elem_size, key, i);
+            return --map->count;
+        }
+    }
+
+    return map->count;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+}
+
+int32_t _ecs_vector_grow(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    int32_t current = ecs_vector_count(*array_inout);
+    return _ecs_vector_set_size(array_inout, elem_size, offset, current + elem_count);
+}
+
+int32_t _ecs_vector_set_count(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    if (!*array_inout) {
+        *array_inout = _ecs_vector_new(elem_size, offset, elem_count);
+    }
+
+    ecs_dbg_assert((*array_inout)->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+    (*array_inout)->count = elem_count;
+    ecs_size_t size = _ecs_vector_set_size(array_inout, elem_size, offset, elem_count);
+    return size;
+}
+
+void* _ecs_vector_first(
+    const ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    (void)elem_size;
+
+    ecs_dbg_assert(!vector || vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+    if (vector && vector->size) {
+        return ECS_OFFSET(vector, offset);
+    } else {
+        return NULL;
+    }
+}
+
+void* _ecs_vector_get(
+    const ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index)
+{
+    ecs_assert(vector != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
+    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(index < vector->count, ECS_INTERNAL_ERROR, NULL);
+
+    return ECS_OFFSET(vector, offset + elem_size * index);
+}
+
+void* _ecs_vector_last(
+    const ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    if (vector) {
+        ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+        int32_t count = vector->count;
+        if (!count) {
+            return NULL;
+        } else {
+            return ECS_OFFSET(vector, offset + elem_size * (count - 1));
+        }
+    } else {
+        return NULL;
+    }
+}
+
+int32_t _ecs_vector_set_min_size(
+    ecs_vector_t **vector_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    if (!*vector_inout || (*vector_inout)->size < elem_count) {
+        return _ecs_vector_set_size(vector_inout, elem_size, offset, elem_count);
+    } else {
+        return (*vector_inout)->size;
+    }
+}
+
+int32_t _ecs_vector_set_min_count(
+    ecs_vector_t **vector_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t elem_count)
+{
+    _ecs_vector_set_min_size(vector_inout, elem_size, offset, elem_count);
+
+    ecs_vector_t *v = *vector_inout;
+    if (v && v->count < elem_count) {
+        v->count = elem_count;
+    }
+
+    return v->count;
+}
+
+void _ecs_vector_sort(
+    ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset,
+    ecs_comparator_t compare_action)
+{
+    if (!vector) {
+        return;
+    }
+
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);    
+
+    int32_t count = vector->count;
+    void *buffer = ECS_OFFSET(vector, offset);
+
+    if (count > 1) {
+        qsort(buffer, (size_t)count, (size_t)elem_size, compare_action);
+    }
+}
+
+void _ecs_vector_memory(
+    const ecs_vector_t *vector,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t *allocd,
+    int32_t *used)
+{
+    if (!vector) {
+        return;
+    }
+
+    ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
+
+    if (allocd) {
+        *allocd += vector->size * elem_size + offset;
+    }
+    if (used) {
+        *used += vector->count * elem_size;
+    }
+}
+
+ecs_vector_t* _ecs_vector_copy(
+    const ecs_vector_t *src,
+    ecs_size_t elem_size,
+    int16_t offset)
+{
+    if (!src) {
+        return NULL;
+    }
+
+    ecs_vector_t *dst = _ecs_vector_new(elem_size, offset, src->size);
+    ecs_os_memcpy(dst, src, offset + elem_size * src->count);
+    return dst;
+}
+
+/** The number of elements in a single chunk */
+#define CHUNK_COUNT (4096)
+
+/** Compute the chunk index from an id by stripping the first 12 bits */
+#define CHUNK(index) ((int32_t)((uint32_t)index >> 12))
+
+/** This computes the offset of an index inside a chunk */
+#define OFFSET(index) ((int32_t)index & 0xFFF)
+
+/* Utility to get a pointer to the payload */
+#define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
+
+typedef struct chunk_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} chunk_t;
+
+struct ecs_sparse_t {
+    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+                                 * dense array stores both alive and not alive
+                                 * sparse indices. The 'count' member keeps
+                                 * track of which indices are alive. */
+
+    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_size_t size;            /* Element size */
+    int32_t count;              /* Number of alive entries */
+    uint64_t max_id_local;      /* Local max index (if no global is set) */
+    uint64_t *max_id;           /* Maximum issued sparse index */
+};
+
+static
+chunk_t* chunk_new(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    int32_t count = ecs_vector_count(sparse->chunks);
+    chunk_t *chunks;
+
+    if (count <= chunk_index) {
+        ecs_vector_set_count(&sparse->chunks, chunk_t, chunk_index + 1);
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+        ecs_os_memset(&chunks[count], 0, (1 + chunk_index - count) * ECS_SIZEOF(chunk_t));
+    } else {
+        chunks = ecs_vector_first(sparse->chunks, chunk_t);
+    }
+
+    ecs_assert(chunks != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    chunk_t *result = &chunks[chunk_index];
+    ecs_assert(result->sparse == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Initialize sparse array with zero's, as zero is used to indicate that the
+     * sparse element has not been paired with a dense element. Use zero
+     * as this means we can take advantage of calloc having a possibly better 
+     * performance than malloc + memset. */
+    result->sparse = ecs_os_calloc(ECS_SIZEOF(int32_t) * CHUNK_COUNT);
+
+    /* Initialize the data array with zero's to guarantee that data is 
+     * always initialized. When an entry is removed, data is reset back to
+     * zero. Initialize now, as this can take advantage of calloc. */
+    result->data = ecs_os_calloc(sparse->size * CHUNK_COUNT);
+
+    ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return result;
+}
+
+static
+void chunk_free(
+    chunk_t *chunk)
+{
+    ecs_os_free(chunk->sparse);
+    ecs_os_free(chunk->data);
+}
+
+static
+chunk_t* get_chunk(
+    const ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    if (!sparse->chunks) {
+        return NULL;
+    }
+    if (chunk_index >= ecs_vector_count(sparse->chunks)) {
+        return NULL;
+    }
+
+    /* If chunk_index is below zero, application used an invalid entity id */
+    ecs_assert(chunk_index >= 0, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *result = ecs_vector_get(sparse->chunks, chunk_t, chunk_index);
+    if (result && !result->sparse) {
+        return NULL;
+    }
+
+    return result;
+}
+
+static
+chunk_t* get_or_create_chunk(
+    ecs_sparse_t *sparse,
+    int32_t chunk_index)
+{
+    chunk_t *chunk = get_chunk(sparse, chunk_index);
+    if (chunk) {
+        return chunk;
+    }
+
+    return chunk_new(sparse, chunk_index);
+}
+
+static
+void grow_dense(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_add(&sparse->dense, uint64_t);
+}
+
+static
+uint64_t strip_generation(
+    uint64_t *index_out)
+{
+    uint64_t index = *index_out;
+    uint64_t gen = index & ECS_GENERATION_MASK;
+    /* Make sure there's no junk in the id */
+    ecs_assert(gen == (index & (0xFFFFFFFFull << 32)),
+        ECS_INVALID_PARAMETER, NULL);
+    *index_out -= gen;
+    return gen;
+}
+
+static
+void assign_index(
+    chunk_t * chunk, 
+    uint64_t * dense_array, 
+    uint64_t index, 
+    int32_t dense)
+{
+    /* Initialize sparse-dense pair. This assigns the dense index to the sparse
+     * array, and the sparse index to the dense array .*/
+    chunk->sparse[OFFSET(index)] = dense;
+    dense_array[dense] = index;
+}
+
+static
+uint64_t inc_gen(
+    uint64_t index)
+{
+    /* When an index is deleted, its generation is increased so that we can do
+     * liveliness checking while recycling ids */
+    return ECS_GENERATION_INC(index);
+}
+
+static
+uint64_t inc_id(
+    ecs_sparse_t *sparse)
+{
+    /* Generate a new id. The last issued id could be stored in an external
+     * variable, such as is the case with the last issued entity id, which is
+     * stored on the world. */
+    return ++ (sparse->max_id[0]);
+}
+
+static
+uint64_t get_id(
+    const ecs_sparse_t *sparse)
+{
+    return sparse->max_id[0];
+}
+
+static
+void set_id(
+    ecs_sparse_t *sparse,
+    uint64_t value)
+{
+    /* Sometimes the max id needs to be assigned directly, which typically 
+     * happens when the API calls get_or_create for an id that hasn't been 
+     * issued before. */
+    sparse->max_id[0] = value;
+}
+
+/* Pair dense id with new sparse id */
+static
+uint64_t create_id(
+    ecs_sparse_t *sparse,
+    int32_t dense)
+{
+    uint64_t index = inc_id(sparse);
+    grow_dense(sparse);
+
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk->sparse[OFFSET(index)] == 0, ECS_INTERNAL_ERROR, NULL);
+    
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    assign_index(chunk, dense_array, index, dense);
+    
+    return index;
+}
+
+/* Create new id */
+static
+uint64_t new_index(
+    ecs_sparse_t *sparse)
+{
+    ecs_vector_t *dense = sparse->dense;
+    int32_t dense_count = ecs_vector_count(dense);
+    int32_t count = sparse->count ++;
+
+    ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
+
+    if (count < dense_count) {
+        /* If there are unused elements in the dense array, return first */
+        uint64_t *dense_array = ecs_vector_first(dense, uint64_t);
+        return dense_array[count];
+    } else {
+        return create_id(sparse, count);
+    }
+}
+
+/* Try obtaining a value from the sparse set, don't care about whether the
+ * provided index matches the current generation count.  */
+static
+void* try_sparse_any(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{    
+    strip_generation(&index);
+
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+/* Try obtaining a value from the sparse set, make sure it's alive. */
+static
+void* try_sparse(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return NULL;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    bool in_use = dense && (dense < sparse->count);
+    if (!in_use) {
+        return NULL;
+    }
+
+    uint64_t gen = strip_generation(&index);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+
+    if (cur_gen != gen) {
+        return NULL;
+    }
+
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+/* Get value from sparse set when it is guaranteed that the value exists. This
+ * function is used when values are obtained using a dense index */
+static
+void* get_sparse(
+    const ecs_sparse_t *sparse,
+    int32_t dense,
+    uint64_t index)
+{
+    strip_generation(&index);
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dense == chunk->sparse[offset], ECS_INTERNAL_ERROR, NULL);
+    (void)dense;
+
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+/* Swap dense elements. A swap occurs when an element is removed, or when a
+ * removed element is recycled. */
+static
+void swap_dense(
+    ecs_sparse_t * sparse,
+    chunk_t * chunk_a,
+    int32_t a,
+    int32_t b)
+{
+    ecs_assert(a != b, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    uint64_t index_a = dense_array[a];
+    uint64_t index_b = dense_array[b];
+
+    chunk_t *chunk_b = get_or_create_chunk(sparse, CHUNK(index_b));
+    assign_index(chunk_a, dense_array, index_a, b);
+    assign_index(chunk_b, dense_array, index_b, a);
+}
+
+ecs_sparse_t* _flecs_sparse_new(
+    ecs_size_t size)
+{
+    ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    result->size = size;
+    result->max_id_local = UINT64_MAX;
+    result->max_id = &result->max_id_local;
+
+    /* Consume first value in dense array as 0 is used in the sparse array to
+     * indicate that a sparse element hasn't been paired yet. */
+    uint64_t *first = ecs_vector_add(&result->dense, uint64_t);
+    *first = 0;
+
+    result->count = 1;
+
+    return result;
+}
+
+void flecs_sparse_set_id_source(
+    ecs_sparse_t * sparse,
+    uint64_t * id_source)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    sparse->max_id = id_source;
+}
+
+void flecs_sparse_clear(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_vector_each(sparse->chunks, chunk_t, chunk, {
+        chunk_free(chunk);
+    });
+
+    ecs_vector_free(sparse->chunks);
+    ecs_vector_set_count(&sparse->dense, uint64_t, 1);
+
+    sparse->chunks = NULL;   
+    sparse->count = 1;
+    sparse->max_id_local = 0;
+}
+
+void flecs_sparse_free(
+    ecs_sparse_t *sparse)
+{
+    if (sparse) {
+        flecs_sparse_clear(sparse);
+        ecs_vector_free(sparse->dense);
+        ecs_os_free(sparse);
+    }
+}
+
+uint64_t flecs_sparse_new_id(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    return new_index(sparse);
+}
+
+const uint64_t* flecs_sparse_new_ids(
+    ecs_sparse_t *sparse,
+    int32_t new_count)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    int32_t dense_count = ecs_vector_count(sparse->dense);
+    int32_t count = sparse->count;
+    int32_t remaining = dense_count - count;
+    int32_t i, to_create = new_count - remaining;
+
+    if (to_create > 0) {
+        flecs_sparse_set_size(sparse, dense_count + to_create);
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+        for (i = 0; i < to_create; i ++) {
+            uint64_t index = create_id(sparse, count + i);
+            dense_array[dense_count + i] = index;
+        }
+    }
+
+    sparse->count += new_count;
+
+    return ecs_vector_get(sparse->dense, uint64_t, count);
+}
+
+void* _flecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t size)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    uint64_t index = new_index(sparse);
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    ecs_assert(chunk != NULL, ECS_INTERNAL_ERROR, NULL);
+    return DATA(chunk->data, size, OFFSET(index));
+}
+
+uint64_t flecs_sparse_last_id(
+    const ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return dense_array[sparse->count - 1];
+}
+
+void* _flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_vector_count(sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
+
+    uint64_t gen = strip_generation(&index);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Check if element is alive. If element is not alive, update indices so
+         * that the first unused dense element points to the sparse element. */
+        int32_t count = sparse->count;
+        if (dense == count) {
+            /* If dense is the next unused element in the array, simply increase
+             * the count to make it part of the alive set. */
+            sparse->count ++;
+        } else if (dense > count) {
+            /* If dense is not alive, swap it with the first unused element. */
+            swap_dense(sparse, chunk, dense, count);
+
+            /* First unused element is now last used element */
+            sparse->count ++;
+        } else {
+            /* Dense is already alive, nothing to be done */
+        }
+
+        /* Ensure provided generation matches current. Only allow mismatching
+         * generations if the provided generation count is 0. This allows for
+         * using the ensure function in combination with ids that have their
+         * generation stripped. */
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
+        ecs_assert(!gen || dense_array[dense] == (index | gen), ECS_INTERNAL_ERROR, NULL);
+        (void)dense_vector;
+        (void)dense_array;
+    } else {
+        /* Element is not paired yet. Must add a new element to dense array */
+        grow_dense(sparse);
+
+        ecs_vector_t *dense_vector = sparse->dense;
+        uint64_t *dense_array = ecs_vector_first(dense_vector, uint64_t);    
+        int32_t dense_count = ecs_vector_count(dense_vector) - 1;
+        int32_t count = sparse->count ++;
+
+        /* If index is larger than max id, update max id */
+        if (index >= get_id(sparse)) {
+            set_id(sparse, index + 1);
+        }
+
+        if (count < dense_count) {
+            /* If there are unused elements in the list, move the first unused
+             * element to the end of the list */
+            uint64_t unused = dense_array[count];
+            chunk_t *unused_chunk = get_or_create_chunk(sparse, CHUNK(unused));
+            assign_index(unused_chunk, dense_array, unused, dense_count);
+        }
+
+        assign_index(chunk, dense_array, index, count);
+        dense_array[count] |= gen;
+    }
+
+    return DATA(chunk->data, sparse->size, offset);
+}
+
+void* _flecs_sparse_set(
+    ecs_sparse_t * sparse,
+    ecs_size_t elem_size,
+    uint64_t index,
+    void* value)
+{
+    void *ptr = _flecs_sparse_ensure(sparse, elem_size, index);
+    ecs_os_memcpy(ptr, value, elem_size);
+    return ptr;
+}
+
+void* _flecs_sparse_remove_get(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    uint64_t gen = strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
+        if (gen != cur_gen) {
+            /* Generation doesn't match which means that the provided entity is
+             * already not alive. */
+            return NULL;
+        }
+
+        /* Increase generation */
+        dense_array[dense] = index | inc_gen(cur_gen);
+        
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            swap_dense(sparse, chunk, dense, count - 1);
+            sparse->count --;
+        } else {
+            /* Element is not alive, nothing to be done */
+            return NULL;
+        }
+
+        /* Reset memory to zero on remove */
+        return DATA(chunk->data, sparse->size, offset);
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+        return NULL;
+    }
+}
+
+void flecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    void *ptr = _flecs_sparse_remove_get(sparse, 0, index);
+    if (ptr) {
+        ecs_os_memset(ptr, 0, sparse->size);
+    }
+}
+
+void flecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
+    
+    uint64_t index_w_gen = index;
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    if (dense) {
+        /* Increase generation */
+        uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+        dense_array[dense] = index_w_gen;
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+    }
+}
+
+bool flecs_sparse_exists(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return false;
+    }
+    
+    strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+
+    return dense != 0;
+}
+
+void* _flecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t size,
+    int32_t dense_index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    dense_index ++;
+
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+    return get_sparse(sparse, dense_index, dense_array[dense_index]);
+}
+
+bool flecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    return try_sparse(sparse, index) != NULL;
+}
+
+uint64_t flecs_sparse_get_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t index)
+{
+    chunk_t *chunk = get_chunk(sparse, CHUNK(index));
+    if (!chunk) {
+        return 0;
+    }
+
+    int32_t offset = OFFSET(index);
+    int32_t dense = chunk->sparse[offset];
+    uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
+
+    /* If dense is 0 (tombstone) this will return 0 */
+    return dense_array[dense];
+}
+
+void* _flecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+    return try_sparse(sparse, index);
+}
+
+void* _flecs_sparse_get_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+    return try_sparse_any(sparse, index);
+}
+
+int32_t flecs_sparse_count(
+    const ecs_sparse_t *sparse)
+{
+    if (!sparse) {
+        return 0;
+    }
+
+    return sparse->count - 1;
+}
+
+int32_t flecs_sparse_size(
+    const ecs_sparse_t *sparse)
+{
+    if (!sparse) {
+        return 0;
+    }
+        
+    return ecs_vector_count(sparse->dense) - 1;
+}
+
+const uint64_t* flecs_sparse_ids(
+    const ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    return &(ecs_vector_first(sparse->dense, uint64_t)[1]);
+}
+
+void flecs_sparse_set_size(
+    ecs_sparse_t *sparse,
+    int32_t elem_count)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_vector_set_size(&sparse->dense, uint64_t, elem_count);
+}
+
+static
+void sparse_copy(
+    ecs_sparse_t * dst,
+    const ecs_sparse_t * src)
+{
+    flecs_sparse_set_size(dst, flecs_sparse_size(src));
+    const uint64_t *indices = flecs_sparse_ids(src);
+    
+    ecs_size_t size = src->size;
+    int32_t i, count = src->count;
+
+    for (i = 0; i < count - 1; i ++) {
+        uint64_t index = indices[i];
+        void *src_ptr = _flecs_sparse_get(src, size, index);
+        void *dst_ptr = _flecs_sparse_ensure(dst, size, index);
+        flecs_sparse_set_generation(dst, index);
+        ecs_os_memcpy(dst_ptr, src_ptr, size);
+    }
+
+    set_id(dst, get_id(src));
+
+    ecs_assert(src->count == dst->count, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_sparse_t* flecs_sparse_copy(
+    const ecs_sparse_t *src)
+{
+    if (!src) {
+        return NULL;
+    }
+
+    ecs_sparse_t *dst = _flecs_sparse_new(src->size);
+    sparse_copy(dst, src);
+
+    return dst;
+}
+
+void flecs_sparse_restore(
+    ecs_sparse_t * dst,
+    const ecs_sparse_t * src)
+{
+    ecs_assert(dst != NULL, ECS_INVALID_PARAMETER, NULL);
+    dst->count = 1;
+    if (src) {
+        sparse_copy(dst, src);
+    }
+}
+
+void flecs_sparse_memory(
+    ecs_sparse_t *sparse,
+    int32_t *allocd,
+    int32_t *used)
+{
+    (void)sparse;
+    (void)allocd;
+    (void)used;
+}
+
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_new(elem_size);
+}
+
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    return _flecs_sparse_add(sparse, elem_size);
+}
+
+uint64_t ecs_sparse_last_id(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_last_id(sparse);
+}
+
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse)
+{
+    return flecs_sparse_count(sparse);
+}
+
+void* _ecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index)
+{
+    return _flecs_sparse_get_dense(sparse, elem_size, index);
+}
+
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id)
+{
+    return _flecs_sparse_get(sparse, elem_size, id);
+}
+
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(elem_size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_sparse_iter_t result;
+    result.sparse = sparse;
+    result.ids = flecs_sparse_ids(sparse);
+    result.size = elem_size;
+    result.i = 0;
+    result.count = sparse->count - 1;
+    return result;
+}
+
+#ifdef FLECS_SANITIZE
+static 
+void verify_nodes(
+    flecs_switch_header_t *hdr,
+    flecs_switch_node_t *nodes)
+{
+    if (!hdr) {
+        return;
+    }
+
+    int32_t prev = -1, elem = hdr->element, count = 0;
+    while (elem != -1) {
+        ecs_assert(prev == nodes[elem].prev, ECS_INTERNAL_ERROR, NULL);
+        prev = elem;
+        elem = nodes[elem].next;
+        count ++;
+    }
+
+    ecs_assert(count == hdr->count, ECS_INTERNAL_ERROR, NULL);
+}
+#else
+#define verify_nodes(hdr, nodes)
+#endif
+
+static
+flecs_switch_header_t *get_header(
+    const ecs_switch_t *sw,
+    uint64_t value)
+{
+    if (value == 0) {
+        return NULL;
+    }
+
+    value = (uint32_t)value;
+
+    ecs_assert(value >= sw->min, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value <= sw->max, ECS_INTERNAL_ERROR, NULL);
+
+    uint64_t index = value - sw->min;
+
+    return &sw->headers[index];
+}
+
+static
+void remove_node(
+    flecs_switch_header_t *hdr,
+    flecs_switch_node_t *nodes,
+    flecs_switch_node_t *node,
+    int32_t element)
+{
+    ecs_assert(&nodes[element] == node, ECS_INTERNAL_ERROR, NULL);
+
+    /* Update previous node/header */
+    if (hdr->element == element) {
+        ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, NULL);
+        /* If this is the first node, update the header */
+        hdr->element = node->next;
+    } else {
+        /* If this is not the first node, update the previous node to the 
+         * removed node's next ptr */
+        ecs_assert(node->prev != -1, ECS_INVALID_PARAMETER, NULL);
+        flecs_switch_node_t *prev_node = &nodes[node->prev];
+        prev_node->next = node->next;
+    }
+
+    /* Update next node */
+    int32_t next = node->next;
+    if (next != -1) {
+        ecs_assert(next >= 0, ECS_INVALID_PARAMETER, NULL);
+        /* If this is not the last node, update the next node to point to the
+         * removed node's prev ptr */
+        flecs_switch_node_t *next_node = &nodes[next];
+        next_node->prev = node->prev;
+    }
+
+    /* Decrease count of current header */
+    hdr->count --;
+    ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_switch_t* flecs_switch_new(
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements)
+{
+    ecs_assert(min <= max, ECS_INVALID_PARAMETER, NULL);
+
+    /* Min must be larger than 0, as 0 is an invalid entity id, and should
+     * therefore never occur as case id */
+    ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
+    result->min = (uint32_t)min;
+    result->max = (uint32_t)max;
+
+    int32_t count = (int32_t)(max - min) + 1;
+    result->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
+    result->nodes = ecs_vector_new(flecs_switch_node_t, elements);
+    result->values = ecs_vector_new(uint64_t, elements);
+
+    int64_t i;
+    for (i = 0; i < count; i ++) {
+        result->headers[i].element = -1;
+        result->headers[i].count = 0;
+    }
+
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        result->nodes, flecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(
+        result->values, uint64_t);        
+
+    for (i = 0; i < elements; i ++) {
+        nodes[i].prev = -1;
+        nodes[i].next = -1;
+        values[i] = 0;
+    }
+
+    return result;
+}
+
+void flecs_switch_free(
+    ecs_switch_t *sw)
+{
+    ecs_os_free(sw->headers);
+    ecs_vector_free(sw->nodes);
+    ecs_vector_free(sw->values);
+    ecs_os_free(sw);
+}
+
+void flecs_switch_add(
+    ecs_switch_t *sw)
+{
+    flecs_switch_node_t *node = ecs_vector_add(&sw->nodes, flecs_switch_node_t);
+    uint64_t *value = ecs_vector_add(&sw->values, uint64_t);
+    node->prev = -1;
+    node->next = -1;
+    *value = 0;
+}
+
+void flecs_switch_set_count(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    if (old_count == count) {
+        return;
+    }
+
+    ecs_vector_set_count(&sw->nodes, flecs_switch_node_t, count);
+    ecs_vector_set_count(&sw->values, uint64_t, count);
+
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+
+    int32_t i;
+    for (i = old_count; i < count; i ++) {
+        flecs_switch_node_t *node = &nodes[i];
+        node->prev = -1;
+        node->next = -1;
+        values[i] = 0;
+    }
+}
+
+void flecs_switch_ensure(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    if (old_count >= count) {
+        return;
+    }
+
+    flecs_switch_set_count(sw, count);
+}
+
+void flecs_switch_addn(
+    ecs_switch_t *sw,
+    int32_t count)
+{
+    int32_t old_count = ecs_vector_count(sw->nodes);
+    flecs_switch_set_count(sw, old_count + count);
+}
+
+void flecs_switch_set(
+    ecs_switch_t *sw,
+    int32_t element,
+    uint64_t value)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t cur_value = values[element];
+
+    /* If the node is already assigned to the value, nothing to be done */
+    if (cur_value == value) {
+        return;
+    }
+
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
+    flecs_switch_node_t *node = &nodes[element];
+
+    flecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
+    flecs_switch_header_t *dst_hdr = get_header(sw, value);
+
+    verify_nodes(cur_hdr, nodes);
+    verify_nodes(dst_hdr, nodes);
+
+    /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
+     * for this switch */
+    ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
+
+    if (cur_hdr) {
+        remove_node(cur_hdr, nodes, node, element);
+    }
+
+    /* Now update the node itself by adding it as the first node of dst */
+    node->prev = -1;
+    values[element] = value;
+
+    if (dst_hdr) {
+        node->next = dst_hdr->element;
+
+        /* Also update the dst header */
+        int32_t first = dst_hdr->element;
+        if (first != -1) {
+            ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
+            flecs_switch_node_t *first_node = &nodes[first];
+            first_node->prev = element;
+        }
+
+        dst_hdr->element = element;
+        dst_hdr->count ++;        
+    }
+}
+
+void flecs_switch_remove(
+    ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    uint64_t value = values[element];
+    flecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, flecs_switch_node_t);
+    flecs_switch_node_t *node = &nodes[element];
+
+    /* If node is currently assigned to a case, remove it from the list */
+    if (value != 0) {
+        flecs_switch_header_t *hdr = get_header(sw, value);
+        ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        verify_nodes(hdr, nodes);
+        remove_node(hdr, nodes, node, element);
+    }
+
+    int32_t last_elem = ecs_vector_count(sw->nodes) - 1;
+    if (last_elem != element) {
+        flecs_switch_node_t *last = ecs_vector_last(sw->nodes, flecs_switch_node_t);
+        int32_t next = last->next, prev = last->prev;
+        if (next != -1) {
+            flecs_switch_node_t *n = &nodes[next];
+            n->prev = element;
+        }
+
+        if (prev != -1) {
+            flecs_switch_node_t *n = &nodes[prev];
+            n->next = element;
+        } else {
+            flecs_switch_header_t *hdr = get_header(sw, values[last_elem]);
+            if (hdr && hdr->element != -1) {
+                ecs_assert(hdr->element == last_elem, 
+                    ECS_INTERNAL_ERROR, NULL);
+                hdr->element = element;
+            }
+        }
+    }
+
+    /* Remove element from arrays */
+    ecs_vector_remove(sw->nodes, flecs_switch_node_t, element);
+    ecs_vector_remove(sw->values, uint64_t, element);
+}
+
+uint64_t flecs_switch_get(
+    const ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->values), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    uint64_t *values = ecs_vector_first(sw->values, uint64_t);
+    return values[element];
+}
+
+ecs_vector_t* flecs_switch_values(
+    const ecs_switch_t *sw)
+{
+    return sw->values;
+}
+
+int32_t flecs_switch_case_count(
+    const ecs_switch_t *sw,
+    uint64_t value)
+{
+    flecs_switch_header_t *hdr = get_header(sw, value);
+    if (!hdr) {
+        return 0;
+    }
+
+    return hdr->count;
+}
+
+void flecs_switch_swap(
+    ecs_switch_t *sw,
+    int32_t elem_1,
+    int32_t elem_2)
+{
+    uint64_t v1 = flecs_switch_get(sw, elem_1);
+    uint64_t v2 = flecs_switch_get(sw, elem_2);
+
+    flecs_switch_set(sw, elem_2, v1);
+    flecs_switch_set(sw, elem_1, v2);
+}
+
+int32_t flecs_switch_first(
+    const ecs_switch_t *sw,
+    uint64_t value)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((uint32_t)value <= sw->max, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((uint32_t)value >= sw->min, ECS_INVALID_PARAMETER, NULL);
+    
+    flecs_switch_header_t *hdr = get_header(sw, value);
+    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return hdr->element;
+}
+
+int32_t flecs_switch_next(
+    const ecs_switch_t *sw,
+    int32_t element)
+{
+    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, flecs_switch_node_t);
+
+    return nodes[element].next;
+}
+
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 #ifndef _MSC_VER
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
@@ -8662,15 +11497,95 @@ void* _flecs_sparse_remove_get(
     ecs_size_t size,
     uint64_t index)
 {
+<<<<<<< HEAD
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
+=======
+<<<<<<< HEAD
+    ecs_assert(bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(bucket_count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_size_t elem_size = map->elem_size;
+
+    ensure_buckets(map, bucket_count);
+
+    ecs_bucket_t *buckets = map->buckets;
+    ecs_assert(buckets != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t bucket_id;
+
+    /* Iterate backwards as elements could otherwise be moved to existing
+        * buckets which could temporarily cause the number of elements in a
+        * bucket to exceed BUCKET_COUNT. */
+    for (bucket_id = bucket_count - 1; bucket_id >= 0; bucket_id --) {
+        ecs_bucket_t *bucket = &buckets[bucket_id];
+=======
+    observable->events = ecs_sparse_new(ecs_event_record_t);
+}
+
+void flecs_observable_fini(
+    ecs_observable_t *observable)
+{
+    ecs_sparse_t *triggers = observable->events;
+    int32_t i, count = flecs_sparse_count(triggers);
+
+    for (i = 0; i < count; i ++) {
+        ecs_event_record_t *et = 
+            ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
+        ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_map_iter_t it = ecs_map_iter(et->event_ids);
+        ecs_event_id_record_t *idt;
+        while ((idt = ecs_map_next(&it, ecs_event_id_record_t, NULL))) {
+            ecs_map_free(idt->triggers);
+            ecs_map_free(idt->set_triggers);
+        }
+        ecs_map_free(et->event_ids);
+    }
+
+    flecs_sparse_free(observable->events);
+}
+
+static
+void notify_subset(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t event,
+    ecs_ids_t *ids,
+    ecs_event_desc_t *desc)
+{
+    ecs_id_t pair = ecs_pair(EcsWildcard, entity);
+    ecs_id_record_t *idr = flecs_get_id_record(world, pair);
+    if (!idr) {
+        return;
+    }
+
+    ecs_table_record_t *trs = ecs_table_cache_tables(
+        &idr->cache, ecs_table_record_t);
+    int32_t i, count = ecs_table_cache_count(&idr->cache);
+    
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &trs[i];
+        ecs_table_t *table = tr->table;
+        ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
+        ecs_entity_t rel = ECS_PAIR_RELATION(id);
+        int32_t entity_count = ecs_table_count(table);
+
+        flecs_triggers_notify(world, desc->observable, ids, event, 
+            entity, table, table, 0, entity_count, 
+            ecs_pair(rel, EcsWildcard), desc->param);
+    }
+}
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
     chunk_t *chunk = get_or_create_chunk(sparse, CHUNK(index));
     uint64_t gen = strip_generation(&index);
     int32_t offset = OFFSET(index);
     int32_t dense = chunk->sparse[offset];
 
+<<<<<<< HEAD
     if (dense) {
         uint64_t *dense_array = ecs_vector_first(sparse->dense, uint64_t);
         uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
@@ -8679,6 +11594,22 @@ void* _flecs_sparse_remove_get(
              * already not alive. */
             return NULL;
         }
+=======
+<<<<<<< HEAD
+        for (i = 0; i < count; i ++) {
+            ecs_map_key_t key = key_array[i];
+            void *elem = GET_ELEM(payload_array, elem_size, i);
+            int32_t new_bucket_id = get_bucket_id(bucket_count, key);
+=======
+    ecs_ids_t ids_storage, *ids = desc->ids;
+    ecs_table_t *table = NULL, *other_table = NULL;
+    int32_t row = 0;
+    int32_t i, count = 0;
+    ecs_entity_t event = desc->event;
+    ecs_entity_t entity = 0;
+    bool skip_set_triggers = false;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
         /* Increase generation */
         dense_array[dense] = index | inc_gen(cur_gen);
@@ -8696,6 +11627,7 @@ void* _flecs_sparse_remove_get(
             return NULL;
         }
 
+<<<<<<< HEAD
         /* Reset memory to zero on remove */
         return DATA(chunk->data, sparse->size, offset);
     } else {
@@ -8703,6 +11635,26 @@ void* _flecs_sparse_remove_get(
         return NULL;
     }
 }
+=======
+<<<<<<< HEAD
+                add_to_bucket(new_bucket, elem_size, key, elem);
+                remove_from_bucket(bucket, elem_size, key, i);
+=======
+    if (desc->payload_kind == EcsPayloadEntity) {
+        entity = desc->payload.entity;
+        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_record_t *r = ecs_eis_get(world, entity);
+        if (r) {
+            bool is_watched;
+            table = r->table;
+            row = flecs_record_to_row(r->row, &is_watched);
+            if (!is_watched) {
+                skip_set_triggers = true;
+            }
+        }
+        count = 1;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 
 void flecs_sparse_remove(
     ecs_sparse_t *sparse,
@@ -8733,6 +11685,27 @@ void flecs_sparse_set_generation(
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
     }
+<<<<<<< HEAD
+=======
+    
+    flecs_triggers_notify(world, desc->observable, ids, event, 
+        entity, table, other_table, row, count, 0, desc->param);
+
+    if (!skip_set_triggers) {
+        ecs_entity_t *ents = ecs_vector_get(
+            table->storage.entities, ecs_entity_t, row);
+        ecs_record_t **recs = ecs_vector_get(
+            table->storage.record_ptrs, ecs_record_t*, row);
+
+        for (i = 0; i < count; i ++) {
+            if (recs[i]->row < 0) {
+                notify_subset(world, ents[i], event, ids, desc);
+            }
+        }
+    }
+error:
+    return;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
 }
 
 bool flecs_sparse_exists(
@@ -16524,8 +19497,73 @@ void flecs_iter_init(
         INIT_CACHE(it, sizes, it->term_count);
         INIT_CACHE(it, ptrs, it->term_count);
     } else {
+<<<<<<< HEAD
         it->sizes = NULL;
         it->ptrs = NULL;
+=======
+        /* Transitive queries are inclusive, which means that if we have a
+         * transitive predicate which is provided with the same subject and
+         * object, it should return true. By default with will not return true
+         * as the subject likely does not have itself as a relationship, which
+         * is why this is a special case. 
+         *
+         * TODO: might want to move this code to a separate with_inclusive
+         * instruction to limit branches for non-transitive queries (and to keep
+         * code more readable).
+         */
+        if (pair.transitive && pair.inclusive) {
+            ecs_entity_t subj = 0, obj = 0;
+            
+            if (r == UINT8_MAX) {
+                subj = op->subject;
+            } else {
+                ecs_rule_var_t *v_subj = &rule->variables[r];
+                if (v_subj->kind == EcsRuleVarKindEntity) {
+                    subj = entity_reg_get(rule, regs, r);
+
+                    /* This is the input for the op, so should always be set */
+                    ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
+                }
+            }
+
+            /* If subj is set, it means that it is an entity. Try to also 
+             * resolve the object. */
+            if (subj) {
+                /* If the object is not a wildcard, it has been reified. Get the
+                 * value from either the register or as a literal */
+                if (!filter.obj_wildcard) {
+                    obj = ecs_entity_t_lo(filter.mask);
+                    if (subj == obj) {
+                        it->ids[op->term] = filter.mask;
+                        return true;
+                    }
+                }
+            }
+        }
+
+<<<<<<< HEAD
+        /* The With operation finds the table set that belongs to its pair
+         * filter. The table set is a sparse set that provides an O(1) operation
+         * to check whether the current table has the required expression. */
+        idr = op_ctx->idr = find_tables(world, filter.mask);
+=======
+    switch(event->kind) {
+    case EcsTableQueryMatch:
+        register_query(world, table, event->query);
+        break;
+    case EcsTableQueryUnmatch:
+        unregister_query(world, table, event->query);
+        break;
+    case EcsTableComponentInfo:
+        notify_component_info(world, table, event->component);
+        break;
+    case EcsTableTriggersForId:
+        notify_trigger(world, table, event->event);
+        break;
+    case EcsTableNoTriggersForId:
+        break;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
     }
 
     it->is_valid = true;
@@ -40593,12 +43631,29 @@ void ecs_os_init(void)
     }
 }
 
+<<<<<<< HEAD
 void ecs_os_fini(void) {
     if (!--ecs_os_api_init_count) {
         if (ecs_os_api.fini_) {
             ecs_os_api.fini_();
         }
     }
+=======
+<<<<<<< HEAD
+    ecs_strbuf_appendstr(buf, name);
+
+    return cur != 0;
+=======
+    free(strings);
+}
+#else
+static
+void dump_backtrace(
+    FILE *stream)
+{ 
+    (void)stream;
+>>>>>>> c1e31068 (#470 implement event propagation for triggers with SuperSet terms)
+>>>>>>> 739eb3a0 (#470 implement event propagation for triggers with SuperSet terms)
 }
 
 #if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)

@@ -2009,8 +2009,10 @@ void flecs_table_notify(
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
         break;
-    case EcsTableTriggerMatch:
+    case EcsTableTriggersForId:
         notify_trigger(world, table, event->event);
+        break;
+    case EcsTableNoTriggersForId:
         break;
     }
 }

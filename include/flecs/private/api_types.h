@@ -54,7 +54,7 @@ typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
 /** Mixin for emitting events to triggers/observers */
 struct ecs_observable_t {
-    ecs_sparse_t *triggers;  /* sparse<event, ecs_event_triggers_t> */
+    ecs_sparse_t *events;  /* sparse<event, ecs_event_record_t> */
 };
 
 struct ecs_record_t {

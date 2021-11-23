@@ -4956,6 +4956,8 @@ void Filter_filter_no_this_tag() {
 
     test_assert(!ecs_filter_next(&it));
 
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 
@@ -4989,6 +4991,8 @@ void Filter_filter_no_this_component() {
 
     test_assert(!ecs_filter_next(&it));
 
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 
@@ -5021,6 +5025,8 @@ void Filter_filter_no_this_tag_2_ents() {
     test_int(ecs_term_source(&it, 2),  e2);
 
     test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -5065,6 +5071,8 @@ void Filter_filter_no_this_component_2_ents() {
 
     test_assert(!ecs_filter_next(&it));
 
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 
@@ -5099,6 +5107,8 @@ void Filter_filter_no_this_tag_2_ents_1_not() {
     test_int(ecs_term_source(&it, 3),  e2);
 
     test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -5145,6 +5155,8 @@ void Filter_filter_no_this_component_2_ents_1_not() {
 
     test_assert(!ecs_filter_next(&it));
 
+    ecs_filter_fini(&f);
+
     ecs_fini(world);
 }
 
@@ -5172,6 +5184,8 @@ void Filter_filter_no_this_component_1_not() {
     test_int(ecs_term_source(&it, 1),  e1);
 
     test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
