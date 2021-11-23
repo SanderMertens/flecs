@@ -69,7 +69,7 @@ void dump_backtrace(
 
     free(strings);
 }
-#elif
+#else
 static
 void dump_backtrace(
     FILE *stream)

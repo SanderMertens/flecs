@@ -355,7 +355,7 @@ bool build_pipeline(
     /* Find the system ran last this frame (helps workers reset iter) */
     ecs_entity_t last_system = 0;
     op = ecs_vector_first(ops, ecs_pipeline_op_t);
-    int32_t i, ran_since_merge = 0, op_index = 0, cur = 0;
+    int32_t i, ran_since_merge = 0, op_index = 0;
 
     /* Add schedule to debug tracing */
     ecs_dbg("#[green]pipeline#[reset] rebuild:");
@@ -389,7 +389,6 @@ bool build_pipeline(
 
             if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
                 last_system = it.entities[i];
-                cur = op_index;
 
                 /* Can't break from loop yet. It's possible that previously
                  * inactive systems that ran before the last ran system are now
