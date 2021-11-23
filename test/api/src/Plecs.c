@@ -1788,7 +1788,7 @@ void Plecs_assign_component_value_in_assign_scope() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE " (Position){10, 20}"
+    LINE " Position = {10, 20}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -1828,8 +1828,8 @@ void Plecs_assign_2_component_values_in_assign_scope() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE " (Position){10, 20}"
-    LINE " (Velocity){1, 2}"
+    LINE " Position = {10, 20}"
+    LINE " Velocity = {1, 2}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2115,8 +2115,8 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
     LINE "}"
     LINE 
     LINE "Foo {"
-    LINE "  (Position){x: 10, y: 20}"
-    LINE "  (Color){Green}"
+    LINE "  Position = {x: 10, y: 20}"
+    LINE "  Color = {Green}"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
@@ -2970,23 +2970,23 @@ void Plecs_assign_tag_to_parent() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  (Tag)"
+    LINE "  (Bar)"
     LINE "  Child"
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
     ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
 
     test_assert(foo != 0);
-    test_assert(tag != 0);
+    test_assert(bar != 0);
     test_assert(child != 0);
 
-    test_assert( ecs_has_id(world, foo, tag));
-    test_assert( !ecs_has_id(world, child, tag));
-    test_assert( !ecs_has_pair(world, tag, EcsChildOf, foo));
+    test_assert( ecs_has_id(world, foo, bar));
+    test_assert( !ecs_has_id(world, child, bar));
+    test_assert( !ecs_has_pair(world, bar, EcsChildOf, foo));
     test_assert( ecs_has_pair(world, child, EcsChildOf, foo));
 
     ecs_fini(world);
@@ -3005,7 +3005,7 @@ void Plecs_assign_component_to_parent() {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  (Position){10, 20}"
+    LINE "  Position = {10, 20}"
     LINE "  Child"
     LINE "}";
 
@@ -3481,6 +3481,106 @@ void Plecs_scope_w_1_subj_and_2_pairs() {
 
     test_assert( ecs_has_pair(world, foo, rel_a, bar));
     test_assert( ecs_has_pair(world, foo, rel_b, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_inherit_from_multiple() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Inst : Foo, Bar";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t inst = ecs_lookup_fullpath(world, "Inst");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+
+    test_assert(inst != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    test_assert(ecs_has_pair(world, inst, EcsIsA, foo));
+    test_assert(ecs_has_pair(world, inst, EcsIsA, bar));
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_pair_component() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  x = {f32}"
+    LINE "  y = {f32}"
+    LINE "}"
+    LINE
+    LINE "Foo = (Position, Bar){x: 10, y: 20}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(Position), bar));
+
+    const Position *ptr = ecs_get_pair(world, foo, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_pair_component_in_scope() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  x = {f32}"
+    LINE "  y = {f32}"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo) = {x: 10, y: 20}"
+    LINE "  (Position, Bar) = {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
 
     ecs_fini(world);
 }

@@ -34,6 +34,7 @@ typedef struct {
     char *comment;
 
     bool with_stmt;
+    bool scope_assign_stmt;
     bool using_stmt;
     bool assign_stmt;
     bool isa_stmt;
@@ -205,6 +206,7 @@ bool pred_is_subj(
     if (state->using_stmt) {
         return false;
     }
+
     return true;
 }
 
@@ -341,12 +343,6 @@ int create_term(
     }
 #endif
 
-    if (state->isa_stmt) {
-        state->last_assign_id = 0;
-        state->assign_to = 0;
-        state->isa_stmt = false;
-    }
-
     return 0;
 }
 
@@ -453,11 +449,7 @@ const char* parse_assign_stmt(
 {
     (void)world;
 
-    if (state->isa_stmt) {
-        ecs_parser_error(name, expr, ptr - expr, 
-            "missing base for inheritance statement");
-        return NULL;
-    }
+    state->isa_stmt = false;
 
     /* Component scope (add components to entity) */
     if (!state->last_subject) {
@@ -472,9 +464,51 @@ const char* parse_assign_stmt(
         return NULL;
     }
 
+    if (!state->scope_assign_stmt) {
+        state->assign_to = state->last_subject;
+    }
+
     state->assign_stmt = true;
-    state->assign_to = state->last_subject;
     
+    /* Assignment without a preceding component */
+    if (ptr[0] == '{') {
+        ecs_entity_t type = 0;
+
+        if (state->scope_assign_stmt) {
+            ecs_assert(state->assign_to == ecs_get_scope(world), 
+                ECS_INTERNAL_ERROR, NULL);
+        }
+
+        /* If we're in a scope & last_subject is a type, assign to scope */
+        if (ecs_get_scope(world) != 0) {
+            type = ecs_get_typeid(world, state->last_subject);
+            if (type != 0) {
+                type = state->last_subject;
+            }
+        }
+
+        /* If type hasn't been set yet, check if scope has default type */
+        if (!type && !state->scope_assign_stmt) {
+            type = state->default_scope_type[state->sp];
+        }
+
+        /* If no type has been found still, check if last with id is a type */
+        if (!type && !state->scope_assign_stmt) {
+            int32_t with_frame_count = state->with_frames[state->sp];
+            if (with_frame_count) {
+                type = state->with[with_frame_count - 1];
+            }
+        }
+
+        if (!type) {
+            ecs_parser_error(name, expr, ptr - expr, 
+                "missing type for assignment");
+            return NULL;
+        }
+
+        state->last_assign_id = type;
+    }
+
     return ptr;
 }
 
@@ -529,11 +563,7 @@ const char* parse_scope_open(
     const char *ptr,
     plecs_state_t *state) 
 {
-    if (state->isa_stmt) {
-        ecs_parser_error(name, expr, ptr - expr, 
-            "missing base for inheritance");
-        return NULL;
-    }
+    state->isa_stmt = false;
 
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
@@ -643,6 +673,14 @@ const char *parse_plecs_term(
     plecs_state_t *state)
 {
     ecs_term_t term = {0};
+    ecs_entity_t scope = ecs_get_scope(world);
+
+    /* If first character is a (, this should be interpreted as an id assigned
+     * to the current scope if:
+     * - this is not already an assignment: "Foo = (Hello, World)" 
+     * - this is in a scope
+     */
+    bool scope_assignment = (ptr[0] == '(') && !state->assign_stmt && scope != 0;
 
     ptr = ecs_parse_term(world, name, expr, ptr, &term);
     if (!ptr) {
@@ -654,10 +692,41 @@ const char *parse_plecs_term(
         return NULL; /* No term found */
     }
 
+    /* Lookahead to check if this is an implicit scope assignment (no parens) */
+    if (ptr[0] == '=') {
+        const char *tptr = ecs_parse_fluff(ptr + 1, NULL);
+        if (tptr[0] == '{') {
+            ecs_entity_t pred = plecs_lookup(
+                world, term.pred.name, state, false);
+            ecs_entity_t obj = plecs_lookup(
+                world, term.obj.name, state, false);
+            ecs_id_t id = 0;
+            if (pred && obj) {
+                id = ecs_pair(pred, obj);
+            } else if (pred) {
+                id = pred;
+            }
+
+            if (id && (ecs_get_typeid(world, id) != 0)) {
+                scope_assignment = true;
+            }
+        } 
+    }
+
+    bool prev = state->assign_stmt;
+    if (scope_assignment) {
+        state->assign_stmt = true;
+        state->assign_to = scope;
+    }
     if (create_term(world, &term, name, expr, (ptr - expr), state)) {
         ecs_term_fini(&term);
         return NULL; /* Failed to create term */
     }
+    if (scope_assignment) {
+        state->last_subject = state->last_assign_id;
+        state->scope_assign_stmt = true;
+    }
+    state->assign_stmt = prev;
 
     ecs_term_fini(&term);
 
@@ -673,6 +742,7 @@ const char* parse_stmt(
     plecs_state_t *state)
 {
     state->assign_stmt = false;
+    state->scope_assign_stmt = false;
     state->isa_stmt = false;
     state->with_stmt = false;
     state->using_stmt = false;
@@ -693,11 +763,7 @@ const char* parse_stmt(
         ptr = parse_fluff(expr, ptr + 1, state);
         goto scope_close;
     } else if (ch == '(') {
-        if (ecs_get_scope(world) != 0) {
-            goto assign_to_scope_stmt;
-        } else {
-            goto term_expr;
-        }
+        goto term_expr;
     } else if (!ecs_os_strncmp(ptr, TOK_USING " ", 5)) {
         ptr = parse_using_stmt(name, expr, ptr, state);
         if (!ptr) goto error;
@@ -753,34 +819,14 @@ inherit_stmt:
     /* Expect base identifier */
     goto term_expr;
 
-assign_to_scope_stmt:
-    state->last_subject = ecs_get_scope(world);
-    goto assign_stmt;
-
 assign_stmt:
     ptr = parse_assign_stmt(world, name, expr, ptr, state);
     if (!ptr) goto error;
 
     ptr = parse_fluff(expr, ptr, state);
 
+    /* Assignment without a preceding component */
     if (ptr[0] == '{') {
-        /* Assignment without a preceding component */
-        ecs_entity_t type = state->default_scope_type[state->sp];
-        if (!type) {
-            /* Scope has no default type, check if last with id is a type */
-            int32_t with_frame_count = state->with_frames[state->sp];
-            if (with_frame_count) {
-                type = state->with[with_frame_count - 1];
-            }
-
-            if (!type) {
-                ecs_parser_error(name, expr, ptr - expr, 
-                    "missing type for assignment");
-                return NULL;
-            }
-        }
-
-        state->last_assign_id = type;
         goto assign_expr;
     }
 
