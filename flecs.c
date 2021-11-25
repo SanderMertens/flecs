@@ -33977,7 +33977,7 @@ void ecs_os_fini(void) {
     }
 }
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 static
