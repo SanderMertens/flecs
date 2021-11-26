@@ -14833,8 +14833,7 @@ protected:
 };
 
 struct entity final : entity_base {
-    template <typename ... Args>
-    entity(Args&&... args) : entity_base(std::forward<Args>(args)...) { }
+    using entity_base::entity_base;
 
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that
@@ -17078,7 +17077,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term() {
         this->term();
         *this->m_term = flecs::term(this->world_v()).id<T>().move();
-        this->m_term->oper = static_cast<ecs_oper_kind_t>(this->template type_to_inout<T>());
+        this->m_term->inout = static_cast<ecs_inout_kind_t>(this->template type_to_inout<T>());
         return *this;
     }
 
@@ -18010,12 +18009,8 @@ namespace flecs
 
 struct trigger final : public entity_base
 {
-    explicit trigger() 
-        : entity_base() { }
-
-    explicit trigger(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
-
+    using entity_base::entity_base;
+    
     void ctx(void *ctx) {
         ecs_trigger_desc_t desc = {};
         desc.entity.entity = m_id;
@@ -18189,11 +18184,7 @@ namespace flecs
 
 struct observer final : public entity_base
 {
-    explicit observer() 
-        : entity_base() { }
-
-    explicit observer(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
+    using entity_base::entity_base;
 
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
@@ -18572,12 +18563,7 @@ private:
 
 struct system final : entity_base, extendable<system, Mixins>
 {
-    explicit system() 
-        : entity_base() { }
-
-    explicit system(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
-
+    using entity_base::entity_base;
 
     void ctx(void *ctx) {
         if (ecs_has(m_world, m_id, EcsSystem)) {

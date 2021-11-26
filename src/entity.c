@@ -53,6 +53,8 @@ void* get_component(
     int32_t row,
     ecs_id_t id)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!table->storage_table) {
         ecs_check(ecs_type_index_of(table->type, 0, id) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
@@ -1148,8 +1150,8 @@ void *get_mutable(
         ecs_table_t *table = info->table;
         add_id_w_info(world, entity, info, component, true);
         flecs_get_info(world, entity, info);
+        
         ecs_assert(info->table != NULL, ECS_INTERNAL_ERROR, NULL);
-
         ecs_assert(info->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = get_component(world, info->table, info->row, component);
 
