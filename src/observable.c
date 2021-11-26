@@ -117,7 +117,7 @@ void ecs_emit(
     flecs_triggers_notify(world, desc->observable, ids, event, 
         entity, table, other_table, row, count, 0, desc->param);
 
-    if (!skip_set_triggers) {
+    if (!skip_set_triggers && table) {
         ecs_entity_t *ents = ecs_vector_get(
             table->storage.entities, ecs_entity_t, row);
         ecs_record_t **recs = ecs_vector_get(
