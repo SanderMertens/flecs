@@ -3592,6 +3592,7 @@ void notify_set_triggers(
     const ecs_map_t *triggers)
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
@@ -3618,7 +3619,22 @@ void notify_set_triggers(
             it->binding_ctx = t->binding_ctx;
             it->term_index = t->term.index;
             it->terms = &t->term;
-            t->action(it);
+
+            if (it->count == 1 || t->instanced || !it->sizes[0]) {
+                it->is_instanced = t->instanced;
+                t->action(it);
+                it->is_instanced = false;
+            } else {
+                int32_t i, count = it->count;
+                ecs_entity_t *entities = it->entities;
+                it->count = 1;
+                for (i = 0; i < count; i ++) {
+                    it->entities = &entities[i];
+                    t->action(it);
+                }
+                it->count = count;
+                it->entities = entities;
+            }
 
             it->event_id = event_id;
         }                
@@ -3859,6 +3875,7 @@ ecs_entity_t ecs_trigger_init(
         trigger->observable = observable;
         trigger->match_prefab = desc->match_prefab;
         trigger->match_disabled = desc->match_disabled;
+        trigger->instanced = desc->instanced;
 
         if (trigger->term.id == EcsPrefab) {
             trigger->match_prefab = true;
@@ -11366,6 +11383,7 @@ const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 17;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
@@ -13440,17 +13458,33 @@ void notify_subset(
     ecs_table_record_t *trs = ecs_table_cache_tables(
         &idr->cache, ecs_table_record_t);
     int32_t i, count = ecs_table_cache_count(&idr->cache);
-    
+
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &trs[i];
         ecs_table_t *table = tr->table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
         ecs_entity_t rel = ECS_PAIR_RELATION(id);
-        int32_t entity_count = ecs_table_count(table);
+
+        if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
+            continue;
+        }
+
+        int32_t e, entity_count = ecs_table_count(table);
 
         flecs_triggers_notify(world, desc->observable, ids, event, 
             entity, table, table, 0, entity_count, 
             ecs_pair(rel, EcsWildcard), desc->param);
+
+        ecs_entity_t *entities = ecs_vector_first(
+            table->storage.entities, ecs_entity_t);
+        ecs_record_t **records = ecs_vector_first(
+            table->storage.record_ptrs, ecs_record_t*);
+
+        for (e = 0; e < entity_count; e ++) {
+            if (records[e]->row < 0) {
+                notify_subset(world, entities[e], event, ids, desc);
+            }
+        }
     }
 }
 
@@ -17488,6 +17522,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsExclusive);
+    flecs_bootstrap_tag(world, EcsAcyclic);
 
     flecs_bootstrap_tag(world, EcsOnDelete);
     flecs_bootstrap_tag(world, EcsOnDeleteObject);
@@ -17535,11 +17570,16 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsTag, EcsFinal);
     ecs_add_id(world, EcsExclusive, EcsFinal);
+    ecs_add_id(world, EcsAcyclic, EcsFinal);
     ecs_add_id(world, EcsIsA, EcsFinal);
     ecs_add_id(world, EcsChildOf, EcsFinal);
     ecs_add_id(world, EcsOnDelete, EcsFinal);
     ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
     ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
+
+    /* Acyclic relations */
+    ecs_add_id(world, EcsIsA, EcsAcyclic);
+    ecs_add_id(world, EcsChildOf, EcsAcyclic);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);

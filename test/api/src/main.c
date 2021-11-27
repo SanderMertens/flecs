@@ -1490,6 +1490,10 @@ void Trigger_on_remove_base(void);
 void Trigger_on_set_base(void);
 void Trigger_on_unset_base(void);
 void Trigger_on_add_base_superset_trigger(void);
+void Trigger_on_add_base_superset_trigger_2_lvls(void);
+void Trigger_on_add_base_2_entities(void);
+void Trigger_on_set_base_w_value_2_entities(void);
+void Trigger_on_set_base_w_value_2_entities_instanced(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8012,6 +8016,22 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_base_superset_trigger",
         Trigger_on_add_base_superset_trigger
+    },
+    {
+        "on_add_base_superset_trigger_2_lvls",
+        Trigger_on_add_base_superset_trigger_2_lvls
+    },
+    {
+        "on_add_base_2_entities",
+        Trigger_on_add_base_2_entities
+    },
+    {
+        "on_set_base_w_value_2_entities",
+        Trigger_on_set_base_w_value_2_entities
+    },
+    {
+        "on_set_base_w_value_2_entities_instanced",
+        Trigger_on_set_base_w_value_2_entities_instanced
     }
 };
 
@@ -11205,7 +11225,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        77,
+        81,
         Trigger_testcases
     },
     {

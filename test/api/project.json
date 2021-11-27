@@ -1559,7 +1559,11 @@
                "on_remove_base",
                "on_set_base",
                "on_unset_base",
-               "on_add_base_superset_trigger"
+               "on_add_base_superset_trigger",
+               "on_add_base_superset_trigger_2_lvls",
+               "on_add_base_2_entities",
+               "on_set_base_w_value_2_entities",
+               "on_set_base_w_value_2_entities_instanced"
            ]
         }, {
             "id": "Observer",

@@ -2640,6 +2640,7 @@ struct ecs_trigger_t {
 
     bool match_prefab;          /* Should trigger ignore prefabs */
     bool match_disabled;        /* Should trigger ignore disabled entities */
+    bool instanced;             /* See ecs_filter_desc_t */
 
     uint64_t id;                /* Internal id */
 };
@@ -3529,9 +3530,12 @@ typedef struct ecs_trigger_desc_t {
     /* Events to trigger on (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* Should trigger ignore prefabs & disabled entities */
+    /* Should trigger match prefabs & disabled entities */
     bool match_prefab;
     bool match_disabled;
+
+    /* See ecs_filter_desc_t::instanced */
+    bool instanced;
 
     /* When trigger is created, generate events from existing data. For example,
      * EcsOnAdd Position would trigger for all existing instances of Position.
@@ -3824,6 +3828,9 @@ FLECS_API extern const ecs_entity_t EcsTag;
 /* Can be added to relation to indicate that the relationship can only occur
  * once on an entity. Adding a 2nd instance will replace the 1st. */
 FLECS_API extern const ecs_entity_t EcsExclusive;
+
+/* Marks a relation as acyclic. Acyclic relations may not form cycles. */
+FLECS_API extern const ecs_entity_t EcsAcyclic;
 
 /* Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
