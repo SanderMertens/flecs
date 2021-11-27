@@ -1,5 +1,5 @@
 
-namespace flecs 
+namespace flecs
 {
 
 /** Static helper functions to assign a component value */
@@ -475,16 +475,19 @@ struct world final : extendable<world, Mixins> {
 
     /** Set singleton component.
      */
-    template <typename T>
+    template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(const T& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), value);
     }
 
-    template <typename T>
+    template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
             std::forward<T&&>(value));
-    } 
+    }
+    
+    template <typename Func, if_t< is_callable<Func>::value > = 0 >
+    void set(const Func& func);
 
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
@@ -506,6 +509,9 @@ struct world final : extendable<world, Mixins> {
      */
     template <typename T>
     const T* get() const;
+    
+    template <typename Func, if_t< is_callable<Func>::value > = 0 >
+    void get(const Func& func);
 
     /** Test if world has singleton component.
      */
