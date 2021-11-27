@@ -511,7 +511,7 @@ struct world final : extendable<world, Mixins> {
     const T* get() const;
     
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
-    void get(const Func& func);
+    void get(const Func& func) const;
 
     /** Test if world has singleton component.
      */

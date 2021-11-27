@@ -104,8 +104,8 @@ inline flecs::entity world::singleton() {
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
-void world::get(const Func& func) {
-    static_assert(arity<Func>::value == 1);
+void world::get(const Func& func) const {
+    static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
     return *this;
@@ -113,7 +113,7 @@ void world::get(const Func& func) {
 
 template <typename Func, if_t< is_callable<Func>::value > >
 void world::set(const Func& func) {
-    static_assert(arity<Func>::value == 1);
+    static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
     return *this;
