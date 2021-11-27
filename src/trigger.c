@@ -378,6 +378,7 @@ void notify_set_triggers(
     const ecs_map_t *triggers)
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
@@ -404,7 +405,22 @@ void notify_set_triggers(
             it->binding_ctx = t->binding_ctx;
             it->term_index = t->term.index;
             it->terms = &t->term;
-            t->action(it);
+
+            if (it->count == 1 || t->instanced || !it->sizes[0]) {
+                it->is_instanced = t->instanced;
+                t->action(it);
+                it->is_instanced = false;
+            } else {
+                int32_t i, count = it->count;
+                ecs_entity_t *entities = it->entities;
+                it->count = 1;
+                for (i = 0; i < count; i ++) {
+                    it->entities = &entities[i];
+                    t->action(it);
+                }
+                it->count = count;
+                it->entities = entities;
+            }
 
             it->event_id = event_id;
         }                
@@ -645,6 +661,7 @@ ecs_entity_t ecs_trigger_init(
         trigger->observable = observable;
         trigger->match_prefab = desc->match_prefab;
         trigger->match_disabled = desc->match_disabled;
+        trigger->instanced = desc->instanced;
 
         if (trigger->term.id == EcsPrefab) {
             trigger->match_prefab = true;

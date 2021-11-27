@@ -55,6 +55,7 @@ const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 17;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;

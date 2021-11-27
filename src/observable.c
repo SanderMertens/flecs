@@ -46,17 +46,33 @@ void notify_subset(
     ecs_table_record_t *trs = ecs_table_cache_tables(
         &idr->cache, ecs_table_record_t);
     int32_t i, count = ecs_table_cache_count(&idr->cache);
-    
+
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &trs[i];
         ecs_table_t *table = tr->table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
         ecs_entity_t rel = ECS_PAIR_RELATION(id);
-        int32_t entity_count = ecs_table_count(table);
+
+        if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
+            continue;
+        }
+
+        int32_t e, entity_count = ecs_table_count(table);
 
         flecs_triggers_notify(world, desc->observable, ids, event, 
             entity, table, table, 0, entity_count, 
             ecs_pair(rel, EcsWildcard), desc->param);
+
+        ecs_entity_t *entities = ecs_vector_first(
+            table->storage.entities, ecs_entity_t);
+        ecs_record_t **records = ecs_vector_first(
+            table->storage.record_ptrs, ecs_record_t*);
+
+        for (e = 0; e < entity_count; e ++) {
+            if (records[e]->row < 0) {
+                notify_subset(world, entities[e], event, ids, desc);
+            }
+        }
     }
 }
 
