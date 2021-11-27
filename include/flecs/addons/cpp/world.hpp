@@ -486,6 +486,8 @@ struct world final : extendable<world, Mixins> {
             std::forward<T&&>(value));
     }
     
+    /** Set singleton component inside a callback.
+     */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
     void set(const Func& func);
 
@@ -510,8 +512,10 @@ struct world final : extendable<world, Mixins> {
     template <typename T>
     const T* get() const;
     
+    /** Get singleton component inside a callback.
+     */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
-    void get(const Func& func) const;
+    void get(const Func& func);
 
     /** Test if world has singleton component.
      */
