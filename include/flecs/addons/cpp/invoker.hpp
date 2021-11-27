@@ -317,6 +317,11 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     using PtrArray = flecs::array<void*, sizeof...(Args)>;
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
+    
+    template<size_t Index>
+    static constexpr get_type_id(world& w) {
+        w.id<Args>()
+    }
 
     template <typename ArrayType>
     static bool get_ptrs(world& w, ecs_record_t *r, ecs_table_t *table, 
