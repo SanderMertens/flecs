@@ -69,7 +69,7 @@ void notify_subset(
             table->storage.record_ptrs, ecs_record_t*);
 
         for (e = 0; e < entity_count; e ++) {
-            if (records[e]->row < 0) {
+            if (records[e]->row & ECS_ROW_FLAGS_MASK) {
                 notify_subset(world, entities[e], event, ids, desc);
             }
         }
@@ -100,10 +100,9 @@ void ecs_emit(
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_record_t *r = ecs_eis_get(world, entity);
         if (r) {
-            bool is_watched;
             table = r->table;
-            row = flecs_record_to_row(r->row, &is_watched);
-            if (!is_watched) {
+            row = ECS_RECORD_TO_ROW(r->row);
+            if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
                 skip_set_triggers = true;
             }
         }
@@ -140,11 +139,12 @@ void ecs_emit(
             table->storage.record_ptrs, ecs_record_t*, row);
 
         for (i = 0; i < count; i ++) {
-            if (recs[i]->row < 0) {
+            if (recs[i]->row & ECS_ROW_FLAGS_MASK) {
                 notify_subset(world, ents[i], event, ids, desc);
             }
         }
     }
+    
 error:
     return;
 }

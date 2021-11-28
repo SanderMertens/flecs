@@ -1217,11 +1217,8 @@ void flecs_table_delete(
     /* Update record of moved entity in entity index */
     if (index != count) {
         if (record_to_move) {
-            if (record_to_move->row >= 0) {
-                record_to_move->row = index + 1;
-            } else {
-                record_to_move->row = -(index + 1);
-            }
+            uint32_t row_flags = record_to_move->row & ECS_ROW_FLAGS_MASK;
+            record_to_move->row = ECS_ROW_TO_RECORD(index, row_flags);
             ecs_assert(record_to_move->table != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
         }
@@ -1594,14 +1591,14 @@ void flecs_table_swap(
     ecs_assert(record_ptr_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Keep track of whether entity is watched */
-    bool watched_1 = record_ptr_1->row < 0;
-    bool watched_2 = record_ptr_2->row < 0;
+    uint32_t flags_1 = ECS_RECORD_TO_ROW_FLAGS(record_ptr_1->row);
+    uint32_t flags_2 = ECS_RECORD_TO_ROW_FLAGS(record_ptr_2->row);
 
     /* Swap entities & records */
     entities[row_1] = e2;
     entities[row_2] = e1;
-    record_ptr_1->row = flecs_row_to_record(row_2, watched_1);
-    record_ptr_2->row = flecs_row_to_record(row_1, watched_2);
+    record_ptr_1->row = ECS_ROW_TO_RECORD(row_2, flags_1);
+    record_ptr_2->row = ECS_ROW_TO_RECORD(row_1, flags_2);
     record_ptrs[row_1] = record_ptr_2;
     record_ptrs[row_2] = record_ptr_1;
 
@@ -1916,8 +1913,8 @@ void flecs_table_merge(
             record = ecs_eis_ensure(world, old_entities[i]);
         }
 
-        bool is_monitored = record->row < 0;
-        record->row = flecs_row_to_record(new_count + i, is_monitored);
+        uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
+        record->row = ECS_ROW_TO_RECORD(new_count + i, flags);
         record->table = new_table;
     }
 
@@ -2133,16 +2130,12 @@ void* ecs_record_get_column(
     ecs_column_t *c = &table->storage.columns[column];
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int16_t size = c->size;
     ecs_check(!flecs_utosize(c_size) || 
         flecs_utosize(c_size) == c->size, 
         ECS_INVALID_PARAMETER, NULL);
 
-    void *array = ecs_vector_first_t(c->data, c->size, c->alignment);
-    bool is_watched;
-    int32_t row = flecs_record_to_row(r->row, &is_watched);
-
-    return ECS_OFFSET(array, size * row);
+    return ecs_vector_get_t(c->data, c->size, c->alignment, 
+        ECS_RECORD_TO_ROW(r->row));
 error:
     return NULL;
 }

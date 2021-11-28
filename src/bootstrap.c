@@ -193,7 +193,7 @@ void _bootstrap_component(
 
     int32_t index = flecs_table_append(world, table, &table->storage, 
         entity, record, false);
-    record->row = index + 1;
+    record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);
     component[index].size = size;

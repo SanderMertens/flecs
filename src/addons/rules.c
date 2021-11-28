@@ -31,7 +31,7 @@
  * - Position, Velocity
  * 
  * Is equivalent to
- * 
+ *
  * - Position(This), Velocity(This)
  * 
  * The function of the variable is to ensure that all components are matched on
@@ -816,9 +816,8 @@ void reg_set_entity(
             regs[r].count = 0;
             regs[r].entity = entity;
         } else {
-            bool is_monitored;
             regs[r].table = record->table;
-            regs[r].offset = flecs_record_to_row(record->row, &is_monitored);
+            regs[r].offset = ECS_RECORD_TO_ROW(record->row);
             regs[r].count = 1;
             regs[r].entity = 0;
         }
@@ -3906,9 +3905,7 @@ void populate_iterator(
 
             ecs_entity_t e = reg->entity;
             ecs_record_t *record = ecs_eis_get(world, e);
-
-            bool is_monitored;
-            offset = flecs_record_to_row(record->row, &is_monitored);
+            offset = ECS_RECORD_TO_ROW(record->row);
 
             /* If an entity is not stored in a table, it could not have
              * been matched by anything */

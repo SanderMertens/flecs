@@ -59,7 +59,7 @@ struct ecs_observable_t {
 
 struct ecs_record_t {
     ecs_table_t *table;  /* Identifies a type (and table) in world */
-    int32_t row;         /* Table row of the entity */
+    uint32_t row;        /* Table row of the entity */
 };
 
 /** Cached reference. */
@@ -67,7 +67,7 @@ struct ecs_ref_t {
     ecs_entity_t entity;    /* Entity of the reference */
     ecs_entity_t component; /* Component of the reference */
     void *table;            /* Last known table */
-    int32_t row;            /* Last known location in table */
+    uint32_t row;           /* Last known location in table */
     int32_t alloc_count;    /* Last known alloc count of table */
     ecs_record_t *record;   /* Pointer to record, if in main stage */
     const void *ptr;        /* Cached ptr */

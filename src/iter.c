@@ -107,8 +107,7 @@ bool flecs_iter_populate_term_data(
             ecs_record_t *r = ecs_eis_get(world, subj);
             ecs_assert(r != NULL && r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            bool is_monitored;
-            row = flecs_record_to_row(r->row, &is_monitored);            
+            row = ECS_RECORD_TO_ROW(r->row);
             table = r->table;
 
             ecs_id_t id = it->ids[t];
