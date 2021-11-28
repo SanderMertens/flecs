@@ -118,6 +118,13 @@ typedef int32_t ecs_size_t;
 
 #define ECS_ROLE_MASK         (0xFFull << 56)
 #define ECS_ENTITY_MASK       (0xFFFFFFFFull)
+#define ECS_ROW_MASK          (0x0FFFFFFFu)
+#define ECS_ROW_FLAGS_MASK    (~ECS_ROW_MASK)
+#define ECS_ROW_OBSERVED      (1u << 31)
+#define ECS_ROW_OBSERVED_PAIR (1u << 30)
+#define ECS_RECORD_TO_ROW(v)  ECS_CAST(int32_t, (ECS_CAST(uint32_t, v) & ECS_ROW_MASK))
+#define ECS_RECORD_TO_ROW_FLAGS(v) (ECS_CAST(uint32_t, v) & ECS_ROW_FLAGS_MASK)
+#define ECS_ROW_TO_RECORD(row, flags) ECS_CAST(uint32_t, (ECS_CAST(uint32_t, row) | (flags)))
 #define ECS_GENERATION_MASK   (0xFFFFull << 32)
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((0xFFFF & (ECS_GENERATION(e) + 1)) << 32))

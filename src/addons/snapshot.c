@@ -318,10 +318,8 @@ void restore_filtered(
             ecs_entity_t e = entities[i];
             ecs_record_t *r = ecs_eis_get(world, e);
             if (r && r->table) {
-                bool is_monitored;
-                int32_t row = flecs_record_to_row(r->row, &is_monitored);
-                flecs_table_delete(
-                    world, r->table, &r->table->storage, row, true);
+                flecs_table_delete(world, r->table, &r->table->storage, 
+                    ECS_RECORD_TO_ROW(r->row), true);
             } else {
                 /* Make sure that the entity has the same generation count */
                 ecs_eis_set_generation(world, e);

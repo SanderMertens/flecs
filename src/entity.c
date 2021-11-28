@@ -144,8 +144,7 @@ void* get_base_component(
             ptr = get_base_component(world, table, id, table_index, 
                 table_index_isa, recur_depth + 1);
         } else {
-            bool is_monitored;
-            int32_t row = flecs_record_to_row(r->row, &is_monitored);
+            int32_t row = ECS_RECORD_TO_ROW(r->row);
             ptr = get_component_w_index(table, tr->column, row);
         }
     } while (!ptr && (i < end));
@@ -157,11 +156,12 @@ error:
 
 /* Utility to compute actual row from row in record */
 static
-int32_t set_row_info(
+void set_row_info(
     ecs_entity_info_t *info,
-    int32_t row)
+    uint32_t row)
 {
-    return info->row = flecs_record_to_row(row, &info->is_watched);
+    info->row = ECS_RECORD_TO_ROW(row);
+    info->row_flags = ECS_RECORD_TO_ROW_FLAGS(row);
 }
 
 /* Utility to set info from main stage record */
@@ -706,7 +706,7 @@ int32_t new_entity(
         world, new_table, new_data, entity, record, construct);
 
     record->table = new_table;
-    record->row = flecs_row_to_record(new_row, info->is_watched);
+    record->row = ECS_ROW_TO_RECORD(new_row, info->row_flags);
 
     ecs_assert(ecs_vector_count(new_data[0].entities) > new_row, 
         ECS_INTERNAL_ERROR, NULL);
@@ -763,8 +763,8 @@ int32_t move_entity(
 
     /* Update entity index & delete old data after running remove actions */
     record->table = dst_table;
-    record->row = flecs_row_to_record(dst_row, info->is_watched);
-
+    record->row = ECS_ROW_TO_RECORD(dst_row, info->row_flags);
+    
     flecs_table_delete(world, src_table, src_data, src_row, false);
 
     /* If components were added, invoke add actions */
@@ -901,7 +901,7 @@ void commit(
             delete_entity(world, src_table, src_data, info->row, diff);
 
             ecs_eis_set(world, entity, &(ecs_record_t){
-                NULL, (info->is_watched == true) * -1
+                NULL, info->row_flags
             });
         }      
     } else {        
@@ -917,7 +917,7 @@ void commit(
      * ensures that systems that rely on components from containers or prefabs
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
-    if (info->is_watched) {
+    if (info->row_flags) {
         update_component_monitors(world, entity, &diff->added, &diff->removed);
     }
 
@@ -993,10 +993,10 @@ const ecs_entity_t* new_w_data(
     ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     for (i = 0; i < count; i ++) { 
         record_ptrs[row + i] = ecs_eis_set(world, entities[i], 
-        &(ecs_record_t){
-            .table = table,
-            .row = row + i + 1
-        });
+            &(ecs_record_t){
+                .table = table,
+                .row = ECS_ROW_TO_RECORD(row + i, 0)
+            });
     }
 
     flecs_defer_none(world, &world->stage);
@@ -1285,7 +1285,7 @@ bool flecs_get_info(
     info->table = NULL;
     info->record = NULL;
     info->data = NULL;
-    info->is_watched = false;
+    info->row_flags = 0;
 
     if (entity & ECS_ROLE) {
         return false;
@@ -1302,21 +1302,19 @@ bool flecs_get_info(
     return true;
 }
 
-int32_t flecs_record_to_row(
-    int32_t row, 
+uint32_t flecs_record_to_row(
+    uint32_t row, 
     bool *is_watched_out) 
 {
-    bool is_watched = row < 0;
-    row = row * -(is_watched * 2 - 1) - 1 * (row != 0);
-    *is_watched_out = is_watched;
-    return row;
+    *is_watched_out = (row & ECS_ROW_FLAGS_MASK) != 0;
+    return row & ECS_ROW_MASK;
 }
 
-int32_t flecs_row_to_record(
-    int32_t row, 
+uint32_t flecs_row_to_record(
+    uint32_t row, 
     bool is_watched) 
 {
-    return (row + 1) * -(is_watched * 2 - 1);
+    return row | (ECS_ROW_OBSERVED * is_watched);
 }
 
 ecs_ids_t flecs_type_to_ids(
@@ -1336,18 +1334,10 @@ void flecs_set_watch(
 
     ecs_record_t *record = ecs_eis_get(world, entity);
     if (!record) {
-        ecs_record_t new_record = {.row = -1, .table = NULL};
+        ecs_record_t new_record = {.row = ECS_ROW_OBSERVED, .table = NULL};
         ecs_eis_set(world, entity, &new_record);
     } else {
-        if (record->row > 0) {
-            record->row *= -1;
-
-        } else if (record->row == 0) {
-            /* If entity is empty, there is no index to change the sign of. In
-             * this case, set the index to -1, and assign an empty type. */
-            record->row = -1;
-            record->table = NULL;
-        }
+        record->row |= ECS_ROW_OBSERVED;
     }
 }
 
@@ -2335,12 +2325,10 @@ void delete_objects(
             ecs_record_t *r = flecs_sparse_get(
                 world->store.entity_index, ecs_record_t, e);
             
-            /* If row is negative, it means the entity is being monitored. Only
-             * monitored entities can have delete actions */
-            if (r && r->row < 0) {
-                /* Make row positive which prevents infinite recursion in case
-                 * of cyclic delete actions */
-                r->row = (-r->row);
+            /* If entity is flagged, it could have delete actions. */
+            if (r && (r->row & ECS_ROW_FLAGS_MASK)) {
+                /* Strip mask to prevent infinite recursion */
+                r->row = r->row & ECS_ROW_MASK;
 
                 /* Run delete actions for objects */
                 on_delete_any_w_entity(world, entities[i], 0);
@@ -2520,10 +2508,9 @@ void ecs_delete(
             table_id = table->id;
         }
 
-        if (info.is_watched) {
-            /* Make row positive which prevents infinite recursion in case
-             * of cyclic delete actions */
-            r->row = (-r->row);
+        if (info.row_flags) {
+            /* Prevent infinite recursion in case of cyclic delete actions */
+            r->row &= ECS_ROW_MASK;
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
@@ -2561,6 +2548,7 @@ void ecs_delete(
         }
 
         r->row = 0;
+        r->table = NULL;
 
         /* Remove (and invalidate) entity after executing handlers */
         flecs_sparse_remove(world->store.entity_index, entity);
@@ -2685,9 +2673,7 @@ const void* ecs_get_id(
        return get_base_component(world, table, id, idr, NULL, 0);
     }
 
-    bool is_monitored;
-    int32_t row = flecs_record_to_row(r->row, &is_monitored);
-
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
     return get_component_w_index(table, tr->column, row);
 error:
     return NULL;
@@ -2732,17 +2718,15 @@ const void* ecs_get_ref_w_id(
 
     id |= ref->component;
 
-    int32_t row = record->row;
+    uint32_t row = record->row;
     ref->entity = entity;
     ref->component = id;
     ref->table = table;
-    ref->row = record->row;
+    ref->row = row;
     ref->alloc_count = table->alloc_count;
 
     if (table) {
-        bool is_monitored;
-        row = flecs_record_to_row(row, &is_monitored);
-        ref->ptr = get_component(world, table, row, id);
+        ref->ptr = get_component(world, table, ECS_RECORD_TO_ROW(row), id);
     }
 
     ref->record = record;
@@ -2783,7 +2767,7 @@ void* ecs_get_mut_id(
      * reallocate arrays. Also store the row, as the entity could have 
      * reallocated. */
     int32_t alloc_count = table->alloc_count;
-    int32_t row = info.record->row;
+    uint32_t row = info.record->row;
     
     flecs_defer_flush(world, stage);
 

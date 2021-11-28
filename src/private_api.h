@@ -738,13 +738,13 @@ uint64_t flecs_from_row(
     ecs_record_t record);
 
 /* Get actual row from record row */
-int32_t flecs_record_to_row(
-    int32_t row, 
+uint32_t flecs_record_to_row(
+    uint32_t row, 
     bool *is_watched_out);
 
 /* Convert actual row to record row */
-int32_t flecs_row_to_record(
-    int32_t row, 
+uint32_t flecs_row_to_record(
+    uint32_t row, 
     bool is_watched);
 
 /* Convert type to entity array */

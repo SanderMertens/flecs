@@ -226,6 +226,13 @@ typedef int32_t ecs_size_t;
 
 #define ECS_ROLE_MASK         (0xFFull << 56)
 #define ECS_ENTITY_MASK       (0xFFFFFFFFull)
+#define ECS_ROW_MASK          (0x0FFFFFFFu)
+#define ECS_ROW_FLAGS_MASK    (~ECS_ROW_MASK)
+#define ECS_ROW_OBSERVED      (1u << 31)
+#define ECS_ROW_OBSERVED_PAIR (1u << 30)
+#define ECS_RECORD_TO_ROW(v)  ECS_CAST(int32_t, (ECS_CAST(uint32_t, v) & ECS_ROW_MASK))
+#define ECS_RECORD_TO_ROW_FLAGS(v) (ECS_CAST(uint32_t, v) & ECS_ROW_FLAGS_MASK)
+#define ECS_ROW_TO_RECORD(row, flags) ECS_CAST(uint32_t, (ECS_CAST(uint32_t, row) | (flags)))
 #define ECS_GENERATION_MASK   (0xFFFFull << 32)
 #define ECS_GENERATION(e)     ((e & ECS_GENERATION_MASK) >> 32)
 #define ECS_GENERATION_INC(e) ((e & ~ECS_GENERATION_MASK) | ((0xFFFF & (ECS_GENERATION(e) + 1)) << 32))
@@ -2740,7 +2747,7 @@ struct ecs_observable_t {
 
 struct ecs_record_t {
     ecs_table_t *table;  /* Identifies a type (and table) in world */
-    int32_t row;         /* Table row of the entity */
+    uint32_t row;        /* Table row of the entity */
 };
 
 /** Cached reference. */
@@ -2748,7 +2755,7 @@ struct ecs_ref_t {
     ecs_entity_t entity;    /* Entity of the reference */
     ecs_entity_t component; /* Component of the reference */
     void *table;            /* Last known table */
-    int32_t row;            /* Last known location in table */
+    uint32_t row;           /* Last known location in table */
     int32_t alloc_count;    /* Last known alloc count of table */
     ecs_record_t *record;   /* Pointer to record, if in main stage */
     const void *ptr;        /* Cached ptr */
