@@ -97,6 +97,7 @@ static const flecs::entity_t TransitiveSelf = EcsTransitiveSelf;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
+static const flecs::entity_t Acyclic = EcsAcyclic;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
