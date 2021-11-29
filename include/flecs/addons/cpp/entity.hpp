@@ -251,8 +251,7 @@ protected:
 };
 
 struct entity final : entity_base {
-    template <typename ... Args>
-    entity(Args&&... args) : entity_base(std::forward<Args>(args)...) { }
+    using entity_base::entity_base;
 
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that

@@ -7,12 +7,8 @@ namespace flecs
 
 struct trigger final : public entity_base
 {
-    explicit trigger() 
-        : entity_base() { }
-
-    explicit trigger(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
-
+    using entity_base::entity_base;
+    
     void ctx(void *ctx) {
         ecs_trigger_desc_t desc = {};
         desc.entity.entity = m_id;

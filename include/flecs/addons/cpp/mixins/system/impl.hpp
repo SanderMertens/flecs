@@ -61,12 +61,7 @@ private:
 
 struct system final : entity_base, extendable<system, Mixins>
 {
-    explicit system() 
-        : entity_base() { }
-
-    explicit system(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
-
+    using entity_base::entity_base;
 
     void ctx(void *ctx) {
         if (ecs_has(m_world, m_id, EcsSystem)) {

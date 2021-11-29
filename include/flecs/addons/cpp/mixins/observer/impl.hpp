@@ -7,11 +7,7 @@ namespace flecs
 
 struct observer final : public entity_base
 {
-    explicit observer() 
-        : entity_base() { }
-
-    explicit observer(flecs::world_t *world, flecs::entity_t id)
-        : entity_base(world, id) { }
+    using entity_base::entity_base;
 
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
