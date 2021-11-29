@@ -2024,6 +2024,7 @@ void MultiThread_multithread_quit(void);
 void MultiThread_schedule_w_tasks(void);
 void MultiThread_reactive_system(void);
 void MultiThread_fini_after_set_threads(void);
+void MultiThread_2_threads_single_threaded_system(void);
 
 // Testsuite 'DeferredActions'
 void DeferredActions_defer_new(void);
@@ -10005,6 +10006,10 @@ bake_test_case MultiThread_testcases[] = {
     {
         "fini_after_set_threads",
         MultiThread_fini_after_set_threads
+    },
+    {
+        "2_threads_single_threaded_system",
+        MultiThread_2_threads_single_threaded_system
     }
 };
 
@@ -11322,7 +11327,7 @@ static bake_test_suite suites[] = {
         "MultiThread",
         MultiThread_setup,
         NULL,
-        39,
+        40,
         MultiThread_testcases
     },
     {

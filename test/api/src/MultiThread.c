@@ -1043,3 +1043,45 @@ void MultiThread_fini_after_set_threads() {
     // Make sure code doesn't crash
     test_assert(true);
 }
+
+static
+void SingleThreadedSystem(ecs_iter_t * it) {
+    Position *p = ecs_term(it, Position, 1);
+    
+    int i;
+    for (i = 0; i < it->count; i++ ) {
+        p[i].x ++;
+        p[i].y ++;
+    }
+}
+
+void MultiThread_2_threads_single_threaded_system() {
+    ecs_world_t * world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);        
+    ECS_SYSTEM(world, SingleThreadedSystem, EcsOnUpdate, Position);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = SingleThreadedSystem,
+        .multi_threaded = false
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+
+    ecs_set_threads(world, 2);
+
+    ecs_progress(world, 0);
+
+    const Position *p = ecs_get(world, e1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    p = ecs_get(world, e2, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 21);
+    test_int(p->y, 31);
+
+    ecs_fini(world);
+}

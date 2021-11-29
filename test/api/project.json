@@ -2135,7 +2135,8 @@
                 "multithread_quit",
                 "schedule_w_tasks",
                 "reactive_system",
-                "fini_after_set_threads"
+                "fini_after_set_threads",
+                "2_threads_single_threaded_system"
             ]
         }, {
             "id": "DeferredActions",

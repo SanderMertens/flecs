@@ -164,7 +164,7 @@ ecs_entity_t ecs_run_intern(
     ecs_iter_action_t action = system_data->action;
 
     /* If no filter is provided, just iterate tables & invoke action */
-    if (stage_count <= 1) {
+    if (stage_count <= 1 || !system_data->multi_threaded) {
         while (ecs_query_next(&it)) {
             action(&it);
         }
