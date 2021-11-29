@@ -898,7 +898,7 @@ add_pair:
             }
 
             table_data->subjects[c] = entity;
-            flecs_set_watch(world, entity);
+            flecs_add_flag(world, entity, ECS_FLAG_OBSERVED);
 
             if (!match) {
                 ecs_ref_t *ref = ecs_vector_last(references, ecs_ref_t);
@@ -1687,7 +1687,7 @@ void process_signature(
         if (subj->entity && subj->entity != EcsThis && 
             subj->set.mask == EcsSelf) 
         {
-            flecs_set_watch(world, term->subj.entity);
+            flecs_add_flag(world, term->subj.entity, ECS_FLAG_OBSERVED);
         }
     }
 

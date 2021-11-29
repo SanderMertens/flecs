@@ -54,6 +54,7 @@ void notify_subset(
         ecs_entity_t rel = ECS_PAIR_RELATION(id);
 
         if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
+            /* Only notify for acyclic relations */
             continue;
         }
 
@@ -69,7 +70,10 @@ void notify_subset(
             table->storage.record_ptrs, ecs_record_t*);
 
         for (e = 0; e < entity_count; e ++) {
-            if (records[e]->row & ECS_ROW_FLAGS_MASK) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                /* Only notify for entities that are used in pairs with
+                 * acyclic relations */
                 notify_subset(world, entities[e], event, ids, desc);
             }
         }
@@ -139,7 +143,8 @@ void ecs_emit(
             table->storage.record_ptrs, ecs_record_t*, row);
 
         for (i = 0; i < count; i ++) {
-            if (recs[i]->row & ECS_ROW_FLAGS_MASK) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
                 notify_subset(world, ents[i], event, ids, desc);
             }
         }
