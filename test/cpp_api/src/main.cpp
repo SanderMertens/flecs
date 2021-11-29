@@ -510,6 +510,7 @@ void FilterBuilder_10_terms(void);
 void FilterBuilder_20_terms(void);
 void FilterBuilder_term_after_arg(void);
 void FilterBuilder_name_arg(void);
+void FilterBuilder_const_in_term(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -2697,6 +2698,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "name_arg",
         FilterBuilder_name_arg
+    },
+    {
+        "const_in_term",
+        FilterBuilder_const_in_term
     }
 };
 
@@ -3612,7 +3617,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        63,
+        64,
         FilterBuilder_testcases
     },
     {

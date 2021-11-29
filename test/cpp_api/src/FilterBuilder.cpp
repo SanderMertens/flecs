@@ -1609,3 +1609,26 @@ void FilterBuilder_name_arg() {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_const_in_term() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<Position>({10, 20});
+
+    auto f = ecs.filter_builder<>()
+        .term<const Position>()
+        .build();
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        auto p = it.term<const Position>(1);
+        test_assert(it.is_readonly(1));
+        for (auto i : it) {
+            count ++;
+            test_int(p[i].x, 10);
+            test_int(p[i].y, 20);
+        }
+    });
+
+    test_int(count, 1);
+}
