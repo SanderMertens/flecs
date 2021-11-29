@@ -43,9 +43,10 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
-void flecs_set_watch(
+void flecs_add_flag(
     ecs_world_t *world,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    uint32_t flag);
 
 /* Obtain entity info */
 bool flecs_get_info(

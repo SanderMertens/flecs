@@ -106,7 +106,7 @@ void register_on_delete(ecs_iter_t *it) {
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(world, e);
+        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
 }
 
@@ -122,7 +122,7 @@ void register_on_delete_object(ecs_iter_t *it) {
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete_object = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(world, e);
+        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
 }
 

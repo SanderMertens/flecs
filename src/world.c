@@ -1616,8 +1616,13 @@ void for_each_id(
             action(world, table, all_wildcard, i);
 
             if (set_watch) {
-                flecs_set_watch(world, ecs_pair_relation(world, id));
-                flecs_set_watch(world, ecs_pair_object(world, id));
+                ecs_entity_t rel = ecs_pair_relation(world, id);
+                ecs_entity_t obj = ecs_pair_object(world, id);
+                flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
+                flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
+                if (ecs_has_id(world, rel, EcsAcyclic)) {
+                    flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
+                }
             }
         } else {
             if (id & ECS_ROLE_MASK) {
@@ -1626,7 +1631,7 @@ void for_each_id(
             }
 
             if (set_watch) {
-                flecs_set_watch(world, id);
+                flecs_add_flag(world, id, ECS_FLAG_OBSERVED_ID);
             }            
         }
     }

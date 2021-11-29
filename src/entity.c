@@ -1314,7 +1314,7 @@ uint32_t flecs_row_to_record(
     uint32_t row, 
     bool is_watched) 
 {
-    return row | (ECS_ROW_OBSERVED * is_watched);
+    return row | (ECS_FLAG_OBSERVED * is_watched);
 }
 
 ecs_ids_t flecs_type_to_ids(
@@ -1326,18 +1326,19 @@ ecs_ids_t flecs_type_to_ids(
     };
 }
 
-void flecs_set_watch(
+void flecs_add_flag(
     ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    uint32_t flag)
 {    
     (void)world;
 
     ecs_record_t *record = ecs_eis_get(world, entity);
     if (!record) {
-        ecs_record_t new_record = {.row = ECS_ROW_OBSERVED, .table = NULL};
+        ecs_record_t new_record = {.row = flag, .table = NULL};
         ecs_eis_set(world, entity, &new_record);
     } else {
-        record->row |= ECS_ROW_OBSERVED;
+        record->row |= flag;
     }
 }
 
@@ -2229,7 +2230,8 @@ static
 void on_delete_any_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t action);
+    ecs_entity_t action,
+    uint32_t flags);
 
 static
 void throw_invalid_delete(
@@ -2326,12 +2328,13 @@ void delete_objects(
                 world->store.entity_index, ecs_record_t, e);
             
             /* If entity is flagged, it could have delete actions. */
-            if (r && (r->row & ECS_ROW_FLAGS_MASK)) {
+            uint32_t flags;
+            if (r && (flags = (r->row & ECS_ROW_FLAGS_MASK))) {
                 /* Strip mask to prevent infinite recursion */
                 r->row = r->row & ECS_ROW_MASK;
 
                 /* Run delete actions for objects */
-                on_delete_any_w_entity(world, entities[i], 0);
+                on_delete_any_w_entity(world, entities[i], 0, flags);
             }        
         }
 
@@ -2449,13 +2452,18 @@ void on_delete_action(
 static
 void on_delete_any_w_entity(
     ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t e,
+    ecs_entity_t action,
+    uint32_t flags)
 {
     /* Make sure any references to the entity are cleaned up */
-    on_delete_action(world, id, action);
-    on_delete_action(world, ecs_pair(id, EcsWildcard), action);
-    on_delete_action(world, ecs_pair(EcsWildcard, id), action);
+    if (flags & ECS_FLAG_OBSERVED_ID) {
+        on_delete_action(world, e, action);
+        on_delete_action(world, ecs_pair(e, EcsWildcard), action);
+    }
+    if (flags & ECS_FLAG_OBSERVED_OBJECT) {
+        on_delete_action(world, ecs_pair(EcsWildcard, e), action);
+    }
 }
 
 void ecs_delete_with(
@@ -2514,7 +2522,7 @@ void ecs_delete(
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
-            on_delete_any_w_entity(world, entity, 0);
+            on_delete_any_w_entity(world, entity, 0, info.row_flags);
 
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */

@@ -1358,9 +1358,10 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
-void flecs_set_watch(
+void flecs_add_flag(
     ecs_world_t *world,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    uint32_t flag);
 
 /* Obtain entity info */
 bool flecs_get_info(
@@ -5281,7 +5282,7 @@ uint32_t flecs_row_to_record(
     uint32_t row, 
     bool is_watched) 
 {
-    return row | (ECS_ROW_OBSERVED * is_watched);
+    return row | (ECS_FLAG_OBSERVED * is_watched);
 }
 
 ecs_ids_t flecs_type_to_ids(
@@ -5293,18 +5294,19 @@ ecs_ids_t flecs_type_to_ids(
     };
 }
 
-void flecs_set_watch(
+void flecs_add_flag(
     ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    uint32_t flag)
 {    
     (void)world;
 
     ecs_record_t *record = ecs_eis_get(world, entity);
     if (!record) {
-        ecs_record_t new_record = {.row = ECS_ROW_OBSERVED, .table = NULL};
+        ecs_record_t new_record = {.row = flag, .table = NULL};
         ecs_eis_set(world, entity, &new_record);
     } else {
-        record->row |= ECS_ROW_OBSERVED;
+        record->row |= flag;
     }
 }
 
@@ -6196,7 +6198,8 @@ static
 void on_delete_any_w_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t action);
+    ecs_entity_t action,
+    uint32_t flags);
 
 static
 void throw_invalid_delete(
@@ -6293,12 +6296,13 @@ void delete_objects(
                 world->store.entity_index, ecs_record_t, e);
             
             /* If entity is flagged, it could have delete actions. */
-            if (r && (r->row & ECS_ROW_FLAGS_MASK)) {
+            uint32_t flags;
+            if (r && (flags = (r->row & ECS_ROW_FLAGS_MASK))) {
                 /* Strip mask to prevent infinite recursion */
                 r->row = r->row & ECS_ROW_MASK;
 
                 /* Run delete actions for objects */
-                on_delete_any_w_entity(world, entities[i], 0);
+                on_delete_any_w_entity(world, entities[i], 0, flags);
             }        
         }
 
@@ -6416,13 +6420,18 @@ void on_delete_action(
 static
 void on_delete_any_w_entity(
     ecs_world_t *world,
-    ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t e,
+    ecs_entity_t action,
+    uint32_t flags)
 {
     /* Make sure any references to the entity are cleaned up */
-    on_delete_action(world, id, action);
-    on_delete_action(world, ecs_pair(id, EcsWildcard), action);
-    on_delete_action(world, ecs_pair(EcsWildcard, id), action);
+    if (flags & ECS_FLAG_OBSERVED_ID) {
+        on_delete_action(world, e, action);
+        on_delete_action(world, ecs_pair(e, EcsWildcard), action);
+    }
+    if (flags & ECS_FLAG_OBSERVED_OBJECT) {
+        on_delete_action(world, ecs_pair(EcsWildcard, e), action);
+    }
 }
 
 void ecs_delete_with(
@@ -6481,7 +6490,7 @@ void ecs_delete(
 
             /* Ensure that the store contains no dangling references to the
              * deleted entity (as a component, or as part of a relation) */
-            on_delete_any_w_entity(world, entity, 0);
+            on_delete_any_w_entity(world, entity, 0, info.row_flags);
 
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
@@ -12928,8 +12937,13 @@ void for_each_id(
             action(world, table, all_wildcard, i);
 
             if (set_watch) {
-                flecs_set_watch(world, ecs_pair_relation(world, id));
-                flecs_set_watch(world, ecs_pair_object(world, id));
+                ecs_entity_t rel = ecs_pair_relation(world, id);
+                ecs_entity_t obj = ecs_pair_object(world, id);
+                flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
+                flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
+                if (ecs_has_id(world, rel, EcsAcyclic)) {
+                    flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
+                }
             }
         } else {
             if (id & ECS_ROLE_MASK) {
@@ -12938,7 +12952,7 @@ void for_each_id(
             }
 
             if (set_watch) {
-                flecs_set_watch(world, id);
+                flecs_add_flag(world, id, ECS_FLAG_OBSERVED_ID);
             }            
         }
     }
@@ -13450,6 +13464,7 @@ void notify_subset(
         ecs_entity_t rel = ECS_PAIR_RELATION(id);
 
         if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
+            /* Only notify for acyclic relations */
             continue;
         }
 
@@ -13465,7 +13480,10 @@ void notify_subset(
             table->storage.record_ptrs, ecs_record_t*);
 
         for (e = 0; e < entity_count; e ++) {
-            if (records[e]->row & ECS_ROW_FLAGS_MASK) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                /* Only notify for entities that are used in pairs with
+                 * acyclic relations */
                 notify_subset(world, entities[e], event, ids, desc);
             }
         }
@@ -13535,7 +13553,8 @@ void ecs_emit(
             table->storage.record_ptrs, ecs_record_t*, row);
 
         for (i = 0; i < count; i ++) {
-            if (recs[i]->row & ECS_ROW_FLAGS_MASK) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
                 notify_subset(world, ents[i], event, ids, desc);
             }
         }
@@ -14499,7 +14518,7 @@ add_pair:
             }
 
             table_data->subjects[c] = entity;
-            flecs_set_watch(world, entity);
+            flecs_add_flag(world, entity, ECS_FLAG_OBSERVED);
 
             if (!match) {
                 ecs_ref_t *ref = ecs_vector_last(references, ecs_ref_t);
@@ -15288,7 +15307,7 @@ void process_signature(
         if (subj->entity && subj->entity != EcsThis && 
             subj->set.mask == EcsSelf) 
         {
-            flecs_set_watch(world, term->subj.entity);
+            flecs_add_flag(world, term->subj.entity, ECS_FLAG_OBSERVED);
         }
     }
 
@@ -17244,7 +17263,7 @@ void register_on_delete(ecs_iter_t *it) {
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(world, e);
+        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
 }
 
@@ -17260,7 +17279,7 @@ void register_on_delete_object(ecs_iter_t *it) {
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->on_delete_object = ECS_PAIR_OBJECT(id);
 
-        flecs_set_watch(world, e);
+        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
 }
 
