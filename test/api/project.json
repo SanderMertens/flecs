@@ -61,20 +61,10 @@
             }, {
                 "id": "Event",
                 "testcases": [
-                    "empty_entity_1_id_w_trigger",
-                    "empty_entity_1_id_w_observer",
-                    "entity_1_id_w_trigger",
-                    "entity_2_ids_w_trigger",
                     "table_1_id_w_trigger",
                     "table_2_ids_w_trigger",
-                    "table_no_ids_w_trigger",
-                    "entity_1_id_w_observer",
-                    "entity_2_ids_w_observer",
                     "table_1_id_w_observer",
-                    "table_2_ids_w_observer",
-                    "table_no_ids_w_observer",
-                    "entity_1_id_w_wildcard_trigger",
-                    "observer_1_id_w_wildcard_trigger"
+                    "table_2_ids_w_observer"
                 ]
             }, {
             "id": "New",

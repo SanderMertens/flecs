@@ -165,17 +165,17 @@ void flecs_clear_id_record(
     ecs_id_t id);
 
 void flecs_triggers_notify(
-    ecs_world_t *world,
-    ecs_poly_t *observable,
+    ecs_iter_t *it,
+    ecs_observable_t *observable,
+    ecs_ids_t *ids,
+    ecs_entity_t event);
+
+void flecs_set_triggers_notify(
+    ecs_iter_t *it,
+    ecs_observable_t *observable,
     ecs_ids_t *ids,
     ecs_entity_t event,
-    ecs_entity_t entity,
-    ecs_table_t *table,
-    ecs_table_t *other_table,
-    int32_t row,
-    int32_t count,
-    ecs_id_t set_id,
-    void *param);
+    ecs_id_t set_id);
 
 ecs_event_id_record_t* flecs_triggers_for_id(
     const ecs_poly_t *world,
