@@ -5926,26 +5926,14 @@ void* ecs_get_trigger_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t trigger);
 
-
-typedef enum ecs_payload_kind_t {
-    EcsPayloadNone,
-    EcsPayloadEntity,
-    EcsPayloadTable
-} ecs_payload_kind_t;
-
 typedef struct ecs_event_desc_t {
     ecs_entity_t event;
     ecs_ids_t *ids; /* When NULL, notify for all ids in entity/table type */
-    ecs_payload_kind_t payload_kind;
-    union {
-        ecs_entity_t entity;
-        struct {
-            ecs_table_t *table;
-            ecs_table_t *other_table;
-            int32_t offset;
-            int32_t count; /* When 0 notify all entities starting from offset */
-        } table;
-    } payload;
+
+    ecs_table_t *table;
+    ecs_table_t *other_table;
+    int32_t offset;
+    int32_t count; /* When 0 notify all entities starting from offset */
 
     void *param; /* Assigned to iter param member */
 

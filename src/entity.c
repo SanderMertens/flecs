@@ -293,13 +293,11 @@ void notify(
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = event,
         .ids = ids,
-        .payload_kind = EcsPayloadTable,
-        .payload.table = {
-            .table = table,
-            .other_table = other_table,
-            .offset = row,
-            .count = count
-        }
+        .table = table,
+        .other_table = other_table,
+        .offset = row,
+        .count = count,
+        .observable = world
     });
 }
 
@@ -1186,20 +1184,23 @@ void flecs_notify_on_add(
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (table->flags & EcsTableHasIsA) {
-        components_override(world, table, data, row, count, &diff->added);
+    if (diff->added.count) {
+        if (table->flags & EcsTableHasIsA) {
+            components_override(world, table, data, row, count, &diff->added);
+        }
+
+        if (table->flags & EcsTableHasSwitch) {
+            ecs_components_switch(
+                world, table, data, row, count, &diff->added, NULL);
+        }
+
+        if (table->flags & EcsTableHasOnAdd) {
+            notify(world, table, other_table, row, count, EcsOnAdd, 
+                &diff->added);
+        }
     }
 
-    if (table->flags & EcsTableHasSwitch) {
-        ecs_components_switch(
-            world, table, data, row, count, &diff->added, NULL);
-    }
-
-    if (table->flags & EcsTableHasOnAdd) {
-        notify(world, table, other_table, row, count, EcsOnAdd, &diff->added);
-    }
-
-    if (run_on_set) {
+    if (run_on_set && diff->on_set.count) {
         notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set);
     }
 }
@@ -1215,14 +1216,16 @@ void flecs_notify_on_remove(
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (count) {
-        notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set);
+        if (diff->un_set.count) {
+            notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set);
+        }
 
-        if (table->flags & EcsTableHasOnRemove) {
+        if (table->flags & EcsTableHasOnRemove && diff->removed.count) {
             notify(world, table, other_table, row, count, EcsOnRemove, 
                 &diff->removed);
         }
 
-        if (table->flags & EcsTableHasIsA) {
+        if (table->flags & EcsTableHasIsA && diff->on_set.count) {
             notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set);
         }
     }
@@ -1272,7 +1275,7 @@ void flecs_notify_on_set(
     }
 
     /* Run OnSet notifications */
-    if (table->flags & EcsTableHasOnSet) {
+    if (table->flags & EcsTableHasOnSet && ids->count) {
         notify(world, table, NULL, row, count, EcsOnSet, ids);
     }
 }
