@@ -150,3 +150,40 @@ void Singleton_type_id_from_world() {
     test_assert(s.id() == flecs::type_id<Position>());
     test_assert(s.id() == flecs::type_id<Position>());
 }
+
+void Singleton_set_lambda() {
+    flecs::world world;
+
+    world.set([](Position& p) {
+        p.x = 10;
+        p.y = 20;
+    });
+
+    const Position* p = world.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    world.set([](Position& p) {
+        p.x ++;
+        p.y ++;
+    });
+
+    p = world.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+}
+
+void Singleton_get_lambda() {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+
+    int32_t count = 0;
+    world.get([&](const Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

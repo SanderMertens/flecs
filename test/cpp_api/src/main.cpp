@@ -727,6 +727,8 @@ void Singleton_has_singleton(void);
 void Singleton_singleton_system(void);
 void Singleton_get_singleton(void);
 void Singleton_type_id_from_world(void);
+void Singleton_set_lambda(void);
+void Singleton_get_lambda(void);
 
 // Testsuite 'Misc'
 void Misc_setup(void);
@@ -3511,6 +3513,14 @@ bake_test_case Singleton_testcases[] = {
     {
         "type_id_from_world",
         Singleton_type_id_from_world
+    },
+    {
+        "set_lambda",
+        Singleton_set_lambda
+    },
+    {
+        "get_lambda",
+        Singleton_get_lambda
     }
 };
 
@@ -3694,7 +3704,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        10,
+        12,
         Singleton_testcases
     },
     {

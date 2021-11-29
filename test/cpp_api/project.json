@@ -772,7 +772,9 @@
                 "has_singleton",
                 "singleton_system",
                 "get_singleton",
-                "type_id_from_world"
+                "type_id_from_world",
+                "set_lambda",
+                "get_lambda"
             ]
         }, {
             "id": "Misc",
