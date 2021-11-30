@@ -1,6 +1,5 @@
 #include <meta.h>
 
-
 void SerializeToJson_struct_bool() {
     typedef struct {
         ecs_bool_t x;

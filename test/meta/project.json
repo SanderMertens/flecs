@@ -470,6 +470,31 @@
                 "serialize_iterator_w_2_vars"
             ]
         }, {
+            "id": "SerializeTypeInfoToJson",
+            "testcases": [
+                "bool",
+                "byte",
+                "char",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "iptr",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "uptr",
+                "float",
+                "double",
+                "string",
+                "entity",
+                "enum",
+                "bitmask",
+                "struct",
+                "nested_struct"
+            ]
+        }, {
             "id": "MetaUtils",
             "testcases": [
                 "struct_w_2_i32",

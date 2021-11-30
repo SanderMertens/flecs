@@ -1,8 +1,7 @@
 
-#include "../../private_api.h"
+#include "json.h"
 
 #ifdef FLECS_JSON
-
 
 static
 int json_ser_type(
@@ -25,118 +24,6 @@ int json_ser_type_op(
     ecs_meta_type_op_t *op, 
     const void *base,
     ecs_strbuf_t *str);
-
-static
-void json_next(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_next(buf);
-}
-
-static
-void json_literal(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_strbuf_appendstr(buf, value);
-}
-
-static
-void json_number(
-    ecs_strbuf_t *buf,
-    double value)
-{
-    ecs_strbuf_appendflt(buf, value);
-}
-
-static
-void json_true(
-    ecs_strbuf_t *buf)
-{
-    json_literal(buf, "true");
-}
-
-static
-void json_false(
-    ecs_strbuf_t *buf)
-{
-    json_literal(buf, "false");
-}
-
-static
-void json_array_push(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_push(buf, "[", ", ");
-}
-
-static
-void json_array_pop(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_pop(buf, "]");
-}
-
-static
-void json_object_push(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_push(buf, "{", ", ");
-}
-
-static
-void json_object_pop(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_pop(buf, "}");
-}
-
-static
-void json_string(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_strbuf_appendstr(buf, "\"");
-    ecs_strbuf_appendstr(buf, value);
-    ecs_strbuf_appendstr(buf, "\"");
-}
-
-static
-void json_member(
-    ecs_strbuf_t *buf,
-    const char *name)
-{
-    ecs_strbuf_list_appendstr(buf, "\"");
-    ecs_strbuf_appendstr(buf, name);
-    ecs_strbuf_appendstr(buf, "\":");
-}
-
-static
-void json_path(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    ecs_strbuf_appendch(buf, '"');
-    ecs_get_fullpath_buf(world, e, buf);
-    ecs_strbuf_appendch(buf, '"');
-}
-
-static
-void json_id(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_strbuf_appendch(buf, '"');
-    ecs_id_str_buf(world, id, buf);
-    ecs_strbuf_appendch(buf, '"');
-}
-
-static
-ecs_primitive_kind_t json_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
-    return kind - EcsOpPrimitive;
-}
 
 /* Serialize enumeration */
 static

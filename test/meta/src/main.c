@@ -440,6 +440,29 @@ void SerializeToJson_serialize_iterator_w_pair_wildcard(void);
 void SerializeToJson_serialize_iterator_w_var(void);
 void SerializeToJson_serialize_iterator_w_2_vars(void);
 
+// Testsuite 'SerializeTypeInfoToJson'
+void SerializeTypeInfoToJson_bool(void);
+void SerializeTypeInfoToJson_byte(void);
+void SerializeTypeInfoToJson_char(void);
+void SerializeTypeInfoToJson_i8(void);
+void SerializeTypeInfoToJson_i16(void);
+void SerializeTypeInfoToJson_i32(void);
+void SerializeTypeInfoToJson_i64(void);
+void SerializeTypeInfoToJson_iptr(void);
+void SerializeTypeInfoToJson_u8(void);
+void SerializeTypeInfoToJson_u16(void);
+void SerializeTypeInfoToJson_u32(void);
+void SerializeTypeInfoToJson_u64(void);
+void SerializeTypeInfoToJson_uptr(void);
+void SerializeTypeInfoToJson_float(void);
+void SerializeTypeInfoToJson_double(void);
+void SerializeTypeInfoToJson_string(void);
+void SerializeTypeInfoToJson_entity(void);
+void SerializeTypeInfoToJson_enum(void);
+void SerializeTypeInfoToJson_bitmask(void);
+void SerializeTypeInfoToJson_struct(void);
+void SerializeTypeInfoToJson_nested_struct(void);
+
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
 void MetaUtils_struct_w_2_bool(void);
@@ -2118,6 +2141,93 @@ bake_test_case SerializeToJson_testcases[] = {
     }
 };
 
+bake_test_case SerializeTypeInfoToJson_testcases[] = {
+    {
+        "bool",
+        SerializeTypeInfoToJson_bool
+    },
+    {
+        "byte",
+        SerializeTypeInfoToJson_byte
+    },
+    {
+        "char",
+        SerializeTypeInfoToJson_char
+    },
+    {
+        "i8",
+        SerializeTypeInfoToJson_i8
+    },
+    {
+        "i16",
+        SerializeTypeInfoToJson_i16
+    },
+    {
+        "i32",
+        SerializeTypeInfoToJson_i32
+    },
+    {
+        "i64",
+        SerializeTypeInfoToJson_i64
+    },
+    {
+        "iptr",
+        SerializeTypeInfoToJson_iptr
+    },
+    {
+        "u8",
+        SerializeTypeInfoToJson_u8
+    },
+    {
+        "u16",
+        SerializeTypeInfoToJson_u16
+    },
+    {
+        "u32",
+        SerializeTypeInfoToJson_u32
+    },
+    {
+        "u64",
+        SerializeTypeInfoToJson_u64
+    },
+    {
+        "uptr",
+        SerializeTypeInfoToJson_uptr
+    },
+    {
+        "float",
+        SerializeTypeInfoToJson_float
+    },
+    {
+        "double",
+        SerializeTypeInfoToJson_double
+    },
+    {
+        "string",
+        SerializeTypeInfoToJson_string
+    },
+    {
+        "entity",
+        SerializeTypeInfoToJson_entity
+    },
+    {
+        "enum",
+        SerializeTypeInfoToJson_enum
+    },
+    {
+        "bitmask",
+        SerializeTypeInfoToJson_bitmask
+    },
+    {
+        "struct",
+        SerializeTypeInfoToJson_struct
+    },
+    {
+        "nested_struct",
+        SerializeTypeInfoToJson_nested_struct
+    }
+};
+
 bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_2_i32",
@@ -2266,6 +2376,13 @@ static bake_test_suite suites[] = {
         SerializeToJson_testcases
     },
     {
+        "SerializeTypeInfoToJson",
+        NULL,
+        NULL,
+        21,
+        SerializeTypeInfoToJson_testcases
+    },
+    {
         "MetaUtils",
         NULL,
         NULL,
@@ -2276,5 +2393,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("meta", argc, argv, suites, 14);
+    return bake_test_run("meta", argc, argv, suites, 15);
 }
