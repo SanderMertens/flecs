@@ -20,6 +20,8 @@ flecs_src = files(
     'src/addons/http.c',
     'src/addons/json/deserialize.c',
     'src/addons/json/serialize.c',
+    'src/addons/json/serialize_type_info.c',
+    'src/addons/json/json.c',
     'src/addons/log.c',
     'src/addons/meta/api.c',
     'src/addons/meta/meta.c',
