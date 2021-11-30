@@ -3,8 +3,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 new_git_repository(
     name = "bake",
     remote = "git@github.com:SanderMertens/bake.git",
-    commit = "cfc90745f9daa7b7fba80f229af18cdd5029b066",
-    shallow_since = "1614835160 -0800",
+    commit = "e2b3d03b61ef36e17a41aa76cb9395b4260468aa",
+    shallow_since = "1637826538 -0800",
 
     build_file_content = """
 cc_library(
@@ -12,6 +12,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [":util", ":bake"],
 
+    defines = ["bake_test_STATIC"],
     srcs = glob(["drivers/test/src/**/*.c", "drivers/test/src/**/*.h"]),
     hdrs = glob(["drivers/test/include/**/*.h"]),
     includes = ["drivers/test/include"],
@@ -30,10 +31,10 @@ cc_library(
 cc_library(
     name = "util",
     visibility = ["//visibility:public"],
-    defines = ["__BAKE__", "_XOPEN_SOURCE=600"],
+    defines = ["UT_IMPL", "__BAKE__", "_XOPEN_SOURCE=600"],
 
     linkopts = select({
-        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:windows": ["-DEFAULTLIB:dbghelp -DEFAULTLIB:shell32 -DEFAULTLIB:shlwapi"],
         "//conditions:default": ["-lrt -lpthread -ldl"],
     }),
 
