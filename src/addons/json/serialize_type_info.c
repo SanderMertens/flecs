@@ -162,7 +162,7 @@ error:
     return -1;
 }
 
-int ecs_type_info_to_buf(
+int ecs_type_info_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf)
@@ -196,7 +196,7 @@ char* ecs_type_info_to_json(
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
 
-    if (ecs_type_info_to_buf(world, type, &str) != 0) {
+    if (ecs_type_info_to_json_buf(world, type, &str) != 0) {
         ecs_strbuf_reset(&str);
         return NULL;
     }

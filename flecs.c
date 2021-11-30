@@ -24733,6 +24733,61 @@ void FlecsSystemImport(
 #ifdef FLECS_JSON
 
 void json_next(
+    ecs_strbuf_t *buf);
+
+void json_literal(
+    ecs_strbuf_t *buf,
+    const char *value);
+
+void json_number(
+    ecs_strbuf_t *buf,
+    double value);
+
+void json_true(
+    ecs_strbuf_t *buf);
+
+void json_false(
+    ecs_strbuf_t *buf);
+
+void json_array_push(
+    ecs_strbuf_t *buf);
+
+void json_array_pop(
+    ecs_strbuf_t *buf);
+
+void json_object_push(
+    ecs_strbuf_t *buf);
+
+void json_object_pop(
+    ecs_strbuf_t *buf);
+
+void json_string(
+    ecs_strbuf_t *buf,
+    const char *value);
+
+void json_member(
+    ecs_strbuf_t *buf,
+    const char *name);
+
+void json_path(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+void json_id(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+ecs_primitive_kind_t json_op_to_primitive_kind(
+    ecs_meta_type_op_kind_t kind);
+
+#endif
+
+
+#ifdef FLECS_JSON
+
+void json_next(
     ecs_strbuf_t *buf)
 {
     ecs_strbuf_list_next(buf);
@@ -24834,61 +24889,6 @@ ecs_primitive_kind_t json_op_to_primitive_kind(
 
 #endif
 
-
-
-#ifdef FLECS_JSON
-
-void json_next(
-    ecs_strbuf_t *buf);
-
-void json_literal(
-    ecs_strbuf_t *buf,
-    const char *value);
-
-void json_number(
-    ecs_strbuf_t *buf,
-    double value);
-
-void json_true(
-    ecs_strbuf_t *buf);
-
-void json_false(
-    ecs_strbuf_t *buf);
-
-void json_array_push(
-    ecs_strbuf_t *buf);
-
-void json_array_pop(
-    ecs_strbuf_t *buf);
-
-void json_object_push(
-    ecs_strbuf_t *buf);
-
-void json_object_pop(
-    ecs_strbuf_t *buf);
-
-void json_string(
-    ecs_strbuf_t *buf,
-    const char *value);
-
-void json_member(
-    ecs_strbuf_t *buf,
-    const char *name);
-
-void json_path(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
-void json_id(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id);
-
-ecs_primitive_kind_t json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind);
-
-#endif
 
 
 #ifdef FLECS_JSON
@@ -26007,7 +26007,7 @@ error:
     return -1;
 }
 
-int ecs_type_info_to_buf(
+int ecs_type_info_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf)
@@ -26041,7 +26041,7 @@ char* ecs_type_info_to_json(
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
 
-    if (ecs_type_info_to_buf(world, type, &str) != 0) {
+    if (ecs_type_info_to_json_buf(world, type, &str) != 0) {
         ecs_strbuf_reset(&str);
         return NULL;
     }

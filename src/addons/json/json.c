@@ -1,4 +1,4 @@
-#include "../../private_api.h"
+#include "json.h"
 
 #ifdef FLECS_JSON
 

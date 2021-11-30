@@ -137,7 +137,7 @@ char* ecs_type_info_to_json(
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
-char* ecs_type_info_to_json_buf(
+int ecs_type_info_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf_out);
