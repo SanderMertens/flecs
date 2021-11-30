@@ -1484,6 +1484,11 @@ void Trigger_on_add_base_superset_trigger_2_lvls(void);
 void Trigger_on_add_base_2_entities(void);
 void Trigger_on_set_base_w_value_2_entities(void);
 void Trigger_on_set_base_w_value_2_entities_instanced(void);
+void Trigger_on_add_base_w_override(void);
+void Trigger_on_set_base_w_override(void);
+void Trigger_entity_source_1_trigger(void);
+void Trigger_entity_source_2_triggers(void);
+void Trigger_entity_source_base_set(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7982,6 +7987,26 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_base_w_value_2_entities_instanced",
         Trigger_on_set_base_w_value_2_entities_instanced
+    },
+    {
+        "on_add_base_w_override",
+        Trigger_on_add_base_w_override
+    },
+    {
+        "on_set_base_w_override",
+        Trigger_on_set_base_w_override
+    },
+    {
+        "entity_source_1_trigger",
+        Trigger_entity_source_1_trigger
+    },
+    {
+        "entity_source_2_triggers",
+        Trigger_entity_source_2_triggers
+    },
+    {
+        "entity_source_base_set",
+        Trigger_entity_source_base_set
     }
 };
 
@@ -11175,7 +11200,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        81,
+        86,
         Trigger_testcases
     },
     {

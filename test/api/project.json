@@ -1553,7 +1553,12 @@
                "on_add_base_superset_trigger_2_lvls",
                "on_add_base_2_entities",
                "on_set_base_w_value_2_entities",
-               "on_set_base_w_value_2_entities_instanced"
+               "on_set_base_w_value_2_entities_instanced",
+               "on_add_base_w_override",
+               "on_set_base_w_override",
+               "entity_source_1_trigger",
+               "entity_source_2_triggers",
+               "entity_source_base_set"
            ]
         }, {
             "id": "Observer",

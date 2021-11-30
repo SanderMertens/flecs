@@ -20,6 +20,20 @@ void Trigger_w_value(ecs_iter_t *it) {
 }
 
 static
+void Trigger_w_value_from_entity(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] == 0);
+    test_assert(it->subjects[0] != 0);
+
+    Position *p = ecs_term(it, Position, 1);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+static
 void Trigger_w_value_instanced(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -2898,6 +2912,7 @@ void Trigger_on_add_base() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -2925,15 +2940,19 @@ void Trigger_on_add_base() {
     ctx = (Probe){0};
 
     ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_remove_base() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -2949,6 +2968,7 @@ void Trigger_on_remove_base() {
     test_int(ctx.invoked, 0);
 
     ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, base, TagA);
@@ -2964,15 +2984,19 @@ void Trigger_on_remove_base() {
     ctx = (Probe){0};
 
     ecs_remove(world, base, TagA);
+    ecs_remove(world, base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_set_base() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3009,13 +3033,21 @@ void Trigger_on_set_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
+    ctx = (Probe){0};
+
+    ecs_set(world, base, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_unset_base() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3031,6 +3063,7 @@ void Trigger_on_unset_base() {
     test_int(ctx.invoked, 0);
 
     ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, base, Velocity, {1, 2});
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, base, Position);
@@ -3046,15 +3079,19 @@ void Trigger_on_unset_base() {
     ctx = (Probe){0};
 
     ecs_remove(world, base, Position);
+    ecs_remove(world, base, Velocity);
     test_int(ctx.invoked, 0);
     
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_add_base_superset_trigger() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -3082,6 +3119,7 @@ void Trigger_on_add_base_superset_trigger() {
     ctx = (Probe){0};
 
     ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
@@ -3091,6 +3129,7 @@ void Trigger_on_add_base_superset_trigger_2_lvls() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -3121,15 +3160,19 @@ void Trigger_on_add_base_superset_trigger_2_lvls() {
     ctx = (Probe){0};
 
     ecs_add(world, base_of_base, TagA);
+    ecs_add(world, base_of_base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_add_base_2_entities() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3159,15 +3202,19 @@ void Trigger_on_add_base_2_entities() {
     ctx = (Probe){0};
 
     ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
 }
 
 void Trigger_on_set_base_w_value_2_entities() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3207,6 +3254,11 @@ void Trigger_on_set_base_w_value_2_entities() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
+    ctx = (Probe){0};
+
+    ecs_set(world, base, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
     ecs_fini(world);
 }
 
@@ -3214,6 +3266,7 @@ void Trigger_on_set_base_w_value_2_entities_instanced() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3253,6 +3306,254 @@ void Trigger_on_set_base_w_value_2_entities_instanced() {
     test_null(ctx.param);
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
+
+    ctx = (Probe){0};
+
+    ecs_set(world, base, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_add_base_w_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA, /* Implicitly also listens to IsA */
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, base, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], base);
+
+    ctx = (Probe){0};
+
+    ecs_add(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], 0);
+
+    ctx = (Probe){0};
+
+    ecs_remove(world, base, TagA);
+    ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void Trigger_on_set_base_w_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, base, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], base);
+
+    ctx = (Probe){0};
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], 0);
+
+    ctx = (Probe){0};
+
+    ecs_set(world, base, Position, {10, 20});
+    test_int(ctx.invoked, 0); // no trigger, overridden
+
+    ecs_set(world, base, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void Trigger_entity_source_1_trigger() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t subj = ecs_new_id(world);
+    ecs_entity_t dummy = ecs_new_id(world);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .term.subj.entity = subj,
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value_from_entity,
+        .ctx = &ctx
+    });
+
+    ecs_set(world, dummy, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, subj, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], subj);
+
+    ecs_fini(world);
+}
+
+void Trigger_entity_source_2_triggers() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t subj_a = ecs_new_id(world);
+    ecs_entity_t subj_b = ecs_new_id(world);
+    ecs_entity_t dummy = ecs_new_id(world);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .term.subj.entity = subj_a,
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value_from_entity,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t t2 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .term.subj.entity = subj_b,
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value_from_entity,
+        .ctx = &ctx
+    });
+
+    ecs_set(world, dummy, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, subj_a, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], subj_a);
+
+    ctx = (Probe){0};
+
+    ecs_set(world, subj_b, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t2);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], subj_b);
+
+    ecs_fini(world);
+}
+
+void Trigger_entity_source_base_set() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t subj = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t dummy = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t dummy_no_base = ecs_new_w_pair(world, EcsIsA, base);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .term.subj.entity = subj,
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value_from_entity,
+        .ctx = &ctx
+    });
+
+    ecs_set(world, dummy, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, dummy_no_base, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, base, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], base);
 
     ecs_fini(world);
 }

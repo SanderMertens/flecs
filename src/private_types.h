@@ -395,6 +395,9 @@ typedef struct ecs_event_id_record_t {
     /* Triggers for SuperSet, SubSet */
     ecs_map_t *set_triggers; /* map<trigger_id, trigger_t> */
 
+    /* Triggers for Self with non-This subject */
+    ecs_map_t *entity_triggers; /* map<trigger_id, trigger_t> */
+
     /* Number of active triggers for (component) id */
     int32_t trigger_count;
 } ecs_event_id_record_t;
