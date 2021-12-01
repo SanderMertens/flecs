@@ -3032,6 +3032,18 @@ typedef struct ecs_event_desc_t {
  * Triggers are invoked synchronously. It is therefore safe to use stack-based
  * data as event context, which can be set in the "param" member.
  * 
+ * To send a notification for a single entity, an application should set the
+ * following members in the event descriptor:
+ * 
+ * - table: set to the table of the entity
+ * - offset: set to the row of the entity in the table
+ * - count: set to 1
+ * 
+ * The table & row of the entity can be obtained like this:
+ *   ecs_record_t *r = ecs_record_find(world, e);
+ *   desc.table = r->table;
+ *   desc.offset = ECS_RECORD_TO_ROW(r->row);
+ * 
  * @param world The world.
  * @param desc Event parameters.
  */
