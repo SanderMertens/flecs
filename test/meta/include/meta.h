@@ -40,7 +40,7 @@ void _meta_test_member(
 
 typedef struct {
     int32_t x, y;
-} Position;
+} Position, Velocity;
 
 typedef struct {
     int32_t value;

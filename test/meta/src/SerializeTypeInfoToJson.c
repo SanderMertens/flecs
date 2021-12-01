@@ -5,7 +5,7 @@ void SerializeTypeInfoToJson_bool() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_bool_t));
     test_assert(str != NULL);
-    test_str(str, "\"bool\"");
+    test_str(str, "[\"bool\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -16,7 +16,7 @@ void SerializeTypeInfoToJson_byte() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_byte_t));
     test_assert(str != NULL);
-    test_str(str, "\"byte\"");
+    test_str(str, "[\"byte\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -27,7 +27,7 @@ void SerializeTypeInfoToJson_char() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_char_t));
     test_assert(str != NULL);
-    test_str(str, "\"text\"");
+    test_str(str, "[\"text\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -38,7 +38,7 @@ void SerializeTypeInfoToJson_i8() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i8_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -49,7 +49,7 @@ void SerializeTypeInfoToJson_i16() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i16_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -60,7 +60,7 @@ void SerializeTypeInfoToJson_i32() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i32_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -71,7 +71,7 @@ void SerializeTypeInfoToJson_i64() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i64_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -82,7 +82,7 @@ void SerializeTypeInfoToJson_iptr() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_iptr_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -93,7 +93,7 @@ void SerializeTypeInfoToJson_u8() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u8_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -104,7 +104,7 @@ void SerializeTypeInfoToJson_u16() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u16_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -115,7 +115,7 @@ void SerializeTypeInfoToJson_u32() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u32_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -126,7 +126,7 @@ void SerializeTypeInfoToJson_u64() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u64_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -137,7 +137,7 @@ void SerializeTypeInfoToJson_uptr() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_uptr_t));
     test_assert(str != NULL);
-    test_str(str, "\"int\"");
+    test_str(str, "[\"int\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -148,7 +148,7 @@ void SerializeTypeInfoToJson_float() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_f32_t));
     test_assert(str != NULL);
-    test_str(str, "\"float\"");
+    test_str(str, "[\"float\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -159,7 +159,7 @@ void SerializeTypeInfoToJson_double() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_f64_t));
     test_assert(str != NULL);
-    test_str(str, "\"float\"");
+    test_str(str, "[\"float\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -170,7 +170,7 @@ void SerializeTypeInfoToJson_string() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_string_t));
     test_assert(str != NULL);
-    test_str(str, "\"text\"");
+    test_str(str, "[\"text\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -181,7 +181,7 @@ void SerializeTypeInfoToJson_entity() {
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_entity_t));
     test_assert(str != NULL);
-    test_str(str, "\"entity\"");
+    test_str(str, "[\"entity\"]");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -198,7 +198,7 @@ void SerializeTypeInfoToJson_enum() {
 
     char *str = ecs_type_info_to_json(world, e);
     test_assert(str != NULL);
-    test_str(str, "{\"enum\":[\"Red\", \"Blue\", \"Green\"]}");
+    test_str(str, "[\"enum\", \"Red\", \"Blue\", \"Green\"]");
     ecs_os_free(str);
     
     ecs_fini(world);
@@ -215,7 +215,7 @@ void SerializeTypeInfoToJson_bitmask() {
 
     char *str = ecs_type_info_to_json(world, b);
     test_assert(str != NULL);
-    test_str(str, "{\"bitmask\":[\"Red\", \"Blue\", \"Green\"]}");
+    test_str(str, "[\"bitmask\", \"Red\", \"Blue\", \"Green\"]");
     ecs_os_free(str);
     
     ecs_fini(world);
@@ -233,7 +233,7 @@ void SerializeTypeInfoToJson_struct() {
 
     char *str = ecs_type_info_to_json(world, t);
     test_assert(str != NULL);
-    test_str(str, "{\"x\":\"float\", \"y\":\"float\"}");
+    test_str(str, "{\"x\":[\"float\"], \"y\":[\"float\"]}");
     ecs_os_free(str);
 
     ecs_fini(world);
@@ -258,7 +258,7 @@ void SerializeTypeInfoToJson_nested_struct() {
 
     char *str = ecs_type_info_to_json(world, l);
     test_assert(str != NULL);
-    test_str(str, "{\"start\":{\"x\":\"float\", \"y\":\"float\"}, \"stop\":{\"x\":\"float\", \"y\":\"float\"}}");
+    test_str(str, "{\"start\":{\"x\":[\"float\"], \"y\":[\"float\"]}, \"stop\":{\"x\":[\"float\"], \"y\":[\"float\"]}}");
     ecs_os_free(str);
 
     ecs_fini(world);

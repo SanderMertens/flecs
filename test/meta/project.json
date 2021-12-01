@@ -467,7 +467,14 @@
                 "serialize_iterator_2_comps_1_owned_2_ents",
                 "serialize_iterator_w_pair_wildcard",
                 "serialize_iterator_w_var",
-                "serialize_iterator_w_2_vars"
+                "serialize_iterator_w_2_vars",
+                "serialize_iterator_type_info_1_tags",
+                "serialize_iterator_type_info_2_tags",
+                "serialize_iterator_type_info_1_component",
+                "serialize_iterator_type_info_2_components",
+                "serialize_iterator_type_info_1_struct",
+                "serialize_iterator_type_info_1_component_1_struct",
+                "serialize_iterator_type_info_2_structs"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

@@ -117,7 +117,7 @@ int ecs_ptr_to_json_buf(
  * This serializes type information to JSON, and can be used to store/transmit
  * the structure of a (component) value.
  * 
- * The provided type must have reflection data.
+ * If the provided type does not have reflection data, "0" will be returned.
  * 
  * @param world The world.
  * @param type The type to serialize to JSON.
@@ -181,6 +181,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool dont_serialize_values;    /* Exclude component values from result */
     bool dont_serialize_entities;  /* Exclude entities (for This terms) */
     bool measure_eval_duration;    /* Include evaluation duration */
+    bool serialize_type_info;      /* Include type information */
 } ecs_iter_to_json_desc_t;
 
 /** Serialize iterator into JSON string.

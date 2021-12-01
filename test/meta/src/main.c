@@ -439,6 +439,13 @@ void SerializeToJson_serialize_iterator_2_comps_1_owned_2_ents(void);
 void SerializeToJson_serialize_iterator_w_pair_wildcard(void);
 void SerializeToJson_serialize_iterator_w_var(void);
 void SerializeToJson_serialize_iterator_w_2_vars(void);
+void SerializeToJson_serialize_iterator_type_info_1_tags(void);
+void SerializeToJson_serialize_iterator_type_info_2_tags(void);
+void SerializeToJson_serialize_iterator_type_info_1_component(void);
+void SerializeToJson_serialize_iterator_type_info_2_components(void);
+void SerializeToJson_serialize_iterator_type_info_1_struct(void);
+void SerializeToJson_serialize_iterator_type_info_1_component_1_struct(void);
+void SerializeToJson_serialize_iterator_type_info_2_structs(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -2138,6 +2145,34 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_w_2_vars",
         SerializeToJson_serialize_iterator_w_2_vars
+    },
+    {
+        "serialize_iterator_type_info_1_tags",
+        SerializeToJson_serialize_iterator_type_info_1_tags
+    },
+    {
+        "serialize_iterator_type_info_2_tags",
+        SerializeToJson_serialize_iterator_type_info_2_tags
+    },
+    {
+        "serialize_iterator_type_info_1_component",
+        SerializeToJson_serialize_iterator_type_info_1_component
+    },
+    {
+        "serialize_iterator_type_info_2_components",
+        SerializeToJson_serialize_iterator_type_info_2_components
+    },
+    {
+        "serialize_iterator_type_info_1_struct",
+        SerializeToJson_serialize_iterator_type_info_1_struct
+    },
+    {
+        "serialize_iterator_type_info_1_component_1_struct",
+        SerializeToJson_serialize_iterator_type_info_1_component_1_struct
+    },
+    {
+        "serialize_iterator_type_info_2_structs",
+        SerializeToJson_serialize_iterator_type_info_2_structs
     }
 };
 
@@ -2372,7 +2407,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        51,
+        58,
         SerializeToJson_testcases
     },
     {

@@ -651,6 +651,37 @@ void serialize_iter_ids(
 }
 
 static
+void serialize_type_info(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf) 
+{
+    int32_t term_count = it->term_count;
+    if (!term_count) {
+        return;
+    }
+
+    json_member(buf, "type_info");
+    json_object_push(buf);
+
+    for (int i = 0; i < term_count; i ++) {
+        json_next(buf);
+        ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
+        if (typeid) {
+            serialize_id(world, typeid, buf);
+            ecs_strbuf_appendstr(buf, ":");
+            ecs_type_info_to_json_buf(world, typeid, buf);
+        } else {
+            serialize_id(world, it->terms[i].id, buf);
+            ecs_strbuf_appendstr(buf, ":");
+            ecs_strbuf_appendstr(buf, "0");
+        }
+    }
+
+    json_object_pop(buf);
+}
+
+static
 void serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
     char **variable_names = it->variable_names;
     int32_t var_count = it->variable_count;
@@ -907,6 +938,11 @@ int ecs_iter_to_json_buf(
     /* Serialize component ids of the terms (usually provided by query) */
     if (!desc || !desc->dont_serialize_term_ids) {
         serialize_iter_ids(world, it, buf);
+    }
+
+    /* Serialize type info if enabled */
+    if (desc && desc->serialize_type_info) {
+        serialize_type_info(world, it, buf);
     }
 
     /* Serialize variable names, if iterator has any */
