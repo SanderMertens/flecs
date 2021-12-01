@@ -5939,22 +5939,52 @@ void* ecs_get_trigger_binding_ctx(
     ecs_entity_t trigger);
 
 typedef struct ecs_event_desc_t {
+    /* The event id. Only triggers for the specified event will be notified */
     ecs_entity_t event;
-    ecs_ids_t *ids; /* When NULL, notify for all ids in entity/table type */
 
+    /* Component ids. Only triggers with a matching component id will be 
+     * notified. Observers are guaranteed to get notified once, even if they
+     * match more than one id. */
+    ecs_ids_t *ids;
+
+    /* The table for which to notify. */
     ecs_table_t *table;
+
+    /* Optional 2nd table to notify. This can be used to communicate the
+     * previous or next table, in case an entity is moved between tables. */
     ecs_table_t *other_table;
+
+    /* Limit notified entities to ones starting from offset (row) in table */
     int32_t offset;
-    int32_t count; /* When 0 notify all entities starting from offset */
 
-    void *param; /* Assigned to iter param member */
+    /* Limit number of notified entities to count. offset+count must be less
+     * than the total number of entities in the table. If left to 0, it will be
+     * automatically determined by doing ecs_table_count(table) - row. */
+    int32_t count;
 
-    /* Observable for which to notify the triggers/observers. If NULL, the
-     * world will be used as observable. */
+    /* Optional context. Assigned to iter param member */
+    void *param;
+
+    /* Observable (usually the world) */
     ecs_poly_t *observable;
 } ecs_event_desc_t;
 
 /** Send event.
+ * This sends an event to matching triggers & is the mechanism used by flecs
+ * itself to send OnAdd, OnRemove, etc events.
+ * 
+ * Applications can use this function to send custom events, where a custom
+ * event can be any regular entity.
+ * 
+ * Applications should not send builtin flecs events, as this may violate
+ * assumptions the code makes about the conditions under which those events are
+ * sent.
+ * 
+ * Triggers are invoked synchronously. It is therefore safe to use stack-based
+ * data as event context, which can be set in the "param" member.
+ * 
+ * @param world The world.
+ * @param desc Event parameters.
  */
 FLECS_API
 void ecs_emit( 
