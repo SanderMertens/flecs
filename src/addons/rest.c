@@ -70,6 +70,49 @@ void reply_error(
 }
 
 static
+void rest_bool_param(
+    const ecs_http_request_t *req,
+    const char *name,
+    bool *value_out)
+{
+    const char *value = ecs_http_get_param(req, name);
+    if (value) {
+        if (!ecs_os_strcmp(value, "true")) {
+            value_out[0] = true;
+        } else {
+            value_out[0] = false;
+        }
+    }
+}
+
+static
+void rest_parse_json_ser_entity_params(
+    ecs_entity_to_json_desc_t *desc,
+    const ecs_http_request_t *req)
+{
+    rest_bool_param(req, "path", &desc->serialize_path);
+    rest_bool_param(req, "base", &desc->serialize_base);
+    rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+}
+
+static
+void rest_parse_json_ser_iter_params(
+    ecs_iter_to_json_desc_t *desc,
+    const ecs_http_request_t *req)
+{
+    rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
+    rest_bool_param(req, "ids", &desc->serialize_ids);
+    rest_bool_param(req, "subjects", &desc->serialize_subjects);
+    rest_bool_param(req, "variables", &desc->serialize_variables);
+    rest_bool_param(req, "is_set", &desc->serialize_is_set);
+    rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "entities", &desc->serialize_entities);
+    rest_bool_param(req, "duration", &desc->measure_eval_duration);
+    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+}
+
+static
 bool rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -98,7 +141,10 @@ bool rest_reply(
                 }
             }
 
-            ecs_entity_to_json_buf(world, e, &reply->body);
+            ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+            rest_parse_json_ser_entity_params(&desc, req);
+
+            ecs_entity_to_json_buf(world, e, &reply->body, &desc);
             return true;
         
         /* Query endpoint */
@@ -125,8 +171,11 @@ bool rest_reply(
                 ecs_os_free(escaped_err);
                 ecs_os_free(err);
             } else {
+                ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+                rest_parse_json_ser_iter_params(&desc, req);
+                
                 ecs_iter_t it = ecs_rule_iter(world, r);
-                ecs_iter_to_json_buf(world, &it, &reply->body, NULL);
+                ecs_iter_to_json_buf(world, &it, &reply->body, &desc);
                 ecs_rule_fini(r);
             }
 

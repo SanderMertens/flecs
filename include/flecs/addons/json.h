@@ -142,6 +142,17 @@ int ecs_type_info_to_json_buf(
     ecs_entity_t type,
     ecs_strbuf_t *buf_out);
 
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_entity_to_json_desc_t {
+    bool serialize_path;       /* Serialize full pathname */
+    bool serialize_base;       /* Serialize base components */
+    bool serialize_values;     /* Serialize component values */
+    bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
+} ecs_entity_to_json_desc_t;
+
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
+    true, true, true, false }
+
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
  * and tags the entity has, and the component values.
@@ -155,7 +166,8 @@ int ecs_type_info_to_json_buf(
 FLECS_API
 char* ecs_entity_to_json(
     const ecs_world_t *world,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    const ecs_entity_to_json_desc_t *desc);
 
 /** Serialize entity into JSON string buffer.
  * Same as ecs_entity_to_json, but serializes to an ecs_strbuf_t instance.
@@ -169,20 +181,24 @@ FLECS_API
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf_out,
+    const ecs_entity_to_json_desc_t *desc);
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
-    bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
-    bool dont_serialize_subjects;  /* Exclude subjects from result */
-    bool dont_serialize_variables; /* Exclude variables from result */
-    bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
-    bool dont_serialize_values;    /* Exclude component values from result */
-    bool dont_serialize_entities;  /* Exclude entities (for This terms) */
-    bool measure_eval_duration;    /* Include evaluation duration */
-    bool serialize_type_info;      /* Include type information */
+    bool serialize_term_ids;    /* Exclude term (query) component ids from result */
+    bool serialize_ids;         /* Exclude actual (matched) component ids from result */
+    bool serialize_subjects;    /* Exclude subjects from result */
+    bool serialize_variables;   /* Exclude variables from result */
+    bool serialize_is_set;      /* Exclude is_set (for optional terms) */
+    bool serialize_values;      /* Exclude component values from result */
+    bool serialize_entities;    /* Exclude entities (for This terms) */
+    bool measure_eval_duration; /* Include evaluation duration */
+    bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;
+
+#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
+    true, true, true, true, true, true, true, false, false }
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them

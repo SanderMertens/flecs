@@ -458,6 +458,7 @@
                 "serialize_entity_w_enum_component",
                 "serialize_entity_w_struct_and_enum_component",
                 "serialize_entity_w_invalid_enum_component",
+                "serialize_entity_w_type_info",
                 "serialize_iterator_1_comps_empty",
                 "serialize_iterator_1_comps_2_ents_same_table",
                 "serialize_iterator_1_tag_2_ents_same_table",

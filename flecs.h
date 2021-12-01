@@ -6786,6 +6786,26 @@ int ecs_app_set_frame_action(
  *     /entity/parent/child
  *     /entity/420
  * 
+ *   Parameters:
+ *    The following parameters can be added to the endpoint:
+ * 
+ *    - path : bool
+ *      Add path (name) for entity.
+ *        Default: true
+ * 
+ *    - base : bool
+ *      Add base components.
+ *        Default: true
+ * 
+ *    - values : bool
+ *      Add component values.
+ *        Default: true
+ * 
+ *    - type_info : bool
+ *      Add reflection data for component types. Requires values=true.
+ *        Default: false
+ * 
+ * 
  * /query?q=<query>
  *   The query endpoint requests data for a query. The implementation uses the
  *   rules query engine. The format of the response is the same as what is
@@ -6794,6 +6814,53 @@ int ecs_app_set_frame_action(
  *   Example:
  *     /query?q=Position
  *     /query?q=Position%2CVelocity
+ * 
+ *   Parameters:
+ *    The following parameters can be added to the endpoint:
+ * 
+ *    - term_ids : bool
+ *      Add top-level "ids" array with components as specified by query.
+ *        Default: true
+ * 
+ *    - ids : bool
+ *      Add result-specific "ids" array with components as matched. Can be
+ *      different from top-level "ids" array for queries with wildcards.
+ *        Default: true
+ * 
+ *    - subjects : bool
+ *      Add result-specific "subjects" array with component source. A 0 element
+ *      indicates the component is matched on the current (This) entity.
+ *        Default: true
+ *      
+ *    - variables : bool
+ *      Add result-specific "variables" array with values for variables, if any.
+ *        Default: true
+ * 
+ *    - is_set : bool
+ *      Add result-specific "is_set" array with boolean elements indicating
+ *      whether component was matched (used for optional terms).
+ *        Default: true
+ * 
+ *    - values : bool
+ *      Add result-specific "values" array with component values. A 0 element
+ *      indicates a component that could not be serialized, which can be either
+ *      because no reflection data was registered, because the component has no
+ *      data, or because the query didn't request it.
+ *        Default: true
+ * 
+ *    - entities : bool
+ *      Add result-specific "entities" array with matched entities.
+ *        Default: true
+ * 
+ *    - duration : bool
+ *      Include measurement on how long it took to serialize result.
+ *        Default: false
+ *      
+ *    - type_info : bool
+ *        Add top-level "type_info" array with reflection data on the type in
+ *        the query. If a query element has a component that has no reflection
+ *        data, a 0 element is added to the array.
+ *          Default: false
  */
 
 #ifdef FLECS_REST
@@ -7860,6 +7927,17 @@ int ecs_type_info_to_json_buf(
     ecs_entity_t type,
     ecs_strbuf_t *buf_out);
 
+/** Used with ecs_iter_to_json. */
+typedef struct ecs_entity_to_json_desc_t {
+    bool serialize_path;       /* Serialize full pathname */
+    bool serialize_base;       /* Serialize base components */
+    bool serialize_values;     /* Serialize component values */
+    bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
+} ecs_entity_to_json_desc_t;
+
+#define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
+    true, true, true, false }
+
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
  * and tags the entity has, and the component values.
@@ -7873,7 +7951,8 @@ int ecs_type_info_to_json_buf(
 FLECS_API
 char* ecs_entity_to_json(
     const ecs_world_t *world,
-    ecs_entity_t entity);
+    ecs_entity_t entity,
+    const ecs_entity_to_json_desc_t *desc);
 
 /** Serialize entity into JSON string buffer.
  * Same as ecs_entity_to_json, but serializes to an ecs_strbuf_t instance.
@@ -7887,20 +7966,24 @@ FLECS_API
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_strbuf_t *buf_out);
+    ecs_strbuf_t *buf_out,
+    const ecs_entity_to_json_desc_t *desc);
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool dont_serialize_term_ids;  /* Exclude term (query) component ids from result */
-    bool dont_serialize_ids;       /* Exclude actual (matched) component ids from result */
-    bool dont_serialize_subjects;  /* Exclude subjects from result */
-    bool dont_serialize_variables; /* Exclude variables from result */
-    bool dont_serialize_is_set;    /* Exclude is_set (for optional terms) */
-    bool dont_serialize_values;    /* Exclude component values from result */
-    bool dont_serialize_entities;  /* Exclude entities (for This terms) */
-    bool measure_eval_duration;    /* Include evaluation duration */
-    bool serialize_type_info;      /* Include type information */
+    bool serialize_term_ids;    /* Exclude term (query) component ids from result */
+    bool serialize_ids;         /* Exclude actual (matched) component ids from result */
+    bool serialize_subjects;    /* Exclude subjects from result */
+    bool serialize_variables;   /* Exclude variables from result */
+    bool serialize_is_set;      /* Exclude is_set (for optional terms) */
+    bool serialize_values;      /* Exclude component values from result */
+    bool serialize_entities;    /* Exclude entities (for This terms) */
+    bool measure_eval_duration; /* Include evaluation duration */
+    bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;
+
+#define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t) {\
+    true, true, true, true, true, true, true, false, false }
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them

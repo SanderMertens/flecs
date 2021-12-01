@@ -23778,6 +23778,49 @@ void reply_error(
 }
 
 static
+void rest_bool_param(
+    const ecs_http_request_t *req,
+    const char *name,
+    bool *value_out)
+{
+    const char *value = ecs_http_get_param(req, name);
+    if (value) {
+        if (!ecs_os_strcmp(value, "true")) {
+            value_out[0] = true;
+        } else {
+            value_out[0] = false;
+        }
+    }
+}
+
+static
+void rest_parse_json_ser_entity_params(
+    ecs_entity_to_json_desc_t *desc,
+    const ecs_http_request_t *req)
+{
+    rest_bool_param(req, "path", &desc->serialize_path);
+    rest_bool_param(req, "base", &desc->serialize_base);
+    rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+}
+
+static
+void rest_parse_json_ser_iter_params(
+    ecs_iter_to_json_desc_t *desc,
+    const ecs_http_request_t *req)
+{
+    rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
+    rest_bool_param(req, "ids", &desc->serialize_ids);
+    rest_bool_param(req, "subjects", &desc->serialize_subjects);
+    rest_bool_param(req, "variables", &desc->serialize_variables);
+    rest_bool_param(req, "is_set", &desc->serialize_is_set);
+    rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "entities", &desc->serialize_entities);
+    rest_bool_param(req, "duration", &desc->measure_eval_duration);
+    rest_bool_param(req, "type_info", &desc->serialize_type_info);
+}
+
+static
 bool rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -23806,7 +23849,10 @@ bool rest_reply(
                 }
             }
 
-            ecs_entity_to_json_buf(world, e, &reply->body);
+            ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+            rest_parse_json_ser_entity_params(&desc, req);
+
+            ecs_entity_to_json_buf(world, e, &reply->body, &desc);
             return true;
         
         /* Query endpoint */
@@ -23833,8 +23879,11 @@ bool rest_reply(
                 ecs_os_free(escaped_err);
                 ecs_os_free(err);
             } else {
+                ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+                rest_parse_json_ser_iter_params(&desc, req);
+                
                 ecs_iter_t it = ecs_rule_iter(world, r);
-                ecs_iter_to_json_buf(world, &it, &reply->body, NULL);
+                ecs_iter_to_json_buf(world, &it, &reply->body, &desc);
                 ecs_rule_fini(r);
             }
 
@@ -28224,7 +28273,8 @@ int append_type(
     const ecs_world_t *world, 
     ecs_strbuf_t *buf, 
     ecs_entity_t ent, 
-    ecs_entity_t inst) 
+    ecs_entity_t inst,
+    const ecs_entity_to_json_desc_t *desc) 
 {
     ecs_type_t type = ecs_get_type(world, ent);
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
@@ -28294,15 +28344,26 @@ int append_type(
         if (!hidden) {
             ecs_entity_t typeid = ecs_get_typeid(world, id);
             if (typeid) {
-                const EcsMetaTypeSerialized *ser = ecs_get(
-                    world, typeid, EcsMetaTypeSerialized);
-                if (ser) {
-                    const void *ptr = ecs_get_id(world, ent, id);
-                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    json_member(buf, "value");
-                    if (json_ser_type(world, ser->ops, ptr, buf) != 0) {
-                        /* Entity contains invalid value */
-                        return -1;
+                if (!desc || desc->serialize_values) {
+                    const EcsMetaTypeSerialized *ser = ecs_get(
+                        world, typeid, EcsMetaTypeSerialized);
+                    if (ser) {
+                        const void *ptr = ecs_get_id(world, ent, id);
+                        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                        json_member(buf, "value");
+                        if (json_ser_type(world, ser->ops, ptr, buf) != 0) {
+                            /* Entity contains invalid value */
+                            return -1;
+                        }
+
+                        if (desc && desc->serialize_type_info) {
+                            json_member(buf, "type_info");
+                            if (ecs_type_info_to_json_buf(
+                                world, typeid, buf) != 0) 
+                            {
+                                return -1;
+                            }
+                        }
                     }
                 }
             }
@@ -28321,7 +28382,8 @@ int append_base(
     const ecs_world_t *world, 
     ecs_strbuf_t *buf, 
     ecs_entity_t ent, 
-    ecs_entity_t inst) 
+    ecs_entity_t inst,
+    const ecs_entity_to_json_desc_t *desc) 
 {
     ecs_type_t type = ecs_get_type(world, ent);
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
@@ -28330,7 +28392,8 @@ int append_base(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            if (append_base(world, buf, ecs_pair_object(world, id), inst)) {
+            if (append_base(world, buf, ecs_pair_object(world, id), inst, desc)) 
+            {
                 return -1;
             }
         }
@@ -28342,7 +28405,7 @@ int append_base(
 
     json_object_push(buf);
 
-    if (append_type(world, buf, ent, inst)) {
+    if (append_type(world, buf, ent, inst, desc)) {
         return -1;
     }
 
@@ -28354,7 +28417,8 @@ int append_base(
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    const ecs_entity_to_json_desc_t *desc)
 {
     if (!entity || !ecs_is_valid(world, entity)) {
         return -1;
@@ -28362,34 +28426,38 @@ int ecs_entity_to_json_buf(
 
     json_object_push(buf);
 
-    char *path = ecs_get_fullpath(world, entity);
-    json_member(buf, "path");
-    json_string(buf, path);
-    ecs_os_free(path);
+    if (!desc || desc->serialize_path) {
+        char *path = ecs_get_fullpath(world, entity);
+        json_member(buf, "path");
+        json_string(buf, path);
+        ecs_os_free(path);
+    }
 
     ecs_type_t type = ecs_get_type(world, entity);
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);
 
-    if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
-        json_member(buf, "is_a");
-        json_object_push(buf);
+    if (!desc || desc->serialize_base) {
+        if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
+            json_member(buf, "is_a");
+            json_object_push(buf);
 
-        for (i = 0; i < count; i ++) {
-            ecs_id_t id = ids[i];
-            if (ECS_HAS_RELATION(id, EcsIsA)) {
-                if (append_base(
-                    world, buf, ecs_pair_object(world, id), entity)) 
-                {
-                    return -1;
+            for (i = 0; i < count; i ++) {
+                ecs_id_t id = ids[i];
+                if (ECS_HAS_RELATION(id, EcsIsA)) {
+                    if (append_base(
+                        world, buf, ecs_pair_object(world, id), entity, desc)) 
+                    {
+                        return -1;
+                    }
                 }
             }
-        }
 
-        json_object_pop(buf);
+            json_object_pop(buf);
+        }
     }
 
-    if (append_type(world, buf, entity, entity)) {
+    if (append_type(world, buf, entity, entity, desc)) {
         goto error;
     }
 
@@ -28402,11 +28470,12 @@ error:
 
 char* ecs_entity_to_json(
     const ecs_world_t *world,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    const ecs_entity_to_json_desc_t *desc)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    if (ecs_entity_to_json_buf(world, entity, &buf) != 0) {
+    if (ecs_entity_to_json_buf(world, entity, &buf, desc) != 0) {
         ecs_strbuf_reset(&buf);
         return NULL;
     }
@@ -28468,18 +28537,23 @@ void serialize_type_info(
     }
 
     json_member(buf, "type_info");
-    json_array_push(buf);
+    json_object_push(buf);
 
     for (int i = 0; i < term_count; i ++) {
         json_next(buf);
         ecs_entity_t typeid = ecs_get_typeid(world, it->terms[i].id);
         if (typeid) {
             serialize_id(world, typeid, buf);
+            ecs_strbuf_appendstr(buf, ":");
             ecs_type_info_to_json_buf(world, typeid, buf);
+        } else {
+            serialize_id(world, it->terms[i].id, buf);
+            ecs_strbuf_appendstr(buf, ":");
+            ecs_strbuf_appendstr(buf, "0");
         }
     }
 
-    json_array_pop(buf);
+    json_object_pop(buf);
 }
 
 static
@@ -28691,32 +28765,32 @@ void serialize_iter_result(
 
     /* Each result can be matched with different component ids. Add them to
      * the result so clients know with which component an entity was matched */
-    if (!desc || !desc->dont_serialize_ids) {
+    if (!desc || desc->serialize_ids) {
         serialize_iter_result_ids(world, it, buf);
     }
 
     /* Include information on which entity the term is matched with */
-    if (!desc || !desc->dont_serialize_ids) {
+    if (!desc || desc->serialize_ids) {
         serialize_iter_result_subjects(world, it, buf);
     }
 
     /* Write variable values for current result */
-    if (!desc || !desc->dont_serialize_variables) {
+    if (!desc || desc->serialize_variables) {
         serialize_iter_result_variables(world, it, buf);
     }
 
     /* Include information on which terms are set, to support optional terms */
-    if (!desc || !desc->dont_serialize_is_set) {
+    if (!desc || desc->serialize_is_set) {
         serialize_iter_result_is_set(it, buf);
     }
 
     /* Write entity ids for current result (for queries with This terms) */
-    if (!desc || !desc->dont_serialize_entities) {
+    if (!desc || desc->serialize_entities) {
         serialize_iter_result_entities(world, it, buf);
     }
 
     /* Serialize component values */
-    if (!desc || !desc->dont_serialize_values) {
+    if (!desc || desc->serialize_values) {
         serialize_iter_result_values(world, it, buf);
     }
 
@@ -28737,7 +28811,7 @@ int ecs_iter_to_json_buf(
     json_object_push(buf);
 
     /* Serialize component ids of the terms (usually provided by query) */
-    if (!desc || !desc->dont_serialize_term_ids) {
+    if (!desc || desc->serialize_term_ids) {
         serialize_iter_ids(world, it, buf);
     }
 
