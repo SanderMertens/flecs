@@ -134,6 +134,7 @@
 #endif
 
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -429,6 +430,7 @@ typedef int32_t ecs_size_t;
 #endif
 
 #endif
+
 /**
  * @file log.h
  * @brief Logging addon.
@@ -828,6 +830,7 @@ int ecs_log_last_error(void);
 #endif
 
 #endif // FLECS_LOG_H
+
 
 /**
  * @file vector.h
@@ -1369,6 +1372,7 @@ private:
 #endif
 
 #endif
+
 /**
  * @file map.h
  * @brief Map datastructure.
@@ -1629,6 +1633,7 @@ private:
 #endif
 
 #endif
+
 /**
  * @file strbuf.h
  * @brief Utility for constructing strings.
@@ -1831,6 +1836,7 @@ int32_t ecs_strbuf_written(
 #endif
 
 #endif
+
 /**
  * @file os_api.h
  * @brief Operating system abstraction API.
@@ -2317,6 +2323,7 @@ bool ecs_os_has_modules(void);
 #endif
 
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -3101,6 +3108,7 @@ typedef void (*ecs_on_set_t)(
 
 #endif
 
+
 /**
  * @file api_support.h
  * @brief Support functions and constants.
@@ -3182,6 +3190,7 @@ void ecs_default_ctor(
 #endif
 
 #endif
+
 /**
  * @file hashmap.h
  * @brief Hashmap datastructure.
@@ -3310,6 +3319,7 @@ void* _flecs_hashmap_next(
 #endif
 
 #endif
+
 /**
  * @file type.h
  * @brief Type API.
@@ -3367,6 +3377,7 @@ int32_t ecs_type_match(
 #endif
 
 #endif
+
 
 
 /**
@@ -3745,6 +3756,7 @@ extern "C" {
 #endif
 
 #endif
+
 #endif
 
 
@@ -6765,6 +6777,7 @@ int ecs_app_set_frame_action(
 #endif
 
 #endif // FLECS_APP
+
 #endif
 #ifdef FLECS_REST
 /**
@@ -6915,6 +6928,7 @@ void FlecsRestImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_TIMER
 /**
@@ -7160,6 +7174,7 @@ void FlecsTimerImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_PIPELINE
 /**
@@ -7342,6 +7357,7 @@ void FlecsPipelineImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_SYSTEM
 /**
@@ -7626,6 +7642,7 @@ void FlecsSystemImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_COREDOC
 /**
@@ -7666,6 +7683,7 @@ void FlecsCoreDocImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_DOC
 /**
@@ -7781,6 +7799,7 @@ void FlecsDocImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_JSON
 /**
@@ -8021,6 +8040,7 @@ int ecs_iter_to_json_buf(
 #endif
 
 #endif
+
 #endif
 #if defined(FLECS_EXPR) || defined(FLECS_META_C)
 #define FLECS_META
@@ -8522,6 +8542,7 @@ void FlecsMetaImport(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_EXPR
 /**
@@ -8731,6 +8752,7 @@ const char *ecs_parse_expr_token(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_META_C
 /**
@@ -8885,6 +8907,7 @@ int ecs_meta_from_desc(
 #endif // FLECS_META_C_H
 
 #endif // FLECS_META_C
+
 #endif
 #ifdef FLECS_PLECS
 /**
@@ -8967,6 +8990,7 @@ int ecs_plecs_from_file(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_RULES
 
@@ -9053,6 +9077,7 @@ char* ecs_rule_str(
 #endif // FLECS_RULES_H
 
 #endif // FLECS_RULES
+
 #endif
 #ifdef FLECS_SNAPSHOT
 /**
@@ -9153,6 +9178,7 @@ void ecs_snapshot_free(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_STATS
 /**
@@ -9360,6 +9386,7 @@ void ecs_gauge_reduce(
 #endif
 
 #endif
+
 #endif
 #ifdef FLECS_PARSER
 /**
@@ -9481,6 +9508,7 @@ char* ecs_parse_term(
 #endif // FLECS_PARSER_H
 
 #endif // FLECS_PARSER
+
 #endif
 #ifdef FLECS_HTTP
 /**
@@ -9670,6 +9698,7 @@ const char* ecs_http_get_param(
 #endif // FLECS_HTTP_H
 
 #endif // FLECS_HTTP
+
 #endif
 #ifdef FLECS_OS_API_IMPL
 /**
@@ -9696,6 +9725,7 @@ void ecs_set_os_api_impl(void);
 #endif // FLECS_OS_API_IMPL_H
 
 #endif // FLECS_OS_API_IMPL
+
 #endif
 #ifdef FLECS_MODULE
 /**
@@ -9809,6 +9839,7 @@ ecs_entity_t ecs_module_init(
 #endif
 
 #endif
+
 #endif
 
 /**
@@ -10224,6 +10255,7 @@ ecs_entity_t ecs_module_init(
 
 #endif // FLECS_C_
 
+
 #ifdef __cplusplus
 }
 
@@ -10451,6 +10483,7 @@ struct array<T, Size, enable_if_t<Size == 0>> final {
 };
 
 }
+
 // String utility that doesn't implicitly allocate memory.
 
 namespace flecs {
@@ -10586,6 +10619,7 @@ struct string_view : string {
 };
 
 }
+
 // Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
 
 namespace flecs {
@@ -10629,6 +10663,7 @@ private:
 };
 
 }
+
 
 // Neat utility to inspect arguments & returntype of a function type
 // Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
@@ -10758,6 +10793,7 @@ template <typename Func>
 using first_arg_t = typename first_arg<Func>::type;
 
 } // flecs
+
 // Utility for adding features (mixins) to a class without modifying its 
 // definition.
 
@@ -10806,6 +10842,8 @@ struct extendable : extendable_impl<T, Mixins> {
 };
 
 }
+
+
 
 // Forward declarations
 namespace flecs 
@@ -10943,6 +10981,7 @@ static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Throw = EcsThrow;
 
 }
+
 
 // Mixin forward declarations
 #pragma once
@@ -11109,6 +11148,7 @@ protected:
 };
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11139,6 +11179,7 @@ struct entity_m<flecs::world> : mixin<flecs::world> {
 using entity_m_world = entity_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11160,6 +11201,7 @@ struct component_m<flecs::world> : mixin<flecs::world> {
 using component_m_world = component_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11183,6 +11225,7 @@ struct type_m<flecs::world> : mixin<flecs::world> {
 using type_m_world = type_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11218,6 +11261,7 @@ struct term_m<flecs::world> : mixin<flecs::world> {
 using term_m_world = term_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11276,6 +11320,7 @@ using filter_m_world = filter_m<flecs::world>;
 using filter_m_entity_view = filter_m<flecs::entity_view>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11318,6 +11363,7 @@ struct query_m<flecs::world> : mixin<flecs::world> {
 using query_m_world = query_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11349,6 +11395,7 @@ struct trigger_m<flecs::world> : mixin<flecs::world> {
 using trigger_m_world = trigger_m<flecs::world>;
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -11380,6 +11427,7 @@ struct observer_m<flecs::world> : mixin<flecs::world> {
 using observer_m_world = observer_m<flecs::world>;
 
 }
+
 #ifdef FLECS_MODULE
 #pragma once
 
@@ -11414,6 +11462,7 @@ struct module_m<flecs::world> : mixin<flecs::world> {
 using module_m_world = module_m<flecs::world>;
 
 }
+
 #endif
 #ifdef FLECS_SYSTEM
 #pragma once
@@ -11457,6 +11506,7 @@ struct system_m<flecs::world> : mixin<flecs::world> {
 using system_m_world = system_m<flecs::world>;
 
 }
+
 #endif
 #ifdef FLECS_PIPELINE
 #pragma once
@@ -11563,6 +11613,7 @@ struct pipeline_m<flecs::world> : mixin<flecs::world> {
 using pipeline_m_world = pipeline_m<flecs::world>;
 
 }
+
 #endif
 #ifdef FLECS_TIMER
 #pragma once
@@ -11641,6 +11692,7 @@ using timer_m_world = timer_m<flecs::world>;
 using timer_m_system = timer_m<flecs::system>;
 
 }
+
 #endif
 #ifdef FLECS_SNAPSHOT
 #pragma once
@@ -11668,6 +11720,7 @@ flecs::snapshot snapshot(Args &&... args) const;
 using snapshot_m_world = snapshot_m<flecs::world>;
 
 }
+
 #endif
 #ifdef FLECS_DOC
 #pragma once
@@ -11693,6 +11746,7 @@ struct doc_m<flecs::world> : mixin<flecs::world> {
 using doc_m_world = doc_m<flecs::world>;
 
 }
+
 #endif
 #ifdef FLECS_REST
 #pragma once
@@ -11716,6 +11770,7 @@ struct rest_m<flecs::world> : mixin<flecs::world> {
 using rest_m_world = rest_m<flecs::world>;
 
 }
+
 #endif
 
 // Mixins (remove from list to disable)
@@ -11789,6 +11844,7 @@ inline void err(const char *fmt, ...) {
 
 }
 }
+
 
 namespace flecs {
 
@@ -11909,6 +11965,7 @@ struct is_actual {
 };
 
 } // flecs
+
 namespace flecs 
 {
 
@@ -12356,6 +12413,7 @@ ecs_move_ctor_t move_dtor() {
 
 } // _
 } // flecs
+
 
 namespace flecs
 {
@@ -13066,6 +13124,7 @@ public:
 
 } // namespace flecs
 
+
 namespace flecs 
 {
 
@@ -13516,6 +13575,7 @@ private:
 };
 
 } // namespace flecs
+
 namespace flecs
 {
 
@@ -13567,6 +13627,7 @@ private:
 };
 
 }
+
 #pragma once
 
 #pragma once
@@ -14155,6 +14216,7 @@ protected:
 };
 
 }
+
 #pragma once
 
 namespace flecs
@@ -14704,6 +14766,7 @@ private:
 
 }
 
+
 namespace flecs
 {
 
@@ -14973,6 +15036,7 @@ struct entity final : entity_base {
 };
 
 } // namespace flecs
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system each
@@ -15466,6 +15530,7 @@ struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
 } // namespace _
 
 } // namespace flecs
+
 #pragma once
 
 namespace flecs {
@@ -16102,6 +16167,7 @@ flecs::entity_t type_id() {
 }
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -16293,6 +16359,7 @@ struct type : type_base<type> {
 
 }
 
+
 // Mixin implementations
 
 namespace flecs {
@@ -16391,6 +16458,7 @@ inline flecs::id id_m_world::pair(entity_t r, entity_t o) const {
 #undef flecs_me_
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -16591,6 +16659,7 @@ inline flecs::entity entity_m_world::prefab(Args &&... args) const {
 #undef flecs_me_
 
 }
+
 #pragma once
 
 namespace flecs {
@@ -16606,6 +16675,7 @@ inline flecs::entity component_m_world::component(Args &&... args) const {
 #undef flecs_me_
 
 } // namespace flecs
+
 #pragma once
 
 namespace flecs {
@@ -16621,6 +16691,7 @@ inline flecs::type type_m_world::type(Args &&... args) const {
 #undef flecs_me_
 
 }
+
 #pragma once
 
 #pragma once
@@ -16978,6 +17049,7 @@ private:
 };
 
 }
+
 namespace flecs {
 
 #define flecs_me_ this->me()
@@ -17130,6 +17202,7 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
 #undef flecs_me_
 
 }
+
 #pragma once
 
 #pragma once
@@ -17290,6 +17363,7 @@ private:
 
 }
 
+
 namespace flecs 
 {
 
@@ -17357,6 +17431,7 @@ public:
 };
 
 }
+
 
 namespace flecs 
 {
@@ -17636,6 +17711,7 @@ inline filter<Components ...> filter_builder_base<Components...>::build() const 
 #undef flecs_me_
 
 }
+
 #pragma once
 
 #pragma once
@@ -17748,6 +17824,7 @@ private:
 
 }
 
+
 namespace flecs
 {
 
@@ -17813,6 +17890,7 @@ struct query_builder final : query_builder_base<Components...> {
 };
 
 }
+
 
 namespace flecs {
 
@@ -18001,6 +18079,7 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
 #undef flecs_me_
 
 } // namespace flecs
+
 #pragma once
 
 #pragma once
@@ -18059,6 +18138,7 @@ private:
 };
 
 }
+
 
 namespace flecs 
 {
@@ -18123,6 +18203,7 @@ private:
 
 }
 
+
 namespace flecs 
 {
 
@@ -18174,6 +18255,7 @@ inline trigger trigger_builder<Components...>::each(Func&& func) {
 }
 
 } // namespace flecs
+
 #pragma once
 
 #pragma once
@@ -18231,6 +18313,7 @@ private:
 };
 
 }
+
 
 namespace flecs 
 {
@@ -18298,6 +18381,7 @@ private:
 
 }
 
+
 namespace flecs 
 {
 
@@ -18349,6 +18433,7 @@ inline observer observer_builder<Components...>::each(Func&& func) const {
 }
 
 } // namespace flecs
+
 #ifdef FLECS_MODULE
 #pragma once
 
@@ -18427,6 +18512,7 @@ inline flecs::entity module_m_world::import() {
 }
 
 }
+
 #endif
 #ifdef FLECS_SYSTEM
 #pragma once
@@ -18553,6 +18639,7 @@ private:
 
 }
 
+
 namespace flecs 
 {
 
@@ -18622,6 +18709,7 @@ private:
 };
 
 }
+
 
 namespace flecs 
 {
@@ -18759,6 +18847,7 @@ inline system system_builder<Components...>::each(Func&& func) const {
 }
 
 } // namespace flecs
+
 #endif
 #ifdef FLECS_PIPELINE
 #pragma once
@@ -18838,6 +18927,7 @@ inline int32_t pipeline_m_world::get_threads() const {
 }
 
 }
+
 #endif
 #ifdef FLECS_TIMER
 #pragma once
@@ -18903,6 +18993,7 @@ inline void timer_m_base<T>::set_tick_source(flecs::entity e) {
 #undef flecs_me_
 
 }
+
 #endif
 #ifdef FLECS_SNAPSHOT
 #pragma once
@@ -18994,6 +19085,7 @@ inline flecs::snapshot snapshot_m_world::snapshot(Args &&... args) const {
 #undef flecs_me_
 
 }
+
 #endif
 #ifdef FLECS_DOC
 #pragma once
@@ -19038,6 +19130,7 @@ inline void doc_m_world::init() {
 #undef flecs_me_
 
 }
+
 #endif
 #ifdef FLECS_REST
 #pragma once
@@ -19054,6 +19147,7 @@ inline void rest_m_world::init() {
 #undef flecs_me_
 
 }
+
 #endif
 
 
@@ -19081,6 +19175,7 @@ inline void ctor_world_entity_impl(
 
 } // _
 } // flecs
+
 
 namespace flecs
 {
@@ -19134,6 +19229,7 @@ inline flecs::type iter::type() const {
 }
 
 } // namespace flecs
+
 #pragma once
 
 namespace flecs 
@@ -19254,8 +19350,12 @@ void world::set(const Func& func) {
 }
 
 } // namespace flecs
-#endif
+
+
 
 #endif
 
 #endif
+
+#endif
+

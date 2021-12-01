@@ -228,7 +228,7 @@ int json_ser_type_op(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e = *(ecs_entity_t*)ptr;
+        ecs_entity_t e = *(ecs_entity_t*)ECS_OFFSET(ptr, op->offset);
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
@@ -241,7 +241,8 @@ int json_ser_type_op(
     }
 
     default:
-        if (ecs_primitive_to_expr_buf(world, json_op_to_primitive_kind(op->kind), 
+        if (ecs_primitive_to_expr_buf(world, 
+            json_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
             /* Unknown operation */

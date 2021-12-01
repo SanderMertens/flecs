@@ -401,6 +401,31 @@ void SerializeToJson_struct_entity() {
     ecs_fini(world);
 }
 
+void SerializeToJson_struct_entity_after_float() {
+    typedef struct {
+        int32_t v;
+        ecs_entity_t e;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"v", ecs_id(ecs_i32_t)},
+            {"e", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    T value = {10, EcsFlecsCore};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"v\":10, \"e\":\"flecs.core\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_struct_enum() {
     typedef enum {
         Red, Blue, Green

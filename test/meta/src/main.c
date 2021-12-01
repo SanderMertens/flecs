@@ -338,6 +338,7 @@ void SerializeToExpr_struct_bitmask(void);
 void SerializeToExpr_struct_i32(void);
 void SerializeToExpr_struct_i32_i32(void);
 void SerializeToExpr_struct_entity(void);
+void SerializeToExpr_entity_entity_after_float(void);
 void SerializeToExpr_struct_nested_i32(void);
 void SerializeToExpr_struct_nested_i32_i32(void);
 void SerializeToExpr_struct_2_nested_i32_i32(void);
@@ -405,6 +406,7 @@ void SerializeToJson_struct_float(void);
 void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_entity_after_float(void);
 void SerializeToJson_struct_enum(void);
 void SerializeToJson_struct_bitmask(void);
 void SerializeToJson_struct_i32_i32(void);
@@ -1754,6 +1756,10 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_struct_entity
     },
     {
+        "entity_entity_after_float",
+        SerializeToExpr_entity_entity_after_float
+    },
+    {
         "struct_nested_i32",
         SerializeToExpr_struct_nested_i32
     },
@@ -2010,6 +2016,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_entity",
         SerializeToJson_struct_entity
+    },
+    {
+        "struct_entity_after_float",
+        SerializeToJson_struct_entity_after_float
     },
     {
         "struct_enum",
@@ -2398,7 +2408,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        39,
+        40,
         SerializeToExpr_testcases
     },
     {
@@ -2412,7 +2422,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        59,
+        60,
         SerializeToJson_testcases
     },
     {
