@@ -490,6 +490,7 @@ void Plecs_scope_w_1_subj_and_2_pairs(void);
 void Plecs_inherit_from_multiple(void);
 void Plecs_assign_pair_component(void);
 void Plecs_assign_pair_component_in_scope(void);
+void Plecs_set_entity_names(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -4185,6 +4186,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_pair_component_in_scope",
         Plecs_assign_pair_component_in_scope
+    },
+    {
+        "set_entity_names",
+        Plecs_set_entity_names
     }
 };
 
@@ -11169,7 +11174,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        130,
+        131,
         Plecs_testcases
     },
     {

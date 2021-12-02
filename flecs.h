@@ -5877,7 +5877,7 @@ typedef struct ecs_event_desc_t {
 
     /* Limit number of notified entities to count. offset+count must be less
      * than the total number of entities in the table. If left to 0, it will be
-     * automatically determined by doing ecs_table_count(table) - row. */
+     * automatically determined by doing ecs_table_count(table) - offset. */
     int32_t count;
 
     /* Optional context. Assigned to iter param member */

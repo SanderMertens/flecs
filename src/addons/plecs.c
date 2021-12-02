@@ -210,6 +210,27 @@ bool pred_is_subj(
     return true;
 }
 
+/* Set masks aren't useful in plecs, so translate them back to entity names */
+static
+const char* set_mask_to_name(
+    ecs_flags32_t flags) 
+{
+    if (flags == EcsSelf) {
+        return "self";
+    } else if (flags == EcsAll) {
+        return "all";
+    } else if (flags == EcsSuperSet) {
+        return "super";
+    } else if (flags == EcsSubSet) {
+        return "sub";
+    } else if (flags == EcsCascade || flags == (EcsSuperSet|EcsCascade)) {
+        return "cascade";
+    } else if (flags == EcsParent) {
+        return "parent";
+    }
+    return NULL;
+}
+
 static
 int create_term(
     ecs_world_t *world, 
@@ -224,6 +245,17 @@ int create_term(
     state->last_object = 0;
     state->last_assign_id = 0;
 
+    const char *pred_name = term->pred.name;
+    const char *subj_name = term->subj.name;
+    const char *obj_name = term->obj.name;
+
+    if (!subj_name) {
+        subj_name = set_mask_to_name(term->subj.set.mask);
+    }
+    if (!obj_name) {
+        obj_name = set_mask_to_name(term->obj.set.mask);
+    }
+
     if (!ecs_term_id_is_set(&term->pred)) {
         ecs_parser_error(name, expr, column, "missing predicate in expression");
         return -1;
@@ -237,12 +269,12 @@ int create_term(
 
     bool pred_as_subj = pred_is_subj(term, state);
 
-    ecs_entity_t pred = ensure_entity(world, state, term->pred.name, pred_as_subj); 
-    ecs_entity_t subj = ensure_entity(world, state, term->subj.name, true);
+    ecs_entity_t pred = ensure_entity(world, state, pred_name, pred_as_subj); 
+    ecs_entity_t subj = ensure_entity(world, state, subj_name, true);
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->obj)) {
-        obj = ensure_entity(world, state, term->obj.name, 
+        obj = ensure_entity(world, state, obj_name, 
             state->assign_stmt == false);
     }
 

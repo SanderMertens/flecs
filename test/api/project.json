@@ -513,7 +513,8 @@
                 "scope_w_1_subj_and_2_pairs",
                 "inherit_from_multiple",
                 "assign_pair_component",
-                "assign_pair_component_in_scope"
+                "assign_pair_component_in_scope",
+                "set_entity_names"
             ]
         }, {
             "id": "GlobalComponentIds",

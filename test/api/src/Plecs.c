@@ -3584,3 +3584,38 @@ void Plecs_assign_pair_component_in_scope() {
 
     ecs_fini(world);
 }
+
+void Plecs_set_entity_names() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo(self)"
+    LINE "foo(parent)"
+    LINE "foo(cascade)"
+    LINE "foo(sub)"
+    LINE "foo(super)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    ecs_entity_t self = ecs_lookup_fullpath(world, "self");
+    ecs_entity_t sub = ecs_lookup_fullpath(world, "sub");
+    ecs_entity_t super = ecs_lookup_fullpath(world, "super");
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "parent");
+    ecs_entity_t cascade = ecs_lookup_fullpath(world, "cascade");
+
+    test_assert(foo != 0);
+    test_assert(self != 0);
+    test_assert(sub != 0);
+    test_assert(super != 0);
+    test_assert(parent != 0);
+    test_assert(cascade != 0);
+
+    test_assert( ecs_has_id(world, self, foo));
+    test_assert( ecs_has_id(world, sub, foo));
+    test_assert( ecs_has_id(world, super, foo));
+    test_assert( ecs_has_id(world, parent, foo));
+    test_assert( ecs_has_id(world, cascade, foo));
+
+    ecs_fini(world);
+}
