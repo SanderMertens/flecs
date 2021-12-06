@@ -712,7 +712,7 @@ void OnDelete_on_delete_remove_object_w_5_relations() {
 void OnDelete_on_delete_remove_object_w_50_relations() {
     ecs_world_t *world = ecs_mini();
 
-    const int NUM = 50;
+    #define NUM 50
 
     ecs_entity_t r[NUM];
     int i;
@@ -733,6 +733,8 @@ void OnDelete_on_delete_remove_object_w_50_relations() {
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_get_type(world, e) == NULL);
 
+    #undef NUM
+
     ecs_fini(world);
 }
 
@@ -743,7 +745,7 @@ void OnDelete_on_delete_remove_object_w_50_relations_3_tables() {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    const int NUM = 50;
+    #define NUM 50
 
     ecs_entity_t r[NUM];
     int i;
@@ -773,6 +775,8 @@ void OnDelete_on_delete_remove_object_w_50_relations_3_tables() {
     test_assert(ecs_has_id(world, e_1, TagA));
     test_assert(ecs_has_id(world, e_2, TagB));
     test_assert(ecs_has_id(world, e_3, TagC));
+
+    #undef NUM
 
     ecs_fini(world);
 }
@@ -1019,7 +1023,7 @@ void OnDelete_stresstest_many_relations_on_delete() {
 
     int i, oi;
 
-    const int COUNT = 2;
+    #define COUNT 50
 
     /* Precreate objects so we get different relationship ids */
     ecs_entity_t objects[COUNT];
@@ -1051,6 +1055,8 @@ void OnDelete_stresstest_many_relations_on_delete() {
     ecs_get_world_stats(world, &s);
 
     test_int(s.table_count.avg[s.t] - table_count, 0);
+
+    #undef COUNT
 
     ecs_fini(world);
 }
