@@ -29,7 +29,7 @@ void Rules_empty_rule() {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ });
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){ 0 });
 
     test_assert(r == NULL);
 
@@ -4224,7 +4224,7 @@ void Rules_term_obj_w_this() {
     ECS_ENTITY(world, TagA, 0);
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
 
-    ecs_filter_desc_t desc = {};
+    ecs_filter_desc_t desc = { 0 };
     desc.terms[0].pred.entity = TagA;
     desc.terms[0].obj.entity = EcsThis;
     desc.terms[0].obj.var = EcsVarIsVariable;
@@ -4251,7 +4251,7 @@ void Rules_term_subj_w_this() {
     ECS_ENTITY(world, TagA, 0);
     ecs_add_id(world, TagA, ecs_pair(TagA, TagA));
 
-    ecs_filter_desc_t desc = {};
+    ecs_filter_desc_t desc = {0};
     desc.terms[0].pred.entity = TagA;
     desc.terms[0].obj.entity = TagA;
     desc.terms[0].subj.entity = EcsThis;

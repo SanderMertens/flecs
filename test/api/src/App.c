@@ -12,7 +12,7 @@ void App_app_w_frame_action() {
 
     test_int(ecs_app_set_frame_action(dummy_frame_action), 0);
 
-    int result = ecs_app_run(world, &(ecs_app_desc_t) { });
+    int result = ecs_app_run(world, &(ecs_app_desc_t) { 0 });
     test_int(result, 10);
 
     ecs_fini(world);
