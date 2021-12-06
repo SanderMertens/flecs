@@ -786,7 +786,7 @@ void Filter_filter_move() {
     test_int(f_1.terms[0].id, TagA);
     test_int(f_1.terms[1].id, TagB);
 
-    ecs_filter_t f_2 = {};
+    ecs_filter_t f_2 = {0};
     ecs_filter_move(&f_2, &f_1);
 
     test_int(f_2.term_count, 2);
@@ -819,7 +819,7 @@ void Filter_filter_copy() {
     test_int(f_1.terms[0].id, TagA);
     test_int(f_1.terms[1].id, TagB);
 
-    ecs_filter_t f_2 = {};
+    ecs_filter_t f_2 = {0};
     ecs_filter_copy(&f_2, &f_1);
 
     test_int(f_1.term_count, 2);
@@ -856,7 +856,7 @@ void Filter_filter_w_resources_copy() {
     test_int(f_1.terms[0].id, TagA);
     test_int(f_1.terms[1].id, TagB);
 
-    ecs_filter_t f_2 = {};
+    ecs_filter_t f_2 = {0};
     ecs_filter_copy(&f_2, &f_1);
 
     test_int(f_1.term_count, 2);
@@ -981,7 +981,7 @@ void Filter_filter_w_10_terms_move() {
     test_int(f_1.terms[8].id, TagI);
     test_int(f_1.terms[9].id, TagJ);
 
-    ecs_filter_t f_2 = {};
+    ecs_filter_t f_2 = {0};
     ecs_filter_move(&f_2, &f_1);    
 
     test_int(f_2.term_count, 10);
@@ -1041,7 +1041,7 @@ void Filter_filter_w_10_terms_copy() {
     test_int(f_1.terms[8].id, TagI);
     test_int(f_1.terms[9].id, TagJ);
 
-    ecs_filter_t f_2 = {};
+    ecs_filter_t f_2 = {0};
     ecs_filter_copy(&f_2, &f_1);    
 
     test_int(f_1.term_count, 10);

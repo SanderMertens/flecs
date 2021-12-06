@@ -2396,7 +2396,7 @@ ECS_MOVE(Position, dst, src, {
     move_position ++;
     dst->x = src->x;
     dst->y = src->y;
-});
+})
 
 void SingleThreadStaging_clear_stage_after_merge() {
     ecs_world_t *world = ecs_init();

@@ -715,7 +715,7 @@ void Entity_init_w_with() {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ });
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){0});
     test_assert(e != 0);
     test_assert(ecs_has_id(world, e, Tag));
 
@@ -754,7 +754,7 @@ void Entity_init_w_with_w_scope() {
     ecs_set_with(world, Tag);
     ecs_set_scope(world, parent);
 
-    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){ });
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){0});
     test_assert(e != 0);
     test_assert(ecs_has_id(world, e, Tag));
     test_assert(ecs_has_id(world, e, ecs_pair(EcsChildOf, parent)));

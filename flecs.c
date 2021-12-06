@@ -1,6 +1,4 @@
-#ifndef FLECS_IMPL
 #include "flecs.h"
-#endif
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
@@ -2123,6 +2121,18 @@ void _assert_func(
 
 #endif
 
+<<<<<<< HEAD
+=======
+
+static
+uint64_t ids_hash(const void *ptr) {
+    const ecs_ids_t *type = ptr;
+    ecs_id_t *ids = type->array;
+    int32_t count = type->count;
+    uint64_t hash = flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t));
+    return hash;
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 /* Count number of switch columns */
 static
@@ -3230,12 +3240,20 @@ int32_t flecs_table_append(
     ecs_entity_t *entities = ecs_vector_first(
         data->entities, ecs_entity_t);
 
+<<<<<<< HEAD
     /* Reobtain size to ensure that the columns have the same size as the 
      * entities and record vectors. This keeps reasoning about when allocations
      * occur easier. */
     size = ecs_vector_size(data->entities);
 
     /* Grow component arrays with 1 element */
+=======
+
+static
+int32_t count_events(
+    const ecs_entity_t *events) 
+{
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
     int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
@@ -4147,7 +4165,13 @@ void ecs_table_lock(
     }
 }
 
+<<<<<<< HEAD
 void ecs_table_unlock(
+=======
+
+static
+void flecs_notify_on_add(
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -8349,6 +8373,107 @@ error:
     return false;
 }
 
+<<<<<<< HEAD
+=======
+
+#ifndef _MSC_VER
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
+/* See explanation below. The hashing function may read beyond the memory passed
+ * into the hashing function, but only at word boundaries. This should be safe,
+ * but trips up address sanitizers and valgrind.
+ * This ensures clean valgrind logs in debug mode & the best perf in release */
+#if !defined(NDEBUG) || defined(ADDRESS_SANITIZER)
+#ifndef VALGRIND
+#define VALGRIND
+#endif
+#endif
+
+/*
+-------------------------------------------------------------------------------
+lookup3.c, by Bob Jenkins, May 2006, Public Domain.
+  http://burtleburtle.net/bob/c/lookup3.c
+-------------------------------------------------------------------------------
+*/
+
+#ifdef _MSC_VER
+//FIXME
+#else
+#include <sys/param.h>  /* attempt to define endianness */
+#endif
+#ifdef linux
+# include <endian.h>    /* attempt to define endianness */
+#endif
+
+/*
+ * My best guess at if you are big-endian or little-endian.  This may
+ * need adjustment.
+ */
+#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && \
+     __BYTE_ORDER == __LITTLE_ENDIAN) || \
+    (defined(i386) || defined(__i386__) || defined(__i486__) || \
+     defined(__i586__) || defined(__i686__) || defined(vax) || defined(MIPSEL))
+# define HASH_LITTLE_ENDIAN 1
+#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && \
+       __BYTE_ORDER == __BIG_ENDIAN) || \
+      (defined(sparc) || defined(POWERPC) || defined(mc68000) || defined(sel))
+# define HASH_LITTLE_ENDIAN 0
+#else
+# define HASH_LITTLE_ENDIAN 0
+#endif
+
+#define rot(x,k) (((x)<<(k)) | ((x)>>(32-(k))))
+
+/*
+-------------------------------------------------------------------------------
+mix -- mix 3 32-bit values reversibly.
+This is reversible, so any information in (a,b,c) before mix() is
+still in (a,b,c) after mix().
+If four pairs of (a,b,c) inputs are run through mix(), or through
+mix() in reverse, there are at least 32 bits of the output that
+are sometimes the same for one pair and different for another pair.
+This was tested for:
+* pairs that differed by one bit, by two bits, in any combination
+  of top bits of (a,b,c), or in any combination of bottom bits of
+  (a,b,c).
+* "differ" is defined as +, -, ^, or ~^.  For + and -, I transformed
+  the output delta to a Gray code (a^(a>>1)) so a string of 1's (as
+  is commonly produced by subtraction) look like a single 1-bit
+  difference.
+* the base values were pseudorandom, all zero but one bit set, or 
+  all zero plus a counter that starts at zero.
+Some k values for my "a-=c; a^=rot(c,k); c+=b;" arrangement that
+satisfy this are
+    4  6  8 16 19  4
+    9 15  3 18 27 15
+   14  9  3  7 17  3
+Well, "9 15 3 18 27 15" didn't quite get 32 bits diffing
+for "differ" defined as + with a one-bit base and a two-bit delta.  I
+used http://burtleburtle.net/bob/hash/avalanche.html to choose 
+the operations, constants, and arrangements of the variables.
+This does not achieve avalanche.  There are input bits of (a,b,c)
+that fail to affect some output bits of (a,b,c), especially of a.  The
+most thoroughly mixed value is c, but it doesn't really even achieve
+avalanche in c.
+This allows some parallelism.  Read-after-writes are good at doubling
+the number of bits affected, so the goal of mixing pulls in the opposite
+direction as the goal of parallelism.  I did what I could.  Rotates
+seem to cost as much as shifts on every machine I could lay my hands
+on, and rotates are much kinder to the top and bottom bits, so I used
+rotates.
+-------------------------------------------------------------------------------
+*/
+#define mix(a,b,c) \
+{ \
+  a -= c;  a ^= rot(c, 4);  c += b; \
+  b -= a;  b ^= rot(a, 6);  a += c; \
+  c -= b;  c ^= rot(b, 8);  b += a; \
+  a -= c;  a ^= rot(c,16);  c += b; \
+  b -= a;  b ^= rot(a,19);  a += c; \
+  c -= b;  c ^= rot(b, 4);  b += a; \
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
@@ -8440,6 +8565,41 @@ void merge_stages(
     }
 }
 
+<<<<<<< HEAD
+=======
+
+/** The number of elements in a single chunk */
+#define CHUNK_COUNT (4096)
+
+/** Compute the chunk index from an id by stripping the first 12 bits */
+#define CHUNK(index) ((int32_t)((uint32_t)index >> 12))
+
+/** This computes the offset of an index inside a chunk */
+#define OFFSET(index) ((int32_t)index & 0xFFF)
+
+/* Utility to get a pointer to the payload */
+#define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
+
+typedef struct chunk_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} chunk_t;
+
+struct ecs_sparse_t {
+    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+                                 * dense array stores both alive and not alive
+                                 * sparse indices. The 'count' member keeps
+                                 * track of which indices are alive. */
+
+    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_size_t size;            /* Element size */
+    int32_t count;              /* Number of alive entries */
+    uint64_t max_id_local;      /* Local max index (if no global is set) */
+    uint64_t *max_id;           /* Maximum issued sparse index */
+};
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 static
 void do_auto_merge(
     ecs_world_t *world)
@@ -9139,10 +9299,20 @@ void* _ecs_vector_add(
     ecs_vector_t *vector = *array_inout;
     int32_t count, size;
 
+<<<<<<< HEAD
     if (vector) {
         ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
         count = vector->count;
         size = vector->size;
+=======
+
+/**
+ *  stm32tpl --  STM32 C++ Template Peripheral Library
+ *  Visit https://github.com/antongus/stm32tpl for new versions
+ *
+ *  Copyright (c) 2011-2020 Anton B. Gusev aka AHTOXA
+ */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         if (count >= size) {
             size *= 2;
@@ -9693,6 +9863,7 @@ uint64_t new_index(
     }
 }
 
+<<<<<<< HEAD
 /* Try obtaining a value from the sparse set, don't care about whether the
  * provided index matches the current generation count.  */
 static
@@ -9705,6 +9876,17 @@ void* try_sparse_any(
     chunk_t *chunk = get_chunk(sparse, CHUNK(index));
     if (!chunk) {
         return NULL;
+=======
+
+#ifdef FLECS_SANITIZE
+static 
+void verify_nodes(
+    flecs_switch_header_t *hdr,
+    flecs_switch_node_t *nodes)
+{
+    if (!hdr) {
+        return;
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
     }
 
     int32_t offset = OFFSET(index);
@@ -10109,10 +10291,20 @@ uint64_t flecs_sparse_get_alive(
     return dense_array[dense];
 }
 
+<<<<<<< HEAD
 void* _flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
+=======
+
+/** Resize the vector buffer */
+static
+ecs_vector_t* resize(
+    ecs_vector_t *vector,
+    int16_t offset,
+    int32_t size)
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -10521,6 +10713,7 @@ void flecs_switch_set(
     }
 }
 
+<<<<<<< HEAD
 void flecs_switch_remove(
     ecs_switch_t *sw,
     int32_t element)
@@ -10528,6 +10721,15 @@ void flecs_switch_remove(
     ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element < ecs_vector_count(sw->nodes), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+=======
+
+/* The ratio used to determine whether the map should rehash. If
+ * (element_count * LOAD_FACTOR) > bucket_count, bucket count is increased. */
+#define LOAD_FACTOR (1.5f)
+#define KEY_SIZE (ECS_SIZEOF(ecs_map_key_t))
+#define GET_ELEM(array, elem_size, index) \
+    ECS_OFFSET(array, (elem_size) * (index))
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     uint64_t *values = ecs_vector_first(sw->values, uint64_t);
     uint64_t value = values[element];
@@ -10979,6 +11181,7 @@ uint64_t flecs_hash(
 
 
 
+
 static
 void ensure(
     ecs_bitset_t *bs,
@@ -11088,6 +11291,14 @@ error:
     return;
 }
 
+<<<<<<< HEAD
+=======
+
+typedef struct ecs_hm_bucket_t {
+    ecs_vector_t *keys;
+    ecs_vector_t *values;
+} ecs_hm_bucket_t;
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 /**
  *  stm32tpl --  STM32 C++ Template Peripheral Library
@@ -11286,6 +11497,20 @@ bool vappend(
     if (!str) {
         return result;
     }
+<<<<<<< HEAD
+=======
+    
+    return ecs_vector_get_t(bucket->values, value_size, 8, index);
+}
+
+
+/* Roles */
+const ecs_id_t ECS_CASE =      (ECS_ROLE | (0x7Cull << 56));
+const ecs_id_t ECS_SWITCH =    (ECS_ROLE | (0x7Bull << 56));
+const ecs_id_t ECS_PAIR =      (ECS_ROLE | (0x7Aull << 56));
+const ecs_id_t ECS_OVERRIDE =  (ECS_ROLE | (0x75ull << 56));
+const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     ecs_strbuf_init(b);
 
@@ -13199,7 +13424,11 @@ void signal_workers(
     ecs_os_mutex_unlock(world->sync_mutex);
 }
 
+<<<<<<< HEAD
 /** Stop worker threads */
+=======
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 static
 bool ecs_stop_threads(
     ecs_world_t *world)
@@ -13421,7 +13650,16 @@ void ecs_set_threads(
     }
 }
 
+<<<<<<< HEAD
 #endif
+=======
+
+void flecs_observable_init(
+    ecs_observable_t *observable)
+{
+    observable->events = ecs_sparse_new(ecs_event_record_t);
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 
 #ifdef FLECS_PIPELINE
@@ -13475,6 +13713,44 @@ uint64_t group_by_phase(
             break;
         }
     }
+<<<<<<< HEAD
+=======
+    
+error:
+    return;
+}
+
+
+#ifdef FLECS_SYSTEM
+#ifndef FLECS_SYSTEM_PRIVATE_H
+#define FLECS_SYSTEM_PRIVATE_H
+
+#ifdef FLECS_SYSTEM
+
+
+typedef struct EcsSystem {
+    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
+
+    ecs_entity_t entity;            /* Entity id of system, used for ordering */
+    ecs_query_t *query;             /* System query */
+    ecs_system_status_action_t status_action; /* Status action */   
+    ecs_entity_t tick_source;       /* Tick source associated with system */
+    
+    /* Schedule parameters */
+    bool multi_threaded;
+    bool no_staging;
+
+    int32_t invoke_count;           /* Number of times system is invoked */
+    float time_spent;               /* Time spent on running system */
+    FLECS_FLOAT time_passed;        /* Time passed since last invocation */
+    int32_t last_frame;             /* Last frame for which the system was considered */
+
+    ecs_entity_t self;              /* Entity associated with system */
+
+    void *ctx;                      /* Userdata for system */
+    void *status_ctx;               /* User data for status action */ 
+    void *binding_ctx;              /* Optional language binding context */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result < INT_MAX, ECS_INTERNAL_ERROR, NULL);
@@ -13488,10 +13764,16 @@ typedef enum ComponentWriteState {
     WriteToStage
 } ComponentWriteState;
 
+<<<<<<< HEAD
 typedef struct write_state_t {
     ecs_map_t *components;
     bool wildcard;
 } write_state_t;
+=======
+#endif
+
+#endif
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 int32_t get_write_state(
@@ -16247,9 +16529,33 @@ bool obj_is_set(
     return ecs_term_id_is_set(&term->obj) || term->role == ECS_PAIR;
 }
 
+<<<<<<< HEAD
 static
 ecs_rule_op_t* create_operation(
     ecs_rule_t *rule)
+=======
+
+#define INIT_CACHE(it, f, term_count)\
+    if (!it->f && term_count) {\
+        if (term_count < ECS_TERM_CACHE_SIZE) {\
+            it->f = it->cache.f;\
+            it->cache.f##_alloc = false;\
+        } else {\
+            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
+            it->cache.f##_alloc = true;\
+        }\
+    }
+
+#define FINI_CACHE(it, f)\
+    if (it->f) {\
+        if (it->cache.f##_alloc) {\
+            ecs_os_free((void*)it->f);\
+        }\
+    }   
+
+void flecs_iter_init(
+    ecs_iter_t *it)
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 {
     int32_t cur = rule->operation_count ++;
     rule->operations = ecs_os_realloc(
@@ -16815,9 +17121,14 @@ ecs_rule_filter_t pair_to_filter(
         }
     }
 
+<<<<<<< HEAD
     if (pair.reg_mask & RULE_PAIR_PREDICATE) {
         pred = entity_reg_get(it->rule, regs, pair.pred.reg);
         pred = ecs_entity_t_lo(pred); /* Filters don't have generations */
+=======
+
+/* -- Component lifecycle -- */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         if (pred == EcsWildcard) {
             if (result.wildcard) {
@@ -17470,6 +17781,11 @@ ecs_rule_var_t* ensure_entity_written(
     return evar;
 }
 
+<<<<<<< HEAD
+=======
+
+/* Move table from empty to non-empty list, or vice versa */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 static
 ecs_rule_op_t* insert_operation(
     ecs_rule_t *rule,
@@ -17992,9 +18308,20 @@ void insert_term_2(
             } else {
                 ecs_assert(obj != NULL, ECS_INTERNAL_ERROR, NULL);
 
+<<<<<<< HEAD
                 /* If subject is literal, find supersets for subject */
                 if (subj == NULL || subj->kind == EcsRuleVarKindEntity) {
                     obj = to_entity(rule, obj);
+=======
+
+/* Count number of switch columns */
+static
+int32_t switch_column_count(
+    ecs_table_t *table)
+{
+    int32_t i, sw_count = 0, count = ecs_vector_count(table->type);
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
                     ecs_rule_pair_t set_pair = *filter;
                     set_pair.reg_mask &= RULE_PAIR_PREDICATE;
@@ -20315,9 +20642,20 @@ ecs_entity_t ecs_struct_init(
             return 0;
         }
 
+<<<<<<< HEAD
         ecs_entity_t m = ecs_entity_init(world, &(ecs_entity_desc_t) {
             .name = m_desc->name
         });
+=======
+
+static const char* mixin_kind_str[] = {
+    [EcsMixinBase] = "base (should never be requested by application)",
+    [EcsMixinWorld] = "world",
+    [EcsMixinObservable] = "observable",
+    [EcsMixinIterable] = "iterable",
+    [EcsMixinMax] = "max (should never be requested by application)"
+};
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 
@@ -20450,10 +20788,28 @@ ecs_vector_t* serialize_array(
     return ops;
 }
 
+<<<<<<< HEAD
 static
 ecs_vector_t* serialize_array_component(
     ecs_world_t *world,
     ecs_entity_t type)
+=======
+
+#ifndef NDEBUG
+static int64_t s_min[] = { 
+    [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
+static int64_t s_max[] = { 
+    [1] = INT8_MAX, [2] = INT16_MAX, [4] = INT32_MAX, [8] = INT64_MAX };
+static uint64_t u_max[] = { 
+    [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
+
+uint64_t _flecs_ito(
+    size_t size,
+    bool is_signed,
+    bool lt_zero,
+    uint64_t u,
+    const char *err)
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 {
     const EcsArray *ptr = ecs_get(world, type, EcsArray);
     if (!ptr) {
@@ -20666,6 +21022,7 @@ static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
 
     dst->ops = ecs_vector_copy(src->ops, ecs_meta_type_op_t);
 
+<<<<<<< HEAD
     int32_t o, count = ecs_vector_count(src->ops);
     ecs_meta_type_op_t *ops = ecs_vector_first(src->ops, ecs_meta_type_op_t);
     
@@ -20683,6 +21040,19 @@ static ECS_MOVE(EcsMetaTypeSerialized, dst, src, {
     dst->ops = src->ops;
     src->ops = NULL;
 })
+=======
+
+static
+void term_error(
+    const ecs_world_t *world,
+    const ecs_term_t *term,
+    const char *name,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static ECS_DTOR(EcsMetaTypeSerialized, ptr, { 
     ecs_meta_dtor_serialized(ptr);
@@ -22734,6 +23104,7 @@ int expr_ser_elements(
     return 0;
 }
 
+<<<<<<< HEAD
 static
 int expr_ser_type_elements(
     const ecs_world_t *world,
@@ -22745,6 +23116,10 @@ int expr_ser_type_elements(
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
     ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
+=======
+
+#ifdef FLECS_TIMER
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -23219,10 +23594,15 @@ const char* ecs_parse_expr(
                 return NULL;
             }
 
+<<<<<<< HEAD
             if (ecs_meta_pop(&cur) != 0) {
                 goto error;
             }
         }
+=======
+
+#ifdef FLECS_EXPR
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         else if (!ecs_os_strcmp(token, "[")) {
             depth ++;
@@ -23586,7 +23966,12 @@ bool ecs_get_pipeline_stats(
         return false;
     }
 
+<<<<<<< HEAD
     int32_t sys_count = 0, active_sys_count = 0;
+=======
+
+#ifdef FLECS_EXPR
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
@@ -23763,9 +24148,14 @@ ecs_data_t* duplicate_data(
     result->columns = ecs_os_memdup(
         main_data->columns, ECS_SIZEOF(ecs_column_t) * column_count);
 
+<<<<<<< HEAD
     /* Copy entities */
     result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
     ecs_entity_t *entities = ecs_vector_first(result->entities, ecs_entity_t);
+=======
+
+#ifdef FLECS_EXPR
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     /* Copy record ptrs */
     result->record_ptrs = ecs_vector_copy(main_data->record_ptrs, ecs_record_t*);
@@ -23991,6 +24381,7 @@ void restore_unfiltered(
         }
     }
 
+<<<<<<< HEAD
     /* Now that all tables have been restored and world is in a consistent
      * state, run OnSet systems */
     int32_t world_count = flecs_sparse_count(world->store.tables);
@@ -24000,6 +24391,24 @@ void restore_unfiltered(
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
+=======
+    return ptr;
+error:
+    return NULL;
+}
+
+#endif
+
+
+#ifdef FLECS_REST
+
+typedef struct {
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    ecs_http_server_t *srv;
+    int32_t rc;
+} ecs_rest_ctx_t;
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         int32_t tcount = ecs_table_count(table);
         if (tcount) {
@@ -24287,6 +24696,7 @@ ecs_entity_t ecs_run_intern(
         if (tick) {
             time_elapsed = tick->time_elapsed;
 
+<<<<<<< HEAD
             /* If timer hasn't fired we shouldn't run the system */
             if (!tick->tick) {
                 return 0;
@@ -24300,6 +24710,12 @@ ecs_entity_t ecs_run_intern(
             return 0;
         }
     }
+=======
+#endif
+
+#ifndef FLECS_META_PRIVATE_H
+#define FLECS_META_PRIVATE_H
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     ecs_time_t time_start;
     bool measure_time = world->measure_system_time;
@@ -24327,7 +24743,12 @@ ecs_entity_t ecs_run_intern(
     it.ctx = system_data->ctx;
     it.binding_ctx = system_data->binding_ctx;
 
+<<<<<<< HEAD
     ecs_iter_action_t action = system_data->action;
+=======
+
+#ifdef FLECS_META
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     /* If no filter is provided, just iterate tables & invoke action */
     if (stage_count <= 1 || !system_data->multi_threaded) {
@@ -25003,7 +25424,12 @@ int json_ser_elements(
 {
     json_array_push(str);
 
+<<<<<<< HEAD
     const void *ptr = base;
+=======
+
+#ifdef FLECS_META
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     int i;
     for (i = 0; i < elem_count; i ++) {
@@ -25435,9 +25861,14 @@ int append_base(
         }
     }
 
+<<<<<<< HEAD
     char *path = ecs_get_fullpath(world, ent);
     json_member(buf, path);
     ecs_os_free(path);
+=======
+
+#ifdef FLECS_META
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     json_object_push(buf);
 
@@ -26327,6 +26758,11 @@ error:
 
 #endif
 
+<<<<<<< HEAD
+=======
+
+#ifdef FLECS_META
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 #ifdef FLECS_REST
 
@@ -26730,10 +27166,37 @@ void FlecsCoreDocImport(
 
 #endif
 
+<<<<<<< HEAD
 /* This is a heavily modified version of the EmbeddableWebServer (see copyright
  * below). This version has been stripped from everything not strictly necessary
  * for receiving/replying to simple HTTP requests, and has been modified to use
  * the Flecs OS API. */
+=======
+
+#ifdef FLECS_MODULE
+
+
+char* ecs_module_path_from_c(
+    const char *c_name)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+    const char *ptr;
+    char ch;
+
+    for (ptr = c_name; (ch = *ptr); ptr++) {
+        if (isupper(ch)) {
+            ch = flecs_ito(char, tolower(ch));
+            if (ptr != c_name) {
+                ecs_strbuf_appendstrn(&str, ".", 1);
+            }
+        }
+
+        ecs_strbuf_appendstrn(&str, &ch, 1);
+    }
+
+    return ecs_strbuf_get(&str);
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 /* EmbeddableWebServer Copyright (c) 2016, 2019, 2020 Forrest Heller, and 
  * CONTRIBUTORS (see below) - All rights reserved.
@@ -26951,6 +27414,7 @@ void http_close(
 #endif
 }
 
+<<<<<<< HEAD
 static
 ecs_http_socket_t http_accept(
     ecs_http_socket_t sock,
@@ -26962,6 +27426,36 @@ ecs_http_socket_t http_accept(
     addr_len[0] = (ecs_size_t)len;
     return result;
 }
+=======
+
+#ifdef FLECS_META_C
+
+#define ECS_META_IDENTIFIER_LENGTH (256)
+
+#define ecs_meta_error(ctx, ptr, ...)\
+    ecs_parser_error((ctx)->name, (ctx)->desc, ptr - (ctx)->desc, __VA_ARGS__);
+
+typedef char ecs_meta_token_t[ECS_META_IDENTIFIER_LENGTH];
+
+typedef struct meta_parse_ctx_t {
+    const char *name;
+    const char *desc;
+} meta_parse_ctx_t;
+
+typedef struct meta_type_t {
+    ecs_meta_token_t type;
+    ecs_meta_token_t params;
+    bool is_const;
+    bool is_ptr;
+} meta_type_t;
+
+typedef struct meta_member_t {
+    meta_type_t type;
+    ecs_meta_token_t name;
+    int64_t count;
+    bool is_partial;
+} meta_member_t;
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static 
 void reply_free(ecs_http_reply_t* response) {
@@ -27809,6 +28303,11 @@ void FlecsDocImport(
 
 #endif
 
+<<<<<<< HEAD
+=======
+
+#ifdef FLECS_LOG
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 #ifdef FLECS_PARSER
 
@@ -28249,6 +28748,7 @@ const char* parse_set_expr(
         }
     }
 
+<<<<<<< HEAD
     do {
         uint8_t tok = parse_set_token(token);
         if (!tok) {
@@ -28256,6 +28756,30 @@ const char* parse_set_expr(
                 "invalid set token '%s'", token);
             return NULL;
         }
+=======
+
+#ifdef FLECS_JSON
+
+void json_next(
+    ecs_strbuf_t *buf);
+
+void json_literal(
+    ecs_strbuf_t *buf,
+    const char *value);
+
+void json_number(
+    ecs_strbuf_t *buf,
+    double value);
+
+void json_true(
+    ecs_strbuf_t *buf);
+
+void json_false(
+    ecs_strbuf_t *buf);
+
+void json_array_push(
+    ecs_strbuf_t *buf);
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         if (id->set.mask & tok) {
             ecs_parser_error(name, expr, column, 
@@ -28318,12 +28842,17 @@ const char* parse_set_expr(
                 }
             }
 
+<<<<<<< HEAD
             /* If another digit is found, previous depth was min depth */
             if (isdigit(ptr[0])) {
                 ptr = parse_digit(ptr, token);
                 if (!ptr) {
                     return NULL;
                 }
+=======
+
+#ifdef FLECS_JSON
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
                 id->set.min_depth = id->set.max_depth;
                 id->set.max_depth = atoi(token);
@@ -29405,10 +29934,15 @@ ecs_entity_t meta_lookup_vector(
         e = ecs_set(world, 0, EcsMetaType, {EcsVectorType});
     }
 
+<<<<<<< HEAD
     return ecs_set(world, e, EcsVector, { element_type });
 error:
     return 0;
 }
+=======
+
+#ifdef FLECS_JSON
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 ecs_entity_t meta_lookup_bitmask(
@@ -29544,8 +30078,40 @@ ecs_entity_t meta_lookup(
         type = ecs_lookup_symbol(world, typename, true);
     }
 
+<<<<<<< HEAD
     if (count != 1) {
         ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
+=======
+    return ptr;
+error:
+    return NULL;
+}
+
+#endif
+
+
+#ifdef FLECS_JSON
+
+void json_next(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_next(buf);
+}
+
+void json_literal(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_strbuf_appendstr(buf, value);
+}
+
+void json_number(
+    ecs_strbuf_t *buf,
+    double value)
+{
+    ecs_strbuf_appendflt(buf, value);
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         type = ecs_set(world, ecs_set(world, 0,
             EcsMetaType, {EcsArrayType}),
@@ -29603,6 +30169,20 @@ error:
     return -1;
 }
 
+<<<<<<< HEAD
+=======
+#endif
+
+
+#ifdef FLECS_JSON
+
+static
+int json_typeinfo_ser_type(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_strbuf_t *buf);
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 static
 int meta_parse_constants(
     ecs_world_t *world,
@@ -29779,8 +30359,14 @@ int ecs_app_set_run_action(
 
     run_action = callback;
 
+<<<<<<< HEAD
     return 0;
 }
+=======
+
+#ifdef FLECS_SYSTEM
+#endif
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 int ecs_app_set_frame_action(
     ecs_app_frame_action_t callback)
@@ -29845,6 +30431,7 @@ const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 5;
 
+<<<<<<< HEAD
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 11;
@@ -29854,6 +30441,11 @@ const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 17;
+=======
+#endif
+
+#endif
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
@@ -30167,6 +30759,14 @@ bool world_iter_next(
     return it->is_valid = true;
 }
 
+<<<<<<< HEAD
+=======
+#endif
+
+
+#ifdef FLECS_APP
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 static
 void world_iter_init(
     const ecs_world_t *world,
@@ -30291,9 +30891,208 @@ ecs_world_t *ecs_mini(void) {
     ecs_trace("#[green]release#[reset] build");
 #endif
 
+<<<<<<< HEAD
     ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
+=======
+
+#ifdef FLECS_RULES
+
+/** Implementation of the rule query engine.
+ * 
+ * A rule (terminology borrowed from prolog) is a list of constraints that 
+ * specify which conditions must be met for an entity to match the rule. While
+ * this description matches any kind of ECS query, the rule engine has features
+ * that go beyond regular (flecs) ECS queries:
+ * 
+ * - query for all components of an entity (vs. all entities for a component)
+ * - query for all relationship pairs of an entity
+ * - support for query variables that are resolved at evaluation time
+ * - automatic traversal of transitive relationships
+ * 
+ * Query terms can have the following forms:
+ * 
+ * - Component(Subject)
+ * - Relation(Subject, Object)
+ * 
+ * Additionally the query parser supports the following shorthand notations:
+ * 
+ * - Component             // short for Component(This)
+ * - (Relation, Object)    // short for Relation(This, Object)
+ * 
+ * The subject, or first arugment of a term represents the entity on which the
+ * component or relation is matched. By default the subject is set to a builtin
+ * This variable, which causes the behavior to match a regular ECS query:
+ * 
+ * - Position, Velocity
+ * 
+ * Is equivalent to
+ *
+ * - Position(This), Velocity(This)
+ * 
+ * The function of the variable is to ensure that all components are matched on
+ * the same entity. Conceptually the query first populates the This variable
+ * with all entities that have Position. When the query evaluates the Velocity
+ * term, the variable is populated and the entity it contains will be checked
+ * for whether it has Velocity.
+ * 
+ * The actual implementation is more efficient and does not check per-entity.
+ * 
+ * Custom variables can be used to join parts of different terms. For example, 
+ * the following query can be used to find entities with a parent that has a
+ * Position component (note that variable names start with a _):
+ * 
+ * - ChildOf(This, _Parent), Component(_Parent)
+ * 
+ * The rule engine uses a backtracking algorithm to find the set of entities
+ * and variables that match all terms. As soon as the engine finds a term that
+ * does not match with the currently evaluated entity, the entity is discarded.
+ * When an entity is found for which all terms match, the entity is yielded to
+ * the iterator.
+ * 
+ * While a rule is being evaluated, a variable can either contain a single 
+ * entity or a table. The engine will attempt to work with tables as much as
+ * possible so entities can be eliminated/yielded in bulk. A rule may store
+ * both the table and entity version of a variable and only switch from table to
+ * entity when necessary.
+ * 
+ * The rule engine has an algorithm for computing which variables should be 
+ * resolved first. This algorithm works by finding a "root" variable, which is
+ * the subject variable that occurs in the term with the least dependencies. The
+ * remaining variables are then resolved based on their "distance" from the root
+ * with the closest variables being resolved first.
+ * 
+ * This generally results in an ordering that resolves the variables with the 
+ * least dependencies first and the most dependencies last, which is beneficial
+ * for two reasons:
+ * 
+ * - it improves the average performance of all queries
+ * - it makes performance less dependent on how an application orders the terms
+ * 
+ * A possible improvement would be for the query engine to also consider
+ * the number of tables that need to be evaluated for each term, as starting
+ * with the smallest term reduces the amount of work. Other than static variable
+ * analysis however, this can only be determined when the query is executed.
+ * 
+ * Rules are "compiled" into a set of instructions that encode the operations
+ * the query needs to perform in order to find the right set of entities.
+ * Operations can either yield data, which progresses the program, or signal
+ * that there is no (more) matching data, which discards the current variables.
+ * 
+ * An operation can yield multiple times, if there are multiple matches for its
+ * inputs. Operations are called with a redo flag, which can be either true or
+ * false. When redo is true the operation will yield the next result. When redo
+ * is false, the operation will reset its state and start from the first result.
+ * 
+ * Operations can have an input, output and a filter. Most commonly an operation
+ * either matches the filter against an input and yields if it matches, or uses
+ * the filter to find all matching results and store the result in the output.
+ *
+ * Variables are resolved by matching a filter against the output of an 
+ * operation. When a term contains variables, they are encoded as register ids
+ * in the filter. When the filter is evaluated, the most recent values of the
+ * register are used to match/lookup the output.
+ * 
+ * For example, a filter could be (ChildOf, _Parent). When the program starts,
+ * the _Parent register is initialized with *, so that when this filter is first
+ * evaluated, the operation will find all tables with (ChildOf, *). The _Parent
+ * register is then populated by taking the actual value of the table. If the
+ * table has type [(ChildOf, Sun)], _Parent will be initialized with Sun.
+ * 
+ * It is possible that a filter matches multiple times. Consider the filter
+ * (Likes, _Food), and a table [(Likes, Apples), (Likes, Pears)]. In this case
+ * an operation will yield the table twice, once with _Food=Apples, and once
+ * with _Food=Pears.
+ * 
+ * If a rule contains a term with a transitive relation, it will automatically
+ * substitute the parts of the term to find a fact that matches. The following
+ * examples illustrate how transitivity is resolved:
+ * 
+ * Query:
+ *   LocatedIn(Bob, SanFrancisco)
+ *   
+ * Expands to:
+ *   LocatedIn(Bob, SanFrancisco:self|subset)
+ * 
+ * Explanation:
+ *   "Is Bob located in San Francisco" - This term is true if Bob is either 
+ *   located in San Francisco, or is located in anything that is itself located 
+ *   in (a subset of) San Francisco.
+ * 
+ * 
+ * Query:
+ *   LocatedIn(Bob, X)
+ * 
+ * Expands to:
+ *   LocatedIn(Bob, X:self|superset)
+ * 
+ * Explanation:
+ *   "Where is Bob located?" - This term recursively returns all places that
+ *   Bob is located in, which includes his location and the supersets of his
+ *   location. When Bob is located in San Francisco, he is also located in
+ *   the United States, North America etc.
+ * 
+ * 
+ * Query:
+ *   LocatedIn(X, NorthAmerica)
+ * 
+ * Expands to:
+ *   LocatedIn(X, NorthAmerica:self|subset)
+ * 
+ * Explanation:
+ *   "What is located in North America?" - This term returns everything located
+ *   in North America and its subsets, as something located in San Francisco is
+ *   located in UnitedStates, which is located in NorthAmerica. 
+ * 
+ * 
+ * Query:
+ *   LocatedIn(X, Y)
+ * 
+ * Expands to:
+ *   LocatedIn(X, Y)
+ * 
+ * Explanation:
+ *   "Where is everything located" - This term returns everything that is
+ *   located somewhere. No substitution is performed as this would explode the
+ *   results while not yielding new information.
+ * 
+ * 
+ * In the above terms, the variable indicates the part of the term that is
+ * unknown at evaluation time. In an actual rule the picked strategy depends on
+ * whether the variable is known when the term is evaluated. For example, if
+ * variable X has been resolved by the time Located(X, Y) is evaluated, the
+ * strategy from the LocatedIn(Bob, X) example will be used.
+ */
+
+#define ECS_RULE_MAX_VARIABLE_COUNT (256)
+
+#define RULE_PAIR_PREDICATE (1)
+#define RULE_PAIR_OBJECT (2)
+
+/* A rule pair contains a predicate and object that can be stored in a register. */
+typedef struct ecs_rule_pair_t {
+    union {
+        int32_t reg;
+        ecs_entity_t ent;
+    } pred;
+    union {
+        int32_t reg;
+        ecs_entity_t ent;
+    } obj;
+    int32_t reg_mask; /* bit 1 = predicate, bit 2 = object, bit 4 = wildcard */
+    bool transitive; /* Is predicate transitive */
+    bool final;      /* Is predicate final */
+    bool inclusive;  /* Is predicate inclusive */
+    bool obj_0;
+} ecs_rule_pair_t;
+
+/* Filter for evaluating & reifing types and variables. Filters are created ad-
+ * hoc from pairs, and take into account all variables that had been resolved
+ * up to that point. */
+typedef struct ecs_rule_filter_t {
+    ecs_id_t mask;  /* Mask with wildcard in place of variables */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     world->self = world;
     world->type_info = flecs_sparse_new(ecs_type_info_t);
@@ -33987,10 +34786,19 @@ int32_t move_table(
     ecs_assert(ecs_vector_count(src_array) == last_src_index, 
         ECS_INTERNAL_ERROR, NULL);
 
+<<<<<<< HEAD
     if (empty) {
         /* Table is now empty, index is negative */
         new_index = new_index * -1 - 1;
     }
+=======
+#endif
+
+/* This is a heavily modified version of the EmbeddableWebServer (see copyright
+ * below). This version has been stripped from everything not strictly necessary
+ * for receiving/replying to simple HTTP requests, and has been modified to use
+ * the Flecs OS API. */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     return new_index;
 }
@@ -34905,6 +35713,7 @@ bool ecs_os_has_modules(void) {
 static char error_str[255];
 #endif
 
+<<<<<<< HEAD
 const char* ecs_os_strerror(int err) {
 #if defined(_MSC_VER)
     strerror_s(error_str, 255, err);
@@ -34913,6 +35722,11 @@ const char* ecs_os_strerror(int err) {
     return strerror(err);
 #endif
 }
+=======
+
+#ifdef FLECS_SNAPSHOT
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 
 #ifdef FLECS_SYSTEM
@@ -35375,11 +36189,16 @@ int get_comp_and_src(
                     break;
                 }
 
+<<<<<<< HEAD
                 if (!component) {
                     ecs_entity_t source = 0;
                     int32_t result = ecs_type_match(world, table, type, 
                         0, term->id, subj->set.relation, subj->set.min_depth, 
                         subj->set.max_depth, &source, NULL, NULL);
+=======
+
+#ifdef FLECS_DOC
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
                     if (result != -1) {
                         component = term->id;
@@ -35439,10 +36258,18 @@ int get_comp_and_src(
     return t;
 }
 
+<<<<<<< HEAD
 typedef struct pair_offset_t {
     int32_t index;
     int32_t count;
 } pair_offset_t;
+=======
+#endif
+
+
+#ifdef FLECS_PLECS
+
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 /* Get index for specified pair. Take into account that a pair can be matched
  * multiple times per table, by keeping an offset of the last found index */
@@ -36326,9 +37153,14 @@ bool tables_dirty(
 {
     bool is_dirty = false;
 
+<<<<<<< HEAD
     ecs_vector_t *vec = query->cache.tables;
     ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
     int32_t i, count = ecs_vector_count(vec);
+=======
+
+#ifdef FLECS_PIPELINE
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     for (i = 0; i < count; i ++) {
         ecs_query_table_t *qt = &tables[i];
@@ -36803,8 +37635,13 @@ void remove_table(
 
     ecs_os_free(elem->monitor);
 
+<<<<<<< HEAD
     elem->first = NULL;
 }
+=======
+
+#ifdef FLECS_PIPELINE
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 void unmatch_table(
@@ -37833,8 +38670,15 @@ bool ecs_query_next_instanced(
 
         iter->node = next;
 
+<<<<<<< HEAD
         goto yield;
     }
+=======
+
+#ifdef FLECS_OS_API_IMPL
+#ifdef _MSC_VER
+#include <windows.h>
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 done:
 error:
@@ -37974,11 +38818,18 @@ const EcsComponent* flecs_component_from_id(
         return NULL;
     }
 
+<<<<<<< HEAD
     const EcsComponent *component = ecs_get(world, e, EcsComponent);
     if ((!component || !component->size) && pair) {
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
         e = ECS_PAIR_OBJECT(pair);
+=======
+    ecs_os_set_api(&api);
+}
+
+#else
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         /* Because generations are not stored in the pair, get the currently
          * alive id */
@@ -38091,6 +38942,7 @@ void init_flags(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+<<<<<<< HEAD
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
     
@@ -38098,6 +38950,57 @@ void init_flags(
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
+=======
+    pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
+    pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
+    if (pthread_cond_wait(cond, mutex)) {
+        abort();
+    }
+}
+
+void ecs_set_os_api_impl(void) {
+    ecs_os_set_api_defaults();
+
+    ecs_os_api_t api = ecs_os_api;
+
+    api.thread_new_ = posix_thread_new;
+    api.thread_join_ = posix_thread_join;
+    api.ainc_ = posix_ainc;
+    api.adec_ = posix_adec;
+    api.mutex_new_ = posix_mutex_new;
+    api.mutex_free_ = posix_mutex_free;
+    api.mutex_lock_ = posix_mutex_lock;
+    api.mutex_unlock_ = posix_mutex_unlock;
+    api.cond_new_ = posix_cond_new;
+    api.cond_free_ = posix_cond_free;
+    api.cond_signal_ = posix_cond_signal;
+    api.cond_broadcast_ = posix_cond_broadcast;
+    api.cond_wait_ = posix_cond_wait;
+
+    ecs_os_set_api(&api);
+}
+
+#endif
+#endif
+
+
+
+#ifdef FLECS_COREDOC
+
+#define URL_ROOT "https://flecs.docsforge.com/master/relations-manual/"
+
+void FlecsCoreDocImport(
+    ecs_world_t *world)
+{    
+    ECS_MODULE(world, FlecsCoreDoc);
+
+    ECS_IMPORT(world, FlecsMeta);
+    ECS_IMPORT(world, FlecsDoc);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    /* Initialize reflection data for core components */
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         /* As we're iterating over the table components, also set the table
          * flags. These allow us to quickly determine if the table contains
@@ -38204,8 +39107,13 @@ ecs_table_t *create_table(
 #endif
     ecs_log_push();
 
+<<<<<<< HEAD
     /* Store table in table hashmap */
     *(ecs_table_t**)table_elem.value = result;
+=======
+
+#ifdef FLECS_PARSER
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     /* Set keyvalue to one that has the same lifecycle as the table */
     ecs_ids_t key = {
@@ -39342,6 +40250,7 @@ bool ecs_term_is_readonly(
     ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(term_index > 0, ECS_INVALID_PARAMETER, NULL);
 
+<<<<<<< HEAD
     ecs_term_t *term = &it->terms[term_index - 1];
     ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
     
@@ -39349,6 +40258,10 @@ bool ecs_term_is_readonly(
         return true;
     } else {
         ecs_term_id_t *subj = &term->subj;
+=======
+
+#ifdef FLECS_SYSTEM
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
         if (term->inout == EcsInOutDefault) {
             if (subj->entity != EcsThis) {
@@ -39832,6 +40745,7 @@ void init_iter(
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
 
+<<<<<<< HEAD
     int32_t index = ecs_type_match(it->world, it->table, it->type, 0, 
         it->event_id, EcsIsA, 0, 0, it->subjects, NULL, NULL);
     
@@ -39842,6 +40756,10 @@ void init_iter(
     } else {
         it->columns[0] = index + 1;
     }
+=======
+
+#ifdef FLECS_DEPRECATED
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     ecs_term_t term = {
         .id = it->event_id
@@ -39862,6 +40780,7 @@ bool ignore_table(
         return false;
     }
 
+<<<<<<< HEAD
     if (!t->match_prefab && (table->flags & EcsTableIsPrefab)) {
         return true;
     }
@@ -39871,6 +40790,10 @@ bool ignore_table(
     
     return false;
 }
+=======
+
+#define ECS_NAME_BUFFER_LENGTH (64)
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 void notify_self_triggers(
@@ -40724,6 +41647,16 @@ void flecs_increase_timer_resolution(bool enable)
 }
 #endif
 
+<<<<<<< HEAD
+=======
+
+static
+ecs_defer_op_t* new_defer_op(ecs_stage_t *stage) {
+    ecs_defer_op_t *result = ecs_vector_add(&stage->defer_queue, ecs_defer_op_t);
+    ecs_os_memset(result, 0, ECS_SIZEOF(ecs_defer_op_t));
+    return result;
+}
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
 static
 ecs_vector_t* sort_and_dedup(
@@ -41401,6 +42334,7 @@ void flecs_bootstrap(
         .events = {EcsOnAdd}
     });
 
+<<<<<<< HEAD
     /* Define trigger to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -41408,6 +42342,10 @@ void flecs_bootstrap(
         .callback = ensure_module_tag,
         .events = {EcsOnAdd}
     });
+=======
+
+void ecs_os_api_impl(ecs_os_api_t *api);
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 
     /* Define trigger for when component lifecycle is set for component */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
@@ -41873,6 +42811,7 @@ error:
     return 0;
 }
 
+<<<<<<< HEAD
 ecs_entity_t ecs_lookup_path_w_sep(
     const ecs_world_t *world,
     ecs_entity_t parent,
@@ -41880,6 +42819,12 @@ ecs_entity_t ecs_lookup_path_w_sep(
     const char *sep,
     const char *prefix,
     bool recursive)
+=======
+
+static
+ecs_vector_t* sort_and_dedup(
+    ecs_vector_t *result)
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
 {
     if (!path) {
         return 0;
@@ -42020,9 +42965,37 @@ ecs_entity_t ecs_add_path_w_sep(
         sep = ".";
     }    
 
+<<<<<<< HEAD
     if (!path) {
         if (!entity) {
             entity = ecs_new_id(world);
+=======
+
+static
+bool match_id(
+    const ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_entity_t match_with)
+{
+    (void)world;
+    
+    if (ECS_HAS_ROLE(match_with, CASE)) {
+        ecs_entity_t sw = ECS_PAIR_RELATION(match_with);
+        if (id == (ECS_SWITCH | sw)) {
+#ifdef FLECS_SANITIZE
+            ecs_entity_t sw_case = ECS_PAIR_OBJECT(match_with);
+            const EcsType *sw_type = ecs_get(world, sw, EcsType);
+            ecs_assert(sw_type != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_type_has_id(world, sw_type->normalized, 
+                ecs_get_alive(world, sw_case), false) == true,
+                        ECS_INVALID_PARAMETER, NULL);
+            (void)sw_case;
+            (void)sw_type;
+#endif
+            return true;
+        } else {
+            return false;
+>>>>>>> 38b21efc (#124 fix pedantic warnings in testcases)
         }
 
         if (parent) {
