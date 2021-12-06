@@ -6,7 +6,7 @@
         "use": [
             "flecs"
         ],
-        "use-amalgamate": true
+        "standalone": true
     },
     "lang.c": {
         "defines": ["FLECS_CUSTOM_BUILD", "FLECS_PIPELINE"]
