@@ -99,6 +99,10 @@ struct system final : entity_base, extendable<system, Mixins>
         return system_runner_fluent(
             m_world, m_id, stage_current, stage_count, delta_time, param);
     }
+
+    operator flecs::entity() const {
+        return flecs::entity(m_world, m_id);
+    }
 };
 
 // Mixin implementation

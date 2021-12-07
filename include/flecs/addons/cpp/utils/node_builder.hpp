@@ -1,10 +1,7 @@
 #pragma once
 
-namespace flecs 
-{
-
-namespace _ 
-{
+namespace flecs {
+namespace _ {
 
 // Macros for template types so we don't go cross-eyed
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
@@ -65,5 +62,4 @@ private:
 #undef FLECS_IBUILDER
 
 } // namespace _
-
 } // namespace flecs

@@ -574,8 +574,8 @@ void System_system_from_id() {
     flecs::world world;
 
     uint32_t invoked = 0;
+
     flecs::entity sys = world.system<>()
-        .kind(0)
         .iter([&](flecs::iter& it) {
             invoked ++;
         });

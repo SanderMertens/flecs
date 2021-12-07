@@ -1,8 +1,8 @@
 #pragma once
 
 namespace flecs {
-
 namespace _ {
+
     template <typename T, if_t< is_const<T>::value > = 0>
     static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::In;
@@ -35,9 +35,7 @@ namespace _ {
             : ids({ (_::cpp_type<Components>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
             , oper ({ (type_to_oper<Components>())... }) 
-        {
-            (void)world;
-        }
+        { (void)world; }
 
         flecs::array<flecs::id_t, sizeof...(Components)> ids;
         flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout;
@@ -54,5 +52,4 @@ namespace _ {
     };
 
 } // namespace _
-
 } // namespace flecs

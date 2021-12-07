@@ -23,6 +23,14 @@ struct query_base {
         : m_world(world)
     {
         m_query = ecs_query_init(world, desc);
+
+        if (!m_query) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->filter.terms_buffer) {
+            ecs_os_free(desc->filter.terms_buffer);
+        }
     }
 
     operator query_t*() const {

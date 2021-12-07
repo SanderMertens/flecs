@@ -22,14 +22,14 @@ template <typename Func, if_t< is_callable<Func>::value > >
 inline Base& entity_builder_i<Base>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->world_v(), this->id_v(), func);
-    return *this;
+    return to_base();
 }
 
 template <typename Base>
 template <typename T>
 inline Base& entity_builder_i<Base>::component() {
     component_for_id<T>(this->world_v(), this->id_v());
-    return *this;
+    return to_base();
 }
 
 inline bool entity_view::has_switch(const flecs::type& type) const {

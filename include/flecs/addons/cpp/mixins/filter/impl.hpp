@@ -97,7 +97,7 @@ struct filter_base {
         while (ecs_filter_next(&it)) {
             _::iter_invoker<Func>(func).invoke(&it);
         }
-    }  
+    }
 
     template <typename Func>
     void each_term(const Func& func) {
@@ -260,7 +260,11 @@ inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
 
 // filter_base implementation
 inline filter_base::operator filter<>() const {
-    return flecs::filter<>(m_world, &m_filter);
+    flecs::filter<> f;
+    ecs_filter_copy(&f.m_filter, &this->m_filter);
+    f.m_filter_ptr = &f.m_filter;
+    f.m_world = this->m_world;
+    return f;
 }
 
 #undef flecs_me_

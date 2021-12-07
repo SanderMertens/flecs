@@ -3,17 +3,12 @@
 #include "../../utils/builder.hpp"
 #include "builder_i.hpp"
 
-namespace flecs
-{
-
+namespace flecs {
 namespace _ {
     template <typename ... Components>
     using query_builder_base = builder<
-        query, 
-        ecs_query_desc_t, 
-        query_builder<Components...>, 
-        query_builder_i, 
-        Components ...>;
+        query, ecs_query_desc_t, query_builder<Components...>, 
+        query_builder_i, Components ...>;
 }
 
 template <typename ... Components>
