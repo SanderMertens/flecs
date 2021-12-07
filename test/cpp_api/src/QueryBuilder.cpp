@@ -1578,3 +1578,19 @@ void QueryBuilder_group_by_template() {
     });
     test_int(count, 3);
 }
+
+void QueryBuilder_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder().term<Position>().build();
+
+    auto e1 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}

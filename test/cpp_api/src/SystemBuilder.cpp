@@ -459,3 +459,22 @@ void SystemBuilder_name_arg() {
 
     test_assert(s.has<Position>());
 }
+
+void SystemBuilder_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .term<Position>()
+        .each([&](flecs::entity e) {
+            count ++;
+            test_assert(e == e1);
+        });
+
+    test_int(count, 0);
+    s.run();
+    test_int(count, 1);
+}

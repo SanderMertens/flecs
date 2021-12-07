@@ -1636,3 +1636,19 @@ void FilterBuilder_const_in_term() {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto q = ecs.filter_builder().term<Position>().build();
+
+    auto e1 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}

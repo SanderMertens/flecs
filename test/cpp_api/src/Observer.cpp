@@ -337,3 +337,22 @@ void Observer_2_entities_each() {
     test_int(count, 2);
     test_assert(last == e2);
 }
+
+void Observer_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+
+    int32_t count = 0;
+
+    ecs.observer()
+        .term<Position>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;          
+        });
+
+    e1.set<Position>({10, 20});
+    test_int(count, 1);
+}

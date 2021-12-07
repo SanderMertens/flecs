@@ -153,7 +153,7 @@ public:
     template <typename Func>
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    } 
+    }
 
     template <typename Func>
     void iter(Func&& func) const { 
