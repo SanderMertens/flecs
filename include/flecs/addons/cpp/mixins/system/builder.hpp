@@ -18,7 +18,15 @@ namespace _ {
 
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {
-    using _::system_builder_base<Components...>::system_builder_base;
+    system_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::system_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+
+#ifdef FLECS_PIPELINE
+        this->m_desc.entity.add[0] = flecs::OnUpdate;
+#endif
+    }
 };
 
 }

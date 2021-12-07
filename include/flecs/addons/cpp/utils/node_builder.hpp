@@ -6,25 +6,18 @@ namespace flecs
 namespace _ 
 {
 
-// Base class just used to initialize m_desc to 0
-template <typename TDesc>
-struct node_desc_initializer {
-    node_desc_initializer(TDesc *desc) { *desc = {}; }
-};
-
 // Macros for template types so we don't go cross-eyed
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<typename T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
-struct node_builder
-    : node_desc_initializer<TDesc>, IBuilder<Base, Components ...>
+struct node_builder : IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : node_desc_initializer<TDesc>(&m_desc)
-        , IBase(world, &m_desc)
+        : IBase(world, &m_desc)
+        , m_desc{}
         , m_world(world) 
     {
         m_desc.entity.name = name;

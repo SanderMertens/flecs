@@ -16737,6 +16737,66 @@ inline flecs::type type_m_world::type(Args &&... args) const {
 
 #pragma once
 
+#pragma once
+
+namespace flecs {
+
+namespace _ {
+    template <typename T, if_t< is_const<T>::value > = 0>
+    static constexpr flecs::inout_kind_t type_to_inout() {
+        return flecs::In;
+    }
+
+    template <typename T, if_t< is_reference<T>::value > = 0>
+    static constexpr flecs::inout_kind_t type_to_inout() {
+        return flecs::Out;
+    }
+
+    template <typename T, if_not_t< 
+        is_const<T>::value || is_reference<T>::value > = 0>
+    static constexpr flecs::inout_kind_t type_to_inout() {
+        return flecs::InOutDefault;
+    }
+
+    template <typename T, if_t< is_pointer<T>::value > = 0>
+    static constexpr flecs::oper_kind_t type_to_oper() {
+        return flecs::Optional;
+    }
+
+    template <typename T, if_not_t< is_pointer<T>::value > = 0>
+    static constexpr flecs::oper_kind_t type_to_oper() {
+        return flecs::And;
+    }
+
+    template <typename ... Components>
+    struct sig {
+        sig(flecs::world_t *world) 
+            : ids({ (_::cpp_type<Components>::id(world))... })
+            , inout ({ (type_to_inout<Components>())... })
+            , oper ({ (type_to_oper<Components>())... }) 
+        {
+            (void)world;
+        }
+
+        flecs::array<flecs::id_t, sizeof...(Components)> ids;
+        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout;
+        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper;
+
+        template <typename Builder>
+        void populate(const Builder& b) {
+            size_t i = 0;
+            for (auto id : ids) {
+                b->term(id).inout(inout[i]).oper(oper[i]);
+                i ++;
+            }
+        }
+    };
+
+} // namespace _
+
+} // namespace flecs
+
+
 namespace flecs 
 {
 
@@ -17038,55 +17098,6 @@ protected:
         }
     }
 
-    template <typename Arg, typename ... ComponentTypes>
-    static void populate_filter_from_pack(flecs::world_t *world, Arg *me) {
-        (void)world;
-        
-        flecs::array<flecs::id_t, sizeof...(ComponentTypes)> ids ({
-            (_::cpp_type<ComponentTypes>::id(world))...
-        });
-
-        flecs::array<flecs::inout_kind_t, sizeof...(ComponentTypes)> inout_kinds ({
-            (type_to_inout<ComponentTypes>())...
-        });
-
-        flecs::array<flecs::oper_kind_t, sizeof...(ComponentTypes)> oper_kinds ({
-            (type_to_oper<ComponentTypes>())...
-        });
-
-        size_t i = 0;
-        for (auto id : ids) {
-            me->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
-            i ++;
-        }
-    }
-
-    template <typename T, if_t< is_const<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::In;
-    }
-
-    template <typename T, if_t< is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::Out;
-    }
-
-    template <typename T, if_not_t< 
-        is_const<T>::value || is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::InOutDefault;
-    }
-
-    template <typename T, if_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
-        return flecs::Optional;
-    }
-
-    template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
-        return flecs::And;
-    } 
-
 private:
     operator Base&() {
         return *static_cast<Base*>(this);
@@ -17094,6 +17105,7 @@ private:
 };
 
 }
+
 
 namespace flecs {
 
@@ -17268,31 +17280,23 @@ namespace flecs
 namespace _
 {
 
-// Base class just used to initialize m_desc to 0
-template <typename TDesc>
-struct builder_desc_initializer {
-    builder_desc_initializer(TDesc *desc) { *desc = {}; }
-};
-
 // Macros for template types so we don't go cross-eyed
 #define FLECS_TBUILDER template<typename ... Components> class
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<FLECS_TBUILDER T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
-struct builder_base
-    : builder_desc_initializer<TDesc>, IBuilder<Base, Components ...>
+struct builder_base : IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
     builder_base(flecs::world_t *world)
-        : builder_desc_initializer<TDesc>(&m_desc)
-        , IBase(world, &m_desc)
+        : IBase(world, &m_desc)
+        , m_desc{}
         , m_world(world) { }
 
     builder_base(const builder_base& f) 
-        : builder_desc_initializer<TDesc>(&m_desc)
-        , IBase(f.m_world, &m_desc, f.m_term_index)
+        : IBase(f.m_world, &m_desc, f.m_term_index)
     {
         m_world = f.m_world;
         m_desc = f.m_desc;
@@ -17340,13 +17344,7 @@ template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
     filter_builder_i(flecs::world_t *world, ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
-        , m_desc(desc) 
-    {
-        this->template populate_filter_from_pack<
-            filter_builder_i<Base, Components...>, 
-            Components...>
-                (world, this);
-    }
+        , m_desc(desc) { }
 
     Base& instanced() {
         m_desc->instanced = true;
@@ -17397,7 +17395,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term() {
         this->term();
         *this->m_term = flecs::term(this->world_v()).id<T>().move();
-        this->m_term->inout = static_cast<ecs_inout_kind_t>(this->template type_to_inout<T>());
+        this->m_term->inout = static_cast<ecs_inout_kind_t>(_::type_to_inout<T>());
         return *this;
     }
 
@@ -17487,7 +17485,11 @@ namespace _ {
 
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
-    using _::filter_builder_base<Components...>::filter_builder_base;
+    filter_builder(flecs::world_t* world)
+        : _::filter_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }
@@ -17886,7 +17888,11 @@ namespace _ {
 
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
-    using _::query_builder_base<Components...>::query_builder_base;
+    query_builder(flecs::world_t* world)
+        : _::query_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }
@@ -18082,25 +18088,18 @@ namespace flecs
 namespace _ 
 {
 
-// Base class just used to initialize m_desc to 0
-template <typename TDesc>
-struct node_desc_initializer {
-    node_desc_initializer(TDesc *desc) { *desc = {}; }
-};
-
 // Macros for template types so we don't go cross-eyed
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<typename T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
-struct node_builder
-    : node_desc_initializer<TDesc>, IBuilder<Base, Components ...>
+struct node_builder : IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : node_desc_initializer<TDesc>(&m_desc)
-        , IBase(world, &m_desc)
+        : IBase(world, &m_desc)
+        , m_desc{}
         , m_world(world) 
     {
         m_desc.entity.name = name;
@@ -18166,10 +18165,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     trigger_builder_i(flecs::world_t *world, ecs_trigger_desc_t *desc) 
         : BaseClass(&desc->term)
         , m_desc(desc)
-        , m_event_count(0) 
-    { 
-        this->template populate_filter_from_pack<Class, Components...>(world, this);
-    }
+        , m_event_count(0) { }
 
     /** Specify when the event(s) for which the trigger run.
      * @param kind The kind that specifies when the system should be ran.
@@ -18221,7 +18217,11 @@ namespace _ {
 
 template <typename ... Components>
 struct trigger_builder final : _::trigger_builder_base<Components...> {
-    using _::trigger_builder_base<Components...>::trigger_builder_base;
+    trigger_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::trigger_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }
@@ -18339,7 +18339,11 @@ namespace _ {
 
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
-    using _::observer_builder_base<Components...>::observer_builder_base;
+    observer_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::observer_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }
@@ -18485,12 +18489,7 @@ private:
 public:
     system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
         : BaseClass(world, &desc->query)
-        , m_desc(desc) 
-    {
-#ifdef FLECS_PIPELINE
-        m_desc->entity.add[0] = flecs::OnUpdate;
-#endif
-    }
+        , m_desc(desc) { }
 
     /** Specify when the system should be ran.
      *
@@ -18598,7 +18597,15 @@ namespace _ {
 
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {
-    using _::system_builder_base<Components...>::system_builder_base;
+    system_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::system_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+
+#ifdef FLECS_PIPELINE
+        this->m_desc.entity.add[0] = flecs::OnUpdate;
+#endif
+    }
 };
 
 }

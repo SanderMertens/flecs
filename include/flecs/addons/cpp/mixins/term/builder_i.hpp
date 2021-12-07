@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../utils/signature.hpp"
+
 namespace flecs 
 {
 
@@ -300,55 +302,6 @@ protected:
             this->m_term_id = nullptr;
         }
     }
-
-    template <typename Arg, typename ... ComponentTypes>
-    static void populate_filter_from_pack(flecs::world_t *world, Arg *me) {
-        (void)world;
-        
-        flecs::array<flecs::id_t, sizeof...(ComponentTypes)> ids ({
-            (_::cpp_type<ComponentTypes>::id(world))...
-        });
-
-        flecs::array<flecs::inout_kind_t, sizeof...(ComponentTypes)> inout_kinds ({
-            (type_to_inout<ComponentTypes>())...
-        });
-
-        flecs::array<flecs::oper_kind_t, sizeof...(ComponentTypes)> oper_kinds ({
-            (type_to_oper<ComponentTypes>())...
-        });
-
-        size_t i = 0;
-        for (auto id : ids) {
-            me->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
-            i ++;
-        }
-    }
-
-    template <typename T, if_t< is_const<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::In;
-    }
-
-    template <typename T, if_t< is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::Out;
-    }
-
-    template <typename T, if_not_t< 
-        is_const<T>::value || is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::InOutDefault;
-    }
-
-    template <typename T, if_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
-        return flecs::Optional;
-    }
-
-    template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
-        return flecs::And;
-    } 
 
 private:
     operator Base&() {

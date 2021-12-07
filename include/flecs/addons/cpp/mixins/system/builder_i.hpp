@@ -14,12 +14,7 @@ private:
 public:
     system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
         : BaseClass(world, &desc->query)
-        , m_desc(desc) 
-    {
-#ifdef FLECS_PIPELINE
-        m_desc->entity.add[0] = flecs::OnUpdate;
-#endif
-    }
+        , m_desc(desc) { }
 
     /** Specify when the system should be ran.
      *

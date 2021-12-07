@@ -10,13 +10,7 @@ template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
     filter_builder_i(flecs::world_t *world, ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
-        , m_desc(desc) 
-    {
-        this->template populate_filter_from_pack<
-            filter_builder_i<Base, Components...>, 
-            Components...>
-                (world, this);
-    }
+        , m_desc(desc) { }
 
     Base& instanced() {
         m_desc->instanced = true;
@@ -67,7 +61,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term() {
         this->term();
         *this->m_term = flecs::term(this->world_v()).id<T>().move();
-        this->m_term->inout = static_cast<ecs_inout_kind_t>(this->template type_to_inout<T>());
+        this->m_term->inout = static_cast<ecs_inout_kind_t>(_::type_to_inout<T>());
         return *this;
     }
 

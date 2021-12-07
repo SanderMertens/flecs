@@ -18,7 +18,11 @@ namespace _ {
 
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
-    using _::observer_builder_base<Components...>::observer_builder_base;
+    observer_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::observer_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }

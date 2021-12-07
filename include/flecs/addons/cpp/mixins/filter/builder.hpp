@@ -18,7 +18,11 @@ namespace _ {
 
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
-    using _::filter_builder_base<Components...>::filter_builder_base;
+    filter_builder(flecs::world_t* world)
+        : _::filter_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }

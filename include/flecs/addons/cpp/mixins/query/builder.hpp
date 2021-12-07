@@ -18,7 +18,11 @@ namespace _ {
 
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
-    using _::query_builder_base<Components...>::query_builder_base;
+    query_builder(flecs::world_t* world)
+        : _::query_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }

@@ -18,7 +18,11 @@ namespace _ {
 
 template <typename ... Components>
 struct trigger_builder final : _::trigger_builder_base<Components...> {
-    using _::trigger_builder_base<Components...>::trigger_builder_base;
+    trigger_builder(flecs::world_t* world, const char *name = nullptr)
+        : _::trigger_builder_base<Components...>(world, name)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
 };
 
 }
