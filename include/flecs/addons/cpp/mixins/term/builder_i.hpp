@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../utils/signature.hpp"
+
 namespace flecs 
 {
 
@@ -131,6 +133,11 @@ struct term_builder_i : term_id_builder_i<Base> {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_term->pred.entity = id;
         return *this;
+    }
+
+    /** Alias for id, for compatibility with populate_filter_from_pack */
+    Base& term(id_t id) {
+        return this->id(id);
     }
 
     /** Set (component) id to type.
@@ -295,56 +302,6 @@ protected:
             this->m_term_id = nullptr;
         }
     }
-
-    // A term can contain at most one component, but the parameter pack makes
-    // the template parameter optional, which makes it easier to reuse the same
-    // code for templated vs. non-templated terms.
-    template <typename ... Components>
-    void populate_term_from_pack() {
-        flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(this->world_v()))...
-        });
-
-        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
-            (type_to_inout<Components>())...
-        });
-
-        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
-            (type_to_oper<Components>())...
-        });
-
-        size_t i = 0;
-        for (auto the_id : ids) {
-            this->id(the_id).inout(inout_kinds[i]).oper(oper_kinds[i]);
-            i ++;
-        }
-    }
-
-    template <typename T, if_t< is_const<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::In;
-    }
-
-    template <typename T, if_t< is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::Out;
-    }
-
-    template <typename T, if_not_t< 
-        is_const<T>::value || is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
-        return flecs::InOutDefault;
-    }
-
-    template <typename T, if_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
-        return flecs::Optional;
-    }
-
-    template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
-        return flecs::And;
-    } 
 
 private:
     operator Base&() {

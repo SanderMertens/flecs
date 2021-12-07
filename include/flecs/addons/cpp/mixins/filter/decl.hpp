@@ -53,6 +53,5 @@ struct filter_m<flecs::world> : mixin<flecs::world> {
 };
 
 using filter_m_world = filter_m<flecs::world>;
-using filter_m_entity_view = filter_m<flecs::entity_view>;
 
 }

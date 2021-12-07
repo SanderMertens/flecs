@@ -19,9 +19,21 @@ struct query_base {
         : m_world(world)
         , m_query(query) { }
 
-    /** Get pointer to C query object.
-     */
-    query_t* c_ptr() const {
+    query_base(world_t *world, ecs_query_desc_t *desc) 
+        : m_world(world)
+    {
+        m_query = ecs_query_init(world, desc);
+
+        if (!m_query) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->filter.terms_buffer) {
+            ecs_os_free(desc->filter.terms_buffer);
+        }
+    }
+
+    operator query_t*() const {
         return m_query;
     }
 
@@ -97,6 +109,8 @@ struct query_base {
         return flecs::string(result);
     }
 
+    operator query<>() const;
+
 protected:
     world_t *m_world;
     query_t *m_query;
@@ -108,41 +122,37 @@ private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
 public:
-    query() { }
-
-    query(world_t *world, query_t *q)
-        : query_base(world, q) { }
+    using query_base::query_base;
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_instanced);
     } 
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
     }
 
     template <typename Func>
     void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        if (force_instanced) {
-            it.is_instanced = true;
-        }
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
@@ -162,28 +172,15 @@ inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... ar
 }
 
 // Builder implementation
-template <typename ... Components>
-inline query_builder_base<Components...>::operator query<Components ...>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
-template <typename ... Components>
-inline query_builder<Components ...>::operator query<>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<>(this->m_world, query);
-}
-
-template <typename ... Components>
-inline query<Components ...> query_builder_base<Components...>::build() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
 template <typename Base, typename ... Components>
 inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
-    m_desc->parent = parent.c_ptr();
+    m_desc->parent = parent;
     return *static_cast<Base*>(this);
+}
+
+// query_base implementation
+inline query_base::operator query<>() const {
+    return flecs::query<>(m_world, m_query);
 }
 
 #undef flecs_me_

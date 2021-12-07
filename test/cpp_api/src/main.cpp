@@ -269,10 +269,10 @@ void Type_get_out_of_range(void);
 void Type_has_from_stage(void);
 
 // Testsuite 'System'
-void System_action(void);
-void System_action_const(void);
-void System_action_shared(void);
-void System_action_optional(void);
+void System_iter(void);
+void System_iter_const(void);
+void System_iter_shared(void);
+void System_iter_optional(void);
 void System_each(void);
 void System_each_const(void);
 void System_each_shared(void);
@@ -284,7 +284,6 @@ void System_signature_optional(void);
 void System_copy_name_on_create(void);
 void System_nested_system(void);
 void System_empty_signature(void);
-void System_action_tag(void);
 void System_iter_tag(void);
 void System_each_tag(void);
 void System_system_from_id(void);
@@ -319,6 +318,7 @@ void System_instanced_query_w_singleton_iter(void);
 void System_instanced_query_w_base_iter(void);
 void System_un_instanced_query_w_singleton_iter(void);
 void System_un_instanced_query_w_base_iter(void);
+void System_create_w_no_template_args(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -330,6 +330,7 @@ void Trigger_trigger_w_self(void);
 void Trigger_on_add_id(void);
 void Trigger_on_add_id_arg(void);
 void Trigger_on_add_expr(void);
+void Trigger_create_w_no_template_args(void);
 
 // Testsuite 'Query'
 void Query_action(void);
@@ -445,6 +446,7 @@ void QueryBuilder_10_terms(void);
 void QueryBuilder_20_terms(void);
 void QueryBuilder_group_by_raw(void);
 void QueryBuilder_group_by_template(void);
+void QueryBuilder_create_w_no_template_args(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -511,6 +513,7 @@ void FilterBuilder_20_terms(void);
 void FilterBuilder_term_after_arg(void);
 void FilterBuilder_name_arg(void);
 void FilterBuilder_const_in_term(void);
+void FilterBuilder_create_w_no_template_args(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -532,6 +535,7 @@ void SystemBuilder_singleton_term(void);
 void SystemBuilder_10_terms(void);
 void SystemBuilder_20_terms(void);
 void SystemBuilder_name_arg(void);
+void SystemBuilder_create_w_no_template_args(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -544,6 +548,7 @@ void Observer_20_terms(void);
 void Observer_2_entities_iter(void);
 void Observer_2_entities_table_column(void);
 void Observer_2_entities_each(void);
+void Observer_create_w_no_template_args(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -1758,20 +1763,20 @@ bake_test_case Type_testcases[] = {
 
 bake_test_case System_testcases[] = {
     {
-        "action",
-        System_action
+        "iter",
+        System_iter
     },
     {
-        "action_const",
-        System_action_const
+        "iter_const",
+        System_iter_const
     },
     {
-        "action_shared",
-        System_action_shared
+        "iter_shared",
+        System_iter_shared
     },
     {
-        "action_optional",
-        System_action_optional
+        "iter_optional",
+        System_iter_optional
     },
     {
         "each",
@@ -1816,10 +1821,6 @@ bake_test_case System_testcases[] = {
     {
         "empty_signature",
         System_empty_signature
-    },
-    {
-        "action_tag",
-        System_action_tag
     },
     {
         "iter_tag",
@@ -1956,6 +1957,10 @@ bake_test_case System_testcases[] = {
     {
         "un_instanced_query_w_base_iter",
         System_un_instanced_query_w_base_iter
+    },
+    {
+        "create_w_no_template_args",
+        System_create_w_no_template_args
     }
 };
 
@@ -1995,6 +2000,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_expr",
         Trigger_on_add_expr
+    },
+    {
+        "create_w_no_template_args",
+        Trigger_create_w_no_template_args
     }
 };
 
@@ -2445,6 +2454,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "group_by_template",
         QueryBuilder_group_by_template
+    },
+    {
+        "create_w_no_template_args",
+        QueryBuilder_create_w_no_template_args
     }
 };
 
@@ -2704,6 +2717,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "const_in_term",
         FilterBuilder_const_in_term
+    },
+    {
+        "create_w_no_template_args",
+        FilterBuilder_create_w_no_template_args
     }
 };
 
@@ -2783,6 +2800,10 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "name_arg",
         SystemBuilder_name_arg
+    },
+    {
+        "create_w_no_template_args",
+        SystemBuilder_create_w_no_template_args
     }
 };
 
@@ -2826,6 +2847,10 @@ bake_test_case Observer_testcases[] = {
     {
         "2_entities_each",
         Observer_2_entities_each
+    },
+    {
+        "create_w_no_template_args",
+        Observer_create_w_no_template_args
     }
 };
 
@@ -3606,7 +3631,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        9,
+        10,
         Trigger_testcases
     },
     {
@@ -3620,28 +3645,28 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        58,
+        59,
         QueryBuilder_testcases
     },
     {
         "FilterBuilder",
         NULL,
         NULL,
-        64,
+        65,
         FilterBuilder_testcases
     },
     {
         "SystemBuilder",
         NULL,
         NULL,
-        19,
+        20,
         SystemBuilder_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        10,
+        11,
         Observer_testcases
     },
     {

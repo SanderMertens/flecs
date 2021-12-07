@@ -8,8 +8,8 @@ namespace flecs
 #define flecs_me_ this->me()
 
 struct filter_base {
-    filter_base(world_t *world = nullptr)
-        : m_world(world)
+    filter_base()
+        : m_world(nullptr)
         , m_filter({})
         , m_filter_ptr(nullptr) { }
 
@@ -24,10 +24,19 @@ struct filter_base {
             ecs_filter_move(&m_filter, filter);
         }
 
-    /** Get pointer to C filter object.
-     */
-    const filter_t* c_ptr() const {
-        return m_filter_ptr;
+    filter_base(world_t *world, ecs_filter_desc_t *desc) 
+        : m_world(world)
+    {
+        int res = ecs_filter_init(world, &m_filter, desc);
+        if (res != 0) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->terms_buffer) {
+            ecs_os_free(desc->terms_buffer);
+        }
+
+        m_filter_ptr = &m_filter;
     }
 
     filter_base(const filter_base& obj) {
@@ -72,6 +81,10 @@ struct filter_base {
         return *this; 
     }
 
+    operator const flecs::filter_t*() const {
+        return m_filter_ptr;
+    }
+
     /** Free the filter.
      */
     ~filter_base() {
@@ -84,7 +97,7 @@ struct filter_base {
         while (ecs_filter_next(&it)) {
             _::iter_invoker<Func>(func).invoke(&it);
         }
-    }  
+    }
 
     template <typename Func>
     void each_term(const Func& func) {
@@ -107,12 +120,13 @@ struct filter_base {
         return flecs::string(result);
     }
 
+    operator filter<>() const;
+
 protected:
     world_t *m_world;
     filter_t m_filter;
     const filter_t *m_filter_ptr;
 };
-
 
 template<typename ... Components>
 struct filter : filter_base {
@@ -120,21 +134,7 @@ private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
 public:
-    filter() { }
-
-    filter(world_t *world, filter_t *f)
-        : filter_base(world, f) { }
-
-    explicit filter(const world& world, const char *expr = nullptr) 
-        : filter_base(world.c_ptr())
-    {
-        auto qb = world.filter_builder<Components ...>()
-            .expr(expr);
-
-        flecs::filter_t f = qb;
-        ecs_filter_move(&m_filter, &f);
-        m_filter_ptr = &m_filter;
-    }
+    using filter_base::filter_base;
 
     filter(const filter& obj) : filter_base(obj) { }
 
@@ -153,7 +153,7 @@ public:
     template <typename Func>
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    } 
+    }
 
     template <typename Func>
     void iter(Func&& func) const { 
@@ -164,6 +164,8 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(std::move(func)).invoke(&it);
         }
@@ -193,7 +195,7 @@ template<typename Func, typename E, typename ... Args>
 struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
 {
     filter_invoker_w_ent(const flecs::world& world, Func&& func) {
-        flecs::filter<Args ...> f(world);
+        auto f = world.filter<Args ...>();
         f.each(std::move(func));
     }
 };
@@ -206,7 +208,7 @@ template<typename Func, typename ... Args>
 struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 {
     filter_invoker_no_ent(const flecs::world& world, Func&& func) {
-        flecs::filter<Args ...> f(world);
+        auto f = world.filter<Args ...>();
         f.each(std::move(func));
     }
 };
@@ -258,23 +260,13 @@ inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
     }
 }
 
-// Builder implementation
-template <typename ... Components>
-inline filter_builder_base<Components...>::operator filter<Components ...>() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<Components...>(m_world, &filter);
-}
-
-template <typename ... Components>
-inline filter_builder<Components ...>::operator filter<>() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<>(this->m_world, &filter);
-}
-
-template <typename ... Components>
-inline filter<Components ...> filter_builder_base<Components...>::build() const {
-    ecs_filter_t filter = *this;
-    return flecs::filter<Components...>(m_world, &filter);
+// filter_base implementation
+inline filter_base::operator filter<>() const {
+    flecs::filter<> f;
+    ecs_filter_copy(&f.m_filter, &this->m_filter);
+    f.m_filter_ptr = &f.m_filter;
+    f.m_world = this->m_world;
+    return f;
 }
 
 #undef flecs_me_

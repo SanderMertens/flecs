@@ -2,8 +2,7 @@
 
 #include "../filter/builder_i.hpp"
 
-namespace flecs 
-{
+namespace flecs {
 
 // Query builder interface
 template<typename Base, typename ... Components>

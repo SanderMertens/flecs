@@ -8,6 +8,12 @@ namespace flecs
 struct trigger final : public entity_base
 {
     using entity_base::entity_base;
+
+    trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
+        : entity_base(world, ecs_trigger_init(world, desc)) 
+    { 
+        ecs_term_fini(&desc->term);
+    }
     
     void ctx(void *ctx) {
         ecs_trigger_desc_t desc = {};
@@ -30,26 +36,6 @@ inline void trigger_m_world::init() {
 template <typename... Comps, typename... Args>
 inline trigger_builder<Comps...> trigger_m_world::trigger(Args &&... args) const {
     return flecs::trigger_builder<Comps...>(this->me(), std::forward<Args>(args)...);
-}
-
-// Builder implementation
-
-template <typename ... Components>    
-template <typename Func>
-inline trigger trigger_builder<Components...>::iter(Func&& func) {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
-    return flecs::trigger(m_world, trigger);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline trigger trigger_builder<Components...>::each(Func&& func) {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t trigger = build<Invoker>(std::forward<Func>(func));
-    return flecs::trigger(m_world, trigger);
 }
 
 } // namespace flecs

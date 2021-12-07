@@ -144,7 +144,8 @@ void Pairs_system_1_pair_instance() {
     int entity_count = 0;
     int trait_value = 0;
 
-    ecs.system<>(nullptr, "(Pair, *)")
+    ecs.system<>()
+        .expr("(Pair, *)")
         .iter([&](flecs::iter it) {
             flecs::column<Pair> tr(it, 1);
             invoke_count ++;            
@@ -172,7 +173,8 @@ void Pairs_system_2_pair_instances() {
     int entity_count = 0;
     int trait_value = 0;
 
-    ecs.system<>(nullptr, "(Pair, *)")
+    ecs.system<>()
+        .expr("(Pair, *)")
         .iter([&](flecs::iter it) {
             flecs::column<Pair> tr(it, 1);
             invoke_count ++;            

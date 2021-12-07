@@ -13,6 +13,14 @@ struct term final : term_builder_i<term> {
         , value({})
         , m_world(world_ptr) { value.move = true; }
 
+    term(id_t id) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(nullptr) { 
+            value.move = true; 
+            this->id(id);
+        }
+
     term(flecs::world_t *world_ptr, id_t id) 
         : term_builder_i<term>(&value)
         , value({})

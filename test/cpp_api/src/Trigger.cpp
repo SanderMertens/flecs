@@ -138,7 +138,8 @@ void Trigger_on_add_id_arg() {
 
     auto tag = world.component<Tag>();
 
-    world.trigger<>(nullptr, tag)
+    world.trigger<>()
+        .id(tag)
         .event(flecs::OnAdd)
         .each([&](flecs::entity e) {
             invoked ++;
@@ -175,3 +176,22 @@ void Trigger_on_add_expr() {
     test_int(invoked, 1);
 }
 
+void Trigger_create_w_no_template_args() {
+    flecs::world world;
+
+    auto entity = world.entity();
+
+    int invoked = 0;
+
+    world.trigger()
+        .id<Position>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e) {
+            invoked ++;
+            test_assert(e == entity);
+        });
+
+    entity.add<Position>();
+
+    test_int(invoked, 1);
+}

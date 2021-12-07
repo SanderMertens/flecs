@@ -8,7 +8,7 @@ void FilterBuilder_builder_assign_same_type() {
     flecs::world ecs;
 
     flecs::filter<Position, Velocity> q = 
-        ecs.filter_builder<Position, Velocity>();
+        ecs.filter_builder<Position, Velocity>().build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -25,7 +25,7 @@ void FilterBuilder_builder_assign_same_type() {
 void FilterBuilder_builder_assign_to_empty() {
     flecs::world ecs;
 
-    flecs::filter<> q = ecs.filter_builder<Position, Velocity>();
+    flecs::filter<> q = ecs.filter_builder<Position, Velocity>().build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -44,7 +44,8 @@ void FilterBuilder_builder_assign_from_empty() {
 
     flecs::filter<> q = ecs.filter_builder<>()
         .term<Position>()
-        .term<Velocity>();
+        .term<Velocity>()
+        .build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -1243,6 +1244,7 @@ void FilterBuilder_2_subsequent_args() {
     test_int(count, 1);
 }
 
+static
 int filter_arg(flecs::filter<Self> f) {
     int32_t count = 0;
 
@@ -1271,6 +1273,7 @@ void FilterBuilder_filter_as_arg() {
     test_int(filter_arg(f), 3);
 }
 
+static
 int filter_move_arg(flecs::filter<Self>&& f) {
     int32_t count = 0;
 
@@ -1299,6 +1302,7 @@ void FilterBuilder_filter_as_move_arg() {
     test_int(filter_move_arg(ecs.filter<Self>()), 3);
 }
 
+static
 flecs::filter<Self> filter_return(flecs::world& ecs) {
     return ecs.filter<Self>();
 }
@@ -1630,5 +1634,21 @@ void FilterBuilder_const_in_term() {
         }
     });
 
+    test_int(count, 1);
+}
+
+void FilterBuilder_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto q = ecs.filter_builder().term<Position>().build();
+
+    auto e1 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
     test_int(count, 1);
 }

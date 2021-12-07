@@ -15,7 +15,7 @@ struct entity_builder_i {
         flecs_static_assert(is_flecs_constructible<T>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
         ecs_add_id(this->world_v(), this->id_v(), _::cpp_type<T>::id(this->world_v()));
-        return *this;
+        return to_base();
     }
 
     /** Add an entity to an entity.
@@ -25,7 +25,7 @@ struct entity_builder_i {
      */
     Base& add(entity_t entity) {
         ecs_add_id(this->world_v(), this->id_v(), entity);
-        return *this;
+        return to_base();
     }
 
     /** Add a pair.
@@ -36,7 +36,7 @@ struct entity_builder_i {
      */
     Base& add(entity_t relation, entity_t object) {
         ecs_add_pair(this->world_v(), this->id_v(), relation, object);
-        return *this;
+        return to_base();
     }
 
     /** Add a pair.
@@ -118,7 +118,7 @@ struct entity_builder_i {
     template <typename T>
     Base& remove() {
         ecs_remove_id(this->world_v(), this->id_v(), _::cpp_type<T>::id(this->world_v()));
-        return *this;
+        return to_base();
     }
 
     /** Remove an entity from an entity.
@@ -127,7 +127,7 @@ struct entity_builder_i {
      */
     Base& remove(entity_t entity) {
         ecs_remove_id(this->world_v(), this->id_v(), entity);
-        return *this;
+        return to_base();
     }
 
     /** Remove a pair.
@@ -138,7 +138,7 @@ struct entity_builder_i {
      */
     Base& remove(entity_t relation, entity_t object) {
         ecs_remove_pair(this->world_v(), this->id_v(), relation, object);
-        return *this;
+        return to_base();
     }
 
     /** Removes a pair.
@@ -180,7 +180,7 @@ struct entity_builder_i {
      */    
     Base& override(entity_t entity) {
         ecs_add_id(this->world_v(), this->id_v(), ECS_OVERRIDE | entity);
-        return *this;  
+        return to_base();  
     }
 
     /** Add owned flag for component (forces ownership when instantiating)
@@ -190,7 +190,7 @@ struct entity_builder_i {
     template <typename T>
     Base& override() {
         ecs_add_id(this->world_v(), this->id_v(), ECS_OVERRIDE | _::cpp_type<T>::id(this->world_v()));
-        return *this;  
+        return to_base();  
     }
 
     /** Set value, add owned flag.
@@ -201,7 +201,7 @@ struct entity_builder_i {
     Base& set_override(T&& val) {
         this->override<T>();
         this->set<T>(std::forward<T>(val));
-        return *this;  
+        return to_base();  
     }    
 
     /** Add a switch to an entity by id.
@@ -212,7 +212,7 @@ struct entity_builder_i {
      */    
     Base& add_switch(entity_t sw) {
         ecs_add_id(this->world_v(), this->id_v(), ECS_SWITCH | sw);
-        return *this;  
+        return to_base();  
     }
 
     /** Add a switch to an entity by C++ type.
@@ -224,7 +224,7 @@ struct entity_builder_i {
     Base& add_switch() {
         ecs_add_id(this->world_v(), this->id_v(), 
             ECS_SWITCH | _::cpp_type<T>::id());
-        return *this;  
+        return to_base();  
     }
 
     /** Add a switch to an entity.
@@ -240,7 +240,7 @@ struct entity_builder_i {
      */    
     Base& remove_switch(entity_t sw) {
         ecs_remove_id(this->world_v(), this->id_v(), ECS_SWITCH | sw);
-        return *this;  
+        return to_base();  
     }
     
     /** Add a switch to an entity by C++ type.
@@ -252,7 +252,7 @@ struct entity_builder_i {
     Base& remove_switch() {
         ecs_remove_id(this->world_v(), this->id_v(), 
             ECS_SWITCH | _::cpp_type<T>::id());
-        return *this;  
+        return to_base();  
     }
 
     /** Remove a switch from an entity.
@@ -269,7 +269,7 @@ struct entity_builder_i {
      */    
     Base& add_case(entity_t sw_case) {
         ecs_add_id(this->world_v(), this->id_v(), ECS_CASE | sw_case);
-        return *this;
+        return to_base();
     }
 
     /** Add a switch to an entity by id.
@@ -289,7 +289,7 @@ struct entity_builder_i {
      */    
     Base& remove_case(entity_t sw_case) {
         ecs_remove_id(this->world_v(), this->id_v(), ECS_CASE | sw_case);
-        return *this;  
+        return to_base();  
     }
 
     /** Remove a switch from an entity by id.
@@ -308,7 +308,7 @@ struct entity_builder_i {
      */
     Base& enable() {
         ecs_enable(this->world_v(), this->id_v(), true);
-        return *this;
+        return to_base();
     }
 
     /** Disable an entity.
@@ -317,7 +317,7 @@ struct entity_builder_i {
      */
     Base& disable() {
         ecs_enable(this->world_v(), this->id_v(), false);
-        return *this;
+        return to_base();
     }
 
     /** Enable a component.
@@ -329,7 +329,7 @@ struct entity_builder_i {
     template<typename T>
     Base& enable() {
         ecs_enable_component_w_id(this->world_v(), this->id_v(), _::cpp_type<T>::id(), true);
-        return *this;
+        return to_base();
     }  
 
     /** Disable a component.
@@ -341,7 +341,7 @@ struct entity_builder_i {
     template<typename T>
     Base& disable() {
         ecs_enable_component_w_id(this->world_v(), this->id_v(), _::cpp_type<T>::id(), false);
-        return *this;
+        return to_base();
     }  
 
     /** Enable a component.
@@ -351,7 +351,7 @@ struct entity_builder_i {
      */   
     Base& enable(entity_t comp) {
         ecs_enable_component_w_id(this->world_v(), this->id_v(), comp, true);
-        return *this;       
+        return to_base();       
     }
 
     /** Disable a component.
@@ -361,12 +361,12 @@ struct entity_builder_i {
      */   
     Base& disable(entity_t comp) {
         ecs_enable_component_w_id(this->world_v(), this->id_v(), comp, false);
-        return *this;       
+        return to_base();       
     }
 
     Base& set_ptr(entity_t comp, size_t size, const void *ptr) {
         ecs_set_id(this->world_v(), this->id_v(), comp, size, ptr);
-        return *this;
+        return to_base();
     }
 
     Base& set_ptr(entity_t comp, const void *ptr) {
@@ -383,28 +383,28 @@ struct entity_builder_i {
         !is_callable<T>::value && is_actual<T>::value> = 0 >
     Base& set(T&& value) {
         flecs::set<T>(this->world_v(), this->id_v(), std::forward<T&&>(value));
-        return *this;
+        return to_base();
     }
 
     template<typename T, if_t< 
         !is_callable<T>::value && is_actual<T>::value > = 0>
     Base& set(const T& value) {
         flecs::set<T>(this->world_v(), this->id_v(), value);
-        return *this;
+        return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t< 
         is_callable<T>::value || is_actual<T>::value > = 0>
     Base& set(A&& value) {
         flecs::set<T>(this->world_v(), this->id_v(), std::forward<A&&>(value));
-        return *this;
+        return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t<
         is_callable<T>::value || is_actual<T>::value > = 0>
     Base& set(const A& value) {
         flecs::set<T>(this->world_v(), this->id_v(), value);
-        return *this;
+        return to_base();
     }
 
     /** Set a pair for an entity.
@@ -419,7 +419,7 @@ struct entity_builder_i {
         typename A = actual_type_t<P>, if_not_t< is_pair<R>::value> = 0>
     Base& set(const A& value) {
         flecs::set<P>(this->world_v(), this->id_v(), value);
-        return *this;
+        return to_base();
     }
 
     /** Set a pair for an entity.
@@ -435,7 +435,7 @@ struct entity_builder_i {
         auto relation = _::cpp_type<R>::id(this->world_v());
         flecs::set(this->world_v(), this->id_v(), value, 
             ecs_pair(relation, object));
-        return *this;
+        return to_base();
     }
 
     /** Set a pair for an entity.
@@ -451,13 +451,13 @@ struct entity_builder_i {
         auto object = _::cpp_type<O>::id(this->world_v());
         flecs::set(this->world_v(), this->id_v(), value, 
             ecs_pair(relation, object));
-        return *this;
+        return to_base();
     }
 
     template <typename R, typename O>
     Base& set_w_object(const O& value) {
         flecs::set<pair_object<R, O>>(this->world_v(), this->id_v(), value);
-        return *this;
+        return to_base();
     }    
 
     /** Set 1..N components.
@@ -500,7 +500,7 @@ struct entity_builder_i {
     Base& emplace(Args&&... args) {
         flecs::emplace<T>(this->world_v(), this->id_v(), 
             std::forward<Args>(args)...);
-        return *this;
+        return to_base();
     }
 
     /** Entities created in function will have the current entity.
@@ -512,7 +512,7 @@ struct entity_builder_i {
         ecs_id_t prev = ecs_set_with(this->world_v(), this->id_v());
         func();
         ecs_set_with(this->world_v(), prev);
-        return *this;
+        return to_base();
     }
 
     /** Entities created in function will have (Relation, this) 
@@ -524,7 +524,7 @@ struct entity_builder_i {
     template <typename Relation, typename Func>
     Base& with(const Func& func) {
         with(_::cpp_type<Relation>::id(this->world_v()), func);
-        return *this;
+        return to_base();
     }  
 
     /** Entities created in function will have (relation, this) 
@@ -538,7 +538,7 @@ struct entity_builder_i {
             ecs_pair(relation, this->id_v()));
         func();
         ecs_set_with(this->world_v(), prev);
-        return *this;
+        return to_base();
     }
 
     /** The function will be ran with the scope set to the current entity. */
@@ -547,7 +547,7 @@ struct entity_builder_i {
         ecs_entity_t prev = ecs_set_scope(this->world_v(), this->id_v());
         func();
         ecs_set_scope(this->world_v(), prev);
-        return *this;
+        return to_base();
     }
 
     /** Associate entity with type.
@@ -569,16 +569,16 @@ struct entity_builder_i {
      */
     Base& set_name(const char *name) {
         ecs_set_name(this->world_v(), this->id_v(), name);
-        return *this;
+        return to_base();
     }
 
     virtual ~entity_builder_i() { }
 
-    operator Base&() {
+protected:
+    Base& to_base() {
         return *static_cast<Base*>(this);
     }
 
-protected:
     virtual flecs::world_t* world_v() = 0;
     virtual flecs::entity_t id_v() = 0;
 };

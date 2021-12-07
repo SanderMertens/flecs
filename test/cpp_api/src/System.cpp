@@ -1,10 +1,7 @@
 #include <cpp_api.h>
 
-void System_action() {
+void System_iter() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
 
     auto entity = world.entity()
         .set<Position>({10, 20})
@@ -29,11 +26,8 @@ void System_action() {
     test_int(v->y, 2);       
 }
 
-void System_action_const() {
+void System_iter_const() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
 
     auto entity = world.entity()
         .set<Position>({10, 20})
@@ -58,11 +52,8 @@ void System_action_const() {
     test_int(v->y, 2);
 }
 
-void System_action_shared() {
+void System_iter_shared() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
 
     auto base = world.entity()
         .set<Velocity>({1, 2});
@@ -75,7 +66,7 @@ void System_action_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<Position>().signature("Velocity(self|super)")
+    world.system<Position>().expr("Velocity(self|super)")
         .iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
 
@@ -103,11 +94,8 @@ void System_action_shared() {
     test_int(p->y, 24);   
 }
 
-void System_action_optional() {
+void System_iter_optional() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = world.entity()
@@ -163,9 +151,6 @@ void System_action_optional() {
 void System_each() {
     flecs::world world;
 
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
-
     auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
@@ -186,9 +171,6 @@ void System_each() {
 void System_each_const() {
     flecs::world world;
 
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
-
     auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
@@ -208,9 +190,6 @@ void System_each_const() {
 
 void System_each_shared() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
 
     auto base = world.entity()
         .set<Velocity>({1, 2});
@@ -242,9 +221,6 @@ void System_each_shared() {
 
 void System_each_optional() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = world.entity()
@@ -297,14 +273,11 @@ void System_each_optional() {
 void System_signature() {
     flecs::world world;
 
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
-
     auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    world.system<>().signature("Position, Velocity")
+    world.system<>().expr("Position, Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
@@ -329,14 +302,11 @@ void System_signature() {
 void System_signature_const() {
     flecs::world world;
 
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
-
     auto entity = world.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    world.system<>().signature("Position, [in] Velocity")
+    world.system<>().expr("Position, [in] Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -361,9 +331,6 @@ void System_signature_const() {
 void System_signature_shared() {
     flecs::world world;
 
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
-
     auto base = world.entity()
         .set<Velocity>({1, 2});
 
@@ -375,7 +342,7 @@ void System_signature_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<>().signature("Position, [in] Velocity(self|super)")
+    world.system<>().expr("Position, [in] Velocity(self|super)")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -406,9 +373,6 @@ void System_signature_shared() {
 
 void System_signature_optional() {
     flecs::world world;
-
-    world.component<Position>("Position");
-    world.component<Velocity>("Velocity");
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = world.entity()
@@ -427,7 +391,7 @@ void System_signature_optional() {
     auto e4 = world.entity()
         .set<Position>({70, 80});
 
-    world.system<>().signature("Position, ?Velocity, ?Mass")
+    world.system<>().expr("Position, ?Velocity, ?Mass")
         .iter([](flecs::iter& it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
@@ -516,24 +480,6 @@ void System_empty_signature() {
 
 struct MyTag { };
 
-void System_action_tag() {
-    flecs::world world;
-
-    int invoked = 0;
-
-    world.system<MyTag>()
-        .iter([&](flecs::iter it, MyTag*) {
-            invoked ++;
-        });
-
-    world.entity()
-        .add<MyTag>();
-
-    world.progress();
-
-    test_int(invoked, 1);
-}
-
 void System_iter_tag() {
     flecs::world world;
 
@@ -574,8 +520,8 @@ void System_system_from_id() {
     flecs::world world;
 
     uint32_t invoked = 0;
+
     flecs::entity sys = world.system<>()
-        .kind(0)
         .iter([&](flecs::iter& it) {
             invoked ++;
         });
@@ -754,9 +700,6 @@ void System_get_query() {
 void System_add_from_each() {
     flecs::world world;
 
-    world.component<Position>();
-    world.component<Velocity>();
-
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
@@ -777,9 +720,6 @@ void System_add_from_each() {
 
 void System_delete_from_each() {
     flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
 
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
@@ -850,9 +790,6 @@ void System_new_from_each() {
 void System_add_from_iter() {
     flecs::world world;
 
-    world.component<Position>();
-    world.component<Velocity>();
-
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
@@ -874,9 +811,6 @@ void System_add_from_iter() {
 
 void System_delete_from_iter() {
     flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
 
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
@@ -1756,4 +1690,24 @@ void System_un_instanced_query_w_base_iter() {
         test_int(p.x, 74);
         test_int(p.y, 85);
     }));
+}
+
+void System_create_w_no_template_args() {
+    flecs::world world;
+
+    auto entity = world.entity()
+        .set<Position>({10, 20});
+
+    int32_t count = 0;
+
+    auto s = world.system()
+        .term<Position>()
+        .each([&](flecs::entity e) {
+            test_assert(e == entity);
+            count ++;
+        });
+
+    s.run();
+
+    test_int(count, 1);
 }

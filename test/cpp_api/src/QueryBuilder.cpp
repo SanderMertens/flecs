@@ -8,7 +8,7 @@ void QueryBuilder_builder_assign_same_type() {
     flecs::world ecs;
 
     flecs::query<Position, Velocity> q = 
-        ecs.query_builder<Position, Velocity>();
+        ecs.query_builder<Position, Velocity>().build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -25,7 +25,7 @@ void QueryBuilder_builder_assign_same_type() {
 void QueryBuilder_builder_assign_to_empty() {
     flecs::world ecs;
 
-    flecs::query<> q = ecs.query_builder<Position, Velocity>();
+    flecs::query<> q = ecs.query_builder<Position, Velocity>().build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -44,7 +44,8 @@ void QueryBuilder_builder_assign_from_empty() {
 
     flecs::query<> q = ecs.query_builder<>()
         .term<Position>()
-        .term<Velocity>();
+        .term<Velocity>()
+        .build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     ecs.entity().add<Position>();
@@ -1576,4 +1577,20 @@ void QueryBuilder_group_by_template() {
         count++;
     });
     test_int(count, 3);
+}
+
+void QueryBuilder_create_w_no_template_args() {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder().term<Position>().build();
+
+    auto e1 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
