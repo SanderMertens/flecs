@@ -163,6 +163,11 @@ struct each_invoker : public invoker {
         self->invoke(iter);
     }
 
+    // Each invokers always use instanced iterators
+    static bool instanced() {
+        return true;
+    }
+
 private:
     // Number of function arguments is one more than number of components, pass
     // entity as argument.
@@ -252,6 +257,11 @@ public:
         auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
+    }
+
+    // Instancing needs to be enabled explicitly for iter invokers
+    static bool instanced() {
+        return false;
     }
 
 private:

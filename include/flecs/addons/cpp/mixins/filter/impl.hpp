@@ -164,6 +164,8 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(std::move(func)).invoke(&it);
         }

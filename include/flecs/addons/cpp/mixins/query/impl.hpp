@@ -126,34 +126,33 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_instanced);
     } 
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
     }
 
     template <typename Func>
     void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        if (force_instanced) {
-            it.is_instanced = true;
-        }
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }

@@ -15,7 +15,8 @@ public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
         : IBase(&m_desc)
         , m_desc{}
-        , m_world(world) 
+        , m_world(world)
+        , m_instanced(false)
     {
         m_desc.entity.name = name;
         m_desc.entity.sep = "::";
@@ -37,6 +38,7 @@ public:
     T each(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, Components...>;
+        m_instanced = true;
         return build<Invoker>(std::forward<Func>(func));
     }
 
@@ -44,6 +46,7 @@ protected:
     flecs::world_t* world_v() override { return m_world; }
     TDesc m_desc;
     flecs::world_t *m_world;
+    bool m_instanced;
 
 private:
     template <typename Invoker, typename Func>
