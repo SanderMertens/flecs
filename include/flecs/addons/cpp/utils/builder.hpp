@@ -14,12 +14,12 @@ struct builder : IBuilder<Base, Components ...>
 
 public:
     builder(flecs::world_t *world)
-        : IBase(world, &m_desc)
+        : IBase(&m_desc)
         , m_desc{}
         , m_world(world) { }
 
     builder(const builder& f) 
-        : IBase(f.m_world, &m_desc, f.m_term_index)
+        : IBase(&m_desc, f.m_term_index)
     {
         m_world = f.m_world;
         m_desc = f.m_desc;

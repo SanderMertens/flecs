@@ -12,8 +12,8 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
-        : BaseClass(world, &desc->query)
+    system_builder_i(ecs_system_desc_t *desc) 
+        : BaseClass(&desc->query)
         , m_desc(desc) { }
 
     /** Specify when the system should be ran.

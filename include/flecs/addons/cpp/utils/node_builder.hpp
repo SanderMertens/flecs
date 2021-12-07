@@ -13,7 +13,7 @@ struct node_builder : IBuilder<Base, Components ...>
 
 public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : IBase(world, &m_desc)
+        : IBase(&m_desc)
         , m_desc{}
         , m_world(world) 
     {

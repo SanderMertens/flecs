@@ -11,7 +11,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     using Class = trigger_builder_i<Base, Components...>;
     using BaseClass = term_builder_i<Base>;
 
-    trigger_builder_i(flecs::world_t *world, ecs_trigger_desc_t *desc) 
+    trigger_builder_i(ecs_trigger_desc_t *desc) 
         : BaseClass(&desc->term)
         , m_desc(desc)
         , m_event_count(0) { }
