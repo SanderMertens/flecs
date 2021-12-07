@@ -19,9 +19,13 @@ struct query_base {
         : m_world(world)
         , m_query(query) { }
 
-    /** Get pointer to C query object.
-     */
-    query_t* c_ptr() const {
+    query_base(world_t *world, ecs_query_desc_t *desc) 
+        : m_world(world)
+    {
+        m_query = ecs_query_init(world, desc);
+    }
+
+    operator query_t*() const {
         return m_query;
     }
 
@@ -97,6 +101,8 @@ struct query_base {
         return flecs::string(result);
     }
 
+    operator query<>() const;
+
 protected:
     world_t *m_world;
     query_t *m_query;
@@ -108,10 +114,7 @@ private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
 public:
-    query() { }
-
-    query(world_t *world, query_t *q)
-        : query_base(world, q) { }
+    using query_base::query_base;
 
     template <typename Func>
     void each(Func&& func) const {
@@ -162,28 +165,15 @@ inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... ar
 }
 
 // Builder implementation
-template <typename ... Components>
-inline query_builder_base<Components...>::operator query<Components ...>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
-template <typename ... Components>
-inline query_builder<Components ...>::operator query<>() const {
-    ecs_query_t *query = *this;
-    return flecs::query<>(this->m_world, query);
-}
-
-template <typename ... Components>
-inline query<Components ...> query_builder_base<Components...>::build() const {
-    ecs_query_t *query = *this;
-    return flecs::query<Components...>(m_world, query);
-}
-
 template <typename Base, typename ... Components>
 inline Base& query_builder_i<Base, Components ...>::parent(const query_base& parent) {
-    m_desc->parent = parent.c_ptr();
+    m_desc->parent = parent;
     return *static_cast<Base*>(this);
+}
+
+// query_base implementation
+inline query_base::operator query<>() const {
+    return flecs::query<>(m_world, m_query);
 }
 
 #undef flecs_me_

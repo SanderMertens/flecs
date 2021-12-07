@@ -138,7 +138,8 @@ void Trigger_on_add_id_arg() {
 
     auto tag = world.component<Tag>();
 
-    world.trigger<>(nullptr, tag)
+    world.trigger<>()
+        .id(tag)
         .event(flecs::OnAdd)
         .each([&](flecs::entity e) {
             invoked ++;

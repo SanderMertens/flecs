@@ -133,6 +133,11 @@ struct term_builder_i : term_id_builder_i<Base> {
         return *this;
     }
 
+    /** Alias for id, for compatibility with populate_filter_from_pack */
+    Base& term(id_t id) {
+        return this->id(id);
+    }
+
     /** Set (component) id to type.
      * Type must be associated with an entity (e.g. created by world::type) and
      * not an entity type (e.g. returned from entity::type). */
@@ -296,53 +301,52 @@ protected:
         }
     }
 
-    // A term can contain at most one component, but the parameter pack makes
-    // the template parameter optional, which makes it easier to reuse the same
-    // code for templated vs. non-templated terms.
-    template <typename ... Components>
-    void populate_term_from_pack() {
-        flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(this->world_v()))...
+    template <typename Arg, typename ... ComponentTypes>
+    static void populate_filter_from_pack(flecs::world_t *world, Arg *me) {
+        (void)world;
+        
+        flecs::array<flecs::id_t, sizeof...(ComponentTypes)> ids ({
+            (_::cpp_type<ComponentTypes>::id(world))...
         });
 
-        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
-            (type_to_inout<Components>())...
+        flecs::array<flecs::inout_kind_t, sizeof...(ComponentTypes)> inout_kinds ({
+            (type_to_inout<ComponentTypes>())...
         });
 
-        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
-            (type_to_oper<Components>())...
+        flecs::array<flecs::oper_kind_t, sizeof...(ComponentTypes)> oper_kinds ({
+            (type_to_oper<ComponentTypes>())...
         });
 
         size_t i = 0;
-        for (auto the_id : ids) {
-            this->id(the_id).inout(inout_kinds[i]).oper(oper_kinds[i]);
+        for (auto id : ids) {
+            me->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
             i ++;
         }
     }
 
     template <typename T, if_t< is_const<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
+    static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::In;
     }
 
     template <typename T, if_t< is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
+    static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::Out;
     }
 
     template <typename T, if_not_t< 
         is_const<T>::value || is_reference<T>::value > = 0>
-    constexpr flecs::inout_kind_t type_to_inout() const {
+    static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::InOutDefault;
     }
 
     template <typename T, if_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
+    static constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::Optional;
     }
 
     template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    constexpr flecs::oper_kind_t type_to_oper() const {
+    static constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::And;
     } 
 

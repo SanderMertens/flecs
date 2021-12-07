@@ -14,8 +14,8 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         , m_desc(nullptr)
         , m_event_count(0) { }
 
-    observer_builder_i(ecs_observer_desc_t *desc) 
-        : BaseClass(&desc->filter)
+    observer_builder_i(flecs::world_t *world, ecs_observer_desc_t *desc) 
+        : BaseClass(world, &desc->filter)
         , m_desc(desc)
         , m_event_count(0) { }
 

@@ -16,8 +16,8 @@ public:
         : BaseClass(nullptr)
         , m_desc(nullptr) { }
 
-    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
-        : BaseClass(&desc->filter, term_index)
+    query_builder_i(flecs::world_t *world, ecs_query_desc_t *desc, int32_t term_index = 0) 
+        : BaseClass(world, &desc->filter, term_index)
         , m_desc(desc) { }
 
     /** Sort the output of a query.

@@ -75,7 +75,7 @@ void System_action_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<Position>().signature("Velocity(self|super)")
+    world.system<Position>().expr("Velocity(self|super)")
         .iter([](flecs::iter&it, Position *p) {
             auto v = it.term<const Velocity>(2);
 
@@ -304,7 +304,7 @@ void System_signature() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    world.system<>().signature("Position, Velocity")
+    world.system<>().expr("Position, Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);
@@ -336,7 +336,7 @@ void System_signature_const() {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    world.system<>().signature("Position, [in] Velocity")
+    world.system<>().expr("Position, [in] Velocity")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -375,7 +375,7 @@ void System_signature_shared() {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<>().signature("Position, [in] Velocity(self|super)")
+    world.system<>().expr("Position, [in] Velocity(self|super)")
         .iter([](flecs::iter&it) {
             flecs::column<Position> p(it, 1);
             flecs::column<const Velocity> v(it, 2);
@@ -427,7 +427,7 @@ void System_signature_optional() {
     auto e4 = world.entity()
         .set<Position>({70, 80});
 
-    world.system<>().signature("Position, ?Velocity, ?Mass")
+    world.system<>().expr("Position, ?Velocity, ?Mass")
         .iter([](flecs::iter& it) {
             flecs::column<Position> p(it, 1);
             flecs::column<Velocity> v(it, 2);

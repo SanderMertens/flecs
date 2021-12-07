@@ -8,17 +8,16 @@ namespace flecs
 // Trigger builder interface
 template<typename Base, typename ... Components>
 struct trigger_builder_i : term_builder_i<Base> {
+    using Class = trigger_builder_i<Base, Components...>;
     using BaseClass = term_builder_i<Base>;
 
-    trigger_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr)
-        , m_event_count(0) { }
-
-    trigger_builder_i(ecs_trigger_desc_t *desc) 
+    trigger_builder_i(flecs::world_t *world, ecs_trigger_desc_t *desc) 
         : BaseClass(&desc->term)
         , m_desc(desc)
-        , m_event_count(0) { }
+        , m_event_count(0) 
+    { 
+        this->template populate_filter_from_pack<Class, Components...>(world, this);
+    }
 
     /** Specify when the event(s) for which the trigger run.
      * @param kind The kind that specifies when the system should be ran.

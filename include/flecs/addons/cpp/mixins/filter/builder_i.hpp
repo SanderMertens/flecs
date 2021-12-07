@@ -8,9 +8,15 @@ namespace flecs
 // Filter builder interface
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
-    filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
+    filter_builder_i(flecs::world_t *world, ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
-        , m_desc(desc) { }
+        , m_desc(desc) 
+    {
+        this->template populate_filter_from_pack<
+            filter_builder_i<Base, Components...>, 
+            Components...>
+                (world, this);
+    }
 
     Base& instanced() {
         m_desc->instanced = true;
@@ -67,9 +73,9 @@ struct filter_builder_i : term_builder_i<Base> {
 
     Base& term(id_t id) {
         this->term();
-        *this->m_term = flecs::term(this->world_v()).id(id).move();
+        *this->m_term = flecs::term(id).move();
         return *this;
-    }   
+    }
 
     template<typename R, typename O>
     Base& term() {
@@ -119,26 +125,6 @@ struct filter_builder_i : term_builder_i<Base> {
         this->term();
         *this->m_term = term.move();
         return *this;
-    }    
-
-    void populate_filter_from_pack() {
-        flecs::array<flecs::id_t, sizeof...(Components)> ids ({
-            (_::cpp_type<Components>::id(this->world_v()))...
-        });
-
-        flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout_kinds ({
-            (this->template type_to_inout<Components>())...
-        });
-
-        flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper_kinds ({
-            (this->template type_to_oper<Components>())...
-        });
-
-        size_t i = 0;
-        for (auto id : ids) {
-            this->term(id).inout(inout_kinds[i]).oper(oper_kinds[i]);
-            i ++;
-        }
     }
 
 protected:

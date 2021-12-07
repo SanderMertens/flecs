@@ -12,20 +12,13 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i()
-        : BaseClass(nullptr)
-        , m_desc(nullptr)
-        , m_add_count(0) { }
-
-    system_builder_i(ecs_system_desc_t *desc) 
-        : BaseClass(&desc->query)
-        , m_desc(desc)
-        , m_add_count(0) { }
-
-    /** Specify string-based signature. */
-    Base& signature(const char *signature) {
-        m_desc->query.filter.expr = signature;
-        return *this;
+    system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
+        : BaseClass(world, &desc->query)
+        , m_desc(desc) 
+    {
+#ifdef FLECS_PIPELINE
+        m_desc->entity.add[0] = flecs::OnUpdate;
+#endif
     }
 
     /** Specify when the system should be ran.
@@ -92,7 +85,7 @@ public:
         m_desc->rate = rate;
         return *this;
     }
-    
+
     /** Associate system with entity */
     Base& self(flecs::entity self) {
         m_desc->self = self;
@@ -114,7 +107,6 @@ private:
     }
 
     ecs_system_desc_t *m_desc;
-    int32_t m_add_count;
 };
 
 }

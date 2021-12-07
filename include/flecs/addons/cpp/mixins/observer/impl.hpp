@@ -9,6 +9,14 @@ struct observer final : public entity_base
 {
     using entity_base::entity_base;
 
+    observer(flecs::world_t *world, ecs_observer_desc_t *desc) 
+        : entity_base(world, ecs_observer_init(world, desc)) 
+    { 
+        if (desc->filter.terms_buffer) {
+            ecs_os_free(desc->filter.terms_buffer);
+        }
+    }
+
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
         desc.entity.entity = m_id;
@@ -30,26 +38,6 @@ inline void observer_m_world::init() {
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> observer_m_world::observer(Args &&... args) const {
     return flecs::observer_builder<Comps...>(this->me(), std::forward<Args>(args)...);
-}
-
-// Builder implementation
-
-template <typename ... Components>    
-template <typename Func>
-inline observer observer_builder<Components...>::iter(Func&& func) const {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::observer(m_world, observer);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline observer observer_builder<Components...>::each(Func&& func) const {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t observer = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::observer(m_world, observer);
 }
 
 } // namespace flecs

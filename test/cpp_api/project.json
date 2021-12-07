@@ -535,7 +535,7 @@
                 "term_after_arg",
                 "name_arg",
                 "const_in_term"
-            ]         
+            ]
         }, {
             "id": "SystemBuilder",
             "testcases": [

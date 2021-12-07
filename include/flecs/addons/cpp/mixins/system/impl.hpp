@@ -63,26 +63,23 @@ struct system final : entity_base, extendable<system, Mixins>
 {
     using entity_base::entity_base;
 
-    void ctx(void *ctx) {
-        if (ecs_has(m_world, m_id, EcsSystem)) {
-            ecs_system_desc_t desc = {};
-            desc.entity.entity = m_id;
-            desc.ctx = ctx;
-            ecs_system_init(m_world, &desc);
-        } else {
-            ecs_trigger_desc_t desc = {};
-            desc.entity.entity = m_id;
-            desc.ctx = ctx;
-            ecs_trigger_init(m_world, &desc);
+    system(flecs::world_t *world, ecs_system_desc_t *desc) 
+        : entity_base(world, ecs_system_init(world, desc)) 
+    {
+        if (desc->query.filter.terms_buffer) {
+            ecs_os_free(desc->query.filter.terms_buffer);
         }
     }
 
+    void ctx(void *ctx) {
+        ecs_system_desc_t desc = {};
+        desc.entity.entity = m_id;
+        desc.ctx = ctx;
+        ecs_system_init(m_world, &desc);
+    }
+
     void* ctx() const {
-        if (ecs_has(m_world, m_id, EcsSystem)) {
-            return ecs_get_system_ctx(m_world, m_id);
-        } else {
-            return ecs_get_trigger_ctx(m_world, m_id);
-        }
+        return ecs_get_system_ctx(m_world, m_id);
     }
 
     query_base query() const {
@@ -116,25 +113,6 @@ inline system system_m_world::system(flecs::entity e) const {
 template <typename... Comps, typename... Args>
 inline system_builder<Comps...> system_m_world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
-}
-
-// Builder implementation
-template <typename ... Components>    
-template <typename Func>
-inline system system_builder<Components...>::iter(Func&& func) const {
-    using Invoker = typename _::iter_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), false);
-    return flecs::system(m_world, system);
-}
-
-template <typename ... Components>    
-template <typename Func>
-inline system system_builder<Components...>::each(Func&& func) const {
-    using Invoker = typename _::each_invoker<
-        typename std::decay<Func>::type, Components...>;
-    flecs::entity_t system = build<Invoker>(std::forward<Func>(func), true);
-    return flecs::system(m_world, system);
 }
 
 } // namespace flecs
