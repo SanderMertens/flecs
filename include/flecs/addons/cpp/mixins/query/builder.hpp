@@ -18,7 +18,7 @@ namespace _ {
 
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
-    using _::query_builder_base<Components...>::builder;
+    using _::query_builder_base<Components...>::query_builder_base;
 };
 
 }

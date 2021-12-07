@@ -18,7 +18,7 @@ namespace _ {
 
 template <typename ... Components>
 struct trigger_builder final : _::trigger_builder_base<Components...> {
-    using _::trigger_builder_base<Components...>::node_builder;
+    using _::trigger_builder_base<Components...>::trigger_builder_base;
 };
 
 }

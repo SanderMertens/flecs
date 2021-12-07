@@ -18,7 +18,7 @@ namespace _ {
 
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {
-    using _::system_builder_base<Components...>::node_builder;
+    using _::system_builder_base<Components...>::system_builder_base;
 };
 
 }

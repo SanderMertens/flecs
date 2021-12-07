@@ -18,7 +18,7 @@ namespace _ {
 
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
-    using _::filter_builder_base<Components...>::builder;
+    using _::filter_builder_base<Components...>::filter_builder_base;
 };
 
 }

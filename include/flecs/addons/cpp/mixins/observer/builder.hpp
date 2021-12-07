@@ -18,7 +18,7 @@ namespace _ {
 
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
-    using _::observer_builder_base<Components...>::node_builder;
+    using _::observer_builder_base<Components...>::observer_builder_base;
 };
 
 }

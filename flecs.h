@@ -17265,23 +17265,34 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
 namespace flecs
 {
 
+namespace _
+{
+
+// Base class just used to initialize m_desc to 0
+template <typename TDesc>
+struct builder_desc_initializer {
+    builder_desc_initializer(TDesc *desc) { *desc = {}; }
+};
+
 // Macros for template types so we don't go cross-eyed
 #define FLECS_TBUILDER template<typename ... Components> class
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<FLECS_TBUILDER T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
 struct builder_base
-    : IBuilder<Base, Components ...>
+    : builder_desc_initializer<TDesc>, IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
-    builder_base(flecs::world_t *world) 
-        : IBase(world, (m_desc = {}, &m_desc))
+    builder_base(flecs::world_t *world)
+        : builder_desc_initializer<TDesc>(&m_desc)
+        , IBase(world, &m_desc)
         , m_world(world) { }
 
     builder_base(const builder_base& f) 
-        : IBase(m_world, &m_desc, f.m_term_index)
+        : builder_desc_initializer<TDesc>(&m_desc)
+        , IBase(f.m_world, &m_desc, f.m_term_index)
     {
         m_world = f.m_world;
         m_desc = f.m_desc;
@@ -17314,7 +17325,9 @@ struct builder : builder_base<T, TDesc, Base, IBuilder, Components...> {
 #undef FLECS_TBUILDER
 #undef FLECS_IBUILDER
 
-}
+} // namespace _
+
+} // namespace flecs
 
 #pragma once
 
@@ -17474,7 +17487,7 @@ namespace _ {
 
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
-    using _::filter_builder_base<Components...>::builder;
+    using _::filter_builder_base<Components...>::filter_builder_base;
 };
 
 }
@@ -17873,7 +17886,7 @@ namespace _ {
 
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
-    using _::query_builder_base<Components...>::builder;
+    using _::query_builder_base<Components...>::query_builder_base;
 };
 
 }
@@ -18066,18 +18079,28 @@ inline query_base::operator query<>() const {
 namespace flecs 
 {
 
+namespace _ 
+{
+
+// Base class just used to initialize m_desc to 0
+template <typename TDesc>
+struct node_desc_initializer {
+    node_desc_initializer(TDesc *desc) { *desc = {}; }
+};
+
 // Macros for template types so we don't go cross-eyed
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<typename T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
 struct node_builder
-    : IBuilder<Base, Components ...>
+    : node_desc_initializer<TDesc>, IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : IBase(world, (m_desc = {}, &m_desc))
+        : node_desc_initializer<TDesc>(&m_desc)
+        , IBase(world, &m_desc)
         , m_world(world) 
     {
         m_desc.entity.name = name;
@@ -18124,7 +18147,9 @@ private:
 
 #undef FLECS_IBUILDER
 
-}
+} // namespace _
+
+} // namespace flecs
 
 #pragma once
 
@@ -18196,7 +18221,7 @@ namespace _ {
 
 template <typename ... Components>
 struct trigger_builder final : _::trigger_builder_base<Components...> {
-    using _::trigger_builder_base<Components...>::node_builder;
+    using _::trigger_builder_base<Components...>::trigger_builder_base;
 };
 
 }
@@ -18314,7 +18339,7 @@ namespace _ {
 
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
-    using _::observer_builder_base<Components...>::node_builder;
+    using _::observer_builder_base<Components...>::observer_builder_base;
 };
 
 }
@@ -18573,7 +18598,7 @@ namespace _ {
 
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {
-    using _::system_builder_base<Components...>::node_builder;
+    using _::system_builder_base<Components...>::system_builder_base;
 };
 
 }

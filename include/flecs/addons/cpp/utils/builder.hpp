@@ -3,23 +3,34 @@
 namespace flecs
 {
 
+namespace _
+{
+
+// Base class just used to initialize m_desc to 0
+template <typename TDesc>
+struct builder_desc_initializer {
+    builder_desc_initializer(TDesc *desc) { *desc = {}; }
+};
+
 // Macros for template types so we don't go cross-eyed
 #define FLECS_TBUILDER template<typename ... Components> class
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<FLECS_TBUILDER T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>
 struct builder_base
-    : IBuilder<Base, Components ...>
+    : builder_desc_initializer<TDesc>, IBuilder<Base, Components ...>
 {
     using IBase = IBuilder<Base, Components ...>;
 
 public:
-    builder_base(flecs::world_t *world) 
-        : IBase(world, (m_desc = {}, &m_desc))
+    builder_base(flecs::world_t *world)
+        : builder_desc_initializer<TDesc>(&m_desc)
+        , IBase(world, &m_desc)
         , m_world(world) { }
 
     builder_base(const builder_base& f) 
-        : IBase(m_world, &m_desc, f.m_term_index)
+        : builder_desc_initializer<TDesc>(&m_desc)
+        , IBase(f.m_world, &m_desc, f.m_term_index)
     {
         m_world = f.m_world;
         m_desc = f.m_desc;
@@ -52,4 +63,6 @@ struct builder : builder_base<T, TDesc, Base, IBuilder, Components...> {
 #undef FLECS_TBUILDER
 #undef FLECS_IBUILDER
 
-}
+} // namespace _
+
+} // namespace flecs
