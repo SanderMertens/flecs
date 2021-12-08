@@ -1390,7 +1390,7 @@ ecs_iter_t ecs_term_iter(
         .next = ecs_term_next
     };
 
-    term_iter_init(world, term, &it.iter.term);
+    term_iter_init(world, term, &it.priv.iter.term);
 
     return it;
 error:
@@ -1412,15 +1412,15 @@ ecs_iter_t ecs_term_chain_iter(
     }
 
     ecs_iter_t it = {
-        .chain_it = (ecs_iter_t*)chain_it,
         .real_world = (ecs_world_t*)world,
         .world = chain_it->world,
         .terms = term,
         .term_count = 1,
+        .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_term_next
     };
 
-    term_iter_init(world, term, &it.iter.term);
+    term_iter_init(world, term, &it.priv.iter.term);
 
     return it;
 error:
@@ -1543,7 +1543,7 @@ bool ecs_term_next(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_term_iter_t *iter = &it->iter.term;
+    ecs_term_iter_t *iter = &it->priv.iter.term;
     ecs_term_t *term = &iter->term;
     ecs_world_t *world = it->real_world;
     ecs_table_t *table;
@@ -1605,7 +1605,7 @@ const ecs_filter_t* init_filter_iter(
     ecs_iter_t *it,
     const ecs_filter_t *filter)
 {
-    ecs_filter_iter_t *iter = &it->iter.filter;
+    ecs_filter_iter_t *iter = &it->priv.iter.filter;
 
     if (filter) {
         iter->filter = *filter;
@@ -1647,7 +1647,7 @@ ecs_iter_t ecs_filter_iter(
         .is_instanced = filter ? filter->instanced : false
     };
 
-    ecs_filter_iter_t *iter = &it.iter.filter;
+    ecs_filter_iter_t *iter = &it.priv.iter.filter;
 
     filter = init_filter_iter(world, &it, filter);
 
@@ -1723,13 +1723,13 @@ ecs_iter_t ecs_filter_chain_iter(
     ecs_iter_t it = {
         .terms = filter->terms,
         .term_count = filter->term_count,
-        .chain_it = (ecs_iter_t*)chain_it,
-        .next = ecs_filter_next,
         .world = chain_it->world,
-        .real_world = chain_it->real_world
+        .real_world = chain_it->real_world,
+        .chain_it = (ecs_iter_t*)chain_it,
+        .next = ecs_filter_next
     };
 
-    ecs_filter_iter_t *iter = &it.iter.filter;
+    ecs_filter_iter_t *iter = &it.priv.iter.filter;
     init_filter_iter(it.world, &it, filter);
 
     iter->kind = EcsIterEvalChain;
@@ -1764,7 +1764,7 @@ bool ecs_filter_next_instanced(
     ecs_check(it->next == ecs_filter_next, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->chain_it != it, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_filter_iter_t *iter = &it->iter.filter;
+    ecs_filter_iter_t *iter = &it->priv.iter.filter;
     ecs_filter_t *filter = &iter->filter;
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = NULL;
@@ -1818,7 +1818,7 @@ bool ecs_filter_next_instanced(
                         goto done;
                     }
 
-                    table = it->table = term_iter->table;
+                    table = term_iter->table;
                     if (pivot_term != -1) {
                         it->ids[pivot_term] = term_iter->id;
                         it->subjects[pivot_term] = term_iter->subject;

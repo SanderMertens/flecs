@@ -3,17 +3,17 @@
 #define INIT_CACHE(it, f, term_count)\
     if (!it->f && term_count) {\
         if (term_count < ECS_TERM_CACHE_SIZE) {\
-            it->f = it->cache.f;\
-            it->cache.f##_alloc = false;\
+            it->f = it->priv.cache.f;\
+            it->priv.cache.f##_alloc = false;\
         } else {\
             it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
-            it->cache.f##_alloc = true;\
+            it->priv.cache.f##_alloc = true;\
         }\
     }
 
 #define FINI_CACHE(it, f)\
     if (it->f) {\
-        if (it->cache.f##_alloc) {\
+        if (it->priv.cache.f##_alloc) {\
             ecs_os_free((void*)it->f);\
         }\
     }   
@@ -196,6 +196,10 @@ void flecs_iter_populate_data(
     void **ptrs,
     ecs_size_t *sizes)
 {
+    if (it->table) {
+        it->frame_offset += ecs_table_count(it->table);
+    }
+
     it->table = table;
     it->offset = offset;
     it->count = count;
@@ -537,4 +541,198 @@ bool ecs_iter_count(
     return count;
 error:
     return 0;
+}
+
+ecs_iter_t ecs_page_iter(
+    ecs_iter_t *it,
+    int32_t offset,
+    int32_t limit)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return (ecs_iter_t){
+        .real_world = it->real_world,
+        .world = it->world,
+        .priv.iter.page = {
+            .offset = offset,
+            .limit = limit,
+            .remaining = limit
+        },
+        .next = ecs_page_next,
+        .chain_it = it
+    };
+error:
+    return (ecs_iter_t){ 0 };
+}
+
+static
+void offset_iter(
+    ecs_iter_t *it,
+    int32_t offset)
+{
+    it->entities = &it->entities[offset];
+
+    int32_t t, term_count = it->term_count;
+    for (t = 0; t < term_count; t ++) {
+        void *ptrs = it->ptrs[t];
+        if (!ptrs) {
+            continue;
+        }
+
+        if (it->subjects[t]) {
+            continue;
+        }
+
+        it->ptrs[t] = ECS_OFFSET(ptrs, offset * it->sizes[t]);
+    }
+}
+
+bool ecs_page_next(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_iter_t *chain_it = it->chain_it;
+
+    do {
+        if (!ecs_iter_next(chain_it)) {
+            goto done;
+        }
+
+        ecs_page_iter_t *iter = &it->priv.iter.page;
+        
+        /* Copy everything up to the private iterator data */
+        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+
+        if (!chain_it->table) {
+            goto yield; /* Task query */
+        }
+
+        int32_t offset = iter->offset;
+        int32_t limit = iter->limit;
+        if (!(offset || limit)) {
+            return it->count != 0;
+        }
+
+        int32_t count = it->count;
+        int32_t remaining = iter->remaining;
+
+        if (offset) {
+            if (offset > count) {
+                /* No entities to iterate in current table */
+                iter->offset -= count;
+                it->count = 0;
+                continue;
+            } else {
+                it->offset += offset;
+                count = it->count -= offset;
+                iter->offset = 0;
+                offset_iter(it, offset);
+            }
+        }
+
+        if (remaining) {
+            if (remaining > count) {
+                iter->remaining -= count;
+            } else {
+                it->count = remaining;
+                iter->remaining = 0;
+            }
+        } else if (limit) {
+            /* Limit hit: no more entities left to iterate */
+            goto done;
+        }
+    } while (it->count == 0);
+
+yield:
+    return true;
+done:
+error:
+    return false;
+}
+
+ecs_iter_t ecs_worker_iter(
+    ecs_iter_t *it,
+    int32_t index,
+    int32_t count)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
+
+    return (ecs_iter_t){
+        .real_world = it->real_world,
+        .world = it->world,
+        .priv.iter.worker = {
+            .index = index,
+            .count = count
+        },
+        .next = ecs_worker_next,
+        .chain_it = it
+    };
+
+error:
+    return (ecs_iter_t){ 0 };
+}
+
+bool ecs_worker_next(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_iter_t *chain_it = it->chain_it;
+    ecs_worker_iter_t *iter = &it->priv.iter.worker;
+    int32_t res_count = iter->count, res_index = iter->index;
+    int32_t per_worker, instances_per_worker, first;
+
+    do {
+        if (!ecs_iter_next(chain_it)) {
+            return false;
+        }
+
+        /* Copy everything up to the private iterator data */
+        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+
+        int32_t count = it->count;
+        int32_t instance_count = it->instance_count;
+        per_worker = count / res_count;
+        instances_per_worker = instance_count / res_count;
+        first = per_worker * res_index;
+        count -= per_worker * res_count;
+
+        if (count) {
+            if (res_index < count) {
+                per_worker ++;
+                first += res_index;
+            } else {
+                first += count;
+            }
+        }
+
+        if (!per_worker && it->table == NULL) {
+            if (res_index == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } while (!per_worker);
+
+    it->instance_count = instances_per_worker;
+    it->frame_offset += first;
+
+    offset_iter(it, it->offset + first);
+    it->count = per_worker;
+    it->offset += first;
+
+    return true;
+error:
+    return false;
 }

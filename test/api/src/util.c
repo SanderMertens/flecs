@@ -92,7 +92,7 @@ const ecs_entity_t* bulk_new_w_type(
 
 int32_t find_entity(
     ecs_world_t *world,
-    ecs_iter_result_t *expect, 
+    test_iter_result_t *expect, 
     ecs_entity_t e)
 {
     int i;
@@ -142,7 +142,7 @@ int32_t find_entity(
 bool test_iter(
     ecs_iter_t *it, 
     ecs_iter_next_action_t next, 
-    ecs_iter_result_t *expect) 
+    test_iter_result_t *expect) 
 {
     int32_t entity_index = -1;
 

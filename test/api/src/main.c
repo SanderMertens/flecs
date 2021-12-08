@@ -1133,6 +1133,7 @@ void Filter_filter_no_this_component_2_ents(void);
 void Filter_filter_no_this_tag_2_ents_1_not(void);
 void Filter_filter_no_this_component_2_ents_1_not(void);
 void Filter_filter_no_this_component_1_not(void);
+void Filter_filter_iter_frame_offset(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1189,6 +1190,25 @@ void Query_2_terms_1_filter(void);
 void Query_3_terms_2_filter(void);
 void Query_no_instancing_w_singleton(void);
 void Query_no_instancing_w_shared(void);
+void Query_query_iter_frame_offset(void);
+
+// Testsuite 'Iter'
+void Iter_page_iter_0_0(void);
+void Iter_page_iter_1_0(void);
+void Iter_page_iter_0_1(void);
+void Iter_page_iter_n_0(void);
+void Iter_page_iter_0_n(void);
+void Iter_page_iter_m_n(void);
+void Iter_page_iter_skip_1_table(void);
+void Iter_page_iter_skip_2_tables(void);
+void Iter_worker_iter_1(void);
+void Iter_worker_iter_2(void);
+void Iter_worker_iter_3(void);
+void Iter_worker_iter_4(void);
+void Iter_paged_iter_w_shared_comp(void);
+void Iter_worker_iter_w_shared_comp(void);
+void Iter_paged_iter_w_task_query(void);
+void Iter_worker_iter_w_task_query(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1382,6 +1402,7 @@ void Rules_2_terms_1_filter(void);
 void Rules_3_terms_2_filter(void);
 void Rules_term_obj_w_this(void);
 void Rules_term_subj_w_this(void);
+void Rules_rule_iter_frame_offset(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6608,6 +6629,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_no_this_component_1_not",
         Filter_filter_no_this_component_1_not
+    },
+    {
+        "filter_iter_frame_offset",
+        Filter_filter_iter_frame_offset
     }
 };
 
@@ -6827,6 +6852,77 @@ bake_test_case Query_testcases[] = {
     {
         "no_instancing_w_shared",
         Query_no_instancing_w_shared
+    },
+    {
+        "query_iter_frame_offset",
+        Query_query_iter_frame_offset
+    }
+};
+
+bake_test_case Iter_testcases[] = {
+    {
+        "page_iter_0_0",
+        Iter_page_iter_0_0
+    },
+    {
+        "page_iter_1_0",
+        Iter_page_iter_1_0
+    },
+    {
+        "page_iter_0_1",
+        Iter_page_iter_0_1
+    },
+    {
+        "page_iter_n_0",
+        Iter_page_iter_n_0
+    },
+    {
+        "page_iter_0_n",
+        Iter_page_iter_0_n
+    },
+    {
+        "page_iter_m_n",
+        Iter_page_iter_m_n
+    },
+    {
+        "page_iter_skip_1_table",
+        Iter_page_iter_skip_1_table
+    },
+    {
+        "page_iter_skip_2_tables",
+        Iter_page_iter_skip_2_tables
+    },
+    {
+        "worker_iter_1",
+        Iter_worker_iter_1
+    },
+    {
+        "worker_iter_2",
+        Iter_worker_iter_2
+    },
+    {
+        "worker_iter_3",
+        Iter_worker_iter_3
+    },
+    {
+        "worker_iter_4",
+        Iter_worker_iter_4
+    },
+    {
+        "paged_iter_w_shared_comp",
+        Iter_paged_iter_w_shared_comp
+    },
+    {
+        "worker_iter_w_shared_comp",
+        Iter_worker_iter_w_shared_comp
+    },
+    {
+        "paged_iter_w_task_query",
+        Iter_paged_iter_w_task_query
+    },
+    {
+        "worker_iter_w_task_query",
+        Iter_worker_iter_w_task_query
     }
 };
 
@@ -7589,6 +7685,10 @@ bake_test_case Rules_testcases[] = {
     {
         "term_subj_w_this",
         Rules_term_subj_w_this
+    },
+    {
+        "rule_iter_frame_offset",
+        Rules_rule_iter_frame_offset
     }
 };
 
@@ -11165,15 +11265,22 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        111,
+        112,
         Filter_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        54,
+        55,
         Query_testcases
+    },
+    {
+        "Iter",
+        NULL,
+        NULL,
+        16,
+        Iter_testcases
     },
     {
         "Pairs",
@@ -11186,7 +11293,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        115,
+        116,
         Rules_testcases
     },
     {
@@ -11424,5 +11531,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("api", argc, argv, suites, 64);
+    return bake_test_run("api", argc, argv, suites, 65);
 }

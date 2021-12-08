@@ -5189,3 +5189,57 @@ void Filter_filter_no_this_component_1_not() {
 
     ecs_fini(world);
 }
+
+void Filter_filter_iter_frame_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = TagA, }
+        },
+    }), 0);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_entity_t e5 = ecs_new(world, TagA);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+    ecs_add(world, e5, TagC);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 0);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e1);
+    test_assert(it.entities[1] == e2);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 2);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e3);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.frame_offset, 4);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
