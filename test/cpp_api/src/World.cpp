@@ -778,8 +778,7 @@ void World_template_component_w_same_namespace_name_and_namespaced_arg() {
 void World_entity_as_tag() {
     flecs::world ecs;
 
-    auto e = ecs.entity()
-        .component<Tag>();
+    auto e = ecs.entity<Tag>();
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Tag>();
@@ -798,8 +797,7 @@ void World_entity_as_tag() {
 void World_entity_w_name_as_tag() {
     flecs::world ecs;
 
-    auto e = ecs.entity("Foo")
-        .component<Tag>();
+    auto e = ecs.entity<Tag>("Foo");
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Tag>();
@@ -818,8 +816,7 @@ void World_entity_w_name_as_tag() {
 void World_entity_as_component() {
     flecs::world ecs;
 
-    auto e = ecs.entity()
-        .component<Position>();
+    auto e = ecs.entity<Position>();
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Position>();
@@ -838,8 +835,7 @@ void World_entity_as_component() {
 void World_entity_w_name_as_component() {
     flecs::world ecs;
 
-    auto e = ecs.entity("Foo")
-        .component<Position>();
+    auto e = ecs.entity<Position>("Foo");
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Position>();
@@ -857,13 +853,11 @@ void World_entity_w_name_as_component() {
 
 void World_entity_as_component_2_worlds() {
     flecs::world ecs_1;
-    auto e_1 = ecs_1.entity()
-        .component<Position>();
+    auto e_1 = ecs_1.entity<Position>();
     test_assert(e_1.id() != 0);
 
     flecs::world ecs_2;
-    auto e_2 = ecs_2.entity()
-        .component<Position>();
+    auto e_2 = ecs_2.entity<Position>();
     test_assert(e_2.id() != 0);
 
     test_assert(e_1 == e_2);
@@ -877,21 +871,17 @@ struct Parent {
 
 void World_entity_as_namespaced_component_2_worlds() {
     flecs::world ecs_1;
-    auto e_1 = ecs_1.entity()
-        .component<Parent>();
+    auto e_1 = ecs_1.entity<Parent>();
     test_assert(e_1.id() != 0);
 
-    auto e_1_1 = ecs_1.entity()
-        .component<Parent::Child>();
+    auto e_1_1 = ecs_1.entity<Parent::Child>();
     test_assert(e_1_1.id() != 0);
 
     flecs::world ecs_2;
-    auto e_2 = ecs_2.entity()
-        .component<Parent>();
+    auto e_2 = ecs_2.entity<Parent>();
     test_assert(e_2.id() != 0);
 
-    auto e_2_1 = ecs_2.entity()
-        .component<Parent::Child>();
+    auto e_2_1 = ecs_2.entity<Parent::Child>();
     test_assert(e_2_1.id() != 0);
 
     test_assert(e_1 == e_2);
@@ -905,15 +895,13 @@ void World_entity_as_namespaced_component_2_worlds() {
 
 void World_entity_as_component_2_worlds_implicit_namespaced() {
     flecs::world ecs_1;
-    auto e_1 = ecs_1.entity()
-        .component<Parent>();
+    auto e_1 = ecs_1.entity<Parent>();
     test_assert(e_1.id() != 0);
 
     ecs_1.entity().add<Parent::Child>();
 
     flecs::world ecs_2;
-    auto e_2 = ecs_2.entity()
-        .component<Parent>();
+    auto e_2 = ecs_2.entity<Parent>();
     test_assert(e_2.id() != 0);
 
     ecs_2.entity().add<Parent::Child>();
@@ -931,36 +919,10 @@ struct PositionDerived : Position {
     PositionDerived(float x, float y) : Position{x, y} { }
 };
 
-void World_component_as_component() {
-    flecs::world ecs;
-
-    auto e = ecs.component<Position>()
-        .component<PositionDerived>();
-    test_assert(e.id() != 0);
-
-    auto t = ecs.component<Position>();
-    test_assert(t.id() != 0);
-    test_assert(e == t);
-
-    auto e2 = ecs.entity()
-        .set<PositionDerived>({10, 20});
-
-    test_bool(e2.has<Position>(), true);
-    test_bool(e2.has<PositionDerived>(), true);
-
-    const Position *p = e2.get<Position>();
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_str(e.name(), "Position");
-}
-
 void World_type_as_component() {
     flecs::world ecs;
 
-    auto e = ecs.type()
-        .component<Position>();
+    auto e = ecs.type<Position>();
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Position>();
@@ -978,8 +940,7 @@ void World_type_as_component() {
 void World_type_w_name_as_component() {
     flecs::world ecs;
 
-    auto e = ecs.type("Foo")
-        .component<Position>();
+    auto e = ecs.type<Position>("Foo");
     test_assert(e.id() != 0);
 
     auto t = ecs.component<Position>();

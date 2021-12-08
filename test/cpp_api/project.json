@@ -755,7 +755,6 @@
                 "entity_as_component_2_worlds_implicit_namespaced",
                 "type_as_component",
                 "type_w_name_as_component",
-                "component_as_component",
                 "delete_with_id",
                 "delete_with_type",
                 "delete_with_pair",

@@ -23,6 +23,16 @@ struct entity_m<flecs::world> : mixin<flecs::world> {
    */
   template <typename... Args>
   flecs::entity prefab(Args &&... args) const;
+
+  /** Create an entity that's associated with a type.
+   */
+  template <typename T>
+  flecs::entity entity(const char *name = nullptr) const;
+
+  /** Create a prefab that's associated with a type.
+   */
+  template <typename T>
+  flecs::entity prefab(const char *name = nullptr) const;
 };
 
 using entity_m_world = entity_m<flecs::world>;

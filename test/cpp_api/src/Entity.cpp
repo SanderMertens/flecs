@@ -2908,7 +2908,7 @@ void Entity_is_a_w_type() {
 
     struct Prefab { };
 
-    auto base = world.entity().component<Prefab>();
+    auto base = world.entity<Prefab>();
 
     auto e = world.entity().is_a<Prefab>();
 
@@ -2931,7 +2931,7 @@ void Entity_child_of_w_type() {
 
     struct Parent { };
 
-    auto base = world.entity().component<Parent>();
+    auto base = world.entity<Parent>();
 
     auto e = world.entity().child_of<Parent>();
 

@@ -904,7 +904,7 @@ void QueryBuilder_role() {
     struct Walking { };
     struct Running { };
 
-    ecs.type().component<Movement>()
+    ecs.type<Movement>()
         .add<Walking>()
         .add<Running>();
 

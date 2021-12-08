@@ -11216,6 +11216,16 @@ struct entity_m<flecs::world> : mixin<flecs::world> {
    */
   template <typename... Args>
   flecs::entity prefab(Args &&... args) const;
+
+  /** Create an entity that's associated with a type.
+   */
+  template <typename T>
+  flecs::entity entity(const char *name = nullptr) const;
+
+  /** Create a prefab that's associated with a type.
+   */
+  template <typename T>
+  flecs::entity prefab(const char *name = nullptr) const;
 };
 
 using entity_m_world = entity_m<flecs::world>;
@@ -11261,7 +11271,12 @@ struct type_m<flecs::world> : mixin<flecs::world> {
   /** Create a type.
    */
   template <typename... Args>
-  flecs::type type(Args &&... args) const;      
+  flecs::type type(Args &&... args) const;  
+
+  /** Create a type associated with a component.
+   */
+  template <typename T>
+  flecs::type type(const char *name = nullptr) const;
 };
 
 using type_m_world = type_m<flecs::world>;
@@ -14223,21 +14238,6 @@ struct entity_builder_i {
         return to_base();
     }
 
-    /** Associate entity with type.
-     * This operation enables using a type to refer to an entity, as it
-     * associates the entity id with the provided type.
-     *
-     * If the entity does not have a name, a name will be derived from the type.
-     * If the entity already is a component, the provided type must match in
-     * size with the component size of the entity. After this operation the
-     * entity will be a component (it will have the EcsComponent component) if
-     * the type has a non-zero size.
-     *
-     * @tparam T the type to associate with the entity.
-     */
-    template <typename T>
-    Base& component();
-
     /* Set the entity name.
      */
     Base& set_name(const char *name) {
@@ -15243,6 +15243,11 @@ struct each_invoker : public invoker {
         self->invoke(iter);
     }
 
+    // Each invokers always use instanced iterators
+    static bool instanced() {
+        return true;
+    }
+
 private:
     // Number of function arguments is one more than number of components, pass
     // entity as argument.
@@ -15332,6 +15337,11 @@ public:
         auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
+    }
+
+    // Instancing needs to be enabled explicitly for iter invokers
+    static bool instanced() {
+        return false;
     }
 
 private:
@@ -16307,12 +16317,6 @@ struct type_base {
         return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
     }
 
-    template <typename T>
-    Base& component() {
-        component_for_id<T>(world(), m_entity);
-        return *this;
-    }
-
     flecs::string str() const {
         const flecs::world_t *w = ecs_get_world(world());
         char *str = ecs_type_str(w, m_type);
@@ -16389,13 +16393,7 @@ private:
 };
 
 struct type : type_base<type> { 
-    explicit type(
-        world_t *world, const char *name = nullptr, const char *expr = nullptr)
-    : type_base(world, name, expr) { }
-
-    explicit type(world_t *world, type_t t) : type_base(world, t) { }
-
-    type(type_t t) : type_base(t) { }
+    using type_base<type>::type_base;
 };
 
 }
@@ -16524,13 +16522,6 @@ template <typename Func, if_t< is_callable<Func>::value > >
 inline Base& entity_builder_i<Base>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->world_v(), this->id_v(), func);
-    return to_base();
-}
-
-template <typename Base>
-template <typename T>
-inline Base& entity_builder_i<Base>::component() {
-    component_for_id<T>(this->world_v(), this->id_v());
     return to_base();
 }
 
@@ -16690,9 +16681,21 @@ inline flecs::entity entity_m_world::entity(Args &&... args) const {
     return flecs::entity(flecs_me_, std::forward<Args>(args)...);
 }
 
+template <typename T>
+inline flecs::entity entity_m_world::entity(const char *name) const {
+    return flecs::component<T>(flecs_me_, name, true);
+}
+
 template <typename... Args>
 inline flecs::entity entity_m_world::prefab(Args &&... args) const {
     flecs::entity result = flecs::entity(flecs_me_, std::forward<Args>(args)...);
+    result.add(flecs::Prefab);
+    return result;
+}
+
+template <typename T>
+inline flecs::entity entity_m_world::prefab(const char *name) const {
+    flecs::entity result = flecs::component<T>(flecs_me_, name, true);
     result.add(flecs::Prefab);
     return result;
 }
@@ -16727,6 +16730,12 @@ namespace flecs {
 template <typename... Args>
 inline flecs::type type_m_world::type(Args &&... args) const {
     return flecs::type(flecs_me_, std::forward<Args>(args)...);
+}
+
+template <typename T>
+inline flecs::type type_m_world::type(const char *name) const {
+    flecs::entity result = flecs::component<T>(flecs_me_, name, true);
+    return flecs::type(flecs_me_, result);
 }
 
 #undef flecs_me_
@@ -17285,12 +17294,12 @@ struct builder : IBuilder<Base, Components ...>
 
 public:
     builder(flecs::world_t *world)
-        : IBase(world, &m_desc)
+        : IBase(&m_desc)
         , m_desc{}
         , m_world(world) { }
 
     builder(const builder& f) 
-        : IBase(f.m_world, &m_desc, f.m_term_index)
+        : IBase(&m_desc, f.m_term_index)
     {
         m_world = f.m_world;
         m_desc = f.m_desc;
@@ -17328,7 +17337,7 @@ namespace flecs
 // Filter builder interface
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
-    filter_builder_i(flecs::world_t *world, ecs_filter_desc_t *desc, int32_t term_index = 0) 
+    filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
         , m_desc(desc) { }
 
@@ -17571,7 +17580,7 @@ struct filter_base {
         while (ecs_filter_next(&it)) {
             _::iter_invoker<Func>(func).invoke(&it);
         }
-    }  
+    }
 
     template <typename Func>
     void each_term(const Func& func) {
@@ -17627,7 +17636,7 @@ public:
     template <typename Func>
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    } 
+    }
 
     template <typename Func>
     void iter(Func&& func) const { 
@@ -17638,6 +17647,8 @@ private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
     void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(std::move(func)).invoke(&it);
         }
@@ -17734,7 +17745,11 @@ inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
 
 // filter_base implementation
 inline filter_base::operator filter<>() const {
-    return flecs::filter<>(m_world, &m_filter);
+    flecs::filter<> f;
+    ecs_filter_copy(&f.m_filter, &this->m_filter);
+    f.m_filter_ptr = &f.m_filter;
+    f.m_world = this->m_world;
+    return f;
 }
 
 #undef flecs_me_
@@ -17761,8 +17776,8 @@ public:
         : BaseClass(nullptr)
         , m_desc(nullptr) { }
 
-    query_builder_i(flecs::world_t *world, ecs_query_desc_t *desc, int32_t term_index = 0) 
-        : BaseClass(world, &desc->filter, term_index)
+    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
+        : BaseClass(&desc->filter, term_index)
         , m_desc(desc) { }
 
     /** Sort the output of a query.
@@ -17894,6 +17909,14 @@ struct query_base {
         : m_world(world)
     {
         m_query = ecs_query_init(world, desc);
+
+        if (!m_query) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->filter.terms_buffer) {
+            ecs_os_free(desc->filter.terms_buffer);
+        }
     }
 
     operator query_t*() const {
@@ -17989,34 +18012,33 @@ public:
 
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_instanced);
     } 
 
     template <typename Func>
     void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(true, std::forward<Func>(func), 
+        iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), ecs_query_next);
+        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
     }
 
     template <typename Func>
     void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(false, std::forward<Func>(func), 
+        iterate<_::iter_invoker>(std::forward<Func>(func), 
             ecs_query_next_worker, stage_current, stage_count);
     }
 
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(bool force_instanced, Func&& func, NextFunc next, Args &&... args) const {
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        if (force_instanced) {
-            it.is_instanced = true;
-        }
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
         while (next(&it, std::forward<Args>(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
@@ -18070,9 +18092,10 @@ struct node_builder : IBuilder<Base, Components ...>
 
 public:
     explicit node_builder(flecs::world_t* world, const char *name = nullptr)
-        : IBase(world, &m_desc)
+        : IBase(&m_desc)
         , m_desc{}
-        , m_world(world) 
+        , m_world(world)
+        , m_instanced(false)
     {
         m_desc.entity.name = name;
         m_desc.entity.sep = "::";
@@ -18094,6 +18117,7 @@ public:
     T each(Func&& func) {
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, Components...>;
+        m_instanced = true;
         return build<Invoker>(std::forward<Func>(func));
     }
 
@@ -18101,6 +18125,7 @@ protected:
     flecs::world_t* world_v() override { return m_world; }
     TDesc m_desc;
     flecs::world_t *m_world;
+    bool m_instanced;
 
 private:
     template <typename Invoker, typename Func>
@@ -18133,7 +18158,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     using Class = trigger_builder_i<Base, Components...>;
     using BaseClass = term_builder_i<Base>;
 
-    trigger_builder_i(flecs::world_t *world, ecs_trigger_desc_t *desc) 
+    trigger_builder_i(ecs_trigger_desc_t *desc) 
         : BaseClass(&desc->term)
         , m_desc(desc)
         , m_event_count(0) { }
@@ -18252,8 +18277,8 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         , m_desc(nullptr)
         , m_event_count(0) { }
 
-    observer_builder_i(flecs::world_t *world, ecs_observer_desc_t *desc) 
-        : BaseClass(world, &desc->filter)
+    observer_builder_i(ecs_observer_desc_t *desc) 
+        : BaseClass(&desc->filter)
         , m_desc(desc)
         , m_event_count(0) { }
 
@@ -18450,8 +18475,8 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i(flecs::world_t *world, ecs_system_desc_t *desc) 
-        : BaseClass(world, &desc->query)
+    system_builder_i(ecs_system_desc_t *desc) 
+        : BaseClass(&desc->query)
         , m_desc(desc) { }
 
     /** Specify when the system should be ran.
@@ -18559,6 +18584,8 @@ struct system_builder final : _::system_builder_base<Components...> {
         : _::system_builder_base<Components...>(world, name)
     {
         _::sig<Components...>(world).populate(this);
+        
+        this->m_desc.query.filter.instanced = this->m_instanced;
 
 #ifdef FLECS_PIPELINE
         this->m_desc.entity.add[0] = flecs::OnUpdate;

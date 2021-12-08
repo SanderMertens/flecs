@@ -711,7 +711,6 @@ void World_entity_as_namespaced_component_2_worlds(void);
 void World_entity_as_component_2_worlds_implicit_namespaced(void);
 void World_type_as_component(void);
 void World_type_w_name_as_component(void);
-void World_component_as_component(void);
 void World_delete_with_id(void);
 void World_delete_with_type(void);
 void World_delete_with_pair(void);
@@ -3461,10 +3460,6 @@ bake_test_case World_testcases[] = {
         World_type_w_name_as_component
     },
     {
-        "component_as_component",
-        World_component_as_component
-    },
-    {
         "delete_with_id",
         World_delete_with_id
     },
@@ -3722,7 +3717,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        56,
+        55,
         World_testcases
     },
     {

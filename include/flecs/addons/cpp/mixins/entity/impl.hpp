@@ -25,13 +25,6 @@ inline Base& entity_builder_i<Base>::set(const Func& func) {
     return to_base();
 }
 
-template <typename Base>
-template <typename T>
-inline Base& entity_builder_i<Base>::component() {
-    component_for_id<T>(this->world_v(), this->id_v());
-    return to_base();
-}
-
 inline bool entity_view::has_switch(const flecs::type& type) const {
     return ecs_has_id(m_world, m_id, flecs::Switch | type.id());
 }
@@ -188,9 +181,21 @@ inline flecs::entity entity_m_world::entity(Args &&... args) const {
     return flecs::entity(flecs_me_, std::forward<Args>(args)...);
 }
 
+template <typename T>
+inline flecs::entity entity_m_world::entity(const char *name) const {
+    return flecs::component<T>(flecs_me_, name, true);
+}
+
 template <typename... Args>
 inline flecs::entity entity_m_world::prefab(Args &&... args) const {
     flecs::entity result = flecs::entity(flecs_me_, std::forward<Args>(args)...);
+    result.add(flecs::Prefab);
+    return result;
+}
+
+template <typename T>
+inline flecs::entity entity_m_world::prefab(const char *name) const {
+    flecs::entity result = flecs::component<T>(flecs_me_, name, true);
     result.add(flecs::Prefab);
     return result;
 }

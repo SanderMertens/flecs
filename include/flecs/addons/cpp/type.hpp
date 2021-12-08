@@ -96,12 +96,6 @@ struct type_base {
         return this->has(_::cpp_type<flecs::pair<Relation, Object>>::id(world()));
     }
 
-    template <typename T>
-    Base& component() {
-        component_for_id<T>(world(), m_entity);
-        return *this;
-    }
-
     flecs::string str() const {
         const flecs::world_t *w = ecs_get_world(world());
         char *str = ecs_type_str(w, m_type);
@@ -178,13 +172,7 @@ private:
 };
 
 struct type : type_base<type> { 
-    explicit type(
-        world_t *world, const char *name = nullptr, const char *expr = nullptr)
-    : type_base(world, name, expr) { }
-
-    explicit type(world_t *world, type_t t) : type_base(world, t) { }
-
-    type(type_t t) : type_base(t) { }
+    using type_base<type>::type_base;
 };
 
 }

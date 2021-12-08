@@ -168,7 +168,7 @@ struct Movement {
 void Switch_system_w_sw_type_builder() {
     flecs::world world;
 
-    world.type().component<Movement>()
+    world.type<Movement>()
         .add<Movement::Standing>()
         .add<Movement::Walking>();
 
@@ -226,10 +226,9 @@ void Switch_add_case_w_type() {
 void Switch_add_switch_w_type() {
     flecs::world world;
 
-    world.type()
+    world.type<Movement>()
         .add<Movement::Standing>()
-        .add<Movement::Walking>()
-        .component<Movement>();
+        .add<Movement::Walking>();
 
     auto e = world.entity()
         .add_switch<Movement>()
@@ -247,7 +246,7 @@ void Switch_add_switch_w_type() {
 void Switch_add_switch_w_type_component_first() {
     flecs::world world;
 
-    world.type().component<Movement>()
+    world.type<Movement>()
         .add<Movement::Standing>()
         .add<Movement::Walking>();
 
@@ -267,7 +266,7 @@ void Switch_add_switch_w_type_component_first() {
 void Switch_add_remove_switch_w_type() {
     flecs::world world;
 
-    world.type().component<Movement>()
+    world.type<Movement>()
         .add<Movement::Standing>()
         .add<Movement::Walking>();
 
