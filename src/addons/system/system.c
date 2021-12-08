@@ -149,28 +149,37 @@ ecs_entity_t ecs_run_intern(
     ecs_defer_begin(thread_ctx);
 
     /* Prepare the query iterator */
-    ecs_iter_t it = ecs_query_iter_page(
-        thread_ctx, system_data->query, offset, limit);
+    ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
+    ecs_iter_t *it = &qit;
 
-    it.system = system;
-    it.self = system_data->self;
-    it.delta_time = delta_time;
-    it.delta_system_time = time_elapsed;
-    it.frame_offset = offset;
-    it.param = param;
-    it.ctx = system_data->ctx;
-    it.binding_ctx = system_data->binding_ctx;
+    if (offset || limit) {
+        pit = ecs_page_iter(it, offset, limit);
+        it = &pit;
+    }
+
+    if (stage_count > 1 && system_data->multi_threaded) {
+        wit = ecs_worker_iter(it, stage_current, stage_count);
+        it = &wit;
+    }
+
+    qit.system = system;
+    qit.self = system_data->self;
+    qit.delta_time = delta_time;
+    qit.delta_system_time = time_elapsed;
+    qit.frame_offset = offset;
+    qit.param = param;
+    qit.ctx = system_data->ctx;
+    qit.binding_ctx = system_data->binding_ctx;
 
     ecs_iter_action_t action = system_data->action;
 
-    /* If no filter is provided, just iterate tables & invoke action */
-    if (stage_count <= 1 || !system_data->multi_threaded) {
-        while (ecs_query_next(&it)) {
-            action(&it);
+    if (it == &qit) {
+        while (ecs_query_next(&qit)) {
+            action(&qit);
         }
     } else {
-        while (ecs_query_next_worker(&it, stage_current, stage_count)) {
-            action(&it);               
+        while (ecs_iter_next(it)) {
+            action(it);
         }
     }
 
@@ -182,7 +191,7 @@ ecs_entity_t ecs_run_intern(
 
     ecs_defer_end(thread_ctx);
 
-    return it.interrupted_by;
+    return it->interrupted_by;
 }
 
 /* -- Public API -- */

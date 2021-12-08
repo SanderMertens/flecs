@@ -438,7 +438,7 @@ void test_1_comp(const char *expr) {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         {e1, e2, e3, e4},
         {{ecs_id(Position)}},
         {
@@ -478,7 +478,7 @@ void test_2_comp(const char *expr) {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         {e1, e2, e3, e4},
         {{ecs_id(Position), ecs_id(Velocity)}},
         {
@@ -821,7 +821,7 @@ void Rules_find_1_pair() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"BB8", "Luke", "Rey"},
         .term_ids_expr = {{"(HomePlanet,Tatooine)"}}
     }));
@@ -844,7 +844,7 @@ void Rules_find_2_pairs() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"Luke", "Rey"},
         .term_ids_expr = {{"(HomePlanet,Tatooine)", "(Enemy,Palpatine)"}}
     }));
@@ -870,7 +870,7 @@ void Rules_find_w_pred_var() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {
             "Luke", "Luke",
             "Yoda", "Yoda",
@@ -914,7 +914,7 @@ void Rules_find_w_pred_var_explicit_subject() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .term_ids_expr = {
             {"Human"}, {"Jedi"}
         },
@@ -946,7 +946,7 @@ void Rules_find_1_pair_w_object_var() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"BB8", "DarthVader", "Luke", "Yoda", "Rey"},
         .term_ids_expr = {
             {"(HomePlanet,Tatooine)"}, {"(HomePlanet,Mustafar)"}, 
@@ -983,7 +983,7 @@ void Rules_find_2_pairs_w_object_var() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"Luke", "Luke", "Yoda", "Yoda", "Rey"},
         .term_ids_expr = {
             {"(HomePlanet,Tatooine)", "(Enemy,DarthVader)"}, 
@@ -1023,7 +1023,7 @@ void Rules_find_1_pair_w_pred_var() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"BB8", "Luke", "Rey"},
         .term_ids_expr = {
             {"(HomePlanet,Tatooine)"},
@@ -1058,7 +1058,7 @@ void Rules_find_2_pairs_w_pred_var() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"Luke", "Rey"},
         .term_ids_expr = {
             {"(HomePlanet,Tatooine)", "(Enemy,Palpatine)"}
@@ -1094,7 +1094,7 @@ void Rules_find_cyclic_pairs() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {"HanSolo", "Leia"},
         .term_ids_expr = {
             {"(Likes,Leia)", "(Likes,HanSolo)"},
@@ -1130,7 +1130,7 @@ void Rules_join_by_object() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {
             "BenSolo", "BenSolo",
             "Luke",    "Luke",
@@ -1178,7 +1178,7 @@ void Rules_join_by_predicate() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    test_true(test_iter(&it, ecs_rule_next, &(ecs_iter_result_t){
+    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
         .entity_names = {
             "Luke", "Luke", "Luke", "Luke",
             "Yoda", "Yoda",
@@ -4268,6 +4268,59 @@ void Rules_term_subj_w_this() {
     test_assert(ecs_rule_next(&it) == false);
 
     ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_rule_iter_frame_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_rule_t *q = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = TagA, }
+        },
+    });
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_entity_t e5 = ecs_new(world, TagA);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+    ecs_add(world, e5, TagC);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 0);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e1);
+    test_assert(it.entities[1] == e2);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 2);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e3);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.frame_offset, 4);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), false);
 
     ecs_fini(world);
 }

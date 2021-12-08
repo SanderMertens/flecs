@@ -733,7 +733,6 @@ void TestAll(ecs_iter_t *it) {
     }
 }
 
-
 static
 void test_combs_100_entity(int THREADS) {
     ecs_world_t *world = ecs_init();
@@ -777,7 +776,7 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
 
     ecs_query_t *q = ecs_query_new(world, "Position, TestSubset()");
 
-    int i, ENTITIES = 4;
+    int i, ENTITIES = 100;
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
 
@@ -786,13 +785,15 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker() {
     }
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next_worker(&it, 0, 2)) {
-        TestAll(&it);
+    ecs_iter_t wit = ecs_worker_iter(&it, 0, 2);
+    while (ecs_worker_next(&wit)) {
+        TestAll(&wit);
     }
 
     it = ecs_query_iter(world, q);
-    while (ecs_query_next_worker(&it, 1, 2)) {
-        TestAll(&it);
+    wit = ecs_worker_iter(&it, 1, 2);
+    while (ecs_worker_next(&wit)) {
+        TestAll(&wit);
     }
 
     for (i = 0; i < ENTITIES; i ++) {

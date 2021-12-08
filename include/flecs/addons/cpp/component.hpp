@@ -616,18 +616,6 @@ flecs::entity component(
     return result;
 }
 
-/* Register component with existing entity id */
-template <typename T>
-void component_for_id(flecs::world_t *world, flecs::id_t id) {
-    flecs::entity result = component<T>(world, nullptr, true, id);
-
-    ecs_assert(result.id() == id, ECS_INTERNAL_ERROR, NULL);
-
-    if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world, result);
-    }
-}
-
 template <typename T>
 flecs::entity_t type_id() {
     return _::cpp_type<T>::id();

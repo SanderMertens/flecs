@@ -1192,7 +1192,8 @@
                 "filter_no_this_component_2_ents",
                 "filter_no_this_tag_2_ents_1_not",
                 "filter_no_this_component_2_ents_1_not",
-                "filter_no_this_component_1_not"
+                "filter_no_this_component_1_not",
+                "filter_iter_frame_offset"
             ]
         }, {
             "id": "Query",
@@ -1250,7 +1251,28 @@
                 "2_terms_1_filter",
                 "3_terms_2_filter",
                 "no_instancing_w_singleton",
-                "no_instancing_w_shared"
+                "no_instancing_w_shared",
+                "query_iter_frame_offset"
+            ]
+        }, {
+            "id": "Iter",
+            "testcases": [
+                "page_iter_0_0",
+                "page_iter_1_0",
+                "page_iter_0_1",
+                "page_iter_n_0",
+                "page_iter_0_n",
+                "page_iter_m_n",
+                "page_iter_skip_1_table",
+                "page_iter_skip_2_tables",
+                "worker_iter_1",
+                "worker_iter_2",
+                "worker_iter_3",
+                "worker_iter_4",
+                "paged_iter_w_shared_comp",
+                "worker_iter_w_shared_comp",
+                "paged_iter_w_task_query",
+                "worker_iter_w_task_query"
             ]
         }, {
             "id": "Pairs",
@@ -1447,7 +1469,8 @@
                 "2_terms_1_filter",
                 "3_terms_2_filter",
                 "term_obj_w_this",
-                "term_subj_w_this"
+                "term_subj_w_this",
+                "rule_iter_frame_offset"
             ]
         }, {
             "id": "TransitiveRules",

@@ -2799,7 +2799,7 @@ ecs_entity_t ecs_rule_variable(
     ecs_iter_t *iter,
     int32_t var_id)
 {
-    ecs_rule_iter_t *it = &iter->iter.rule;
+    ecs_rule_iter_t *it = &iter->priv.iter.rule;
     const ecs_rule_t *rule = it->rule;
 
     /* We can only return entity variables */
@@ -2825,7 +2825,7 @@ ecs_iter_t ecs_rule_iter(
     result.world = (ecs_world_t*)world;
     result.real_world = (ecs_world_t*)ecs_get_world(rule->world);
 
-    ecs_rule_iter_t *it = &result.iter.rule;
+    ecs_rule_iter_t *it = &result.priv.iter.rule;
     it->rule = rule;
 
     if (rule->operation_count) {
@@ -2871,7 +2871,7 @@ ecs_iter_t ecs_rule_iter(
 void ecs_rule_iter_free(
     ecs_iter_t *iter)
 {
-    ecs_rule_iter_t *it = &iter->iter.rule;
+    ecs_rule_iter_t *it = &iter->priv.iter.rule;
     ecs_os_free(it->registers);
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
@@ -3052,7 +3052,7 @@ void set_source(
 
     ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_rule_t *rule = it->iter.rule.rule;
+    const ecs_rule_t *rule = it->priv.iter.rule.rule;
     if ((r != UINT8_MAX) && rule->variables[r].kind == EcsRuleVarKindEntity) {
         it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
@@ -3092,7 +3092,7 @@ bool eval_superset(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_superset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.superset;
@@ -3198,7 +3198,7 @@ bool eval_subset(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_subset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.subset;
@@ -3338,7 +3338,7 @@ bool eval_select(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
@@ -3461,7 +3461,7 @@ bool eval_with(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
@@ -3612,7 +3612,7 @@ bool eval_each(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     ecs_rule_each_ctx_t *op_ctx = &iter->op_ctx[op_index].is.each;
     ecs_rule_reg_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
@@ -3697,7 +3697,7 @@ bool eval_store(
         return false;
     }
 
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
     ecs_rule_reg_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
@@ -3725,7 +3725,7 @@ bool eval_setjmp(
     int32_t op_index,
     bool redo)
 {
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     ecs_rule_setjmp_ctx_t *ctx = &iter->op_ctx[op_index].is.setjmp;
 
     if (!redo) {
@@ -3979,7 +3979,7 @@ bool ecs_rule_next(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_rule_iter_t *iter = &it->iter.rule;
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
     bool redo = iter->redo;
     int32_t last_frame = -1;

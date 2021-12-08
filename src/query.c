@@ -2319,11 +2319,9 @@ const ecs_filter_t* ecs_query_get_filter(
 }
 
 /* Create query iterator */
-ecs_iter_t ecs_query_iter_page(
+ecs_iter_t ecs_query_iter(
     const ecs_world_t *stage,
-    ecs_query_t *query,
-    int32_t offset,
-    int32_t limit)
+    ecs_query_t *query)
 {
     ecs_poly_assert(query, ecs_query_t);
     ecs_check(!(query->flags & EcsQueryIsOrphaned),
@@ -2348,12 +2346,7 @@ ecs_iter_t ecs_query_iter_page(
 
     ecs_query_iter_t it = {
         .query = query,
-        .node = query->list.first,
-        .page_iter = {
-            .offset = offset,
-            .limit = limit,
-            .remaining = limit
-        }
+        .node = query->list.first
     };
 
     if (query->order_by && query->list.count) {
@@ -2368,60 +2361,11 @@ ecs_iter_t ecs_query_iter_page(
         .table_count = table_count,
         .is_filter = query->filter.filter,
         .is_instanced = query->filter.instanced,
-        .iter.query = it,
+        .priv.iter.query = it,
         .next = ecs_query_next,
     };
 error:
     return (ecs_iter_t){ 0 };
-}
-
-ecs_iter_t ecs_query_iter(
-    const ecs_world_t *world,
-    ecs_query_t *query)
-{
-    ecs_poly_assert(query, ecs_query_t);
-    return ecs_query_iter_page(world, query, 0, 0);
-}
-
-static
-int ecs_page_iter_next(
-    ecs_page_iter_t *it,
-    ecs_page_cursor_t *cur)
-{
-    int32_t offset = it->offset;
-    int32_t limit = it->limit;
-    if (!(offset || limit)) {
-        return cur->count == 0;
-    }
-
-    int32_t count = cur->count;
-    int32_t remaining = it->remaining;
-
-    if (offset) {
-        if (offset > count) {
-            /* No entities to iterate in current table */
-            it->offset -= count;
-            return 1;
-        } else {
-            cur->first += offset;
-            count = cur->count -= offset;
-            it->offset = 0;
-        }
-    }
-
-    if (remaining) {
-        if (remaining > count) {
-            it->remaining -= count;
-        } else {
-            count = cur->count = remaining;
-            it->remaining = 0;
-        }
-    } else if (limit) {
-        /* Limit hit: no more entities left to iterate */
-        return -1;
-    }
-
-    return count == 0;
 }
 
 static
@@ -2470,13 +2414,18 @@ int find_smallest_column(
     return index;
 }
 
+typedef struct {
+    int32_t first;
+    int32_t count;
+} query_iter_cursor_t;
+
 static
 int sparse_column_next(
     ecs_table_t *table,
     ecs_query_table_match_t *matched_table,
     ecs_vector_t *sparse_columns,
     ecs_query_iter_t *iter,
-    ecs_page_cursor_t *cur,
+    query_iter_cursor_t *cur,
     bool filter)
 {
     bool first_iteration = false;
@@ -2562,7 +2511,7 @@ int bitset_column_next(
     ecs_table_t *table,
     ecs_vector_t *bitset_columns,
     ecs_query_iter_t *iter,
-    ecs_page_cursor_t *cur)
+    query_iter_cursor_t *cur)
 {
     /* Precomputed single-bit test */
     static const uint64_t bitmask[64] = {
@@ -2806,8 +2755,7 @@ bool ecs_query_next_instanced(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *iter = &it->iter.query;
-    ecs_page_iter_t *piter = &iter->page_iter;
+    ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
     (void)world;
@@ -2820,8 +2768,7 @@ bool ecs_query_next_instanced(
         goto done;
     }
     
-    ecs_page_cursor_t cur;
-    int32_t prev_count = it->total_count;
+    query_iter_cursor_t cur;
 
     ecs_query_table_node_t *node, *next;
     for (node = iter->node; node != NULL; node = next) {     
@@ -2886,15 +2833,6 @@ bool ecs_query_next_instanced(
                     continue;
                 }
             }
-
-            int ret = ecs_page_iter_next(piter, &cur);
-            if (ret < 0) {
-                goto done;
-            } else if (ret > 0) {
-                continue;
-            }
-
-            it->total_count = cur.count;
         } else {
             cur.count = 0;
             cur.first = 0;
@@ -2905,7 +2843,6 @@ bool ecs_query_next_instanced(
         it->subjects = match->subjects;
         it->sizes = match->sizes;
         it->references = match->references;
-        it->frame_offset += prev_count;
         it->instance_count = 0;
 
         flecs_iter_init(it);
@@ -2929,55 +2866,6 @@ error:
     
 yield:
     return true;  
-}
-
-bool ecs_query_next_worker(
-    ecs_iter_t *it,
-    int32_t current,
-    int32_t total)
-{
-    int32_t per_worker, instances_per_worker, first, prev_offset = it->offset;
-    ecs_world_t *world = it->world;
-
-    do {
-        if (!ecs_query_next(it)) {
-            return false;
-        }
-
-        int32_t count = it->count;
-        int32_t instance_count = it->instance_count;
-        per_worker = count / total;
-        instances_per_worker = instance_count / total;
-        first = per_worker * current;
-        count -= per_worker * total;
-
-        if (count) {
-            if (current < count) {
-                per_worker ++;
-                first += current;
-            } else {
-                first += count;
-            }
-        }
-
-        if (!per_worker && !(it->iter.query.query->flags & EcsQueryNeedsTables)) {
-            if (current == 0) {
-                flecs_iter_populate_data(world, it, it->table, it->offset, it->count, it->ptrs, NULL);
-                return true;
-            } else {
-                return false;
-            }
-        }
-    } while (!per_worker);
-
-    it->instance_count = instances_per_worker;
-    it->frame_offset -= prev_offset;
-    it->frame_offset += first;
-
-    flecs_iter_populate_data(
-        world, it, it->table, it->offset + first, per_worker, it->ptrs, NULL);
-
-    return true;
 }
 
 bool ecs_query_changed(

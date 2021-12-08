@@ -2778,16 +2778,18 @@ typedef struct ecs_ids_t {
     int32_t size;           /* The size of the array */
 } ecs_ids_t;
 
-typedef struct ecs_page_cursor_t {
-    int32_t first;
-    int32_t count;
-} ecs_page_cursor_t;
-
+/* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
     int32_t offset;
     int32_t limit;
     int32_t remaining;
 } ecs_page_iter_t;
+
+/* Worker-iterator specific data */
+typedef struct ecs_worker_iter_t {
+    int32_t index;
+    int32_t count;
+} ecs_worker_iter_t;
 
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
@@ -2829,7 +2831,6 @@ typedef struct ecs_filter_iter_t {
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
-    ecs_page_iter_t page_iter;
     ecs_query_table_node_t *node;
     int32_t sparse_smallest;
     int32_t sparse_first;
@@ -2885,103 +2886,51 @@ typedef struct ecs_iter_cache_t {
     bool match_indices_alloc;
 } ecs_iter_cache_t;
 
+/* Private iterator data. Used by iterator implementations to keep track of
+ * progress & to provide builtin storage. */
+typedef struct ecs_iter_private_t {
+    union {
+        ecs_term_iter_t term;
+        ecs_filter_iter_t filter;
+        ecs_query_iter_t query;
+        ecs_rule_iter_t rule;
+        ecs_snapshot_iter_t snapshot;
+        ecs_page_iter_t page;
+        ecs_worker_iter_t worker;
+    } iter;                       /* Iterator specific data */
+
+    ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
+} ecs_iter_private_t;
+
 /** Iterator.
- * Contains all data necessary to iterate entities and component data. Iterators
- * can be used without knowledge about the components being iterated. This makes 
- * it possible for code like serializers and language bindings to inspect them.
- *
- * Each iterable object in flecs has an "iter" and a "next" function that are 
- * used to obtain an iterator and iterate through the results. For example:
- *
- *   ecs_query_t *q = ...;
- *  
- *   // Create iterator
- *   ecs_iter_t it = ecs_query_iter(q);
- *  
- *   // Iterate results
- *   while (ecs_query_next(&it)) { }
- *
- * For each time the "next" function returns true, there are "count" entities to
- * iterate, with the entity ids stored in the "entities" array:
- *
- *   while (ecs_query_next(&it)) { 
- *     for (int i = 0; i < it.count; i ++) {
- *       printf("entity matched: %u\n", it.entities[i]);
- *     }
- *   }
- *
- *
- * It is guaranteed that each entity returned by a single "next" call has the
- * same components. The type of the current batch of entities is accessible
- * through the "type" member.
- *
- * Component data is accessible through the "ptrs" member which contains an
- * array where each element stores the component data for a query term. For
- * example, the following expression accesses a component value for the 2nd 
- * term, 10th entity of type "Position": ((Position*)it.ptrs[1])[9];
- *
- * For convenience and safety checking applications should use ecs_term():
- *
- *   Position *p = ecs_term(&it, Position, 2);
- * 
- * Note that terms start counting from 1.
- *
- * This shows a typical example of iterating two components:
- *
- *   while (ecs_query_next(&it)) { 
- *     Position *p = ecs_term(&it, Position, 1);
- *     Velocity *v = ecs_term(&it, Velocity, 2);
- *  
- *     for (int i = 0; i < it.count; i ++) {
- *       p[i].x += v[i].x;
- *       p[i].y += v[i].y;
- *     }
- *   }
- *
- * When an iterator has terms with a subject that is different from the entity
- * being matched, the component data is provided as a pointer (vs. an array). An
- * example of a query with such a term is the following:
- *
- *   Position, Velocity, MaxSpeed(Game)
- * 
- * Here the 3rd term is explicitly matched on the "Game" entity. As a result
- * MaxSpeed will be provided as a pointer to Game's component, as is shown here:
- *
- *   while (ecs_query_next(&it)) { 
- *     Position *p = ecs_term(&it, Position, 1);
- *     Velocity *v = ecs_term(&it, Velocity, 2);
- *     MaxSpeed *s = ecs_term(&it, MaxSpeed, 3);
- *  
- *     for (int i = 0; i < it.count; i ++) {
- *       p[i].x += max(v[i].x, s->value);
- *       p[i].y += max(v[i].y, s->value);
- *     }
- *   }
  */
 struct ecs_iter_t {
+    /* World */
     ecs_world_t *world;           /* The world */
-    ecs_world_t *real_world;      /* Actual world. This differs from world when using threads.  */
-    ecs_entity_t system;          /* The current system (if applicable) */
-    ecs_entity_t event;           /* The event (if applicable) */
-    ecs_id_t event_id;            /* The (component) id for the event */
-    ecs_entity_t self;            /* Self entity (if set) */
+    ecs_world_t *real_world;      /* Actual world. This differs from world when in staged mode */
 
+    /* Matched data */
+    ecs_entity_t *entities;       /* Entity identifiers */
+    void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
+    ecs_size_t *sizes;            /* Component sizes */
     ecs_table_t *table;           /* Current table */
     ecs_type_t type;              /* Current type */
     ecs_table_t *other_table;     /* Prev or next table when adding/removing */
-
     ecs_id_t *ids;                /* (Component) ids */
+    ecs_entity_t *variables;      /* Values of variables (if any) */
     int32_t *columns;             /* Query term to table column mapping */
     ecs_entity_t *subjects;       /* Subject (source) entities */
-    ecs_size_t *sizes;            /* Component sizes */
-    void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
-    char **variable_names;        /* Names of variables (if any) */
-    ecs_entity_t *variables;      /* Values of variables (if any) */
-
     int32_t *match_indices;       /* Indices of current match for term. Allows an iterator to iterate
                                    * all permutations of wildcards in query. */
-    ecs_ref_t *references;
+    ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
 
+    /* Source information */
+    ecs_entity_t system;          /* The system (if applicable) */
+    ecs_entity_t event;           /* The event (if applicable) */
+    ecs_id_t event_id;            /* The (component) id for the event */
+    ecs_entity_t self;            /* Self entity (if set for system) */
+
+    /* Query information */
     ecs_term_t *terms;            /* Terms of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_count;           /* Number of terms in query */
@@ -2989,41 +2938,36 @@ struct ecs_iter_t {
                                    * This field will be set to the 'index' field
                                    * of a trigger/observer term. */
     int32_t variable_count;       /* Number of variables for query */
-    
-    ecs_entity_t *entities;       /* Entity identifiers */
+    char **variable_names;        /* Names of variables (if any) */
 
+    /* Context */
     void *param;                  /* Param passed to ecs_run */
     void *ctx;                    /* System context */
     void *binding_ctx;            /* Binding context */
+
+    /* Time */
     FLECS_FLOAT delta_time;       /* Time elapsed since last frame */
     FLECS_FLOAT delta_system_time;/* Time elapsed since last system invocation */
 
+    /* Iterator counters */
     int32_t frame_offset;         /* Offset relative to start of iteration */
     int32_t offset;               /* Offset relative to current table */
     int32_t count;                /* Number of entities to iterate */
     int32_t instance_count;       /* Number of entities to iterate before next table */
-    int32_t total_count;          /* Number of entities in table */
 
+    /* Iterator flags */
     bool is_valid;                /* Set to true after first next() */
     bool is_filter;               /* When true, data fields are not set */
     bool is_instanced;            /* When true, owned terms are always returned as arrays */
     bool has_shared;              /* Iterator may set this when iterator has shared terms */
 
-    ecs_ids_t *triggered_by;      /* Component(s) that triggered the system */
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
 
+    ecs_iter_private_t priv;      /* Private data */
+
+    /* Chained iterators */
     ecs_iter_next_action_t next;  /* Next function to use for iterator */
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
-
-    union {
-        ecs_term_iter_t term;
-        ecs_filter_iter_t filter;
-        ecs_query_iter_t query;
-        ecs_rule_iter_t rule;
-        ecs_snapshot_iter_t snapshot;
-    } iter;                       /* Iterator specific data */
-
-    ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5801,23 +5745,6 @@ ecs_iter_t ecs_query_iter(
     const ecs_world_t *world,
     ecs_query_t *query);  
 
-/** Iterate over a query.
- * This operation is similar to ecs_query_iter, but starts iterating from a
- * specified offset, and will not iterate more than limit entities.
- *
- * @param world The world or stage, when iterating in readonly mode.
- * @param query The query to iterate.
- * @param offset The number of entities to skip.
- * @param limit The maximum number of entities to iterate.
- * @return The query iterator.
- */
-FLECS_API
-ecs_iter_t ecs_query_iter_page(
-    const ecs_world_t *world,
-    ecs_query_t *query,
-    int32_t offset,
-    int32_t limit);  
-
 /** Progress the query iterator.
  * This operation progresses the query iterator to the next table. The 
  * iterator must have been initialized with `ecs_query_iter`. This operation 
@@ -5837,27 +5764,6 @@ bool ecs_query_next(
 FLECS_API
 bool ecs_query_next_instanced(
     ecs_iter_t *iter);
-
-/** Progress the query iterator for a worker thread.
- * This operation is similar to ecs_query_next, but provides the ability to 
- * divide entities up across multiple worker threads. The operation accepts a
- * current thread id and a total thread id, which is used to determine which
- * subset of entities should be assigned to the current thread.
- *
- * Current should be less than total, and there should be as many as total
- * threads. If there are less entities in a table than there are threads, only
- * as many threads as there are entities will iterate that table.
- *
- * @param it The iterator.
- * @param stage_current Id of current stage.
- * @param stage_count Total number of stages.
- * @returns True if more data is available, false if not.
- */
-FLECS_API
-bool ecs_query_next_worker(
-    ecs_iter_t *it,
-    int32_t stage_current,
-    int32_t stage_count);
 
 /** Returns whether the query data changed since the last iteration.
  * This operation must be invoked before obtaining the iterator, as this will
@@ -6100,6 +6006,73 @@ bool ecs_iter_next(
  */
 FLECS_API
 bool ecs_iter_count(
+    ecs_iter_t *it);
+
+/** Create a paged iterator.
+ * Paged iterators limit the results to those starting from 'offset', and will
+ * return at most 'limit' results.
+ * 
+ * The iterator must be iterated with ecs_page_next.
+ * 
+ * A paged iterator acts as a passthrough for data exposed by the parent
+ * iterator, so that any data provided by the parent will also be provided by
+ * the paged iterator.
+ * 
+ * @param it The source iterator.
+ * @param offset The number of entities to skip.
+ * @param limit The maximum number of entities to iterate.
+ * @return A page iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_page_iter(
+    ecs_iter_t *it,
+    int32_t offset,
+    int32_t limit);
+
+/** Progress a paged iterator.
+ * Progresses an iterator created by ecs_page_iter.
+ * 
+ * @param it The iterator.
+ * @return true if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_page_next(
+    ecs_iter_t *it);
+
+/** Create a worker iterator.
+ * Worker iterators can be used to equally divide the number of matched entities 
+ * across N resources (usually threads). Each resource will process the total
+ * number of matched entities divided by 'count'.
+ * 
+ * Entities are distributed across resources such that the distribution is
+ * stable between queries. Two queries that match the same table are guaranteed
+ * to match the same entities in that table.
+ * 
+ * The iterator must be iterated with ecs_worker_next.
+ * 
+ * A worker iterator acts as a passthrough for data exposed by the parent
+ * iterator, so that any data provided by the parent will also be provided by
+ * the worker iterator.
+ * 
+ * @param it The source iterator.
+ * @param index The index of the current resource.
+ * @param count The total number of resources to divide entities to.
+ * @return A worker iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_worker_iter(
+    ecs_iter_t *it,
+    int32_t index,
+    int32_t count);
+
+/** Progress a worker iterator.
+ * Progresses an iterator created by ecs_worker_iter.
+ * 
+ * @param it The iterator.
+ * @return true if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_worker_next(
     ecs_iter_t *it);
 
 /** Obtain data for a query term.
@@ -16200,18 +16173,6 @@ flecs::entity component(
     return result;
 }
 
-/* Register component with existing entity id */
-template <typename T>
-void component_for_id(flecs::world_t *world, flecs::id_t id) {
-    flecs::entity result = component<T>(world, nullptr, true, id);
-
-    ecs_assert(result.id() == id, ECS_INTERNAL_ERROR, NULL);
-
-    if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world, result);
-    }
-}
-
 template <typename T>
 flecs::entity_t type_id() {
     return _::cpp_type<T>::id();
@@ -18014,23 +17975,11 @@ public:
     void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), 
             ecs_query_next_instanced);
-    } 
-
-    template <typename Func>
-    void each_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
-            ecs_query_next_worker, stage_current, stage_count);
     }
 
     template <typename Func>
     void iter(Func&& func) const { 
         iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
-    template <typename Func>
-    void iter_worker(int32_t stage_current, int32_t stage_count, Func&& func) const {
-        iterate<_::iter_invoker>(std::forward<Func>(func), 
-            ecs_query_next_worker, stage_current, stage_count);
     }
 
 private:

@@ -2398,3 +2398,56 @@ void Query_no_instancing_w_shared() {
 
     ecs_fini(world);
 }
+
+void Query_query_iter_frame_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = TagA, }
+        },
+    });
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_entity_t e5 = ecs_new(world, TagA);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+    ecs_add(world, e5, TagC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 0);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e1);
+    test_assert(it.entities[1] == e2);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 2);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e3);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.frame_offset, 4);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}

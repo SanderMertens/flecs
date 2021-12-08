@@ -2850,23 +2850,6 @@ ecs_iter_t ecs_query_iter(
     const ecs_world_t *world,
     ecs_query_t *query);  
 
-/** Iterate over a query.
- * This operation is similar to ecs_query_iter, but starts iterating from a
- * specified offset, and will not iterate more than limit entities.
- *
- * @param world The world or stage, when iterating in readonly mode.
- * @param query The query to iterate.
- * @param offset The number of entities to skip.
- * @param limit The maximum number of entities to iterate.
- * @return The query iterator.
- */
-FLECS_API
-ecs_iter_t ecs_query_iter_page(
-    const ecs_world_t *world,
-    ecs_query_t *query,
-    int32_t offset,
-    int32_t limit);  
-
 /** Progress the query iterator.
  * This operation progresses the query iterator to the next table. The 
  * iterator must have been initialized with `ecs_query_iter`. This operation 
@@ -2886,27 +2869,6 @@ bool ecs_query_next(
 FLECS_API
 bool ecs_query_next_instanced(
     ecs_iter_t *iter);
-
-/** Progress the query iterator for a worker thread.
- * This operation is similar to ecs_query_next, but provides the ability to 
- * divide entities up across multiple worker threads. The operation accepts a
- * current thread id and a total thread id, which is used to determine which
- * subset of entities should be assigned to the current thread.
- *
- * Current should be less than total, and there should be as many as total
- * threads. If there are less entities in a table than there are threads, only
- * as many threads as there are entities will iterate that table.
- *
- * @param it The iterator.
- * @param stage_current Id of current stage.
- * @param stage_count Total number of stages.
- * @returns True if more data is available, false if not.
- */
-FLECS_API
-bool ecs_query_next_worker(
-    ecs_iter_t *it,
-    int32_t stage_current,
-    int32_t stage_count);
 
 /** Returns whether the query data changed since the last iteration.
  * This operation must be invoked before obtaining the iterator, as this will
@@ -3149,6 +3111,73 @@ bool ecs_iter_next(
  */
 FLECS_API
 bool ecs_iter_count(
+    ecs_iter_t *it);
+
+/** Create a paged iterator.
+ * Paged iterators limit the results to those starting from 'offset', and will
+ * return at most 'limit' results.
+ * 
+ * The iterator must be iterated with ecs_page_next.
+ * 
+ * A paged iterator acts as a passthrough for data exposed by the parent
+ * iterator, so that any data provided by the parent will also be provided by
+ * the paged iterator.
+ * 
+ * @param it The source iterator.
+ * @param offset The number of entities to skip.
+ * @param limit The maximum number of entities to iterate.
+ * @return A page iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_page_iter(
+    ecs_iter_t *it,
+    int32_t offset,
+    int32_t limit);
+
+/** Progress a paged iterator.
+ * Progresses an iterator created by ecs_page_iter.
+ * 
+ * @param it The iterator.
+ * @return true if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_page_next(
+    ecs_iter_t *it);
+
+/** Create a worker iterator.
+ * Worker iterators can be used to equally divide the number of matched entities 
+ * across N resources (usually threads). Each resource will process the total
+ * number of matched entities divided by 'count'.
+ * 
+ * Entities are distributed across resources such that the distribution is
+ * stable between queries. Two queries that match the same table are guaranteed
+ * to match the same entities in that table.
+ * 
+ * The iterator must be iterated with ecs_worker_next.
+ * 
+ * A worker iterator acts as a passthrough for data exposed by the parent
+ * iterator, so that any data provided by the parent will also be provided by
+ * the worker iterator.
+ * 
+ * @param it The source iterator.
+ * @param index The index of the current resource.
+ * @param count The total number of resources to divide entities to.
+ * @return A worker iterator.
+ */
+FLECS_API
+ecs_iter_t ecs_worker_iter(
+    ecs_iter_t *it,
+    int32_t index,
+    int32_t count);
+
+/** Progress a worker iterator.
+ * Progresses an iterator created by ecs_worker_iter.
+ * 
+ * @param it The iterator.
+ * @return true if iterator has more results, false if not.
+ */
+FLECS_API
+bool ecs_worker_next(
     ecs_iter_t *it);
 
 /** Obtain data for a query term.
