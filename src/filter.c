@@ -1869,7 +1869,7 @@ bool ecs_filter_next_instanced(
 
 done:
 error:
-    flecs_iter_fini(it);
+    ecs_iter_fini(it);
     return false;
 
 yield:

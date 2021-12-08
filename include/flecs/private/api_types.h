@@ -268,7 +268,8 @@ struct ecs_iter_t {
     ecs_iter_private_t priv;      /* Private data */
 
     /* Chained iterators */
-    ecs_iter_next_action_t next;  /* Next function to use for iterator */
+    ecs_iter_next_action_t next;  /* Function to progress iterator */
+    ecs_iter_fini_action_t fini;  /* Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 };
 

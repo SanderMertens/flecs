@@ -88,7 +88,7 @@ void observer_callback(ecs_iter_t *it) {
     }
 
 done:
-    flecs_iter_fini(&user_it);
+    ecs_iter_fini(&user_it);
 }
 
 ecs_entity_t ecs_observer_init(

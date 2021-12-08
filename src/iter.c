@@ -37,11 +37,15 @@ void flecs_iter_init(
     it->is_valid = true;
 }
 
-void flecs_iter_fini(
+void ecs_iter_fini(
     ecs_iter_t *it)
 {
     ecs_check(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
     it->is_valid = false;
+
+    if (it->fini) {
+        it->fini(it);
+    }
 
     FINI_CACHE(it, ids);
     FINI_CACHE(it, columns);

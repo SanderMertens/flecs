@@ -4322,5 +4322,7 @@ void Rules_rule_iter_frame_offset() {
 
     test_bool(ecs_rule_next(&it), false);
 
+    ecs_rule_fini(q);
+
     ecs_fini(world);
 }

@@ -2864,6 +2864,7 @@ ecs_iter_t ecs_rule_iter(
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.is_filter = rule->filter.filter;
+    result.columns = it->columns; /* prevent alloc */
 
     return result;
 }
@@ -2876,10 +2877,11 @@ void ecs_rule_iter_free(
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
     ecs_os_free(it->variables);
+    iter->columns = NULL;
     it->registers = NULL;
     it->columns = NULL;
     it->op_ctx = NULL;
-    flecs_iter_fini(iter);
+    ecs_iter_fini(iter);
 }
 
 /* Edge case: if the filter has the same variable for both predicate and

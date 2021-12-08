@@ -1874,7 +1874,7 @@ void flecs_query_notify(
 void flecs_iter_init(
     ecs_iter_t *it);
 
-void flecs_iter_fini(
+void ecs_iter_fini(
     ecs_iter_t *it);
 
 void flecs_iter_populate_data(
@@ -13350,7 +13350,7 @@ void observer_callback(ecs_iter_t *it) {
     }
 
 done:
-    flecs_iter_fini(&user_it);
+    ecs_iter_fini(&user_it);
 }
 
 ecs_entity_t ecs_observer_init(
@@ -16598,7 +16598,7 @@ bool ecs_query_next_instanced(
 
 done:
 error:
-    flecs_iter_fini(it);
+    ecs_iter_fini(it);
     return false;
     
 yield:
@@ -16661,11 +16661,15 @@ void flecs_iter_init(
     it->is_valid = true;
 }
 
-void flecs_iter_fini(
+void ecs_iter_fini(
     ecs_iter_t *it)
 {
     ecs_check(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
     it->is_valid = false;
+
+    if (it->fini) {
+        it->fini(it);
+    }
 
     FINI_CACHE(it, ids);
     FINI_CACHE(it, columns);
@@ -17231,6 +17235,10 @@ bool ecs_page_next(
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
 
+        if (!chain_it->table) {
+            goto yield; /* Task query */
+        }
+
         int32_t offset = iter->offset;
         int32_t limit = iter->limit;
         if (!(offset || limit)) {
@@ -17267,6 +17275,7 @@ bool ecs_page_next(
         }
     } while (it->count == 0);
 
+yield:
     return true;
 done:
 error:
@@ -22704,7 +22713,7 @@ bool ecs_filter_next_instanced(
 
 done:
 error:
-    flecs_iter_fini(it);
+    ecs_iter_fini(it);
     return false;
 
 yield:
@@ -32979,6 +32988,7 @@ ecs_iter_t ecs_rule_iter(
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.is_filter = rule->filter.filter;
+    result.columns = it->columns; /* prevent alloc */
 
     return result;
 }
@@ -32991,10 +33001,11 @@ void ecs_rule_iter_free(
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
     ecs_os_free(it->variables);
+    iter->columns = NULL;
     it->registers = NULL;
     it->columns = NULL;
     it->op_ctx = NULL;
-    flecs_iter_fini(iter);
+    ecs_iter_fini(iter);
 }
 
 /* Edge case: if the filter has the same variable for both predicate and
@@ -40384,6 +40395,7 @@ ecs_entity_t ecs_lookup_child(
             char *cur_name = ids[i].value;
             if (cur_name && !ecs_os_strcmp(cur_name, name)) {
                 ecs_filter_fini(&f);
+                ecs_iter_fini(&it);
                 return it.entities[i];
             }
         }

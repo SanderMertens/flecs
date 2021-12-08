@@ -380,6 +380,7 @@ ecs_entity_t ecs_lookup_child(
             char *cur_name = ids[i].value;
             if (cur_name && !ecs_os_strcmp(cur_name, name)) {
                 ecs_filter_fini(&f);
+                ecs_iter_fini(&it);
                 return it.entities[i];
             }
         }

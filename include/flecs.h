@@ -161,7 +161,7 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 #define ECS_MAX_ADD_REMOVE (32)
 
 /* Maximum number of terms cached in static arrays */
-#define ECS_TERM_CACHE_SIZE (8)
+#define ECS_TERM_CACHE_SIZE (4)
 
 /* Maximum number of terms in desc (larger, as these are temp objects) */
 #define ECS_TERM_DESC_CACHE_SIZE (16)
@@ -212,6 +212,14 @@ typedef void (*ecs_iter_init_action_t)(
  */
 typedef bool (*ecs_iter_next_action_t)(
     ecs_iter_t *it);  
+
+/** Function prototype for freeing an iterator.
+ * Free iterator resources.
+ * 
+ * @param it The iterator to free.
+ */
+typedef void (*ecs_iter_fini_action_t)(
+    ecs_iter_t *it); 
 
 /** Callback used for sorting components */
 typedef int (*ecs_order_by_action_t)(
@@ -3096,6 +3104,22 @@ void ecs_iter_poly(
  */
 FLECS_API
 bool ecs_iter_next(
+    ecs_iter_t *it);
+
+/** Cleanup iterator resources.
+ * This operation cleans up any resources associated with the iterator. 
+ * Iterators may contain allocated resources when the number of matched terms
+ * exceeds ECS_TERM_CACHE_SIZE and/or when the source for the iterator requires
+ * to keep state while iterating.
+ * 
+ * This operation should only be used when an iterator is not iterated until
+ * completion (next has not yet returned false). When an iterator is iterated
+ * until completion, resources are automatically freed.
+ * 
+ * @param it The iterator.
+ */
+FLECS_API
+void ecs_iter_fini(
     ecs_iter_t *it);
 
 /** Count number of matched entities in query.
