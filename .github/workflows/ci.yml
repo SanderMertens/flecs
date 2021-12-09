@@ -20,22 +20,11 @@ jobs:
           ./setup.bat
 
       - name: build flecs (debug)
-        run: bake/bake --strict --cfg debug
-        
-      - name: build flecs (release)
-        run: bake/bake --strict --cfg release        
+        run: bake/bake --strict --cfg debug    
 
       - name: build examples (debug)
         run: |
+          bake/bake examples/os_api/bake --strict --cfg debug
           bake/bake examples/c --strict --cfg debug
           bake/bake examples/cpp --strict --cfg debug
-          bake/bake examples/os_api/stdcpp --strict --cfg debug
-          bake/bake examples/os_api/bake --strict --cfg debug
 
-      - name: build examples (release)
-        run: |
-          bake/bake examples/c --strict --cfg release
-          bake/bake examples/cpp --strict --cfg release
-          bake/bake examples/os_api/stdcpp --strict --cfg release
-          bake/bake examples/os_api/bake --strict --cfg release
-          echo %ERRORLEVEL%
