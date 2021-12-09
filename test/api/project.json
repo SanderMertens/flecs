@@ -1272,7 +1272,10 @@
                 "paged_iter_w_shared_comp",
                 "worker_iter_w_shared_comp",
                 "paged_iter_w_task_query",
-                "worker_iter_w_task_query"
+                "worker_iter_w_task_query",
+                "iter_1_term_no_alloc",
+                "iter_cache_size_terms_no_alloc",
+                "iter_lt_cache_size_terms_alloc"
             ]
         }, {
             "id": "Pairs",

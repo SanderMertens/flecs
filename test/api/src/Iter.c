@@ -1138,3 +1138,106 @@ void Iter_worker_iter_w_task_query() {
 
     ecs_fini(world);
 }
+
+    ecs_id_t ids[ECS_TERM_CACHE_SIZE];
+    int32_t columns[ECS_TERM_CACHE_SIZE];
+    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
+    ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
+    void *ptrs[ECS_TERM_CACHE_SIZE];
+    int32_t match_indices[ECS_TERM_CACHE_SIZE];
+
+void Iter_iter_1_term_no_alloc() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    });
+
+    ecs_new(world, TagA);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids == it.priv.cache.ids);
+    test_assert(it.columns == it.priv.cache.columns);
+    test_assert(it.subjects == it.priv.cache.subjects);
+    test_assert(it.sizes == it.priv.cache.sizes);
+    test_assert(it.ptrs == it.priv.cache.ptrs);
+    test_assert(it.match_indices == it.priv.cache.match_indices);
+
+    ecs_iter_fini(&it);
+
+    ecs_fini(world);
+}
+
+void Iter_iter_cache_size_terms_no_alloc() {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ECS_TERM_CACHE_SIZE, 4);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { TagB }, { TagC }, { TagD }}
+    });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids == it.priv.cache.ids);
+    test_assert(it.columns == it.priv.cache.columns);
+    test_assert(it.subjects == it.priv.cache.subjects);
+    test_assert(it.sizes == it.priv.cache.sizes);
+    test_assert(it.ptrs == it.priv.cache.ptrs);
+    test_assert(it.match_indices == it.priv.cache.match_indices);
+
+    ecs_iter_fini(&it);
+
+    ecs_fini(world);
+}
+
+void Iter_iter_lt_cache_size_terms_alloc() {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ECS_TERM_CACHE_SIZE, 4);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { TagB }, { TagC }, { TagD }, { TagE }}
+    });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+    ecs_add(world, e, TagE);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(ecs_filter_next(&it), true);
+    test_assert(it.ids != it.priv.cache.ids);
+    test_assert(it.columns != it.priv.cache.columns);
+    test_assert(it.subjects != it.priv.cache.subjects);
+    test_assert(it.sizes != it.priv.cache.sizes);
+    test_assert(it.ptrs != it.priv.cache.ptrs);
+    test_assert(it.match_indices != it.priv.cache.match_indices);
+
+    ecs_iter_fini(&it);
+
+    ecs_fini(world);
+}

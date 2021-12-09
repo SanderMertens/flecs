@@ -1209,6 +1209,9 @@ void Iter_paged_iter_w_shared_comp(void);
 void Iter_worker_iter_w_shared_comp(void);
 void Iter_paged_iter_w_task_query(void);
 void Iter_worker_iter_w_task_query(void);
+void Iter_iter_1_term_no_alloc(void);
+void Iter_iter_cache_size_terms_no_alloc(void);
+void Iter_iter_lt_cache_size_terms_alloc(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6923,6 +6926,18 @@ bake_test_case Iter_testcases[] = {
     {
         "worker_iter_w_task_query",
         Iter_worker_iter_w_task_query
+    },
+    {
+        "iter_1_term_no_alloc",
+        Iter_iter_1_term_no_alloc
+    },
+    {
+        "iter_cache_size_terms_no_alloc",
+        Iter_iter_cache_size_terms_no_alloc
+    },
+    {
+        "iter_lt_cache_size_terms_alloc",
+        Iter_iter_lt_cache_size_terms_alloc
     }
 };
 
@@ -11279,7 +11294,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        16,
+        19,
         Iter_testcases
     },
     {

@@ -2,7 +2,7 @@
 
 #define INIT_CACHE(it, f, term_count)\
     if (!it->f && term_count) {\
-        if (term_count < ECS_TERM_CACHE_SIZE) {\
+        if (term_count <= ECS_TERM_CACHE_SIZE) {\
             it->f = it->priv.cache.f;\
             it->priv.cache.f##_alloc = false;\
         } else {\
