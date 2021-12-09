@@ -1134,6 +1134,9 @@ void Filter_filter_no_this_tag_2_ents_1_not(void);
 void Filter_filter_no_this_component_2_ents_1_not(void);
 void Filter_filter_no_this_component_1_not(void);
 void Filter_filter_iter_frame_offset(void);
+void Filter_filter_1_term_no_alloc(void);
+void Filter_filter_cache_size_terms_no_alloc(void);
+void Filter_filter_lt_cache_size_terms_no_alloc(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6636,6 +6639,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_frame_offset",
         Filter_filter_iter_frame_offset
+    },
+    {
+        "filter_1_term_no_alloc",
+        Filter_filter_1_term_no_alloc
+    },
+    {
+        "filter_cache_size_terms_no_alloc",
+        Filter_filter_cache_size_terms_no_alloc
+    },
+    {
+        "filter_lt_cache_size_terms_no_alloc",
+        Filter_filter_lt_cache_size_terms_no_alloc
     }
 };
 
@@ -11280,7 +11295,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        112,
+        115,
         Filter_testcases
     },
     {

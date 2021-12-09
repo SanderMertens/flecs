@@ -1139,13 +1139,6 @@ void Iter_worker_iter_w_task_query() {
     ecs_fini(world);
 }
 
-    ecs_id_t ids[ECS_TERM_CACHE_SIZE];
-    int32_t columns[ECS_TERM_CACHE_SIZE];
-    ecs_entity_t subjects[ECS_TERM_CACHE_SIZE];
-    ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
-    void *ptrs[ECS_TERM_CACHE_SIZE];
-    int32_t match_indices[ECS_TERM_CACHE_SIZE];
-
 void Iter_iter_1_term_no_alloc() {
     ecs_world_t *world = ecs_init();
 
@@ -1168,6 +1161,8 @@ void Iter_iter_1_term_no_alloc() {
     test_assert(it.match_indices == it.priv.cache.match_indices);
 
     ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -1202,6 +1197,8 @@ void Iter_iter_cache_size_terms_no_alloc() {
     test_assert(it.match_indices == it.priv.cache.match_indices);
 
     ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -1238,6 +1235,8 @@ void Iter_iter_lt_cache_size_terms_alloc() {
     test_assert(it.match_indices != it.priv.cache.match_indices);
 
     ecs_iter_fini(&it);
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }

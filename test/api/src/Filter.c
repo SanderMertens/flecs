@@ -5243,3 +5243,67 @@ void Filter_filter_iter_frame_offset() {
 
     ecs_fini(world);
 }
+
+void Filter_filter_1_term_no_alloc() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = TagA, }
+        },
+    }), 0);
+
+    test_assert(f.term_cache == f.terms);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_cache_size_terms_no_alloc() {
+    ecs_world_t *world = ecs_mini();
+
+    test_int(ECS_TERM_CACHE_SIZE, 4);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { TagB }, { TagC }, { TagD }}
+    }), 0);
+
+    test_assert(f.term_cache == f.terms);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_lt_cache_size_terms_no_alloc() {
+    ecs_world_t *world = ecs_mini();
+
+    test_int(ECS_TERM_CACHE_SIZE, 4);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { TagB }, { TagC }, { TagD }, { TagE }}
+    }), 0);
+
+    test_assert(f.term_cache != f.terms);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

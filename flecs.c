@@ -1874,9 +1874,6 @@ void flecs_query_notify(
 void flecs_iter_init(
     ecs_iter_t *it);
 
-void ecs_iter_fini(
-    ecs_iter_t *it);
-
 void flecs_iter_populate_data(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -21708,7 +21705,7 @@ int ecs_filter_init(
     /* Copy term resources. */
     if (term_count) {
         if (!filter_out->expr) {
-            if (term_count < ECS_TERM_CACHE_SIZE) {
+            if (term_count <= ECS_TERM_CACHE_SIZE) {
                 filter_out->terms = filter_out->term_cache;
                 filter_out->term_cache_used = true;
             } else {

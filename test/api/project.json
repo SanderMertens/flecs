@@ -1193,7 +1193,10 @@
                 "filter_no_this_tag_2_ents_1_not",
                 "filter_no_this_component_2_ents_1_not",
                 "filter_no_this_component_1_not",
-                "filter_iter_frame_offset"
+                "filter_iter_frame_offset",
+                "filter_1_term_no_alloc",
+                "filter_cache_size_terms_no_alloc",
+                "filter_lt_cache_size_terms_no_alloc"
             ]
         }, {
             "id": "Query",
