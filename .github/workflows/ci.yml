@@ -77,10 +77,8 @@ jobs:
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
-          cd bake\build-Windows
-          nmake
-          cd ..
-          ./bake setup --local
+          cd bake
+          ./setup.bat
 
       - name: build flecs (debug)
         run: bake/bake --strict --cfg debug

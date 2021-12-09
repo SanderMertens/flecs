@@ -156,10 +156,12 @@ bool ecs_stop_threads(
     signal_workers(world);
 
     /* Join all threads with main */
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_os_thread_join(stage->thread);
-        stage->thread = 0;
-    });
+    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+    int32_t i, count = ecs_vector_count(world->worker_stages);
+    for (i = 0; i < count; i ++) {
+        ecs_os_thread_join(stages[i].thread);
+        stages[i].thread = 0;
+    }
 
     world->quit_workers = false;
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
