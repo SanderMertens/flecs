@@ -23,7 +23,7 @@ void* worker(void *arg) {
 
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
-
+ 
         ecs_run_pipeline(
             (ecs_world_t*)stage, 
             world->pipeline, 

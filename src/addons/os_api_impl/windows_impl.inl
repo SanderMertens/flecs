@@ -16,7 +16,10 @@ void* win_thread_join(
     ecs_os_thread_t thr)
 {
     HANDLE *thread = (HANDLE*)(uintptr_t)thr;
-    WaitForSingleObject(thread, INFINITE);
+    DWORD r = WaitForSingleObject(*thread, INFINITE);
+    if (r == WAIT_FAILED) {
+        ecs_err("win_thread_join: WaitForSingleObject failed");
+    }
     ecs_os_free(thread);
     return NULL;
 }
