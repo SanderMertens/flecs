@@ -138,7 +138,7 @@ private:
 public:
     using filter_base::filter_base;
 
-    filter() : filter_base() { }
+    filter() : filter_base() { } // necessary not not confuse msvc
 
     filter(const filter& obj) : filter_base(obj) { }
 
@@ -265,7 +265,7 @@ inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
 }
 
 // filter_base implementation
-inline filter_base::operator filter<>() const {
+inline filter_base::operator flecs::filter<> () const {
     flecs::filter<> f;
     ecs_filter_copy(&f.m_filter, &this->m_filter);
     f.m_filter_ptr = &f.m_filter;
