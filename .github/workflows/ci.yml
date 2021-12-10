@@ -8,7 +8,7 @@ jobs:
     runs-on: windows-latest
 
     strategy:
-      fail-fast: false
+      fail-fast: true
 
     steps:
       - uses: actions/checkout@v2
@@ -16,15 +16,20 @@ jobs:
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
-          cd bake
-          ./setup.bat
-
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
       - name: build flecs (debug)
-        run: bake/bake --strict --cfg debug    
+        run: bake/bake --strict --cfg debug
+        
+      - name: build flecs (release)
+        run: bake/bake --strict --cfg release        
 
       - name: build examples (debug)
         run: |
-          bake/bake examples/os_api/bake --strict --cfg debug
-          bake/bake examples/c --strict --cfg debug
-          bake/bake examples/cpp --strict --cfg debug
+          bake/bake examples --strict --cfg debug
 
+      - name: build examples (release)
+        run: |
+          bake/bake examples --strict --cfg debug
