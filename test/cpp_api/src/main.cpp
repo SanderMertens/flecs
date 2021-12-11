@@ -354,6 +354,7 @@ void Query_sort_by(void);
 void Query_changed(void);
 void Query_orphaned(void);
 void Query_default_ctor(void);
+void Query_default_ctor_no_assign(void);
 void Query_expr_w_template(void);
 void Query_query_type_w_template(void);
 void Query_compare_term_id(void);
@@ -558,6 +559,7 @@ void Filter_term_each_pair_type(void);
 void Filter_term_each_pair_id(void);
 void Filter_term_each_pair_relation_wildcard(void);
 void Filter_term_each_pair_object_wildcard(void);
+void Filter_default_ctor_no_assign(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -2092,6 +2094,10 @@ bake_test_case Query_testcases[] = {
         Query_default_ctor
     },
     {
+        "default_ctor_no_assign",
+        Query_default_ctor_no_assign
+    },
+    {
         "expr_w_template",
         Query_expr_w_template
     },
@@ -2881,6 +2887,10 @@ bake_test_case Filter_testcases[] = {
     {
         "term_each_pair_object_wildcard",
         Filter_term_each_pair_object_wildcard
+    },
+    {
+        "default_ctor_no_assign",
+        Filter_default_ctor_no_assign
     }
 };
 
@@ -3633,7 +3643,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        53,
+        54,
         Query_testcases
     },
     {
@@ -3668,7 +3678,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        7,
+        8,
         Filter_testcases
     },
     {

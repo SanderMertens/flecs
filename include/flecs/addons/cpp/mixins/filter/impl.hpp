@@ -88,7 +88,9 @@ struct filter_base {
     /** Free the filter.
      */
     ~filter_base() {
-        ecs_filter_fini(&m_filter);
+        if ((&m_filter == m_filter_ptr) && m_filter_ptr) {
+            ecs_filter_fini(&m_filter);
+        }
     }
 
     template <typename Func>
@@ -135,6 +137,8 @@ private:
 
 public:
     using filter_base::filter_base;
+
+    filter() : filter_base() { }
 
     filter(const filter& obj) : filter_base(obj) { }
 

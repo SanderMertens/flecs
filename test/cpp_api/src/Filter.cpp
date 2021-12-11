@@ -162,3 +162,10 @@ void Filter_term_each_pair_object_wildcard() {
 
     test_int(count, 3);
 }
+
+void Filter_default_ctor_no_assign() {
+    flecs::filter<> f;
+    
+    // Make sure code compiles & works
+    test_assert(true);
+}

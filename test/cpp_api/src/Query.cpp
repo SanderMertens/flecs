@@ -1663,3 +1663,10 @@ void Query_un_instanced_query_w_base_iter() {
         test_int(p.y, 85);
     }));
 }
+
+void Query_default_ctor_no_assign() {
+    flecs::query<> q;
+
+    // Make sure code compiles & works
+    test_assert(true);
+}
