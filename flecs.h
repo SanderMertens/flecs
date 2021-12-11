@@ -17607,7 +17607,7 @@ private:
 public:
     using filter_base::filter_base;
 
-    filter() : filter_base();
+    filter() : filter_base() { }
 
     filter(const filter& obj) : filter_base(obj) { }
 
