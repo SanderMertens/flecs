@@ -754,7 +754,7 @@ void SystemPeriodic_1_type_1_and_1_or() {
     test_int(ctx.s[0][1], 0);
 
     /* Now repeat test, with entities that have Position_1 */
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);

@@ -606,7 +606,7 @@ void Pairs_on_add_pair() {
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));  
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Velocity));
 
     test_int(ctx.count, 1);
@@ -686,7 +686,7 @@ void Pairs_on_remove_pair() {
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));  
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
     ecs_remove_pair(world, e, ecs_id(Rel), ecs_id(Velocity));
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

@@ -302,7 +302,7 @@ void SystemCascade_add_after_match() {
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 1);
 
@@ -374,7 +374,7 @@ void SystemCascade_adopt_after_match() {
     ecs_add_pair(world, e3, EcsChildOf, parent);
     ecs_add_pair(world, e4, EcsChildOf, parent);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 1);
 
@@ -671,7 +671,7 @@ void SystemCascade_custom_relation_add_after_match() {
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 1);
 
@@ -744,7 +744,7 @@ void SystemCascade_custom_relation_adopt_after_match() {
     ecs_add_pair(world, e3, Rel, parent);
     ecs_add_pair(world, e4, Rel, parent);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 1);
 

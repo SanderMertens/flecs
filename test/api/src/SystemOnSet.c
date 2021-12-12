@@ -85,7 +85,7 @@ void SystemOnSet_set_1_of_1() {
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 0);
     test_int(ctx.invoked, 0);
@@ -148,7 +148,7 @@ void SystemOnSet_set_1_of_2() {
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
@@ -210,7 +210,7 @@ void SystemOnSet_set_1_of_3() {
     test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
@@ -227,7 +227,7 @@ void SystemOnSet_set_1_of_3() {
     test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Mass, {10});
     test_int(ctx.invoked, 1);
@@ -322,7 +322,7 @@ void SystemOnSet_set_1_of_3_1_from_base() {
     test_int(ctx.c[0][2], ecs_id(Mass));
     test_int(ctx.s[0][2], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Mass, {10});
     test_int(ctx.invoked, 1);
@@ -437,7 +437,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
@@ -712,7 +712,7 @@ void SystemOnSet_set_optional() {
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Velocity, {10, 20});
     test_int(ctx.invoked, 1);
@@ -753,7 +753,7 @@ void SystemOnSet_set_from_nothing() {
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
     ecs_set(world, e, Velocity, {10, 20});
     test_int(ctx.invoked, 0);
 

@@ -675,7 +675,7 @@ void System_w_FromParent_add_component_after_match_and_rematch() {
     ecs_set(world, parent, Mass, {2});
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -734,7 +734,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ecs_set(world, Parent, Mass, {2});
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -803,7 +803,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     test_int(ctx.count, 0);
 
     /* Now a rematch of tables need to happen again, since parent has changed */
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_progress(world, 1);
 
     test_int(ctx.count, 2);
@@ -1289,7 +1289,7 @@ void System_w_FromParent_realloc_after_match() {
      * or reference freed memory and use the old value. */
     ecs_set(world, parent, Mass, {3});
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 1);
 
