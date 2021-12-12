@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
             ecs_set(ecs, mammoth_freighter, Defense, {300});
 
         ecs_entity_t frigate = ecs_new_prefab(ecs, "Frigate");
-        ecs_add_pair(ecs, frigate, EcsIsA, frigate);
+        ecs_add_pair(ecs, frigate, EcsIsA, spaceship);
         ecs_set(ecs, frigate, Attack, {100});
         ecs_set(ecs, frigate, Defense, {75});
         ecs_set(ecs, frigate, ImpulseSpeed, {125});
