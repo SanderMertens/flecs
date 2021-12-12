@@ -34,7 +34,9 @@
 
 #ifdef FLECS_PLECS
 
+#ifndef FLECS_PARSER
 #define FLECS_PARSER
+#endif
 
 #ifndef FLECS_PLECS_H
 #define FLECS_PLECS_H

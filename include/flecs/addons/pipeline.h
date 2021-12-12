@@ -19,7 +19,9 @@
 #define FLECS_MODULE
 #endif
 
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H

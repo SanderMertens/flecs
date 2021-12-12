@@ -3701,7 +3701,6 @@ typedef struct ecs_world_info_t {
 extern "C" {
 #endif
 
-
 #ifdef __cplusplus
 }
 #endif
@@ -7238,7 +7237,9 @@ void FlecsTimerImport(
 #define FLECS_MODULE
 #endif
 
+#ifndef FLECS_SYSTEM
 #define FLECS_SYSTEM
+#endif
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
@@ -8986,7 +8987,9 @@ int ecs_meta_from_desc(
 
 #ifdef FLECS_PLECS
 
+#ifndef FLECS_PARSER
 #define FLECS_PARSER
+#endif
 
 #ifndef FLECS_PLECS_H
 #define FLECS_PLECS_H
