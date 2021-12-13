@@ -1453,7 +1453,7 @@ int scan_variables(
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
     size_t var_count = flecs_itosize(rule->variable_count);
-    qsort(rule->variables, var_count, sizeof(ecs_rule_var_t), compare_variable);
+    ecs_qsort(rule->variables, var_count, sizeof(ecs_rule_var_t), compare_variable);
 
     /* Iterate variables to correct ids after sort */
     for (i = 0; i < rule->variable_count; i ++) {

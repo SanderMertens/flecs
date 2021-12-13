@@ -215,7 +215,7 @@ void TransitiveRules_trans_constrained_x_y() {
     char *expect =
     HEAD "term: (LocatedIn,Universe),Location,Location"
     LINE "subj: Earth,Earth,Universe"
-    LINE "vars: X=Earth,Y=Universe"
+    LINE "vars: Y=Universe,X=Earth"
     LINE;
 
     char *result = ecs_iter_str(&it);

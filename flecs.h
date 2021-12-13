@@ -210,7 +210,8 @@ typedef int32_t ecs_size_t;
 #define ECS_ALIGN(size, alignment) (ecs_size_t)((((((size_t)size) - 1) / ((size_t)alignment)) + 1) * ((size_t)alignment))
 
 /* Simple utility for determining the max of two values */
-#define ECS_MAX(a, b) ((a > b) ? a : b)
+#define ECS_MAX(a, b) (((a) > (b)) ? a : b)
+#define ECS_MIN(a, b) (((a) < (b)) ? a : b)
 
 /* Abstraction on top of C-style casts so that C functions can be used in C++
  * code without producing warnings */
@@ -2179,6 +2180,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_memset_t(ptr, value, T) ecs_os_memset(ptr, value, ECS_SIZEOF(T))
 #define ecs_os_memset_n(ptr, value, T, count) ecs_os_memset(ptr, value, ECS_SIZEOF(T) * count)
+#define ecs_os_zeromem(ptr) ecs_os_memset(ptr, 0, ECS_SIZEOF(*ptr))
 
 #define ecs_os_memdup_t(ptr, T) ecs_os_memdup(ptr, ECS_SIZEOF(T))
 #define ecs_os_memdup_n(ptr, T, count) ecs_os_memdup(ptr, ECS_SIZEOF(T) * count)
@@ -17610,7 +17612,7 @@ private:
 public:
     using filter_base::filter_base;
 
-    filter() : filter_base() { }
+    filter() : filter_base() { } // necessary not not confuse msvc
 
     filter(const filter& obj) : filter_base(obj) { }
 
@@ -17737,7 +17739,7 @@ inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
 }
 
 // filter_base implementation
-inline filter_base::operator filter<>() const {
+inline filter_base::operator flecs::filter<> () const {
     flecs::filter<> f;
     ecs_filter_copy(&f.m_filter, &this->m_filter);
     f.m_filter_ptr = &f.m_filter;

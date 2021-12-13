@@ -1177,36 +1177,97 @@ void Rules_join_by_predicate() {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
+    char *result, *expect;
 
-    test_true(test_iter(&it, ecs_rule_next, &(test_iter_result_t){
-        .entity_names = {
-            "Luke", "Luke", "Luke", "Luke",
-            "Yoda", "Yoda",
-            "Leia", "Leia",
-        },
-        .term_ids_expr = {
-            {"(Parent,DarthVader)", "(Parent,DarthVader)"}, {"(Parent,DarthVader)", "(Parent,DarthVader)"},
-            {"(Enemy,DarthVader)", "(Enemy,DarthVader)"},   {"(Enemy,DarthVader)", "(Enemy,DarthVader)"},
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Luke"
+    LINE "vars: X=Parent,Y=Luke"
+    LINE "this:"
+    LINE "    - Luke"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-            {"(Enemy,DarthVader)", "(Enemy,DarthVader)"},   {"(Enemy,DarthVader)", "(Enemy,DarthVader)"},
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Luke"
+    LINE "vars: X=Parent,Y=Luke"
+    LINE "this:"
+    LINE "    - Leia"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-            {"(Parent,DarthVader)", "(Parent,DarthVader)"}, {"(Parent,DarthVader)", "(Parent,DarthVader)"},
-        },
-        .variables = {
-            {x_var, .entity_names = {
-                "Parent", "Parent",
-                "Enemy", "Enemy",
-                "Enemy", "Enemy",
-                "Parent", "Parent",
-            }},
-            {y_var, .entity_names = {
-                "Luke", "Leia",
-                "Luke", "Yoda",
-                "Luke", "Yoda",
-                "Luke", "Leia",
-            }}
-        }
-    }));
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Enemy,DarthVader),(Enemy,DarthVader)"
+    LINE "subj: 0,Luke"
+    LINE "vars: X=Enemy,Y=Luke"
+    LINE "this:"
+    LINE "    - Luke"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Enemy,DarthVader),(Enemy,DarthVader)"
+    LINE "subj: 0,Luke"
+    LINE "vars: X=Enemy,Y=Luke"
+    LINE "this:"
+    LINE "    - Yoda"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Leia"
+    LINE "vars: X=Parent,Y=Leia"
+    LINE "this:"
+    LINE "    - Luke"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Leia"
+    LINE "vars: X=Parent,Y=Leia"
+    LINE "this:"
+    LINE "    - Leia"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Enemy,DarthVader),(Enemy,DarthVader)"
+    LINE "subj: 0,Yoda"
+    LINE "vars: X=Enemy,Y=Yoda"
+    LINE "this:"
+    LINE "    - Luke"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Enemy,DarthVader),(Enemy,DarthVader)"
+    LINE "subj: 0,Yoda"
+    LINE "vars: X=Enemy,Y=Yoda"
+    LINE "this:"
+    LINE "    - Yoda"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
     
@@ -3907,7 +3968,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Bob),(Likes,Alice)"
     LINE "subj: Alice,*"
-    LINE "vars: Y=Bob,X=Alice,Z=*"
+    LINE "vars: Y=Bob,Z=*,X=Alice"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -3916,7 +3977,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Bob),(Likes,Jane)"
     LINE "subj: Jane,John"
-    LINE "vars: Y=Bob,X=Jane,Z=John"
+    LINE "vars: Y=Bob,Z=John,X=Jane"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -3925,7 +3986,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Jane),(Likes,John)"
     LINE "subj: John,*"
-    LINE "vars: Y=Jane,X=John,Z=*"
+    LINE "vars: Y=Jane,Z=*,X=John"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
