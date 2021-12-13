@@ -90,10 +90,9 @@ template <typename E>
 struct event_builder_typed : event_builder_base<event_builder_typed<E>, E> {
 private:
     using Class = event_builder_typed<E>;
-    using Base = event_builder_base<Class, E>;
 
 public:
-    using Base::event_builder_base;
+    using event_builder_base<Class, E>::event_builder_base;
 
     /* Set event data */
     Class& ctx(const E& ptr) {
