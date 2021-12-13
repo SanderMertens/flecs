@@ -337,6 +337,17 @@
                 "create_w_no_template_args"
             ]
         }, {
+            "id": "Event",
+            "testcases": [
+                "evt_1_id_entity",
+                "evt_2_ids_entity",
+                "evt_1_id_table",
+                "evt_2_ids_table",
+                "evt_type",
+                "evt_1_component",
+                "evt_2_components"
+            ]
+        }, {
             "id": "Trigger",
             "testcases": [
                 "on_add",

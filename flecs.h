@@ -10919,6 +10919,7 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using id_t = ecs_id_t;
+using ids_t = ecs_ids_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;
@@ -11384,6 +11385,113 @@ using filter_m_world = filter_m<flecs::world>;
 
 #pragma once
 
+#pragma once
+
+#define ECS_EVENT_DESC_ID_COUNT_MAX (8)
+
+namespace flecs {
+
+// Event builder interface
+struct event_builder {
+    event_builder(flecs::world_t *world, flecs::entity_t event) 
+        : m_world(world)
+        , m_desc{}
+        , m_ids{}
+        , m_ids_array{}
+    {
+        m_desc.event = event;
+    }
+
+    /** Add component to trigger on */
+    template <typename T>
+    event_builder& id() {
+        m_ids.array = m_ids_array;
+        m_ids.array[m_ids.count] = _::cpp_type<T>().id(m_world);
+        m_ids.count ++;
+        return *this;
+    }
+
+    /** Add (component) id to trigger on */
+    event_builder& id(flecs::id_t id) {
+        m_ids.array = m_ids_array;
+        m_ids.array[m_ids.count] = id;
+        m_ids.count ++;
+        return *this;
+    }
+
+    /** Set entity for which to trigger */
+    event_builder& entity(flecs::entity_t e) {
+        ecs_record_t *r = ecs_record_find(m_world, e);
+        
+        /* can't trigger for empty entity */
+        ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
+        ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
+
+        m_desc.table = r->table;
+        m_desc.offset = ECS_RECORD_TO_ROW(r->row);
+        m_desc.count = 1;
+        return *this;
+    }
+
+    /* Set table for which to trigger */
+    event_builder& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
+        m_desc.table = t;
+        m_desc.offset = offset;
+        m_desc.count = count;
+        return *this;
+    }
+
+    void emit() {
+        ecs_assert(m_ids.count != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_desc.table != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_ids.array = m_ids_array;
+        m_desc.ids = &m_ids;
+        m_desc.observable = m_world;
+        ecs_emit(m_world, &m_desc);
+    }
+
+private:
+    flecs::world_t *m_world;
+    ecs_event_desc_t m_desc;
+    flecs::ids_t m_ids;
+    flecs::id_t m_ids_array[ECS_EVENT_DESC_ID_COUNT_MAX];
+};
+
+}
+
+
+namespace flecs {
+
+struct event_builder;
+
+template<typename T>
+struct event_m : mixin<T> { };
+
+/** Event mixin for flecs::world. */
+template<>
+struct event_m<flecs::world> : mixin<flecs::world> {
+  void init() { };
+
+  /** Create a new event.
+   * 
+   * @return Event builder.
+   */
+  flecs::event_builder event(flecs::entity_t event) const;
+
+  /** Create a new event.
+   * 
+   * @return Event builder.
+   */
+  template <typename E>
+  flecs::event_builder event() const;
+};
+
+using event_m_world = event_m<flecs::world>;
+
+} // namespace flecs
+
+#pragma once
+
 namespace flecs {
 
 struct query_base;
@@ -11844,6 +11952,7 @@ using Mixins = mixin_list<
     term_m,
     filter_m,
     query_m,
+    event_m,
     trigger_m,
     observer_m
 #ifdef FLECS_MODULE
@@ -14353,6 +14462,14 @@ struct entity_view : public id {
      * @return Returns the entity type.
      */
     flecs::type type() const;
+
+    /** Return the table.
+     *
+     * @return Returns the entity type.
+     */
+    flecs::table_t* table() const {
+        return ecs_get_table(m_world, m_id);
+    }
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
@@ -17755,6 +17872,25 @@ inline filter_base::operator flecs::filter<> () const {
 
 #pragma once
 
+
+namespace flecs 
+{
+
+// Mixin implementation
+
+inline flecs::event_builder event_m_world::event(flecs::entity_t evt) const {
+    return flecs::event_builder(this->me(), evt);
+}
+
+template <typename E>
+inline flecs::event_builder event_m_world::event() const {
+    return flecs::event_builder(this->me(), _::cpp_type<E>().id(this->me()));
+}
+
+} // namespace flecs
+
+#pragma once
+
 #pragma once
 
 #pragma once
@@ -18148,14 +18284,22 @@ struct trigger_builder_i : term_builder_i<Base> {
         , m_desc(desc)
         , m_event_count(0) { }
 
-    /** Specify when the event(s) for which the trigger run.
-     * @param kind The kind that specifies when the system should be ran.
+    /** Specify the event(s) for when the trigger should run.
+     * @param evt The event.
      */
-    Base& event(entity_t kind) {
-        m_desc->events[m_event_count ++] = kind;
+    Base& event(entity_t evt) {
+        m_desc->events[m_event_count ++] = evt;
         return *this;
     }
 
+    /** Specify the event(s) for when the trigger should run.
+     * @tparam E The event.
+     */
+    template <typename E>
+    Base& event() {
+        m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
+        return *this;
+    }
     /** Associate trigger with entity */
     Base& self(flecs::entity self) {
         m_desc->self = self;
@@ -18267,11 +18411,20 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         , m_desc(desc)
         , m_event_count(0) { }
 
-    /** Specify when the event(s) for which the trigger run.
-     * @param kind The kind that specifies when the system should be ran.
+    /** Specify the event(s) for when the observer should run.
+     * @param evt The event.
      */
-    Base& event(entity_t kind) {
-        m_desc->events[m_event_count ++] = kind;
+    Base& event(entity_t evt) {
+        m_desc->events[m_event_count ++] = evt;
+        return *this;
+    }
+
+    /** Specify the event(s) for when the observer should run.
+     * @tparam E The event.
+     */
+    template <typename E>
+    Base& event() {
+        m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
         return *this;
     }
 

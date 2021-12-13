@@ -18,11 +18,20 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         , m_desc(desc)
         , m_event_count(0) { }
 
-    /** Specify when the event(s) for which the trigger run.
-     * @param kind The kind that specifies when the system should be ran.
+    /** Specify the event(s) for when the observer should run.
+     * @param evt The event.
      */
-    Base& event(entity_t kind) {
-        m_desc->events[m_event_count ++] = kind;
+    Base& event(entity_t evt) {
+        m_desc->events[m_event_count ++] = evt;
+        return *this;
+    }
+
+    /** Specify the event(s) for when the observer should run.
+     * @tparam E The event.
+     */
+    template <typename E>
+    Base& event() {
+        m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
         return *this;
     }
 

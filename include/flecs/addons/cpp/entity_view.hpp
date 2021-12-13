@@ -89,6 +89,14 @@ struct entity_view : public id {
      */
     flecs::type type() const;
 
+    /** Return the table.
+     *
+     * @return Returns the entity type.
+     */
+    flecs::table_t* table() const {
+        return ecs_get_table(m_world, m_id);
+    }
+
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
      *   void(*)(flecs::id id)

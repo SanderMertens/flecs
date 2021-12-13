@@ -320,6 +320,15 @@ void System_un_instanced_query_w_singleton_iter(void);
 void System_un_instanced_query_w_base_iter(void);
 void System_create_w_no_template_args(void);
 
+// Testsuite 'Event'
+void Event_evt_1_id_entity(void);
+void Event_evt_2_ids_entity(void);
+void Event_evt_1_id_table(void);
+void Event_evt_2_ids_table(void);
+void Event_evt_type(void);
+void Event_evt_1_component(void);
+void Event_evt_2_components(void);
+
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
 void Trigger_on_remove(void);
@@ -1962,6 +1971,37 @@ bake_test_case System_testcases[] = {
     {
         "create_w_no_template_args",
         System_create_w_no_template_args
+    }
+};
+
+bake_test_case Event_testcases[] = {
+    {
+        "evt_1_id_entity",
+        Event_evt_1_id_entity
+    },
+    {
+        "evt_2_ids_entity",
+        Event_evt_2_ids_entity
+    },
+    {
+        "evt_1_id_table",
+        Event_evt_1_id_table
+    },
+    {
+        "evt_2_ids_table",
+        Event_evt_2_ids_table
+    },
+    {
+        "evt_type",
+        Event_evt_type
+    },
+    {
+        "evt_1_component",
+        Event_evt_1_component
+    },
+    {
+        "evt_2_components",
+        Event_evt_2_components
     }
 };
 
@@ -3633,6 +3673,13 @@ static bake_test_suite suites[] = {
         System_testcases
     },
     {
+        "Event",
+        NULL,
+        NULL,
+        7,
+        Event_testcases
+    },
+    {
         "Trigger",
         NULL,
         NULL,
@@ -3748,5 +3795,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 22);
+    return bake_test_run("cpp_api", argc, argv, suites, 23);
 }
