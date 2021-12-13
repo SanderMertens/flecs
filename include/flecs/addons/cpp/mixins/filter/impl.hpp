@@ -94,14 +94,6 @@ struct filter_base {
     }
 
     template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        while (ecs_filter_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }
-
-    template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < m_filter_ptr->term_count; i ++) {
             flecs::term t(m_world, m_filter_ptr->terms[i]);
@@ -131,7 +123,7 @@ protected:
 };
 
 template<typename ... Components>
-struct filter : filter_base {
+struct filter : filter_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
@@ -154,25 +146,17 @@ public:
         return *this;
     }
 
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
-    }
-
 private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        it.is_instanced |= Invoker<Func, Components...>::instanced();
+    ecs_iter_t get_iter() const override {
+        return ecs_filter_iter(m_world, m_filter_ptr);
+    }
 
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(std::move(func)).invoke(&it);
-        }
+    ecs_iter_next_action_t next_action() const override {
+        return ecs_filter_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const override {
+        return ecs_filter_next_instanced;
     }
 };
 

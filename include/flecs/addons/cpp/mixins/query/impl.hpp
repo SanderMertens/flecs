@@ -70,14 +70,6 @@ struct query_base {
     }
 
     template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        while (ecs_query_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }  
-
-    template <typename Func>
     void each_term(const Func& func) {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -117,34 +109,24 @@ protected:
 };
 
 template<typename ... Components>
-struct query final : query_base {
+struct query final : query_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
+    ecs_iter_t get_iter() const override {
+        return ecs_query_iter(m_world, m_query);
+    }
+
+    ecs_iter_next_action_t next_action() const override {
+        return ecs_query_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const override {
+        return ecs_query_next_instanced;
+    }
+
 public:
     using query_base::query_base;
-
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
-            ecs_query_next_instanced);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
-private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        it.is_instanced |= Invoker<Func, Components...>::instanced();
-
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
-        }
-    }
 };
 
 // Mixin implementation

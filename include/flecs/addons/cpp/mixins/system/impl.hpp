@@ -82,8 +82,8 @@ struct system final : entity_base, extendable<system, Mixins>
         return ecs_get_system_ctx(m_world, m_id);
     }
 
-    query_base query() const {
-        return query_base(m_world, ecs_system_get_query(m_world, m_id));
+    flecs::query<> query() const {
+        return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {

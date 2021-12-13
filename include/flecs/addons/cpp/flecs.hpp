@@ -110,6 +110,7 @@ using Mixins = mixin_list<
 #include "ref.hpp"
 #include "entity.hpp"
 #include "invoker.hpp"
+#include "utils/iterable.hpp"
 #include "component.hpp"
 #include "type.hpp"
 

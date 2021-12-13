@@ -15749,6 +15749,41 @@ struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
 
 } // namespace flecs
 
+
+namespace flecs {
+
+template <typename ... Components>
+struct iterable {
+    template <typename Func>
+    void each(Func&& func) const {
+        iterate<_::each_invoker>(std::forward<Func>(func), 
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    void iter(Func&& func) const { 
+        iterate<_::iter_invoker>(std::forward<Func>(func), this->next_action());
+    }
+
+protected:
+    virtual ecs_iter_t get_iter() const = 0;
+    virtual ecs_iter_next_action_t next_action() const = 0;
+    virtual ecs_iter_next_action_t next_each_action() const = 0;
+
+private:
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = this->get_iter();
+        it.is_instanced |= Invoker<Func, Components...>::instanced();
+
+        while (next(&it, std::forward<Args>(args)...)) {
+            Invoker<Func, Components...>(func).invoke(&it);
+        }
+    }
+};
+
+}
+
 #pragma once
 
 namespace flecs {
@@ -17732,14 +17767,6 @@ struct filter_base {
     }
 
     template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        while (ecs_filter_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }
-
-    template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < m_filter_ptr->term_count; i ++) {
             flecs::term t(m_world, m_filter_ptr->terms[i]);
@@ -17769,7 +17796,7 @@ protected:
 };
 
 template<typename ... Components>
-struct filter : filter_base {
+struct filter : filter_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
@@ -17792,25 +17819,17 @@ public:
         return *this;
     }
 
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), ecs_filter_next);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_filter_next);
-    }
-
 private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_filter_iter(m_world, m_filter_ptr);
-        it.is_instanced |= Invoker<Func, Components...>::instanced();
+    ecs_iter_t get_iter() const override {
+        return ecs_filter_iter(m_world, m_filter_ptr);
+    }
 
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(std::move(func)).invoke(&it);
-        }
+    ecs_iter_next_action_t next_action() const override {
+        return ecs_filter_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const override {
+        return ecs_filter_next_instanced;
     }
 };
 
@@ -18134,14 +18153,6 @@ struct query_base {
     }
 
     template <typename Func>
-    void iter(Func&& func) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        while (ecs_query_next(&it)) {
-            _::iter_invoker<Func>(func).invoke(&it);
-        }
-    }  
-
-    template <typename Func>
     void each_term(const Func& func) {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
         ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -18181,34 +18192,24 @@ protected:
 };
 
 template<typename ... Components>
-struct query final : query_base {
+struct query final : query_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
+    ecs_iter_t get_iter() const override {
+        return ecs_query_iter(m_world, m_query);
+    }
+
+    ecs_iter_next_action_t next_action() const override {
+        return ecs_query_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const override {
+        return ecs_query_next_instanced;
+    }
+
 public:
     using query_base::query_base;
-
-    template <typename Func>
-    void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
-            ecs_query_next_instanced);
-    }
-
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), ecs_query_next);
-    }
-
-private:
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = ecs_query_iter(m_world, m_query);
-        it.is_instanced |= Invoker<Func, Components...>::instanced();
-
-        while (next(&it, std::forward<Args>(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
-        }
-    }
 };
 
 // Mixin implementation
@@ -18859,8 +18860,8 @@ struct system final : entity_base, extendable<system, Mixins>
         return ecs_get_system_ctx(m_world, m_id);
     }
 
-    query_base query() const {
-        return query_base(m_world, ecs_system_get_query(m_world, m_id));
+    flecs::query<> query() const {
+        return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(FLECS_FLOAT delta_time = 0.0f, void *param = nullptr) const {
