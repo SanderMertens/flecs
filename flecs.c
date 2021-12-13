@@ -1514,14 +1514,17 @@ do {									\
     if ((Q_N) > 1)							\
 	/* We could check sizeof(Q_N) and use "unsigned", but at least	\
 	 * on x86_64, this has the performance penalty of up to 5%. */	\
-	Q_LOOP(unsigned long, Q_N, Q_LESS, Q_SWAP);			\
+	Q_LOOP(ecs_size_t, Q_N, Q_LESS, Q_SWAP);			\
 } while (0)
 
 void ecs_qsort(
     void *base, 
-    size_t nitems, 
-    size_t size, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
     int (*compar)(const void *, const void*));
+
+#define ecs_qsort_t(base, nitems, T, compar) \
+    ecs_qsort(base, nitems, ECS_SIZEOF(T), compar)
 
 #endif
 
@@ -11653,24 +11656,21 @@ void* _flecs_hashmap_next(
 }
 
 
-#define ELEM(base, i, size) \
-    ECS_OFFSET(base, (size) * (i))
-
 void ecs_qsort(
     void *base, 
-    size_t nitems, 
-    size_t size, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
     int (*compar)(const void *, const void*))
 {
     void *tmp = ecs_os_alloca(size); /* For swap */
 
     #define LESS(i, j) \
-        compar(ELEM(base, i, size), ELEM(base, j, size)) < 0
+        compar(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j)) < 0
 
     #define SWAP(i, j) \
-        ecs_os_memcpy(tmp, ELEM(base, i, size), size),\
-        ecs_os_memcpy(ELEM(base, i, size), ELEM(base, j, size), size),\
-        ecs_os_memcpy(ELEM(base, j, size), tmp, size)
+        ecs_os_memcpy(tmp, ECS_ELEM(base, size, i), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, j), tmp, size)
 
     QSORT(nitems, LESS, SWAP);
 }
@@ -15077,8 +15077,6 @@ void match_tables(
     }
 }
 
-#define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
-
 static
 int32_t qsort_partition(
     ecs_world_t *world,
@@ -15092,7 +15090,7 @@ int32_t qsort_partition(
     ecs_order_by_action_t compare)
 {
     int32_t p = (hi + lo) / 2;
-    void *pivot = ELEM(ptr, elem_size, p);
+    void *pivot = ECS_ELEM(ptr, elem_size, p);
     ecs_entity_t pivot_e = entities[p];
     int32_t i = lo - 1, j = hi + 1;
     void *el;    
@@ -15101,12 +15099,12 @@ repeat:
     {
         do {
             i ++;
-            el = ELEM(ptr, elem_size, i);
+            el = ECS_ELEM(ptr, elem_size, i);
         } while ( compare(entities[i], el, pivot_e, pivot) < 0);
 
         do {
             j --;
-            el = ELEM(ptr, elem_size, j);
+            el = ECS_ELEM(ptr, elem_size, j);
         } while ( compare(entities[j], el, pivot_e, pivot) > 0);
 
         if (i >= j) {
@@ -15116,10 +15114,10 @@ repeat:
         flecs_table_swap(world, table, data, i, j);
 
         if (p == i) {
-            pivot = ELEM(ptr, elem_size, j);
+            pivot = ECS_ELEM(ptr, elem_size, j);
             pivot_e = entities[j];
         } else if (p == j) {
-            pivot = ELEM(ptr, elem_size, i);
+            pivot = ECS_ELEM(ptr, elem_size, i);
             pivot_e = entities[i];
         }
 
@@ -15203,7 +15201,7 @@ const void* ptr_from_helper(
     if (helper->shared) {
         return helper->ptr;
     } else {
-        return ELEM(helper->ptr, helper->elem_size, helper->row);
+        return ECS_ELEM(helper->ptr, helper->elem_size, helper->row);
     }
 }
 
@@ -31807,8 +31805,8 @@ int scan_variables(
     /* Order variables by depth, followed by occurrence. The variable
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
-    size_t var_count = flecs_itosize(rule->variable_count);
-    ecs_qsort(rule->variables, var_count, sizeof(ecs_rule_var_t), compare_variable);
+    int32_t var_count = rule->variable_count;
+    ecs_qsort_t(rule->variables, var_count, ecs_rule_var_t, compare_variable);
 
     /* Iterate variables to correct ids after sort */
     for (i = 0; i < rule->variable_count; i ++) {

@@ -1,24 +1,21 @@
 #include "../private_api.h"
 #include "qsort.h"
 
-#define ELEM(base, i, size) \
-    ECS_OFFSET(base, (size) * (i))
-
 void ecs_qsort(
     void *base, 
-    size_t nitems, 
-    size_t size, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
     int (*compar)(const void *, const void*))
 {
     void *tmp = ecs_os_alloca(size); /* For swap */
 
     #define LESS(i, j) \
-        compar(ELEM(base, i, size), ELEM(base, j, size)) < 0
+        compar(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j)) < 0
 
     #define SWAP(i, j) \
-        ecs_os_memcpy(tmp, ELEM(base, i, size), size),\
-        ecs_os_memcpy(ELEM(base, i, size), ELEM(base, j, size), size),\
-        ecs_os_memcpy(ELEM(base, j, size), tmp, size)
+        ecs_os_memcpy(tmp, ECS_ELEM(base, size, i), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, j), tmp, size)
 
     QSORT(nitems, LESS, SWAP);
 }

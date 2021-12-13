@@ -183,13 +183,16 @@ do {									\
     if ((Q_N) > 1)							\
 	/* We could check sizeof(Q_N) and use "unsigned", but at least	\
 	 * on x86_64, this has the performance penalty of up to 5%. */	\
-	Q_LOOP(unsigned long, Q_N, Q_LESS, Q_SWAP);			\
+	Q_LOOP(ecs_size_t, Q_N, Q_LESS, Q_SWAP);			\
 } while (0)
 
 void ecs_qsort(
     void *base, 
-    size_t nitems, 
-    size_t size, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
     int (*compar)(const void *, const void*));
+
+#define ecs_qsort_t(base, nitems, T, compar) \
+    ecs_qsort(base, nitems, ECS_SIZEOF(T), compar)
 
 #endif

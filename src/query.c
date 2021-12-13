@@ -1109,8 +1109,6 @@ void match_tables(
     }
 }
 
-#define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
-
 static
 int32_t qsort_partition(
     ecs_world_t *world,
@@ -1124,7 +1122,7 @@ int32_t qsort_partition(
     ecs_order_by_action_t compare)
 {
     int32_t p = (hi + lo) / 2;
-    void *pivot = ELEM(ptr, elem_size, p);
+    void *pivot = ECS_ELEM(ptr, elem_size, p);
     ecs_entity_t pivot_e = entities[p];
     int32_t i = lo - 1, j = hi + 1;
     void *el;    
@@ -1133,12 +1131,12 @@ repeat:
     {
         do {
             i ++;
-            el = ELEM(ptr, elem_size, i);
+            el = ECS_ELEM(ptr, elem_size, i);
         } while ( compare(entities[i], el, pivot_e, pivot) < 0);
 
         do {
             j --;
-            el = ELEM(ptr, elem_size, j);
+            el = ECS_ELEM(ptr, elem_size, j);
         } while ( compare(entities[j], el, pivot_e, pivot) > 0);
 
         if (i >= j) {
@@ -1148,10 +1146,10 @@ repeat:
         flecs_table_swap(world, table, data, i, j);
 
         if (p == i) {
-            pivot = ELEM(ptr, elem_size, j);
+            pivot = ECS_ELEM(ptr, elem_size, j);
             pivot_e = entities[j];
         } else if (p == j) {
-            pivot = ELEM(ptr, elem_size, i);
+            pivot = ECS_ELEM(ptr, elem_size, i);
             pivot_e = entities[i];
         }
 
@@ -1235,7 +1233,7 @@ const void* ptr_from_helper(
     if (helper->shared) {
         return helper->ptr;
     } else {
-        return ELEM(helper->ptr, helper->elem_size, helper->row);
+        return ECS_ELEM(helper->ptr, helper->elem_size, helper->row);
     }
 }
 
