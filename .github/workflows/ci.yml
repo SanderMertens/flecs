@@ -3,67 +3,6 @@ name: CI
 on: [ push, pull_request ]
 
 jobs:
-  build-linux:
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
-    env:
-      CC: ${{ matrix.compiler.cc }}
-      CXX: ${{ matrix.compiler.cxx }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler:
-          - cc: gcc-7
-            cxx: g++-7
-          - cc: gcc-8
-            cxx: g++-8
-          - cc: gcc-9
-            cxx: g++-9
-          - cc: gcc-10
-            cxx: g++-10
-          - cc: clang-8
-            cxx: clang++-8
-          - cc: clang-9
-            cxx: clang++-9
-          - cc: clang-10
-            cxx: clang++-10
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: install compiler
-        run: |
-          sudo apt-get install -y ${{ matrix.compiler.cc }}
-          sudo apt-get install -y ${{ matrix.compiler.cxx }}
-      
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs (debug)
-        run: |
-          bake --strict --cfg debug
-
-      - name: build flecs (release)
-        run: |          
-          bake --strict --cfg release
-
-      - name: build examples (debug)
-        run: |
-          bake examples/c --strict --cfg debug
-          bake examples/cpp --strict --cfg debug
-          bake examples/os_api --strict --cfg debug
-          bake examples/os_api/bake --strict --cfg debug
-
-      - name: build examples (release)
-        run: |
-          bake examples/c --strict --cfg release
-          bake examples/cpp --strict --cfg release
-          bake examples/os_api --strict --cfg release
-          bake examples/os_api/bake --strict --cfg release
-
   build-windows:
     timeout-minutes: 20
     runs-on: windows-latest
