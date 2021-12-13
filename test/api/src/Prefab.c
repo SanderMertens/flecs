@@ -2552,11 +2552,9 @@ void Prefab_empty_prefab() {
 }
 
 void Prefab_instanceof_0() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
     install_test_abort();
+    
+    ecs_world_t *world = ecs_mini();
 
     test_expect_abort();
 

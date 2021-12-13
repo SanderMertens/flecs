@@ -20,7 +20,7 @@ void Error_abort_w_param() {
 
 static bool my_abort_called = false;
 static
-void my_abort() {
+void my_abort(void) {
     my_abort_called = true;
 }
 

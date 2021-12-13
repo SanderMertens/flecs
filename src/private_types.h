@@ -531,6 +531,10 @@ typedef struct ecs_store_t {
 
     /* Root table */
     ecs_table_t root;
+
+    /* Reusable id sequence storage to prevent having to do allocs
+     * when generating an id list for a new table */
+    ecs_ids_t id_cache;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */

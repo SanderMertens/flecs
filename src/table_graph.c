@@ -86,22 +86,24 @@ int32_t ensure_columns(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t* ids = ecs_vector_first(table->type, ecs_id_t);
 
-        if (ECS_HAS_ROLE(component, PAIR)) {
-            ecs_entity_t rel = ECS_PAIR_RELATION(component);
-            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+    for (i = 0; i < count; i++) {
+        ecs_id_t id = ids[i];
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(id);
             ecs_ensure(world, rel);
             ecs_ensure(world, obj);
-        } else if (component & ECS_ROLE_MASK) {
-            ecs_entity_t e = ECS_PAIR_OBJECT(component);
+        } else if (id & ECS_ROLE_MASK) {
+            ecs_entity_t e = ECS_PAIR_OBJECT(id);
             ecs_ensure(world, e);
         } else {
-            ecs_ensure(world, component);
+            ecs_ensure(world, id);
         }
-    });
+    }
 
     return count;
 }
@@ -226,11 +228,13 @@ void init_flags(
         /* Does table support component disabling */
         if (ECS_HAS_ROLE(id, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
-        }   
+        }
 
         /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            ecs_poly_assert(world, ecs_world_t);
             ecs_entity_t obj = ecs_pair_object(world, id);
+
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
                 ecs_has_id(world, obj, EcsModule)) 
             {
@@ -282,6 +286,7 @@ ecs_table_t *create_table(
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->id = flecs_sparse_last_id(world->store.tables);
+
     init_table(world, result, entities);
 
 #ifndef NDEBUG
@@ -960,27 +965,32 @@ ecs_table_t* find_or_create(
     ecs_poly_assert(world, ecs_world_t);   
 
     /* Make sure array is ordered and does not contain duplicates */
-    int32_t type_count = ids->count;
+    int32_t id_count = ids->count;
     ecs_id_t *ordered = NULL;
 
-    if (!type_count) {
+    if (!id_count) {
         return &world->store.root;
     }
 
     if (!ecs_entity_array_is_ordered(ids)) {
-        ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
-        ordered = ecs_os_alloca(size);
-        ecs_os_memcpy(ordered, ids->array, size);
-        qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), 
+        if (id_count > world->store.id_cache.count) {
+            ecs_os_free(world->store.id_cache.array);
+            world->store.id_cache.array = ecs_os_malloc_n(ecs_id_t, id_count);
+            world->store.id_cache.count = id_count;
+        }
+
+        ordered = world->store.id_cache.array;
+        ecs_os_memcpy_n(ordered, ids->array, ecs_id_t, id_count);
+        qsort(ordered, (size_t)id_count, sizeof(ecs_entity_t), 
             flecs_entity_compare_qsort);
-        type_count = ecs_entity_array_dedup(ordered, type_count);        
+        id_count = ecs_entity_array_dedup(ordered, id_count);  
     } else {
         ordered = ids->array;
     }
 
     ecs_ids_t ordered_ids = {
         .array = ordered,
-        .count = type_count
+        .count = id_count
     };
 
     ecs_table_t *table;
@@ -1005,10 +1015,10 @@ ecs_table_t* find_or_create(
 
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
-    const ecs_ids_t *components)
+    const ecs_ids_t *ids)
 {
     ecs_poly_assert(world, ecs_world_t);   
-    return find_or_create(world, components);
+    return find_or_create(world, ids);
 }
 
 void flecs_init_root_table(

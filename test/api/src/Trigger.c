@@ -1732,8 +1732,6 @@ void Trigger_on_add_self_superset() {
         .ctx = &ctx
     });
 
-    printf("Filter created\n");
-
     ecs_entity_t base_no_comp = ecs_new_id(world);
     test_int(ctx.invoked, 0);
 
@@ -1747,8 +1745,6 @@ void Trigger_on_add_self_superset() {
     test_null(ctx.param);
     test_int(ctx.e[0], base);
     test_int(ctx.c[0][0], TagA);
-
-    printf("Probe size = %d\n", sizeof(Probe));
 
     ecs_os_zeromem(&ctx);
 
