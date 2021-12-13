@@ -12,8 +12,8 @@ inline flecs::event_builder event_m_world::event(flecs::entity_t evt) const {
 }
 
 template <typename E>
-inline flecs::event_builder event_m_world::event() const {
-    return flecs::event_builder(this->me(), _::cpp_type<E>().id(this->me()));
+inline flecs::event_builder_typed<E> event_m_world::event() const {
+    return flecs::event_builder_typed<E>(this->me(), _::cpp_type<E>().id(this->me()));
 }
 
 } // namespace flecs

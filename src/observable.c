@@ -116,7 +116,7 @@ void ecs_emit(
         .other_table = desc->other_table,
         .offset = row,
         .count = count,
-        .param = desc->param
+        .param = (void*)desc->param
     };
 
     world->event_id ++;

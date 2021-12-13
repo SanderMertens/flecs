@@ -219,6 +219,15 @@ public:
         return m_iter->param;
     }
 
+    /** Access param. 
+     * param contains the pointer passed to the param argument of system::run
+     */
+    template <typename T>
+    T* param() {
+        /* TODO: type check */
+        return static_cast<T*>(m_iter->param);
+    }
+
     /** Obtain mutable handle to entity being iterated over.
      *
      * @param row Row being iterated over.

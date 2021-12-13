@@ -5881,7 +5881,7 @@ typedef struct ecs_event_desc_t {
     int32_t count;
 
     /* Optional context. Assigned to iter param member */
-    void *param;
+    const void *param;
 
     /* Observable (usually the world) */
     ecs_poly_t *observable;
@@ -11392,8 +11392,9 @@ using filter_m_world = filter_m<flecs::world>;
 namespace flecs {
 
 // Event builder interface
-struct event_builder {
-    event_builder(flecs::world_t *world, flecs::entity_t event) 
+template <typename Base, typename E>
+struct event_builder_base {
+    event_builder_base(flecs::world_t *world, flecs::entity_t event)
         : m_world(world)
         , m_desc{}
         , m_ids{}
@@ -11404,7 +11405,7 @@ struct event_builder {
 
     /** Add component to trigger on */
     template <typename T>
-    event_builder& id() {
+    Base& id() {
         m_ids.array = m_ids_array;
         m_ids.array[m_ids.count] = _::cpp_type<T>().id(m_world);
         m_ids.count ++;
@@ -11412,7 +11413,7 @@ struct event_builder {
     }
 
     /** Add (component) id to trigger on */
-    event_builder& id(flecs::id_t id) {
+    Base& id(flecs::id_t id) {
         m_ids.array = m_ids_array;
         m_ids.array[m_ids.count] = id;
         m_ids.count ++;
@@ -11420,7 +11421,7 @@ struct event_builder {
     }
 
     /** Set entity for which to trigger */
-    event_builder& entity(flecs::entity_t e) {
+    Base& entity(flecs::entity_t e) {
         ecs_record_t *r = ecs_record_find(m_world, e);
         
         /* can't trigger for empty entity */
@@ -11434,10 +11435,16 @@ struct event_builder {
     }
 
     /* Set table for which to trigger */
-    event_builder& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
+    Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
         m_desc.table = t;
         m_desc.offset = offset;
         m_desc.count = count;
+        return *this;
+    }
+
+    /* Set event data */
+    Base& ctx(const E* ptr) {
+        m_desc.param = ptr;
         return *this;
     }
 
@@ -11450,11 +11457,36 @@ struct event_builder {
         ecs_emit(m_world, &m_desc);
     }
 
-private:
+protected:
     flecs::world_t *m_world;
     ecs_event_desc_t m_desc;
     flecs::ids_t m_ids;
     flecs::id_t m_ids_array[ECS_EVENT_DESC_ID_COUNT_MAX];
+
+private:
+    operator Base&() {
+        return *static_cast<Base*>(this);
+    }
+};
+
+struct event_builder : event_builder_base<event_builder, void> {
+    using event_builder_base::event_builder_base;
+};
+
+template <typename E>
+struct event_builder_typed : event_builder_base<event_builder_typed<E>, E> {
+private:
+    using Class = event_builder_typed<E>;
+    using Base = event_builder_base<Class, E>;
+
+public:
+    using Base::event_builder_base;
+
+    /* Set event data */
+    Class& ctx(const E& ptr) {
+        this->m_desc.param = &ptr;
+        return *this;
+    }
 };
 
 }
@@ -11463,6 +11495,9 @@ private:
 namespace flecs {
 
 struct event_builder;
+
+template <typename E>
+struct event_builder_typed;
 
 template<typename T>
 struct event_m : mixin<T> { };
@@ -11474,16 +11509,18 @@ struct event_m<flecs::world> : mixin<flecs::world> {
 
   /** Create a new event.
    * 
+   * @param evt The event id.
    * @return Event builder.
    */
-  flecs::event_builder event(flecs::entity_t event) const;
+  flecs::event_builder event(flecs::entity_t evt) const;
 
   /** Create a new event.
    * 
+   * @tparam E The event type.
    * @return Event builder.
    */
   template <typename E>
-  flecs::event_builder event() const;
+  flecs::event_builder_typed<E> event() const;
 };
 
 using event_m_world = event_m<flecs::world>;
@@ -13513,6 +13550,15 @@ public:
      */
     void* param() {
         return m_iter->param;
+    }
+
+    /** Access param. 
+     * param contains the pointer passed to the param argument of system::run
+     */
+    template <typename T>
+    T* param() {
+        /* TODO: type check */
+        return static_cast<T*>(m_iter->param);
     }
 
     /** Obtain mutable handle to entity being iterated over.
@@ -17883,8 +17929,8 @@ inline flecs::event_builder event_m_world::event(flecs::entity_t evt) const {
 }
 
 template <typename E>
-inline flecs::event_builder event_m_world::event() const {
-    return flecs::event_builder(this->me(), _::cpp_type<E>().id(this->me()));
+inline flecs::event_builder_typed<E> event_m_world::event() const {
+    return flecs::event_builder_typed<E>(this->me(), _::cpp_type<E>().id(this->me()));
 }
 
 } // namespace flecs

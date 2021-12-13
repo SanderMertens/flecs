@@ -2982,7 +2982,7 @@ typedef struct ecs_event_desc_t {
     int32_t count;
 
     /* Optional context. Assigned to iter param member */
-    void *param;
+    const void *param;
 
     /* Observable (usually the world) */
     ecs_poly_t *observable;

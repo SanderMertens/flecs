@@ -328,6 +328,9 @@ void Event_evt_2_ids_table(void);
 void Event_evt_type(void);
 void Event_evt_1_component(void);
 void Event_evt_2_components(void);
+void Event_evt_void_ctx(void);
+void Event_evt_typed_ctx(void);
+void Event_evt_implicit_typed_ctx(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -2002,6 +2005,18 @@ bake_test_case Event_testcases[] = {
     {
         "evt_2_components",
         Event_evt_2_components
+    },
+    {
+        "evt_void_ctx",
+        Event_evt_void_ctx
+    },
+    {
+        "evt_typed_ctx",
+        Event_evt_typed_ctx
+    },
+    {
+        "evt_implicit_typed_ctx",
+        Event_evt_implicit_typed_ctx
     }
 };
 
@@ -3676,7 +3691,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        7,
+        10,
         Event_testcases
     },
     {

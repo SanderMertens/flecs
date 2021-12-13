@@ -209,3 +209,88 @@ void Event_evt_2_components() {
 
     test_int(count, 2);
 }
+
+struct EvtData {
+    int value;
+};
+
+void Event_evt_void_ctx() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto id = ecs.entity();
+    auto e1 = ecs.entity().add(id);
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id(id)
+        .iter([&](flecs::iter& it) {
+            test_assert(it.entity(0) == e1);
+            test_int(it.param<EvtData>()->value, 10);
+            count ++;
+        });
+
+    EvtData data = {10};
+
+    ecs.event(evt)
+        .id(id)
+        .entity(e1)
+        .ctx(&data)
+        .emit();
+
+    test_int(count, 1);
+}
+
+void Event_evt_typed_ctx() {
+    flecs::world ecs;
+
+    auto id = ecs.entity();
+    auto e1 = ecs.entity().add(id);
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event<EvtData>()
+        .id(id)
+        .iter([&](flecs::iter& it) {
+            test_assert(it.entity(0) == e1);
+            test_int(it.param<EvtData>()->value, 10);
+            count ++;
+        });
+
+    ecs.event<EvtData>()
+        .id(id)
+        .entity(e1)
+        .ctx(EvtData{10})
+        .emit();
+
+    test_int(count, 1);
+}
+
+void Event_evt_implicit_typed_ctx() {
+    flecs::world ecs;
+
+    auto id = ecs.entity();
+    auto e1 = ecs.entity().add(id);
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event<EvtData>()
+        .id(id)
+        .iter([&](flecs::iter& it) {
+            test_assert(it.entity(0) == e1);
+            test_int(it.param<EvtData>()->value, 10);
+            count ++;
+        });
+
+    ecs.event<EvtData>()
+        .id(id)
+        .entity(e1)
+        .ctx({10})
+        .emit();
+
+    test_int(count, 1);
+}

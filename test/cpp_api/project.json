@@ -345,7 +345,10 @@
                 "evt_2_ids_table",
                 "evt_type",
                 "evt_1_component",
-                "evt_2_components"
+                "evt_2_components",
+                "evt_void_ctx",
+                "evt_typed_ctx",
+                "evt_implicit_typed_ctx"
             ]
         }, {
             "id": "Trigger",
