@@ -1086,6 +1086,10 @@ typedef struct ecs_store_t {
 
     /* Root table */
     ecs_table_t root;
+
+    /* Reusable id sequence storage to prevent having to do allocs
+     * when generating an id list for a new table */
+    ecs_ids_t id_cache;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
@@ -1322,6 +1326,205 @@ void _ecs_table_cache_fini_delete_all(
 #ifdef __cplusplus
 }
 #endif
+
+#endif
+
+/* From: https://github.com/svpv/qsort/blob/master/qsort.h 
+ * Use custom qsort implementation rather than relying on the version in libc to
+ * ensure that results are consistent across platforms.
+ */
+
+/*
+ * Copyright (c) 2013, 2017 Alexey Tourbin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * This is a traditional Quicksort implementation which mostly follows
+ * [Sedgewick 1978].  Sorting is performed entirely on array indices,
+ * while actual access to the array elements is abstracted out with the
+ * user-defined `LESS` and `SWAP` primitives.
+ *
+ * Synopsis:
+ *	QSORT(N, LESS, SWAP);
+ * where
+ *	N - the number of elements in A[];
+ *	LESS(i, j) - compares A[i] to A[j];
+ *	SWAP(i, j) - exchanges A[i] with A[j].
+ */
+
+#ifndef QSORT_H
+#define QSORT_H
+
+/* Sort 3 elements. */
+#define Q_SORT3(q_a1, q_a2, q_a3, Q_LESS, Q_SWAP) \
+do {					\
+    if (Q_LESS(q_a2, q_a1)) {		\
+	if (Q_LESS(q_a3, q_a2))		\
+	    Q_SWAP(q_a1, q_a3);		\
+	else {				\
+	    Q_SWAP(q_a1, q_a2);		\
+	    if (Q_LESS(q_a3, q_a2))	\
+		Q_SWAP(q_a2, q_a3);	\
+	}				\
+    }					\
+    else if (Q_LESS(q_a3, q_a2)) {	\
+	Q_SWAP(q_a2, q_a3);		\
+	if (Q_LESS(q_a2, q_a1))		\
+	    Q_SWAP(q_a1, q_a2);		\
+    }					\
+} while (0)
+
+/* Partition [q_l,q_r] around a pivot.  After partitioning,
+ * [q_l,q_j] are the elements that are less than or equal to the pivot,
+ * while [q_i,q_r] are the elements greater than or equal to the pivot. */
+#define Q_PARTITION(q_l, q_r, q_i, q_j, Q_UINT, Q_LESS, Q_SWAP)		\
+do {									\
+    /* The middle element, not to be confused with the median. */	\
+    Q_UINT q_m = q_l + ((q_r - q_l) >> 1);				\
+    /* Reorder the second, the middle, and the last items.		\
+     * As [Edelkamp Weiss 2016] explain, using the second element	\
+     * instead of the first one helps avoid bad behaviour for		\
+     * decreasingly sorted arrays.  This method is used in recent	\
+     * versions of gcc's std::sort, see gcc bug 58437#c13, although	\
+     * the details are somewhat different (cf. #c14). */		\
+    Q_SORT3(q_l + 1, q_m, q_r, Q_LESS, Q_SWAP);				\
+    /* Place the median at the beginning. */				\
+    Q_SWAP(q_l, q_m);							\
+    /* Partition [q_l+2, q_r-1] around the median which is in q_l.	\
+     * q_i and q_j are initially off by one, they get decremented	\
+     * in the do-while loops. */					\
+    q_i = q_l + 1; q_j = q_r;						\
+    while (1) {								\
+	do q_i++; while (Q_LESS(q_i, q_l));				\
+	do q_j--; while (Q_LESS(q_l, q_j));				\
+	if (q_i >= q_j) break; /* Sedgewick says "until j < i" */	\
+	Q_SWAP(q_i, q_j);						\
+    }									\
+    /* Compensate for the i==j case. */					\
+    q_i = q_j + 1;							\
+    /* Put the median to its final place. */				\
+    Q_SWAP(q_l, q_j);							\
+    /* The median is not part of the left subfile. */			\
+    q_j--;								\
+} while (0)
+
+/* Insertion sort is applied to small subfiles - this is contrary to
+ * Sedgewick's suggestion to run a separate insertion sort pass after
+ * the partitioning is done.  The reason I don't like a separate pass
+ * is that it triggers extra comparisons, because it can't see that the
+ * medians are already in their final positions and need not be rechecked.
+ * Since I do not assume that comparisons are cheap, I also do not try
+ * to eliminate the (q_j > q_l) boundary check. */
+#define Q_INSERTION_SORT(q_l, q_r, Q_UINT, Q_LESS, Q_SWAP)		\
+do {									\
+    Q_UINT q_i, q_j;							\
+    /* For each item starting with the second... */			\
+    for (q_i = q_l + 1; q_i <= q_r; q_i++)				\
+    /* move it down the array so that the first part is sorted. */	\
+    for (q_j = q_i; q_j > q_l && (Q_LESS(q_j, q_j - 1)); q_j--)		\
+	Q_SWAP(q_j, q_j - 1);						\
+} while (0)
+
+/* When the size of [q_l,q_r], i.e. q_r-q_l+1, is greater than or equal to
+ * Q_THRESH, the algorithm performs recursive partitioning.  When the size
+ * drops below Q_THRESH, the algorithm switches to insertion sort.
+ * The minimum valid value is probably 5 (with 5 items, the second and
+ * the middle items, the middle itself being rounded down, are distinct). */
+#define Q_THRESH 16
+
+/* The main loop. */
+#define Q_LOOP(Q_UINT, Q_N, Q_LESS, Q_SWAP)				\
+do {									\
+    Q_UINT q_l = 0;							\
+    Q_UINT q_r = (Q_N) - 1;						\
+    Q_UINT q_sp = 0; /* the number of frames pushed to the stack */	\
+    struct { Q_UINT q_l, q_r; }						\
+	/* On 32-bit platforms, to sort a "char[3GB+]" array,		\
+	 * it may take full 32 stack frames.  On 64-bit CPUs,		\
+	 * though, the address space is limited to 48 bits.		\
+	 * The usage is further reduced if Q_N has a 32-bit type. */	\
+	q_st[sizeof(Q_UINT) > 4 && sizeof(Q_N) > 4 ? 48 : 32];		\
+    while (1) {								\
+	if (q_r - q_l + 1 >= Q_THRESH) {				\
+	    Q_UINT q_i, q_j;						\
+	    Q_PARTITION(q_l, q_r, q_i, q_j, Q_UINT, Q_LESS, Q_SWAP);	\
+	    /* Now have two subfiles: [q_l,q_j] and [q_i,q_r].		\
+	     * Dealing with them depends on which one is bigger. */	\
+	    if (q_j - q_l >= q_r - q_i)					\
+		Q_SUBFILES(q_l, q_j, q_i, q_r);				\
+	    else							\
+		Q_SUBFILES(q_i, q_r, q_l, q_j);				\
+	}								\
+	else {								\
+	    Q_INSERTION_SORT(q_l, q_r, Q_UINT, Q_LESS, Q_SWAP);		\
+	    /* Pop subfiles from the stack, until it gets empty. */	\
+	    if (q_sp == 0) break;					\
+	    q_sp--;							\
+	    q_l = q_st[q_sp].q_l;					\
+	    q_r = q_st[q_sp].q_r;					\
+	}								\
+    }									\
+} while (0)
+
+/* The missing part: dealing with subfiles.
+ * Assumes that the first subfile is not smaller than the second. */
+#define Q_SUBFILES(q_l1, q_r1, q_l2, q_r2)				\
+do {									\
+    /* If the second subfile is only a single element, it needs		\
+     * no further processing.  The first subfile will be processed	\
+     * on the next iteration (both subfiles cannot be only a single	\
+     * element, due to Q_THRESH). */					\
+    if (q_l2 == q_r2) {							\
+	q_l = q_l1;							\
+	q_r = q_r1;							\
+    }									\
+    else {								\
+	/* Otherwise, both subfiles need processing.			\
+	 * Push the larger subfile onto the stack. */			\
+	q_st[q_sp].q_l = q_l1;						\
+	q_st[q_sp].q_r = q_r1;						\
+	q_sp++;								\
+	/* Process the smaller subfile on the next iteration. */	\
+	q_l = q_l2;							\
+	q_r = q_r2;							\
+    }									\
+} while (0)
+
+/* And now, ladies and gentlemen, may I proudly present to you... */
+#define QSORT(Q_N, Q_LESS, Q_SWAP)					\
+do {									\
+    if ((Q_N) > 1)							\
+	/* We could check sizeof(Q_N) and use "unsigned", but at least	\
+	 * on x86_64, this has the performance penalty of up to 5%. */	\
+	Q_LOOP(ecs_size_t, Q_N, Q_LESS, Q_SWAP);			\
+} while (0)
+
+void ecs_qsort(
+    void *base, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
+    int (*compar)(const void *, const void*));
+
+#define ecs_qsort_t(base, nitems, T, compar) \
+    ecs_qsort(base, nitems, ECS_SIZEOF(T), compar)
 
 #endif
 
@@ -2205,22 +2408,24 @@ int32_t ensure_columns(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
+    int32_t i, count = ecs_vector_count(table->type);
+    ecs_id_t* ids = ecs_vector_first(table->type, ecs_id_t);
 
-        if (ECS_HAS_ROLE(component, PAIR)) {
-            ecs_entity_t rel = ECS_PAIR_RELATION(component);
-            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+    for (i = 0; i < count; i++) {
+        ecs_id_t id = ids[i];
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            ecs_entity_t obj = ECS_PAIR_OBJECT(id);
             ecs_ensure(world, rel);
             ecs_ensure(world, obj);
-        } else if (component & ECS_ROLE_MASK) {
-            ecs_entity_t e = ECS_PAIR_OBJECT(component);
+        } else if (id & ECS_ROLE_MASK) {
+            ecs_entity_t e = ECS_PAIR_OBJECT(id);
             ecs_ensure(world, e);
         } else {
-            ecs_ensure(world, component);
+            ecs_ensure(world, id);
         }
-    });
+    }
 
     return count;
 }
@@ -2345,11 +2550,13 @@ void init_flags(
         /* Does table support component disabling */
         if (ECS_HAS_ROLE(id, DISABLED)) {
             table->flags |= EcsTableHasDisabled;
-        }   
+        }
 
         /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            ecs_poly_assert(world, ecs_world_t);
             ecs_entity_t obj = ecs_pair_object(world, id);
+
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
                 ecs_has_id(world, obj, EcsModule)) 
             {
@@ -2401,6 +2608,7 @@ ecs_table_t *create_table(
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->id = flecs_sparse_last_id(world->store.tables);
+
     init_table(world, result, entities);
 
 #ifndef NDEBUG
@@ -3079,27 +3287,32 @@ ecs_table_t* find_or_create(
     ecs_poly_assert(world, ecs_world_t);   
 
     /* Make sure array is ordered and does not contain duplicates */
-    int32_t type_count = ids->count;
+    int32_t id_count = ids->count;
     ecs_id_t *ordered = NULL;
 
-    if (!type_count) {
+    if (!id_count) {
         return &world->store.root;
     }
 
     if (!ecs_entity_array_is_ordered(ids)) {
-        ecs_size_t size = ECS_SIZEOF(ecs_entity_t) * type_count;
-        ordered = ecs_os_alloca(size);
-        ecs_os_memcpy(ordered, ids->array, size);
-        qsort(ordered, (size_t)type_count, sizeof(ecs_entity_t), 
+        if (id_count > world->store.id_cache.count) {
+            ecs_os_free(world->store.id_cache.array);
+            world->store.id_cache.array = ecs_os_malloc_n(ecs_id_t, id_count);
+            world->store.id_cache.count = id_count;
+        }
+
+        ordered = world->store.id_cache.array;
+        ecs_os_memcpy_n(ordered, ids->array, ecs_id_t, id_count);
+        qsort(ordered, (size_t)id_count, sizeof(ecs_entity_t), 
             flecs_entity_compare_qsort);
-        type_count = ecs_entity_array_dedup(ordered, type_count);        
+        id_count = ecs_entity_array_dedup(ordered, id_count);  
     } else {
         ordered = ids->array;
     }
 
     ecs_ids_t ordered_ids = {
         .array = ordered,
-        .count = type_count
+        .count = id_count
     };
 
     ecs_table_t *table;
@@ -3124,10 +3337,10 @@ ecs_table_t* find_or_create(
 
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
-    const ecs_ids_t *components)
+    const ecs_ids_t *ids)
 {
     ecs_poly_assert(world, ecs_world_t);   
-    return find_or_create(world, components);
+    return find_or_create(world, ids);
 }
 
 void flecs_init_root_table(
@@ -11443,6 +11656,26 @@ void* _flecs_hashmap_next(
 }
 
 
+void ecs_qsort(
+    void *base, 
+    ecs_size_t nitems, 
+    ecs_size_t size, 
+    int (*compar)(const void *, const void*))
+{
+    void *tmp = ecs_os_alloca(size); /* For swap */
+
+    #define LESS(i, j) \
+        compar(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j)) < 0
+
+    #define SWAP(i, j) \
+        ecs_os_memcpy(tmp, ECS_ELEM(base, size, i), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, i), ECS_ELEM(base, size, j), size),\
+        ecs_os_memcpy(ECS_ELEM(base, size, j), tmp, size)
+
+    QSORT(nitems, LESS, SWAP);
+}
+
+
 /* Roles */
 const ecs_id_t ECS_CASE =      (ECS_ROLE | (0x7Cull << 56));
 const ecs_id_t ECS_SWITCH =    (ECS_ROLE | (0x7Bull << 56));
@@ -11794,6 +12027,7 @@ void fini_store(ecs_world_t *world) {
     flecs_table_free(world, &world->store.root);
     flecs_sparse_clear(world->store.entity_index);
     flecs_hashmap_free(world->store.table_map);
+    ecs_os_free(world->store.id_cache.array);
 }
 
 /* Implementation for iterable mixin */
@@ -11936,7 +12170,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_trace("#[green]release#[reset] build");
 #endif
 
-    ecs_world_t *world = ecs_os_calloc(sizeof(ecs_world_t));
+    ecs_world_t *world = ecs_os_calloc_t(ecs_world_t);
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);
 
@@ -14843,8 +15077,6 @@ void match_tables(
     }
 }
 
-#define ELEM(ptr, size, index) ECS_OFFSET(ptr, size * index)
-
 static
 int32_t qsort_partition(
     ecs_world_t *world,
@@ -14858,7 +15090,7 @@ int32_t qsort_partition(
     ecs_order_by_action_t compare)
 {
     int32_t p = (hi + lo) / 2;
-    void *pivot = ELEM(ptr, elem_size, p);
+    void *pivot = ECS_ELEM(ptr, elem_size, p);
     ecs_entity_t pivot_e = entities[p];
     int32_t i = lo - 1, j = hi + 1;
     void *el;    
@@ -14867,12 +15099,12 @@ repeat:
     {
         do {
             i ++;
-            el = ELEM(ptr, elem_size, i);
+            el = ECS_ELEM(ptr, elem_size, i);
         } while ( compare(entities[i], el, pivot_e, pivot) < 0);
 
         do {
             j --;
-            el = ELEM(ptr, elem_size, j);
+            el = ECS_ELEM(ptr, elem_size, j);
         } while ( compare(entities[j], el, pivot_e, pivot) > 0);
 
         if (i >= j) {
@@ -14882,10 +15114,10 @@ repeat:
         flecs_table_swap(world, table, data, i, j);
 
         if (p == i) {
-            pivot = ELEM(ptr, elem_size, j);
+            pivot = ECS_ELEM(ptr, elem_size, j);
             pivot_e = entities[j];
         } else if (p == j) {
-            pivot = ELEM(ptr, elem_size, i);
+            pivot = ECS_ELEM(ptr, elem_size, i);
             pivot_e = entities[i];
         }
 
@@ -14969,7 +15201,7 @@ const void* ptr_from_helper(
     if (helper->shared) {
         return helper->ptr;
     } else {
-        return ELEM(helper->ptr, helper->elem_size, helper->row);
+        return ECS_ELEM(helper->ptr, helper->elem_size, helper->row);
     }
 }
 
@@ -17603,7 +17835,7 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    ecs_entity_t entities[] = {
+    ecs_id_t entities[] = {
         ecs_id(EcsComponent), 
         ecs_pair(ecs_id(EcsIdentifier), EcsName),
         ecs_pair(ecs_id(EcsIdentifier), EcsSymbol),
@@ -31573,8 +31805,8 @@ int scan_variables(
     /* Order variables by depth, followed by occurrence. The variable
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
-    size_t var_count = flecs_itosize(rule->variable_count);
-    qsort(rule->variables, var_count, sizeof(ecs_rule_var_t), compare_variable);
+    int32_t var_count = rule->variable_count;
+    ecs_qsort_t(rule->variables, var_count, ecs_rule_var_t, compare_variable);
 
     /* Iterate variables to correct ids after sort */
     for (i = 0; i < rule->variable_count; i ++) {
@@ -36709,7 +36941,7 @@ void* worker(void *arg) {
 
     while (!world->quit_workers) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
-
+ 
         ecs_run_pipeline(
             (ecs_world_t*)stage, 
             world->pipeline, 
@@ -36842,10 +37074,12 @@ bool ecs_stop_threads(
     signal_workers(world);
 
     /* Join all threads with main */
-    ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
-        ecs_os_thread_join(stage->thread);
-        stage->thread = 0;
-    });
+    ecs_stage_t *stages = ecs_vector_first(world->worker_stages, ecs_stage_t);
+    int32_t i, count = ecs_vector_count(world->worker_stages);
+    for (i = 0; i < count; i ++) {
+        ecs_os_thread_join(stages[i].thread);
+        stages[i].thread = 0;
+    }
 
     world->quit_workers = false;
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
@@ -37929,7 +38163,10 @@ void* win_thread_join(
     ecs_os_thread_t thr)
 {
     HANDLE *thread = (HANDLE*)(uintptr_t)thr;
-    WaitForSingleObject(thread, INFINITE);
+    DWORD r = WaitForSingleObject(*thread, INFINITE);
+    if (r == WAIT_FAILED) {
+        ecs_err("win_thread_join: WaitForSingleObject failed");
+    }
     ecs_os_free(thread);
     return NULL;
 }

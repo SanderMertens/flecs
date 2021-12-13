@@ -4,6 +4,7 @@ bin
 .vscode
 gcov
 .idea
+*.pdb
 deps
 cmake-build-debug
 bazel-bin

@@ -85,22 +85,14 @@ jobs:
       - name: build flecs (debug)
         run: bake/bake --strict --cfg debug
         
-      - name: build flecs (release)
-        run: bake/bake --strict --cfg release        
+      - name: build flecs (release)  
+        run: bake/bake --strict --cfg release
 
       - name: build examples (debug)
-        run: |
-          bake/bake examples/c --strict --cfg debug
-          bake/bake examples/cpp --strict --cfg debug
-          bake/bake examples/os_api/stdcpp --strict --cfg debug
-          bake/bake examples/os_api/bake --strict --cfg debug
+        run: bake/bake examples --strict --cfg debug
 
       - name: build examples (release)
-        run: |
-          bake/bake examples/c --strict --cfg release
-          bake/bake examples/cpp --strict --cfg release
-          bake/bake examples/os_api/stdcpp --strict --cfg release
-          bake/bake examples/os_api/bake --strict --cfg release
+        run: bake/bake examples --strict --cfg debug
 
   test-unix:
     timeout-minutes: 30
@@ -146,12 +138,17 @@ jobs:
       - name: build flecs
         run: bake/bake --strict
 
-      - name: run tests
-        run: |
-          bake/bake examples/os_api/bake
-          bake/bake run test\cpp_api
-          bake/bake run test\api
-          bake/bake run test\collections
+      - name: test api
+        run: bake/bake run test\api -- -j 4
+
+      - name: test meta
+        run: bake/bake run test\meta -- -j 4
+
+      - name: test cpp_api
+        run: bake/bake run test\api -- -j 4
+
+      - name: test collections
+        run: bake/bake run test\collections -- -j 4
 
   analyze-scan-build:
     timeout-minutes: 30

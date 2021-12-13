@@ -29,26 +29,22 @@ void* stdcpp_thread_join(
 
 static
 int32_t stdcpp_ainc(int32_t *count) {
-    int value;
 #ifdef __GNUC__
-    value = __sync_add_and_fetch (count, 1);
+    int value = __sync_add_and_fetch (count, 1);
     return value;
 #else
-    return InterlockedIncrement(count);
+    return InterlockedIncrement((uint32_t*)count);
 #endif
-    return value;
 }
 
 static
 int32_t stdcpp_adec(int32_t *count) {
-    int value;
 #ifdef __GNUC__
-    value = __sync_sub_and_fetch (count, 1);
+    int value = __sync_sub_and_fetch (count, 1);
     return value;
 #else
-    return InterlockedDecrement(count);
+    return InterlockedDecrement((uint32_t*)count);
 #endif
-    return value;
 }
 
 static

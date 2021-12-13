@@ -330,7 +330,7 @@ void Trigger_on_add_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_id(world, e, TagB);
 
@@ -412,7 +412,7 @@ void Trigger_on_add_pair_obj_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjA));
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, Pred, ObjB);
 
@@ -461,7 +461,7 @@ void Trigger_on_add_pair_pred_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredA, Obj));
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, PredB, Obj);
 
@@ -611,7 +611,7 @@ void Trigger_on_remove_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_id(world, e, TagB);
 
@@ -699,7 +699,7 @@ void Trigger_on_remove_pair_obj_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(Pred, ObjA));
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, Pred, ObjB);
 
@@ -753,7 +753,7 @@ void Trigger_on_remove_pair_pred_wildcard() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_pair(PredA, Obj));
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_pair(world, e, PredB, Obj);
 
@@ -849,7 +849,7 @@ void Trigger_wildcard_pair_w_pred_component() {
     p->x = 30;
     p->y = 40;
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set_pair(world, e, Position, ObjB, {10, 20});
 
@@ -904,7 +904,7 @@ void Trigger_wildcard_pair_w_obj_component() {
     p->x = 30;
     p->y = 40;
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set_pair_object(world, e, RelB, Position, {10, 20});
 
@@ -1163,7 +1163,7 @@ void Trigger_on_add_remove() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_id(world, e, TagA);
 
@@ -1477,7 +1477,7 @@ void Trigger_on_add_not_tag() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_id(world, e, TagA);
 
@@ -1513,7 +1513,7 @@ void Trigger_on_remove_not_tag() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, TagA);
 
@@ -1559,7 +1559,7 @@ void Trigger_on_add_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1608,7 +1608,7 @@ void Trigger_on_remove_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1657,7 +1657,7 @@ void Trigger_on_add_superset_childof() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1709,7 +1709,7 @@ void Trigger_on_remove_superset_childof() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1746,7 +1746,7 @@ void Trigger_on_add_self_superset() {
     test_int(ctx.e[0], base);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_no_comp);
     test_assert(e != 0);
@@ -1764,7 +1764,7 @@ void Trigger_on_add_self_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1778,7 +1778,7 @@ void Trigger_on_add_self_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_pair(world, e, EcsIsA, base);
 
@@ -1811,7 +1811,7 @@ void Trigger_on_remove_self_superset() {
     ecs_entity_t base = ecs_new(world, TagA);
     test_int(ctx.invoked, 0);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_no_comp);
     test_assert(e != 0);
@@ -1832,7 +1832,7 @@ void Trigger_on_remove_self_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
     test_int(ctx.invoked, 0);
@@ -1849,7 +1849,7 @@ void Trigger_on_remove_self_superset() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
 
@@ -1893,7 +1893,7 @@ void Trigger_add_twice() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_id(world, e, TagA);
 
@@ -1931,7 +1931,7 @@ void Trigger_remove_twice() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_id(world, e, TagA);
 
@@ -2064,7 +2064,7 @@ void Trigger_on_add_w_clone() {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], TagA);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e, true);
 
@@ -2499,8 +2499,8 @@ void Trigger_trigger_on_prefab() {
     ecs_new(world, TagA);
     test_int(ctx_1.invoked, 1);
     test_int(ctx_2.invoked, 1);
-    ctx_1 = (Probe){0};
-    ctx_2 = (Probe){0};
+    ecs_os_zeromem(&ctx_1);
+    ecs_os_zeromem(&ctx_2);
 
     ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
     test_int(ctx_1.invoked, 0);
@@ -2508,7 +2508,7 @@ void Trigger_trigger_on_prefab() {
     ecs_add(world, e, TagA);
     test_int(ctx_1.invoked, 0);
     test_int(ctx_2.invoked, 1);
-    ctx_2 = (Probe){0};
+    ecs_os_zeromem(&ctx_2);
 
     e = ecs_new_w_id(world, EcsDisabled);
     test_int(ctx_1.invoked, 0);
@@ -2546,8 +2546,8 @@ void Trigger_trigger_on_disabled() {
     ecs_new(world, TagA);
     test_int(ctx_1.invoked, 1);
     test_int(ctx_2.invoked, 1);
-    ctx_1 = (Probe){0};
-    ctx_2 = (Probe){0};
+    ecs_os_zeromem(&ctx_1);
+    ecs_os_zeromem(&ctx_2);
 
     ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
     test_int(ctx_1.invoked, 0);
@@ -2555,7 +2555,7 @@ void Trigger_trigger_on_disabled() {
     ecs_add(world, e, TagA);
     test_int(ctx_1.invoked, 0);
     test_int(ctx_2.invoked, 0);
-    ctx_2 = (Probe){0};
+    ecs_os_zeromem(&ctx_2);
 
     e = ecs_new_w_id(world, EcsDisabled);
     test_int(ctx_1.invoked, 0);
@@ -2665,7 +2665,7 @@ void Trigger_on_add_yield_existing() {
     test_int(ctx.c[0][0], Tag);
 
     // Ensure normal triggering also still works
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_new(world, Tag);
     test_int(ctx.invoked, 1);
 
@@ -2713,7 +2713,7 @@ void Trigger_on_add_yield_existing_2_tables() {
     test_int(ctx.c[1][0], TagA);
 
     // Ensure normal triggering also still works
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_new(world, TagA);
     test_int(ctx.invoked, 1);
 
@@ -2760,7 +2760,7 @@ void Trigger_on_add_yield_existing_wildcard_pair() {
     test_int(ctx.c[1][0], ecs_pair(Rel, ObjB));
 
     // Ensure normal triggering also still works
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_new_w_pair(world, Rel, ObjA);
     test_int(ctx.invoked, 1);
 
@@ -2804,7 +2804,7 @@ void Trigger_on_set_yield_existing() {
     test_int(ctx.c[0][0], ecs_id(Position));
 
     // Ensure normal triggering also still works
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
@@ -2883,7 +2883,7 @@ void Trigger_on_add_remove_after_exclusive_add() {
 
     test_int(ctx_remove.invoked, 0);
 
-    ctx_add = (Probe){ 0 };
+    ecs_os_zeromem(&ctx_add);
 
     ecs_add_pair(world, e, Rel, ObjB);
     test_assert( ecs_has_pair(world, e, Rel, ObjB));
@@ -2937,7 +2937,7 @@ void Trigger_on_add_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, base, TagA);
     ecs_add(world, base, TagB);
@@ -2981,7 +2981,7 @@ void Trigger_on_remove_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, base, TagA);
     ecs_remove(world, base, TagB);
@@ -3021,7 +3021,7 @@ void Trigger_on_set_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Position, {10, 20});
     test_int(ctx.invoked, 1);
@@ -3033,7 +3033,7 @@ void Trigger_on_set_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Velocity, {1, 2});
     test_int(ctx.invoked, 0);
@@ -3076,7 +3076,7 @@ void Trigger_on_unset_base() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, base, Position);
     ecs_remove(world, base, Velocity);
@@ -3116,7 +3116,7 @@ void Trigger_on_add_base_superset_trigger() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, base, TagA);
     ecs_add(world, base, TagB);
@@ -3157,7 +3157,7 @@ void Trigger_on_add_base_superset_trigger_2_lvls() {
     test_null(ctx.param);
     test_int(ctx.e[0], e);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, base_of_base, TagA);
     ecs_add(world, base_of_base, TagB);
@@ -3199,7 +3199,7 @@ void Trigger_on_add_base_2_entities() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, base, TagA);
     ecs_add(world, base, TagB);
@@ -3241,7 +3241,7 @@ void Trigger_on_set_base_w_value_2_entities() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Position, {10, 20});
     test_int(ctx.invoked, 2);
@@ -3254,7 +3254,7 @@ void Trigger_on_set_base_w_value_2_entities() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Velocity, {1, 2});
     test_int(ctx.invoked, 0);
@@ -3294,7 +3294,7 @@ void Trigger_on_set_base_w_value_2_entities_instanced() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Position, {10, 20});
     test_int(ctx.invoked, 1);
@@ -3307,7 +3307,7 @@ void Trigger_on_set_base_w_value_2_entities_instanced() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Velocity, {1, 2});
     test_int(ctx.invoked, 0);
@@ -3345,7 +3345,7 @@ void Trigger_on_add_base_w_override() {
     test_int(ctx.e[0], e);
     test_int(ctx.s[0][0], base);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, TagA);
     test_int(ctx.invoked, 1);
@@ -3358,7 +3358,7 @@ void Trigger_on_add_base_w_override() {
     test_int(ctx.e[0], e);
     test_int(ctx.s[0][0], 0);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, base, TagA);
     ecs_add(world, base, TagA);
@@ -3400,7 +3400,7 @@ void Trigger_on_set_base_w_override() {
     test_int(ctx.e[0], e);
     test_int(ctx.s[0][0], base);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
@@ -3413,7 +3413,7 @@ void Trigger_on_set_base_w_override() {
     test_int(ctx.e[0], e);
     test_int(ctx.s[0][0], 0);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, base, Position, {10, 20});
     test_int(ctx.invoked, 0); // no trigger, overridden
@@ -3502,7 +3502,7 @@ void Trigger_entity_source_2_triggers() {
     test_int(ctx.e[0], 0);
     test_int(ctx.s[0][0], subj_a);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_set(world, subj_b, Position, {10, 20});
     test_int(ctx.invoked, 1);

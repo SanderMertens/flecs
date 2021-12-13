@@ -3,6 +3,7 @@
 
 #include "private_types.h"
 #include "table_cache.h"
+#include "datastructures/qsort.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Core bootstrap functions

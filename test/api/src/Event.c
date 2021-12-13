@@ -81,7 +81,7 @@ void Event_table_2_ids_w_trigger() {
         .ctx = &ctx
     });
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,

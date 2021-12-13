@@ -159,7 +159,7 @@ void TriggerOnSet_clone() {
     test_int(p->x, 11);
     test_int(p->y, 20);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
    ecs_clone(world, 0, e1, false);
 
@@ -197,7 +197,7 @@ void TriggerOnSet_clone_w_value() {
     test_int(p->x, 11);
     test_int(p->y, 20);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
 
@@ -351,7 +351,7 @@ void TriggerOnSet_on_set_after_override() {
 
     /* override component (doesn't call system) */
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Position);
 

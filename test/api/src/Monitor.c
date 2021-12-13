@@ -26,7 +26,7 @@ void Monitor_1_comp() {
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_progress(world, 0);
     test_int(ctx.invoked, 0);
@@ -63,7 +63,7 @@ void Monitor_2_comps() {
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);    
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Position);
     test_int(ctx.invoked, 0);
@@ -107,7 +107,7 @@ void Monitor_1_comp_1_not() {
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);    
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0);
@@ -189,7 +189,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.c[0][1], ecs_id(Position));
     test_int(ctx.s[0][1], parent);    
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0);
@@ -202,7 +202,7 @@ void Monitor_1_comp_1_parent() {
     test_int(ctx.count, 1);
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){ 0 };
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Position);
     test_int(ctx.invoked, 1);
@@ -286,13 +286,13 @@ void Monitor_monitor_w_and() {
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Velocity);
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Position);
     test_int(ctx.invoked, 0); // Second unmatch, no trigger
@@ -326,7 +326,7 @@ void Monitor_monitor_w_or() {
     test_int(ctx.invoked, 1); // First match, triggers OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Mass);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -335,7 +335,7 @@ void Monitor_monitor_w_or() {
     test_int(ctx.invoked, 1); // First non-match, triggers OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Position); // First match, trigger
     test_int(ctx.invoked, 1);
@@ -363,13 +363,13 @@ void Monitor_monitor_w_not() {
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Velocity);
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
@@ -395,7 +395,7 @@ void Monitor_monitor_w_optional() {
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -404,13 +404,13 @@ void Monitor_monitor_w_optional() {
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Position);
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Velocity);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -445,7 +445,7 @@ void Monitor_monitor_w_superset() {
     test_int(ctx.invoked, 1); // First match, trigger
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, EcsIsA, base_2);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -457,7 +457,7 @@ void Monitor_monitor_w_superset() {
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Position);
     test_int(ctx.invoked, 0); // Second unmatch, no trigger
@@ -492,7 +492,7 @@ void Monitor_monitor_w_self_superset() {
     test_int(ctx.invoked, 1); // First match, trigger
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, EcsIsA, base_2);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -510,13 +510,13 @@ void Monitor_monitor_w_self_superset() {
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 1); // First match, trigger
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove(world, e, Position);
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
@@ -546,7 +546,7 @@ void Monitor_monitor_w_wildcard() {
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add_pair(world, e, Eats, Pears);
     test_int(ctx.invoked, 0); // Second match, no trigger
@@ -555,13 +555,13 @@ void Monitor_monitor_w_wildcard() {
     test_int(ctx.invoked, 1); // First unmatch, trigger OnRemove
     test_int(ctx.event, EcsOnRemove);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_add(world, e, Position);
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
     test_int(ctx.event, EcsOnAdd);
 
-    ctx = (Probe){0};
+    ecs_os_zeromem(&ctx);
 
     ecs_remove_pair(world, e, Eats, Apples);
     test_int(ctx.invoked, 0);
