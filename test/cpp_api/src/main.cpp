@@ -344,6 +344,12 @@ void Trigger_on_add_id_arg(void);
 void Trigger_on_add_expr(void);
 void Trigger_create_w_no_template_args(void);
 
+// Testsuite 'Iterable'
+void Iterable_page_each(void);
+void Iterable_page_iter(void);
+void Iterable_worker_each(void);
+void Iterable_worker_iter(void);
+
 // Testsuite 'Query'
 void Query_action(void);
 void Query_action_const(void);
@@ -2063,6 +2069,25 @@ bake_test_case Trigger_testcases[] = {
     }
 };
 
+bake_test_case Iterable_testcases[] = {
+    {
+        "page_each",
+        Iterable_page_each
+    },
+    {
+        "page_iter",
+        Iterable_page_iter
+    },
+    {
+        "worker_each",
+        Iterable_worker_each
+    },
+    {
+        "worker_iter",
+        Iterable_worker_iter
+    }
+};
+
 bake_test_case Query_testcases[] = {
     {
         "action",
@@ -3702,6 +3727,13 @@ static bake_test_suite suites[] = {
         Trigger_testcases
     },
     {
+        "Iterable",
+        NULL,
+        NULL,
+        4,
+        Iterable_testcases
+    },
+    {
         "Query",
         NULL,
         NULL,
@@ -3810,5 +3842,5 @@ static bake_test_suite suites[] = {
 
 int main(int argc, char *argv[]) {
     ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 23);
+    return bake_test_run("cpp_api", argc, argv, suites, 24);
 }

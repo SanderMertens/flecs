@@ -365,6 +365,14 @@
                 "create_w_no_template_args"
             ]
         }, {
+            "id": "Iterable",
+            "testcases": [
+                "page_each",
+                "page_iter",
+                "worker_each",
+                "worker_iter"
+            ]
+        }, {
             "id": "Query",
             "testcases": [
                 "action",

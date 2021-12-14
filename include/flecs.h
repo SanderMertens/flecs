@@ -3185,7 +3185,7 @@ bool ecs_page_next(
  * 
  * @param it The source iterator.
  * @param index The index of the current resource.
- * @param count The total number of resources to divide entities to.
+ * @param count The total number of resources to divide entities between.
  * @return A worker iterator.
  */
 FLECS_API

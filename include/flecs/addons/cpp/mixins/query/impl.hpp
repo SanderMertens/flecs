@@ -113,7 +113,7 @@ struct query final : query_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
-    ecs_iter_t get_iter() const override {
+    ecs_iter_t get_iter() override {
         return ecs_query_iter(m_world, m_query);
     }
 
