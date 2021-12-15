@@ -1803,7 +1803,6 @@ bool ecs_filter_next_instanced(
 
         do {
             first = iter->matches_left == 0;
-            match = false;
 
             if (first) {
                 if (kind != EcsIterEvalCondition) {
