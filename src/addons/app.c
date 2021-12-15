@@ -26,16 +26,19 @@ int default_frame_action(
 
 static ecs_app_run_action_t run_action = default_run_action;
 static ecs_app_frame_action_t frame_action = default_frame_action;
+static ecs_app_desc_t ecs_app_desc;
 
 int ecs_app_run(
     ecs_world_t *world,
     ecs_app_desc_t *desc)
 {
+    ecs_app_desc = *desc;
+
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
     if (!run_action) {
-        ecs_set_target_fps(world, desc->target_fps);
-        ecs_set_threads(world, desc->threads);
+        ecs_set_target_fps(world, ecs_app_desc.target_fps);
+        ecs_set_threads(world, ecs_app_desc.threads);
     }
 
     /* REST server enables connecting to app with explorer */
@@ -47,7 +50,7 @@ int ecs_app_run(
 #endif
     }
 
-    return run_action(world, desc);
+    return run_action(world, &ecs_app_desc);
 }
 
 int ecs_app_run_frame(

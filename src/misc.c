@@ -173,6 +173,9 @@ static LARGE_INTEGER _ecs_os_time_win_start;
 #include <mach/mach_time.h>
 static mach_timebase_info_data_t _ecs_os_time_osx_timebase;
 static uint64_t _ecs_os_time_osx_start;
+#elif defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+static uint64_t _ecs_os_time_posix_start;
 #else /* anything else, this will need more care for non-Linux platforms */
 #include <time.h>
 static uint64_t _ecs_os_time_posix_start;
@@ -221,6 +224,8 @@ uint64_t flecs_os_time_now(void) {
         now = (uint64_t)(qpc_t.QuadPart / _ecs_os_time_win_freq);
     #elif defined(__APPLE__) && defined(__MACH__)
         now = (uint64_t) int64_muldiv((int64_t)mach_absolute_time(), (int64_t)_ecs_os_time_osx_timebase.numer, (int64_t)_ecs_os_time_osx_timebase.denom);
+    #elif defined(__EMSCRIPTEN__)
+        now = (long long)(emscripten_get_now() * 1000.0);
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);

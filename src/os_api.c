@@ -5,10 +5,17 @@ void ecs_os_api_impl(ecs_os_api_t *api);
 static bool ecs_os_api_initialized = false;
 static int ecs_os_api_init_count = 0;
 
+#ifndef __EMSCRIPTEN__
 ecs_os_api_t ecs_os_api = {
     .log_with_color_ = true,
     .log_level_ = -1 /* disable tracing by default, but enable >= warnings */
 };
+#else
+/* Disable colors by default for emscripten */
+ecs_os_api_t ecs_os_api = {
+    .log_level_ = -1
+};
+#endif
 
 int64_t ecs_os_api_malloc_count = 0;
 int64_t ecs_os_api_realloc_count = 0;
