@@ -1517,6 +1517,7 @@ void Trigger_on_set_base_w_override(void);
 void Trigger_entity_source_1_trigger(void);
 void Trigger_entity_source_2_triggers(void);
 void Trigger_entity_source_base_set(void);
+void Trigger_not_from_superset(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8142,6 +8143,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "entity_source_base_set",
         Trigger_entity_source_base_set
+    },
+    {
+        "not_from_superset",
+        Trigger_not_from_superset
     }
 };
 
@@ -11342,7 +11347,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        86,
+        87,
         Trigger_testcases
     },
     {

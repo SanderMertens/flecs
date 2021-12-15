@@ -3557,3 +3557,25 @@ void Trigger_entity_source_base_set() {
 
     ecs_fini(world);
 }
+
+void Trigger_not_from_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .term.oper = EcsNot,
+        .term.subj.set.mask = EcsSuperSet,
+        .events = {EcsOnAdd},
+        .callback = Trigger_w_value_from_entity,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}

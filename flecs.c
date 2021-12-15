@@ -32908,7 +32908,9 @@ bool flecs_term_match_table(
     bool result = column != -1;
 
     if (oper == EcsNot) {
-        match_index_out[0] = 1;
+        if (match_index_out) {
+            match_index_out[0] = 1;
+        }
         result = !result;
     }
 
