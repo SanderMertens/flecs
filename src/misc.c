@@ -225,11 +225,11 @@ uint64_t flecs_os_time_now(void) {
     #elif defined(__APPLE__) && defined(__MACH__)
         now = (uint64_t) int64_muldiv((int64_t)mach_absolute_time(), (int64_t)_ecs_os_time_osx_timebase.numer, (int64_t)_ecs_os_time_osx_timebase.denom);
     #elif defined(__EMSCRIPTEN__)
-        now = (long long)(emscripten_get_now() * 1000.0);
+        now = (long long)(emscripten_get_now() * 1000.0 * 1000);
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
-        now = ((uint64_t)ts.tv_sec * 1000000000 + (uint64_t)ts.tv_nsec);
+        now = ((uint64_t)ts.tv_sec * 1000 * 1000 * 1000 + (uint64_t)ts.tv_nsec);
     #endif
 
     return now;

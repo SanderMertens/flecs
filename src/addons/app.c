@@ -36,7 +36,8 @@ int ecs_app_run(
 
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
-    if (!run_action) {
+    if (run_action == default_run_action) {
+        printf("set target FPS\n");
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
         ecs_set_threads(world, ecs_app_desc.threads);
     }

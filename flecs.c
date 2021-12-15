@@ -29717,7 +29717,8 @@ int ecs_app_run(
 
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
-    if (!run_action) {
+    if (run_action == default_run_action) {
+        printf("set target FPS\n");
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
         ecs_set_threads(world, ecs_app_desc.threads);
     }
@@ -31134,7 +31135,7 @@ FLECS_FLOAT start_measure_frame(
     if (world->measure_frame_time || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
         do {
-            if (world->frame_start_time.sec) {
+            if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
                 delta_time = insert_sleep(world, &t);
 
                 ecs_time_measure(&t);
@@ -40738,11 +40739,11 @@ uint64_t flecs_os_time_now(void) {
     #elif defined(__APPLE__) && defined(__MACH__)
         now = (uint64_t) int64_muldiv((int64_t)mach_absolute_time(), (int64_t)_ecs_os_time_osx_timebase.numer, (int64_t)_ecs_os_time_osx_timebase.denom);
     #elif defined(__EMSCRIPTEN__)
-        now = (long long)(emscripten_get_now() * 1000.0);
+        now = (long long)(emscripten_get_now() * 1000.0 * 1000);
     #else
         struct timespec ts;
         clock_gettime(CLOCK_MONOTONIC, &ts);
-        now = ((uint64_t)ts.tv_sec * 1000000000 + (uint64_t)ts.tv_nsec);
+        now = ((uint64_t)ts.tv_sec * 1000 * 1000 * 1000 + (uint64_t)ts.tv_nsec);
     #endif
 
     return now;

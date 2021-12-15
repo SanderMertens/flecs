@@ -1364,7 +1364,7 @@ FLECS_FLOAT start_measure_frame(
     if (world->measure_frame_time || (user_delta_time == 0)) {
         ecs_time_t t = world->frame_start_time;
         do {
-            if (world->frame_start_time.sec) {
+            if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
                 delta_time = insert_sleep(world, &t);
 
                 ecs_time_measure(&t);
