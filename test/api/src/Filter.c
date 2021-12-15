@@ -3680,126 +3680,110 @@ void Filter_filter_iter_pair_w_2_wildcards_2x2_matches() {
 void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Rel_1);
-    ECS_TAG(world, Rel_2);
-    ECS_TAG(world, Rel_3);
-    ECS_TAG(world, Obj_1);
-    ECS_TAG(world, Obj_2);
-    ECS_TAG(world, Tag);
+    ECS_TAG(world, X);
+    ECS_TAG(world, Y);
+    ECS_TAG(world, Z);
 
-    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel_1, Obj_1);
-    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel_1, Obj_1);
-    ecs_add_pair(world, e_1, Rel_1, Obj_2);
-    ecs_add_pair(world, e_2, Rel_1, Obj_2);
+    ECS_TAG(world, A);
+    ECS_TAG(world, B);
+    ECS_TAG(world, C);
 
-    ecs_add_pair(world, e_1, Rel_2, Obj_1);
-    ecs_add_pair(world, e_2, Rel_2, Obj_1);
-    ecs_add_pair(world, e_1, Rel_2, Obj_2);
-    ecs_add_pair(world, e_2, Rel_2, Obj_2);
-
-    ecs_add_pair(world, e_1, Rel_3, Obj_1);
-    ecs_add_pair(world, e_2, Rel_3, Obj_1);
-    ecs_add_pair(world, e_1, Rel_3, Obj_2);
-    ecs_add_pair(world, e_2, Rel_3, Obj_2);
-
-    ecs_add(world, e_1, Tag);
+    ECS_ENTITY(world, E, 
+        (X, A), (X, B), (Y, A), (Y, B), (Z, A), (Z, B));
 
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
-            { ecs_pair(Rel_1, EcsWildcard) },
-            { ecs_pair(Rel_2, EcsWildcard) },
-            { ecs_pair(Rel_3, EcsWildcard) }
+            { .id = ecs_pair(X, EcsWildcard) },
+            { .id = ecs_pair(Y, EcsWildcard) },
+            { .id = ecs_pair(Z, EcsWildcard) }
         }
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
+    char *result, *expect;
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_1));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,A),(Y,A),(Z,A)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,A),(Y,A),(Z,B)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_2));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,A),(Y,B),(Z,A)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_1));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,A),(Y,B),(Z,B)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,B),(Y,A),(Z,A)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_2);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_2));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,B),(Y,A),(Z,B)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_1));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,B),(Y,B),(Z,A)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
+    test_bool(ecs_filter_next(&it), true);
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (X,B),(Y,B),(Z,B)"
+    LINE "subj: 0,0,0"
+    LINE "this:"
+    LINE "    - E"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
 
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_1));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_2));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
-
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_1));
-
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_1));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
-
-    test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel_1, Obj_2));
-    test_int(ecs_term_id(&it, 2), ecs_pair(Rel_2, Obj_2));
-    test_int(ecs_term_id(&it, 3), ecs_pair(Rel_3, Obj_2));
-
-    test_assert(!ecs_filter_next(&it));
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -5161,7 +5145,7 @@ void Filter_filter_no_this_component_2_ents_1_not() {
 }
 
 void Filter_filter_no_this_component_1_not() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

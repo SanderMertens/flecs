@@ -152,303 +152,6 @@ void flecs_bitset_swap(
 #endif
 
 /**
- * @file sparse.h
- * @brief Sparse set datastructure.
- *
- * This is an implementation of a paged sparse set that stores the payload in
- * the sparse array.
- *
- * A sparse set has a dense and a sparse array. The sparse array is directly
- * indexed by a 64 bit identifier. The sparse element is linked with a dense
- * element, which allows for liveliness checking. The liveliness check itself
- * can be performed by doing (psuedo code):
- *  dense[sparse[sparse_id].dense] == sparse_id
- *
- * To ensure that the sparse array doesn't have to grow to a large size when
- * using large sparse_id's, the sparse set uses paging. This cuts up the array
- * into several pages of 4096 elements. When an element is set, the sparse set
- * ensures that the corresponding page is created. The page associated with an
- * id is determined by shifting a bit 12 bits to the right.
- *
- * The sparse set keeps track of a generation count per id, which is increased
- * each time an id is deleted. The generation is encoded in the returned id.
- *
- * This sparse set implementation stores payload in the sparse array, which is
- * not typical. The reason for this is to guarantee that (in combination with
- * paging) the returned payload pointers are stable. This allows for various
- * optimizations in the parts of the framework that uses the sparse set.
- *
- * The sparse set has been designed so that new ids can be generated in bulk, in
- * an O(1) operation. The way this works is that once a dense-sparse pair is
- * created, it is never unpaired. Instead it is moved to the end of the dense
- * array, and the sparse set stores an additional count to keep track of the
- * last alive id in the sparse set. To generate new ids in bulk, the sparse set
- * only needs to increase this count by the number of requested ids.
- */
-
-#ifndef FLECS_SPARSE_H
-#define FLECS_SPARSE_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Create new sparse set */
-FLECS_DBG_API
-ecs_sparse_t* _flecs_sparse_new(
-    ecs_size_t elem_size);
-
-#define flecs_sparse_new(type)\
-    _flecs_sparse_new(sizeof(type))
-
-/** Set id source. This allows the sparse set to use an external variable for
- * issuing and increasing new ids. */
-FLECS_DBG_API
-void flecs_sparse_set_id_source(
-    ecs_sparse_t *sparse,
-    uint64_t *id_source);
-
-/** Free sparse set */
-FLECS_DBG_API
-void flecs_sparse_free(
-    ecs_sparse_t *sparse);
-
-/** Remove all elements from sparse set */
-FLECS_DBG_API
-void flecs_sparse_clear(
-    ecs_sparse_t *sparse);
-
-/** Add element to sparse set, this generates or recycles an id */
-FLECS_DBG_API
-void* _flecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-#define flecs_sparse_add(sparse, type)\
-    ((type*)_flecs_sparse_add(sparse, sizeof(type)))
-
-/** Get last issued id. */
-FLECS_DBG_API
-uint64_t flecs_sparse_last_id(
-    const ecs_sparse_t *sparse);
-
-/** Generate or recycle a new id. */
-FLECS_DBG_API
-uint64_t flecs_sparse_new_id(
-    ecs_sparse_t *sparse);
-
-/** Generate or recycle new ids in bulk. The returned pointer points directly to
- * the internal dense array vector with sparse ids. Operations on the sparse set
- * can (and likely will) modify the contents of the buffer. */
-FLECS_DBG_API
-const uint64_t* flecs_sparse_new_ids(
-    ecs_sparse_t *sparse,
-    int32_t count);
-
-/** Remove an element */
-FLECS_DBG_API
-void flecs_sparse_remove(
-    ecs_sparse_t *sparse,
-    uint64_t id);
-
-/** Remove an element, return pointer to the value in the sparse array */
-FLECS_DBG_API
-void* _flecs_sparse_remove_get(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);    
-
-#define flecs_sparse_remove_get(sparse, type, index)\
-    ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
-
-/** Override the generation count for a specific id */
-FLECS_DBG_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);    
-
-/** Check whether an id has ever been issued. */
-FLECS_DBG_API
-bool flecs_sparse_exists(
-    const ecs_sparse_t *sparse,
-    uint64_t id);
-
-/** Test if id is alive, which requires the generation count to match. */
-FLECS_DBG_API
-bool flecs_sparse_is_alive(
-    const ecs_sparse_t *sparse,
-    uint64_t id);
-
-/** Return identifier with current generation set. */
-FLECS_DBG_API
-uint64_t flecs_sparse_get_alive(
-    const ecs_sparse_t *sparse,
-    uint64_t id);
-
-/** Get value from sparse set by dense id. This function is useful in 
- * combination with flecs_sparse_count for iterating all values in the set. */
-FLECS_DBG_API
-void* _flecs_sparse_get_dense(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
-
-#define flecs_sparse_get_dense(sparse, type, index)\
-    ((type*)_flecs_sparse_get_dense(sparse, sizeof(type), index))
-
-/** Get the number of alive elements in the sparse set. */
-FLECS_DBG_API
-int32_t flecs_sparse_count(
-    const ecs_sparse_t *sparse);
-
-/** Return total number of allocated elements in the dense array */
-FLECS_DBG_API
-int32_t flecs_sparse_size(
-    const ecs_sparse_t *sparse);
-
-/** Get element by (sparse) id. The returned pointer is stable for the duration
- * of the sparse set, as it is stored in the sparse array. */
-FLECS_DBG_API
-void* _flecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_get(sparse, type, index)\
-    ((type*)_flecs_sparse_get(sparse, sizeof(type), index))
-
-/** Like get_sparse, but don't care whether element is alive or not. */
-FLECS_DBG_API
-void* _flecs_sparse_get_any(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_get_any(sparse, type, index)\
-    ((type*)_flecs_sparse_get_any(sparse, sizeof(type), index))
-
-/** Get or create element by (sparse) id. */
-FLECS_DBG_API
-void* _flecs_sparse_ensure(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_ensure(sparse, type, index)\
-    ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
-
-/** Set value. */
-FLECS_DBG_API
-void* _flecs_sparse_set(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id,
-    void *value);
-
-#define flecs_sparse_set(sparse, type, index, value)\
-    ((type*)_flecs_sparse_set(sparse, sizeof(type), index, value))
-
-/** Get pointer to ids (alive and not alive). Use with count() or size(). */
-FLECS_DBG_API
-const uint64_t* flecs_sparse_ids(
-    const ecs_sparse_t *sparse);
-
-/** Set size of the dense array. */
-FLECS_DBG_API
-void flecs_sparse_set_size(
-    ecs_sparse_t *sparse,
-    int32_t elem_count);
-
-/** Copy sparse set into a new sparse set. */
-FLECS_DBG_API
-ecs_sparse_t* flecs_sparse_copy(
-    const ecs_sparse_t *src);    
-
-/** Restore sparse set into destination sparse set. */
-FLECS_DBG_API
-void flecs_sparse_restore(
-    ecs_sparse_t *dst,
-    const ecs_sparse_t *src);
-
-/** Get memory usage of sparse set. */
-FLECS_DBG_API
-void flecs_sparse_memory(
-    ecs_sparse_t *sparse,
-    int32_t *allocd,
-    int32_t *used);
-
-FLECS_DBG_API
-ecs_sparse_iter_t _flecs_sparse_iter(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-#define flecs_sparse_iter(sparse, T)\
-    _flecs_sparse_iter(sparse, ECS_SIZEOF(T))
-
-#ifndef FLECS_LEGACY
-#define flecs_sparse_each(sparse, T, var, ...)\
-    {\
-        int var##_i, var##_count = ecs_sparse_count(sparse);\
-        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
-            T* var = ecs_sparse_get_dense(sparse, T, var##_i);\
-            __VA_ARGS__\
-        }\
-    }
-#endif
-
-/* Publicly exposed APIs 
- * The flecs_ functions aren't exposed directly as this can cause some
- * optimizers to not consider them for link time optimization. */
-
-FLECS_API
-ecs_sparse_t* _ecs_sparse_new(
-    ecs_size_t elem_size);
-
-#define ecs_sparse_new(type)\
-    _ecs_sparse_new(sizeof(type))
-
-FLECS_API
-void* _ecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-#define ecs_sparse_add(sparse, type)\
-    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
-
-FLECS_API
-uint64_t ecs_sparse_last_id(
-    const ecs_sparse_t *sparse);
-
-FLECS_API
-int32_t ecs_sparse_count(
-    const ecs_sparse_t *sparse);
-
-FLECS_API
-void* _ecs_sparse_get_dense(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
-
-#define ecs_sparse_get_dense(sparse, type, index)\
-    ((type*)_ecs_sparse_get_dense(sparse, sizeof(type), index))
-
-FLECS_API
-void* _ecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define ecs_sparse_get(sparse, type, index)\
-    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/**
  * @file switch_list.h
  * @brief Interleaved linked list for storing mutually exclusive values.
  *
@@ -21570,11 +21273,6 @@ const char* ecs_identifier_is_var(
         return &id[1];
     }
 
-    /* Identifiers that have a single uppercase character are variables */
-    if (ecs_os_strlen(id) == 1 && isupper(id[0])) {
-        return id;
-    }
-
     return NULL;
 }
 
@@ -22256,6 +21954,7 @@ bool flecs_term_match_table(
     bool result = column != -1;
 
     if (oper == EcsNot) {
+        match_index_out[0] = 1;
         result = !result;
     }
 
@@ -22321,7 +22020,10 @@ bool flecs_filter_match_table(
 
     bool is_or = false;
     bool or_result = false;
-    int32_t match_count = 0;
+    int32_t match_count = 1;
+    if (matches_left) {
+        match_count = *matches_left;
+    }
 
     for (i = 0; i < count; i ++) {
         if (i == skip_term) {
@@ -22366,12 +22068,13 @@ bool flecs_filter_match_table(
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
+        int32_t match_index = 0;
         bool result = flecs_term_match_table(world, term, match_table, 
             match_type,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
-            match_indices ? &match_indices[t_i] : NULL,
+            &match_index,
             first);
 
         if (is_or) {
@@ -22380,11 +22083,11 @@ bool flecs_filter_match_table(
             return false;
         }
 
-        /* Match indices is populated with the number of matches for this term.
-         * This is used to determine whether to keep iterating this table. */
-        if (first && match_indices && match_indices[t_i]) {
-            match_indices[t_i] --;
-            match_count += match_indices[t_i];
+        if (first && match_index) {
+            match_count *= match_index;
+        }
+        if (match_indices) {
+            match_indices[t_i] = match_index;
         }
     }
 
@@ -22842,7 +22545,6 @@ bool ecs_filter_next_instanced(
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = NULL;
     bool match;
-    int i;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;
@@ -22873,16 +22575,13 @@ bool ecs_filter_next_instanced(
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t pivot_term = term->index;
-        bool term_is_filter = term->inout == EcsInOutFilter;
+        bool first;
 
         do {
-            int32_t matches_left = iter->matches_left;
-            if (matches_left < 0) {
-                goto done;
-            }
+            first = iter->matches_left == 0;
+            match = false;
 
-            bool first_match = matches_left == 0;
-            if (first_match) {
+            if (first) {
                 if (kind != EcsIterEvalCondition) {
                     /* Find new match, starting with the leading term */
                     if (!term_iter_next(world, term_iter, 
@@ -22891,50 +22590,77 @@ bool ecs_filter_next_instanced(
                         goto done;
                     }
 
+                    ecs_assert(term_iter->match_count != 0, 
+                        ECS_INTERNAL_ERROR, NULL);
+
+                    iter->matches_left = term_iter->match_count;
+
+                    /* Filter iterator takes control over iterating all the
+                     * permutations that match the wildcard. */
+                    term_iter->match_count = 1;
+
                     table = term_iter->table;
                     if (pivot_term != -1) {
                         it->ids[pivot_term] = term_iter->id;
                         it->subjects[pivot_term] = term_iter->subject;
                         it->columns[pivot_term] = term_iter->column;
                     }
+                } else {
+                    /* Progress iterator to next match for table, if any */
+                    table = it->table;
+                    if (term_iter->index == 0) {
+                        iter->matches_left = 1;
+                        term_iter->index = 1; /* prevents looping again */
+                    } else {
+                        goto done;
+                    }
                 }
-            } else {
-                /* Progress iterator to next match for table, if any */
-                table = it->table;
-                first_match = false;
 
-                for (i = filter->term_count_actual - 1; i >= 0; i --) {
-                    if (it->match_indices[i] > 0) {
-                        it->match_indices[i] --;
-                        if (!term_is_filter) {
-                            it->columns[i] ++;
-                        }
+                /* Match the remainder of the terms */
+                match = flecs_filter_match_table(world, filter, table,
+                    it->ids, it->columns, it->subjects,
+                    it->match_indices, &iter->matches_left, first, 
+                    pivot_term);
+                if (!match) {
+                    iter->matches_left = 0;
+                    continue;
+                }
+                    
+                ecs_assert(iter->matches_left != 0, ECS_INTERNAL_ERROR, NULL);
+            }
+
+            /* If this is not the first result for the table, and the table
+             * is matched more than once, iterate remaining matches */
+            if (!first && (iter->matches_left > 0)) {
+                table = it->table;
+                
+                /* Find first term that still has matches left */
+                int32_t i, j, count = it->term_count;
+                for (i = count - 1; i >= 0; i --) {
+                    int32_t mi = -- it->match_indices[i];
+                    if (mi) {
                         break;
                     }
                 }
-            }
 
-            /* Match the remainder of the terms */
-            match = flecs_filter_match_table(world, filter, table,
-                it->ids, it->columns, it->subjects,
-                it->match_indices, &matches_left, first_match, 
-                pivot_term);
-            
-            if (kind == EcsIterEvalCondition && !matches_left) {
-                matches_left --;
-            }
+                /* Progress first term to next match (must be at least one) */
+                it->columns[i] ++;
+                flecs_term_match_table(world, &filter->terms[i], table, 
+                    table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
+                    &it->match_indices[i], false);
 
-            /* Check if there are any terms which have more matching columns */
-            if (!first_match) {
-                matches_left = 0;
-                for (i = 0; i < filter->term_count_actual; i ++) {
-                    if (it->match_indices[i] > 0) {
-                        matches_left += it->match_indices[i];
-                    }
+                /* Reset remaining terms (if any) to first match */
+                for (j = i + 1; j < count; j ++) {
+                    flecs_term_match_table(world, &filter->terms[j], table, 
+                        table->type, &it->ids[j], &it->columns[j], 
+                        &it->subjects[j], &it->match_indices[j], true);
                 }
             }
 
-            iter->matches_left = matches_left;
+            match = iter->matches_left != 0;
+            iter->matches_left --;
+
+            ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
         } while (!match);
 
         goto yield;

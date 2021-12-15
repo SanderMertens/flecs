@@ -3149,6 +3149,303 @@ void ecs_default_ctor(
 #endif
 
 /**
+ * @file sparse.h
+ * @brief Sparse set datastructure.
+ *
+ * This is an implementation of a paged sparse set that stores the payload in
+ * the sparse array.
+ *
+ * A sparse set has a dense and a sparse array. The sparse array is directly
+ * indexed by a 64 bit identifier. The sparse element is linked with a dense
+ * element, which allows for liveliness checking. The liveliness check itself
+ * can be performed by doing (psuedo code):
+ *  dense[sparse[sparse_id].dense] == sparse_id
+ *
+ * To ensure that the sparse array doesn't have to grow to a large size when
+ * using large sparse_id's, the sparse set uses paging. This cuts up the array
+ * into several pages of 4096 elements. When an element is set, the sparse set
+ * ensures that the corresponding page is created. The page associated with an
+ * id is determined by shifting a bit 12 bits to the right.
+ *
+ * The sparse set keeps track of a generation count per id, which is increased
+ * each time an id is deleted. The generation is encoded in the returned id.
+ *
+ * This sparse set implementation stores payload in the sparse array, which is
+ * not typical. The reason for this is to guarantee that (in combination with
+ * paging) the returned payload pointers are stable. This allows for various
+ * optimizations in the parts of the framework that uses the sparse set.
+ *
+ * The sparse set has been designed so that new ids can be generated in bulk, in
+ * an O(1) operation. The way this works is that once a dense-sparse pair is
+ * created, it is never unpaired. Instead it is moved to the end of the dense
+ * array, and the sparse set stores an additional count to keep track of the
+ * last alive id in the sparse set. To generate new ids in bulk, the sparse set
+ * only needs to increase this count by the number of requested ids.
+ */
+
+#ifndef FLECS_SPARSE_H
+#define FLECS_SPARSE_H
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Create new sparse set */
+FLECS_DBG_API
+ecs_sparse_t* _flecs_sparse_new(
+    ecs_size_t elem_size);
+
+#define flecs_sparse_new(type)\
+    _flecs_sparse_new(sizeof(type))
+
+/** Set id source. This allows the sparse set to use an external variable for
+ * issuing and increasing new ids. */
+FLECS_DBG_API
+void flecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source);
+
+/** Free sparse set */
+FLECS_DBG_API
+void flecs_sparse_free(
+    ecs_sparse_t *sparse);
+
+/** Remove all elements from sparse set */
+FLECS_DBG_API
+void flecs_sparse_clear(
+    ecs_sparse_t *sparse);
+
+/** Add element to sparse set, this generates or recycles an id */
+FLECS_DBG_API
+void* _flecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define flecs_sparse_add(sparse, type)\
+    ((type*)_flecs_sparse_add(sparse, sizeof(type)))
+
+/** Get last issued id. */
+FLECS_DBG_API
+uint64_t flecs_sparse_last_id(
+    const ecs_sparse_t *sparse);
+
+/** Generate or recycle a new id. */
+FLECS_DBG_API
+uint64_t flecs_sparse_new_id(
+    ecs_sparse_t *sparse);
+
+/** Generate or recycle new ids in bulk. The returned pointer points directly to
+ * the internal dense array vector with sparse ids. Operations on the sparse set
+ * can (and likely will) modify the contents of the buffer. */
+FLECS_DBG_API
+const uint64_t* flecs_sparse_new_ids(
+    ecs_sparse_t *sparse,
+    int32_t count);
+
+/** Remove an element */
+FLECS_DBG_API
+void flecs_sparse_remove(
+    ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Remove an element, return pointer to the value in the sparse array */
+FLECS_DBG_API
+void* _flecs_sparse_remove_get(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);    
+
+#define flecs_sparse_remove_get(sparse, type, index)\
+    ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
+
+/** Override the generation count for a specific id */
+FLECS_DBG_API
+void flecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t id);    
+
+/** Check whether an id has ever been issued. */
+FLECS_DBG_API
+bool flecs_sparse_exists(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Test if id is alive, which requires the generation count to match. */
+FLECS_DBG_API
+bool flecs_sparse_is_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Return identifier with current generation set. */
+FLECS_DBG_API
+uint64_t flecs_sparse_get_alive(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Get value from sparse set by dense id. This function is useful in 
+ * combination with flecs_sparse_count for iterating all values in the set. */
+FLECS_DBG_API
+void* _flecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index);
+
+#define flecs_sparse_get_dense(sparse, type, index)\
+    ((type*)_flecs_sparse_get_dense(sparse, sizeof(type), index))
+
+/** Get the number of alive elements in the sparse set. */
+FLECS_DBG_API
+int32_t flecs_sparse_count(
+    const ecs_sparse_t *sparse);
+
+/** Return total number of allocated elements in the dense array */
+FLECS_DBG_API
+int32_t flecs_sparse_size(
+    const ecs_sparse_t *sparse);
+
+/** Get element by (sparse) id. The returned pointer is stable for the duration
+ * of the sparse set, as it is stored in the sparse array. */
+FLECS_DBG_API
+void* _flecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_get(sparse, type, index)\
+    ((type*)_flecs_sparse_get(sparse, sizeof(type), index))
+
+/** Like get_sparse, but don't care whether element is alive or not. */
+FLECS_DBG_API
+void* _flecs_sparse_get_any(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_get_any(sparse, type, index)\
+    ((type*)_flecs_sparse_get_any(sparse, sizeof(type), index))
+
+/** Get or create element by (sparse) id. */
+FLECS_DBG_API
+void* _flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_ensure(sparse, type, index)\
+    ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
+
+/** Set value. */
+FLECS_DBG_API
+void* _flecs_sparse_set(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    void *value);
+
+#define flecs_sparse_set(sparse, type, index, value)\
+    ((type*)_flecs_sparse_set(sparse, sizeof(type), index, value))
+
+/** Get pointer to ids (alive and not alive). Use with count() or size(). */
+FLECS_DBG_API
+const uint64_t* flecs_sparse_ids(
+    const ecs_sparse_t *sparse);
+
+/** Set size of the dense array. */
+FLECS_DBG_API
+void flecs_sparse_set_size(
+    ecs_sparse_t *sparse,
+    int32_t elem_count);
+
+/** Copy sparse set into a new sparse set. */
+FLECS_DBG_API
+ecs_sparse_t* flecs_sparse_copy(
+    const ecs_sparse_t *src);    
+
+/** Restore sparse set into destination sparse set. */
+FLECS_DBG_API
+void flecs_sparse_restore(
+    ecs_sparse_t *dst,
+    const ecs_sparse_t *src);
+
+/** Get memory usage of sparse set. */
+FLECS_DBG_API
+void flecs_sparse_memory(
+    ecs_sparse_t *sparse,
+    int32_t *allocd,
+    int32_t *used);
+
+FLECS_DBG_API
+ecs_sparse_iter_t _flecs_sparse_iter(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define flecs_sparse_iter(sparse, T)\
+    _flecs_sparse_iter(sparse, ECS_SIZEOF(T))
+
+#ifndef FLECS_LEGACY
+#define flecs_sparse_each(sparse, T, var, ...)\
+    {\
+        int var##_i, var##_count = ecs_sparse_count(sparse);\
+        for (var##_i = 0; var##_i < var##_count; var##_i ++) {\
+            T* var = ecs_sparse_get_dense(sparse, T, var##_i);\
+            __VA_ARGS__\
+        }\
+    }
+#endif
+
+/* Publicly exposed APIs 
+ * The flecs_ functions aren't exposed directly as this can cause some
+ * optimizers to not consider them for link time optimization. */
+
+FLECS_API
+ecs_sparse_t* _ecs_sparse_new(
+    ecs_size_t elem_size);
+
+#define ecs_sparse_new(type)\
+    _ecs_sparse_new(sizeof(type))
+
+FLECS_API
+void* _ecs_sparse_add(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define ecs_sparse_add(sparse, type)\
+    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
+
+FLECS_API
+uint64_t ecs_sparse_last_id(
+    const ecs_sparse_t *sparse);
+
+FLECS_API
+int32_t ecs_sparse_count(
+    const ecs_sparse_t *sparse);
+
+FLECS_API
+void* _ecs_sparse_get_dense(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    int32_t index);
+
+#define ecs_sparse_get_dense(sparse, type, index)\
+    ((type*)_ecs_sparse_get_dense(sparse, sizeof(type), index))
+
+FLECS_API
+void* _ecs_sparse_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define ecs_sparse_get(sparse, type, index)\
+    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/**
  * @file hashmap.h
  * @brief Hashmap datastructure.
  *
@@ -6084,7 +6381,7 @@ bool ecs_page_next(
  * 
  * @param it The source iterator.
  * @param index The index of the current resource.
- * @param count The total number of resources to divide entities to.
+ * @param count The total number of resources to divide entities between.
  * @return A worker iterator.
  */
 FLECS_API
@@ -15753,26 +16050,70 @@ struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
 namespace flecs {
 
 template <typename ... Components>
+struct page_iterable;
+
+template <typename ... Components>
+struct worker_iterable;
+
+template <typename ... Components>
 struct iterable {
+    /** Each iterator.
+     * The "each" iterator accepts a function that is invoked for each matching
+     * entity. The following function signatures are valid:
+     *  - func(flecs::entity e, Components& ...)
+     *  - func(Components& ...)
+     * 
+     * Each iterators are automatically instanced.
+     */
     template <typename Func>
-    void each(Func&& func) const {
+    void each(Func&& func) {
         iterate<_::each_invoker>(std::forward<Func>(func), 
             this->next_each_action());
     }
 
+    /** Iter iterator.
+     * The "iter" iterator accepts a function that is invoked for each matching
+     * table. The following function signatures are valid:
+     *  - func(flecs::entity e, Components& ...)
+     *  - func(Components& ...)
+     */
     template <typename Func>
-    void iter(Func&& func) const { 
+    void iter(Func&& func) { 
         iterate<_::iter_invoker>(std::forward<Func>(func), this->next_action());
     }
 
+    /** Page iterator.
+     * Create an iterator that limits the returned entities with offset/limit.
+     * 
+     * @param offset How many entities to skip.
+     * @param limit The maximum number of entities to return.
+     * @return Iterable that can be iterated with each/iter.
+     */
+    page_iterable<Components...> page(int32_t offset, int32_t limit);
+
+    /** Worker iterator.
+     * Create an iterator that divides the number of matched entities across
+     * a number of resources.
+     * 
+     * @param index The index of the current resource.
+     * @param count The total number of resources to divide entities between.
+     * @return Iterable that can be iterated with each/iter.
+     */
+    worker_iterable<Components...> worker(int32_t index, int32_t count);
+
+
+    virtual ~iterable() { }
 protected:
-    virtual ecs_iter_t get_iter() const = 0;
+    friend page_iterable<Components...>;
+    friend worker_iterable<Components...>;
+
+    virtual ecs_iter_t get_iter() = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
 
 private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) const {
+    void iterate(Func&& func, NextFunc next, Args &&... args) {
         ecs_iter_t it = this->get_iter();
         it.is_instanced |= Invoker<Func, Components...>::instanced();
 
@@ -15781,6 +16122,78 @@ private:
         }
     }
 };
+
+template <typename ... Components>
+struct page_iterable final : iterable<Components...> {
+    page_iterable(int32_t offset, int32_t limit, iterable<Components...> *it) 
+        : m_offset(offset)
+        , m_limit(limit)
+    {
+        m_chain_it = it->get_iter();
+    }
+
+protected:
+    ecs_iter_t get_iter() {
+        return ecs_page_iter(&m_chain_it, m_offset, m_limit);
+    }
+
+    ecs_iter_next_action_t next_action() const {
+        return ecs_page_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const {
+        return ecs_page_next;
+    }
+
+private:
+    ecs_iter_t m_chain_it;
+    int32_t m_offset;
+    int32_t m_limit;
+};
+
+template <typename ... Components>
+page_iterable<Components...> iterable<Components...>::page(
+    int32_t offset, 
+    int32_t limit) 
+{
+    return page_iterable<Components...>(offset, limit, this);
+}
+
+template <typename ... Components>
+struct worker_iterable final : iterable<Components...> {
+    worker_iterable(int32_t offset, int32_t limit, iterable<Components...> *it) 
+        : m_offset(offset)
+        , m_limit(limit)
+    {
+        m_chain_it = it->get_iter();
+    }
+
+protected:
+    ecs_iter_t get_iter() {
+        return ecs_worker_iter(&m_chain_it, m_offset, m_limit);
+    }
+
+    ecs_iter_next_action_t next_action() const {
+        return ecs_worker_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const {
+        return ecs_worker_next;
+    }
+
+private:
+    ecs_iter_t m_chain_it;
+    int32_t m_offset;
+    int32_t m_limit;
+};
+
+template <typename ... Components>
+worker_iterable<Components...> iterable<Components...>::worker(
+    int32_t index, 
+    int32_t count) 
+{
+    return worker_iterable<Components...>(index, count, this);
+}
 
 }
 
@@ -17820,7 +18233,7 @@ public:
     }
 
 private:
-    ecs_iter_t get_iter() const override {
+    ecs_iter_t get_iter() override {
         return ecs_filter_iter(m_world, m_filter_ptr);
     }
 
@@ -18196,7 +18609,7 @@ struct query final : query_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
-    ecs_iter_t get_iter() const override {
+    ecs_iter_t get_iter() override {
         return ecs_query_iter(m_world, m_query);
     }
 

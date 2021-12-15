@@ -497,11 +497,6 @@ const char* ecs_identifier_is_var(
         return &id[1];
     }
 
-    /* Identifiers that have a single uppercase character are variables */
-    if (ecs_os_strlen(id) == 1 && isupper(id[0])) {
-        return id;
-    }
-
     return NULL;
 }
 
@@ -1183,6 +1178,7 @@ bool flecs_term_match_table(
     bool result = column != -1;
 
     if (oper == EcsNot) {
+        match_index_out[0] = 1;
         result = !result;
     }
 
@@ -1248,7 +1244,10 @@ bool flecs_filter_match_table(
 
     bool is_or = false;
     bool or_result = false;
-    int32_t match_count = 0;
+    int32_t match_count = 1;
+    if (matches_left) {
+        match_count = *matches_left;
+    }
 
     for (i = 0; i < count; i ++) {
         if (i == skip_term) {
@@ -1293,12 +1292,13 @@ bool flecs_filter_match_table(
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
+        int32_t match_index = 0;
         bool result = flecs_term_match_table(world, term, match_table, 
             match_type,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
-            match_indices ? &match_indices[t_i] : NULL,
+            &match_index,
             first);
 
         if (is_or) {
@@ -1307,11 +1307,11 @@ bool flecs_filter_match_table(
             return false;
         }
 
-        /* Match indices is populated with the number of matches for this term.
-         * This is used to determine whether to keep iterating this table. */
-        if (first && match_indices && match_indices[t_i]) {
-            match_indices[t_i] --;
-            match_count += match_indices[t_i];
+        if (first && match_index) {
+            match_count *= match_index;
+        }
+        if (match_indices) {
+            match_indices[t_i] = match_index;
         }
     }
 
@@ -1769,7 +1769,6 @@ bool ecs_filter_next_instanced(
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = NULL;
     bool match;
-    int i;
 
     if (!filter->terms) {
         filter->terms = filter->term_cache;
@@ -1800,16 +1799,13 @@ bool ecs_filter_next_instanced(
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t pivot_term = term->index;
-        bool term_is_filter = term->inout == EcsInOutFilter;
+        bool first;
 
         do {
-            int32_t matches_left = iter->matches_left;
-            if (matches_left < 0) {
-                goto done;
-            }
+            first = iter->matches_left == 0;
+            match = false;
 
-            bool first_match = matches_left == 0;
-            if (first_match) {
+            if (first) {
                 if (kind != EcsIterEvalCondition) {
                     /* Find new match, starting with the leading term */
                     if (!term_iter_next(world, term_iter, 
@@ -1818,50 +1814,77 @@ bool ecs_filter_next_instanced(
                         goto done;
                     }
 
+                    ecs_assert(term_iter->match_count != 0, 
+                        ECS_INTERNAL_ERROR, NULL);
+
+                    iter->matches_left = term_iter->match_count;
+
+                    /* Filter iterator takes control over iterating all the
+                     * permutations that match the wildcard. */
+                    term_iter->match_count = 1;
+
                     table = term_iter->table;
                     if (pivot_term != -1) {
                         it->ids[pivot_term] = term_iter->id;
                         it->subjects[pivot_term] = term_iter->subject;
                         it->columns[pivot_term] = term_iter->column;
                     }
+                } else {
+                    /* Progress iterator to next match for table, if any */
+                    table = it->table;
+                    if (term_iter->index == 0) {
+                        iter->matches_left = 1;
+                        term_iter->index = 1; /* prevents looping again */
+                    } else {
+                        goto done;
+                    }
                 }
-            } else {
-                /* Progress iterator to next match for table, if any */
-                table = it->table;
-                first_match = false;
 
-                for (i = filter->term_count_actual - 1; i >= 0; i --) {
-                    if (it->match_indices[i] > 0) {
-                        it->match_indices[i] --;
-                        if (!term_is_filter) {
-                            it->columns[i] ++;
-                        }
+                /* Match the remainder of the terms */
+                match = flecs_filter_match_table(world, filter, table,
+                    it->ids, it->columns, it->subjects,
+                    it->match_indices, &iter->matches_left, first, 
+                    pivot_term);
+                if (!match) {
+                    iter->matches_left = 0;
+                    continue;
+                }
+                    
+                ecs_assert(iter->matches_left != 0, ECS_INTERNAL_ERROR, NULL);
+            }
+
+            /* If this is not the first result for the table, and the table
+             * is matched more than once, iterate remaining matches */
+            if (!first && (iter->matches_left > 0)) {
+                table = it->table;
+                
+                /* Find first term that still has matches left */
+                int32_t i, j, count = it->term_count;
+                for (i = count - 1; i >= 0; i --) {
+                    int32_t mi = -- it->match_indices[i];
+                    if (mi) {
                         break;
                     }
                 }
-            }
 
-            /* Match the remainder of the terms */
-            match = flecs_filter_match_table(world, filter, table,
-                it->ids, it->columns, it->subjects,
-                it->match_indices, &matches_left, first_match, 
-                pivot_term);
-            
-            if (kind == EcsIterEvalCondition && !matches_left) {
-                matches_left --;
-            }
+                /* Progress first term to next match (must be at least one) */
+                it->columns[i] ++;
+                flecs_term_match_table(world, &filter->terms[i], table, 
+                    table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
+                    &it->match_indices[i], false);
 
-            /* Check if there are any terms which have more matching columns */
-            if (!first_match) {
-                matches_left = 0;
-                for (i = 0; i < filter->term_count_actual; i ++) {
-                    if (it->match_indices[i] > 0) {
-                        matches_left += it->match_indices[i];
-                    }
+                /* Reset remaining terms (if any) to first match */
+                for (j = i + 1; j < count; j ++) {
+                    flecs_term_match_table(world, &filter->terms[j], table, 
+                        table->type, &it->ids[j], &it->columns[j], 
+                        &it->subjects[j], &it->match_indices[j], true);
                 }
             }
 
-            iter->matches_left = matches_left;
+            match = iter->matches_left != 0;
+            iter->matches_left --;
+
+            ecs_assert(iter->matches_left >= 0, ECS_INTERNAL_ERROR, NULL);
         } while (!match);
 
         goto yield;

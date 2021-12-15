@@ -1086,7 +1086,7 @@ void Parser_variable_single_char() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Pred(X)"
+        .expr = "Pred(_X)"
     }));
     test_int(filter_count(&f), 1);
 

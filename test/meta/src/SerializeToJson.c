@@ -1618,7 +1618,7 @@ void SerializeToJson_serialize_iterator_w_var() {
     ecs_add_pair(world, e2, Rel, ObjB);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(Rel, X)"
+        .expr = "(Rel, _X)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -1677,7 +1677,7 @@ void SerializeToJson_serialize_iterator_w_2_vars() {
     ecs_add_pair(world, e2, RelY, ObjD);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(RelX, X), (RelY, Y)"
+        .expr = "(RelX, _X), (RelY, _Y)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
