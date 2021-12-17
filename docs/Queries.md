@@ -101,7 +101,8 @@ auto q = qb.build();
 The builder API has support for adding terms using the DSL:
 
 ```cpp
-auto q = world.query_builder<>("Position, [in] Velocity")
+auto q = world.query_builder()
+  .expr("Position, [in] Velocity")
   .term("NPC")
   .term("(Likes, Apples)")
   .build();
