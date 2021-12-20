@@ -166,6 +166,7 @@ static int ecs_os_time_initialized;
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#include <WinSock2.h>
 #include <windows.h>
 static double _ecs_os_time_win_freq;
 static LARGE_INTEGER _ecs_os_time_win_start;

@@ -4,6 +4,7 @@
 #include <condition_variable>
 
 #ifdef _MSC_VER
+#include <WinSock2.h>
 #include "windows.h"
 #endif
 
