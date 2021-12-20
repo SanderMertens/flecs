@@ -94,6 +94,7 @@
  *          Default: false
  */
 
+
 #ifdef FLECS_REST
 
 /* Used for the HTTP server */

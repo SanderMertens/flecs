@@ -15738,7 +15738,8 @@ int ecs_plecs_from_str(
         return 0;
     }
 
-    state.scope[0] = ecs_get_scope(world);
+    state.scope[0] = 0;
+    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     do {
@@ -15752,7 +15753,7 @@ int ecs_plecs_from_str(
         }
     } while (true);
 
-    ecs_set_scope(world, state.scope[0]);
+    ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
     
     clear_comment(expr, ptr, &state);
@@ -29718,7 +29719,6 @@ int ecs_app_run(
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
     if (run_action == default_run_action) {
-        printf("set target FPS\n");
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
         ecs_set_threads(world, ecs_app_desc.threads);
     }
@@ -39185,6 +39185,7 @@ bool flecs_iter_next_row(
         if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
             int t, term_count = it->term_count;
+
             for (t = 0; t < term_count; t ++) {
                 int32_t column = it->columns[t];
                 if (column >= 0) {

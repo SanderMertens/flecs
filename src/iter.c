@@ -269,6 +269,7 @@ bool flecs_iter_next_row(
         if (instance_count > count && offset < (instance_count - 1)) {
             ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
             int t, term_count = it->term_count;
+
             for (t = 0; t < term_count; t ++) {
                 int32_t column = it->columns[t];
                 if (column >= 0) {

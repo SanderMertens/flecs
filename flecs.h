@@ -62,8 +62,13 @@
 #define FLECS_LOG           /* When enabled ECS provides more detailed logs */
 #define FLECS_APP           /* Application addon */
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
+
+/* Don't enable web addons if we're running as a webasm app */
+#ifndef __EMSCRIPTEN__
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
+#endif
+
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -132,7 +137,6 @@
 #endif
 
 #endif
-
 
 
 #ifdef __cplusplus
@@ -7215,6 +7219,7 @@ int ecs_app_set_frame_action(
  *        data, a 0 element is added to the array.
  *          Default: false
  */
+
 
 #ifdef FLECS_REST
 

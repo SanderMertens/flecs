@@ -723,18 +723,20 @@ void Plecs_create_in_scope() {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
+    test_assert(ecs_get_scope(world) == Root);
+
     test_assert(ecs_lookup_fullpath(world, "Child") == 0);
 
     ecs_set_scope(world, 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Root.Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Root.Parent.Child");
+    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
 
     test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
-    test_assert(ecs_has_pair(world, parent, EcsChildOf, Root));
+    test_assert(!ecs_has_pair(world, parent, EcsChildOf, Root));
 
     ecs_fini(world);
 }

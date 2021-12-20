@@ -911,7 +911,8 @@ int ecs_plecs_from_str(
         return 0;
     }
 
-    state.scope[0] = ecs_get_scope(world);
+    state.scope[0] = 0;
+    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     do {
@@ -925,7 +926,7 @@ int ecs_plecs_from_str(
         }
     } while (true);
 
-    ecs_set_scope(world, state.scope[0]);
+    ecs_set_scope(world, prev_scope);
     ecs_set_with(world, prev_with);
     
     clear_comment(expr, ptr, &state);
