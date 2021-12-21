@@ -20,6 +20,7 @@ struct type_base {
         ecs_type_desc_t desc = {};
         desc.entity.entity = e;
         m_entity = flecs::entity(world, ecs_type_init(world, &desc));
+        ecs_assert(!e || e == m_entity, ECS_INTERNAL_ERROR, nullptr);
         sync_from_flecs();
     }
 
@@ -150,7 +151,6 @@ private:
         tc->type = m_type;
         tc->normalized = m_type;
         ecs_modified(world(), id(), EcsType);
-
     }
 
     void sync_from_flecs() {
@@ -158,16 +158,18 @@ private:
             return;
         }
 
-        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
-        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);            
-        m_type = tc->normalized;
-        ecs_modified(world(), id(), EcsType);
+        const EcsType *tc = ecs_get(world(), id(), EcsType);
+        if (!tc) {
+            m_type = nullptr;
+        } else {
+            m_type = tc->normalized;
+        }
 
         m_table = nullptr;
     }
 
     flecs::entity m_entity;
-    type_t m_type;
+    type_t m_type = nullptr;
     table_t *m_table = nullptr;
 };
 
