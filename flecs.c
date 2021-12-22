@@ -553,6 +553,8 @@ struct ecs_query_table_match_t {
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
+
+    int32_t *monitor;                /* Used to monitor table for changes */
 };
 
 /** A single table can occur multiple times in the cache when a term matches
@@ -561,7 +563,6 @@ typedef struct ecs_query_table_t {
     ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_table_match_t *first;  /* List with matches for table */
     ecs_query_table_match_t *last;   /* Last discovered match for table */
-    int32_t *monitor;                /* Used to monitor table for changes */
 } ecs_query_table_t;
 
 /** Points to the beginning & ending of a query group */
@@ -580,6 +581,7 @@ typedef struct ecs_query_table_list_t {
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
 #define EcsQueryHasOptional (2048)   /* Does query have optional columns */
+#define EcsQueryHasMonitor (4096)    /* Does query track changes */
 
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
@@ -3998,8 +4000,12 @@ int32_t* flecs_table_get_dirty_state(
     
     if (!table->dirty_state) {
         int32_t column_count = ecs_vector_count(table->storage_type);
-        table->dirty_state = ecs_os_calloc_n( int32_t, column_count + 1);
+        table->dirty_state = ecs_os_malloc_n( int32_t, column_count + 1);
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        for (int i = 0; i < column_count + 1; i ++) {
+            table->dirty_state[i] = 1;
+        }
     }
     return table->dirty_state;
 }
@@ -4106,6 +4112,7 @@ int32_t ecs_table_type_to_storage_index(
     const ecs_table_t *table,
     int32_t index)
 {
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
     int32_t *storage_map = table->storage_map;
@@ -35262,6 +35269,266 @@ ecs_query_table_match_t* cache_add(
     return result;
 }
 
+typedef struct {
+    ecs_table_t *table;
+    int32_t *dirty_state;
+    int32_t column;
+} table_dirty_state_t;
+
+static
+void get_dirty_state(
+    ecs_query_t *query,
+    ecs_query_table_match_t *match,
+    int32_t term,
+    table_dirty_state_t *out)
+{
+    ecs_world_t *world = query->world;
+    ecs_entity_t subject = match->subjects[term];
+    int32_t column;
+
+    if (!subject) {
+        out->table = match->table;
+        column = match->columns[term];
+        if (column == -1) {
+            column = 0;
+        }
+    } else {
+        out->table = ecs_get_table(world, subject);
+        column = -match->columns[term];
+    }
+
+    out->dirty_state = flecs_table_get_dirty_state(out->table);
+
+    if (column) {
+        out->column = ecs_table_type_to_storage_index(out->table, column - 1);
+    } else {
+        out->column = -1;
+    }
+}
+
+/* Get match monitor. Monitors are used to keep track of whether components 
+ * matched by the query in a table have changed. */
+static
+bool get_match_monitor(
+    ecs_query_t *query,
+    ecs_query_table_match_t *match)
+{
+    if (match->monitor) {
+        return false;
+    }
+
+    int32_t *monitor = ecs_os_calloc_n(int32_t, query->filter.term_count + 1);
+
+    /* Mark terms that don't need to be monitored. This saves time when reading
+     * and/or updating the monitor. */
+    const ecs_filter_t *f = &query->filter;
+    int32_t i, t = -1, term_count = f->term_count_actual;
+    table_dirty_state_t cur_dirty_state;
+
+    for (i = 0; i < term_count; i ++) {
+        if (t == f->terms[i].index) {
+            if (monitor[t + 1] != -1) {
+                continue;
+            }
+        }
+
+        t = f->terms[i].index;
+        monitor[t + 1] = -1;
+
+        if (f->terms[i].inout != EcsIn && 
+            f->terms[i].inout != EcsInOut &&
+            f->terms[i].inout != EcsInOutDefault) {
+            continue; /* If term isn't read, don't monitor */
+        }
+
+        int32_t column = match->columns[t];
+        if (column == 0) {
+            continue; /* Don't track terms that aren't matched */
+        }
+
+        get_dirty_state(query, match, t, &cur_dirty_state);
+        if (cur_dirty_state.column == -1) {
+            continue; /* Don't track terms that aren't stored */
+        }
+
+        monitor[t + 1] = 0;
+    }
+
+    match->monitor = monitor;
+
+    query->flags |= EcsQueryHasMonitor;
+
+    return true;
+}
+
+/* Synchronize match monitor with table dirty state */
+static
+void sync_match_monitor(
+    ecs_query_t *query,
+    ecs_query_table_match_t *match)
+{
+    ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!match->monitor) {
+        if (query->flags & EcsQueryHasMonitor) {
+            get_match_monitor(query, match);
+        } else {
+            return;
+        }
+    }
+
+    int32_t *monitor = match->monitor;
+    ecs_table_t *table = match->table;
+    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+    table_dirty_state_t cur;
+
+    monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
+
+    int32_t i, term_count = query->filter.term_count_actual;
+    for (i = 0; i < term_count; i ++) {
+        int32_t t = query->filter.terms[i].index;
+        if (monitor[t + 1] == -1) {
+            continue;
+        }
+                
+        get_dirty_state(query, match, t, &cur);
+        ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+        monitor[t + 1] = cur.dirty_state[cur.column + 1];
+    }
+}
+
+/* Check if single match term has changed */
+static
+bool check_match_monitor_term(
+    ecs_query_t *query,
+    ecs_query_table_match_t *match,
+    int32_t term)
+{
+    ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (get_match_monitor(query, match)) {
+        return true;
+    }
+    
+    int32_t *monitor = match->monitor;
+    ecs_table_t *table = match->table;
+    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+    table_dirty_state_t cur;
+
+    int32_t state = monitor[term];
+    if (state == -1) {
+        return false;
+    }
+
+    if (!term) {
+        return monitor[0] != dirty_state[0];
+    }
+
+    get_dirty_state(query, match, term - 1, &cur);
+    ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+
+    return monitor[term] != cur.dirty_state[cur.column + 1];
+}
+
+/* Check if any term for match has changed */
+static
+bool check_match_monitor(
+    ecs_query_t *query,
+    ecs_query_table_match_t *match)
+{
+    ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (get_match_monitor(query, match)) {
+        return true;
+    }
+
+    int32_t *monitor = match->monitor;
+    ecs_table_t *table = match->table;
+    int32_t *dirty_state = flecs_table_get_dirty_state(table);
+    ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+    table_dirty_state_t cur;
+
+    if (monitor[0] != dirty_state[0]) {
+        return true;
+    }
+
+    ecs_filter_t *f = &query->filter;
+    int32_t i, term_count = f->term_count_actual;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &f->terms[i];
+        int32_t t = term->index;
+        if (monitor[t + 1] == -1) {
+            continue;
+        }
+
+        get_dirty_state(query, match, t, &cur);
+        ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
+
+        if (monitor[t + 1] != cur.dirty_state[cur.column + 1]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/* Check if any term for matched table has changed */
+static
+bool check_table_monitor(
+    ecs_query_t *query,
+    ecs_query_table_t *table,
+    int32_t term)
+{
+    ecs_query_table_node_t *cur, *end = table->last->node.next;
+
+    for (cur = &table->first->node; cur != end; cur = cur->next) {
+        ecs_query_table_match_t *match = (ecs_query_table_match_t*)cur;
+        if (term == -1) {
+            if (check_match_monitor(query, match)) {
+                return true;
+            }
+        } else {
+            if (check_match_monitor_term(query, match, term)) {
+                return true;
+            } 
+        }
+    }
+
+    return false;
+}
+
+static
+bool check_query_monitor(
+    ecs_query_t *query)
+{
+    ecs_vector_t *vec = query->cache.tables;
+    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
+    int32_t i, count = ecs_vector_count(vec);
+
+    for (i = 0; i < count; i ++) {
+        ecs_query_table_t *qt = &tables[i];
+        if (check_table_monitor(query, qt, -1)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+void init_query_monitors(
+    ecs_query_t *query)
+{
+    ecs_query_table_node_t *cur = query->list.first;
+
+    /* Ensure each match has a monitor */
+    for (; cur != NULL; cur = cur->next) {
+        ecs_query_table_match_t *match = (ecs_query_table_match_t*)cur;
+        get_match_monitor(query, match);
+    }
+}
+
 /* Builtin group_by callback for Cascade terms.
  * This function traces the hierarchy depth of an entity type by following a
  * relation upwards (to its 'parents') for as long as those parents have the
@@ -36316,65 +36583,6 @@ void build_sorted_tables(
 }
 
 static
-bool tables_dirty(
-    const ecs_query_t *query)
-{
-    bool is_dirty = false;
-
-    ecs_vector_t *vec = query->cache.tables;
-    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
-    int32_t i, count = ecs_vector_count(vec);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_table_t *qt = &tables[i];
-        ecs_table_t *table = qt->hdr.table;
-
-        if (!qt->monitor) {
-            qt->monitor = flecs_table_get_monitor(table);
-            is_dirty = true;
-        }
-
-        int32_t *dirty_state = flecs_table_get_dirty_state(table);
-        int32_t t, storage_count = ecs_table_storage_count(table);
-        for (t = 0; t < storage_count + 1; t ++) {
-            is_dirty = is_dirty || (dirty_state[t] != qt->monitor[t]);
-        }
-    }
-
-    is_dirty = is_dirty || (query->match_count != query->prev_match_count);
-
-    return is_dirty;
-}
-
-static
-void tables_reset_dirty(
-    ecs_query_t *query)
-{
-    query->prev_match_count = query->match_count;
-
-    ecs_vector_t *vec = query->cache.tables;
-    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
-    int32_t i, count = ecs_vector_count(vec);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_table_t *qt = &tables[i];
-        ecs_table_t *table = qt->hdr.table;
-
-        if (!qt->monitor) {
-            /* If one table doesn't have a monitor, none of the tables will have
-             * a monitor, so early out. */
-            return;
-        }
-
-        int32_t *dirty_state = flecs_table_get_dirty_state(table);
-        int32_t t, storage_count = ecs_table_storage_count(table);
-        for (t = 0; t < storage_count + 1; t ++) {
-            qt->monitor[t] = dirty_state[t];
-        }
-    }
-}
-
-static
 void sort_tables(
     ecs_world_t *world,
     ecs_query_t *query)
@@ -36385,6 +36593,26 @@ void sort_tables(
     }
     
     ecs_entity_t order_by_component = query->order_by_component;
+    int32_t i, order_by_term = -1;
+
+    /* Find term that iterates over component (must be at least one) */
+    if (order_by_component) {
+        const ecs_filter_t *f = &query->filter;
+        int32_t term_count = f->term_count_actual;
+        for (i = 0; i < term_count; i ++) {
+            ecs_term_t *term = &f->terms[i];
+            if (term->subj.entity != EcsThis) {
+                continue;
+            }
+
+            if (term->id == order_by_component) {
+                order_by_term = i;
+                break;
+            }
+        }
+
+        ecs_assert(order_by_term != -1, ECS_INTERNAL_ERROR, NULL);
+    }
 
     /* Iterate over non-empty tables. Don't bother with empty tables as they
      * have nothing to sort */
@@ -36392,50 +36620,42 @@ void sort_tables(
     bool tables_sorted = false;
     ecs_vector_t *vec = query->cache.tables;
     ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
-    int32_t i, count = ecs_vector_count(vec);
+    int32_t count = ecs_vector_count(vec);
 
     for (i = 0; i < count; i ++) {
         ecs_query_table_t *qt = &tables[i];
         ecs_table_t *table = qt->hdr.table;
+        bool dirty = false;
 
-        /* If no monitor had been created for the table yet, create it now */
-        bool is_dirty = false;
-        if (!qt->monitor) {
-            qt->monitor = flecs_table_get_monitor(table);
-
-            /* A new table is always dirty */
-            is_dirty = true;
+        if (check_table_monitor(query, qt, 0)) {
+            dirty = true;
         }
 
-        int32_t *dirty_state = flecs_table_get_dirty_state(table);
-        is_dirty = is_dirty || (dirty_state[0] != qt->monitor[0]);
-
-        int32_t index = -1;
+        int32_t column = -1;
         if (order_by_component) {
-            /* Get index of sorted component. We only care if the component we're
-            * sorting on has changed or if entities have been added / re(moved) */
-            index = ecs_type_index_of(table->storage_type, 
-                0, order_by_component);
+            if (check_table_monitor(query, qt, order_by_term + 1)) {
+                dirty = true;
+            }
 
-            if (index != -1) {
-                ecs_assert(index < ecs_vector_count(table->type), 
-                    ECS_INTERNAL_ERROR, NULL); 
+            if (dirty) {
+                column = ecs_type_match(world, table->storage_table, 
+                    table->storage_type, 0, order_by_component, 
+                        0, 0, 0, 0, 0, 0);
 
-                is_dirty = is_dirty || (dirty_state[index + 1] != qt->monitor[index + 1]);
-            } else {
-                /* Table does not contain component which means the sorted
-                 * component is shared. Table does not need to be sorted */
-                continue;
+                if (column == -1) {
+                    /* Component is shared, no sorting is needed */
+                    dirty = false;
+                }
             }
         }
-        
-        /* Check both if entities have moved (element 0) or if the component
-         * we're sorting on has changed (index + 1) */
-        if (is_dirty) {
-            /* Sort the table */
-            sort_table(world, table, index, compare);
-            tables_sorted = true;
+
+        if (!dirty) {
+            continue;
         }
+
+        /* Something has changed, sort the table */
+        sort_table(world, table, column, compare);
+        tables_sorted = true;
     }
 
     if (tables_sorted || query->match_count != query->prev_match_count) {
@@ -36786,6 +37006,7 @@ void remove_table(
         ecs_os_free(cur->references);
         ecs_os_free(cur->sparse_columns);
         ecs_os_free(cur->bitset_columns);
+        ecs_os_free(cur->monitor);
 
         if (!elem->hdr.empty) {
             remove_table_node(query, &cur->node);
@@ -36795,8 +37016,6 @@ void remove_table(
 
         ecs_os_free(cur);
     }
-
-    ecs_os_free(elem->monitor);
 
     elem->first = NULL;
 }
@@ -37244,7 +37463,7 @@ ecs_iter_t ecs_query_iter(
         flecs_eval_component_monitors(world);
     }
 
-    tables_reset_dirty(query);
+    query->prev_match_count = query->match_count;
 
     int32_t table_count;
     if (query->table_slices) {
@@ -37667,6 +37886,7 @@ bool ecs_query_next_instanced(
     ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
+    ecs_flags32_t flags = query->flags;
     (void)world;
 
     it->is_valid = true;
@@ -37676,10 +37896,19 @@ bool ecs_query_next_instanced(
     if (!query->constraints_satisfied) {
         goto done;
     }
-    
-    query_iter_cursor_t cur;
 
-    ecs_query_table_node_t *node, *next;
+    query_iter_cursor_t cur;
+    ecs_query_table_node_t *node, *next, *prev;
+    if ((prev = iter->prev)) {
+        /* Match has been iterated, update monitor for change tracking */
+        if (flags & EcsQueryHasMonitor) {
+            sync_match_monitor(query, prev->match);
+        }
+        if (flags & EcsQueryHasOutColumns) {
+            mark_columns_dirty(query, prev->match);
+        }
+    }
+
     for (node = iter->node; node != NULL; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
@@ -37755,16 +37984,11 @@ bool ecs_query_next_instanced(
         it->instance_count = 0;
 
         flecs_iter_init(it);
-        flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, it->ptrs, NULL);
-
-        if (query->flags & EcsQueryHasOutColumns) {
-            if (table) {
-                mark_columns_dirty(query, match);
-            }
-        }
+        flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, 
+            it->ptrs, NULL);
 
         iter->node = next;
-
+        iter->prev = node;
         goto yield;
     }
 
@@ -37778,14 +38002,53 @@ yield:
 }
 
 bool ecs_query_changed(
-    const ecs_query_t *query)
+    ecs_query_t *query,
+    ecs_iter_t *it)
 {
+    if (it) {
+        ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
+
+        ecs_query_table_match_t *qt = 
+            (ecs_query_table_match_t*)it->priv.iter.query.prev;
+        ecs_assert(qt != NULL, ECS_INVALID_PARAMETER, NULL);
+
+        if (!query) {
+            query = it->priv.iter.query.query;
+        }
+
+        ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_poly_assert(query, ecs_query_t);
+
+        return check_match_monitor(query, qt);
+    }
+
     ecs_poly_assert(query, ecs_query_t);
     ecs_check(!(query->flags & EcsQueryIsOrphaned), 
         ECS_INVALID_PARAMETER, NULL);
-    return tables_dirty(query);
+
+    if (!(query->flags & EcsQueryHasMonitor)) {
+        query->flags |= EcsQueryHasMonitor;
+        init_query_monitors(query);
+        return true; /* Monitors didn't exist yet */
+    }
+
+    if (query->match_count != query->prev_match_count) {
+        return true;
+    }
+
+    return check_query_monitor(query);
 error:
     return false;
+}
+
+void ecs_query_skip(
+    ecs_iter_t *it)
+{
+    ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    it->priv.iter.query.prev = NULL;
 }
 
 bool ecs_query_orphaned(

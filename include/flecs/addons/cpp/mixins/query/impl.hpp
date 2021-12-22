@@ -47,7 +47,7 @@ struct query_base {
      * @return true if entities changed, otherwise false.
      */
     bool changed() {
-        return ecs_query_changed(m_query);
+        return ecs_query_changed(m_query, 0);
     }
 
     /** Returns whether query is orphaned.

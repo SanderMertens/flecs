@@ -133,7 +133,7 @@ typedef struct ecs_filter_iter_t {
 /** Query-iterator specific data */
 typedef struct ecs_query_iter_t {
     ecs_query_t *query;
-    ecs_query_table_node_t *node;
+    ecs_query_table_node_t *node, *prev;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;

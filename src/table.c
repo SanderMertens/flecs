@@ -1973,8 +1973,12 @@ int32_t* flecs_table_get_dirty_state(
     
     if (!table->dirty_state) {
         int32_t column_count = ecs_vector_count(table->storage_type);
-        table->dirty_state = ecs_os_calloc_n( int32_t, column_count + 1);
+        table->dirty_state = ecs_os_malloc_n( int32_t, column_count + 1);
         ecs_assert(table->dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
+        
+        for (int i = 0; i < column_count + 1; i ++) {
+            table->dirty_state[i] = 1;
+        }
     }
     return table->dirty_state;
 }
@@ -2081,6 +2085,7 @@ int32_t ecs_table_type_to_storage_index(
     const ecs_table_t *table,
     int32_t index)
 {
+    ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < ecs_vector_count(table->type), 
         ECS_INVALID_PARAMETER, NULL);
     int32_t *storage_map = table->storage_map;
