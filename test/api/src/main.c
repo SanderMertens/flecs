@@ -1148,6 +1148,12 @@ void Query_query_changed_after_set(void);
 void Query_query_change_after_modified(void);
 void Query_query_change_after_out_system(void);
 void Query_query_change_after_in_system(void);
+void Query_query_change_after_modified_out_term(void);
+void Query_query_change_check_iter(void);
+void Query_query_change_check_iter_after_skip_read(void);
+void Query_query_change_check_iter_after_skip_write(void);
+void Query_query_change_parent_term(void);
+void Query_query_change_prefab_term(void);
 void Query_subquery_match_existing(void);
 void Query_subquery_match_new(void);
 void Query_subquery_inactive(void);
@@ -6694,6 +6700,30 @@ bake_test_case Query_testcases[] = {
         Query_query_change_after_in_system
     },
     {
+        "query_change_after_modified_out_term",
+        Query_query_change_after_modified_out_term
+    },
+    {
+        "query_change_check_iter",
+        Query_query_change_check_iter
+    },
+    {
+        "query_change_check_iter_after_skip_read",
+        Query_query_change_check_iter_after_skip_read
+    },
+    {
+        "query_change_check_iter_after_skip_write",
+        Query_query_change_check_iter_after_skip_write
+    },
+    {
+        "query_change_parent_term",
+        Query_query_change_parent_term
+    },
+    {
+        "query_change_prefab_term",
+        Query_query_change_prefab_term
+    },
+    {
         "subquery_match_existing",
         Query_subquery_match_existing
     },
@@ -11312,7 +11342,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        55,
+        61,
         Query_testcases
     },
     {

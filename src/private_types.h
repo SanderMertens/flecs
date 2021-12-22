@@ -295,6 +295,8 @@ struct ecs_query_table_match_t {
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_table_match_t *next_match;
+
+    int32_t *monitor;                /* Used to monitor table for changes */
 };
 
 /** A single table can occur multiple times in the cache when a term matches
@@ -303,7 +305,6 @@ typedef struct ecs_query_table_t {
     ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_table_match_t *first;  /* List with matches for table */
     ecs_query_table_match_t *last;   /* Last discovered match for table */
-    int32_t *monitor;                /* Used to monitor table for changes */
 } ecs_query_table_t;
 
 /** Points to the beginning & ending of a query group */
@@ -322,6 +323,7 @@ typedef struct ecs_query_table_list_t {
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
 #define EcsQueryHasOptional (2048)   /* Does query have optional columns */
+#define EcsQueryHasMonitor (4096)    /* Does query track changes */
 
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {

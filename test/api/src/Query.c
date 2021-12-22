@@ -7,18 +7,24 @@ void Query_query_changed_after_new() {
     
     ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_new(world, Position);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -30,18 +36,22 @@ void Query_query_changed_after_delete() {
     
     ecs_entity_t e1 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_delete(world, e1);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
     ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -53,18 +63,22 @@ void Query_query_changed_after_add() {
     
     ecs_entity_t e1 = ecs_new(world, 0);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == false);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_add(world, e1, Position);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -76,18 +90,23 @@ void Query_query_changed_after_remove() {
     
     ecs_entity_t e1 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_remove(world, e1, Position);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == false);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -99,18 +118,23 @@ void Query_query_changed_after_set() {
     
     ecs_entity_t e1 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_set(world, e1, Position, {10, 20});
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -122,18 +146,23 @@ void Query_query_change_after_modified() {
     
     ecs_entity_t e1 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_modified(world, e1, Position);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -149,18 +178,23 @@ void Query_query_change_after_out_system() {
     
     ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_progress(world, 0);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
@@ -174,18 +208,282 @@ void Query_query_change_after_in_system() {
     
     ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
     test_assert(q != NULL);
-    test_assert(ecs_query_changed(q) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
 
-    ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_progress(world, 0);
-    test_assert(ecs_query_changed(q) == false);
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_query_iter(world, q);
-    test_assert(ecs_query_changed(q) == false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_after_modified_out_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_entity_t e = ecs_new(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position, [out] Velocity");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_check_iter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { 
+        test_bool(ecs_query_changed(q, &it), true);
+    }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_modified(world, e1, Position);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_bool(ecs_query_changed(q, &it), true);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_bool(ecs_query_changed(q, &it), false);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_bool(ecs_query_changed(q, &it), false);
+
+    test_bool(ecs_query_changed(q, NULL), false);
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == false);
+    while (ecs_query_next(&it)) { 
+        test_bool(ecs_query_changed(q, &it), false);
+    }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_modified(world, e2, Position);
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_bool(ecs_query_changed(q, &it), false);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_bool(ecs_query_changed(q, &it), true);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_bool(ecs_query_changed(q, &it), false);
+
+    test_bool(ecs_query_changed(q, NULL), false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_check_iter_after_skip_read() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t e = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    ecs_query_skip(&it);
+    test_bool(ecs_query_next(&it), false);
+
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_check_iter_after_skip_write() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_new(world, Position);
+
+    ecs_query_t *qw = ecs_query_new(world, "[out] Position");
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    it = ecs_query_iter(world, qw);
+    test_assert(ecs_query_changed(q, 0) == false);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, 0) == false);
+    ecs_query_skip(&it);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    it = ecs_query_iter(world, qw);
+    test_assert(ecs_query_changed(q, 0) == false);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, 0) == false);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_parent_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t child = ecs_new(world, Position);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position, [in] Position(parent)");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, parent, Position, {10, 20});
+
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_fini(world);
+}
+
+void Query_query_change_prefab_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_entity_t base = ecs_new(world, Position);
+    ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "[in] Position(super)");
+    test_assert(q != NULL);
+    test_assert(ecs_query_changed(q, 0) == true);
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_changed(q, 0) == true);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q, 0) == false);
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_assert(ecs_query_changed(q, 0) == true);
+
+    it = ecs_query_iter(world, q);
+    test_bool(ecs_query_next(&it), true);
+    test_assert(ecs_query_changed(q, &it) == true);
+    test_bool(ecs_query_next(&it), false);
+    test_assert(ecs_query_changed(q, 0) == false);
 
     ecs_fini(world);
 }
