@@ -743,9 +743,11 @@ void flecs_table_reset(
 
 static
 void mark_table_dirty(
+    ecs_world_t *world,
     ecs_table_t *table,
     int32_t index)
 {
+    (void)world;
     if (table->dirty_state) {
         table->dirty_state[index] ++;
     }
@@ -1018,7 +1020,7 @@ int32_t grow_data(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);
+    mark_table_dirty(world, table, 0);
 
     if (!world->is_readonly && !cur_count) {
         table_activate(world, table, true);
@@ -1081,7 +1083,7 @@ int32_t flecs_table_append(
     *r = record;
  
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);
+    mark_table_dirty(world, table, 0);
 
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
@@ -1225,7 +1227,7 @@ void flecs_table_delete(
     }     
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);    
+    mark_table_dirty(world, table, 0);    
 
     /* If table is empty, deactivate it */
     if (!count) {
@@ -1577,7 +1579,7 @@ void flecs_table_swap(
     }
 
     /* If the table is monitored indicate that there has been a change */
-    mark_table_dirty(table, 0);    
+    mark_table_dirty(world, table, 0);    
 
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     ecs_entity_t e1 = entities[row_1];
@@ -1778,7 +1780,7 @@ void merge_table_data(
             old_columns[i_old].data = NULL;
 
             /* Mark component column as dirty */
-            mark_table_dirty(new_table, i_new + 1);
+            mark_table_dirty(world, new_table, i_new + 1);
             
             i_new ++;
             i_old ++;
@@ -1853,7 +1855,7 @@ void merge_table_data(
     }    
 
     /* Mark entity column as dirty */
-    mark_table_dirty(new_table, 0); 
+    mark_table_dirty(world, new_table, 0); 
 }
 
 int32_t ecs_table_count(

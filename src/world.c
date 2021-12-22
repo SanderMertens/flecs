@@ -789,14 +789,18 @@ void ecs_set_component_actions_w_id(
 
     if (c_info->lifecycle_set) {
         ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
-        ecs_check(c_info->lifecycle.ctor == lifecycle->ctor, 
+        ecs_check(!lifecycle->ctor || c_info->lifecycle.ctor == lifecycle->ctor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(c_info->lifecycle.dtor == lifecycle->dtor, 
+        ecs_check(!lifecycle->dtor || c_info->lifecycle.dtor == lifecycle->dtor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(c_info->lifecycle.copy == lifecycle->copy, 
+        ecs_check(!lifecycle->copy || c_info->lifecycle.copy == lifecycle->copy, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(c_info->lifecycle.move == lifecycle->move, 
+        ecs_check(!lifecycle->move || c_info->lifecycle.move == lifecycle->move, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+
+        if (!c_info->lifecycle.on_set) {
+            c_info->lifecycle.on_set = lifecycle->on_set;
+        }
     } else {
         c_info->component = component;
         c_info->lifecycle = *lifecycle;

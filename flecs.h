@@ -391,25 +391,11 @@ typedef int32_t ecs_size_t;
 
 /* Constructor / destructor convenience macro */
 #define ECS_ON_SET_IMPL(type, var, ...)\
-    void type##_##on_set(\
-        ecs_world_t *world,\
-        ecs_entity_t component,\
-        const ecs_entity_t *entity_ptr,\
-        void *_ptr,\
-        size_t _size,\
-        int32_t _count,\
-        void *ctx)\
+    void type##_##on_set(ecs_iter_t *_it)\
     {\
-        (void)world;\
-        (void)component;\
-        (void)entity_ptr;\
-        (void)_ptr;\
-        (void)_size;\
-        (void)_count;\
-        (void)ctx;\
-        for (int32_t i = 0; i < _count; i ++) {\
-            ecs_entity_t entity = entity_ptr[i];\
-            type *var = &((type*)_ptr)[i];\
+        for (int32_t i = 0; i < _it->count; i ++) {\
+            ecs_entity_t entity = _it->entities[i];\
+            type *var = &((type*)_it->ptrs[0])[i];\
             (void)entity;\
             (void)var;\
             __VA_ARGS__\
@@ -3051,16 +3037,6 @@ typedef void (*ecs_move_ctor_t)(
     int32_t count,
     void *ctx);
 
-/** Invoked when setting a component */
-typedef void (*ecs_on_set_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
 #ifdef __cplusplus
 }
 #endif
@@ -3936,7 +3912,7 @@ struct EcsComponentLifecycle {
     /* Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component
      * to respond to changes on itself before others can. */
-    ecs_on_set_t on_set;
+    ecs_iter_action_t on_set;
 };
 
 /** Component that stores reference to trigger */
@@ -16849,6 +16825,7 @@ struct type_base {
         ecs_type_desc_t desc = {};
         desc.entity.entity = e;
         m_entity = flecs::entity(world, ecs_type_init(world, &desc));
+        ecs_assert(!e || e == m_entity, ECS_INTERNAL_ERROR, nullptr);
         sync_from_flecs();
     }
 
@@ -16979,7 +16956,6 @@ private:
         tc->type = m_type;
         tc->normalized = m_type;
         ecs_modified(world(), id(), EcsType);
-
     }
 
     void sync_from_flecs() {
@@ -16987,16 +16963,18 @@ private:
             return;
         }
 
-        EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
-        ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);            
-        m_type = tc->normalized;
-        ecs_modified(world(), id(), EcsType);
+        const EcsType *tc = ecs_get(world(), id(), EcsType);
+        if (!tc) {
+            m_type = nullptr;
+        } else {
+            m_type = tc->normalized;
+        }
 
         m_table = nullptr;
     }
 
     flecs::entity m_entity;
-    type_t m_type;
+    type_t m_type = nullptr;
     table_t *m_table = nullptr;
 };
 

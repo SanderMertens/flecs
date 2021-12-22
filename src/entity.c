@@ -1261,15 +1261,26 @@ void flecs_notify_on_set(
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
             const ecs_type_info_t *info = get_c_info(world, id);
-            ecs_on_set_t on_set;
+            ecs_iter_action_t on_set;
             if (info && (on_set = info->lifecycle.on_set)) {
                 ecs_column_t *c = ecs_table_column_for_id(world, table, id);
                 ecs_size_t size = c->size;
+                void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-                void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
-                on_set(world, id, entities, ptr, flecs_itosize(size), 
-                    count, info->lifecycle.ctx);
+                ecs_iter_t it = {.term_count = 1};
+                it.entities = entities;
+                
+                flecs_iter_init(&it);
+                it.world = world;
+                it.real_world = world;
+                it.ptrs[0] = ptr;
+                it.sizes[0] = size;
+                it.ids[0] = id;
+                it.ctx = info->lifecycle.ctx;
+                it.count = count;
+                
+                on_set(&it);
             }
         }
     }

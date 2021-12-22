@@ -190,23 +190,12 @@ bool rest_reply(
 }
 
 static
-void on_set_rest(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
+void on_set_rest(ecs_iter_t *it)
 {
-    EcsRest *rest = ptr;
-
-    (void)component;
-    (void)size;
-    (void)ctx;
+    EcsRest *rest = it->ptrs[0];
 
     int i;
-    for(i = 0; i < count; i ++) {
+    for(i = 0; i < it->count; i ++) {
         if (!rest[i].port) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
@@ -227,8 +216,8 @@ void on_set_rest(
             continue;
         }
 
-        srv_ctx->world = world;
-        srv_ctx->entity = entities[i];
+        srv_ctx->world = it->world;
+        srv_ctx->entity = it->entities[i];
         srv_ctx->srv = srv;
         srv_ctx->rc = 1;
 

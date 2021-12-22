@@ -2706,7 +2706,7 @@ void mark_columns_dirty(
             ecs_term_t *term = &terms[i];
             int32_t ti = term->index;
 
-            if (term->inout == EcsIn) {
+            if (term->inout == EcsIn || term->inout == EcsInOutFilter) {
                 /* Don't mark readonly terms dirty */
                 continue;
             }

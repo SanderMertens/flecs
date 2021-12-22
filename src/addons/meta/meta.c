@@ -774,23 +774,8 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
 }
 
 static
-void member_on_set(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entity_ptr;
-    (void)size;
-    (void)count;
-    (void)ctx;
-
-    EcsMember *mbr = ptr;
+void member_on_set(ecs_iter_t *it) {
+    EcsMember *mbr = it->ptrs[0];
     if (!mbr->count) {
         mbr->count = 1;
     }

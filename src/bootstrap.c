@@ -31,15 +31,21 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 })
 
-static ECS_ON_SET(EcsIdentifier, ptr, {
-    if (ptr->value) {
-        ptr->length = ecs_os_strlen(ptr->value);
-        ptr->hash = flecs_hash(ptr->value, ptr->length);
-    } else {
-        ptr->length = 0;
-        ptr->hash = 0;
+static
+void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
+    EcsIdentifier *ptr = ecs_term(it, EcsIdentifier, 1);
+    
+    for (int i = 0; i < it->count; i ++) {
+        EcsIdentifier *cur = &ptr[i];
+        if (cur->value) {
+            cur->length = ecs_os_strlen(cur->value);
+            cur->hash = flecs_hash(cur->value, cur->length);
+        } else {
+            cur->length = 0;
+            cur->hash = 0;
+        }
     }
-})
+}
 
 /* Component lifecycle actions for EcsTrigger */
 static ECS_CTOR(EcsTrigger, ptr, {
