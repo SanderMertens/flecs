@@ -372,6 +372,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t id, const Func& func) {
+        world = (ecs_world_t*)ecs_get_world(world);
         flecs::world w(world);
 
         ecs_record_t *r = ecs_record_find(world, id);
