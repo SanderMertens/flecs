@@ -9201,12 +9201,14 @@ int ecs_meta_from_desc(
 #define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
 
 #define ECS_STRUCT_IMPL(name, type_desc)\
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsStructType;\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_STRUCT_DECLARE(name, type_desc)\
-    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
+    FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name) = 0
 
 #define ECS_STRUCT_EXTERN(name, type_desc)\
     FLECS_META_C_IMPORT extern ECS_COMPONENT_DECLARE(name)
@@ -9219,11 +9221,13 @@ int ecs_meta_from_desc(
 #define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
 
 #define ECS_ENUM_IMPL(name, type_desc)\
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsEnumType;\
     FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
 #define ECS_ENUM_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
     FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
 #define ECS_ENUM_EXTERN(name, type_desc)\
@@ -9237,11 +9241,13 @@ int ecs_meta_from_desc(
 #define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
 
 #define ECS_BITMASK_IMPL(name, type_desc)\
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
     static const char *FLECS__##name##_desc = type_desc;\
     static ecs_type_kind_t FLECS__##name##_kind = EcsBitmaskType;\
     FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
 #define ECS_BITMASK_DECLARE(name, type_desc)\
+    FLECS_META_C_EXPORT extern ECS_COMPONENT_DECLARE(name);\
     FLECS_META_C_EXPORT ECS_COMPONENT_DECLARE(name)
 
 #define ECS_BITMASK_EXTERN(name, type_desc)\
