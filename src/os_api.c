@@ -52,7 +52,7 @@ void ecs_os_fini(void) {
     }
 }
 
-#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !defined(_WIN32)
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 static
