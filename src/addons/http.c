@@ -34,7 +34,7 @@
 
 #ifdef FLECS_HTTP
 
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
 #pragma comment(lib, "Ws2_32.lib")
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
@@ -212,7 +212,7 @@ static
 void http_close(
     ecs_http_socket_t sock)
 {
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
     closesocket(sock);
 #else
     shutdown(sock, SHUT_RDWR);
@@ -867,7 +867,7 @@ ecs_http_server_t* ecs_http_server_init(
     srv->connections = flecs_sparse_new(ecs_http_connection_impl_t);
     srv->requests = flecs_sparse_new(ecs_http_request_impl_t);
 
-#ifndef _MSC_VER
+#if !defined _MSC_VER && !defined _WIN32
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
      * but te client already disconnected. */
     signal(SIGPIPE, SIG_IGN);
