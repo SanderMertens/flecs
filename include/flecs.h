@@ -1229,6 +1229,17 @@ void ecs_set_entity_range(
     ecs_entity_t id_start,
     ecs_entity_t id_end);
 
+/** Sets the entity's generation in the world's sparse set.
+ * Used for managing manual id pools.
+ *
+ * @param world The world.
+ * @param entity_with_generation Entity for which to set the generation with the new generation to set.
+ */
+FLECS_API
+void ecs_set_entity_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation);
+
 /** Enable/disable range limits.
  * When an application is both a receiver of range-limited entities and a
  * producer of range-limited entities, range checking needs to be temporarily
