@@ -1211,6 +1211,18 @@ error:
     return;
 }
 
+void ecs_ensure_entity_w_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation) {
+    if (ecs_is_alive(world, entity_with_generation)) {
+        return;
+    }
+    // Manual id could be abscent in the sparse set after delete.
+    flecs_sparse_ensure(world->store.entity_index, ecs_record_t, ecs_strip_generation(entity_with_generation));
+    // Override generation of the entity with the manually managed one.
+    flecs_sparse_set_generation(world->store.entity_index, entity_with_generation);
+}
+
 bool ecs_enable_range_check(
     ecs_world_t *world,
     bool enable)

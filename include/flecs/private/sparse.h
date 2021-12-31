@@ -176,16 +176,6 @@ void* _flecs_sparse_get_any(
 #define flecs_sparse_get_any(sparse, type, index)\
     ((type*)_flecs_sparse_get_any(sparse, sizeof(type), index))
 
-/** Get or create element by (sparse) id. */
-FLECS_DBG_API
-void* _flecs_sparse_ensure(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_ensure(sparse, type, index)\
-    ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
-
 /** Set value. */
 FLECS_DBG_API
 void* _flecs_sparse_set(
@@ -271,6 +261,16 @@ uint64_t ecs_sparse_last_id(
 FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
+
+/** Get or create element by (sparse) id. */
+FLECS_API
+void* _flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id);
+
+#define flecs_sparse_ensure(sparse, type, index)\
+    ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
 
 FLECS_API
 void* _ecs_sparse_get_dense(
