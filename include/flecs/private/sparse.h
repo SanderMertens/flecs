@@ -110,12 +110,6 @@ void* _flecs_sparse_remove_get(
 #define flecs_sparse_remove_get(sparse, type, index)\
     ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
 
-/** Override the generation count for a specific id */
-FLECS_DBG_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);    
-
 /** Check whether an id has ever been issued. */
 FLECS_DBG_API
 bool flecs_sparse_exists(
@@ -271,6 +265,12 @@ uint64_t ecs_sparse_last_id(
 FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
+
+/** Override the generation count for a specific id */
+FLECS_API
+void flecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t id);
 
 FLECS_API
 void* _ecs_sparse_get_dense(
