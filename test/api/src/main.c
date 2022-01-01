@@ -1138,6 +1138,7 @@ void Filter_filter_iter_frame_offset(void);
 void Filter_filter_1_term_no_alloc(void);
 void Filter_filter_cache_size_terms_no_alloc(void);
 void Filter_filter_lt_cache_size_terms_no_alloc(void);
+void Filter_move_self(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6663,6 +6664,10 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_lt_cache_size_terms_no_alloc",
         Filter_filter_lt_cache_size_terms_no_alloc
+    },
+    {
+        "move_self",
+        Filter_move_self
     }
 };
 
@@ -11335,7 +11340,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        115,
+        116,
         Filter_testcases
     },
     {

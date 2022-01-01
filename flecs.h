@@ -19773,7 +19773,7 @@ inline flecs::entity world::set_scope(const flecs::entity& s) const {
 }
 
 inline flecs::entity world::get_scope() const {
-    return flecs::entity(ecs_get_scope(m_world));
+    return flecs::entity(m_world, ecs_get_scope(m_world));
 }
 
 inline entity world::lookup(const char *name) const {

@@ -2651,10 +2651,22 @@ bool ecs_id_is_wildcard(
  * a world. Filters, as opposed to queries, do not cache results. They are 
  * therefore slower to iterate, but are faster to create.
  *
- * This operation will at minimum allocate an array to hold the filter terms in
- * the returned filter struct. It may allocate additional memory if the provided
- * description contains a name, expression, or if the provided array of terms
- * contains strings (identifier names or term names).
+ * This operation will allocate an array to hold filter terms if the number of
+ * terms in the filter exceed ECS_TERM_DESC_CACHE_SIZE. If the number of terms
+ * is below that constant, the "terms" pointer is set to an inline array.
+ * 
+ * When a filter is copied by value, make sure to use "ecs_filter_move" to 
+ * ensure that the terms pointer still points to the inline array:
+ * 
+ *   ecs_filter_move(&dst_filter, &src_filter)
+ * 
+ * Alternatively, the ecs_filter_move function can be called with both arguments
+ * set to the same filter, to ensure the pointer is valid:
+ * 
+ *   ecs_filter_move(&f, &f)
+ * 
+ * When a filter contains entity or variable names memory is allocated to store
+ * those. To cleanup memory associated with a filter, call ecs_filter_fini.
  *
  * It is possible to create a filter without allocating any memory, by setting
  * the "terms" and "term_count" members directly. When doing so an application

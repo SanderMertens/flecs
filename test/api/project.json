@@ -1197,7 +1197,8 @@
                 "filter_iter_frame_offset",
                 "filter_1_term_no_alloc",
                 "filter_cache_size_terms_no_alloc",
-                "filter_lt_cache_size_terms_no_alloc"
+                "filter_lt_cache_size_terms_no_alloc",
+                "move_self"
             ]
         }, {
             "id": "Query",
