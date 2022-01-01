@@ -11337,7 +11337,8 @@ bool appendstr(
             /* Update to number of characters copied to new buffer */
             b->current->pos += n;
         } else {
-            char *remainder = ecs_os_strdup(str);
+            /* String doesn't fit in a single element, strdup */
+            char *remainder = ecs_os_strdup(str + memLeftInElement);
             ecs_strbuf_grow_str(b, remainder, remainder, n);
         }
     } else {
@@ -26730,7 +26731,7 @@ void FlecsCoreDocImport(
 
 #ifdef FLECS_HTTP
 
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
 #pragma comment(lib, "Ws2_32.lib")
 #include <WinSock2.h>
 #include <Ws2tcpip.h>
@@ -26908,7 +26909,7 @@ static
 void http_close(
     ecs_http_socket_t sock)
 {
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
     closesocket(sock);
 #else
     shutdown(sock, SHUT_RDWR);
@@ -27357,7 +27358,7 @@ int accept_connections(
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
 {
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
     /* If on Windows, test if winsock needs to be initialized */
     SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_ERROR == testsocket && WSANOTINITIALISED == WSAGetLastError()) {
@@ -27563,7 +27564,7 @@ ecs_http_server_t* ecs_http_server_init(
     srv->connections = flecs_sparse_new(ecs_http_connection_impl_t);
     srv->requests = flecs_sparse_new(ecs_http_request_impl_t);
 
-#ifndef _MSC_VER
+#if !defined _MSC_VER && !defined _WIN32
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
      * but te client already disconnected. */
     signal(SIGPIPE, SIG_IGN);
@@ -32663,8 +32664,10 @@ void ecs_filter_move(
             dst->terms = dst->term_cache;
         }
 
-        src->terms = NULL;
-        src->term_count = 0;
+        if (dst != src) {
+            src->terms = NULL;
+            src->term_count = 0;
+        }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
@@ -34543,7 +34546,7 @@ void ecs_os_fini(void) {
     }
 }
 
-#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !defined(_WIN32)
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 static
@@ -37049,17 +37052,41 @@ void rematch_table(
             resolve_cascade_subject(world, query, match, table, table->type);
 
         /* If query has optional columns, it is possible that a column that
-         * previously had data no longer has data, or vice versa. Do a full
+         * previously had data no longer has data, or vice versa. Do a
          * rematch to make sure data is consistent. */
         } else if (query->flags & EcsQueryHasOptional) {
-            unmatch_table(query, table);
-            if (!(query->flags & EcsQueryIsSubquery)) {
-                flecs_table_notify(world, table, &(ecs_table_event_t){
-                    .kind = EcsTableQueryUnmatch,
-                    .query = query
-                }); 
+            /* Check if optional terms that weren't matched before are matched
+             * now & vice versa */
+            ecs_query_table_match_t *qt = match->first;
+
+            bool rematch = false;
+            int32_t i, count = query->filter.term_count_actual;
+            for (i = 0; i < count; i ++) {
+                ecs_term_t *term = &query->filter.terms[i];
+
+                if (term->oper == EcsOptional) {
+                    int32_t t = term->index;
+                    int32_t column = 0;
+                    flecs_term_match_table(world, term, table,
+                        table->type, 0, &column, 0, 0, true);
+                    if (column && (qt->columns[t] == 0)) {
+                        rematch = true;
+                    } else if (!column && (qt->columns[t] != 0)) {
+                        rematch = true;
+                    }
+                }
             }
-            add_table(world, query, table);
+
+            if (rematch) {
+                unmatch_table(query, table);
+                if (!(query->flags & EcsQueryIsSubquery)) {
+                    flecs_table_notify(world, table, &(ecs_table_event_t){
+                        .kind = EcsTableQueryUnmatch,
+                        .query = query
+                    }); 
+                }
+                add_table(world, query, table);
+            }
         }
     } else {
         /* Table no longer matches, remove */
@@ -37120,7 +37147,7 @@ void rematch_tables(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_t *parent_query)
-{
+{    
     if (parent_query) {
         ecs_query_table_t *tables = ecs_vector_first(
             parent_query->cache.tables, ecs_query_table_t);

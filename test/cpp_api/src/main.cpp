@@ -740,6 +740,7 @@ void World_remove_all_id(void);
 void World_remove_all_type(void);
 void World_remove_all_pair(void);
 void World_remove_all_pair_type(void);
+void World_get_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3585,6 +3586,10 @@ bake_test_case World_testcases[] = {
     {
         "remove_all_pair_type",
         World_remove_all_pair_type
+    },
+    {
+        "get_scope",
+        World_get_scope
     }
 };
 
@@ -3826,7 +3831,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        55,
+        56,
         World_testcases
     },
     {

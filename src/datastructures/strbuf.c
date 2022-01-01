@@ -307,7 +307,8 @@ bool appendstr(
             /* Update to number of characters copied to new buffer */
             b->current->pos += n;
         } else {
-            char *remainder = ecs_os_strdup(str);
+            /* String doesn't fit in a single element, strdup */
+            char *remainder = ecs_os_strdup(str + memLeftInElement);
             ecs_strbuf_grow_str(b, remainder, remainder, n);
         }
     } else {

@@ -1221,6 +1221,13 @@ bool ecs_enable_range_check(
     return old_value;
 }
 
+void ecs_set_entity_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation)
+{
+    flecs_sparse_set_generation(world->store.entity_index, entity_with_generation);
+}
+
 int32_t ecs_get_threads(
     ecs_world_t *world)
 {

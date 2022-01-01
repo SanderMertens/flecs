@@ -933,8 +933,10 @@ void ecs_filter_move(
             dst->terms = dst->term_cache;
         }
 
-        src->terms = NULL;
-        src->term_count = 0;
+        if (dst != src) {
+            src->terms = NULL;
+            src->term_count = 0;
+        }
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
     }
