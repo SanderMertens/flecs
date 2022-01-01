@@ -1107,3 +1107,15 @@ void World_remove_all_pair_type() {
     test_assert((!e_2.has<Rel, ObjB>()));
     test_assert((e_3.has<Rel, ObjB>()));
 }
+
+void World_get_scope() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("scope");
+
+    ecs.set_scope(e);
+
+    auto s = ecs.get_scope();
+    test_assert(s == e);
+    test_str(s.name(), "scope");
+}
