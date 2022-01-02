@@ -1220,6 +1220,10 @@ void Iter_paged_iter_w_shared_comp(void);
 void Iter_worker_iter_w_shared_comp(void);
 void Iter_paged_iter_w_task_query(void);
 void Iter_worker_iter_w_task_query(void);
+void Iter_worker_iter_w_singleton(void);
+void Iter_worker_iter_w_singleton_instanced(void);
+void Iter_paged_iter_w_singleton(void);
+void Iter_paged_iter_w_singleton_instanced(void);
 void Iter_iter_1_term_no_alloc(void);
 void Iter_iter_cache_size_terms_no_alloc(void);
 void Iter_iter_lt_cache_size_terms_alloc(void);
@@ -6984,6 +6988,22 @@ bake_test_case Iter_testcases[] = {
         Iter_worker_iter_w_task_query
     },
     {
+        "worker_iter_w_singleton",
+        Iter_worker_iter_w_singleton
+    },
+    {
+        "worker_iter_w_singleton_instanced",
+        Iter_worker_iter_w_singleton_instanced
+    },
+    {
+        "paged_iter_w_singleton",
+        Iter_paged_iter_w_singleton
+    },
+    {
+        "paged_iter_w_singleton_instanced",
+        Iter_paged_iter_w_singleton_instanced
+    },
+    {
         "iter_1_term_no_alloc",
         Iter_iter_1_term_no_alloc
     },
@@ -11354,7 +11374,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        19,
+        23,
         Iter_testcases
     },
     {

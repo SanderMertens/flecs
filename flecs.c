@@ -27358,7 +27358,7 @@ int accept_connections(
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
 {
-#if defined _MSC_VER || defined _WIN32
+#ifdef _MSC_VER
     /* If on Windows, test if winsock needs to be initialized */
     SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_ERROR == testsocket && WSANOTINITIALISED == WSAGetLastError()) {
@@ -30986,6 +30986,13 @@ bool ecs_enable_range_check(
     bool old_value = world->range_check_enabled;
     world->range_check_enabled = enable;
     return old_value;
+}
+
+void ecs_set_entity_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation)
+{
+    flecs_sparse_set_generation(world->store.entity_index, entity_with_generation);
 }
 
 int32_t ecs_get_threads(
@@ -39754,6 +39761,9 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    bool instanced = it->is_instanced;
+    it->is_instanced = true;
+
     return (ecs_iter_t){
         .real_world = it->real_world,
         .world = it->world,
@@ -39763,7 +39773,8 @@ ecs_iter_t ecs_page_iter(
             .remaining = limit
         },
         .next = ecs_page_next,
-        .chain_it = it
+        .chain_it = it,
+        .is_instanced = instanced
     };
 error:
     return (ecs_iter_t){ 0 };
@@ -39791,7 +39802,8 @@ void offset_iter(
     }
 }
 
-bool ecs_page_next(
+static
+bool ecs_page_next_instanced(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -39799,6 +39811,7 @@ bool ecs_page_next(
     ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t *chain_it = it->chain_it;
+    bool instanced = it->is_instanced;
 
     do {
         if (!ecs_iter_next(chain_it)) {
@@ -39809,6 +39822,7 @@ bool ecs_page_next(
         
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+        it->is_instanced = instanced;
 
         if (!chain_it->table) {
             goto yield; /* Task query */
@@ -39817,7 +39831,11 @@ bool ecs_page_next(
         int32_t offset = iter->offset;
         int32_t limit = iter->limit;
         if (!(offset || limit)) {
-            return it->count != 0;
+            if (it->count) {
+                goto yield;
+            } else {
+                goto done;
+            }
         }
 
         int32_t count = it->count;
@@ -39851,8 +39869,27 @@ bool ecs_page_next(
     } while (it->count == 0);
 
 yield:
+    if (!it->is_instanced) {
+        it->offset = 0;
+    }
+
     return true;
 done:
+error:
+    return false;
+}
+
+bool ecs_page_next(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
+
+    if (flecs_iter_next_row(it)) {
+        return true;
+    }
+
+    return flecs_iter_next_instanced(it, ecs_page_next_instanced(it));
 error:
     return false;
 }
@@ -39868,6 +39905,9 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
+    bool instanced = it->is_instanced;
+    it->is_instanced = true;
+
     return (ecs_iter_t){
         .real_world = it->real_world,
         .world = it->world,
@@ -39876,19 +39916,23 @@ ecs_iter_t ecs_worker_iter(
             .count = count
         },
         .next = ecs_worker_next,
-        .chain_it = it
+        .chain_it = it,
+        .is_instanced = instanced
     };
 
 error:
     return (ecs_iter_t){ 0 };
 }
 
-bool ecs_worker_next(
+static
+bool ecs_worker_next_instanced(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
+
+    bool instanced = it->is_instanced;
 
     ecs_iter_t *chain_it = it->chain_it;
     ecs_worker_iter_t *iter = &it->priv.iter.worker;
@@ -39902,6 +39946,7 @@ bool ecs_worker_next(
 
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+        it->is_instanced = instanced;
 
         int32_t count = it->count;
         int32_t instance_count = it->instance_count;
@@ -39933,9 +39978,29 @@ bool ecs_worker_next(
 
     offset_iter(it, it->offset + first);
     it->count = per_worker;
-    it->offset += first;
+
+    if (it->is_instanced) {
+        it->offset += first;
+    } else {
+        it->offset = 0;
+    }
 
     return true;
+error:
+    return false;
+}
+
+bool ecs_worker_next(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
+
+    if (flecs_iter_next_row(it)) {
+        return true;
+    }
+
+    return flecs_iter_next_instanced(it, ecs_worker_next_instanced(it));
 error:
     return false;
 }

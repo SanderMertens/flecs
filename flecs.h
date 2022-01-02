@@ -3239,12 +3239,6 @@ void* _flecs_sparse_remove_get(
 #define flecs_sparse_remove_get(sparse, type, index)\
     ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
 
-/** Override the generation count for a specific id */
-FLECS_DBG_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);    
-
 /** Check whether an id has ever been issued. */
 FLECS_DBG_API
 bool flecs_sparse_exists(
@@ -3400,6 +3394,12 @@ uint64_t ecs_sparse_last_id(
 FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
+
+/** Override the generation count for a specific id */
+FLECS_API
+void flecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t id);
 
 FLECS_API
 void* _ecs_sparse_get_dense(
@@ -4398,6 +4398,17 @@ void ecs_set_entity_range(
     ecs_world_t *world,
     ecs_entity_t id_start,
     ecs_entity_t id_end);
+
+/** Sets the entity's generation in the world's sparse set.
+ * Used for managing manual id pools.
+ *
+ * @param world The world.
+ * @param entity_with_generation Entity for which to set the generation with the new generation to set.
+ */
+FLECS_API
+void ecs_set_entity_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation);
 
 /** Enable/disable range limits.
  * When an application is both a receiver of range-limited entities and a
@@ -5810,10 +5821,22 @@ bool ecs_id_is_wildcard(
  * a world. Filters, as opposed to queries, do not cache results. They are 
  * therefore slower to iterate, but are faster to create.
  *
- * This operation will at minimum allocate an array to hold the filter terms in
- * the returned filter struct. It may allocate additional memory if the provided
- * description contains a name, expression, or if the provided array of terms
- * contains strings (identifier names or term names).
+ * This operation will allocate an array to hold filter terms if the number of
+ * terms in the filter exceed ECS_TERM_DESC_CACHE_SIZE. If the number of terms
+ * is below that constant, the "terms" pointer is set to an inline array.
+ * 
+ * When a filter is copied by value, make sure to use "ecs_filter_move" to 
+ * ensure that the terms pointer still points to the inline array:
+ * 
+ *   ecs_filter_move(&dst_filter, &src_filter)
+ * 
+ * Alternatively, the ecs_filter_move function can be called with both arguments
+ * set to the same filter, to ensure the pointer is valid:
+ * 
+ *   ecs_filter_move(&f, &f)
+ * 
+ * When a filter contains entity or variable names memory is allocated to store
+ * those. To cleanup memory associated with a filter, call ecs_filter_fini.
  *
  * It is possible to create a filter without allocating any memory, by setting
  * the "terms" and "term_count" members directly. When doing so an application
@@ -10423,6 +10446,12 @@ ecs_entity_t ecs_module_init(
 
 
 /* -- Singletons -- */
+
+#define ecs_singleton_add(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
+
+#define ecs_singleton_remove(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
 
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
