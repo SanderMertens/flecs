@@ -215,6 +215,12 @@
 
 /* -- Singletons -- */
 
+#define ecs_singleton_add(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
+
+#define ecs_singleton_remove(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
+
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
 

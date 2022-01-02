@@ -3239,12 +3239,6 @@ void* _flecs_sparse_remove_get(
 #define flecs_sparse_remove_get(sparse, type, index)\
     ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
 
-/** Override the generation count for a specific id */
-FLECS_DBG_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);    
-
 /** Check whether an id has ever been issued. */
 FLECS_DBG_API
 bool flecs_sparse_exists(
@@ -3400,6 +3394,12 @@ uint64_t ecs_sparse_last_id(
 FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
+
+/** Override the generation count for a specific id */
+FLECS_API
+void flecs_sparse_set_generation(
+    ecs_sparse_t *sparse,
+    uint64_t id);
 
 FLECS_API
 void* _ecs_sparse_get_dense(
@@ -4398,6 +4398,17 @@ void ecs_set_entity_range(
     ecs_world_t *world,
     ecs_entity_t id_start,
     ecs_entity_t id_end);
+
+/** Sets the entity's generation in the world's sparse set.
+ * Used for managing manual id pools.
+ *
+ * @param world The world.
+ * @param entity_with_generation Entity for which to set the generation with the new generation to set.
+ */
+FLECS_API
+void ecs_set_entity_generation(
+    ecs_world_t *world,
+    ecs_entity_t entity_with_generation);
 
 /** Enable/disable range limits.
  * When an application is both a receiver of range-limited entities and a
@@ -5810,10 +5821,22 @@ bool ecs_id_is_wildcard(
  * a world. Filters, as opposed to queries, do not cache results. They are 
  * therefore slower to iterate, but are faster to create.
  *
- * This operation will at minimum allocate an array to hold the filter terms in
- * the returned filter struct. It may allocate additional memory if the provided
- * description contains a name, expression, or if the provided array of terms
- * contains strings (identifier names or term names).
+ * This operation will allocate an array to hold filter terms if the number of
+ * terms in the filter exceed ECS_TERM_DESC_CACHE_SIZE. If the number of terms
+ * is below that constant, the "terms" pointer is set to an inline array.
+ * 
+ * When a filter is copied by value, make sure to use "ecs_filter_move" to 
+ * ensure that the terms pointer still points to the inline array:
+ * 
+ *   ecs_filter_move(&dst_filter, &src_filter)
+ * 
+ * Alternatively, the ecs_filter_move function can be called with both arguments
+ * set to the same filter, to ensure the pointer is valid:
+ * 
+ *   ecs_filter_move(&f, &f)
+ * 
+ * When a filter contains entity or variable names memory is allocated to store
+ * those. To cleanup memory associated with a filter, call ecs_filter_fini.
  *
  * It is possible to create a filter without allocating any memory, by setting
  * the "terms" and "term_count" members directly. When doing so an application
@@ -7014,7 +7037,7 @@ bool ecs_commit(
 /** Find record for entity. */
 FLECS_API
 ecs_record_t* ecs_record_find(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get component pointer from column/record. */
@@ -10423,6 +10446,12 @@ ecs_entity_t ecs_module_init(
 
 
 /* -- Singletons -- */
+
+#define ecs_singleton_add(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
+
+#define ecs_singleton_remove(world, comp)\
+    ecs_add(world, ecs_id(comp), comp)
 
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
@@ -15894,7 +15923,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
     template <typename ArrayType>
-    static bool get_ptrs(world& w, ecs_record_t *r, ecs_table_t *table, 
+    static bool get_ptrs(world_t *world, ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15906,7 +15935,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, 0, w.id<Args>())...
+            ecs_type_index_of(type, 0, _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -15923,13 +15952,12 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     }
 
     template <typename ArrayType>
-    static bool get_mut_ptrs(world& w, ecs_entity_t e, ArrayType& ptrs) {        
-        world_t *world = w.c_ptr();
-
+    static bool get_mut_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
         /* Get pointers w/get_mut */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_get_mut_id(world, e, w.id<Args>(), NULL), 0)...
+            (ptrs[i ++] = ecs_get_mut_id(world, e, 
+                _::cpp_type<Args>().id(world), NULL), 0)...
         });
 
         return true;
@@ -15937,8 +15965,6 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t id, const Func& func) {
-        flecs::world w(world);
-
         ecs_record_t *r = ecs_record_find(world, id);
         if (!r) {
             return false;
@@ -15950,7 +15976,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         }
 
         ConstPtrArray ptrs;
-        if (!get_ptrs(w, r, table, ptrs)) {
+        if (!get_ptrs(world, r, table, ptrs)) {
             return false;
         }
 
@@ -16018,7 +16044,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         // When deferred, obtain pointers with regular get_mut
         } else {
-            get_mut_ptrs(w, id, ptrs);
+            get_mut_ptrs(world, id, ptrs);
         }
 
         invoke_callback(func, 0, ptrs);
@@ -19773,7 +19799,7 @@ inline flecs::entity world::set_scope(const flecs::entity& s) const {
 }
 
 inline flecs::entity world::get_scope() const {
-    return flecs::entity(ecs_get_scope(m_world));
+    return flecs::entity(m_world, ecs_get_scope(m_world));
 }
 
 inline entity world::lookup(const char *name) const {

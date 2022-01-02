@@ -5291,3 +5291,25 @@ void Filter_filter_lt_cache_size_terms_no_alloc() {
 
     ecs_fini(world);
 }
+
+void Filter_move_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }), 0);
+
+    ecs_filter_t f_2 = f;
+    ecs_filter_move(&f_2, &f_2);
+
+    char *str = ecs_filter_str(world, &f_2);
+    test_str(str, "TagA");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f_2);
+
+    ecs_fini(world);
+}

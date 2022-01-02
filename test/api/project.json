@@ -56,7 +56,10 @@
                     "is_junk_valid",
                     "is_not_alive_valid",
                     "init_w_name_deferred",
-                    "init_w_name_staged"
+                    "init_w_name_staged",
+                    "record_find_for_empty",
+                    "record_find",
+                    "record_find_from_stage"
                 ]
             }, {
                 "id": "Event",
@@ -1197,7 +1200,8 @@
                 "filter_iter_frame_offset",
                 "filter_1_term_no_alloc",
                 "filter_cache_size_terms_no_alloc",
-                "filter_lt_cache_size_terms_no_alloc"
+                "filter_lt_cache_size_terms_no_alloc",
+                "move_self"
             ]
         }, {
             "id": "Query",
@@ -1283,6 +1287,10 @@
                 "worker_iter_w_shared_comp",
                 "paged_iter_w_task_query",
                 "worker_iter_w_task_query",
+                "worker_iter_w_singleton",
+                "worker_iter_w_singleton_instanced",
+                "paged_iter_w_singleton",
+                "paged_iter_w_singleton_instanced",
                 "iter_1_term_no_alloc",
                 "iter_cache_size_terms_no_alloc",
                 "iter_lt_cache_size_terms_alloc"

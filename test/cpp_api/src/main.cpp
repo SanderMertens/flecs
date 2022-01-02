@@ -169,6 +169,7 @@ void Entity_id_get_entity(void);
 void Entity_id_get_invalid_entity(void);
 void Entity_each_in_stage(void);
 void Entity_iter_recycled_parent(void);
+void Entity_get_lambda_from_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -740,6 +741,7 @@ void World_remove_all_id(void);
 void World_remove_all_type(void);
 void World_remove_all_pair(void);
 void World_remove_all_pair_type(void);
+void World_get_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1406,6 +1408,10 @@ bake_test_case Entity_testcases[] = {
     {
         "iter_recycled_parent",
         Entity_iter_recycled_parent
+    },
+    {
+        "get_lambda_from_stage",
+        Entity_get_lambda_from_stage
     }
 };
 
@@ -3585,6 +3591,10 @@ bake_test_case World_testcases[] = {
     {
         "remove_all_pair_type",
         World_remove_all_pair_type
+    },
+    {
+        "get_scope",
+        World_get_scope
     }
 };
 
@@ -3679,7 +3689,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        160,
+        161,
         Entity_testcases
     },
     {
@@ -3826,7 +3836,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        55,
+        56,
         World_testcases
     },
     {

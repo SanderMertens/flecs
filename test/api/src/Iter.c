@@ -1240,3 +1240,153 @@ void Iter_iter_lt_cache_size_terms_alloc() {
 
     ecs_fini(world);
 }
+
+void Iter_worker_iter_w_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, $Singleton");
+
+    ecs_iter_t it_1 = ecs_query_iter(world, q);
+    ecs_iter_t wit_1 = ecs_worker_iter(&it_1, 0, 2);
+    test_bool(ecs_worker_next(&wit_1), true);
+    test_int(wit_1.count, 1);
+    test_int(wit_1.entities[0], e1);
+    test_bool(ecs_worker_next(&wit_1), true);
+    test_int(wit_1.count, 1);
+    test_int(wit_1.entities[0], e2);
+    test_bool(ecs_worker_next(&wit_1), false);
+
+    ecs_iter_t it_2 = ecs_query_iter(world, q);
+    ecs_iter_t wit_2 = ecs_worker_iter(&it_2, 1, 2);
+    test_bool(ecs_worker_next(&wit_2), true);
+    test_int(wit_2.count, 1);
+    test_int(wit_2.entities[0], e3);
+    test_bool(ecs_worker_next(&wit_2), true);
+    test_int(wit_2.count, 1);
+    test_int(wit_2.entities[0], e4);
+    test_bool(ecs_worker_next(&wit_2), false);
+
+    ecs_fini(world);
+}
+
+void Iter_worker_iter_w_singleton_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter = {
+            .expr = "Position, $Singleton",
+            .instanced = true
+        }
+    });
+
+    ecs_iter_t it_1 = ecs_query_iter(world, q);
+    ecs_iter_t wit_1 = ecs_worker_iter(&it_1, 0, 2);
+    test_bool(ecs_worker_next(&wit_1), true);
+    test_int(wit_1.count, 2);
+    test_int(wit_1.entities[0], e1);
+    test_int(wit_1.entities[1], e2);
+    test_bool(ecs_worker_next(&wit_1), false);
+
+    ecs_iter_t it_2 = ecs_query_iter(world, q);
+    ecs_iter_t wit_2 = ecs_worker_iter(&it_2, 1, 2);
+    test_bool(ecs_worker_next(&wit_2), true);
+    test_int(wit_2.count, 2);
+    test_int(wit_2.entities[0], e3);
+    test_int(wit_2.entities[1], e4);
+    test_bool(ecs_worker_next(&wit_2), false);
+
+    ecs_fini(world);
+}
+
+void Iter_paged_iter_w_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, $Singleton");
+
+    ecs_iter_t it_1 = ecs_query_iter(world, q);
+    ecs_iter_t pit_1 = ecs_page_iter(&it_1, 0, 2);
+    test_bool(ecs_page_next(&pit_1), true);
+    test_int(pit_1.count, 1);
+    test_int(pit_1.entities[0], e1);
+    test_bool(ecs_page_next(&pit_1), true);
+    test_int(pit_1.count, 1);
+    test_int(pit_1.entities[0], e2);
+    test_bool(ecs_page_next(&pit_1), false);
+
+    ecs_iter_t it_2 = ecs_query_iter(world, q);
+    ecs_iter_t pit_2 = ecs_page_iter(&it_2, 2, 2);
+    test_bool(ecs_page_next(&pit_2), true);
+    test_int(pit_2.count, 1);
+    test_int(pit_2.entities[0], e3);
+    test_bool(ecs_page_next(&pit_2), true);
+    test_int(pit_2.count, 1);
+    test_int(pit_2.entities[0], e4);
+    test_bool(ecs_page_next(&pit_2), false);
+
+    ecs_fini(world);
+}
+
+void Iter_paged_iter_w_singleton_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter = {
+            .expr = "Position, $Singleton",
+            .instanced = true
+        }
+    });
+
+    ecs_iter_t it_1 = ecs_query_iter(world, q);
+    ecs_iter_t pit_1 = ecs_page_iter(&it_1, 0, 2);
+    test_bool(ecs_page_next(&pit_1), true);
+    test_int(pit_1.count, 2);
+    test_int(pit_1.entities[0], e1);
+    test_int(pit_1.entities[1], e2);
+    test_bool(ecs_page_next(&pit_1), false);
+
+    ecs_iter_t it_2 = ecs_query_iter(world, q);
+    ecs_iter_t pit_2 = ecs_page_iter(&it_2, 2, 2);
+    test_bool(ecs_page_next(&pit_2), true);
+    test_int(pit_2.count, 2);
+    test_int(pit_2.entities[0], e3);
+    test_int(pit_2.entities[1], e4);
+    test_bool(ecs_page_next(&pit_2), false);
+
+    ecs_fini(world);
+}

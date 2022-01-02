@@ -174,7 +174,8 @@
                 "id_get_entity",
                 "id_get_invalid_entity",
                 "each_in_stage",
-                "iter_recycled_parent"
+                "iter_recycled_parent",
+                "get_lambda_from_stage"
             ]
         }, {
             "id": "Pairs",
@@ -787,7 +788,8 @@
                 "remove_all_id",
                 "remove_all_type",
                 "remove_all_pair",
-                "remove_all_pair_type"
+                "remove_all_pair_type",
+                "get_scope"
             ]
         }, {
             "id": "Singleton",

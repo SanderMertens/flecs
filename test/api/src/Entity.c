@@ -902,3 +902,52 @@ void Entity_init_w_name_staged() {
 
     ecs_fini(world);
 }
+
+void Entity_record_find_for_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world, 0);
+    test_assert(e != 0);
+
+    ecs_record_t *r = ecs_record_find(world, e);
+    test_assert(r != NULL);
+    test_assert(r->table == NULL);
+
+    ecs_fini(world);
+}
+
+void Entity_record_find() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_assert(e != 0);
+
+    ecs_record_t *r = ecs_record_find(world, e);
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+
+    ecs_fini(world);
+}
+
+void Entity_record_find_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    test_assert(e != 0);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_record_t *r = ecs_record_find(stage, e);
+    test_assert(r != NULL);
+    test_assert(r->table != NULL);
+
+    ecs_staging_end(world);
+
+    ecs_fini(world);
+}
