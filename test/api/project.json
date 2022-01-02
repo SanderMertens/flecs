@@ -56,7 +56,10 @@
                     "is_junk_valid",
                     "is_not_alive_valid",
                     "init_w_name_deferred",
-                    "init_w_name_staged"
+                    "init_w_name_staged",
+                    "record_find_for_empty",
+                    "record_find",
+                    "record_find_from_stage"
                 ]
             }, {
                 "id": "Event",

@@ -7037,7 +7037,7 @@ bool ecs_commit(
 /** Find record for entity. */
 FLECS_API
 ecs_record_t* ecs_record_find(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get component pointer from column/record. */
@@ -15923,7 +15923,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
     template <typename ArrayType>
-    static bool get_ptrs(world& w, ecs_record_t *r, ecs_table_t *table, 
+    static bool get_ptrs(world_t *world, ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15935,7 +15935,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, 0, w.id<Args>())...
+            ecs_type_index_of(type, 0, _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -15952,13 +15952,12 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     }
 
     template <typename ArrayType>
-    static bool get_mut_ptrs(world& w, ecs_entity_t e, ArrayType& ptrs) {        
-        world_t *world = w.c_ptr();
-
+    static bool get_mut_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
         /* Get pointers w/get_mut */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_get_mut_id(world, e, w.id<Args>(), NULL), 0)...
+            (ptrs[i ++] = ecs_get_mut_id(world, e, 
+                _::cpp_type<Args>().id(world), NULL), 0)...
         });
 
         return true;
@@ -15966,8 +15965,6 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t id, const Func& func) {
-        flecs::world w(world);
-
         ecs_record_t *r = ecs_record_find(world, id);
         if (!r) {
             return false;
@@ -15979,7 +15976,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         }
 
         ConstPtrArray ptrs;
-        if (!get_ptrs(w, r, table, ptrs)) {
+        if (!get_ptrs(world, r, table, ptrs)) {
             return false;
         }
 
@@ -16047,7 +16044,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         // When deferred, obtain pointers with regular get_mut
         } else {
-            get_mut_ptrs(w, id, ptrs);
+            get_mut_ptrs(world, id, ptrs);
         }
 
         invoke_callback(func, 0, ptrs);

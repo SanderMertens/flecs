@@ -3011,3 +3011,23 @@ void Entity_iter_recycled_parent() {
 
     test_int(count, 1);
 }
+
+void Entity_get_lambda_from_stage() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().set<Position>({10, 20});
+
+    ecs.staging_begin();
+
+    flecs::world stage = ecs.get_stage(0);
+
+    bool invoked = false;
+    e.mut(stage).get([&](const Position& p) {
+        invoked = true;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+    test_bool(invoked, true);
+    
+    ecs.staging_end();
+}

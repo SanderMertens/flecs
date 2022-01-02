@@ -169,6 +169,7 @@ void Entity_id_get_entity(void);
 void Entity_id_get_invalid_entity(void);
 void Entity_each_in_stage(void);
 void Entity_iter_recycled_parent(void);
+void Entity_get_lambda_from_stage(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1407,6 +1408,10 @@ bake_test_case Entity_testcases[] = {
     {
         "iter_recycled_parent",
         Entity_iter_recycled_parent
+    },
+    {
+        "get_lambda_from_stage",
+        Entity_get_lambda_from_stage
     }
 };
 
@@ -3684,7 +3689,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        160,
+        161,
         Entity_testcases
     },
     {

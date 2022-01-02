@@ -51,6 +51,9 @@ void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
 void Entity_init_w_name_deferred(void);
 void Entity_init_w_name_staged(void);
+void Entity_record_find_for_empty(void);
+void Entity_record_find(void);
+void Entity_record_find_from_stage(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2491,6 +2494,18 @@ bake_test_case Entity_testcases[] = {
     {
         "init_w_name_staged",
         Entity_init_w_name_staged
+    },
+    {
+        "record_find_for_empty",
+        Entity_record_find_for_empty
+    },
+    {
+        "record_find",
+        Entity_record_find
+    },
+    {
+        "record_find_from_stage",
+        Entity_record_find_from_stage
     }
 };
 
@@ -11171,7 +11186,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        42,
+        45,
         Entity_testcases
     },
     {

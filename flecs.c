@@ -4137,11 +4137,14 @@ error:
 }
 
 ecs_record_t* ecs_record_find(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
     ecs_record_t *r = ecs_eis_get(world, entity);
     if (r) {
         return r;

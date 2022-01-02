@@ -3867,7 +3867,7 @@ bool ecs_commit(
 /** Find record for entity. */
 FLECS_API
 ecs_record_t* ecs_record_find(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t entity);
 
 /** Get component pointer from column/record. */
