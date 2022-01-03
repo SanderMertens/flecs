@@ -1201,15 +1201,11 @@ void SystemPeriodic_on_period_long_delta() {
 
     test_int(on_period_count, 0);
 
-    ecs_sleepf(1.2);
-
-    ecs_progress(world, 0);
+    ecs_progress(world, 1.2);
 
     test_int(on_period_count, 1);
 
-    ecs_sleepf(0.5);
-
-    ecs_progress(world, 0);
+    ecs_progress(world, 0.5);
 
     test_int(on_period_count, 2);    
 
