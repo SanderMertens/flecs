@@ -43,9 +43,10 @@ const ecs_entity_t ecs_id(EcsVector) =             23;
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;
 const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
 const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
-const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 3;
-const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 4;
-const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsFlecsHidden =           ECS_HI_COMPONENT_ID + 3;
+const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
+const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 6;
 
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
@@ -74,7 +75,7 @@ const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsOnCreateTable =         ECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsOnDeleteTable =         ECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableFilled =         ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableFill =         ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;

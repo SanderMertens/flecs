@@ -452,7 +452,6 @@ void notify_set_base_triggers(
     const ecs_map_t *triggers)
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
@@ -731,6 +730,7 @@ ecs_entity_t ecs_trigger_init(
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     const char *expr = desc->expr;
+    ecs_trigger_t *trigger = NULL;
     
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
@@ -740,6 +740,9 @@ ecs_entity_t ecs_trigger_init(
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
     ecs_entity_t entity = ecs_entity_init(world, &desc->entity);
+    if (!existing && !desc->entity.name) {
+        ecs_add_pair(world, entity, EcsChildOf, EcsFlecsHidden);
+    }
 
     bool added = false;
     EcsTrigger *comp = ecs_get_mut(world, entity, EcsTrigger, &added);
@@ -777,11 +780,14 @@ ecs_entity_t ecs_trigger_init(
         }
 
         if (ecs_term_finalize(world, name, &term)) {
+            ecs_term_fini(&term);
             goto error;
         }
 
-        ecs_trigger_t *trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
+        trigger = flecs_sparse_add(world->triggers, ecs_trigger_t);
         trigger->id = flecs_sparse_last_id(world->triggers);
+
+
         trigger->term = ecs_term_move(&term);
         trigger->action = desc->callback;
         trigger->ctx = desc->ctx;
@@ -843,6 +849,7 @@ ecs_entity_t ecs_trigger_init(
     return entity;
 error:
     ecs_os_free(name);
+    ecs_delete(world, entity);
     return 0;
 }
 

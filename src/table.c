@@ -363,6 +363,19 @@ void table_activate(
     ecs_table_t *table,
     bool activate)
 {
+    ecs_entity_t evt = activate ? EcsOnTableFill : EcsOnTableEmpty;
+    ecs_ids_t ids = {
+        .array = ecs_vector_first(table->type, ecs_id_t),
+        .count = ecs_vector_count(table->type)
+    };
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = evt,
+        .table = table,
+        .ids = &ids,
+        .observable = world
+    });
+
     ecs_vector_t *queries = table->queries;
     ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
     int32_t i, count = ecs_vector_count(queries);

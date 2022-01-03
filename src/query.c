@@ -2386,6 +2386,23 @@ void query_iter_init(
     }
 }
 
+static
+void query_on_event(
+    ecs_iter_t *it) 
+{ 
+    ecs_query_t *query = it->ctx;
+    ecs_entity_t event = it->event;
+
+    if (event == EcsOnTableEmpty) {
+        // printf("%p: table %p: empty\n");
+        // update_table(query, it->table, true);
+    } else
+    if (event == EcsOnTableFill) {
+        // printf("%p: table %p: fill\n");
+        // update_table(query, it->table, false);
+    }
+}
+
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -2400,12 +2417,25 @@ ecs_query_t* ecs_query_init(
 
     result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
-
     result->id = flecs_sparse_last_id(world->queries);
 
-    if (ecs_filter_init(world, &result->filter, &desc->filter)) {
-        flecs_sparse_remove(world->queries, result->id);
-        return NULL;
+    ecs_observer_desc_t observer_desc = { .filter = desc->filter };
+    observer_desc.filter.match_empty_tables = true;
+
+    if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
+        goto error;
+    }
+
+    if (result->filter.term_count) {
+        observer_desc.callback = query_on_event;
+        observer_desc.ctx = result;
+        observer_desc.events[0] = EcsOnTableEmpty;
+        observer_desc.events[1] = EcsOnTableFill;
+        observer_desc.filter.filter = true;
+        result->observer = ecs_observer_init(world, &observer_desc);
+        if (!result->observer) {
+            goto error;
+        }
     }
 
     result->world = world;
@@ -2486,6 +2516,10 @@ ecs_query_t* ecs_query_init(
     return result;
 error:
     if (result) {
+        ecs_filter_fini(&result->filter);
+        if (result->observer) {
+            ecs_delete(world, result->observer);
+        }
         flecs_sparse_remove(world->queries, result->id);
     }
     return NULL;
@@ -2497,6 +2531,10 @@ void ecs_query_fini(
     ecs_poly_assert(query, ecs_query_t);
     ecs_world_t *world = query->world;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!world->is_fini) {
+        ecs_delete(world, query->observer);
+    }
 
     if (query->group_by_ctx_free) {
         if (query->group_by_ctx) {

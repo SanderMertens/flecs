@@ -339,8 +339,7 @@ void* _ecs_map_set(
 
     void *elem = get_from_bucket(bucket, key, elem_size);
     if (!elem) {
-        int32_t index = add_to_bucket(bucket, elem_size, key, payload);
-        
+        int32_t index = add_to_bucket(bucket, elem_size, key, payload);        
         int32_t map_count = ++map->count;
         int32_t target_bucket_count = get_bucket_count(map_count);
         int32_t map_bucket_count = map->bucket_count;
