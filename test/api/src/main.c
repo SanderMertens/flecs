@@ -60,6 +60,7 @@ void Event_table_1_id_w_trigger(void);
 void Event_table_2_ids_w_trigger(void);
 void Event_table_1_id_w_observer(void);
 void Event_table_2_ids_w_observer(void);
+void Event_emit_event_for_empty_table(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -2526,6 +2527,10 @@ bake_test_case Event_testcases[] = {
     {
         "table_2_ids_w_observer",
         Event_table_2_ids_w_observer
+    },
+    {
+        "emit_event_for_empty_table",
+        Event_emit_event_for_empty_table
     }
 };
 
@@ -11198,7 +11203,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        4,
+        5,
         Event_testcases
     },
     {

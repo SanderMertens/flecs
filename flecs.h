@@ -4936,7 +4936,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-const void* ecs_get_ref_w_id(
+const void* ecs_get_ref_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,
@@ -10449,7 +10449,7 @@ ecs_entity_t ecs_module_init(
 /* -- Get -- */
 
 #define ecs_get_ref(world, ref, entity, T)\
-    (ECS_CAST(const T*, ecs_get_ref_w_id(world, ref, entity, ecs_id(T))))
+    (ECS_CAST(const T*, ecs_get_ref_id(world, ref, entity, ecs_id(T))))
 
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
@@ -14196,12 +14196,12 @@ struct ref {
         ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
-        ecs_get_ref_w_id(
+        ecs_get_ref_id(
             m_world, &m_ref, m_entity, comp_id);
     }
 
     const T* operator->() {
-        const T* result = static_cast<const T*>(ecs_get_ref_w_id(
+        const T* result = static_cast<const T*>(ecs_get_ref_id(
             m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -14211,7 +14211,7 @@ struct ref {
 
     const T* get() {
         if (m_entity) {
-            ecs_get_ref_w_id(
+            ecs_get_ref_id(
                 m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
         }
 

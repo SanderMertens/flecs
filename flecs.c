@@ -3410,8 +3410,7 @@ void init_iter(
 
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!it->world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->count > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->offset < ecs_table_count(it->table), 
+    ecs_assert(!it->count || it->offset < ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
@@ -6702,7 +6701,7 @@ error:
     return NULL;
 }
 
-const void* ecs_get_ref_w_id(
+const void* ecs_get_ref_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,
@@ -13628,15 +13627,17 @@ void ecs_emit(
 
     flecs_triggers_notify(&it, observable, ids, event);
 
-    ecs_record_t **recs = ecs_vector_get(
-        table->storage.record_ptrs, ecs_record_t*, row);
+    if (count) {
+        ecs_record_t **recs = ecs_vector_get(
+            table->storage.record_ptrs, ecs_record_t*, row);
 
-    for (i = 0; i < count; i ++) {
-        uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
-        if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
-            notify_subset(world, &it, observable, ecs_vector_first(
-                table->storage.entities, ecs_entity_t)[row + i], 
-                    event, ids);
+        for (i = 0; i < count; i ++) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                notify_subset(world, &it, observable, ecs_vector_first(
+                    table->storage.entities, ecs_entity_t)[row + i], 
+                        event, ids);
+            }
         }
     }
     
@@ -14640,7 +14641,7 @@ ecs_vector_t* add_ref(
     if (c_info) {
         if (c_info->size && subj->entity != 0) {
             if (entity) {
-                ecs_get_ref_w_id(world, ref, entity, component);
+                ecs_get_ref_id(world, ref, entity, component);
             }
 
             query->flags |= EcsQueryHasRefs;
@@ -15741,7 +15742,7 @@ void resolve_cascade_subject_for_table(
 
         references[ref_index].entity = ecs_get_alive(world, subject);
         table_data->subjects[term_index] = subject;
-        ecs_get_ref_w_id(world, ref, subject, term->id);
+        ecs_get_ref_id(world, ref, subject, term->id);
     } else {
         references[ref_index].entity = 0;
         table_data->subjects[term_index] = 0;
@@ -16962,7 +16963,7 @@ bool flecs_iter_populate_term_data(
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
-            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_w_id(
+            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_id(
                 world, ref, ref->entity, ref->component);
 
             /* If cached references were provided, the code that populated

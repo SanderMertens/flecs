@@ -169,3 +169,44 @@ void Event_table_2_ids_w_observer() {
 
     ecs_fini(world);
 }
+
+static int empty_table_callback_invoked = 0;
+
+static
+void empty_table_callback(ecs_iter_t *it) {
+    test_assert(it->table == it->ctx);
+    test_int(it->count, 0);
+    empty_table_callback_invoked++;
+}
+
+void Event_emit_event_for_empty_table() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t evt = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_table_t *table = ecs_get_table(world, e);
+    ecs_delete(world, e);
+
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ TagA }},
+        .events = {evt},
+        .callback = empty_table_callback,
+        .ctx = table
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = evt,
+        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ TagA }},
+        .table = table,
+        .observable = world
+    });
+
+    test_int(empty_table_callback_invoked, 1);
+
+    ecs_delete(world, o);
+
+    ecs_fini(world);
+}

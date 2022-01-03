@@ -67,7 +67,8 @@
                     "table_1_id_w_trigger",
                     "table_2_ids_w_trigger",
                     "table_1_id_w_observer",
-                    "table_2_ids_w_observer"
+                    "table_2_ids_w_observer",
+                    "emit_event_for_empty_table"
                 ]
             }, {
             "id": "New",

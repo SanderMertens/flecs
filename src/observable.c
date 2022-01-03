@@ -126,15 +126,17 @@ void ecs_emit(
 
     flecs_triggers_notify(&it, observable, ids, event);
 
-    ecs_record_t **recs = ecs_vector_get(
-        table->storage.record_ptrs, ecs_record_t*, row);
+    if (count) {
+        ecs_record_t **recs = ecs_vector_get(
+            table->storage.record_ptrs, ecs_record_t*, row);
 
-    for (i = 0; i < count; i ++) {
-        uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
-        if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
-            notify_subset(world, &it, observable, ecs_vector_first(
-                table->storage.entities, ecs_entity_t)[row + i], 
-                    event, ids);
+        for (i = 0; i < count; i ++) {
+            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
+            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                notify_subset(world, &it, observable, ecs_vector_first(
+                    table->storage.entities, ecs_entity_t)[row + i], 
+                        event, ids);
+            }
         }
     }
     

@@ -271,8 +271,7 @@ void init_iter(
 
     ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!it->world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->count > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(it->offset < ecs_table_count(it->table), 
+    ecs_assert(!it->count || it->offset < ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
