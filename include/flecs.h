@@ -905,6 +905,10 @@ FLECS_API extern const ecs_entity_t EcsFlecs;
 /* Core module scope */
 FLECS_API extern const ecs_entity_t EcsFlecsCore;
 
+/* Hidden module scope. This is used as the default location for (anonymous)
+ * entities associated with triggers & observers to keeps other scopes clean. */
+FLECS_API extern const ecs_entity_t EcsFlecsHidden;
+
 /* Entity associated with world (used for "attaching" components to world) */
 FLECS_API extern const ecs_entity_t EcsWorld;
 
@@ -1008,7 +1012,7 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
 /* Event. Triggers when a table becomes non-empty. */
-FLECS_API extern const ecs_entity_t EcsOnTableFilled;
+FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
 /* Event. Triggers when a trigger is created. */
 // FLECS_API extern const ecs_entity_t EcsOnCreateTrigger;

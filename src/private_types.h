@@ -348,6 +348,9 @@ struct ecs_query_t {
     /* Query filter */
     ecs_filter_t filter;
 
+    /* Query observer */
+    ecs_entity_t observer;
+
     /* Tables matched with query */
     ecs_table_cache_t cache;
 

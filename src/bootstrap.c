@@ -358,9 +358,14 @@ void flecs_bootstrap(
     /* Initialize builtin modules */
     ecs_set_name(world, EcsFlecs, "flecs");
     ecs_add_id(world, EcsFlecs, EcsModule);
+
     ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
+
+    ecs_set_name(world, EcsFlecsHidden, "hidden");
+    ecs_add_id(world, EcsFlecsHidden, EcsModule);
+    ecs_add_pair(world, EcsFlecsHidden, EcsChildOf, EcsFlecs);
 
     /* Initialize builtin entities */
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
@@ -393,7 +398,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
     bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
     bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
-    bootstrap_entity(world, EcsOnTableFilled, "OnTableFilled", EcsFlecsCore);
+    bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnCreateTable, "OnCreateTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnDeleteTable, "OnDeleteTable", EcsFlecsCore);
     // bootstrap_entity(world, EcsOnCreateTrigger, "OnCreateTrigger", EcsFlecsCore);

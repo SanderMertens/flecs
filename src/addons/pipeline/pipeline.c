@@ -357,6 +357,8 @@ bool build_pipeline(
     op = ecs_vector_first(ops, ecs_pipeline_op_t);
     int32_t i, ran_since_merge = 0, op_index = 0;
 
+    ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Add schedule to debug tracing */
     ecs_dbg("#[green]pipeline#[reset] rebuild:");
     ecs_log_push();

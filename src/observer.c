@@ -105,6 +105,9 @@ ecs_entity_t ecs_observer_init(
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
     entity = ecs_entity_init(world, &desc->entity);
+    if (!existing && !desc->entity.name) {
+        ecs_add_pair(world, entity, EcsChildOf, EcsFlecsHidden);
+    }
 
     bool added = false;
     EcsObserver *comp = ecs_get_mut(world, entity, EcsObserver, &added);
@@ -113,6 +116,7 @@ ecs_entity_t ecs_observer_init(
             world->observers, ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
         observer->id = flecs_sparse_last_id(world->observers);
+        comp->observer = observer;
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
@@ -126,6 +130,10 @@ ecs_entity_t ecs_observer_init(
             flecs_observer_fini(world, observer);
             return 0;
         }
+
+        /* Creating an observer with no terms has no effect */
+        ecs_assert(observer->filter.term_count != 0, 
+            ECS_INVALID_PARAMETER, NULL);
 
         int i;
         for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
@@ -153,20 +161,20 @@ ecs_entity_t ecs_observer_init(
         ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
         /* Create a trigger for each term in the filter */
-        ecs_trigger_desc_t trigger_desc = {
+        ecs_trigger_desc_t tdesc = {
             .callback = observer_callback,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
             .match_prefab = observer->filter.match_prefab,
             .match_disabled = observer->filter.match_disabled
         };
-        ecs_os_memcpy_n(trigger_desc.events, observer->events, ecs_entity_t,
+        ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
             observer->event_count);
 
         for (i = 0; i < filter->term_count; i ++) {
-            trigger_desc.term = filter->terms[i];
-            ecs_oper_kind_t oper = trigger_desc.term.oper;
-            ecs_id_t id = trigger_desc.term.id;
+            tdesc.term = filter->terms[i];
+            ecs_oper_kind_t oper = tdesc.term.oper;
+            ecs_id_t id = tdesc.term.id;
 
             /* AndFrom & OrFrom terms insert multiple triggers */
             if (oper == EcsAndFrom || oper == EcsOrFrom) {
@@ -176,18 +184,25 @@ ecs_entity_t ecs_observer_init(
 
                 /* Correct operator will be applied when a trigger occurs, and
                  * the observer is evaluated on the trigger source */
-                trigger_desc.term.oper = EcsAnd;
+                tdesc.term.oper = EcsAnd;
                 for (ti = 0; ti < ti_count; ti ++) {
-                    trigger_desc.term.pred.entity = 0;
-                    trigger_desc.term.id = ti_ids[ti];
-                    ecs_vector_add(&observer->triggers, ecs_entity_t)
-                        [0] = ecs_trigger_init(world, &trigger_desc);
+                    tdesc.term.pred.name = NULL;
+                    tdesc.term.pred.entity = ti_ids[ti];
+                    tdesc.term.id = ti_ids[ti];
+                    ecs_entity_t t = ecs_vector_add(&observer->triggers, 
+                        ecs_entity_t)[0] = ecs_trigger_init(world, &tdesc);
+                    if (!t) {
+                        goto error;
+                    }
                 }
                 continue;
             }
 
-            ecs_vector_add(&observer->triggers, ecs_entity_t)
-                [0] = ecs_trigger_init(world, &trigger_desc);
+            ecs_entity_t t = ecs_vector_add(&observer->triggers, ecs_entity_t)
+                [0] = ecs_trigger_init(world, &tdesc);
+            if (!t) {
+                goto error;
+            }
         }
 
         observer->action = desc->callback;
@@ -237,6 +252,8 @@ void flecs_observer_fini(
     int i, count = ecs_vector_count(observer->triggers);
     ecs_entity_t *triggers = ecs_vector_first(observer->triggers, ecs_entity_t);
     for (i = 0; i < count; i ++) {
+        ecs_entity_t t = triggers[i];
+        if (!t) continue;
         ecs_delete(world, triggers[i]);
     }
     ecs_vector_free(observer->triggers);
