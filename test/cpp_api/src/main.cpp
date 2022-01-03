@@ -767,6 +767,7 @@ void Misc_string_view_compare_w_string(void);
 void Misc_string_compare_nullptr(void);
 void Misc_nullptr_string_compare(void);
 void Misc_nullptr_string_compare_nullptr(void);
+void Misc_c_macros(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -3681,6 +3682,10 @@ bake_test_case Misc_testcases[] = {
     {
         "nullptr_string_compare_nullptr",
         Misc_nullptr_string_compare_nullptr
+    },
+    {
+        "c_macros",
+        Misc_c_macros
     }
 };
 
@@ -3850,7 +3855,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        8,
+        9,
         Misc_testcases
     }
 };

@@ -2394,6 +2394,8 @@ ecs_query_t* ecs_query_init(
 {
     ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     result = flecs_sparse_add(world->queries, ecs_query_t);

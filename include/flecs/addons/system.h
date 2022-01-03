@@ -71,6 +71,8 @@ typedef void (*ecs_system_status_action_t)(
 
 /* Use with ecs_system_init */
 typedef struct ecs_system_desc_t {
+    int32_t _canary;
+
     /* System entity creation parameters */
     ecs_entity_desc_t entity;
 
@@ -127,15 +129,18 @@ ecs_entity_t ecs_system_init(
 
 #ifndef FLECS_LEGACY
 #define ECS_SYSTEM_DEFINE(world, id, kind, ...) \
-    ecs_id(id) = ecs_system_init(world, &(ecs_system_desc_t){\
-        .entity = { .name = #id, .add = {kind} },\
-        .query.filter.expr = #__VA_ARGS__,\
-        .callback = id\
-    });\
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+    { \
+        ecs_system_desc_t desc = {0}; \
+        desc.entity.name = #id; \
+        desc.entity.add[0] = kind; \
+        desc.query.filter.expr = #__VA_ARGS__; \
+        desc.callback = id; \
+        ecs_id(id) = ecs_system_init(world, &desc); \
+    } \
+    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
 
 #define ECS_SYSTEM(world, id, kind, ...) \
-    ecs_entity_t ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t ecs_id(id); ECS_SYSTEM_DEFINE(world, id, kind, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;

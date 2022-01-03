@@ -1829,7 +1829,7 @@ void SystemPeriodic_sys_context() {
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {TestContext}, .ctx = &param
+        .entity = {.entity = TestContext}, .ctx = &param
     });
 
     test_assert(ecs_get_system_ctx(world, TestContext) == &param);
@@ -1850,7 +1850,7 @@ void SystemPeriodic_get_sys_context_from_param() {
     ecs_set_context(world, &param);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {TestContext}, .ctx = &param
+        .entity = {.entity = TestContext}, .ctx = &param
     });
 
     ecs_progress(world, 1);

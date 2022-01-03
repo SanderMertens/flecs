@@ -15,19 +15,22 @@
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
-#define ECS_ENTITY_DEFINE(world, id, ...)\
-    id = ecs_entity_init(world, &(ecs_entity_desc_t){\
-        .name = #id,\
-        .add_expr = #__VA_ARGS__\
-    });\
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);\
-    ecs_id(id) = id;\
-    (void)id;\
-    (void)ecs_id(id)
+#define ECS_ENTITY_DEFINE(world, id, ...) \
+    { \
+        ecs_entity_desc_t desc = {0}; \
+        desc.entity = id; \
+        desc.name = #id; \
+        desc.add_expr = #__VA_ARGS__; \
+        id = ecs_entity_init(world, &desc); \
+        ecs_id(id) = id; \
+    } \
+    (void)id; \
+    (void)ecs_id(id);
 
-#define ECS_ENTITY(world, id, ...)\
-    ecs_entity_t ecs_id(id);\
-    ecs_entity_t ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
+#define ECS_ENTITY(world, id, ...) \
+    ecs_entity_t ecs_id(id); \
+    ecs_entity_t id = 0; \
+    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
 
 #define ECS_TAG_DEFINE(world, id)         ECS_ENTITY_DEFINE(world, id, 0)
 #define ECS_TAG(world, id)                ECS_ENTITY(world, id, 0)
@@ -37,17 +40,17 @@
 
 /* Use for declaring component identifiers */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
-#define ECS_COMPONENT_DEFINE(world, id)\
-    ecs_id(id) = ecs_component_init(world, &(ecs_component_desc_t){\
-        .entity = {\
-            .entity = ecs_id(id),\
-            .name = #id,\
-            .symbol = #id\
-        },\
-        .size = sizeof(id),\
-        .alignment = ECS_ALIGNOF(id)\
-    });\
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
+#define ECS_COMPONENT_DEFINE(world, id) \
+    {\
+        ecs_component_desc_t desc = {0}; \
+        desc.entity.entity = ecs_id(id); \
+        desc.entity.name = #id; \
+        desc.entity.symbol = #id; \
+        desc.size = sizeof(id); \
+        desc.alignment = ECS_ALIGNOF(id); \
+        ecs_id(id) = ecs_component_init(world, &desc);\
+        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+    }
 
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
@@ -59,32 +62,40 @@
 
 /* Triggers */
 #define ECS_TRIGGER_DEFINE(world, id, kind, component) \
-    ecs_id(id) = ecs_trigger_init(world, &(ecs_trigger_desc_t){\
-        .entity.name = #id,\
-        .callback = id,\
-        .expr = #component,\
-        .events = {kind},\
-    });\
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);
+    {\
+        ecs_trigger_desc_t desc = {0}; \
+        desc.entity.entity = ecs_id(id); \
+        desc.entity.name = #id;\
+        desc.callback = id;\
+        desc.expr = #component;\
+        desc.events[0] = kind;\
+        ecs_id(id) = ecs_trigger_init(world, &desc);\
+        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+    }
 
 #define ECS_TRIGGER(world, id, kind, component) \
-    ecs_entity_t ECS_TRIGGER_DEFINE(world, id, kind, component);\
+    ecs_entity_t ecs_id(id) = 0; \
+    ECS_TRIGGER_DEFINE(world, id, kind, component);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;
 
 /* Observers */
 #define ECS_OBSERVER_DEFINE(world, id, kind, ...)\
-    ecs_id(id) = ecs_observer_init(world, &(ecs_observer_desc_t){\
-        .entity.name = #id,\
-        .callback = id,\
-        .filter.expr = #__VA_ARGS__,\
-        .events = {kind},\
-    });\
-    ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL)
+    {\
+        ecs_observer_desc_t desc = {0};\
+        desc.entity.entity = ecs_id(id); \
+        desc.entity.name = #id;\
+        desc.callback = id;\
+        desc.filter.expr = #__VA_ARGS__;\
+        desc.events[0] = kind;\
+        ecs_id(id) = ecs_observer_init(world, &desc);\
+        ecs_assert(ecs_id(id) != 0, ECS_INVALID_PARAMETER, NULL);\
+    }
 
 #define ECS_OBSERVER(world, id, kind, ...)\
-    ecs_entity_t ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
+    ecs_entity_t ecs_id(id) = 0; \
+    ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id;

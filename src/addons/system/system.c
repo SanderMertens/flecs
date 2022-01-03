@@ -379,6 +379,8 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t existing = desc->entity.entity;

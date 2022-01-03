@@ -471,7 +471,9 @@ struct ecs_observer_t {
  */
 
 /** Used with ecs_entity_init */
-typedef struct ecs_entity_desc_t { 
+typedef struct ecs_entity_desc_t {
+    int32_t _canary;
+
     ecs_entity_t entity; /* Optional existing entity handle. */
 
     const char *name;    /* Name of the entity. If no entity is provided, an 
@@ -505,6 +507,8 @@ typedef struct ecs_entity_desc_t {
 
 /** Used with ecs_bulk_init */
 typedef struct ecs_bulk_desc_t { 
+    int32_t _canary;
+
     ecs_entity_t *entities;  /* Entities to bulk insert. Entity ids provided by 
                          * the application application must be empty (cannot
                          * have components). If no entity ids are provided, the
@@ -531,6 +535,8 @@ typedef struct ecs_bulk_desc_t {
 
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
+    int32_t _canary;
+
     ecs_entity_desc_t entity;           /* Parameters for component entity */
     size_t size;                        /* Component size */
     size_t alignment;                   /* Component alignment */
@@ -539,6 +545,8 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_type_init. */
 typedef struct ecs_type_desc_t {
+    int32_t _canary;
+
     ecs_entity_desc_t entity;           /* Parameters for type entity */
     ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
     const char *ids_expr;               /* Id expression to include in type */
@@ -547,6 +555,8 @@ typedef struct ecs_type_desc_t {
 
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
+    int32_t _canary;
+
     /* Terms of the filter. If a filter has more terms than 
      * ECS_TERM_CACHE_SIZE use terms_buffer */
     ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
@@ -578,6 +588,8 @@ typedef struct ecs_filter_desc_t {
 
 /** Used with ecs_query_init. */
 typedef struct ecs_query_desc_t {
+    int32_t _canary;
+
     /* Filter for the query */
     ecs_filter_desc_t filter;
 
@@ -623,6 +635,8 @@ typedef struct ecs_query_desc_t {
 
 /** Used with ecs_trigger_init. */
 typedef struct ecs_trigger_desc_t {
+    int32_t _canary;
+
     /* Entity to associate with trigger */
     ecs_entity_desc_t entity;
 
@@ -673,6 +687,8 @@ typedef struct ecs_trigger_desc_t {
 
 /** Used with ecs_observer_init. */
 typedef struct ecs_observer_desc_t {
+    int32_t _canary;
+
     /* Entity to associate with observer */
     ecs_entity_desc_t entity;
 

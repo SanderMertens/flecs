@@ -98,6 +98,7 @@ ecs_entity_t ecs_observer_init(
     ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
     ecs_check(desc->callback != NULL, ECS_INVALID_OPERATION, NULL);
 

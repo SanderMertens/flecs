@@ -109,3 +109,83 @@ void Misc_nullptr_string_compare_nullptr() {
     test_assert(str == "");
     test_assert(str != ptr_1);
 }
+
+static ECS_COMPONENT_DECLARE(Velocity);
+static ECS_DECLARE(TagB);
+static ECS_DECLARE(E2);
+static int sys_invoked_count = 0;
+static int obs_invoked_count = 0;
+static int trig_invoked_count = 0;
+
+void Sys(ecs_iter_t *it) {
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
+
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    sys_invoked_count += it->count;
+}
+
+void Obs(ecs_iter_t *it) {
+    Position *p = ecs_term(it, Position, 1);
+    Velocity *v = ecs_term(it, Velocity, 2);
+
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    obs_invoked_count += it->count;
+}
+
+void Trig(ecs_iter_t *it) {
+    Position *p = ecs_term(it, Position, 1);
+
+    test_assert(p != NULL);
+
+    trig_invoked_count += it->count;
+}
+
+void Misc_c_macros() {
+    flecs::world world;
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ECS_TAG(world, TagA);
+    ECS_TAG_DEFINE(world, TagB);
+
+    ECS_ENTITY(world, E1, 0);
+    ECS_ENTITY_DEFINE(world, E2, 0);
+
+    ECS_SYSTEM(world, Sys, EcsOnUpdate, Position, Velocity);
+    ECS_OBSERVER(world, Obs, EcsOnAdd, Position, Velocity);
+    ECS_TRIGGER(world, Trig, EcsOnAdd, Position);
+
+    test_assert(ecs_id(Position) != 0);
+    test_assert(ecs_id(Velocity) != 0);
+
+    test_assert(TagA != 0);
+    test_assert(TagB != 0);
+
+    test_assert(E1 != 0);
+    test_assert(E2 != 0);
+
+    ecs_add(world, E1, TagA);
+    ecs_add(world, E1, TagB);
+
+    test_assert( ecs_has(world, E1, TagA));
+    test_assert( ecs_has(world, E1, TagB));
+
+    ecs_add(world, E1, Position);
+    test_int(obs_invoked_count, 0);
+    test_int(trig_invoked_count, 1);
+    ecs_add(world, E1, Velocity);
+    test_int(obs_invoked_count, 1);
+
+    test_assert( ecs_has(world, E1, Position));
+    test_assert( ecs_has(world, E1, Velocity));
+    
+    ecs_progress(world, 0);
+
+    test_int(sys_invoked_count, 1);
+}

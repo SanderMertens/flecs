@@ -1848,6 +1848,7 @@ ecs_entity_t ecs_entity_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = ecs_get_scope(world);
@@ -1950,6 +1951,7 @@ const ecs_entity_t* ecs_bulk_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -2006,6 +2008,7 @@ ecs_entity_t ecs_component_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     world = (ecs_world_t*)ecs_get_world(world);
 
@@ -2098,6 +2101,7 @@ ecs_entity_t ecs_type_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {

@@ -6208,6 +6208,7 @@ ecs_entity_t ecs_entity_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = ecs_get_scope(world);
@@ -6310,6 +6311,7 @@ const ecs_entity_t* ecs_bulk_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -6366,6 +6368,7 @@ ecs_entity_t ecs_component_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     world = (ecs_world_t*)ecs_get_world(world);
 
@@ -6458,6 +6461,7 @@ ecs_entity_t ecs_type_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {
@@ -24516,6 +24520,8 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
     ecs_entity_t existing = desc->entity.entity;
@@ -32510,6 +32516,7 @@ int ecs_filter_init(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(filter_out != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
 
@@ -33745,6 +33752,7 @@ ecs_entity_t ecs_observer_init(
     ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
     ecs_check(desc->callback != NULL, ECS_INVALID_OPERATION, NULL);
 
@@ -37325,6 +37333,8 @@ ecs_query_t* ecs_query_init(
 {
     ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     result = flecs_sparse_add(world->queries, ecs_query_t);
@@ -40705,6 +40715,7 @@ ecs_entity_t ecs_trigger_init(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!world->is_readonly, ECS_INVALID_OPERATION, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     const char *expr = desc->expr;
