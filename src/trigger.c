@@ -201,7 +201,8 @@ void unregister_trigger(
             unregister_trigger_for_id(world, observable, trigger, term->id,
                 offsetof(ecs_event_id_record_t, entity_triggers));
         }
-    } else {
+    }
+    if (term->subj.set.mask & EcsSuperSet) {
         ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         unregister_trigger_for_id(world, observable, trigger, pair,
             offsetof(ecs_event_id_record_t, set_triggers));

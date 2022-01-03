@@ -1534,6 +1534,7 @@ void Trigger_entity_source_1_trigger(void);
 void Trigger_entity_source_2_triggers(void);
 void Trigger_entity_source_base_set(void);
 void Trigger_not_from_superset(void);
+void Trigger_create_stresstest(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8227,6 +8228,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "not_from_superset",
         Trigger_not_from_superset
+    },
+    {
+        "create_stresstest",
+        Trigger_create_stresstest
     }
 };
 
@@ -11427,7 +11432,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        87,
+        88,
         Trigger_testcases
     },
     {

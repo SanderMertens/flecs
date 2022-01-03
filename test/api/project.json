@@ -1605,7 +1605,8 @@
                "entity_source_1_trigger",
                "entity_source_2_triggers",
                "entity_source_base_set",
-               "not_from_superset"
+               "not_from_superset",
+               "create_stresstest"
            ]
         }, {
             "id": "Observer",
