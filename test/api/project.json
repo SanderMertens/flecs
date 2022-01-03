@@ -1201,7 +1201,8 @@
                 "filter_1_term_no_alloc",
                 "filter_cache_size_terms_no_alloc",
                 "filter_lt_cache_size_terms_no_alloc",
-                "move_self"
+                "move_self",
+                "match_empty_tables"
             ]
         }, {
             "id": "Query",

@@ -784,6 +784,7 @@ int ecs_filter_init(
     f.expr = (char*)expr;
     f.filter = desc->filter;
     f.instanced = desc->instanced;
+    f.match_empty_tables = desc->match_empty_tables;
     f.match_anything = true;
 
     if (terms) {
@@ -1436,10 +1437,22 @@ static
 const ecs_table_record_t *next_table(
     ecs_term_iter_t *iter)
 {
-    const ecs_table_record_t *tables = flecs_id_record_tables(iter->cur);
-    int32_t count = flecs_id_record_count(iter->cur);
-    if (iter->index >= count) {
-        return NULL;
+    const ecs_table_record_t *tables = NULL;
+    ecs_id_record_t *cur = iter->cur;
+
+    if (iter->empty_tables) {
+        tables = flecs_id_record_empty_tables(cur);
+        if (iter->index >= flecs_id_record_empty_count(cur)) {
+            iter->empty_tables = false;
+            iter->index = 0;
+        }
+    }
+
+    if (!iter->empty_tables) {
+        tables = flecs_id_record_tables(cur);
+        if (iter->index >= flecs_id_record_count(cur)) {
+            return NULL;
+        }
     }
 
     return &tables[iter->index ++];
@@ -1493,10 +1506,6 @@ bool term_iter_next(
             }
 
             if (!match_disabled && (table->flags & EcsTableIsDisabled)) {
-                continue;
-            }
-
-            if (!ecs_table_count(table)) {
                 continue;
             }
 
@@ -1698,6 +1707,8 @@ ecs_iter_t ecs_filter_iter(
         } else {
             term_iter_init(world, &terms[pivot_term], &iter->term_iter);
         }
+
+        iter->term_iter.empty_tables = filter->match_empty_tables;
     } else {
         if (!filter->match_anything) {
             iter->kind = EcsIterEvalCondition;

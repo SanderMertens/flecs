@@ -2627,6 +2627,7 @@ struct ecs_filter_t {
 
     bool filter;               /* When true, data fields won't be populated */
     bool instanced;            /* See ecs_filter_desc_t */
+    bool match_empty_tables;   /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -2796,7 +2797,7 @@ typedef struct ecs_term_iter_t {
     ecs_term_t term;
     ecs_id_record_t *self_index;
     ecs_id_record_t *set_index;
-    
+
     ecs_id_record_t *cur;
     int32_t index;
     
@@ -2804,6 +2805,8 @@ typedef struct ecs_term_iter_t {
     int32_t cur_match;
     int32_t match_count;
     int32_t last_column;
+
+    bool empty_tables;
 
     /* Storage */
     ecs_id_t id;
@@ -3725,6 +3728,9 @@ typedef struct ecs_filter_desc_t {
      * iterator will at most return 1 element when the result contains both 
      * owned and shared terms. */ 
     bool instanced;
+
+    /* Match empty tables. By default empty tables are not returned. */ 
+    bool match_empty_tables;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;

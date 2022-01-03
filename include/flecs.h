@@ -388,6 +388,7 @@ struct ecs_filter_t {
 
     bool filter;               /* When true, data fields won't be populated */
     bool instanced;            /* See ecs_filter_desc_t */
+    bool match_empty_tables;   /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -576,6 +577,9 @@ typedef struct ecs_filter_desc_t {
      * iterator will at most return 1 element when the result contains both 
      * owned and shared terms. */ 
     bool instanced;
+
+    /* Match empty tables. By default empty tables are not returned. */ 
+    bool match_empty_tables;
 
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;

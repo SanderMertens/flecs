@@ -146,7 +146,7 @@ bool flecs_iter_populate_term_data(
     } else {
         /* Data is from This, use table from iterator */
         table = it->table;
-        if (!table) {
+        if (!table || !ecs_table_count(table)) {
             goto no_data;
         }
 

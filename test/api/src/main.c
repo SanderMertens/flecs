@@ -1142,6 +1142,7 @@ void Filter_filter_1_term_no_alloc(void);
 void Filter_filter_cache_size_terms_no_alloc(void);
 void Filter_filter_lt_cache_size_terms_no_alloc(void);
 void Filter_move_self(void);
+void Filter_match_empty_tables(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6687,6 +6688,10 @@ bake_test_case Filter_testcases[] = {
     {
         "move_self",
         Filter_move_self
+    },
+    {
+        "match_empty_tables",
+        Filter_match_empty_tables
     }
 };
 
@@ -11375,7 +11380,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        116,
+        117,
         Filter_testcases
     },
     {
