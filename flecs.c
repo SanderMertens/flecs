@@ -19603,18 +19603,14 @@ int32_t flecs_table_append(
  
     /* If the table is monitored indicate that there has been a change */
     mark_table_dirty(world, table, 0);
-
-    /* If this is the first entity in this table, signal queries so that the
-     * table moves from an inactive table to an active table. */
-    if (!world->is_readonly && !count) {
-        table_activate(world, table, true);
-    } 
-
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
         fast_append(columns, column_count);
+        if (!count) {
+            table_activate(world, table, true); /* See below */
+        }
         return count;
     }
 
@@ -19667,6 +19663,12 @@ int32_t flecs_table_append(
         ecs_bitset_t *bs = &bs_columns[i].data;
         flecs_bitset_addn(bs, 1);
     }    
+
+    /* If this is the first entity in this table, signal queries so that the
+     * table moves from an inactive table to an active table. */
+    if (!count) {
+        table_activate(world, table, true);
+    } 
 
     return count;
 }
