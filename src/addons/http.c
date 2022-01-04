@@ -661,7 +661,7 @@ int accept_connections(
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
 {
-#ifdef _MSC_VER
+#if defined _MSC_VER || defined _WIN32
     /* If on Windows, test if winsock needs to be initialized */
     SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (SOCKET_ERROR == testsocket && WSANOTINITIALISED == WSAGetLastError()) {
