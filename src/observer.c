@@ -167,7 +167,8 @@ ecs_entity_t ecs_observer_init(
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
             .match_prefab = observer->filter.match_prefab,
-            .match_disabled = observer->filter.match_disabled
+            .match_disabled = observer->filter.match_disabled,
+            .last_event_id = &observer->last_event_id
         };
         ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
             observer->event_count);
