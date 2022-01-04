@@ -1149,6 +1149,9 @@ void Filter_filter_cache_size_terms_no_alloc(void);
 void Filter_filter_lt_cache_size_terms_no_alloc(void);
 void Filter_move_self(void);
 void Filter_match_empty_tables(void);
+void Filter_match_switch_w_switch(void);
+void Filter_match_switch_w_case(void);
+void Filter_match_switch_w_case_2_terms(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6723,6 +6726,18 @@ bake_test_case Filter_testcases[] = {
     {
         "match_empty_tables",
         Filter_match_empty_tables
+    },
+    {
+        "match_switch_w_switch",
+        Filter_match_switch_w_switch
+    },
+    {
+        "match_switch_w_case",
+        Filter_match_switch_w_case
+    },
+    {
+        "match_switch_w_case_2_terms",
+        Filter_match_switch_w_case_2_terms
     }
 };
 
@@ -11415,7 +11430,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        117,
+        120,
         Filter_testcases
     },
     {

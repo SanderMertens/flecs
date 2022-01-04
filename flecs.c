@@ -22328,6 +22328,17 @@ error:
     return NULL;
 }
 
+static
+ecs_id_t actual_match_id(
+    ecs_id_t id)
+{
+    /* Table types don't store CASE, so replace it with corresponding SWITCH */
+    if (ECS_HAS_ROLE(id, CASE)) {
+        return ECS_SWITCH | ECS_PAIR_RELATION(id);
+    }
+    return id;
+}
+
 bool flecs_term_match_table(
     ecs_world_t *world,
     const ecs_term_t *term,
@@ -22343,10 +22354,11 @@ bool flecs_term_match_table(
     ecs_oper_kind_t oper = term->oper;
     const ecs_table_t *match_table = table;
     ecs_type_t match_type = type;
+    ecs_id_t id = term->id;
 
     ecs_entity_t subj_entity = subj->entity;
     if (!subj_entity) {
-        id_out[0] = term->id; /* no source corresponds with Nothing set mask */
+        id_out[0] = id; /* no source corresponds with Nothing set mask */
         return true;
     }
 
@@ -22381,7 +22393,7 @@ bool flecs_term_match_table(
 
     /* Find location, source and id of match in table type */
     column = ecs_type_match(world, match_table, match_type,
-        column, term->id, subj->set.relation, subj->set.min_depth, 
+        column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source, id_out, match_index_out);
 
     bool result = column != -1;
@@ -22408,7 +22420,7 @@ bool flecs_term_match_table(
     }
 
     if (id_out && column < 0) {
-        id_out[0] = term->id;
+        id_out[0] = id;
     }
 
     if (column_out) {
@@ -22564,7 +22576,8 @@ void term_iter_init(
     iter->term = *term;
 
     if (subj->set.mask == EcsDefaultSet || subj->set.mask & EcsSelf) {
-        iter->self_index = flecs_get_id_record(world, term->id);
+        iter->self_index = flecs_get_id_record(world, 
+            actual_match_id(term->id));
     }
 
     if (subj->set.mask & EcsSuperSet) {
@@ -22892,7 +22905,8 @@ ecs_iter_t ecs_filter_iter(
                 continue;
             }
 
-            ecs_id_record_t *idr = flecs_get_id_record(world, term->id);
+            ecs_id_record_t *idr = flecs_get_id_record(world,   
+                actual_match_id(term->id));
             if (!idr) {
                 /* If one of the terms does not match with any data, iterator 
                  * should not return anything */
@@ -40800,7 +40814,7 @@ ecs_entity_t ecs_lookup_child(
             { .id = EcsPrefab, .oper = EcsOptional }
         }
     });
-    
+
     ecs_check(ret == 0, ECS_INTERNAL_ERROR, NULL);
     (void)ret;
 
