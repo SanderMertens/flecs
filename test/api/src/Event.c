@@ -421,7 +421,7 @@ void Event_emit_table_event() {
 
     ecs_entity_t evt = ecs_new_id(world);
 
-    ecs_entity_t t_a = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = TagA,
         .term.subj.set.mask = EcsSelf,
         .events = {evt},
@@ -429,7 +429,7 @@ void Event_emit_table_event() {
         .ctx = &ctx_a
     });
 
-    ecs_entity_t t_b = ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = TagA,
         .term.subj.set.mask = EcsSuperSet,
         .events = {evt},

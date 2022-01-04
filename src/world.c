@@ -1543,16 +1543,16 @@ void register_table(
     }
 
     /* Set flags if triggers are registered for table */
-    if (flecs_triggers_for_id(world, id, EcsOnAdd)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
         table->flags |= EcsTableHasOnAdd;
     }
-    if (flecs_triggers_for_id(world, id, EcsOnRemove)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
         table->flags |= EcsTableHasOnRemove;
     }
-    if (flecs_triggers_for_id(world, id, EcsOnSet)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
         table->flags |= EcsTableHasOnSet;
     }
-    if (flecs_triggers_for_id(world, id, EcsUnSet)) {
+    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
         table->flags |= EcsTableHasUnSet;
     }
 }

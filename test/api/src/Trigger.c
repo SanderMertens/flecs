@@ -1566,6 +1566,56 @@ void Trigger_on_add_superset() {
     ecs_fini(world);
 }
 
+void Trigger_on_add_superset_2_levels() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .term.subj.set.mask = EcsSuperSet,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base_no_comp = ecs_new_id(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base_of_base = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, base_of_base);
+    test_int(ctx.invoked, 1);
+    ctx = (Probe){0};
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_no_comp);
+    test_assert(e != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, e, TagA);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Trigger_on_remove_superset() {
     ecs_world_t *world = ecs_init();
 

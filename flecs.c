@@ -1404,7 +1404,7 @@ void flecs_set_triggers_notify(
     ecs_entity_t event,
     ecs_id_t set_id);
 
-ecs_event_id_record_t* flecs_triggers_for_id(
+bool flecs_check_triggers_for_event(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);
@@ -31257,16 +31257,16 @@ void register_table(
     }
 
     /* Set flags if triggers are registered for table */
-    if (flecs_triggers_for_id(world, id, EcsOnAdd)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
         table->flags |= EcsTableHasOnAdd;
     }
-    if (flecs_triggers_for_id(world, id, EcsOnRemove)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
         table->flags |= EcsTableHasOnRemove;
     }
-    if (flecs_triggers_for_id(world, id, EcsOnSet)) {
+    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
         table->flags |= EcsTableHasOnSet;
     }
-    if (flecs_triggers_for_id(world, id, EcsUnSet)) {
+    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
         table->flags |= EcsTableHasUnSet;
     }
 }
@@ -31653,27 +31653,21 @@ void ecs_emit(
 
     ecs_iter_t it = {
         .world = world,
+        .real_world = world,
         .table = table,
         .type = table->type,
         .term_count = 1,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,
-        .param = (void*)desc->param
+        .param = (void*)desc->param,
+        .table_only = desc->table_event
     };
 
     world->event_id ++;
 
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    // if (desc->table_event) {
-    //     static int table_evt_count;
-    //     table_evt_count ++;
-    //     printf("%4d: Notify %s [%p] (ids = %d)\n", table_evt_count,
-    //         ecs_get_name(world, desc->event), 
-    //         table, ids->count);
-    // }
 
     flecs_triggers_notify(&it, observable, ids, event);
 
@@ -40158,7 +40152,7 @@ void inc_trigger_count(
         evt->event_ids, ecs_event_id_record_t, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    int32_t result = idt->trigger_count + value;
+    int32_t result = idt->trigger_count += value;
     if (result == 1) {
         /* Notify framework that there are triggers for the event/id. This 
          * allows parts of the code to skip event evaluation early */
@@ -40178,6 +40172,10 @@ void inc_trigger_count(
             unregister_event_trigger(evt, id);
         }
     }
+
+    // printf("id = %s.%s, count = %d (%d)\n", 
+    //     ecs_get_fullpath(world, event),
+    //     ecs_id_str(world, id), idt->trigger_count, value);
 }
 
 static
@@ -40218,6 +40216,9 @@ void register_trigger_for_id(
         ecs_map_ensure(triggers[0], ecs_trigger_t*, trigger->id)[0] = trigger;
 
         inc_trigger_count(world, event, evt, term_id, 1);
+        if (term_id != id) {
+            inc_trigger_count(world, event, evt, id, 1);
+        }
     }
 }
 
@@ -40300,6 +40301,8 @@ void unregister_trigger_for_id(
             if (!idt->triggers && !idt->set_triggers && !idt->trigger_count) {
                 unregister_event_trigger(evt, id);
             }
+
+            inc_trigger_count(world, event, evt, id, -1);
         }
     }
 }
@@ -40372,18 +40375,23 @@ ecs_event_id_record_t* get_triggers_for_id(
     return ecs_map_get(evt, ecs_event_id_record_t, id);
 }
 
-ecs_event_id_record_t* flecs_triggers_for_id(
+bool flecs_check_triggers_for_event(
     const ecs_poly_t *object,
     ecs_id_t id,
     ecs_entity_t event)
-{
+{    
     ecs_observable_t *observable = ecs_get_observable(object);
     const ecs_map_t *evt = get_triggers_for_event(observable, event);
     if (!evt) {
-        return NULL;
+        return false;
     }
 
-    return get_triggers_for_id(evt, id);
+    ecs_event_id_record_t *edr = get_triggers_for_id(evt, id);
+    if (edr) {
+        return edr->trigger_count != 0;
+    } else {
+        return false;
+    }
 }
 
 static
@@ -40539,6 +40547,16 @@ void notify_set_base_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t event_id = it->event_id;
+    ecs_entity_t rel = ECS_PAIR_RELATION(event_id);
+    ecs_entity_t obj = ecs_pair_object(world, event_id);
+    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *obj_table = ecs_get_table(world, obj);
+    if (!obj_table) {
+        return;
+    }
+
+    ecs_type_t obj_type = obj_table->type;
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
@@ -40546,26 +40564,46 @@ void notify_set_base_triggers(
             continue;
         }
 
-        if (flecs_term_match_table(world, &t->term, it->table, it->type, 
-            it->ids, it->columns, it->subjects, NULL, true))
-        {
-            if (!it->subjects[0]) {
-                /* Do not match owned components */
-                continue;
-            }
+        ecs_term_t *term = &t->term;
+        ecs_id_t id = term->id;
+        int32_t column = ecs_type_match(world, obj_table, obj_type, 0, id, rel, 
+            0, 0, it->subjects, it->ids, 0);
+        
+        bool result = column != -1;
+        if (term->oper == EcsNot) {
+            result = !result;
+        }
 
-            it->is_filter = t->term.inout == EcsInOutFilter;
-            it->event_id = t->term.id;
-            it->ids[0] = t->term.id;
-            it->system = t->entity;
-            it->self = t->self;
-            it->ctx = t->ctx;
-            it->binding_ctx = t->binding_ctx;
-            it->term_index = t->term.index;
-            it->terms = &t->term;
-            
-            t->action(it);
-        }                
+        if (!result) {
+            continue;
+        }
+
+        if (!term->subj.set.min_depth && flecs_get_table_record(
+            world, it->table, id) != NULL) 
+        {
+            continue;
+        }
+
+        if (!it->subjects[0]) {
+            it->subjects[0] = obj;
+        }
+
+        if (column != -1) {
+            it->columns[0] = -(column + 1);
+        } else {
+            it->columns[0] = 0;
+        }
+
+        it->is_filter = t->term.inout == EcsInOutFilter;
+        it->event_id = t->term.id;
+        it->system = t->entity;
+        it->self = t->self;
+        it->ctx = t->ctx;
+        it->binding_ctx = t->binding_ctx;
+        it->term_index = t->term.index;
+        it->terms = &t->term;
+        
+        t->action(it);
     }
 }
 
@@ -40581,12 +40619,11 @@ void notify_set_triggers(
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
-        if (ignore_trigger(world, t, it->table)) {
+        if (!ecs_id_match(it->event_id, t->term.id)) {
             continue;
         }
 
-        /* Make sure trigger id matches event id */
-        if (!ecs_id_match(it->event_id, t->term.id)) {
+        if (ignore_trigger(world, t, it->table)) {
             continue;
         }
 
@@ -40664,19 +40701,22 @@ void notify_triggers_for_id(
     bool *iter_set)
 {
     const ecs_event_id_record_t *idt = get_triggers_for_id(evt, event_id);
-    if (idt) {
-        if (idt->triggers) {
-            init_iter(it, iter_set);
-            notify_self_triggers(world, it, idt->triggers);
-        }
-        if (idt->entity_triggers) {
-            init_iter(it, iter_set);
-            notify_entity_triggers(world, it, idt->entity_triggers);
-        }
-        if (idt->set_triggers) {
-            init_iter(it, iter_set);
-            notify_set_base_triggers(world, it, idt->set_triggers);
-        }
+    if (!idt) {
+        return;
+    }
+
+    ecs_map_t *triggers;
+    if ((triggers = idt->triggers)) {
+        init_iter(it, iter_set);
+        notify_self_triggers(world, it, triggers);
+    }
+    if ((triggers = idt->entity_triggers)) {
+        init_iter(it, iter_set);
+        notify_entity_triggers(world, it, triggers);
+    }
+    if ((triggers = idt->set_triggers)) {
+        init_iter(it, iter_set);
+        notify_set_base_triggers(world, it, triggers);
     }
 }
 

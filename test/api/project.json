@@ -1571,6 +1571,7 @@
                "on_add_not_tag",
                "on_remove_not_tag",
                "on_add_superset",
+               "on_add_superset_2_levels",
                "on_remove_superset",
                "on_add_superset_childof",
                "on_remove_superset_childof",

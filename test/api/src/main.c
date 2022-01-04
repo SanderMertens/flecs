@@ -1499,6 +1499,7 @@ void Trigger_un_set_pair_wildcard(void);
 void Trigger_on_add_not_tag(void);
 void Trigger_on_remove_not_tag(void);
 void Trigger_on_add_superset(void);
+void Trigger_on_add_superset_2_levels(void);
 void Trigger_on_remove_superset(void);
 void Trigger_on_add_superset_childof(void);
 void Trigger_on_remove_superset_childof(void);
@@ -8108,6 +8109,10 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_superset
     },
     {
+        "on_add_superset_2_levels",
+        Trigger_on_add_superset_2_levels
+    },
+    {
         "on_remove_superset",
         Trigger_on_remove_superset
     },
@@ -11522,7 +11527,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        89,
+        90,
         Trigger_testcases
     },
     {
