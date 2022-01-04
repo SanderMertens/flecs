@@ -10,6 +10,8 @@ void observer_callback(ecs_iter_t *it) {
         return;
     }
 
+    o->last_event_id = world->event_id;
+
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual;
     user_it.terms = o->filter.terms;
@@ -84,7 +86,6 @@ void observer_callback(ecs_iter_t *it) {
         user_it.term_count = o->filter.term_count_actual;
 
         o->action(&user_it);
-        o->last_event_id = world->event_id;
     }
 
 done:
