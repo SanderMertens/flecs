@@ -1078,6 +1078,75 @@ void Filter_filter_w_10_terms_copy() {
     ecs_fini(world);
 }
 
+void Filter_filter_w_and_flag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {ECS_AND | TagA}
+        }
+    }), 0);
+
+    test_int(f.term_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].oper, EcsAndFrom);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_or_flag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {ECS_OR | TagA}
+        }
+    }), 0);
+
+    test_int(f.term_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].oper, EcsOrFrom);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_not_flag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {ECS_NOT | TagA}
+        }
+    }), 0);
+
+    test_int(f.term_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].oper, EcsNotFrom);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_term_iter_component() {
     ecs_world_t *world = ecs_mini();
 
@@ -5462,6 +5531,76 @@ void Filter_match_switch_w_case_2_terms() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_assert(it.table == table);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_and_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, TypeX, TagA, TagB);
+
+    ecs_entity_t e = ecs_new_w_id(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    /* Not matched */
+    ecs_new_w_id(world, TagA);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { ECS_AND | TypeX }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_assert(it.table == table);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_or_term() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, TypeX, TagA, TagB);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, TagA);
+    ecs_table_t *table1 = ecs_get_table(world, e1);
+
+    ecs_entity_t e2 = ecs_new_w_id(world, TagB);
+    ecs_table_t *table2 = ecs_get_table(world, e2);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { ECS_OR | TypeX }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_assert(it.table == table1);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_assert(it.table == table2);
 
     test_bool(ecs_filter_next(&it), false);
 

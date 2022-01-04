@@ -1045,6 +1045,9 @@ void Filter_filter_w_resources_copy(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
 void Filter_filter_w_10_terms_copy(void);
+void Filter_filter_w_and_flag(void);
+void Filter_filter_w_or_flag(void);
+void Filter_filter_w_not_flag(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -1152,6 +1155,8 @@ void Filter_match_empty_tables(void);
 void Filter_match_switch_w_switch(void);
 void Filter_match_switch_w_case(void);
 void Filter_match_switch_w_case_2_terms(void);
+void Filter_and_term(void);
+void Filter_or_term(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6312,6 +6317,18 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_10_terms_copy
     },
     {
+        "filter_w_and_flag",
+        Filter_filter_w_and_flag
+    },
+    {
+        "filter_w_or_flag",
+        Filter_filter_w_or_flag
+    },
+    {
+        "filter_w_not_flag",
+        Filter_filter_w_not_flag
+    },
+    {
         "term_w_id",
         Filter_term_w_id
     },
@@ -6738,6 +6755,14 @@ bake_test_case Filter_testcases[] = {
     {
         "match_switch_w_case_2_terms",
         Filter_match_switch_w_case_2_terms
+    },
+    {
+        "and_term",
+        Filter_and_term
+    },
+    {
+        "or_term",
+        Filter_or_term
     }
 };
 
@@ -11430,7 +11455,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        120,
+        125,
         Filter_testcases
     },
     {

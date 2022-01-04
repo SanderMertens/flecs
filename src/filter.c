@@ -634,6 +634,31 @@ int ecs_term_finalize(
         }
     }
 
+    if (term->role == ECS_AND || term->role == ECS_OR || term->role == ECS_NOT){
+        /* AND/OR terms match >1 component, which is only valid as filter */
+        if (term->inout != EcsInOutDefault && term->inout != EcsInOutFilter) {
+            term_error(world, term, name, "AND/OR terms must be filters");
+            return -1;
+        }
+
+        term->inout = EcsInOutFilter;
+
+        /* Translate role to operator */
+        if (term->role == ECS_AND) {
+            term->oper = EcsAndFrom;
+        } else
+        if (term->role == ECS_OR) {
+            term->oper = EcsOrFrom;
+        } else
+        if (term->role == ECS_NOT) {
+            term->oper = EcsNotFrom;
+        }
+
+        /* Zero out role & strip from id */
+        term->id &= ECS_COMPONENT_MASK;
+        term->role = 0;
+    }
+
     if (verify_term_consistency(world, term, name)) {
         return -1;
     }
@@ -1106,6 +1131,8 @@ char* ecs_filter_str(
                 ecs_strbuf_appendstr(&buf, "[inout] ");
             } else if (term->inout == EcsOut) {
                 ecs_strbuf_appendstr(&buf, "[out] ");
+            } else if (term->inout == EcsInOutFilter) {
+                ecs_strbuf_appendstr(&buf, "[filter] ");
             }
         }
 
@@ -1131,7 +1158,56 @@ ecs_id_t actual_match_id(
     if (ECS_HAS_ROLE(id, CASE)) {
         return ECS_SWITCH | ECS_PAIR_RELATION(id);
     }
+
     return id;
+}
+
+static
+bool flecs_n_term_match_table(
+    ecs_world_t *world,
+    const ecs_term_t *term,
+    const ecs_table_t *table,
+    ecs_type_t type,
+    ecs_id_t *id_out,
+    int32_t *column_out,
+    ecs_entity_t *subject_out,
+    int32_t *match_index_out,
+    bool first)
+{
+    (void)column_out;
+    
+    ecs_entity_t type_id = term->id;
+    ecs_oper_kind_t oper = term->oper;
+
+    const EcsType *term_type = ecs_get(world, type_id, EcsType);
+    ecs_check(term_type != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_t *ids = ecs_vector_first(term_type->normalized, ecs_id_t);
+    int32_t i, count = ecs_vector_count(term_type->normalized);
+    ecs_term_t temp = *term;
+    temp.oper = EcsAnd;
+
+    for (i = 0; i < count; i ++) {
+        temp.id = ids[i];
+        bool result = flecs_term_match_table(world, &temp, table, type, id_out, 
+            0, subject_out, match_index_out, first);
+        if (!result && oper == EcsAndFrom) {
+            return false;
+        } else
+        if (result && oper == EcsOrFrom) {
+            return true;
+        }
+    }
+
+    if (oper == EcsAndFrom) {
+        return true;
+    } else
+    if (oper == EcsOrFrom) {
+        return false;
+    }
+
+error:
+    return false;
 }
 
 bool flecs_term_match_table(
@@ -1155,6 +1231,11 @@ bool flecs_term_match_table(
     if (!subj_entity) {
         id_out[0] = id; /* no source corresponds with Nothing set mask */
         return true;
+    }
+
+    if (oper == EcsAndFrom || oper == EcsOrFrom) {
+        return flecs_n_term_match_table(world, term, table, type, id_out, column_out, 
+            subject_out, match_index_out, first);
     }
 
     /* If source is not This, search in table of source */
@@ -1682,6 +1763,7 @@ ecs_iter_t ecs_filter_iter(
     ecs_term_t *terms = filter->terms;
     int32_t min_count = -1;
     int32_t pivot_term = -1;
+    ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* Find term that represents smallest superset */
     if (filter->match_this) {
@@ -1689,8 +1771,7 @@ ecs_iter_t ecs_filter_iter(
 
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
-
-            ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_id_t id = term->id;
 
             if (term->oper != EcsAnd) {
                 continue;
@@ -1701,7 +1782,7 @@ ecs_iter_t ecs_filter_iter(
             }
 
             ecs_id_record_t *idr = flecs_get_id_record(world,   
-                actual_match_id(term->id));
+                actual_match_id(id));
             if (!idr) {
                 /* If one of the terms does not match with any data, iterator 
                  * should not return anything */
@@ -1845,6 +1926,12 @@ bool ecs_filter_next_instanced(
 
                     ecs_assert(term_iter->match_count != 0, 
                         ECS_INTERNAL_ERROR, NULL);
+
+                    if (pivot_term == -1) {
+                        /* Without a pivot term, we're iterating all tables with
+                         * a wildcard, so the match count is meaningless. */
+                        term_iter->match_count = 1;
+                    }
 
                     iter->matches_left = term_iter->match_count;
 
