@@ -263,8 +263,6 @@ void init_table(
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
 
-    table->queries = NULL;
-
     init_node(&table->node);
     init_flags(world, table);
 

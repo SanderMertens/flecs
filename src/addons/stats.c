@@ -179,15 +179,6 @@ void ecs_get_world_stats(
                 singleton_table_count ++;
             }
         }
-
-        /* If this table matches with queries and is not empty, increase the
-         * matched table & matched entity count. These statistics can be used to
-         * compute actual fragmentation ratio for queries. */
-        int32_t queries_matched = ecs_vector_count(table->queries);
-        if (queries_matched && entity_count) {
-            matched_table_count ++;
-            matched_entity_count += entity_count;
-        }
     }
 
     record_gauge(&s->matched_table_count, t, matched_table_count);

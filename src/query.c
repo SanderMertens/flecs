@@ -1219,13 +1219,6 @@ add_pair:
         goto add_pair;
     }
 
-    if (table && !(query->flags & EcsQueryIsSubquery)) {
-        flecs_table_notify(world, table, &(ecs_table_event_t){
-            .kind = EcsTableQueryMatch,
-            .query = query
-        });
-    }
-
     if (pair_offsets) {
         ecs_os_free(pair_offsets);
     }
@@ -2158,12 +2151,6 @@ void rematch_table(
 
             if (rematch) {
                 unmatch_table(query, table);
-                if (!(query->flags & EcsQueryIsSubquery)) {
-                    flecs_table_notify(world, table, &(ecs_table_event_t){
-                        .kind = EcsTableQueryUnmatch,
-                        .query = query
-                    }); 
-                }
                 add_table(world, query, table);
             }
         }
@@ -2171,12 +2158,6 @@ void rematch_table(
         /* Table no longer matches, remove */
         if (match != NULL) {
             unmatch_table(query, table);
-            if (!(query->flags & EcsQueryIsSubquery)) {
-                flecs_table_notify(world, table, &(ecs_table_event_t){
-                    .kind = EcsTableQueryUnmatch,
-                    .query = query
-                });
-            }
             notify_subqueries(world, query, &(ecs_query_event_t){
                 .kind = EcsQueryTableUnmatch,
                 .table = table
@@ -2305,14 +2286,6 @@ void flecs_query_notify(
         /* Rematch tables of query */
         rematch_tables(world, query, event->parent_query);
         break;        
-    case EcsQueryTableEmpty:
-        /* Table is empty, deactivate */
-        update_table(query, event->table, true);
-        break;
-    case EcsQueryTableNonEmpty:
-        /* Table is non-empty, activate */
-        update_table(query, event->table, false);
-        break;
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
         query->flags |= EcsQueryIsOrphaned;
@@ -2395,11 +2368,11 @@ void query_on_event(
 
     if (event == EcsOnTableEmpty) {
         // printf("%p: table %p: empty\n");
-        // update_table(query, it->table, true);
+        update_table(query, it->table, true);
     } else
     if (event == EcsOnTableFill) {
         // printf("%p: table %p: fill\n");
-        // update_table(query, it->table, false);
+        update_table(query, it->table, false);
     }
 }
 
@@ -2550,24 +2523,6 @@ void ecs_query_fini(
 
     notify_subqueries(world, query, &(ecs_query_event_t){
         .kind = EcsQueryOrphan
-    });
-
-    ecs_vector_each(query->cache.empty_tables, ecs_query_table_t, table, {
-        if (!(query->flags & EcsQueryIsSubquery)) {
-            flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            });
-        }    
-    });
-
-    ecs_vector_each(query->cache.tables, ecs_query_table_t, table, {
-        if (!(query->flags & EcsQueryIsSubquery)) {
-            flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            });
-        }
     });
 
     ecs_table_cache_fini(&query->cache);
