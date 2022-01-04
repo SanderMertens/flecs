@@ -867,7 +867,7 @@ void SystemMisc_change_system_action() {
     action_a_invoked = false;
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {sys},
+        .entity = { .entity = sys},
         .callback = ActionB
     });
 
@@ -1022,7 +1022,7 @@ void SystemMisc_one_named_column_of_two() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){ .terms = {
         { ecs_id(Position), .name = "pos" },
         { ecs_id(Velocity) }
     }}));
@@ -1059,7 +1059,7 @@ void SystemMisc_two_named_columns_of_two() {
     ECS_COMPONENT(world, Velocity);
 
     ecs_filter_t f;
-    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){{
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){ .terms = {
         { ecs_id(Position), .name = "pos" },
         { ecs_id(Velocity), .name = "vel" }
     }}));    

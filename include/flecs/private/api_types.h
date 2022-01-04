@@ -98,7 +98,7 @@ typedef struct ecs_term_iter_t {
     ecs_term_t term;
     ecs_id_record_t *self_index;
     ecs_id_record_t *set_index;
-    
+
     ecs_id_record_t *cur;
     int32_t index;
     
@@ -106,6 +106,8 @@ typedef struct ecs_term_iter_t {
     int32_t cur_match;
     int32_t match_count;
     int32_t last_column;
+
+    bool empty_tables;
 
     /* Storage */
     ecs_id_t id;

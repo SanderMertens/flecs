@@ -3579,3 +3579,27 @@ void Trigger_not_from_superset() {
 
     ecs_fini(world);
 }
+
+void Trigger_create_stresstest() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* Make sure we can create & delete 100k triggers without running out of
+     * memory to verify there are no leaks in the administration (sanitizer 
+     * builds don't detect leaks that are cleaned up @ ecs_fini). */
+    for (int i = 0; i < 100 * 1000; i ++) {
+        ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+            .term.id = Tag,
+            .term.subj.set.mask = EcsSelf | EcsSuperSet,
+            .events = {EcsOnAdd},
+            .callback = Trigger
+        });
+
+        ecs_delete(world, t);
+    }
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

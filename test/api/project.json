@@ -67,7 +67,13 @@
                     "table_1_id_w_trigger",
                     "table_2_ids_w_trigger",
                     "table_1_id_w_observer",
-                    "table_2_ids_w_observer"
+                    "table_2_ids_w_observer",
+                    "emit_event_for_empty_table",
+                    "emit_event_switch_id",
+                    "emit_event_case_for_switch_id",
+                    "emit_event_case_for_case_id",
+                    "emit_event_case_for_case_id_wildcard",
+                    "emit_event_switch_for_case_id"
                 ]
             }, {
             "id": "New",
@@ -1099,6 +1105,10 @@
                 "filter_w_10_terms",
                 "filter_w_10_terms_move",
                 "filter_w_10_terms_copy",
+                "filter_w_and_flag",
+                "filter_w_or_flag",
+                "filter_w_not_flag",
+                "filter_filter",
                 "term_w_id",
                 "term_w_pair_id",
                 "term_w_pred_obj",
@@ -1201,7 +1211,13 @@
                 "filter_1_term_no_alloc",
                 "filter_cache_size_terms_no_alloc",
                 "filter_lt_cache_size_terms_no_alloc",
-                "move_self"
+                "move_self",
+                "match_empty_tables",
+                "match_switch_w_switch",
+                "match_switch_w_case",
+                "match_switch_w_case_2_terms",
+                "and_term",
+                "or_term"
             ]
         }, {
             "id": "Query",
@@ -1603,7 +1619,8 @@
                "entity_source_1_trigger",
                "entity_source_2_triggers",
                "entity_source_base_set",
-               "not_from_superset"
+               "not_from_superset",
+               "create_stresstest"
            ]
         }, {
             "id": "Observer",
@@ -1656,7 +1673,9 @@
                 "write_in_unset",
                 "filter_term",
                 "2_terms_1_filter",
-                "3_terms_2_filter"
+                "3_terms_2_filter",
+                "and_from",
+                "or_from"
             ]                
         }, {
             "id": "TriggerOnAdd",

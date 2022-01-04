@@ -93,7 +93,7 @@ bool flecs_iter_populate_term_data(
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
-            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_w_id(
+            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_id(
                 world, ref, ref->entity, ref->component);
 
             /* If cached references were provided, the code that populated
@@ -146,7 +146,7 @@ bool flecs_iter_populate_term_data(
     } else {
         /* Data is from This, use table from iterator */
         table = it->table;
-        if (!table) {
+        if (!table || !ecs_table_count(table)) {
             goto no_data;
         }
 

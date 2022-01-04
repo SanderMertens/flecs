@@ -1022,7 +1022,7 @@ void System_w_FromParent_add_component_in_progress_after_match() {
     ECS_TRIGGER(world, AddMass, EcsOnAdd, Tag);
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .entity = {AddMass}, .ctx = &ecs_id(Mass)
+        .entity = {.entity = AddMass}, .ctx = &ecs_id(Mass)
     });
 
     ecs_entity_t parent = ecs_new(world, 0);

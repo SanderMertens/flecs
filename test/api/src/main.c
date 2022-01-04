@@ -60,6 +60,12 @@ void Event_table_1_id_w_trigger(void);
 void Event_table_2_ids_w_trigger(void);
 void Event_table_1_id_w_observer(void);
 void Event_table_2_ids_w_observer(void);
+void Event_emit_event_for_empty_table(void);
+void Event_emit_event_switch_id(void);
+void Event_emit_event_case_for_switch_id(void);
+void Event_emit_event_case_for_case_id(void);
+void Event_emit_event_case_for_case_id_wildcard(void);
+void Event_emit_event_switch_for_case_id(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -1039,6 +1045,10 @@ void Filter_filter_w_resources_copy(void);
 void Filter_filter_w_10_terms(void);
 void Filter_filter_w_10_terms_move(void);
 void Filter_filter_w_10_terms_copy(void);
+void Filter_filter_w_and_flag(void);
+void Filter_filter_w_or_flag(void);
+void Filter_filter_w_not_flag(void);
+void Filter_filter_filter(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -1142,6 +1152,12 @@ void Filter_filter_1_term_no_alloc(void);
 void Filter_filter_cache_size_terms_no_alloc(void);
 void Filter_filter_lt_cache_size_terms_no_alloc(void);
 void Filter_move_self(void);
+void Filter_match_empty_tables(void);
+void Filter_match_switch_w_switch(void);
+void Filter_match_switch_w_case(void);
+void Filter_match_switch_w_case_2_terms(void);
+void Filter_and_term(void);
+void Filter_or_term(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -1532,6 +1548,7 @@ void Trigger_entity_source_1_trigger(void);
 void Trigger_entity_source_2_triggers(void);
 void Trigger_entity_source_base_set(void);
 void Trigger_not_from_superset(void);
+void Trigger_create_stresstest(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1583,6 +1600,8 @@ void Observer_write_in_unset(void);
 void Observer_filter_term(void);
 void Observer_2_terms_1_filter(void);
 void Observer_3_terms_2_filter(void);
+void Observer_and_from(void);
+void Observer_or_from(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -2525,6 +2544,30 @@ bake_test_case Event_testcases[] = {
     {
         "table_2_ids_w_observer",
         Event_table_2_ids_w_observer
+    },
+    {
+        "emit_event_for_empty_table",
+        Event_emit_event_for_empty_table
+    },
+    {
+        "emit_event_switch_id",
+        Event_emit_event_switch_id
+    },
+    {
+        "emit_event_case_for_switch_id",
+        Event_emit_event_case_for_switch_id
+    },
+    {
+        "emit_event_case_for_case_id",
+        Event_emit_event_case_for_case_id
+    },
+    {
+        "emit_event_case_for_case_id_wildcard",
+        Event_emit_event_case_for_case_id_wildcard
+    },
+    {
+        "emit_event_switch_for_case_id",
+        Event_emit_event_switch_for_case_id
     }
 };
 
@@ -6277,6 +6320,22 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_10_terms_copy
     },
     {
+        "filter_w_and_flag",
+        Filter_filter_w_and_flag
+    },
+    {
+        "filter_w_or_flag",
+        Filter_filter_w_or_flag
+    },
+    {
+        "filter_w_not_flag",
+        Filter_filter_w_not_flag
+    },
+    {
+        "filter_filter",
+        Filter_filter_filter
+    },
+    {
         "term_w_id",
         Filter_term_w_id
     },
@@ -6687,6 +6746,30 @@ bake_test_case Filter_testcases[] = {
     {
         "move_self",
         Filter_move_self
+    },
+    {
+        "match_empty_tables",
+        Filter_match_empty_tables
+    },
+    {
+        "match_switch_w_switch",
+        Filter_match_switch_w_switch
+    },
+    {
+        "match_switch_w_case",
+        Filter_match_switch_w_case
+    },
+    {
+        "match_switch_w_case_2_terms",
+        Filter_match_switch_w_case_2_terms
+    },
+    {
+        "and_term",
+        Filter_and_term
+    },
+    {
+        "or_term",
+        Filter_or_term
     }
 };
 
@@ -8217,6 +8300,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "not_from_superset",
         Trigger_not_from_superset
+    },
+    {
+        "create_stresstest",
+        Trigger_create_stresstest
     }
 };
 
@@ -8416,6 +8503,14 @@ bake_test_case Observer_testcases[] = {
     {
         "3_terms_2_filter",
         Observer_3_terms_2_filter
+    },
+    {
+        "and_from",
+        Observer_and_from
+    },
+    {
+        "or_from",
+        Observer_or_from
     }
 };
 
@@ -11193,7 +11288,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        4,
+        10,
         Event_testcases
     },
     {
@@ -11375,7 +11470,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        116,
+        126,
         Filter_testcases
     },
     {
@@ -11417,14 +11512,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        87,
+        88,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        49,
+        51,
         Observer_testcases
     },
     {

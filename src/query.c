@@ -938,7 +938,7 @@ ecs_vector_t* add_ref(
     if (c_info) {
         if (c_info->size && subj->entity != 0) {
             if (entity) {
-                ecs_get_ref_w_id(world, ref, entity, component);
+                ecs_get_ref_id(world, ref, entity, component);
             }
 
             query->flags |= EcsQueryHasRefs;
@@ -2039,7 +2039,7 @@ void resolve_cascade_subject_for_table(
 
         references[ref_index].entity = ecs_get_alive(world, subject);
         table_data->subjects[term_index] = subject;
-        ecs_get_ref_w_id(world, ref, subject, term->id);
+        ecs_get_ref_id(world, ref, subject, term->id);
     } else {
         references[ref_index].entity = 0;
         table_data->subjects[term_index] = 0;
@@ -2394,6 +2394,8 @@ ecs_query_t* ecs_query_init(
 {
     ecs_query_t *result = NULL;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
     result = flecs_sparse_add(world->queries, ecs_query_t);

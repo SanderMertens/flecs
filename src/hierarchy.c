@@ -368,7 +368,7 @@ ecs_entity_t ecs_lookup_child(
             { .id = EcsPrefab, .oper = EcsOptional }
         }
     });
-    
+
     ecs_check(ret == 0, ECS_INTERNAL_ERROR, NULL);
     (void)ret;
 

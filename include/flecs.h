@@ -388,6 +388,7 @@ struct ecs_filter_t {
 
     bool filter;               /* When true, data fields won't be populated */
     bool instanced;            /* See ecs_filter_desc_t */
+    bool match_empty_tables;   /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
@@ -427,8 +428,8 @@ struct ecs_trigger_t {
 struct ecs_observer_t {
     ecs_filter_t filter;
 
-    /* Triggers created by observer (array size same as number of terms) */
-    ecs_entity_t *triggers;
+    /* Triggers created by observer */
+    ecs_vector_t *triggers;
 
     /* Observer events */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
@@ -471,7 +472,9 @@ struct ecs_observer_t {
  */
 
 /** Used with ecs_entity_init */
-typedef struct ecs_entity_desc_t { 
+typedef struct ecs_entity_desc_t {
+    int32_t _canary;
+
     ecs_entity_t entity; /* Optional existing entity handle. */
 
     const char *name;    /* Name of the entity. If no entity is provided, an 
@@ -505,6 +508,8 @@ typedef struct ecs_entity_desc_t {
 
 /** Used with ecs_bulk_init */
 typedef struct ecs_bulk_desc_t { 
+    int32_t _canary;
+
     ecs_entity_t *entities;  /* Entities to bulk insert. Entity ids provided by 
                          * the application application must be empty (cannot
                          * have components). If no entity ids are provided, the
@@ -531,6 +536,8 @@ typedef struct ecs_bulk_desc_t {
 
 /** Used with ecs_component_init. */
 typedef struct ecs_component_desc_t {
+    int32_t _canary;
+
     ecs_entity_desc_t entity;           /* Parameters for component entity */
     size_t size;                        /* Component size */
     size_t alignment;                   /* Component alignment */
@@ -539,6 +546,8 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_type_init. */
 typedef struct ecs_type_desc_t {
+    int32_t _canary;
+
     ecs_entity_desc_t entity;           /* Parameters for type entity */
     ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
     const char *ids_expr;               /* Id expression to include in type */
@@ -547,6 +556,8 @@ typedef struct ecs_type_desc_t {
 
 /** Used with ecs_filter_init. */
 typedef struct ecs_filter_desc_t {
+    int32_t _canary;
+
     /* Terms of the filter. If a filter has more terms than 
      * ECS_TERM_CACHE_SIZE use terms_buffer */
     ecs_term_t terms[ECS_TERM_DESC_CACHE_SIZE];
@@ -567,6 +578,9 @@ typedef struct ecs_filter_desc_t {
      * owned and shared terms. */ 
     bool instanced;
 
+    /* Match empty tables. By default empty tables are not returned. */ 
+    bool match_empty_tables;
+
     /* Filter expression. Should not be set at the same time as terms array */
     const char *expr;
 
@@ -578,6 +592,8 @@ typedef struct ecs_filter_desc_t {
 
 /** Used with ecs_query_init. */
 typedef struct ecs_query_desc_t {
+    int32_t _canary;
+
     /* Filter for the query */
     ecs_filter_desc_t filter;
 
@@ -623,6 +639,8 @@ typedef struct ecs_query_desc_t {
 
 /** Used with ecs_trigger_init. */
 typedef struct ecs_trigger_desc_t {
+    int32_t _canary;
+
     /* Entity to associate with trigger */
     ecs_entity_desc_t entity;
 
@@ -673,6 +691,8 @@ typedef struct ecs_trigger_desc_t {
 
 /** Used with ecs_observer_init. */
 typedef struct ecs_observer_desc_t {
+    int32_t _canary;
+
     /* Entity to associate with observer */
     ecs_entity_desc_t entity;
 
@@ -1744,7 +1764,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-const void* ecs_get_ref_w_id(
+const void* ecs_get_ref_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_entity_t entity,

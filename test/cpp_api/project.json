@@ -818,7 +818,8 @@
                 "string_view_compare_w_string",
                 "string_compare_nullptr",
                 "nullptr_string_compare",
-                "nullptr_string_compare_nullptr"
+                "nullptr_string_compare_nullptr",
+                "c_macros"
             ]
         }]
     }

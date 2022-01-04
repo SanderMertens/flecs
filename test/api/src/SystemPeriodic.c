@@ -1201,15 +1201,11 @@ void SystemPeriodic_on_period_long_delta() {
 
     test_int(on_period_count, 0);
 
-    ecs_sleepf(1.2);
-
-    ecs_progress(world, 0);
+    ecs_progress(world, 1.2);
 
     test_int(on_period_count, 1);
 
-    ecs_sleepf(0.5);
-
-    ecs_progress(world, 0);
+    ecs_progress(world, 0.5);
 
     test_int(on_period_count, 2);    
 
@@ -1829,7 +1825,7 @@ void SystemPeriodic_sys_context() {
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {TestContext}, .ctx = &param
+        .entity = {.entity = TestContext}, .ctx = &param
     });
 
     test_assert(ecs_get_system_ctx(world, TestContext) == &param);
@@ -1850,7 +1846,7 @@ void SystemPeriodic_get_sys_context_from_param() {
     ecs_set_context(world, &param);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = {TestContext}, .ctx = &param
+        .entity = {.entity = TestContext}, .ctx = &param
     });
 
     ecs_progress(world, 1);
