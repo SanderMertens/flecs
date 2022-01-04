@@ -1124,6 +1124,31 @@ void Filter_filter_w_or_flag() {
     ecs_fini(world);
 }
 
+void Filter_filter_filter() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA}
+        },
+        .filter = true
+    }), 0);
+
+    test_int(f.term_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, TagA);
+    test_int(f.terms[0].role, 0);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].inout, EcsInOutFilter);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_not_flag() {
     ecs_world_t *world = ecs_mini();
 

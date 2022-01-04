@@ -1048,6 +1048,7 @@ void Filter_filter_w_10_terms_copy(void);
 void Filter_filter_w_and_flag(void);
 void Filter_filter_w_or_flag(void);
 void Filter_filter_w_not_flag(void);
+void Filter_filter_filter(void);
 void Filter_term_w_id(void);
 void Filter_term_w_pair_id(void);
 void Filter_term_w_pred_obj(void);
@@ -6329,6 +6330,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_w_not_flag
     },
     {
+        "filter_filter",
+        Filter_filter_filter
+    },
+    {
         "term_w_id",
         Filter_term_w_id
     },
@@ -11455,7 +11460,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        125,
+        126,
         Filter_testcases
     },
     {
