@@ -124,6 +124,14 @@ void ecs_emit(
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    // if (desc->table_event) {
+    //     static int table_evt_count;
+    //     table_evt_count ++;
+    //     printf("%4d: Notify %s [%p] (ids = %d)\n", table_evt_count,
+    //         ecs_get_name(world, desc->event), 
+    //         table, ids->count);
+    // }
+
     flecs_triggers_notify(&it, observable, ids, event);
 
     if (count && !desc->table_event) {
