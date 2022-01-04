@@ -1673,7 +1673,9 @@
                 "write_in_unset",
                 "filter_term",
                 "2_terms_1_filter",
-                "3_terms_2_filter"
+                "3_terms_2_filter",
+                "and_from",
+                "or_from"
             ]                
         }, {
             "id": "TriggerOnAdd",

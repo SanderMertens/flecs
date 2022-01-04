@@ -1600,6 +1600,8 @@ void Observer_write_in_unset(void);
 void Observer_filter_term(void);
 void Observer_2_terms_1_filter(void);
 void Observer_3_terms_2_filter(void);
+void Observer_and_from(void);
+void Observer_or_from(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -8501,6 +8503,14 @@ bake_test_case Observer_testcases[] = {
     {
         "3_terms_2_filter",
         Observer_3_terms_2_filter
+    },
+    {
+        "and_from",
+        Observer_and_from
+    },
+    {
+        "or_from",
+        Observer_or_from
     }
 };
 
@@ -11509,7 +11519,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        49,
+        51,
         Observer_testcases
     },
     {

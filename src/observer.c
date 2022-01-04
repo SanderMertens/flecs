@@ -160,14 +160,34 @@ ecs_entity_t ecs_observer_init(
             .match_prefab = observer->filter.match_prefab,
             .match_disabled = observer->filter.match_disabled
         };
-
         ecs_os_memcpy_n(trigger_desc.events, observer->events, ecs_entity_t,
             observer->event_count);
 
         for (i = 0; i < filter->term_count; i ++) {
             trigger_desc.term = filter->terms[i];
-            ecs_entity_t *t = ecs_vector_add(&observer->triggers, ecs_entity_t);
-            t[0] = ecs_trigger_init(world, &trigger_desc);
+            ecs_oper_kind_t oper = trigger_desc.term.oper;
+            ecs_id_t id = trigger_desc.term.id;
+
+            /* AndFrom & OrFrom terms insert multiple triggers */
+            if (oper == EcsAndFrom || oper == EcsOrFrom) {
+                const EcsType *type = ecs_get(world, id, EcsType);
+                int32_t ti, ti_count = ecs_vector_count(type->normalized);
+                ecs_id_t *ti_ids = ecs_vector_first(type->normalized, ecs_id_t);
+
+                /* Correct operator will be applied when a trigger occurs, and
+                 * the observer is evaluated on the trigger source */
+                trigger_desc.term.oper = EcsAnd;
+                for (ti = 0; ti < ti_count; ti ++) {
+                    trigger_desc.term.pred.entity = 0;
+                    trigger_desc.term.id = ti_ids[ti];
+                    ecs_vector_add(&observer->triggers, ecs_entity_t)
+                        [0] = ecs_trigger_init(world, &trigger_desc);
+                }
+                continue;
+            }
+
+            ecs_vector_add(&observer->triggers, ecs_entity_t)
+                [0] = ecs_trigger_init(world, &trigger_desc);
         }
 
         observer->action = desc->callback;
