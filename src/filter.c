@@ -356,7 +356,7 @@ int populate_from_term_id(
 
     term->role = role;
 
-    if (ECS_HAS_ROLE(term->id, PAIR)) {
+    if (ECS_HAS_ROLE(term->id, PAIR) || ECS_HAS_ROLE(term->id, CASE)) {
         pred = ECS_PAIR_RELATION(term->id);
         obj = ECS_PAIR_OBJECT(term->id);
 

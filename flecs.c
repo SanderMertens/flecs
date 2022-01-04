@@ -3264,6 +3264,7 @@ void register_trigger(
     ecs_trigger_t *trigger)
 {
     ecs_term_t *term = &trigger->term;
+
     if (term->subj.set.mask & EcsSelf) {
         if (term->subj.entity == EcsThis) {
             register_trigger_for_id(world, observable, trigger, term->id, 
@@ -3273,10 +3274,24 @@ void register_trigger(
                 offsetof(ecs_event_id_record_t, entity_triggers));
         }
     }
+
     if (trigger->term.subj.set.mask & EcsSuperSet) {
         ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         register_trigger_for_id(world, observable, trigger, pair,
             offsetof(ecs_event_id_record_t, set_triggers));
+    }
+
+    if (ECS_HAS_ROLE(term->id, SWITCH)) {
+        ecs_entity_t sw = term->id & ECS_COMPONENT_MASK;
+        ecs_id_t sw_case = ecs_case(sw, EcsWildcard);
+        register_trigger_for_id(world, observable, trigger, sw_case, 
+            offsetof(ecs_event_id_record_t, triggers));
+    }
+
+    if (ECS_HAS_ROLE(term->id, CASE)) {
+        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        register_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
+            offsetof(ecs_event_id_record_t, triggers));
     }
 }
 
@@ -3332,6 +3347,7 @@ void unregister_trigger(
     ecs_trigger_t *trigger)
 {    
     ecs_term_t *term = &trigger->term;
+
     if (term->subj.set.mask & EcsSelf) {
         if (term->subj.entity == EcsThis) {
             unregister_trigger_for_id(world, observable, trigger, term->id, 
@@ -3341,10 +3357,24 @@ void unregister_trigger(
                 offsetof(ecs_event_id_record_t, entity_triggers));
         }
     }
+
     if (term->subj.set.mask & EcsSuperSet) {
         ecs_id_t pair = ecs_pair(term->subj.set.relation, EcsWildcard);
         unregister_trigger_for_id(world, observable, trigger, pair,
             offsetof(ecs_event_id_record_t, set_triggers));
+    }
+
+    if (ECS_HAS_ROLE(term->id, SWITCH)) {
+        ecs_entity_t sw = term->id & ECS_COMPONENT_MASK;
+        ecs_id_t sw_case = ecs_case(sw, EcsWildcard);
+        unregister_trigger_for_id(world, observable, trigger, sw_case, 
+            offsetof(ecs_event_id_record_t, triggers));
+    }
+
+    if (ECS_HAS_ROLE(term->id, CASE)) {
+        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        unregister_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
+            offsetof(ecs_event_id_record_t, triggers));
     }
 }
 
@@ -3768,24 +3798,25 @@ void flecs_triggers_notify(
 
         for (i = 0; i < ids_count; i ++) {
             ecs_id_t id = ids_array[i];
+            ecs_entity_t role = id & ECS_ROLE_MASK;
             bool iter_set = false;
 
             it->event_id = id;
 
             notify_triggers_for_id(evt, id, it, &iter_set);
 
-            if (ECS_HAS_ROLE(id, PAIR)) {
+            if (role == ECS_PAIR || role == ECS_CASE) {
                 ecs_entity_t pred = ECS_PAIR_RELATION(id);
                 ecs_entity_t obj = ECS_PAIR_OBJECT(id);
 
-                notify_triggers_for_id(evt, ecs_pair(pred, EcsWildcard), 
-                    it, &iter_set);
+                ecs_id_t tid = role | ecs_entity_t_comb(EcsWildcard, pred);
+                notify_triggers_for_id(evt, tid, it, &iter_set);
 
-                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, obj), 
-                    it, &iter_set);
-
-                notify_triggers_for_id(evt, ecs_pair(EcsWildcard, EcsWildcard), 
-                    it, &iter_set);
+                tid = role | ecs_entity_t_comb(obj, EcsWildcard);
+                notify_triggers_for_id(evt, tid, it, &iter_set);
+                
+                tid = role | ecs_entity_t_comb(EcsWildcard, EcsWildcard);
+                notify_triggers_for_id(evt, tid, it, &iter_set);
             } else {
                 notify_triggers_for_id(evt, EcsWildcard, it, &iter_set);
             }
@@ -21530,7 +21561,7 @@ int populate_from_term_id(
 
     term->role = role;
 
-    if (ECS_HAS_ROLE(term->id, PAIR)) {
+    if (ECS_HAS_ROLE(term->id, PAIR) || ECS_HAS_ROLE(term->id, CASE)) {
         pred = ECS_PAIR_RELATION(term->id);
         obj = ECS_PAIR_OBJECT(term->id);
 
