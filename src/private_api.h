@@ -178,7 +178,7 @@ void flecs_set_triggers_notify(
     ecs_entity_t event,
     ecs_id_t set_id);
 
-ecs_event_id_record_t* flecs_triggers_for_id(
+bool flecs_check_triggers_for_event(
     const ecs_poly_t *world,
     ecs_id_t id,
     ecs_entity_t event);

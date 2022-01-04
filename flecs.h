@@ -2964,6 +2964,7 @@ struct ecs_iter_t {
     bool is_filter;               /* When true, data fields are not set */
     bool is_instanced;            /* When true, owned terms are always returned as arrays */
     bool has_shared;              /* Iterator may set this when iterator has shared terms */
+    bool table_only;              /* If false, iterator does not expose table data */
 
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
 
