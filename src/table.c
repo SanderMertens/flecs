@@ -376,67 +376,7 @@ void table_activate(
         .observable = world
     });
 
-    ecs_vector_t *queries = table->queries;
-    ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
-    int32_t i, count = ecs_vector_count(queries);
-
-    for (i = 0; i < count; i ++) {
-        flecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
-            .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
-            .table = table
-        });                
-    }
-
     flecs_table_set_empty(world, table);
-}
-
-/* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
- * becomes empty / non-empty. */
-static
-void register_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query)
-{
-    (void)world;
-#ifndef NDEBUG
-    /* Sanity check if query has already been added */
-    int32_t i, count = ecs_vector_count(table->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-        ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
-    }
-#endif
-
-    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
-    if (q) *q = query;
-}
-
-/* This function is called when a query is unmatched with a table. This can
- * happen for queries that have shared components expressions in their signature
- * and those shared components changed (for example, a base removed a comp). */
-static
-void unregister_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query)
-{
-    (void)world;
-
-    int32_t i, count = ecs_vector_count(table->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-        if (*q == query) {
-            break;
-        }
-    }
-
-    /* Query must have been registered with table */
-    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-
-    /* Remove query */
-    ecs_vector_remove(table->queries, ecs_query_t*, i);
 }
 
 static
@@ -726,7 +666,6 @@ void flecs_table_free(
 
     flecs_unregister_table(world, table);
 
-    ecs_vector_free(table->queries);
     ecs_os_free(table->dirty_state);
     ecs_os_free(table->storage_map);
 
@@ -2018,12 +1957,6 @@ void flecs_table_notify(
     }
 
     switch(event->kind) {
-    case EcsTableQueryMatch:
-        register_query(world, table, event->query);
-        break;
-    case EcsTableQueryUnmatch:
-        unregister_query(world, table, event->query);
-        break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
         break;

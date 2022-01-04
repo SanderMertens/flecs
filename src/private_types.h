@@ -95,8 +95,6 @@ typedef struct ecs_type_info_t {
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
-    EcsTableQueryMatch,
-    EcsTableQueryUnmatch,
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
     EcsTableComponentInfo
@@ -221,8 +219,6 @@ struct ecs_table_t {
 
     ecs_graph_node_t node;           /* Graph node */
 
-    ecs_vector_t *queries;           /* Queries matched with table */
-
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
 
@@ -328,8 +324,6 @@ typedef struct ecs_query_table_list_t {
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
     EcsQueryTableMatch,
-    EcsQueryTableEmpty,
-    EcsQueryTableNonEmpty,
     EcsQueryTableRematch,
     EcsQueryTableUnmatch,
     EcsQueryOrphan

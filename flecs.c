@@ -353,8 +353,6 @@ typedef struct ecs_type_info_t {
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
-    EcsTableQueryMatch,
-    EcsTableQueryUnmatch,
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
     EcsTableComponentInfo
@@ -479,8 +477,6 @@ struct ecs_table_t {
 
     ecs_graph_node_t node;           /* Graph node */
 
-    ecs_vector_t *queries;           /* Queries matched with table */
-
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
 
@@ -586,8 +582,6 @@ typedef struct ecs_query_table_list_t {
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
     EcsQueryTableMatch,
-    EcsQueryTableEmpty,
-    EcsQueryTableNonEmpty,
     EcsQueryTableRematch,
     EcsQueryTableUnmatch,
     EcsQueryOrphan
@@ -2292,8 +2286,6 @@ void init_table(
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
-
-    table->queries = NULL;
 
     init_node(&table->node);
     init_flags(world, table);
@@ -14994,13 +14986,6 @@ add_pair:
         goto add_pair;
     }
 
-    if (table && !(query->flags & EcsQueryIsSubquery)) {
-        flecs_table_notify(world, table, &(ecs_table_event_t){
-            .kind = EcsTableQueryMatch,
-            .query = query
-        });
-    }
-
     if (pair_offsets) {
         ecs_os_free(pair_offsets);
     }
@@ -15933,12 +15918,6 @@ void rematch_table(
 
             if (rematch) {
                 unmatch_table(query, table);
-                if (!(query->flags & EcsQueryIsSubquery)) {
-                    flecs_table_notify(world, table, &(ecs_table_event_t){
-                        .kind = EcsTableQueryUnmatch,
-                        .query = query
-                    }); 
-                }
                 add_table(world, query, table);
             }
         }
@@ -15946,12 +15925,6 @@ void rematch_table(
         /* Table no longer matches, remove */
         if (match != NULL) {
             unmatch_table(query, table);
-            if (!(query->flags & EcsQueryIsSubquery)) {
-                flecs_table_notify(world, table, &(ecs_table_event_t){
-                    .kind = EcsTableQueryUnmatch,
-                    .query = query
-                });
-            }
             notify_subqueries(world, query, &(ecs_query_event_t){
                 .kind = EcsQueryTableUnmatch,
                 .table = table
@@ -16080,14 +16053,6 @@ void flecs_query_notify(
         /* Rematch tables of query */
         rematch_tables(world, query, event->parent_query);
         break;        
-    case EcsQueryTableEmpty:
-        /* Table is empty, deactivate */
-        update_table(query, event->table, true);
-        break;
-    case EcsQueryTableNonEmpty:
-        /* Table is non-empty, activate */
-        update_table(query, event->table, false);
-        break;
     case EcsQueryOrphan:
         ecs_assert(query->flags & EcsQueryIsSubquery, ECS_INTERNAL_ERROR, NULL);
         query->flags |= EcsQueryIsOrphaned;
@@ -16170,11 +16135,11 @@ void query_on_event(
 
     if (event == EcsOnTableEmpty) {
         // printf("%p: table %p: empty\n");
-        // update_table(query, it->table, true);
+        update_table(query, it->table, true);
     } else
     if (event == EcsOnTableFill) {
         // printf("%p: table %p: fill\n");
-        // update_table(query, it->table, false);
+        update_table(query, it->table, false);
     }
 }
 
@@ -16325,24 +16290,6 @@ void ecs_query_fini(
 
     notify_subqueries(world, query, &(ecs_query_event_t){
         .kind = EcsQueryOrphan
-    });
-
-    ecs_vector_each(query->cache.empty_tables, ecs_query_table_t, table, {
-        if (!(query->flags & EcsQueryIsSubquery)) {
-            flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            });
-        }    
-    });
-
-    ecs_vector_each(query->cache.tables, ecs_query_table_t, table, {
-        if (!(query->flags & EcsQueryIsSubquery)) {
-            flecs_table_notify(world, table->hdr.table, &(ecs_table_event_t){
-                .kind = EcsTableQueryUnmatch,
-                .query = query
-            });
-        }
     });
 
     ecs_table_cache_fini(&query->cache);
@@ -19010,67 +18957,7 @@ void table_activate(
         .observable = world
     });
 
-    ecs_vector_t *queries = table->queries;
-    ecs_query_t **buffer = ecs_vector_first(queries, ecs_query_t*);
-    int32_t i, count = ecs_vector_count(queries);
-
-    for (i = 0; i < count; i ++) {
-        flecs_query_notify(world, buffer[i], &(ecs_query_event_t) {
-            .kind = activate ? EcsQueryTableNonEmpty : EcsQueryTableEmpty,
-            .table = table
-        });                
-    }
-
     flecs_table_set_empty(world, table);
-}
-
-/* This function is called when a query is matched with a table. A table keeps
- * a list of tables that match so that they can be notified when the table
- * becomes empty / non-empty. */
-static
-void register_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query)
-{
-    (void)world;
-#ifndef NDEBUG
-    /* Sanity check if query has already been added */
-    int32_t i, count = ecs_vector_count(table->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-        ecs_assert(*q != query, ECS_INTERNAL_ERROR, NULL);
-    }
-#endif
-
-    ecs_query_t **q = ecs_vector_add(&table->queries, ecs_query_t*);
-    if (q) *q = query;
-}
-
-/* This function is called when a query is unmatched with a table. This can
- * happen for queries that have shared components expressions in their signature
- * and those shared components changed (for example, a base removed a comp). */
-static
-void unregister_query(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_query_t *query)
-{
-    (void)world;
-
-    int32_t i, count = ecs_vector_count(table->queries);
-    for (i = 0; i < count; i ++) {
-        ecs_query_t **q = ecs_vector_get(table->queries, ecs_query_t*, i);
-        if (*q == query) {
-            break;
-        }
-    }
-
-    /* Query must have been registered with table */
-    ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-
-    /* Remove query */
-    ecs_vector_remove(table->queries, ecs_query_t*, i);
 }
 
 static
@@ -19360,7 +19247,6 @@ void flecs_table_free(
 
     flecs_unregister_table(world, table);
 
-    ecs_vector_free(table->queries);
     ecs_os_free(table->dirty_state);
     ecs_os_free(table->storage_map);
 
@@ -20652,12 +20538,6 @@ void flecs_table_notify(
     }
 
     switch(event->kind) {
-    case EcsTableQueryMatch:
-        register_query(world, table, event->query);
-        break;
-    case EcsTableQueryUnmatch:
-        unregister_query(world, table, event->query);
-        break;
     case EcsTableComponentInfo:
         notify_component_info(world, table, event->component);
         break;
@@ -30357,15 +30237,6 @@ void ecs_get_world_stats(
             if (ecs_type_has_id(world, table->type, entities[0], false)) {
                 singleton_table_count ++;
             }
-        }
-
-        /* If this table matches with queries and is not empty, increase the
-         * matched table & matched entity count. These statistics can be used to
-         * compute actual fragmentation ratio for queries. */
-        int32_t queries_matched = ecs_vector_count(table->queries);
-        if (queries_matched && entity_count) {
-            matched_table_count ++;
-            matched_entity_count += entity_count;
         }
     }
 
