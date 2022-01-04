@@ -3073,6 +3073,10 @@ typedef struct ecs_event_desc_t {
 
     /* Observable (usually the world) */
     ecs_poly_t *observable;
+
+    /* Table events apply to tables, not the entities in the table. When
+     * enabled, (super)set triggers are not notified. */
+    bool table_event;
 } ecs_event_desc_t;
 
 /** Send event.
