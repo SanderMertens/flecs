@@ -110,6 +110,7 @@ void ecs_emit(
 
     ecs_iter_t it = {
         .world = world,
+        .real_world = world,
         .table = table,
         .type = table->type,
         .term_count = 1,

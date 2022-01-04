@@ -2661,6 +2661,7 @@ struct ecs_trigger_t {
     bool instanced;             /* See ecs_filter_desc_t */
 
     uint64_t id;                /* Internal id */
+    int32_t *last_event_id;     /* Optional pointer to observer last_event_id */
 };
 
 /* An observer reacts to events matching a filter */
@@ -2688,7 +2689,7 @@ struct ecs_observer_t {
     ecs_observable_t *observable;  /* Observable for observer */
 
     uint64_t id;                /* Internal id */  
-    int32_t last_event_id;      /* Last handled event id */  
+    int32_t last_event_id;      /* Last handled event id */
 
     bool is_monitor;            /* If true, the observer only triggers when the
                                  * filter did not match with the entity before
@@ -3837,6 +3838,11 @@ typedef struct ecs_trigger_desc_t {
 
     /* Observable with which to register the trigger */
     ecs_poly_t *observable;
+
+    /* This field is usually only set if a trigger is part of an observer, and
+     * points to the observer's last_event_id. This enables skipping triggers if
+     * a previous trigger for the same observer already notified it. */
+    int32_t *last_event_id;
 } ecs_trigger_desc_t;
 
 
