@@ -373,7 +373,8 @@ void table_activate(
         .event = evt,
         .table = table,
         .ids = &ids,
-        .observable = world
+        .observable = world,
+        .table_event = true
     });
 
     flecs_table_set_empty(world, table);

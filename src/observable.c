@@ -126,7 +126,7 @@ void ecs_emit(
 
     flecs_triggers_notify(&it, observable, ids, event);
 
-    if (count) {
+    if (count && !desc->table_event) {
         ecs_record_t **recs = ecs_vector_get(
             table->storage.record_ptrs, ecs_record_t*, row);
 

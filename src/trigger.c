@@ -354,9 +354,6 @@ void notify_self_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    void **ptrs = it->ptrs;
-    ecs_size_t *sizes = it->sizes;
-
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
@@ -364,25 +361,15 @@ void notify_self_triggers(
             continue;
         }
 
-        bool is_filter = t->term.inout == EcsInOutFilter;
-
+        it->is_filter = t->term.inout == EcsInOutFilter;
         it->system = t->entity;
         it->self = t->self;
         it->ctx = t->ctx;
         it->binding_ctx = t->binding_ctx;
         it->term_index = t->term.index;
         it->terms = &t->term;
-        it->is_filter = is_filter;
-
-        if (is_filter) {
-            it->ptrs = NULL;
-            it->sizes = NULL;
-        }
 
         t->action(it);
-
-        it->ptrs = ptrs;
-        it->sizes = sizes;
     }
 }
 
@@ -392,9 +379,6 @@ void notify_entity_triggers(
     const ecs_map_t *triggers)
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    void **ptrs = it->ptrs;
-    ecs_size_t *sizes = it->sizes;
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
@@ -414,29 +398,19 @@ void notify_entity_triggers(
             if (entities[i] != t->term.subj.entity) {
                 continue;
             }
-            
-            bool is_filter = t->term.inout == EcsInOutFilter;
 
+            it->is_filter = t->term.inout == EcsInOutFilter;
             it->system = t->entity;
             it->self = t->self;
             it->ctx = t->ctx;
             it->binding_ctx = t->binding_ctx;
             it->term_index = t->term.index;
             it->terms = &t->term;
-            it->is_filter = is_filter;
-
-            if (is_filter) {
-                it->ptrs = NULL;
-                it->sizes = NULL;
-            }
-
             it->offset = i;
             it->count = 1;
             it->subjects[0] = entities[i];
-            t->action(it);
 
-            it->ptrs = ptrs;
-            it->sizes = sizes;
+            t->action(it);
         }
     }
 
@@ -468,6 +442,7 @@ void notify_set_base_triggers(
                 continue;
             }
 
+            it->is_filter = t->term.inout == EcsInOutFilter;
             it->event_id = t->term.id;
             it->ids[0] = t->term.id;
             it->system = t->entity;
@@ -476,7 +451,7 @@ void notify_set_base_triggers(
             it->binding_ctx = t->binding_ctx;
             it->term_index = t->term.index;
             it->terms = &t->term;
-
+            
             t->action(it);
         }                
     }
@@ -535,6 +510,7 @@ void notify_set_triggers(
             ecs_entity_t event_id = it->event_id;
             it->event_id = t->term.id;
 
+            it->is_filter = t->term.inout == EcsInOutFilter;
             it->ids[0] = t->term.id;
             it->system = t->entity;
             it->self = t->self;
@@ -544,7 +520,7 @@ void notify_set_triggers(
             it->terms = &t->term;
 
             /* Triggers for supersets can be instanced */
-            if (it->count == 1 || t->instanced || !it->sizes[0]) {
+            if (it->count == 1 || t->instanced || it->is_filter || !it->sizes[0]) {
                 it->is_instanced = t->instanced;
                 t->action(it);
                 it->is_instanced = false;

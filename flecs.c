@@ -3677,6 +3677,9 @@ void notify_set_triggers(
             it->term_index = t->term.index;
             it->terms = &t->term;
 
+            printf("it->sizes = %p, filter = %d\n", 
+                it->sizes, it->is_filter);
+
             /* Triggers for supersets can be instanced */
             if (it->count == 1 || t->instanced || !it->sizes[0]) {
                 it->is_instanced = t->instanced;

@@ -48,12 +48,10 @@ static
 void Trigger_w_filter_term(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    test_assert(it->ptrs == NULL);
-    test_assert(it->sizes == NULL);
+    test_bool(it->is_filter, true);
 }
 
 static
@@ -3180,6 +3178,49 @@ void Trigger_on_add_base_2_entities() {
         .term.id = TagA, /* Implicitly also listens to IsA */
         .events = {EcsOnAdd},
         .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, base, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void Trigger_on_add_base_2_entities_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Create trigger before table */
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA, /* Implicitly also listens to IsA */
+        .term.inout = EcsInOutFilter,
+        .events = {EcsOnAdd},
+        .callback = Trigger_w_filter_term,
         .ctx = &ctx
     });
 
