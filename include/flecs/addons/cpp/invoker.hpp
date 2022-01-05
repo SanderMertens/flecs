@@ -334,14 +334,18 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_type_t type = ecs_table_get_storage_type(table);
-        if (!type) {
+        ecs_table_t *storage_table = ecs_table_get_storage_table(table);
+        if (!storage_table) {
             return false;
         }
 
+        /* table_index_of needs real world */
+        const flecs::world_t *real_world = ecs_get_world(world);
+
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, 0, _::cpp_type<Args>().id(world))...
+            ecs_table_index_of(real_world, storage_table, 0, 
+                _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */

@@ -254,22 +254,22 @@
     ecs_has_id(world, entity, ecs_pair(relation, object))
 
 #define ecs_owns_id(world, entity, id)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), id, true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), id, true)
 
 #define ecs_owns_pair(world, entity, relation, object)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), true)
 
 #define ecs_owns(world, entity, T)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), true)
 
 #define ecs_shares_id(world, entity, id)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), id, false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), id, false)
 
 #define ecs_shares_pair(world, entity, relation, object)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), false)
 
 #define ecs_shares(world, entity, T)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), false)
 
 
 /* -- Enable / Disable component -- */

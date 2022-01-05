@@ -24,19 +24,6 @@ ecs_type_t ecs_type_from_str(
     const char *expr);    
 
 FLECS_API
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    int32_t offset,
-    ecs_id_t id);
-
-FLECS_API
-bool ecs_type_has_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_id_t id,
-    bool owned);
-
-FLECS_API
 int32_t ecs_type_match(
     const ecs_world_t *world,
     const ecs_table_t *table,

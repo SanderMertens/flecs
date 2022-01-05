@@ -181,8 +181,9 @@ ecs_entity_t ecs_observer_init(
             /* AndFrom & OrFrom terms insert multiple triggers */
             if (oper == EcsAndFrom || oper == EcsOrFrom) {
                 const EcsType *type = ecs_get(world, id, EcsType);
-                int32_t ti, ti_count = ecs_vector_count(type->normalized);
-                ecs_id_t *ti_ids = ecs_vector_first(type->normalized, ecs_id_t);
+                int32_t ti, ti_count = ecs_vector_count(type->normalized->type);
+                ecs_id_t *ti_ids = ecs_vector_first(
+                    type->normalized->type, ecs_id_t);
 
                 /* Correct operator will be applied when a trigger occurs, and
                  * the observer is evaluated on the trigger source */

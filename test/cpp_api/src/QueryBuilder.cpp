@@ -1440,8 +1440,9 @@ uint64_t group_by_first_id(
     flecs::entity_t id,
     void *ctx)
 {
-    flecs::type TableType(m_world, m_type);
-    for(auto ColId : TableType.vector())
+    flecs::vector<flecs::id_t> vec(const_cast<ecs_vector_t*>(m_type));
+
+    for(auto ColId : vec)
     {
         return ColId;
     }

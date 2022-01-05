@@ -1182,8 +1182,8 @@ bool flecs_n_term_match_table(
     const EcsType *term_type = ecs_get(world, type_id, EcsType);
     ecs_check(term_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_t *ids = ecs_vector_first(term_type->normalized, ecs_id_t);
-    int32_t i, count = ecs_vector_count(term_type->normalized);
+    ecs_id_t *ids = ecs_vector_first(term_type->normalized->type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(term_type->normalized->type);
     ecs_term_t temp = *term;
     temp.oper = EcsAnd;
 
@@ -1244,7 +1244,7 @@ bool flecs_term_match_table(
         if (match_table) {
             match_type = match_table->type;
         } else {
-            match_type = NULL;
+            return false;
         }
     } else {
         /* If filter contains This terms, a table must be provided */
@@ -1570,8 +1570,8 @@ bool term_iter_next(
             if (iter->cur_match >= iter->match_count) {
                 table = NULL;
             } else {
-                iter->last_column = ecs_type_index_of(
-                    table->type, iter->last_column + 1, term->id);
+                iter->last_column = ecs_table_index_of(
+                    world, table, iter->last_column + 1, term->id);
                 iter->column = iter->last_column + 1;
                 if (iter->last_column >= 0) {
                     iter->id = ecs_vector_get(

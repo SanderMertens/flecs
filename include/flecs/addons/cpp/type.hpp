@@ -24,12 +24,12 @@ struct type_base {
         sync_from_flecs();
     }
 
-    explicit type_base(world_t *world, type_t t)
+    explicit type_base(world_t *world, table_t *t)
         : m_entity( world, static_cast<flecs::id_t>(0) )
-        , m_type( t ) { }
+        , m_table( t ) { }
 
-    type_base(type_t t)
-        : m_type( t ) { }
+    type_base(table_t *t)
+        : m_table( t ) { }
 
     Base& add(id_t id) {
         if (!m_table) {
@@ -39,7 +39,6 @@ struct type_base {
         }
 
         m_table = ecs_table_add_id(world(), m_table, id);
-        m_type = ecs_table_get_type(m_table);
         sync_from_me();
         return *this;
     }
@@ -78,12 +77,12 @@ struct type_base {
 
     bool has(id_t id) {
         const flecs::world_t *w = ecs_get_world(world());
-        return ecs_type_has_id(w, m_type, id, false);
+        return ecs_table_has_id(w, m_table, id, false);
     }
 
     bool has(id_t relation, id_t object) {
         const flecs::world_t *w = ecs_get_world(world());
-        return ecs_type_has_id(w, m_type, 
+        return ecs_table_has_id(w, m_table, 
             ecs_pair(relation, object), false);
     }    
 
@@ -99,12 +98,12 @@ struct type_base {
 
     flecs::string str() const {
         const flecs::world_t *w = ecs_get_world(world());
-        char *str = ecs_type_str(w, m_type);
+        char *str = ecs_type_str(w, ecs_table_get_type(m_table));
         return flecs::string(str);
     }
 
     type_t c_ptr() const {
-        return m_type;
+        return ecs_table_get_type(m_table);
     }
 
     flecs::id_t id() const { 
@@ -128,7 +127,8 @@ struct type_base {
     }
 
     flecs::vector<flecs::id_t> vector() {
-        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_type));
+        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(
+            ecs_table_get_type(m_table)));
     }
 
     flecs::id get(int32_t index) {
@@ -136,7 +136,7 @@ struct type_base {
     }
 
     /* Implicit conversion to type_t */
-    operator type_t() const { return m_type; }
+    operator type_t() const { return ecs_table_get_type(m_table); }
 
     operator Base&() { return *static_cast<Base*>(this); }
 
@@ -148,8 +148,8 @@ private:
 
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
-        tc->type = m_type;
-        tc->normalized = m_type;
+        tc->type = ecs_table_get_type(m_table);
+        tc->normalized = m_table;
         ecs_modified(world(), id(), EcsType);
     }
 
@@ -160,16 +160,13 @@ private:
 
         const EcsType *tc = ecs_get(world(), id(), EcsType);
         if (!tc) {
-            m_type = nullptr;
+            m_table = nullptr;
         } else {
-            m_type = tc->normalized;
+            m_table = tc->normalized;
         }
-
-        m_table = nullptr;
     }
 
     flecs::entity m_entity;
-    type_t m_type = nullptr;
     table_t *m_table = nullptr;
 };
 

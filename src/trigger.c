@@ -476,7 +476,6 @@ void notify_set_base_triggers(
         if (term->oper == EcsNot) {
             result = !result;
         }
-
         if (!result) {
             continue;
         }

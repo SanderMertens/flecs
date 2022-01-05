@@ -56,7 +56,7 @@ void* get_component(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!table->storage_table) {
-        ecs_check(ecs_type_index_of(table->type, 0, id) == -1, 
+        ecs_check(ecs_table_index_of(world, table, 0, id) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
         return NULL;
     }
@@ -64,7 +64,7 @@ void* get_component(
     ecs_table_record_t *tr = flecs_get_table_record(
         world, table->storage_table, id);
     if (!tr) {
-        ecs_check(ecs_type_index_of(table->type, 0, id) == -1, 
+        ecs_check(ecs_table_index_of(world, table, 0, id) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
        return NULL;
     }
@@ -1605,8 +1605,8 @@ ecs_table_t *traverse_from_expr(
                     return NULL;
                 }
                 
-                ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
-                int32_t i, count = ecs_vector_count(t->normalized);
+                ecs_id_t *ids = ecs_vector_first(t->normalized->type, ecs_id_t);
+                int32_t i, count = ecs_vector_count(t->normalized->type);
                 for (i = 0; i < count; i ++) {
                     table = table_append(world, table, ids[i], diff);
                 }
@@ -1671,8 +1671,8 @@ void defer_from_expr(
                     return;
                 }
                 
-                ecs_id_t *ids = ecs_vector_first(t->normalized, ecs_id_t);
-                int32_t i, count = ecs_vector_count(t->normalized);
+                ecs_id_t *ids = ecs_vector_first(t->normalized->type, ecs_id_t);
+                int32_t i, count = ecs_vector_count(t->normalized->type);
                 for (i = 0; i < count; i ++) {
                     if (is_add) {
                         ecs_add_id(world, entity, ids[i]);
@@ -2149,20 +2149,16 @@ ecs_entity_t ecs_type_init(
     diff_free(&diff);
 
     ecs_type_t type = NULL;
-    ecs_type_t normalized_type = NULL;
     
     if (table) {
         type = table->type;
-    }
-    if (normalized) {
-        normalized_type = normalized->type;
     }
 
     bool add = false;
     EcsType *type_ptr = ecs_get_mut(world, result, EcsType, &add);
     if (add) {
         type_ptr->type = type;
-        type_ptr->normalized = normalized_type;
+        type_ptr->normalized = normalized;
 
         /* This will allow the type to show up in debug tools */
         if (type) {
@@ -2173,7 +2169,7 @@ ecs_entity_t ecs_type_init(
     } else {
         ecs_check(type_ptr->type == type, ECS_ALREADY_DEFINED, 
             desc->entity.name);
-        ecs_check(type_ptr->normalized == normalized_type, ECS_ALREADY_DEFINED,
+        ecs_check(type_ptr->normalized == normalized, ECS_ALREADY_DEFINED,
             desc->entity.name);      
     }
 
@@ -2994,8 +2990,7 @@ ecs_entity_t ecs_get_case(
 
     sw_id = sw_id | ECS_SWITCH;
 
-    ecs_type_t type = table->type;
-    int32_t index = ecs_type_index_of(type, 0, sw_id);
+    int32_t index = ecs_table_index_of(world, table, 0, sw_id);
     if (index == -1) {
         return 0;
     }
@@ -3040,7 +3035,7 @@ void ecs_enable_component_w_id(
     ecs_table_t *table = info.table;
     int32_t index = -1;
     if (table) {
-        index = ecs_type_index_of(table->type, 0, bs_id);
+        index = ecs_table_index_of(world, table, 0, bs_id);
     }
 
     if (index == -1) {
@@ -3081,9 +3076,7 @@ bool ecs_is_component_enabled_w_id(
     }
 
     ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
-
-    ecs_type_t type = table->type;
-    int32_t index = ecs_type_index_of(type, 0, bs_id);
+    int32_t index = ecs_table_index_of(world, table, 0, bs_id);
     if (index == -1) {
         /* If table does not have DISABLED column for component, component is
          * always enabled, if the entity has it */
@@ -3539,7 +3532,7 @@ void ecs_enable(
     const EcsType *type_ptr = ecs_get(world, entity, EcsType);
     if (type_ptr) {
         /* If entity is a type, disable all entities in the type */
-        ecs_vector_each(type_ptr->normalized, ecs_entity_t, e, {
+        ecs_vector_each(type_ptr->normalized->type, ecs_entity_t, e, {
             ecs_enable(world, *e, enabled);
         });
     } else {

@@ -141,7 +141,7 @@ ecs_vector_t* ids_to_normalized_ids(
             ecs_assert(type_ptr != NULL, ECS_INVALID_PARAMETER, 
                 "flag must be applied to type");
 
-            ecs_vector_each(type_ptr->normalized, ecs_id_t, c_ptr, {
+            ecs_vector_each(type_ptr->normalized->type, ecs_id_t, c_ptr, {
                 ecs_entity_t *el = ecs_vector_add(&result, ecs_id_t);
                 *el = *c_ptr;
             })

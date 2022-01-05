@@ -794,7 +794,8 @@ typedef struct pair_offset_t {
  * multiple times per table, by keeping an offset of the last found index */
 static
 int32_t get_pair_index(
-    ecs_type_t table_type,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_id_t pair,
     int32_t column_index,
     pair_offset_t *pair_offsets,
@@ -813,7 +814,7 @@ int32_t get_pair_index(
     } else {
         /* First time for this iteration that the pair index is resolved, look
          * it up in the type. */
-        result = ecs_type_index_of(table_type, 
+        result = ecs_table_index_of(world, table, 
             pair_offsets[column_index].index, pair);
         pair_offsets[column_index].index = result + 1;
         pair_offsets[column_index].count = count;
@@ -825,6 +826,7 @@ int32_t get_pair_index(
 static
 int32_t get_component_index(
     ecs_world_t *world,
+    ecs_table_t *table,
     ecs_type_t table_type,
     ecs_entity_t *component_out,
     int32_t column_index,
@@ -842,7 +844,7 @@ int32_t get_component_index(
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
             ecs_entity_t sw = ECS_PAIR_RELATION(component);
-            result = ecs_type_index_of(table_type, 0, ECS_SWITCH | sw);
+            result = ecs_table_index_of(world, table, 0, ECS_SWITCH | sw);
             ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
@@ -858,8 +860,8 @@ int32_t get_component_index(
 
                 /* Get index of pair. Start looking from the last pair index
                  * as this may not be the first instance of the pair. */
-                result = get_pair_index(
-                    table_type, component, column_index, pair_offsets, count);
+                result = get_pair_index(world, table, component, column_index, 
+                    pair_offsets, count);
                 
                 if (result != -1) {
                     /* If component of current column is a pair, get the actual 
@@ -879,16 +881,15 @@ int32_t get_component_index(
                     }
                 }
             } else {
-
                 /* If the low part is a regular entity (component), then
                  * this query exactly matches a single pair instance. In
                  * this case we can simply do a lookup of the pair 
                  * identifier in the table type. */
-                result = ecs_type_index_of(table_type, 0, component);
+                result = ecs_table_index_of(world, table, 0, component);
             }
         } else {
             /* Get column index for component */
-            result = ecs_type_index_of(table_type, 0, component);
+            result = ecs_table_index_of(world, table, 0, component);
         }
 
         /* If column is found, add one to the index, as column zero in
@@ -906,7 +907,9 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (!ecs_type_has_id(world, table_type, component, false)) {
+        if (-1 == ecs_type_match(world, table, table_type, 0, component, EcsIsA, 
+            0, 0, 0, 0, 0)) 
+        {
             result = 0;
         }
     }  
@@ -950,11 +953,12 @@ ecs_vector_t* add_ref(
 
 static
 int32_t get_pair_count(
-    ecs_type_t type,
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     ecs_entity_t pair)
 {
     int32_t i = -1, result = 0;
-    while (-1 != (i = ecs_type_index_of(type, i + 1, pair))) {
+    while (-1 != (i = ecs_table_index_of(world, table, i + 1, pair))) {
         result ++;
     }
 
@@ -966,8 +970,9 @@ int32_t get_pair_count(
  * or else the table won't match. */
 static
 int32_t count_pairs(
+    const ecs_world_t *world,
     const ecs_query_t *query,
-    ecs_type_t type)
+    const ecs_table_t *table)
 {
     ecs_term_t *terms = query->filter.terms;
     int32_t i, count = query->filter.term_count;
@@ -985,7 +990,7 @@ int32_t count_pairs(
         }
 
         if (ecs_id_is_wildcard(term->id)) {
-            pair_count = get_pair_count(type, term->id);
+            pair_count = get_pair_count(world, table, term->id);
             if (!first_count) {
                 first_count = pair_count;
             } else {
@@ -1016,7 +1021,7 @@ ecs_type_t get_term_type(
 
     const EcsType *type = ecs_get(world, component, EcsType);
     if (type) {
-        return type->normalized;
+        return type->normalized->type;
     } else {
         return ecs_get_type(world, component);
     } 
@@ -1037,7 +1042,7 @@ void add_table(
         table_type = table->type;
     }
 
-    int32_t pair_cur = 0, pair_count = count_pairs(query, table_type);
+    int32_t pair_cur = 0, pair_count = count_pairs(world, query, table);
     
     /* If the query has pairs, we need to account for the fact that a table may
      * have multiple components to which the pair is applied, which means the
@@ -1102,7 +1107,7 @@ add_pair:
 
         /* This column does not retrieve data from a static entity */
         if (!entity && subj.entity) {
-            int32_t index = get_component_index(world, table_type, 
+            int32_t index = get_component_index(world, table, table_type, 
                 &component, c, op, pair_offsets, pair_cur + 1);
 
             if (index == -1) {
@@ -1135,7 +1140,7 @@ add_pair:
             if (index && (table && table->flags & EcsTableHasDisabled)) {
                 ecs_entity_t bs_id = 
                     (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
-                int32_t bs_index = ecs_type_index_of(table->type, 0, bs_id);
+                int32_t bs_index = ecs_table_index_of(world, table, 0, bs_id);
                 if (bs_index != -1) {
                     flecs_bitset_column_t *elem = ecs_vector_add(
                         &table_data->bitset_columns, flecs_bitset_column_t);
@@ -1256,24 +1261,22 @@ bool flecs_query_match(
         return false;
     }
 
-    ecs_type_t table_type = table->type;
-
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_type_has_id(
-        world, table_type, EcsDisabled, true))
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_table_has_id(
+        world, table, EcsDisabled, true))
     {
         return false;
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_type_has_id(
-        world, table_type, EcsPrefab, true))
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_table_has_id(
+        world, table, EcsPrefab, true))
     {
         return false;
     }
 
     /* Check if pair cardinality matches pairs in query, if any */
-    if (count_pairs(query, table->type) == -1) {
+    if (count_pairs(world, query, table) == -1) {
         return false;
     }
 
@@ -1526,7 +1529,7 @@ void build_sorted_table_range(
             continue;
         }
 
-        int32_t index = ecs_type_index_of(table->storage_type, 0, component);
+        int32_t index = ecs_table_index_of(world, table->storage_table, 0, component);
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
             int16_t size = column->size;
@@ -1713,9 +1716,14 @@ void sort_tables(
             }
 
             if (dirty) {
-                column = ecs_type_match(world, table->storage_table, 
-                    table->storage_type, 0, order_by_component, 
-                        0, 0, 0, 0, 0, 0);
+                column = -1;
+
+                ecs_table_t *storage_table = table->storage_table;
+                if (storage_table) {
+                    column = ecs_type_match(world, storage_table, 
+                        table->storage_type, 0, order_by_component, 
+                            0, 0, 0, 0, 0, 0);
+                }
 
                 if (column == -1) {
                     /* Component is shared, no sorting is needed */
@@ -2184,9 +2192,9 @@ bool satisfy_constraints(
         }
 
         if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
-            ecs_type_t type = ecs_get_type(world, subj->entity);
+            ecs_table_t *table = ecs_get_table(world, subj->entity);
 
-            if (ecs_type_has_id(world, type, term->id, false)) {
+            if (ecs_table_has_id(world, table, term->id, false)) {
                 if (oper == EcsNot) {
                     return false;
                 }

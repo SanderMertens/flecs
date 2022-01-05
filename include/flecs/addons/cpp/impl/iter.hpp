@@ -47,7 +47,7 @@ inline flecs::entity iter::term_id(int32_t index) const {
 
 /* Obtain type of iter */
 inline flecs::type iter::type() const {
-    return flecs::type(m_iter->world, m_iter->type);
+    return flecs::type(m_iter->world, m_iter->table);
 }
 
 } // namespace flecs
