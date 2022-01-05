@@ -365,7 +365,7 @@ int32_t ecs_iter_find_column(
 {
     ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    return ecs_type_index_of(it->table->type, 0, component);
+    return ecs_table_index_of(it->real_world, it->table, 0, component);
 error:
     return -1;
 }

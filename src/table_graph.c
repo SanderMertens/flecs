@@ -396,8 +396,8 @@ int32_t flecs_table_switch_from_case(
     if ((sw_columns = table->storage.sw_columns)) {
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
-            ecs_type_t sw_type = sw_columns[i].type;
-            if (ecs_type_has_id(world, sw_type, add, true)) {
+            ecs_table_t *sw_type = sw_columns[i].type;
+            if (ecs_table_has_id(world, sw_type, add, true)) {
                 return i;
             }
         }
@@ -412,7 +412,7 @@ int32_t flecs_table_switch_from_case(
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_type_has_id(
+            if (ecs_table_has_id(
                 world, type_ptr->normalized, add, true)) 
             {
                 return i;

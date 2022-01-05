@@ -195,7 +195,8 @@ void flecs_table_init_data(
             e = e & ECS_COMPONENT_MASK;
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_type_t sw_type = type_ptr->normalized;
+            ecs_table_t *sw_table = type_ptr->normalized;
+            ecs_type_t sw_type = sw_table->type;
 
             ecs_entity_t *sw_array = ecs_vector_first(sw_type, ecs_entity_t);
             int32_t sw_array_count = ecs_vector_count(sw_type);
@@ -206,7 +207,7 @@ void flecs_table_init_data(
                 0);
 
             storage->sw_columns[i].data = sw;
-            storage->sw_columns[i].type = sw_type;
+            storage->sw_columns[i].type = sw_table;
         }
     }
 
@@ -1994,7 +1995,46 @@ bool ecs_table_has_module(
     return table->flags & EcsTableHasModule;
 }
 
-ecs_column_t *ecs_table_column_for_id(
+int32_t ecs_table_index_of(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id)
+{
+    if (!table) {
+        return -1;
+    }
+
+    if (!offset) {
+        ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+        if (tr) {
+            return tr->column;
+        }
+    }
+
+    return ecs_type_match(world, table, table->type, offset, id, 
+        0, 0, 0, 0, 0, 0);
+}
+
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    bool owned)
+{
+    if (!table) {
+        return false;
+    }
+
+    if (owned) {
+        return ecs_table_index_of(world, table, 0, id) != -1;
+    } else {
+        return ecs_type_match(world, table, table->type, 0, id, 
+            EcsIsA, 0, 0, 0, 0, 0) != -1;
+    }
+}
+
+ecs_column_t* ecs_table_column_for_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id)
@@ -2015,13 +2055,17 @@ ecs_column_t *ecs_table_column_for_id(
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table)
 {
-    return table->type;
+    if (table) {
+        return table->type;
+    } else {
+        return NULL;
+    }
 }
 
-ecs_type_t ecs_table_get_storage_type(
+ecs_table_t* ecs_table_get_storage_table(
     const ecs_table_t *table)
 {
-    return table->storage_type;
+    return table->storage_table;
 }
 
 int32_t ecs_table_storage_count(

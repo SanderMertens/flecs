@@ -756,7 +756,7 @@ typedef struct EcsComponent {
  * therefore the creation of named types. */
 typedef struct EcsType {
     ecs_type_t type;        /* Preserved nested types */
-    ecs_type_t normalized;  /* Union of type and nested AND types */
+    ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
@@ -3755,13 +3755,43 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
+/* Get index of id in table type.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param offset Offset, in case id matches more than once.
+ * @param id The id to find.
+ * @return Index of the id in the table type, or -1 if not found.
+ */
+FLECS_API
+int32_t ecs_table_index_of(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id);
+
+/* Check if table type has id.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param id The id to check.
+ * @param owned Whether the table should own the id.
+ * @return true if found, false if not.
+ */
+FLECS_API
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    bool owned);
+
 /** Get storage type for table.
  *
  * @param table The table.
  * @return The storage type of the table (components only).
  */
 FLECS_API
-ecs_type_t ecs_table_get_storage_type(
+ecs_table_t* ecs_table_get_storage_table(
     const ecs_table_t *table);
 
 /** Get number of storages for table.

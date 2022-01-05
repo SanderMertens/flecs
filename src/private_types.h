@@ -127,7 +127,7 @@ struct ecs_column_t {
 /** A switch column. */
 typedef struct ecs_sw_column_t {
     ecs_switch_t *data;          /* Column data */
-    ecs_type_t type;             /* Switch type */
+    ecs_table_t *type;           /* Table with switch type */
 } ecs_sw_column_t;
 
 /** A bitset column. */

@@ -3585,19 +3585,6 @@ ecs_type_t ecs_type_from_str(
     const char *expr);    
 
 FLECS_API
-int32_t ecs_type_index_of(
-    ecs_type_t type,
-    int32_t offset,
-    ecs_id_t id);
-
-FLECS_API
-bool ecs_type_has_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_id_t id,
-    bool owned);
-
-FLECS_API
 int32_t ecs_type_match(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -3908,7 +3895,7 @@ typedef struct EcsComponent {
  * therefore the creation of named types. */
 typedef struct EcsType {
     ecs_type_t type;        /* Preserved nested types */
-    ecs_type_t normalized;  /* Union of type and nested AND types */
+    ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
@@ -6928,13 +6915,43 @@ FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
 
+/* Get index of id in table type.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param offset Offset, in case id matches more than once.
+ * @param id The id to find.
+ * @return Index of the id in the table type, or -1 if not found.
+ */
+FLECS_API
+int32_t ecs_table_index_of(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id);
+
+/* Check if table type has id.
+ *
+ * @param world The world.
+ * @param table The table.
+ * @param id The id to check.
+ * @param owned Whether the table should own the id.
+ * @return true if found, false if not.
+ */
+FLECS_API
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    bool owned);
+
 /** Get storage type for table.
  *
  * @param table The table.
  * @return The storage type of the table (components only).
  */
 FLECS_API
-ecs_type_t ecs_table_get_storage_type(
+ecs_table_t* ecs_table_get_storage_table(
     const ecs_table_t *table);
 
 /** Get number of storages for table.
@@ -10528,22 +10545,22 @@ ecs_entity_t ecs_module_init(
     ecs_has_id(world, entity, ecs_pair(relation, object))
 
 #define ecs_owns_id(world, entity, id)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), id, true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), id, true)
 
 #define ecs_owns_pair(world, entity, relation, object)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), true)
 
 #define ecs_owns(world, entity, T)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), true)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), true)
 
 #define ecs_shares_id(world, entity, id)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), id, false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), id, false)
 
 #define ecs_shares_pair(world, entity, relation, object)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_pair(relation, object), false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), false)
 
 #define ecs_shares(world, entity, T)\
-    ecs_type_has_id(world, ecs_get_type(world, entity), ecs_id(T), false)
+    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), false)
 
 
 /* -- Enable / Disable component -- */
@@ -15981,14 +15998,18 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_type_t type = ecs_table_get_storage_type(table);
-        if (!type) {
+        ecs_table_t *storage_table = ecs_table_get_storage_table(table);
+        if (!storage_table) {
             return false;
         }
 
+        /* table_index_of needs real world */
+        const flecs::world_t *real_world = ecs_get_world(world);
+
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_type_index_of(type, 0, _::cpp_type<Args>().id(world))...
+            ecs_table_index_of(real_world, storage_table, 0, 
+                _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -16948,12 +16969,12 @@ struct type_base {
         sync_from_flecs();
     }
 
-    explicit type_base(world_t *world, type_t t)
+    explicit type_base(world_t *world, table_t *t)
         : m_entity( world, static_cast<flecs::id_t>(0) )
-        , m_type( t ) { }
+        , m_table( t ) { }
 
-    type_base(type_t t)
-        : m_type( t ) { }
+    type_base(table_t *t)
+        : m_table( t ) { }
 
     Base& add(id_t id) {
         if (!m_table) {
@@ -16963,7 +16984,6 @@ struct type_base {
         }
 
         m_table = ecs_table_add_id(world(), m_table, id);
-        m_type = ecs_table_get_type(m_table);
         sync_from_me();
         return *this;
     }
@@ -17002,12 +17022,12 @@ struct type_base {
 
     bool has(id_t id) {
         const flecs::world_t *w = ecs_get_world(world());
-        return ecs_type_has_id(w, m_type, id, false);
+        return ecs_table_has_id(w, m_table, id, false);
     }
 
     bool has(id_t relation, id_t object) {
         const flecs::world_t *w = ecs_get_world(world());
-        return ecs_type_has_id(w, m_type, 
+        return ecs_table_has_id(w, m_table, 
             ecs_pair(relation, object), false);
     }    
 
@@ -17023,12 +17043,12 @@ struct type_base {
 
     flecs::string str() const {
         const flecs::world_t *w = ecs_get_world(world());
-        char *str = ecs_type_str(w, m_type);
+        char *str = ecs_type_str(w, ecs_table_get_type(m_table));
         return flecs::string(str);
     }
 
     type_t c_ptr() const {
-        return m_type;
+        return ecs_table_get_type(m_table);
     }
 
     flecs::id_t id() const { 
@@ -17052,7 +17072,8 @@ struct type_base {
     }
 
     flecs::vector<flecs::id_t> vector() {
-        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(m_type));
+        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(
+            ecs_table_get_type(m_table)));
     }
 
     flecs::id get(int32_t index) {
@@ -17060,7 +17081,7 @@ struct type_base {
     }
 
     /* Implicit conversion to type_t */
-    operator type_t() const { return m_type; }
+    operator type_t() const { return ecs_table_get_type(m_table); }
 
     operator Base&() { return *static_cast<Base*>(this); }
 
@@ -17072,8 +17093,8 @@ private:
 
         EcsType *tc = ecs_get_mut(world(), id(), EcsType, NULL);
         ecs_assert(tc != NULL, ECS_INTERNAL_ERROR, NULL);
-        tc->type = m_type;
-        tc->normalized = m_type;
+        tc->type = ecs_table_get_type(m_table);
+        tc->normalized = m_table;
         ecs_modified(world(), id(), EcsType);
     }
 
@@ -17084,16 +17105,13 @@ private:
 
         const EcsType *tc = ecs_get(world(), id(), EcsType);
         if (!tc) {
-            m_type = nullptr;
+            m_table = nullptr;
         } else {
-            m_type = tc->normalized;
+            m_table = tc->normalized;
         }
-
-        m_table = nullptr;
     }
 
     flecs::entity m_entity;
-    type_t m_type = nullptr;
     table_t *m_table = nullptr;
 };
 
@@ -17297,7 +17315,7 @@ inline flecs::entity entity_view::set_stage(world_t *stage) {
 }   
 
 inline flecs::type entity_view::type() const {
-    return flecs::type(m_world, ecs_get_type(m_world, m_id));
+    return flecs::type(m_world, ecs_get_table(m_world, m_id));
 }
 
 template <typename Func>
@@ -19791,7 +19809,7 @@ inline flecs::entity iter::term_id(int32_t index) const {
 
 /* Obtain type of iter */
 inline flecs::type iter::type() const {
-    return flecs::type(m_iter->world, m_iter->type);
+    return flecs::type(m_iter->world, m_iter->table);
 }
 
 } // namespace flecs

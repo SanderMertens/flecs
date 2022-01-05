@@ -15,7 +15,7 @@ bool match_id(
             ecs_entity_t sw_case = ECS_PAIR_OBJECT(match_with);
             const EcsType *sw_type = ecs_get(world, sw, EcsType);
             ecs_assert(sw_type != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ecs_type_has_id(world, sw_type->normalized, 
+            ecs_assert(ecs_table_has_id(world, sw_type->normalized, 
                 ecs_get_alive(world, sw_case), false) == true,
                         ECS_INVALID_PARAMETER, NULL);
             (void)sw_case;
@@ -47,6 +47,8 @@ int32_t search_type(
 {
     ecs_assert(offset >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(depth >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!id) {
         return -1;
@@ -94,6 +96,11 @@ int32_t search_type(
         ECS_PAIR_RELATION(id) != EcsChildOf)
     {
         int32_t ret;
+        if (table) {
+            if (rel == EcsIsA && !(table->flags & EcsTableHasIsA)) {
+                return -1;
+            }
+        }
 
         for (i = 0; i < count; i ++) {
             tid = ids[i];
@@ -139,27 +146,6 @@ int32_t search_type(
     }
 
     return -1;
-}
-
-bool ecs_type_has_id(
-    const ecs_world_t *world,
-    ecs_type_t type,
-    ecs_id_t id,
-    bool owned)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    
-    return search_type(world, NULL, type, 0, id, owned ? 0 : EcsIsA, 0, 0, 0, 
-        NULL, NULL, NULL) != -1;
-}
-
-int32_t ecs_type_index_of(
-    ecs_type_t type, 
-    int32_t offset, 
-    ecs_id_t id)
-{
-    return search_type(NULL, NULL, type, offset, id, 0, 0, 0, 0, 
-        NULL, NULL, NULL);
 }
 
 int32_t ecs_type_match(
