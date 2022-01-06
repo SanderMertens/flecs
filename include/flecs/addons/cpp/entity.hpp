@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mixins/entity/builder_i.hpp"
+#include "mixins/entity/builder.hpp"
 #include "entity_view.hpp"
 
 namespace flecs
@@ -8,21 +8,29 @@ namespace flecs
 
 /** Entity class
  * This class provides access to entities. */
-struct entity_base : entity_view, entity_builder_i<entity>
+struct entity : entity_builder<entity, entity_view>
 {
-    /** Default constructor.
-     */
-    entity_base() : flecs::entity_view() { }
+    explicit entity() : entity_builder() { }
 
     /** Create entity.
      *
      * @param world The world in which to create the entity.
      */
-    explicit entity_base(world_t *world) 
-        : flecs::entity_view() 
+    explicit entity(world_t *world) 
+        : entity_builder() 
     {
         m_world = world;
         m_id = ecs_new(world, 0);
+    }
+
+    /** Wrap an existing entity id.
+     *
+     * @param world The world in which the entity is created.
+     * @param id The entity id.
+     */
+    explicit entity(flecs::world_t *world, flecs::id_t id) {
+        m_world = world;
+        m_id = id;
     }
 
     /** Create a named entity.
@@ -34,8 +42,8 @@ struct entity_base : entity_view, entity_builder_i<entity>
      * @param world The world in which to create the entity.
      * @param name The entity name.
      */
-    explicit entity_base(world_t *world, const char *name) 
-        : flecs::entity_view()
+    explicit entity(world_t *world, const char *name) 
+        : entity_builder()
     { 
         m_world = world;
 
@@ -45,24 +53,12 @@ struct entity_base : entity_view, entity_builder_i<entity>
         m_id = ecs_entity_init(world, &desc);
     }
 
-    /** Wrap an existing entity id.
-     *
-     * @param world The world in which the entity is created.
-     * @param id The entity id.
-     */
-    explicit entity_base(world_t *world, entity_t id)
-        : flecs::entity_view()
-    {
-        m_world = world;
-        m_id = id;
-    }
-
     /** Conversion from flecs::entity_t to flecs::entity. 
      * 
      * @param id The entity_t value to convert.
      */
-    explicit entity_base(entity_t id) 
-        : flecs::entity_view( nullptr, id ) { }
+    explicit entity(entity_t id) 
+        : entity_builder( nullptr, id ) { }
 
     /** Get entity id.
      * @return The integer entity id.
@@ -239,19 +235,6 @@ struct entity_base : entity_view, entity_builder_i<entity>
     void destruct() const {
         ecs_delete(m_world, m_id);
     }
-
-protected:
-    flecs::world_t* world_v() override {
-        return m_world;
-    }
-
-    flecs::entity_t id_v() override {
-        return m_id;
-    }
-};
-
-struct entity final : entity_base {
-    using entity_base::entity_base;
 
     /** Entity id 0.
      * This function is useful when the API must provide an entity object that

@@ -5,12 +5,12 @@
 namespace flecs 
 {
 
-struct trigger final : public entity_base
+struct trigger final : entity
 {
-    using entity_base::entity_base;
+    using entity::entity;
 
     trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
-        : entity_base(world, ecs_trigger_init(world, desc)) 
+        : entity(world, ecs_trigger_init(world, desc)) 
     { 
         ecs_term_fini(&desc->term);
     }
@@ -29,13 +29,9 @@ struct trigger final : public entity_base
 
 // Mixin implementation
 
-inline void trigger_m_world::init() {
-    this->me().template component<Trigger>("flecs::core::Trigger");
-}
-
 template <typename... Comps, typename... Args>
-inline trigger_builder<Comps...> trigger_m_world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(this->me(), std::forward<Args>(args)...);
+inline trigger_builder<Comps...> world::trigger(Args &&... args) const {
+    return flecs::trigger_builder<Comps...>(m_world, std::forward<Args>(args)...);
 }
 
 } // namespace flecs

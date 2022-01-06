@@ -230,7 +230,7 @@ struct NoDtor {
 };
 
 struct FlecsCtor {
-    FlecsCtor(flecs::world& w, flecs::entity e) : x_(89), e_(e) { }
+    FlecsCtor(flecs::world&, flecs::entity e) : x_(89), e_(e) { }
 
     FlecsCtor(const FlecsCtor& obj) = delete;
     FlecsCtor(FlecsCtor&& obj) = default;
@@ -246,7 +246,7 @@ struct FlecsCtor {
 
 struct FlecsCtorDefaultCtor {
     FlecsCtorDefaultCtor() : x_(99) { }
-    FlecsCtorDefaultCtor(flecs::world& w, flecs::entity e) : x_(89), e_(e) { }
+    FlecsCtorDefaultCtor(flecs::world&, flecs::entity e) : x_(89), e_(e) { }
 
     FlecsCtorDefaultCtor(const FlecsCtorDefaultCtor& obj) = delete;
     FlecsCtorDefaultCtor(FlecsCtorDefaultCtor&& obj) = default;
@@ -277,7 +277,7 @@ struct DefaultCtorValueCtor {
 
 struct FlecsCtorValueCtor {
     FlecsCtorValueCtor(int x) : x_(x) { }
-    FlecsCtorValueCtor(flecs::world& w, flecs::entity e) : x_(89), e_(e) { }
+    FlecsCtorValueCtor(flecs::world&, flecs::entity e) : x_(89), e_(e) { }
 
     FlecsCtorValueCtor(const FlecsCtorValueCtor& obj) = delete;
     FlecsCtorValueCtor(FlecsCtorValueCtor&& obj) = default;

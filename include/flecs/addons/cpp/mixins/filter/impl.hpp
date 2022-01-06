@@ -5,8 +5,6 @@
 namespace flecs 
 {
 
-#define flecs_me_ this->me()
-
 struct filter_base {
     filter_base()
         : m_world(nullptr)
@@ -162,14 +160,14 @@ private:
 
 // World mixin implementation
 template <typename... Comps, typename... Args>
-inline flecs::filter<Comps...> filter_m_world::filter(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(flecs_me_, std::forward<Args>(args)...)
+inline flecs::filter<Comps...> world::filter(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
-inline flecs::filter_builder<Comps...> filter_m_world::filter_builder(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(flecs_me_, std::forward<Args>(args)...);
+inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
+    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...);
 }
 
 // world::each
@@ -222,15 +220,15 @@ struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
 }
 
 template <typename Func>
-inline void filter_m_world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(flecs_me_, std::move(func));
+inline void world::each(Func&& func) const {
+    _::filter_invoker<Func> f_invoker(*this, std::move(func));
 }
 
 template <typename T, typename Func>
-inline void filter_m_world::each(Func&& func) const {
+inline void world::each(Func&& func) const {
     ecs_term_t t = {};
     t.id = _::cpp_type<T>::id();
-    ecs_iter_t it = ecs_term_iter(flecs_me_, &t);
+    ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
         _::each_invoker<Func, T>(func).invoke(&it);
@@ -238,10 +236,10 @@ inline void filter_m_world::each(Func&& func) const {
 }
 
 template <typename Func>
-inline void filter_m_world::each(flecs::id_t term_id, Func&& func) const {
+inline void world::each(flecs::id_t term_id, Func&& func) const {
     ecs_term_t t = {};
     t.id = term_id;
-    ecs_iter_t it = ecs_term_iter(flecs_me_, &t);
+    ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
         _::each_invoker<Func>(func).invoke(&it);
@@ -256,7 +254,5 @@ inline filter_base::operator flecs::filter<> () const {
     f.m_world = this->m_world;
     return f;
 }
-
-#undef flecs_me_
 
 }

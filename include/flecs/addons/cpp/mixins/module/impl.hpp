@@ -3,13 +3,6 @@
 namespace flecs {
 
 template <typename T>
-flecs::entity module(const flecs::world& world) {
-    flecs::entity result = world.id<T>().entity();
-    ecs_set_scope(world, result);
-    return result;
-}
-
-template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_trace("import %s", _::name_helper<T>::name());
     ecs_log_push();
@@ -40,13 +33,13 @@ template <typename T>
 flecs::entity import(world& world) {
     char *symbol = _::symbol_helper<T>::symbol();
 
-    ecs_entity_t m = ecs_lookup_symbol(world.c_ptr(), symbol, true);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     
     if (!_::cpp_type<T>::registered()) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::cpp_type<T>::init(world.c_ptr(), m, false);
+            _::cpp_type<T>::init(world, m, false);
         
         /* Module is not yet registered, register it now */
         } else {
@@ -64,14 +57,16 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-template <typename Module, typename... Args>
-inline flecs::entity module_m_world::module(Args &&... args) const {
-    return flecs::module<Module>(this->me(), std::forward<Args>(args)...);
+template <typename Module>
+inline flecs::entity world::module() const {
+    flecs::id_t result = _::cpp_type<Module>::id(m_world);
+    ecs_set_scope(m_world, result);
+    return flecs::entity(m_world, result);
 }
 
 template <typename Module>
-inline flecs::entity module_m_world::import() {
-    return flecs::import<Module>(this->me());
+inline flecs::entity world::import() {
+    return flecs::import<Module>(*this);
 }
 
 }
