@@ -661,7 +661,8 @@
         }, {
             "id": "Refs",
             "testcases": [
-                "get_ref",
+                "get_ref_by_ptr",
+                "get_ref_by_method",
                 "ref_after_add",
                 "ref_after_remove",
                 "ref_after_set",
