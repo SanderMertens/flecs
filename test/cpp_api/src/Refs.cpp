@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Refs_get_ref() {
+void Refs_get_ref_by_ptr() {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -9,6 +9,17 @@ void Refs_get_ref() {
     auto ref = e.get_ref<Position>();
     test_assert(ref->x == 10);
     test_assert(ref->y == 20);
+}
+
+void Refs_get_ref_by_method() {
+    flecs::world world;
+
+    auto e = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    auto ref = e.get_ref<Position>();
+    test_assert(ref.get()->x == 10);
+    test_assert(ref.get()->y == 20);
 }
 
 void Refs_ref_after_add() {
