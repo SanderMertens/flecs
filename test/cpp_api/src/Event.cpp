@@ -131,7 +131,6 @@ void Event_evt_2_ids_table() {
 void Event_evt_type() {
     flecs::world ecs;
 
-    auto evt = ecs.entity();
     auto id = ecs.entity();
     auto e1 = ecs.entity().add(id);
 
@@ -156,7 +155,6 @@ void Event_evt_type() {
 void Event_evt_1_component() {
     flecs::world ecs;
 
-    auto evt = ecs.entity();
     auto e1 = ecs.entity().add<IdA>();
 
     int32_t count = 0;
@@ -180,7 +178,6 @@ void Event_evt_1_component() {
 void Event_evt_2_components() {
     flecs::world ecs;
 
-    auto evt = ecs.entity();
     auto e1 = ecs.entity().add<IdA>().add<IdB>();
 
     int32_t count = 0;

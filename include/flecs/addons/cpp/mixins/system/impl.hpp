@@ -59,12 +59,12 @@ private:
     int32_t m_stage_count;
 };
 
-struct system final : entity_base, extendable<system, Mixins>
+struct system final : entity
 {
-    using entity_base::entity_base;
+    using entity::entity;
 
     system(flecs::world_t *world, ecs_system_desc_t *desc) 
-        : entity_base(world, ecs_system_init(world, desc)) 
+        : entity(world, ecs_system_init(world, desc)) 
     {
         if (desc->query.filter.terms_buffer) {
             ecs_os_free(desc->query.filter.terms_buffer);
@@ -100,23 +100,20 @@ struct system final : entity_base, extendable<system, Mixins>
             m_world, m_id, stage_current, stage_count, delta_time, param);
     }
 
-    operator flecs::entity() const {
-        return flecs::entity(m_world, m_id);
-    }
+#   ifdef FLECS_TIMER
+#   include "../timer/system_mixin.inl"
+#   endif
+
 };
 
 // Mixin implementation
-inline void system_m_world::init() {
-    this->me().template component<TickSource>("flecs::system::TickSource");
-}
-
-inline system system_m_world::system(flecs::entity e) const {
-    return flecs::system(this->me().m_world, e);
+inline system world::system(flecs::entity e) const {
+    return flecs::system(m_world, e);
 }
 
 template <typename... Comps, typename... Args>
-inline system_builder<Comps...> system_m_world::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(this->me(), std::forward<Args>(args)...);
+inline system_builder<Comps...> world::system(Args &&... args) const {
+    return flecs::system_builder<Comps...>(m_world, std::forward<Args>(args)...);
 }
 
 } // namespace flecs

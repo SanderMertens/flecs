@@ -12,7 +12,7 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    auto s = ecs.system<Position, const Velocity>()
+    ecs.system<Position, const Velocity>()
         .each([](Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;

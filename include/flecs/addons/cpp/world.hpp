@@ -95,7 +95,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
  */
-struct world final : extendable<world, Mixins> {
+struct world final {
     /** Create world.
      */
     explicit world() 
@@ -697,9 +697,31 @@ struct world final : extendable<world, Mixins> {
         ecs_defer_end(m_world);
     }
 
-public:
-    friend extendable<world, Mixins>;
+#   include "mixins/id/mixin.inl"
+#   include "mixins/component/mixin.inl"
+#   include "mixins/entity/mixin.inl"
+#   include "mixins/event/mixin.inl"
+#   include "mixins/term/mixin.inl"
+#   include "mixins/filter/mixin.inl"
+#   include "mixins/trigger/mixin.inl"
+#   include "mixins/observer/mixin.inl"
+#   include "mixins/query/mixin.inl"
+#   include "mixins/type/mixin.inl"
 
+#   ifdef FLECS_MODULE
+#   include "mixins/module/mixin.inl"
+#   endif
+#   ifdef FLECS_PIPELINE
+#   include "mixins/pipeline/mixin.inl"
+#   endif
+#   ifdef FLECS_SNAPSHOT
+#   include "mixins/snapshot/mixin.inl"
+#   endif
+#   ifdef FLECS_SYSTEM
+#   include "mixins/system/mixin.inl"
+#   endif
+
+public:
     void init_builtin_components();
 
     world_t *m_world;

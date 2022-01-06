@@ -4,8 +4,6 @@
 
 namespace flecs {
 
-#define flecs_me_ this->me()
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Persistent queries
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,14 +129,14 @@ public:
 
 // Mixin implementation
 template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> query_m_world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(flecs_me_, std::forward<Args>(args)...)
+inline flecs::query<Comps...> world::query(Args &&... args) const {
+    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
-inline flecs::query_builder<Comps...> query_m_world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(flecs_me_, std::forward<Args>(args)...);
+inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
+    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...);
 }
 
 // Builder implementation
@@ -152,7 +150,5 @@ inline Base& query_builder_i<Base, Components ...>::parent(const query_base& par
 inline query_base::operator query<>() const {
     return flecs::query<>(m_world, m_query);
 }
-
-#undef flecs_me_
 
 } // namespace flecs

@@ -6,7 +6,7 @@ struct NestedNameSpaceType { };
 class NestedModule {
 public:
     NestedModule(flecs::world& world) {
-        flecs::module<ns::NestedModule>(world);
+        world.module<ns::NestedModule>();
         flecs::component<Velocity>(world, "Velocity");
     }
 };
@@ -14,7 +14,7 @@ public:
 class SimpleModule {
 public:
     SimpleModule(flecs::world& world) {
-        flecs::module<ns::SimpleModule>(world);
+        world.module<ns::SimpleModule>();
         flecs::import<ns::NestedModule>(world);
         flecs::component<Position>(world, "Position");
     }

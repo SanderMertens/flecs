@@ -5,12 +5,12 @@
 namespace flecs 
 {
 
-struct observer final : public entity_base
+struct observer final : entity
 {
-    using entity_base::entity_base;
+    using entity::entity;
 
     observer(flecs::world_t *world, ecs_observer_desc_t *desc) 
-        : entity_base(world, ecs_observer_init(world, desc)) 
+        : entity(world, ecs_observer_init(world, desc)) 
     { 
         if (desc->filter.terms_buffer) {
             ecs_os_free(desc->filter.terms_buffer);
@@ -31,13 +31,9 @@ struct observer final : public entity_base
 
 // Mixin implementation
 
-inline void observer_m_world::init() {
-    this->me().template component<Observer>("flecs::core::Observer");
-}
-
 template <typename... Comps, typename... Args>
-inline observer_builder<Comps...> observer_m_world::observer(Args &&... args) const {
-    return flecs::observer_builder<Comps...>(this->me(), std::forward<Args>(args)...);
+inline observer_builder<Comps...> world::observer(Args &&... args) const {
+    return flecs::observer_builder<Comps...>(m_world, std::forward<Args>(args)...);
 }
 
 } // namespace flecs

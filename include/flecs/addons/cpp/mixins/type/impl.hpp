@@ -2,20 +2,16 @@
 
 namespace flecs {
 
-#define flecs_me_ this->me()
-
 // Type mixin implementation
 template <typename... Args>
-inline flecs::type type_m_world::type(Args &&... args) const {
-    return flecs::type(flecs_me_, std::forward<Args>(args)...);
+inline flecs::type world::type(Args &&... args) const {
+    return flecs::type(m_world, std::forward<Args>(args)...);
 }
 
 template <typename T>
-inline flecs::type type_m_world::type(const char *name) const {
-    flecs::entity result = flecs::component<T>(flecs_me_, name, true);
-    return flecs::type(flecs_me_, result);
+inline flecs::type world::type(const char *name) const {
+    flecs::entity result = flecs::component<T>(m_world, name, true);
+    return flecs::type(m_world, result);
 }
-
-#undef flecs_me_
 
 }
