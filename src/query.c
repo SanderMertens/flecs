@@ -809,8 +809,8 @@ int32_t get_pair_index(
     } else {
         /* First time for this iteration that the pair index is resolved, look
          * it up in the type. */
-        result = ecs_table_index_of(world, table, 
-            pair_offsets[column_index].index, pair);
+        result = ecs_search_offset(world, table, 
+            pair_offsets[column_index].index, pair, 0);
         pair_offsets[column_index].index = result + 1;
         pair_offsets[column_index].count = count;
     }
@@ -839,7 +839,7 @@ int32_t get_component_index(
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
             ecs_entity_t sw = ECS_PAIR_RELATION(component);
-            result = ecs_table_index_of(world, table, 0, ECS_SWITCH | sw);
+            result = ecs_search(world, table, ECS_SWITCH | sw, 0);
             ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
@@ -880,11 +880,11 @@ int32_t get_component_index(
                  * this query exactly matches a single pair instance. In
                  * this case we can simply do a lookup of the pair 
                  * identifier in the table type. */
-                result = ecs_table_index_of(world, table, 0, component);
+                result = ecs_search(world, table, component, 0);
             }
         } else {
             /* Get column index for component */
-            result = ecs_table_index_of(world, table, 0, component);
+            result = ecs_search(world, table, component, 0);
         }
 
         /* If column is found, add one to the index, as column zero in
@@ -953,7 +953,7 @@ int32_t get_pair_count(
     ecs_entity_t pair)
 {
     int32_t i = -1, result = 0;
-    while (-1 != (i = ecs_table_index_of(world, table, i + 1, pair))) {
+    while (-1 != (i = ecs_search_offset(world, table, i + 1, pair, 0))) {
         result ++;
     }
 
@@ -1135,7 +1135,7 @@ add_pair:
             if (index && (table && table->flags & EcsTableHasDisabled)) {
                 ecs_entity_t bs_id = 
                     (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
-                int32_t bs_index = ecs_table_index_of(world, table, 0, bs_id);
+                int32_t bs_index = ecs_search(world, table, bs_id, 0);
                 if (bs_index != -1) {
                     flecs_bitset_column_t *elem = ecs_vector_add(
                         &table_data->bitset_columns, flecs_bitset_column_t);
@@ -1262,15 +1262,15 @@ bool flecs_query_match(
     }
 
     /* Don't match disabled entities */
-    if (!(query->flags & EcsQueryMatchDisabled) && ecs_table_has_id(
-        world, table, EcsDisabled, true))
+    if (!(query->flags & EcsQueryMatchDisabled) && ecs_search(
+        world, table, EcsDisabled, 0) != -1)
     {
         return false;
     }
 
     /* Don't match prefab entities */
-    if (!(query->flags & EcsQueryMatchPrefab) && ecs_table_has_id(
-        world, table, EcsPrefab, true))
+    if (!(query->flags & EcsQueryMatchPrefab) && ecs_search(
+        world, table, EcsPrefab, 0) != -1)
     {
         return false;
     }
@@ -1531,7 +1531,7 @@ void build_sorted_table_range(
 
         int32_t index = -1;
         if (id) {
-            index = ecs_table_index_of(world, table->storage_table, 0, id);
+            index = ecs_search(world, table->storage_table, id, 0);
         }
 
         if (index != -1) {
@@ -2194,7 +2194,9 @@ bool satisfy_constraints(
         if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
             ecs_table_t *table = ecs_get_table(world, subj->entity);
 
-            if (ecs_table_has_id(world, table, term->id, false)) {
+            if (ecs_search_relation(world, table, 0, term->id, EcsIsA, 
+                0, 0, 0, 0, 0) != -1) 
+            {
                 if (oper == EcsNot) {
                     return false;
                 }

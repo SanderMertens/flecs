@@ -48,6 +48,9 @@ typedef struct ecs_id_record_t ecs_id_record_t;
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
+/* Internal table storage record */
+struct ecs_table_record_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////

@@ -49,7 +49,6 @@ flecs_src = files(
     'src/datastructures/strbuf.c',
     'src/datastructures/switch_list.c',
     'src/datastructures/vector.c',
-    'src/api_support.c',
     'src/bootstrap.c',
     'src/entity.c',
     'src/filter.c',
@@ -66,7 +65,7 @@ flecs_src = files(
     'src/table_graph.c',
     'src/table.c',
     'src/trigger.c',
-    'src/type.c',
+    'src/search.c',
     'src/world.c',
 )
 

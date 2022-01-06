@@ -76,14 +76,11 @@ struct type_base {
     }
 
     bool has(id_t id) {
-        const flecs::world_t *w = ecs_get_world(world());
-        return ecs_table_has_id(w, m_table, id, false);
+        return ecs_search(world(), m_table, id, 0) != -1;
     }
 
     bool has(id_t relation, id_t object) {
-        const flecs::world_t *w = ecs_get_world(world());
-        return ecs_table_has_id(w, m_table, 
-            ecs_pair(relation, object), false);
+        return this->has(ecs_pair(relation, object));
     }    
 
     template <typename T>

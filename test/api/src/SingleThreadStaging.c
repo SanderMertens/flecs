@@ -1,5 +1,4 @@
 #include <api.h>
-#include <flecs/type.h>
 
 void SingleThreadStaging_setup() {
     ecs_log_set_level(-3);

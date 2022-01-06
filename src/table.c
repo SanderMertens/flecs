@@ -1994,45 +1994,6 @@ bool ecs_table_has_module(
     return table->flags & EcsTableHasModule;
 }
 
-int32_t ecs_table_index_of(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id)
-{
-    if (!table) {
-        return -1;
-    }
-
-    if (!offset) {
-        ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
-        if (tr) {
-            return tr->column;
-        }
-    }
-
-    return ecs_search_relation(world, table, offset, id, 
-        0, 0, 0, 0, 0, 0);
-}
-
-bool ecs_table_has_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id,
-    bool owned)
-{
-    if (!table) {
-        return false;
-    }
-
-    if (owned) {
-        return ecs_table_index_of(world, table, 0, id) != -1;
-    } else {
-        return ecs_search_relation(world, table, 0, id, 
-            EcsIsA, 0, 0, 0, 0, 0) != -1;
-    }
-}
-
 ecs_column_t* ecs_table_column_for_id(
     const ecs_world_t *world,
     const ecs_table_t *table,

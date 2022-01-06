@@ -32,7 +32,6 @@
 #include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"
 #include "flecs/private/hashmap.h"
-#include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 #define ECS_MAX_ADD_REMOVE (32)

@@ -2748,6 +2748,9 @@ typedef struct ecs_id_record_t ecs_id_record_t;
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
+/* Internal table storage record */
+struct ecs_table_record_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -3552,67 +3555,6 @@ void* _flecs_hashmap_next(
 
 #define flecs_hashmap_next_w_key(map, K, key, V)\
     (V*)_flecs_hashmap_next(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/**
- * @file type.h
- * @brief Type API.
- *
- * This API contains utilities for working with types. Types are vectors of
- * component ids, and are used most prominently in the API to construct filters.
- */
-
-#ifndef FLECS_TYPE_H
-#define FLECS_TYPE_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct ecs_table_record_t;
-
-FLECS_API
-char* ecs_type_str(
-    const ecs_world_t *world,
-    ecs_type_t type);  
-
-FLECS_API
-ecs_type_t ecs_type_from_str(
-    ecs_world_t *world,
-    const char *expr);    
-
-FLECS_API
-int32_t ecs_search(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id,
-    ecs_id_t *id_out);
-
-FLECS_API
-int32_t ecs_search_offset(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id,
-    ecs_id_t *id_out);
-
-FLECS_API
-int32_t ecs_search_relation(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id,
-    ecs_entity_t rel,
-    int32_t min_depth,
-    int32_t max_depth,
-    ecs_entity_t *subject_out,
-    ecs_id_t *id_out,
-    struct ecs_table_record_t **tr_out);
 
 #ifdef __cplusplus
 }
@@ -5310,6 +5252,18 @@ void ecs_id_str_buf(
     ecs_id_t id,
     ecs_strbuf_t *buf);
 
+/** Convert type to string.
+ * The result of this operation must be freed with ecs_os_free.
+ * 
+ * @param world The world.
+ * @param type The type.
+ * @return The stringified type.
+ */
+FLECS_API
+char* ecs_type_str(
+    const ecs_world_t *world,
+    ecs_type_t type);  
+
 /** Test if an entity has an entity.
  * This operation returns true if the entity has the provided entity in its 
  * type.
@@ -6897,6 +6851,123 @@ bool ecs_stage_is_async(
 
 /** @} */
 
+/**
+ * @defgroup id_search_functions Search functions for component ids.
+ * @brief Low-level functions to search for component ids in table types.
+ * @{
+ */
+
+/** Search for component id in table type.
+ * This operation returns the index of first occurrance of the id in the table
+ * type. The id may be a wildcard.
+ * 
+ * When id_out is provided, the function will assign it with the found id. The
+ * found id may be different from the provided id if it is a wildcard.
+ * 
+ * This is a constant time operation.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id The id to search for.
+ * @param id_out If provided, it will be set to the found id (optional).
+ * @return The index of the id in the table type.
+ */
+FLECS_API
+int32_t ecs_search(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+/** Search for component id in table type starting from an offset.
+ * This operation is the same as ecs_search, but starts searching from an offset
+ * in the table type.
+ * 
+ * This operation is typically called in a loop where the resulting index is
+ * used in the next iteration as offset:
+ * 
+ * int32_t index = -1;
+ * while ((index = ecs_search_offset(world, table, offset, id, NULL))) {
+ *   // do stuff
+ * }
+ * 
+ * Depending on how the operation is used it is either linear or constant time.
+ * When the id has the form (id) or (rel, *) and the operation is invoked as 
+ * in the above example, it is guaranteed to be constant time.
+ * 
+ * If the provided id has the form (*, obj) the operation takes linear time. The
+ * reason for this is that ids for an object are not packed together, as they
+ * are sorted relation first.
+ * 
+ * If the id at the offset does not match the provided id, the operation will do
+ * a linear search to find a matching id.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param offset Offset from where to start searching.
+ * @param id The id to search for.
+ * @param id_out If provided, it will be set to the found id (optional).
+ * @return The index of the id in the table type.
+ */
+FLECS_API
+int32_t ecs_search_offset(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+/** Search for component/relation id in table type starting from an offset.
+ * This operation is the same as ecs_search_offset, but has the additional
+ * capability of traversing relationships to find a component. For example, if
+ * an application wants to find a component for either the provided table or a
+ * prefab (using the IsA relation) of that table, it could use the operation 
+ * like this:
+ * 
+ * int32_t index = ecs_search_relation(
+ *   world,            // the world
+ *   table,            // the table
+ *   0,                // offset 0
+ *   ecs_id(Position), // the component id
+ *   EcsIsA,           // the relation to traverse
+ *   0,                // start at depth 0 (the table itself)
+ *   0,                // no depth limit
+ *   NULL,             // (optional) entity on which component was found
+ *   NULL,             // see above
+ *   NULL);            // internal type with information about matched id
+ * 
+ * The operation searches depth first. If a table type has 2 IsA relations, the
+ * operation will first search the IsA tree of the first relation.
+ * 
+ * When choosing betwen ecs_search, ecs_search_offset and ecs_search_relation,
+ * the simpler the function the better its performance.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param offset Offset from where to start searching.
+ * @param id The id to search for.
+ * @param rel The relation to traverse (optional).
+ * @param min_depth The minimum search depth. Use 1 for only shared components.
+ * @param max_depth The maximum search depth. Zero means no maximum.
+ * @param subject_out If provided, it will be set to the matched entity.
+ * @param id_out If provided, it will be set to the found id (optional).
+ * @param tr_out Internal datatype.
+ * @return The index of the id in the table type.
+ */
+FLECS_API
+int32_t ecs_search_relation(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out);
+
+/** @} */
 
 /**
  * @defgroup table_functions Public table operations
@@ -6907,21 +6978,6 @@ bool ecs_stage_is_async(
  * @{
  */
 
-/** Find or create table with specified component string. 
- * The provided string must be a comma-separated list of fully qualified 
- * component identifiers. The returned table will have the specified components.
- * Two lists that are the same but specify components in a different order will
- * return the same table.
- *
- * @param world The world.
- * @param type The components.
- * @return The new or existing table, or NULL if the string contains an error.
- */
-FLECS_API
-ecs_table_t* ecs_table_from_str(
-    ecs_world_t *world,
-    const char *type);
-
 /** Get type for table.
  *
  * @param table The table.
@@ -6930,36 +6986,6 @@ ecs_table_t* ecs_table_from_str(
 FLECS_API
 ecs_type_t ecs_table_get_type(
     const ecs_table_t *table);
-
-/* Get index of id in table type.
- *
- * @param world The world.
- * @param table The table.
- * @param offset Offset, in case id matches more than once.
- * @param id The id to find.
- * @return Index of the id in the table type, or -1 if not found.
- */
-FLECS_API
-int32_t ecs_table_index_of(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id);
-
-/* Check if table type has id.
- *
- * @param world The world.
- * @param table The table.
- * @param id The id to check.
- * @param owned Whether the table should own the id.
- * @return true if found, false if not.
- */
-FLECS_API
-bool ecs_table_has_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id,
-    bool owned);
 
 /** Get storage type for table.
  *
@@ -10561,22 +10587,23 @@ ecs_entity_t ecs_module_init(
     ecs_has_id(world, entity, ecs_pair(relation, object))
 
 #define ecs_owns_id(world, entity, id)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), id, true)
+    (ecs_search(world, ecs_get_table(world, entity), id, 0) != -1)
 
 #define ecs_owns_pair(world, entity, relation, object)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), true)
+    ecs_owns_id(world, entity, ecs_pair(relation, object))
 
 #define ecs_owns(world, entity, T)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), true)
+    ecs_owns_id(world, entity, ecs_id(T))
 
 #define ecs_shares_id(world, entity, id)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), id, false)
+    (ecs_search_relation(world, ecs_get_table(world, entity), 0, ecs_id(id), \
+        EcsIsA, 1, 0, 0, 0, 0) != -1)
 
 #define ecs_shares_pair(world, entity, relation, object)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_pair(relation, object), false)
+    (ecs_shares_id(world, entity, ecs_pair(relation, object)))
 
 #define ecs_shares(world, entity, T)\
-    ecs_table_has_id(world, ecs_get_table(world, entity), ecs_id(T), false)
+    (ecs_shares_id(world, entity, ecs_id(T)))
 
 
 /* -- Enable / Disable component -- */
@@ -16024,8 +16051,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_table_index_of(real_world, storage_table, 0, 
-                _::cpp_type<Args>().id(world))...
+            ecs_search_offset(real_world, storage_table, 0, 
+                _::cpp_type<Args>().id(world), 0)...
         });
 
         /* Get pointers for columns for entity */
@@ -17037,14 +17064,11 @@ struct type_base {
     }
 
     bool has(id_t id) {
-        const flecs::world_t *w = ecs_get_world(world());
-        return ecs_table_has_id(w, m_table, id, false);
+        return ecs_search(world(), m_table, id, 0) != -1;
     }
 
     bool has(id_t relation, id_t object) {
-        const flecs::world_t *w = ecs_get_world(world());
-        return ecs_table_has_id(w, m_table, 
-            ecs_pair(relation, object), false);
+        return this->has(ecs_pair(relation, object));
     }    
 
     template <typename T>

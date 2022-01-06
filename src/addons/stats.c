@@ -175,7 +175,9 @@ void ecs_get_world_stats(
         if (entity_count == 1) {
             ecs_entity_t *entities = ecs_vector_first(
                 table->storage.entities, ecs_entity_t);
-            if (ecs_table_has_id(world, table, entities[0], false)) {
+            if (ecs_search_relation(world, table, 0, entities[0], EcsIsA, 
+                0, 0, 0, 0, 0) != -1) 
+            {
                 singleton_table_count ++;
             }
         }

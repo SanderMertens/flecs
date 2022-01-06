@@ -154,8 +154,9 @@ int32_t ecs_search_relation(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out)
 {
+    if (!table) return -1;
+
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
@@ -173,8 +174,9 @@ int32_t ecs_search(
     ecs_id_t id,
     ecs_id_t *id_out)
 {
+    if (!table) return -1;
+
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_type_t type = table->type;
@@ -189,40 +191,11 @@ int32_t ecs_search_offset(
     ecs_id_t id,
     ecs_id_t *id_out)
 {
+    if (!table) return -1;
+
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     return type_search_relation(world, table, offset, id, 0, 
         0, 0, 0, id_out, NULL);
-}
-
-char* ecs_type_str(
-    const ecs_world_t *world,
-    ecs_type_t type)
-{
-    if (!type) {
-        return ecs_os_strdup("");
-    }
-
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t id = ids[i];
-
-        if (i) {
-            ecs_strbuf_appendch(&buf, ',');
-            ecs_strbuf_appendch(&buf, ' ');
-        }
-
-        if (id == 1) {
-            ecs_strbuf_appendstr(&buf, "Component");
-        } else {
-            ecs_id_str_buf(world, id, &buf);
-        }
-    }
-
-    return ecs_strbuf_get(&buf);
 }
