@@ -54,6 +54,7 @@ void* get_component(
     ecs_id_t id)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!table->storage_table) {
         ecs_check(ecs_table_index_of(world, table, 0, id) == -1, 
@@ -2747,7 +2748,7 @@ const void* ecs_get_ref_id(
     ref->row = row;
     ref->alloc_count = table->alloc_count;
 
-    if (table) {
+    if (table && id) {
         ref->ptr = get_component(world, table, ECS_RECORD_TO_ROW(row), id);
     }
 
@@ -3128,8 +3129,8 @@ bool ecs_has_id(
             return false;
         }
 
-        return ecs_type_match(
-            world, table, table->type, 0, id, EcsIsA, 0, 0, 
+        return ecs_search_relation(
+            world, table, 0, id, EcsIsA, 0, 0, 
                 NULL, NULL, NULL) != -1;
     }
 error:
@@ -3179,8 +3180,8 @@ ecs_entity_t ecs_get_object_for_id(
     ecs_entity_t subject = 0;
 
     if (rel) {
-        int32_t column = ecs_type_match(
-            world, table, table->type, 0, id, rel, 0, 0, &subject, NULL, NULL);
+        int32_t column = ecs_search_relation(
+            world, table, 0, id, rel, 0, 0, &subject, NULL, NULL);
         if (column == -1) {
             return 0;
         }

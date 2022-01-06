@@ -716,8 +716,7 @@ void flecs_table_mark_dirty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (table->dirty_state) {
-        int32_t index = ecs_type_match(world, table->storage_table, 
-            table->storage_type, 0, component, 0, 0, 0, NULL, NULL, NULL);
+        int32_t index = ecs_search(world, table->storage_table, component, 0);
         ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
         table->dirty_state[index + 1] ++;
     }
@@ -2012,7 +2011,7 @@ int32_t ecs_table_index_of(
         }
     }
 
-    return ecs_type_match(world, table, table->type, offset, id, 
+    return ecs_search_relation(world, table, offset, id, 
         0, 0, 0, 0, 0, 0);
 }
 
@@ -2029,7 +2028,7 @@ bool ecs_table_has_id(
     if (owned) {
         return ecs_table_index_of(world, table, 0, id) != -1;
     } else {
-        return ecs_type_match(world, table, table->type, 0, id, 
+        return ecs_search_relation(world, table, 0, id, 
             EcsIsA, 0, 0, 0, 0, 0) != -1;
     }
 }

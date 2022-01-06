@@ -321,7 +321,7 @@ void init_iter(
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
 
-    int32_t index = ecs_type_match(it->world, it->table, it->type, 0, 
+    int32_t index = ecs_search_relation(it->world, it->table, 0, 
         it->event_id, EcsIsA, 0, 0, it->subjects, NULL, NULL);
     
     if (index == -1) {
@@ -459,7 +459,6 @@ void notify_set_base_triggers(
         return;
     }
 
-    ecs_type_t obj_type = obj_table->type;
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     while ((t = ecs_map_next_ptr(&mit, ecs_trigger_t*, NULL))) {
@@ -469,7 +468,7 @@ void notify_set_base_triggers(
 
         ecs_term_t *term = &t->term;
         ecs_id_t id = term->id;
-        int32_t column = ecs_type_match(world, obj_table, obj_type, 0, id, rel, 
+        int32_t column = ecs_search_relation(world, obj_table, 0, id, rel, 
             0, 0, it->subjects, it->ids, 0);
         
         bool result = column != -1;

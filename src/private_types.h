@@ -148,7 +148,8 @@ struct ecs_data_t {
 #define EcsTableHasBuiltins         1u    /* Does table have builtin components */
 #define EcsTableIsPrefab            2u    /* Does the table store prefabs */
 #define EcsTableHasIsA              4u    /* Does the table type has IsA */
-#define EcsTableHasModule           8u    /* Does the table have module data */
+#define EcsTableHasPairs            8u    /* Does the table type have pairs */
+#define EcsTableHasModule           16u   /* Does the table have module data */
 #define EcsTableHasXor              32u   /* Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /* Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u

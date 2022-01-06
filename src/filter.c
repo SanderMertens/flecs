@@ -556,14 +556,11 @@ bool ecs_id_is_pair(
 bool ecs_id_is_wildcard(
     ecs_id_t id)
 {
-    if (id == EcsWildcard) {
-        return true;
-    } else if (ECS_HAS_ROLE(id, PAIR)) {
-        return ECS_PAIR_RELATION(id) == EcsWildcard || 
-               ECS_PAIR_OBJECT(id) == EcsWildcard;
-    }
-
-    return false;
+    return
+        (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
+            (ECS_PAIR_RELATION(id) == EcsWildcard) ||
+            (ECS_PAIR_OBJECT(id) == EcsWildcard)
+        ));
 }
 
 bool ecs_term_id_is_set(
@@ -1251,7 +1248,11 @@ bool flecs_term_match_table(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_entity_t source;
+    if (!match_type) {
+        return false;
+    }
+
+    ecs_entity_t source = 0;
 
     /* If first = false, we're searching from an offset. This supports returning
      * multiple results when using wildcard filters. */
@@ -1268,9 +1269,14 @@ bool flecs_term_match_table(
     }
 
     /* Find location, source and id of match in table type */
-    column = ecs_type_match(world, match_table, match_type,
+    ecs_table_record_t *tr = 0;
+    column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, &source, id_out, match_index_out);
+        subj->set.max_depth, &source, id_out, &tr);
+
+    if (tr && match_index_out) {
+        match_index_out[0] = tr->count;
+    }
 
     bool result = column != -1;
 
@@ -1623,7 +1629,7 @@ bool term_iter_next(
             }
 
             /* Test if following the relation finds the id */
-            int32_t index = ecs_type_match(world, table, table->type, 0, 
+            int32_t index = ecs_search_relation(world, table, 0, 
                 term->id, subj->set.relation, subj->set.min_depth, 
                 subj->set.max_depth, &source, &iter->id, NULL);
 

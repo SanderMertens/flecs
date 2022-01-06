@@ -1,146 +1,140 @@
 #include "private_api.h"
 
 static
-bool match_id(
+int32_t type_search(
     const ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_entity_t match_with)
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *ids,
+    ecs_id_t *id_out,
+    ecs_table_record_t **tr_out)
 {
-    (void)world;
-    
-    if (ECS_HAS_ROLE(match_with, CASE)) {
-        ecs_entity_t sw = ECS_PAIR_RELATION(match_with);
-        if (id == (ECS_SWITCH | sw)) {
-#ifdef FLECS_SANITIZE
-            ecs_entity_t sw_case = ECS_PAIR_OBJECT(match_with);
-            const EcsType *sw_type = ecs_get(world, sw, EcsType);
-            ecs_assert(sw_type != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ecs_table_has_id(world, sw_type->normalized, 
-                ecs_get_alive(world, sw_case), false) == true,
-                        ECS_INVALID_PARAMETER, NULL);
-            (void)sw_case;
-            (void)sw_type;
-#endif
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return ecs_id_match(id, match_with);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    if (tr) {
+        int32_t r = tr->column;
+        if (tr_out) tr_out[0] = tr;
+        if (id_out) id_out[0] = ids[r];
+        return r;
     }
+
+    return -1;
 }
 
 static
-int32_t search_type(
+int32_t type_offset_search(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_type_t type,
     int32_t offset,
     ecs_id_t id,
-    ecs_entity_t rel,
+    ecs_id_t *ids,
+    int32_t count,
+    ecs_id_t *id_out,
+    ecs_table_record_t **tr_out)
+{
+    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(offset >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
+
+    if (!offset) {
+        return type_search(world, table, id, ids, id_out, tr_out);
+    }
+
+    while (offset < count) {
+        ecs_id_t type_id = ids[offset ++];
+        if (ecs_id_match(type_id, id)) {
+            if (id_out) id_out[0] = type_id;
+            return offset - 1;
+        }
+    }
+
+    return -1;
+}
+
+static
+int32_t type_search_relation(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    uint32_t rel,
     int32_t min_depth,
     int32_t max_depth,
-    int32_t depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *count_out)
+    ecs_table_record_t **tr_out)
 {
-    ecs_assert(offset >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(depth >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t count = ecs_vector_count(type);
 
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (!id) {
-        return -1;
-    }
-
-    if (!type) {
-        return -1;
-    }
-
-    if (max_depth && depth > max_depth) {
-        return -1;
-    }
-
-    int32_t i, count = ecs_vector_count(type);
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t), tid;
-
-    if (depth >= min_depth) {
-        if (table && !offset && !(ECS_HAS_ROLE(id, CASE))) {
-            ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
-            if (tr) {
-                int32_t column = tr->column;
-                if (count_out) {
-                    *count_out = tr->count;
-                }
-                if (id_out) {
-                    *id_out = ids[column];
-                }
-                return column;
-            }
-        } else {
-            for (i = offset; i < count; i ++) {
-                tid = ids[i];
-                if (match_id(world, tid, id)) {
-                    if (id_out) {
-                        *id_out = tid;
-                    }
-                    return i;
-                }
-            }
+    if (min_depth <= 0) {
+        int32_t r = type_offset_search(world, table, offset, id, ids, count, 
+            id_out, tr_out);
+        if (r != -1) {
+            return r;
         }
     }
 
-    if (rel && id != EcsPrefab && id != EcsDisabled && 
-        ECS_PAIR_RELATION(id) != ecs_id(EcsIdentifier) &&
+    ecs_flags32_t flags = table->flags;
+    if ((flags & EcsTableHasPairs) && max_depth && rel && id != EcsPrefab && 
+        id != EcsDisabled && ECS_PAIR_RELATION(id) != ecs_id(EcsIdentifier) &&
         ECS_PAIR_RELATION(id) != EcsChildOf)
     {
-        int32_t ret;
-        if (table) {
-            if (rel == EcsIsA && !(table->flags & EcsTableHasIsA)) {
-                return -1;
-            }
+        bool is_a = rel == EcsIsA;
+        if (is_a && !(flags & EcsTableHasIsA)) {
+            return -1;
         }
 
+        int32_t i, r;
         for (i = 0; i < count; i ++) {
-            tid = ids[i];
-            if (!ECS_HAS_RELATION(tid, rel)) {
-                continue;
-            }
+            ecs_id_t tid = ids[i];
+            if (ECS_PAIR_RELATION(tid) == rel) {
+                do {
+                    ecs_entity_t obj = ECS_PAIR_OBJECT(tid);
+                    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_entity_t obj = ecs_pair_object(world, tid);
-            ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+                    ecs_record_t *rec = ecs_eis_get_any(world, obj);
+                    ecs_assert(rec != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_table_t *obj_table = ecs_get_table(world, obj);
-            if (!obj_table) {
-                continue;
-            }
+                    ecs_table_t *obj_table = rec->table;
+                    if (obj_table) {
+                        r = type_search_relation(world, obj_table, 0, id, rel, 
+                            min_depth - 1, max_depth - 1, subject_out, id_out,
+                            tr_out);
+                        if (r != -1) {
+                            if (subject_out && !subject_out[0]) {
+                                subject_out[0] = ecs_get_alive(world, obj);
+                            }
+                            return r;
+                        }
 
-            if ((ret = search_type(world, obj_table, obj_table->type, 0, id, 
-                rel, min_depth, max_depth, depth + 1, subject_out, id_out, NULL)) != -1)
-            {
-                if (subject_out && !*subject_out) {
-                    *subject_out = obj;
-                }
-                if (id_out && !*id_out) {
-                    *id_out = tid;
-                }
-                return ret;
-
-            /* If the id could not be found on the object and the relationship
-             * is not IsA, try substituting the object type with IsA */
-            } else if (rel != EcsIsA) {
-                if ((ret = search_type(world, obj_table, obj_table->type, 0, 
-                    id, EcsIsA, 1, 0, 0, subject_out, id_out, NULL)) != -1) 
-                {
-                    if (subject_out && !*subject_out) {
-                        *subject_out = obj;
+                        if (!is_a) {
+                            r = type_search_relation(world, obj_table, 0, id,
+                                (uint32_t)EcsIsA, 1, INT_MAX, subject_out, id_out, 
+                                tr_out);
+                            if (r != -1) {
+                                if (subject_out && !subject_out[0]) {
+                                    subject_out[0] = ecs_get_alive(world, obj);
+                                }
+                                return r;
+                            }
+                        }
                     }
-                    if (id_out && !*id_out) {
-                        *id_out = tid;
+
+                    i ++;
+                    if (i >= count) {
+                        break;
                     }
-                    return ret;
-                }
+
+                    tid = ids[i];
+                } while (ECS_PAIR_RELATION(tid) == rel);
+
+                break;
             }
         }
     }
@@ -148,10 +142,9 @@ int32_t search_type(
     return -1;
 }
 
-int32_t ecs_type_match(
+int32_t ecs_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_type_t type,
     int32_t offset,
     ecs_id_t id,
     ecs_entity_t rel,
@@ -159,16 +152,49 @@ int32_t ecs_type_match(
     int32_t max_depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *count_out)
+    struct ecs_table_record_t **tr_out)
 {
     ecs_poly_assert(world, ecs_world_t);
-    
-    if (subject_out) {
-        *subject_out = 0;
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    return search_type(world, table, type, offset, id, rel, min_depth, 
-        max_depth, 0, subject_out, id_out, count_out);
+    max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
+
+    bool is_case = ECS_HAS_ROLE(id, CASE);
+    id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
+    
+    return type_search_relation(world, table, offset, id, (uint32_t)rel, 
+        min_depth, max_depth, subject_out, id_out, tr_out);
+}
+
+int32_t ecs_search(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    ecs_id_t *id_out)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    return type_search(world, table, id, ids, id_out, NULL);
+}
+
+int32_t ecs_search_offset(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    return type_search_relation(world, table, offset, id, 0, 
+        0, 0, 0, id_out, NULL);
 }
 
 char* ecs_type_str(
