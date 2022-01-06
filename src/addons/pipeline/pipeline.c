@@ -485,7 +485,9 @@ void ecs_run_pipeline(
 
     if (!pipeline) {
         pipeline = world->pipeline;
-    }    
+    }
+
+    ecs_assert(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
 
     /* If the world is passed to ecs_run_pipeline, the function will take care
      * of staging, so the world should not be in staged mode when called. */

@@ -3574,6 +3574,8 @@ void* _flecs_hashmap_next(
 extern "C" {
 #endif
 
+struct ecs_table_record_t;
+
 FLECS_API
 char* ecs_type_str(
     const ecs_world_t *world,
@@ -3585,10 +3587,24 @@ ecs_type_t ecs_type_from_str(
     const char *expr);    
 
 FLECS_API
-int32_t ecs_type_match(
+int32_t ecs_search(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_type_t type,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+FLECS_API
+int32_t ecs_search_offset(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
+FLECS_API
+int32_t ecs_search_relation(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
     int32_t offset,
     ecs_id_t id,
     ecs_entity_t rel,
@@ -3596,7 +3612,7 @@ int32_t ecs_type_match(
     int32_t max_depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
-    int32_t *count_out);
+    struct ecs_table_record_t **tr_out);
 
 #ifdef __cplusplus
 }
@@ -17368,8 +17384,8 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     id_t *ids = static_cast<ecs_id_t*>(
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     
-    while (-1 != (cur = ecs_type_match(
-        real_world, table, type, cur, pattern, 0, 0, 0, NULL, NULL, NULL))) 
+    while (-1 != (cur = ecs_search_relation(real_world, table, cur, pattern,
+        0, 0, 0, NULL, NULL, NULL))) 
     {
         flecs::id ent(m_world, ids[cur]);
         func(ent);

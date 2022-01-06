@@ -406,7 +406,7 @@ void Event_emit_event_switch_for_case_id() {
 }
 
 void Event_emit_table_event() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
 

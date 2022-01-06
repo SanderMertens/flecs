@@ -1115,7 +1115,7 @@ void Query_query_optional_shared() {
 }
 
 void Query_query_optional_shared_nested() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

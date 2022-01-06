@@ -706,11 +706,6 @@ int get_comp_and_src(
             table = ecs_get_table(world, subj->entity);
         }
 
-        ecs_type_t type = NULL;
-        if (table) {
-            type = table->type;
-        }
-
         if (op == EcsOr) {
             for (; t < term_count; t ++) {
                 term = &terms[t];
@@ -723,7 +718,7 @@ int get_comp_and_src(
 
                 if (!component) {
                     ecs_entity_t source = 0;
-                    int32_t result = ecs_type_match(world, table, type, 
+                    int32_t result = ecs_search_relation(world, table, 
                         0, term->id, subj->set.relation, subj->set.min_depth, 
                         subj->set.max_depth, &source, NULL, NULL);
 
@@ -740,7 +735,7 @@ int get_comp_and_src(
             component = term->id;
 
             ecs_entity_t source = 0;
-            bool result = ecs_type_match(world, table, type, 0, component, 
+            bool result = ecs_search_relation(world, table, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
                 &source, NULL, NULL) != -1;
 
@@ -907,7 +902,7 @@ int32_t get_component_index(
         result = 0;
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
-        if (-1 == ecs_type_match(world, table, table_type, 0, component, EcsIsA, 
+        if (-1 == ecs_search_relation(world, table, 0, component, EcsIsA, 
             0, 0, 0, 0, 0)) 
         {
             result = 0;
@@ -1246,8 +1241,8 @@ bool match_term(
         table = ecs_get_table(world, subj->entity);
     }
 
-    return ecs_type_match(
-        world, table, table->type, 0, term->id, subj->set.relation, 
+    return ecs_search_relation(
+        world, table, 0, term->id, subj->set.relation, 
         subj->set.min_depth, subj->set.max_depth, NULL, NULL, NULL) != -1;
 }
 
@@ -1257,6 +1252,11 @@ bool flecs_query_match(
     const ecs_table_t *table,
     const ecs_query_t *query)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!table->type) {
+        return false;
+    }
+
     if (!(query->flags & EcsQueryNeedsTables)) {
         return false;
     }
@@ -1510,7 +1510,7 @@ void build_sorted_table_range(
     ecs_query_table_list_t *list)
 {
     ecs_world_t *world = query->world;
-    ecs_entity_t component = query->order_by_component;
+    ecs_entity_t id = query->order_by_component;
     ecs_order_by_action_t compare = query->order_by;
     
     if (!list->count) {
@@ -1529,7 +1529,11 @@ void build_sorted_table_range(
             continue;
         }
 
-        int32_t index = ecs_table_index_of(world, table->storage_table, 0, component);
+        int32_t index = -1;
+        if (id) {
+            index = ecs_table_index_of(world, table->storage_table, 0, id);
+        }
+
         if (index != -1) {
             ecs_column_t *column = &data->columns[index];
             int16_t size = column->size;
@@ -1537,20 +1541,20 @@ void build_sorted_table_range(
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
             helper[to_sort].shared = false;
-        } else if (component) {
+        } else if (id) {
             /* Find component in prefab */
-            ecs_entity_t base;
-            ecs_type_match(world, table, table->type, 0, component, 
+            ecs_entity_t base = 0;
+            ecs_search_relation(world, table, 0, id, 
                 EcsIsA, 1, 0, &base, NULL, NULL);
 
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
             ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
 
-            const EcsComponent *cptr = ecs_get(world, component, EcsComponent);
+            const EcsComponent *cptr = ecs_get(world, id, EcsComponent);
             ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            helper[to_sort].ptr = ecs_get_id(world, base, component);
+            helper[to_sort].ptr = ecs_get_id(world, base, id);
             helper[to_sort].elem_size = cptr->size;
             helper[to_sort].shared = true;
         } else {
@@ -1720,9 +1724,8 @@ void sort_tables(
 
                 ecs_table_t *storage_table = table->storage_table;
                 if (storage_table) {
-                    column = ecs_type_match(world, storage_table, 
-                        table->storage_type, 0, order_by_component, 
-                            0, 0, 0, 0, 0, 0);
+                    column = ecs_search(world, storage_table, 
+                        order_by_component, NULL);
                 }
 
                 if (column == -1) {
@@ -2013,7 +2016,6 @@ void resolve_cascade_subject_for_table(
     ecs_world_t *world,
     ecs_query_t *query,
     const ecs_table_t *table,
-    ecs_type_t table_type,
     ecs_query_table_match_t *table_data)
 {
     int32_t term_index = query->cascade_by - 1;
@@ -2029,8 +2031,8 @@ void resolve_cascade_subject_for_table(
     ecs_ref_t *references = table_data->references;
 
     /* Find source for component */
-    ecs_entity_t subject;
-    ecs_type_match(world, table, table_type, 0, term->id, 
+    ecs_entity_t subject = 0;
+    ecs_search_relation(world, table, 0, term->id, 
         term->subj.set.relation, 1, 0, &subject, NULL, NULL);
 
     /* If container was found, update the reference */
@@ -2059,13 +2061,11 @@ void resolve_cascade_subject(
     ecs_world_t *world,
     ecs_query_t *query,
     ecs_query_table_t *elem,
-    const ecs_table_t *table,
-    ecs_type_t table_type)
+    const ecs_table_t *table)
 {
     ecs_query_table_match_t *cur;
     for (cur = elem->first; cur != NULL; cur = cur->next_match) {
-        resolve_cascade_subject_for_table(
-            world, query, table, table_type, cur);
+        resolve_cascade_subject_for_table(world, query, table, cur);
     }
 }
 
@@ -2129,7 +2129,7 @@ void rematch_table(
          * sources of references. This may have changed in case 
          * components were added/removed to container entities */ 
         } else if (query->cascade_by) {
-            resolve_cascade_subject(world, query, match, table, table->type);
+            resolve_cascade_subject(world, query, match, table);
 
         /* If query has optional columns, it is possible that a column that
          * previously had data no longer has data, or vice versa. Do a
