@@ -1,5 +1,4 @@
 #include <api.h>
-#include <flecs/type.h>
 
 static
 char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
@@ -515,7 +514,7 @@ void Type_large_type_expr() {
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
 
-        test_assert(ecs_table_index_of(world, ptr->normalized, 0, e) == i);
+        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
     }
 
     ecs_fini(world);
@@ -556,7 +555,7 @@ void Type_large_type_expr_limit() {
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
 
-        test_assert(ecs_table_index_of(world, ptr->normalized, 0, e) == i);
+        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
     }
 
     ecs_fini(world);

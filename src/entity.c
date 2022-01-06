@@ -57,7 +57,7 @@ void* get_component(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!table->storage_table) {
-        ecs_check(ecs_table_index_of(world, table, 0, id) == -1, 
+        ecs_check(ecs_search(world, table, id, 0) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
         return NULL;
     }
@@ -65,7 +65,7 @@ void* get_component(
     ecs_table_record_t *tr = flecs_get_table_record(
         world, table->storage_table, id);
     if (!tr) {
-        ecs_check(ecs_table_index_of(world, table, 0, id) == -1, 
+        ecs_check(ecs_search(world, table, id, 0) == -1, 
             ECS_NOT_A_COMPONENT, NULL);
        return NULL;
     }
@@ -2991,7 +2991,7 @@ ecs_entity_t ecs_get_case(
 
     sw_id = sw_id | ECS_SWITCH;
 
-    int32_t index = ecs_table_index_of(world, table, 0, sw_id);
+    int32_t index = ecs_search(world, table, sw_id, 0);
     if (index == -1) {
         return 0;
     }
@@ -3036,7 +3036,7 @@ void ecs_enable_component_w_id(
     ecs_table_t *table = info.table;
     int32_t index = -1;
     if (table) {
-        index = ecs_table_index_of(world, table, 0, bs_id);
+        index = ecs_search(world, table, bs_id, 0);
     }
 
     if (index == -1) {
@@ -3077,7 +3077,7 @@ bool ecs_is_component_enabled_w_id(
     }
 
     ecs_entity_t bs_id = (id & ECS_COMPONENT_MASK) | ECS_DISABLED;
-    int32_t index = ecs_table_index_of(world, table, 0, bs_id);
+    int32_t index = ecs_search(world, table, bs_id, 0);
     if (index == -1) {
         /* If table does not have DISABLED column for component, component is
          * always enabled, if the entity has it */
@@ -3645,6 +3645,37 @@ char* ecs_id_str(
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_id_str_buf(world, id, &buf);
+    return ecs_strbuf_get(&buf);
+}
+
+
+char* ecs_type_str(
+    const ecs_world_t *world,
+    ecs_type_t type)
+{
+    if (!type) {
+        return ecs_os_strdup("");
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_entity_t *ids = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t id = ids[i];
+
+        if (i) {
+            ecs_strbuf_appendch(&buf, ',');
+            ecs_strbuf_appendch(&buf, ' ');
+        }
+
+        if (id == 1) {
+            ecs_strbuf_appendstr(&buf, "Component");
+        } else {
+            ecs_id_str_buf(world, id, &buf);
+        }
+    }
+
     return ecs_strbuf_get(&buf);
 }
 

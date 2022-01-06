@@ -1576,8 +1576,8 @@ bool term_iter_next(
             if (iter->cur_match >= iter->match_count) {
                 table = NULL;
             } else {
-                iter->last_column = ecs_table_index_of(
-                    world, table, iter->last_column + 1, term->id);
+                iter->last_column = ecs_search_offset(
+                    world, table, iter->last_column + 1, term->id, 0);
                 iter->column = iter->last_column + 1;
                 if (iter->last_column >= 0) {
                     iter->id = ecs_vector_get(

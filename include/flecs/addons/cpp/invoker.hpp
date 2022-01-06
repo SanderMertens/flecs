@@ -344,8 +344,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_table_index_of(real_world, storage_table, 0, 
-                _::cpp_type<Args>().id(world))...
+            ecs_search_offset(real_world, storage_table, 0, 
+                _::cpp_type<Args>().id(world), 0)...
         });
 
         /* Get pointers for columns for entity */

@@ -1,5 +1,4 @@
 #include <api.h>
-#include <flecs/type.h>
 
 static ecs_id_t NamePair;
 
@@ -2570,7 +2569,7 @@ void Prefab_instantiate_empty_child_table() {
     ECS_PREFAB(world, Prefab, 0);
 
     /* Forces creation of child table without children */
-    ecs_table_t *table = ecs_table_from_str(world, "(ChildOf, Prefab)");
+    ecs_table_t *table = ecs_table_add_id(world, 0, ecs_childof(Prefab));
     test_assert(table != NULL);
 
     /* Main goal of this test is to ensure this doesn't crash */
