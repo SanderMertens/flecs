@@ -184,10 +184,12 @@ private:
         }
 #endif
 
-        flecs::iter it(iter);
-        for (auto row : it) {
-            func(it.entity(row),
-                (ColumnType< remove_reference_t<Components> >(comps, row)
+        ecs_world_t *world = iter->world;
+        size_t count = static_cast<size_t>(iter->count);
+
+        for (size_t i = 0; i < count; i ++) {
+            func(flecs::entity(world, iter->entities[i]),
+                (ColumnType< remove_reference_t<Components> >(comps, i)
                     .get_row())...);
         }
 
