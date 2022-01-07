@@ -473,7 +473,7 @@ void* _flecs_sparse_ensure(
 
         /* If index is larger than max id, update max id */
         if (index >= get_id(sparse)) {
-            set_id(sparse, index + 1);
+            set_id(sparse, index);
         }
 
         if (count < dense_count) {

@@ -1473,10 +1473,10 @@ ecs_entity_t ecs_new_low_id(
     if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
             id = unsafe_world->stats.last_component_id ++;
-        } while (ecs_exists(unsafe_world, id) && id < ECS_HI_COMPONENT_ID);        
+        } while (ecs_exists(unsafe_world, id) && id <= ECS_HI_COMPONENT_ID);        
     }
-    
-    if (unsafe_world->stats.last_component_id >= ECS_HI_COMPONENT_ID) {
+
+    if (!id || id >= ECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
         id = ecs_new_id(unsafe_world);
     }
@@ -2074,7 +2074,7 @@ ecs_entity_t ecs_component_init(
 
     ecs_modified(world, result, EcsComponent);
 
-    if (e > world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
+    if (e >= world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
         world->stats.last_component_id = e + 1;
     }
 
@@ -2087,7 +2087,7 @@ ecs_entity_t ecs_component_init(
         stage->defer = defer_count;
         stage->defer_queue = defer_queue;
     }
-
+    
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
