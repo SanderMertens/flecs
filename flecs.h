@@ -14382,7 +14382,7 @@ struct entity_builder : Base {
      * @param value The value to set.
      */
     template <typename R, typename O, typename P = pair<R, O>, 
-        typename A = actual_type_t<P>, if_not_t< is_pair<R>::value> = 0>
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<R>::value> = 0>
     Self& set(const A& value) {
         flecs::set<P>(this->m_world, this->m_id, value);
         return to_base();
@@ -15531,10 +15531,12 @@ private:
         }
 #endif
 
-        flecs::iter it(iter);
-        for (auto row : it) {
-            func(it.entity(row),
-                (ColumnType< remove_reference_t<Components> >(comps, row)
+        ecs_world_t *world = iter->world;
+        size_t count = static_cast<size_t>(iter->count);
+
+        for (size_t i = 0; i < count; i ++) {
+            func(flecs::entity(world, iter->entities[i]),
+                (ColumnType< remove_reference_t<Components> >(comps, i)
                     .get_row())...);
         }
 
@@ -19410,12 +19412,7 @@ inline flecs::world iter::world() const {
 
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < static_cast<size_t>(m_iter->count), ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-    if (!this->world().is_readonly()) {
-        return flecs::entity(m_iter->entities[row])
-            .mut(this->world());
-    } else {
-        return flecs::entity(this->world().c_ptr(), m_iter->entities[row]);
-    }
+    return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
 template <typename T>
