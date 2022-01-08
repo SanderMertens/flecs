@@ -7,21 +7,21 @@ flecs::entity ref<T>::entity() const {
     return flecs::entity(m_world, m_entity);
 }
 
-template <typename Base>
-inline Base& entity_builder_i<Base>::add_switch(const type& sw) {
+template <typename Self, typename Base>
+inline Self& entity_builder<Self, Base>::add_switch(const flecs::type& sw) {
     return add_switch(sw.id());
 }
 
-template <typename Base>
-inline Base& entity_builder_i<Base>::remove_switch(const type& sw) {
+template <typename Self, typename Base>
+inline Self& entity_builder<Self, Base>::remove_switch(const flecs::type& sw) {
     return remove_switch(sw.id());
 }
 
-template <typename Base>
+template <typename Self, typename Base>
 template <typename Func, if_t< is_callable<Func>::value > >
-inline Base& entity_builder_i<Base>::set(const Func& func) {
+inline Self& entity_builder<Self, Base>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
-        this->world_v(), this->id_v(), func);
+        this->m_world, this->m_id, func);
     return to_base();
 }
 
@@ -87,12 +87,11 @@ inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
 }
 
 inline flecs::entity entity_view::set_stage(world_t *stage) {
-    m_world = stage;
-    return flecs::entity(m_world, m_id);
+    return flecs::entity(stage, m_id);
 }   
 
 inline flecs::type entity_view::type() const {
-    return flecs::type(m_world, ecs_get_type(m_world, m_id));
+    return flecs::type(m_world, ecs_get_table(m_world, m_id));
 }
 
 template <typename Func>
@@ -145,8 +144,8 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     id_t *ids = static_cast<ecs_id_t*>(
         _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
     
-    while (-1 != (cur = ecs_type_match(
-        real_world, table, type, cur, pattern, 0, 0, 0, NULL, NULL, NULL))) 
+    while (-1 != (cur = ecs_search_relation(real_world, table, cur, pattern,
+        0, 0, 0, NULL, NULL, NULL))) 
     {
         flecs::id ent(m_world, ids[cur]);
         func(ent);
@@ -172,34 +171,29 @@ inline flecs::entity entity_view::lookup(const char *path) const {
     return flecs::entity(m_world, id);
 }
 
-
-#define flecs_me_ this->me()
-
 // Entity mixin implementation
 template <typename... Args>
-inline flecs::entity entity_m_world::entity(Args &&... args) const {
-    return flecs::entity(flecs_me_, std::forward<Args>(args)...);
+inline flecs::entity world::entity(Args &&... args) const {
+    return flecs::entity(m_world, std::forward<Args>(args)...);
 }
 
 template <typename T>
-inline flecs::entity entity_m_world::entity(const char *name) const {
-    return flecs::component<T>(flecs_me_, name, true);
+inline flecs::entity world::entity(const char *name) const {
+    return flecs::component<T>(m_world, name, true);
 }
 
 template <typename... Args>
-inline flecs::entity entity_m_world::prefab(Args &&... args) const {
-    flecs::entity result = flecs::entity(flecs_me_, std::forward<Args>(args)...);
+inline flecs::entity world::prefab(Args &&... args) const {
+    flecs::entity result = flecs::entity(m_world, std::forward<Args>(args)...);
     result.add(flecs::Prefab);
     return result;
 }
 
 template <typename T>
-inline flecs::entity entity_m_world::prefab(const char *name) const {
-    flecs::entity result = flecs::component<T>(flecs_me_, name, true);
+inline flecs::entity world::prefab(const char *name) const {
+    flecs::entity result = flecs::component<T>(m_world, name, true);
     result.add(flecs::Prefab);
     return result;
 }
-
-#undef flecs_me_
 
 }

@@ -1,11 +1,10 @@
 #include <api.h>
-#include <flecs/type.h>
 
 static
 char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
     const EcsType *type_comp = ecs_get(world, type_ent, EcsType);
     test_assert(type_comp != NULL);
-    return ecs_type_str(world, type_comp->normalized);
+    return ecs_type_str(world, ecs_table_get_type(type_comp->normalized));
 }
 
 void Type_setup() {
@@ -506,7 +505,7 @@ void Type_large_type_expr() {
     const EcsType *ptr = ecs_get(world, type_ent, EcsType);
     test_assert(ptr != NULL);
     test_assert(ecs_vector_count(ptr->type) == 64);
-    test_assert(ecs_vector_count(ptr->normalized) == 64);
+    test_assert(ecs_vector_count(ecs_table_get_type(ptr->normalized)) == 64);
 
     for (i = 0; i < 64; i ++) {
         char buff[4] = { 'e' };
@@ -515,7 +514,7 @@ void Type_large_type_expr() {
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
 
-        test_assert(ecs_type_index_of(ptr->type, 0, e) == i);
+        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
     }
 
     ecs_fini(world);
@@ -547,7 +546,7 @@ void Type_large_type_expr_limit() {
     const EcsType *ptr = ecs_get(world, type_ent, EcsType);
     test_assert(ptr != NULL);
     test_assert(ecs_vector_count(ptr->type) == 32);
-    test_assert(ecs_vector_count(ptr->normalized) == 32);
+    test_assert(ecs_vector_count(ecs_table_get_type(ptr->normalized)) == 32);
 
     for (i = 0; i < 32; i ++) {
         char buff[4] = { 'e' };
@@ -556,7 +555,7 @@ void Type_large_type_expr_limit() {
         test_assert(e != 0);
         test_str(ecs_get_name(world, e), buff);
 
-        test_assert(ecs_type_index_of(ptr->type, 0, e) == i);
+        test_assert(ecs_search(world, ptr->normalized, e, 0) == i);
     }
 
     ecs_fini(world);

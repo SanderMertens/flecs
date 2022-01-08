@@ -73,7 +73,8 @@
                     "emit_event_case_for_switch_id",
                     "emit_event_case_for_case_id",
                     "emit_event_case_for_case_id_wildcard",
-                    "emit_event_switch_for_case_id"
+                    "emit_event_switch_for_case_id",
+                    "emit_table_event"
                 ]
             }, {
             "id": "New",
@@ -533,7 +534,8 @@
                 "declare_2_world",
                 "declare_tag",
                 "declare_tag_w_entity",
-                "declare_entity"
+                "declare_entity",
+                "reuse_300_component_ids"
             ]
         }, {
             "id": "Doc",
@@ -1570,6 +1572,7 @@
                "on_add_not_tag",
                "on_remove_not_tag",
                "on_add_superset",
+               "on_add_superset_2_levels",
                "on_remove_superset",
                "on_add_superset_childof",
                "on_remove_superset_childof",
@@ -1612,6 +1615,7 @@
                "on_add_base_superset_trigger",
                "on_add_base_superset_trigger_2_lvls",
                "on_add_base_2_entities",
+               "on_add_base_2_entities_filter",
                "on_set_base_w_value_2_entities",
                "on_set_base_w_value_2_entities_instanced",
                "on_add_base_w_override",

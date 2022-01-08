@@ -4,8 +4,6 @@
 
 namespace flecs {
 
-#define flecs_me_ this->me()
-
 // Class that describes a term
 struct term final : term_builder_i<term> {
     term(flecs::world_t *world_ptr) 
@@ -128,18 +126,18 @@ private:
 
 // Term mixin implementation
 template <typename... Args>
-inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(flecs_me_, std::forward<Args>(args)...);
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(m_world, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
-inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(flecs_me_, std::forward<Args>(args)...).id<T>();
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(m_world, std::forward<Args>(args)...).id<T>();
 }
 
 template <typename R, typename O, typename... Args>
-inline flecs::term term_m_world::term(Args &&... args) const {
-    return flecs::term(flecs_me_, std::forward<Args>(args)...).id<R, O>();
+inline flecs::term world::term(Args &&... args) const {
+    return flecs::term(m_world, std::forward<Args>(args)...).id<R, O>();
 }
 
 // Builder implementation
@@ -158,7 +156,5 @@ inline Base& term_builder_i<Base>::id(const flecs::type& type, id_t o) {
     m_term->role = ECS_PAIR;
     return *this;
 }
-
-#undef flecs_me_
 
 }

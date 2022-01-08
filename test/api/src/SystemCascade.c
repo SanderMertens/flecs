@@ -474,7 +474,8 @@ void SystemCascade_query_w_only_cascade() {
             test_assert(
                 e == EcsFlecs ||
                 ecs_has_pair(world, e, EcsChildOf, EcsFlecs) ||
-                ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore)
+                ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore) ||
+                ecs_has_pair(world, e, EcsChildOf, EcsFlecsHidden)
             );
 
             count ++;

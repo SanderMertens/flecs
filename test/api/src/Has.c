@@ -1,5 +1,4 @@
 #include <api.h>
-#include <flecs/type.h>
 
 void Has_zero() {
     install_test_abort();

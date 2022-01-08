@@ -407,6 +407,8 @@ void Query_instanced_query_w_singleton_iter(void);
 void Query_instanced_query_w_base_iter(void);
 void Query_un_instanced_query_w_singleton_iter(void);
 void Query_un_instanced_query_w_base_iter(void);
+void Query_query_each_from_component(void);
+void Query_query_iter_from_component(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -623,7 +625,8 @@ void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void);
 void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void);
 
 // Testsuite 'Refs'
-void Refs_get_ref(void);
+void Refs_get_ref_by_ptr(void);
+void Refs_get_ref_by_method(void);
 void Refs_ref_after_add(void);
 void Refs_ref_after_remove(void);
 void Refs_ref_after_set(void);
@@ -2316,6 +2319,14 @@ bake_test_case Query_testcases[] = {
     {
         "un_instanced_query_w_base_iter",
         Query_un_instanced_query_w_base_iter
+    },
+    {
+        "query_each_from_component",
+        Query_query_each_from_component
+    },
+    {
+        "query_iter_from_component",
+        Query_query_iter_from_component
     }
 };
 
@@ -3147,8 +3158,12 @@ bake_test_case ComponentLifecycle_testcases[] = {
 
 bake_test_case Refs_testcases[] = {
     {
-        "get_ref",
-        Refs_get_ref
+        "get_ref_by_ptr",
+        Refs_get_ref_by_ptr
+    },
+    {
+        "get_ref_by_method",
+        Refs_get_ref_by_method
     },
     {
         "ref_after_add",
@@ -3757,7 +3772,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        54,
+        56,
         Query_testcases
     },
     {
@@ -3806,7 +3821,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        5,
+        6,
         Refs_testcases
     },
     {

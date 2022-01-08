@@ -404,3 +404,60 @@ void Event_emit_event_switch_for_case_id() {
 
     ecs_fini(world);
 }
+
+void Event_emit_table_event() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new_w_id(world, TagA);
+    ecs_table_t *base_table = ecs_get_table(world, base);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    Probe ctx_a = {0};
+    Probe ctx_b = {0};
+
+    ecs_entity_t evt = ecs_new_id(world);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = TagA,
+        .term.subj.set.mask = EcsSelf,
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx_a
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = TagA,
+        .term.subj.set.mask = EcsSuperSet,
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx_b
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = evt,
+        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
+        .table = base_table,
+        .observable = world,
+        .table_event = false
+    });
+
+    test_int(ctx_a.invoked, 1);
+    test_int(ctx_b.invoked, 1);
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = evt,
+        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
+        .table = base_table,
+        .observable = world,
+        .table_event = true
+    });
+
+    test_int(ctx_a.invoked, 2);
+    test_int(ctx_b.invoked, 1);
+
+    ecs_fini(world);
+}

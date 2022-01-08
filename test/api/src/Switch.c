@@ -150,7 +150,7 @@ void Switch_remove_last() {
 }
 
 void Switch_delete_first() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);

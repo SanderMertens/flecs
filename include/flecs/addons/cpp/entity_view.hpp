@@ -19,8 +19,11 @@ struct entity_view : public id {
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity_view(const flecs::world& world, const entity_view& id)
-        : flecs::id( world.get_world(), id.id() ) { }
+    explicit entity_view(flecs::world_t *world, flecs::id_t id)
+        : flecs::id(world 
+            ? const_cast<flecs::world_t*>(ecs_get_world(world))
+            : nullptr
+        , id ) { }
 
     /** Wrap an existing entity id.
      *

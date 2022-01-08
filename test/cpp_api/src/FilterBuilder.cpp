@@ -1617,7 +1617,7 @@ void FilterBuilder_name_arg() {
 void FilterBuilder_const_in_term() {
     flecs::world ecs;
 
-    auto e = ecs.entity().set<Position>({10, 20});
+    ecs.entity().set<Position>({10, 20});
 
     auto f = ecs.filter_builder<>()
         .term<const Position>()

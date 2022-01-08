@@ -32,7 +32,6 @@
 #include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"
 #include "flecs/private/hashmap.h"
-#include "flecs/type.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 #define ECS_MAX_ADD_REMOVE (32)
@@ -95,8 +94,6 @@ typedef struct ecs_type_info_t {
 
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
-    EcsTableQueryMatch,
-    EcsTableQueryUnmatch,
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
     EcsTableComponentInfo
@@ -129,7 +126,7 @@ struct ecs_column_t {
 /** A switch column. */
 typedef struct ecs_sw_column_t {
     ecs_switch_t *data;          /* Column data */
-    ecs_type_t type;             /* Switch type */
+    ecs_table_t *type;           /* Table with switch type */
 } ecs_sw_column_t;
 
 /** A bitset column. */
@@ -150,7 +147,8 @@ struct ecs_data_t {
 #define EcsTableHasBuiltins         1u    /* Does table have builtin components */
 #define EcsTableIsPrefab            2u    /* Does the table store prefabs */
 #define EcsTableHasIsA              4u    /* Does the table type has IsA */
-#define EcsTableHasModule           8u    /* Does the table have module data */
+#define EcsTableHasPairs            8u    /* Does the table type have pairs */
+#define EcsTableHasModule           16u   /* Does the table have module data */
 #define EcsTableHasXor              32u   /* Does the table type has XOR */
 #define EcsTableIsDisabled          64u   /* Does the table type has EcsDisabled */
 #define EcsTableHasCtors            128u
@@ -220,8 +218,6 @@ struct ecs_table_t {
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
 
     ecs_graph_node_t node;           /* Graph node */
-
-    ecs_vector_t *queries;           /* Queries matched with table */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
@@ -328,8 +324,6 @@ typedef struct ecs_query_table_list_t {
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {
     EcsQueryTableMatch,
-    EcsQueryTableEmpty,
-    EcsQueryTableNonEmpty,
     EcsQueryTableRematch,
     EcsQueryTableUnmatch,
     EcsQueryOrphan
@@ -347,6 +341,9 @@ struct ecs_query_t {
 
     /* Query filter */
     ecs_filter_t filter;
+
+    /* Query observer */
+    ecs_entity_t observer;
 
     /* Tables matched with query */
     ecs_table_cache_t cache;

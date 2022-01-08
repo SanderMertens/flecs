@@ -34,8 +34,6 @@ struct each_invoker;
 
 // Mixin forward declarations
 #include "mixins/id/decl.hpp"
-#include "mixins/entity/decl.hpp"
-#include "mixins/component/decl.hpp"
 #include "mixins/type/decl.hpp"
 #include "mixins/term/decl.hpp"
 #include "mixins/filter/decl.hpp"
@@ -43,9 +41,6 @@ struct each_invoker;
 #include "mixins/query/decl.hpp"
 #include "mixins/trigger/decl.hpp"
 #include "mixins/observer/decl.hpp"
-#ifdef FLECS_MODULE
-#include "mixins/module/decl.hpp"
-#endif
 #ifdef FLECS_SYSTEM
 #include "mixins/system/decl.hpp"
 #endif
@@ -64,43 +59,6 @@ struct each_invoker;
 #ifdef FLECS_REST
 #include "mixins/rest/decl.hpp"
 #endif
-
-// Mixins (remove from list to disable)
-namespace flecs {
-using Mixins = mixin_list<
-    id_m,
-    entity_m,
-    component_m,
-    type_m,
-    term_m,
-    filter_m,
-    query_m,
-    event_m,
-    trigger_m,
-    observer_m
-#ifdef FLECS_MODULE
-    , module_m
-#endif
-#ifdef FLECS_SYSTEM
-    , system_m
-#endif
-#ifdef FLECS_PIPELINE
-    , pipeline_m
-#endif
-#ifdef FLECS_TIMER
-    , timer_m
-#endif
-#ifdef FLECS_SNAPSHOT
-    , snapshot_m
-#endif
-#ifdef FLECS_DOC
-    , doc_m
-#endif
-#ifdef FLECS_REST
-    , rest_m
-#endif
->;
-}
 
 #include "log.hpp"
 #include "pair.hpp"
@@ -142,9 +100,6 @@ using Mixins = mixin_list<
 #endif
 #ifdef FLECS_DOC
 #include "mixins/doc/impl.hpp"
-#endif
-#ifdef FLECS_REST
-#include "mixins/rest/impl.hpp"
 #endif
 
 #include "impl.hpp"

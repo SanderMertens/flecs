@@ -48,6 +48,9 @@ typedef struct ecs_id_record_t ecs_id_record_t;
 /* Cached query table data */
 typedef struct ecs_query_table_node_t ecs_query_table_node_t;
 
+/* Internal table storage record */
+struct ecs_table_record_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +267,7 @@ struct ecs_iter_t {
     bool is_filter;               /* When true, data fields are not set */
     bool is_instanced;            /* When true, owned terms are always returned as arrays */
     bool has_shared;              /* Iterator may set this when iterator has shared terms */
+    bool table_only;              /* If false, iterator does not expose table data */
 
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
 

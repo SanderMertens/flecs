@@ -7,13 +7,13 @@ namespace flecs
 
 // Mixin implementation
 
-inline flecs::event_builder event_m_world::event(flecs::entity_t evt) const {
-    return flecs::event_builder(this->me(), evt);
+inline flecs::event_builder world::event(flecs::entity_t evt) const {
+    return flecs::event_builder(m_world, evt);
 }
 
 template <typename E>
-inline flecs::event_builder_typed<E> event_m_world::event() const {
-    return flecs::event_builder_typed<E>(this->me(), _::cpp_type<E>().id(this->me()));
+inline flecs::event_builder_typed<E> world::event() const {
+    return flecs::event_builder_typed<E>(m_world, _::cpp_type<E>().id(m_world));
 }
 
 } // namespace flecs

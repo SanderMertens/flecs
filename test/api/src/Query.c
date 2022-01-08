@@ -1115,7 +1115,7 @@ void Query_query_optional_shared() {
 }
 
 void Query_query_optional_shared_nested() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1470,7 +1470,7 @@ void Query_stresstest_query_free() {
      * the table */
 
     for (int i = 0; i < 10000; i ++) {
-        ecs_query_t *q = ecs_query_new(world, "Foo, Bar, Hello");
+        ecs_query_t *q = ecs_query_new(world, "Foo");
          ecs_query_fini(q);
     }
 

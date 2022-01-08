@@ -112,3 +112,40 @@ void GlobalComponentIds_declare_entity() {
 
     ecs_fini(world);
 }
+
+void GlobalComponentIds_reuse_300_component_ids() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t *ids = ecs_os_malloc_n(ecs_entity_t, 300);
+
+    for (int i = 0; i < 300; i ++) {
+        ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
+            .size = 1,
+            .alignment = 1
+        });
+    }
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    ecs_entity_t info_last_component_id = info->last_component_id;
+    ecs_entity_t info_last_id = info->last_id;
+    ecs_entity_t next_id = ecs_new_id(world);
+
+    ecs_fini(world);
+
+    world = ecs_mini();
+
+    for (int i = 0; i < 300; i ++) {
+        ids[i] = ecs_component_init(world, &(ecs_component_desc_t) {
+            .entity.entity = ids[i],
+            .size = 1,
+            .alignment = 1
+        });
+    }
+
+    info = ecs_get_world_info(world);
+    test_int(info->last_component_id, info_last_component_id);
+    test_int(info->last_id, info_last_id);
+    test_int(next_id, ecs_new_id(world));
+
+    ecs_fini(world);
+}

@@ -556,14 +556,11 @@ bool ecs_id_is_pair(
 bool ecs_id_is_wildcard(
     ecs_id_t id)
 {
-    if (id == EcsWildcard) {
-        return true;
-    } else if (ECS_HAS_ROLE(id, PAIR)) {
-        return ECS_PAIR_RELATION(id) == EcsWildcard || 
-               ECS_PAIR_OBJECT(id) == EcsWildcard;
-    }
-
-    return false;
+    return
+        (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
+            (ECS_PAIR_RELATION(id) == EcsWildcard) ||
+            (ECS_PAIR_OBJECT(id) == EcsWildcard)
+        ));
 }
 
 bool ecs_term_id_is_set(
@@ -1182,8 +1179,8 @@ bool flecs_n_term_match_table(
     const EcsType *term_type = ecs_get(world, type_id, EcsType);
     ecs_check(term_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_t *ids = ecs_vector_first(term_type->normalized, ecs_id_t);
-    int32_t i, count = ecs_vector_count(term_type->normalized);
+    ecs_id_t *ids = ecs_vector_first(term_type->normalized->type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(term_type->normalized->type);
     ecs_term_t temp = *term;
     temp.oper = EcsAnd;
 
@@ -1244,14 +1241,18 @@ bool flecs_term_match_table(
         if (match_table) {
             match_type = match_table->type;
         } else {
-            match_type = NULL;
+            return false;
         }
     } else {
         /* If filter contains This terms, a table must be provided */
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_entity_t source;
+    if (!match_type) {
+        return false;
+    }
+
+    ecs_entity_t source = 0;
 
     /* If first = false, we're searching from an offset. This supports returning
      * multiple results when using wildcard filters. */
@@ -1268,9 +1269,14 @@ bool flecs_term_match_table(
     }
 
     /* Find location, source and id of match in table type */
-    column = ecs_type_match(world, match_table, match_type,
+    ecs_table_record_t *tr = 0;
+    column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, &source, id_out, match_index_out);
+        subj->set.max_depth, &source, id_out, &tr);
+
+    if (tr && match_index_out) {
+        match_index_out[0] = tr->count;
+    }
 
     bool result = column != -1;
 
@@ -1570,8 +1576,8 @@ bool term_iter_next(
             if (iter->cur_match >= iter->match_count) {
                 table = NULL;
             } else {
-                iter->last_column = ecs_type_index_of(
-                    table->type, iter->last_column + 1, term->id);
+                iter->last_column = ecs_search_offset(
+                    world, table, iter->last_column + 1, term->id, 0);
                 iter->column = iter->last_column + 1;
                 if (iter->last_column >= 0) {
                     iter->id = ecs_vector_get(
@@ -1623,7 +1629,7 @@ bool term_iter_next(
             }
 
             /* Test if following the relation finds the id */
-            int32_t index = ecs_type_match(world, table, table->type, 0, 
+            int32_t index = ecs_search_relation(world, table, 0, 
                 term->id, subj->set.relation, subj->set.min_depth, 
                 subj->set.max_depth, &source, &iter->id, NULL);
 

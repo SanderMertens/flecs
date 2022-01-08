@@ -215,6 +215,11 @@ void init_flags(
             table->flags |= EcsTableHasXor;
         }
 
+        /* Does the table have pairs */
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            table->flags |= EcsTableHasPairs;
+        }
+
         /* Does table have IsA relations */
         if (ECS_HAS_RELATION(id, EcsIsA)) {
             table->flags |= EcsTableHasIsA;
@@ -262,8 +267,6 @@ void init_table(
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
-
-    table->queries = NULL;
 
     init_node(&table->node);
     init_flags(world, table);
@@ -398,8 +401,8 @@ int32_t flecs_table_switch_from_case(
     if ((sw_columns = table->storage.sw_columns)) {
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
-            ecs_type_t sw_type = sw_columns[i].type;
-            if (ecs_type_has_id(world, sw_type, add, true)) {
+            ecs_table_t *sw_type = sw_columns[i].type;
+            if (ecs_search(world, sw_type, add, 0) != -1) {
                 return i;
             }
         }
@@ -414,9 +417,7 @@ int32_t flecs_table_switch_from_case(
             const EcsType *type_ptr = ecs_get(world, e, EcsType);
             ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_type_has_id(
-                world, type_ptr->normalized, add, true)) 
-            {
+            if (ecs_search(world, type_ptr->normalized, add, 0) != -1) {
                 return i;
             }
         }
@@ -475,9 +476,7 @@ void diff_insert_isa(
                 ecs_id_t base_id = append_from->array[j];
                 /* We still have to make sure the id isn't overridden by the
                  * current table */
-                if (ecs_type_match(world, table, type, 0, base_id, 0, 0, 0, 
-                    NULL, NULL, NULL) == -1) 
-                {
+                if (!type || ecs_search(world, table, base_id, NULL) == -1) {
                     ids_append(append_to, base_id);
                 }
             }
@@ -494,9 +493,7 @@ void diff_insert_isa(
             continue;
         }
 
-        if (ecs_type_match(world, table, type, 0, id, 0, 0, 0, 
-            NULL, NULL, NULL) == -1) 
-        {
+        if (!type || ecs_search(world, table, id, NULL) == -1) {
             ids_append(append_to, id);
         }
     }
@@ -565,8 +562,8 @@ void diff_insert_removed(
         /* If next table has a base and component is removed, check if
          * the removed component was an override. Removed overrides reexpose the
          * base component, thus "changing" the value which requires an OnSet. */
-        if (ecs_type_match(world, table, table->type, 0, id, EcsIsA,
-            1, 0, NULL, NULL, NULL) != -1)
+        if (ecs_search_relation(world, table, 0, id, EcsIsA,
+            1, -1, NULL, NULL, NULL) != -1)
         {
             ids_append(&diff->on_set, id);
             return;

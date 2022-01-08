@@ -110,13 +110,15 @@ void ecs_emit(
 
     ecs_iter_t it = {
         .world = world,
+        .real_world = world,
         .table = table,
         .type = table->type,
         .term_count = 1,
         .other_table = desc->other_table,
         .offset = row,
         .count = count,
-        .param = (void*)desc->param
+        .param = (void*)desc->param,
+        .table_only = desc->table_event
     };
 
     world->event_id ++;
@@ -126,11 +128,18 @@ void ecs_emit(
 
     flecs_triggers_notify(&it, observable, ids, event);
 
-    if (count) {
+    if (count && !desc->table_event) {
         ecs_record_t **recs = ecs_vector_get(
             table->storage.record_ptrs, ecs_record_t*, row);
 
         for (i = 0; i < count; i ++) {
+            ecs_record_t *r = recs[i];
+            if (!r) {
+                /* If the event is emitted after a bulk operation, it's possible
+                 * that it hasn't been populate with entities yet. */
+                continue;
+            }
+
             uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
             if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
                 notify_subset(world, &it, observable, ecs_vector_first(

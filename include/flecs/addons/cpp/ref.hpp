@@ -37,7 +37,7 @@ struct ref {
                 m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
         }
 
-        return static_cast<T*>(m_ref.ptr);
+        return static_cast<const T*>(m_ref.ptr);
     }
 
     flecs::entity entity() const;

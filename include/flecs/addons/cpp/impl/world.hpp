@@ -15,8 +15,23 @@ inline void world::init_builtin_components() {
     component<Component>("flecs::core::Component");
     component<Type>("flecs::core::Type");
     component<Identifier>("flecs::core::Identifier");
+    component<Trigger>("flecs::core::Trigger");
+    component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
-    this->init_mixins();
+
+#   ifdef FLECS_DOC
+    component<doc::Description>("flecs::doc::Description");
+#   endif
+#   ifdef FLECS_REST
+    component<rest::Rest>("flecs::rest::Rest");
+#   endif
+#   ifdef FLECS_SYSTEM
+    component<TickSource>("flecs::system::TickSource");
+#   endif
+#   ifdef FLECS_TIMER
+    component<RateFilter>("flecs::timer::RateFilter");
+    component<Timer>("flecs::timer::Timer");
+#   endif
 }
 
 template <typename T>

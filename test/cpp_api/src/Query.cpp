@@ -7,8 +7,8 @@ struct Pair {
 void Query_action() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -31,8 +31,8 @@ void Query_action() {
 void Query_action_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -55,8 +55,8 @@ void Query_action_const() {
 void Query_action_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto base = flecs::entity(world)
         .set<Velocity>({1, 2});
@@ -101,8 +101,8 @@ void Query_action_shared() {
 void Query_action_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = flecs::entity(world)
@@ -157,8 +157,8 @@ void Query_action_optional() {
 void Query_each() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -179,8 +179,8 @@ void Query_each() {
 void Query_each_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -201,8 +201,8 @@ void Query_each_const() {
 void Query_each_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto base = flecs::entity(world)
         .set<Velocity>({1, 2});
@@ -242,8 +242,8 @@ void Query_each_shared() {
 void Query_each_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = flecs::entity(world)
@@ -294,8 +294,8 @@ void Query_each_optional() {
 void Query_signature() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -321,8 +321,8 @@ void Query_signature() {
 void Query_signature_const() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto entity = flecs::entity(world)
         .set<Position>({10, 20})
@@ -348,8 +348,8 @@ void Query_signature_const() {
 void Query_signature_shared() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
 
     auto base = flecs::entity(world)
         .set<Velocity>({1, 2});
@@ -395,8 +395,8 @@ void Query_signature_shared() {
 void Query_signature_optional() {
     flecs::world world;
 
-    flecs::component<Position>(world, "Position");
-    flecs::component<Velocity>(world, "Velocity");
+    world.component<Position>();
+    world.component<Velocity>();
     flecs::component<Mass>(world, "Mass");
 
     auto e1 = flecs::entity(world)
@@ -1669,4 +1669,50 @@ void Query_default_ctor_no_assign() {
 
     // Make sure code compiles & works
     test_assert(true);
+}
+
+void Query_query_each_from_component() {
+    flecs::world w;
+
+    w.entity().set<Position>({}).set<Velocity>({});
+    w.entity().set<Position>({}).set<Velocity>({});
+
+    struct QueryComponent {
+        flecs::query<Position, Velocity> q;
+    };
+
+    auto q = w.query<Position, Velocity>();
+    auto e = w.entity().set<QueryComponent>({ q });
+
+    const QueryComponent *qc = e.get<QueryComponent>();
+    test_assert(qc != nullptr);
+
+    int count = 0;
+    qc->q.each([&](Position&, Velocity&) { // Ensure we can iterate const query
+        count ++;
+    });
+    test_int(count, 2);
+}
+
+void Query_query_iter_from_component() {
+    flecs::world w;
+
+    w.entity().set<Position>({}).set<Velocity>({});
+    w.entity().set<Position>({}).set<Velocity>({});
+
+    struct QueryComponent {
+        flecs::query<Position, Velocity> q;
+    };
+
+    auto q = w.query<Position, Velocity>();
+    auto e = w.entity().set<QueryComponent>({ q });
+
+    const QueryComponent *qc = e.get<QueryComponent>();
+    test_assert(qc != nullptr);
+
+    int count = 0;
+    qc->q.iter([&](flecs::iter& it) { // Ensure we can iterate const query
+        count += it.count();
+    });
+    test_int(count, 2);
 }

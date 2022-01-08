@@ -66,6 +66,7 @@ void Event_emit_event_case_for_switch_id(void);
 void Event_emit_event_case_for_case_id(void);
 void Event_emit_event_case_for_case_id_wildcard(void);
 void Event_emit_event_switch_for_case_id(void);
+void Event_emit_table_event(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -508,6 +509,7 @@ void GlobalComponentIds_declare_2_world(void);
 void GlobalComponentIds_declare_tag(void);
 void GlobalComponentIds_declare_tag_w_entity(void);
 void GlobalComponentIds_declare_entity(void);
+void GlobalComponentIds_reuse_300_component_ids(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_brief(void);
@@ -1498,6 +1500,7 @@ void Trigger_un_set_pair_wildcard(void);
 void Trigger_on_add_not_tag(void);
 void Trigger_on_remove_not_tag(void);
 void Trigger_on_add_superset(void);
+void Trigger_on_add_superset_2_levels(void);
 void Trigger_on_remove_superset(void);
 void Trigger_on_add_superset_childof(void);
 void Trigger_on_remove_superset_childof(void);
@@ -1540,6 +1543,7 @@ void Trigger_on_unset_base(void);
 void Trigger_on_add_base_superset_trigger(void);
 void Trigger_on_add_base_superset_trigger_2_lvls(void);
 void Trigger_on_add_base_2_entities(void);
+void Trigger_on_add_base_2_entities_filter(void);
 void Trigger_on_set_base_w_value_2_entities(void);
 void Trigger_on_set_base_w_value_2_entities_instanced(void);
 void Trigger_on_add_base_w_override(void);
@@ -2568,6 +2572,10 @@ bake_test_case Event_testcases[] = {
     {
         "emit_event_switch_for_case_id",
         Event_emit_event_switch_for_case_id
+    },
+    {
+        "emit_table_event",
+        Event_emit_table_event
     }
 };
 
@@ -4287,6 +4295,10 @@ bake_test_case GlobalComponentIds_testcases[] = {
     {
         "declare_entity",
         GlobalComponentIds_declare_entity
+    },
+    {
+        "reuse_300_component_ids",
+        GlobalComponentIds_reuse_300_component_ids
     }
 };
 
@@ -8102,6 +8114,10 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_superset
     },
     {
+        "on_add_superset_2_levels",
+        Trigger_on_add_superset_2_levels
+    },
+    {
         "on_remove_superset",
         Trigger_on_remove_superset
     },
@@ -8268,6 +8284,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_base_2_entities",
         Trigger_on_add_base_2_entities
+    },
+    {
+        "on_add_base_2_entities_filter",
+        Trigger_on_add_base_2_entities_filter
     },
     {
         "on_set_base_w_value_2_entities",
@@ -11288,7 +11308,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        10,
+        11,
         Event_testcases
     },
     {
@@ -11351,7 +11371,7 @@ static bake_test_suite suites[] = {
         "GlobalComponentIds",
         NULL,
         NULL,
-        6,
+        7,
         GlobalComponentIds_testcases
     },
     {
@@ -11512,7 +11532,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        88,
+        90,
         Trigger_testcases
     },
     {

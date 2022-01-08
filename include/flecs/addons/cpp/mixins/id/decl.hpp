@@ -5,41 +5,6 @@ namespace flecs {
 struct id;
 struct entity;
 
-template <typename T>
-struct id_m : mixin<T> { };
-
-/** Type mixin for flecs::world */
-template <>
-struct id_m<flecs::world> : mixin<flecs::world> {
-  void init() { }
-
-  /** Get id from a type.
-   */
-  template <typename T>
-  flecs::id id() const;
-
-  /** Id factory.
-   */
-  template <typename ... Args>
-  flecs::id id(Args&&... args) const;
-
-  /** Get pair id from relation, object
-   */
-  template <typename R, typename O>
-  flecs::id pair() const;
-
-  /** Get pair id from relation, object
-   */
-  template <typename R>
-  flecs::id pair(entity_t o) const;
-
-  /** Get pair id from relation, object
-   */
-  flecs::id pair(entity_t r, entity_t o) const;
-};
-
-using id_m_world = id_m<flecs::world>;
-
 /** Class that stores a flecs id.
  * A flecs id is an identifier that can store an entity id, an relation-object 
  * pair, or role annotated id (such as SWITCH | Movement).
