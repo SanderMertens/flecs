@@ -1,0 +1,11 @@
+{
+    "id": "ad_hoc_query",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

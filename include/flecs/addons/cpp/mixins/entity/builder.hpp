@@ -3,10 +3,10 @@
 namespace flecs
 {
 
-template <typename Self, typename Base>
-struct entity_builder : Base {
+template <typename Self>
+struct entity_builder : entity_view {
 
-    using Base::Base;
+    using entity_view::entity_view;
 
     /** Add a component to an entity.
      * To ensure the component is initialized, it should have a constructor.

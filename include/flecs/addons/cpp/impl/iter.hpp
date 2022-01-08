@@ -32,11 +32,11 @@ inline column<T>::column(iter &iter, int32_t index) {
     *this = iter.term<T>(index);
 }
 
-inline flecs::entity iter::term_source(int32_t index) const {
+inline flecs::entity iter::source(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_source(m_iter, index));
 }
 
-inline flecs::entity iter::term_id(int32_t index) const {
+inline flecs::entity iter::id(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
 }
 

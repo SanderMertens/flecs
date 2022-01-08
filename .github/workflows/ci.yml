@@ -145,7 +145,7 @@ jobs:
         run: bake/bake run test\meta -- -j 4
 
       - name: test cpp_api
-        run: bake/bake run test\api -- -j 4
+        run: bake/bake run test\cpp_api -- -j 4
 
       - name: test collections
         run: bake/bake run test\collections -- -j 4

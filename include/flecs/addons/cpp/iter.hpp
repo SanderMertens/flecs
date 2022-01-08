@@ -268,7 +268,7 @@ public:
      *
      * @param index The term id.
      */
-    size_t term_size(int32_t index) const {
+    size_t size(int32_t index) const {
         return ecs_term_size(m_iter, index);
     }
 
@@ -276,13 +276,13 @@ public:
      *
      * @param index The term index.
      */    
-    flecs::entity term_source(int32_t index) const;
+    flecs::entity source(int32_t index) const;
 
     /** Obtain component/tag entity of term.
      *
      * @param index The term index.
      */
-    flecs::entity term_id(int32_t index) const;
+    flecs::entity id(int32_t index) const;
 
     /** Obtain term with const type.
      * If the specified term index does not match with the provided type, the

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "mixins/entity/builder.hpp"
 #include "entity_view.hpp"
+#include "mixins/entity/builder.hpp"
 
 namespace flecs
 {
 
 /** Entity class
  * This class provides access to entities. */
-struct entity : entity_builder<entity, entity_view>
+struct entity : entity_builder<entity>
 {
-    explicit entity() : entity_builder() { }
+    explicit entity() : entity_builder<entity>() { }
 
     /** Create entity.
      *
@@ -59,13 +59,6 @@ struct entity : entity_builder<entity, entity_view>
      */
     explicit entity(entity_t id) 
         : entity_builder( nullptr, id ) { }
-
-    /** Get entity id.
-     * @return The integer entity id.
-     */
-    entity_t id() const {
-        return m_id;
-    }
 
     /** Get mutable component value.
      * This operation returns a mutable pointer to the component. If the entity

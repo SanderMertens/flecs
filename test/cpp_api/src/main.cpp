@@ -413,6 +413,7 @@ void Query_query_each_w_func_ptr(void);
 void Query_query_iter_w_func_ptr(void);
 void Query_query_each_w_func_no_ptr(void);
 void Query_query_iter_w_func_no_ptr(void);
+void Query_query_each_w_iter(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -2347,6 +2348,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_iter_w_func_no_ptr",
         Query_query_iter_w_func_no_ptr
+    },
+    {
+        "query_each_w_iter",
+        Query_query_each_w_iter
     }
 };
 
@@ -3792,7 +3797,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        60,
+        61,
         Query_testcases
     },
     {

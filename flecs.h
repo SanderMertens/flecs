@@ -13716,7 +13716,7 @@ public:
      *
      * @param index The term id.
      */
-    size_t term_size(int32_t index) const {
+    size_t size(int32_t index) const {
         return ecs_term_size(m_iter, index);
     }
 
@@ -13724,13 +13724,13 @@ public:
      *
      * @param index The term index.
      */    
-    flecs::entity term_source(int32_t index) const;
+    flecs::entity source(int32_t index) const;
 
     /** Obtain component/tag entity of term.
      *
      * @param index The term index.
      */
-    flecs::entity term_id(int32_t index) const;
+    flecs::entity id(int32_t index) const;
 
     /** Obtain term with const type.
      * If the specified term index does not match with the provided type, the
@@ -15477,7 +15477,12 @@ struct each_invoker : public invoker {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
-        sizeof...(Components) == (arity<decay_t<Func>>::value - 1);
+        (sizeof...(Components) + 1) == (arity<decay_t<Func>>::value);
+
+    // If the number of arguments in the function is two more than the number of
+    // components in the query, extra iter + index arguments are required.
+    static constexpr bool PassIter = 
+        (sizeof...(Components) + 2) == (arity<decay_t<Func>>::value);
 
     static_assert(arity<Func>::value > 0, 
         "each() must have at least one argument");
@@ -15548,10 +15553,42 @@ private:
 #endif        
     }
 
+
+    // Number of function arguments is two more than number of components, pass
+    // iter + index as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && PassIter> = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+#ifndef NDEBUG
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
+        }
+#endif
+
+        size_t count = static_cast<size_t>(iter->count);
+        flecs::iter it(iter);
+
+        for (size_t i = 0; i < count; i ++) {
+            func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...);
+        }
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
+#endif        
+    }
+
+
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && !PassEntity> = 0>
+            sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -15869,6 +15906,7 @@ struct iterable {
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
      *  - func(flecs::entity e, Components& ...)
+     *  - func(flecs::iter& it, int32_t index, Components& ....)
      *  - func(Components& ...)
      * 
      * Each iterators are automatically instanced.
@@ -15882,8 +15920,13 @@ struct iterable {
     /** Iter iterator.
      * The "iter" iterator accepts a function that is invoked for each matching
      * table. The following function signatures are valid:
-     *  - func(flecs::entity e, Components& ...)
+     *  - func(flecs::iter& it, Components* ...)
      *  - func(Components& ...)
+     * 
+     * Iter iterators are not automatically instanced. When a result contains
+     * shared components, entities of the result will be iterated one by one.
+     * This ensures that applications can't accidentally read out of bounds by
+     * accessing a shared component as an array.
      */
     template <typename Func>
     void iter(Func&& func) const { 
@@ -19421,11 +19464,11 @@ inline column<T>::column(iter &iter, int32_t index) {
     *this = iter.term<T>(index);
 }
 
-inline flecs::entity iter::term_source(int32_t index) const {
+inline flecs::entity iter::source(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_source(m_iter, index));
 }
 
-inline flecs::entity iter::term_id(int32_t index) const {
+inline flecs::entity iter::id(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
 }
 

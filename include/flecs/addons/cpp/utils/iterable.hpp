@@ -13,6 +13,7 @@ struct iterable {
      * The "each" iterator accepts a function that is invoked for each matching
      * entity. The following function signatures are valid:
      *  - func(flecs::entity e, Components& ...)
+     *  - func(flecs::iter& it, int32_t index, Components& ....)
      *  - func(Components& ...)
      * 
      * Each iterators are automatically instanced.
@@ -26,8 +27,13 @@ struct iterable {
     /** Iter iterator.
      * The "iter" iterator accepts a function that is invoked for each matching
      * table. The following function signatures are valid:
-     *  - func(flecs::entity e, Components& ...)
+     *  - func(flecs::iter& it, Components* ...)
      *  - func(Components& ...)
+     * 
+     * Iter iterators are not automatically instanced. When a result contains
+     * shared components, entities of the result will be iterated one by one.
+     * This ensures that applications can't accidentally read out of bounds by
+     * accessing a shared component as an array.
      */
     template <typename Func>
     void iter(Func&& func) const { 

@@ -1,0 +1,11 @@
+{
+    "id": "sorting",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
