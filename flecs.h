@@ -15477,13 +15477,14 @@ struct each_invoker : public invoker {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
-        sizeof...(Components) == (arity<Func>::value - 1);
+        sizeof...(Components) == (arity<decay_t<Func>>::value - 1);
 
     static_assert(arity<Func>::value > 0, 
         "each() must have at least one argument");
 
     using Terms = typename term_ptrs<Components ...>::array;
 
+    template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit each_invoker(Func&& func) noexcept 
         : m_func(std::move(func)) { }
 
@@ -15586,6 +15587,7 @@ private:
     using Terms = typename term_ptrs<Components ...>::array;
 
 public:
+    template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit iter_invoker(Func&& func) noexcept 
         : m_func(std::move(func)) { }
 

@@ -1716,3 +1716,82 @@ void Query_query_iter_from_component() {
     });
     test_int(count, 2);
 }
+
+static int invoked_count = 0;
+
+void EachFunc(flecs::entity e, Position& p) {
+    invoked_count ++;
+    p.x ++;
+    p.y ++;
+}
+
+void IterFunc(flecs::iter& it, Position* p) {
+    test_int(it.count(), 1);
+    invoked_count ++;
+    p->x ++;
+    p->y ++;
+}
+
+void Query_query_each_w_func_ptr() {
+    flecs::world w;
+
+    auto e = w.entity().set<Position>({10, 20});
+
+    auto q = w.query<Position>();
+
+    q.each(&EachFunc);
+
+    test_int(invoked_count, 1);
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 21);
+}
+
+void Query_query_iter_w_func_ptr() {
+    flecs::world w;
+
+    auto e = w.entity().set<Position>({10, 20});
+
+    auto q = w.query<Position>();
+
+    q.iter(&IterFunc);
+
+    test_int(invoked_count, 1);
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 21);
+}
+
+void Query_query_each_w_func_no_ptr() {
+    flecs::world w;
+
+    auto e = w.entity().set<Position>({10, 20});
+
+    auto q = w.query<Position>();
+
+    q.each(EachFunc);
+
+    test_int(invoked_count, 1);
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 21);
+}
+
+void Query_query_iter_w_func_no_ptr() {
+    flecs::world w;
+
+    auto e = w.entity().set<Position>({10, 20});
+
+    auto q = w.query<Position>();
+
+    q.iter(IterFunc);
+
+    test_int(invoked_count, 1);
+
+    const Position *ptr = e.get<Position>();
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 21);
+}
