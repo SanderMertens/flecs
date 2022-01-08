@@ -209,11 +209,20 @@ private:
 #endif
     }
 
+<<<<<<< HEAD
     // Number of function arguments is two more than number of components, pass
     // iter + index as argument.
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, bool Enabled = PassIter, if_t< 
             (sizeof...(Components) == sizeof...(Args)) && Enabled> = 0>
+=======
+
+    // Number of function arguments is two more than number of components, pass
+    // iter + index as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && PassIter> = 0>
+>>>>>>> e947c867 (#575 add ability to access flecs::iter from each, add more C++ query examples)
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -243,7 +252,11 @@ private:
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
+<<<<<<< HEAD
             (sizeof...(Components) == sizeof...(Args)) && !PassEntity && !PassIter> = 0>
+=======
+            sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
+>>>>>>> e947c867 (#575 add ability to access flecs::iter from each, add more C++ query examples)
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
