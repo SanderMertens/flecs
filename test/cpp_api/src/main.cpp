@@ -407,6 +407,8 @@ void Query_instanced_query_w_singleton_iter(void);
 void Query_instanced_query_w_base_iter(void);
 void Query_un_instanced_query_w_singleton_iter(void);
 void Query_un_instanced_query_w_base_iter(void);
+void Query_query_each_from_component(void);
+void Query_query_iter_from_component(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -2317,6 +2319,14 @@ bake_test_case Query_testcases[] = {
     {
         "un_instanced_query_w_base_iter",
         Query_un_instanced_query_w_base_iter
+    },
+    {
+        "query_each_from_component",
+        Query_query_each_from_component
+    },
+    {
+        "query_iter_from_component",
+        Query_query_iter_from_component
     }
 };
 
@@ -3762,7 +3772,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        54,
+        56,
         Query_testcases
     },
     {

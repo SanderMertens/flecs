@@ -3262,7 +3262,7 @@ bool ecs_iter_count(
  */
 FLECS_API
 ecs_iter_t ecs_page_iter(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t offset,
     int32_t limit);
 
@@ -3298,7 +3298,7 @@ bool ecs_page_next(
  */
 FLECS_API
 ecs_iter_t ecs_worker_iter(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t index,
     int32_t count);
 

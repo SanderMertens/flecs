@@ -18,7 +18,7 @@ struct iterable {
      * Each iterators are automatically instanced.
      */
     template <typename Func>
-    void each(Func&& func) {
+    void each(Func&& func) const {
         iterate<_::each_invoker>(std::forward<Func>(func), 
             this->next_each_action());
     }
@@ -30,7 +30,7 @@ struct iterable {
      *  - func(Components& ...)
      */
     template <typename Func>
-    void iter(Func&& func) { 
+    void iter(Func&& func) const { 
         iterate<_::iter_invoker>(std::forward<Func>(func), this->next_action());
     }
 
@@ -53,19 +53,17 @@ struct iterable {
      */
     worker_iterable<Components...> worker(int32_t index, int32_t count);
 
-
     virtual ~iterable() { }
 protected:
     friend page_iterable<Components...>;
     friend worker_iterable<Components...>;
 
-    virtual ecs_iter_t get_iter() = 0;
+    virtual ecs_iter_t get_iter() const = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
 
-private:
     template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
-    void iterate(Func&& func, NextFunc next, Args &&... args) {
+    void iterate(Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = this->get_iter();
         it.is_instanced |= Invoker<Func, Components...>::instanced();
 
@@ -77,7 +75,8 @@ private:
 
 template <typename ... Components>
 struct page_iterable final : iterable<Components...> {
-    page_iterable(int32_t offset, int32_t limit, iterable<Components...> *it) 
+    template <typename Iterable>
+    page_iterable(int32_t offset, int32_t limit, Iterable *it) 
         : m_offset(offset)
         , m_limit(limit)
     {
@@ -85,7 +84,7 @@ struct page_iterable final : iterable<Components...> {
     }
 
 protected:
-    ecs_iter_t get_iter() {
+    ecs_iter_t get_iter() const {
         return ecs_page_iter(&m_chain_it, m_offset, m_limit);
     }
 
@@ -121,7 +120,7 @@ struct worker_iterable final : iterable<Components...> {
     }
 
 protected:
-    ecs_iter_t get_iter() {
+    ecs_iter_t get_iter() const {
         return ecs_worker_iter(&m_chain_it, m_offset, m_limit);
     }
 

@@ -39882,15 +39882,12 @@ error:
 }
 
 ecs_iter_t ecs_page_iter(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t offset,
     int32_t limit)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    bool instanced = it->is_instanced;
-    it->is_instanced = true;
 
     return (ecs_iter_t){
         .real_world = it->real_world,
@@ -39901,8 +39898,8 @@ ecs_iter_t ecs_page_iter(
             .remaining = limit
         },
         .next = ecs_page_next,
-        .chain_it = it,
-        .is_instanced = instanced
+        .chain_it = (ecs_iter_t*)it,
+        .is_instanced = it->is_instanced
     };
 error:
     return (ecs_iter_t){ 0 };
@@ -40012,6 +40009,9 @@ bool ecs_page_next(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    it->chain_it->is_instanced = true;
 
     if (flecs_iter_next_row(it)) {
         return true;
@@ -40023,7 +40023,7 @@ error:
 }
 
 ecs_iter_t ecs_worker_iter(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t index,
     int32_t count)
 {
@@ -40033,9 +40033,6 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
-    bool instanced = it->is_instanced;
-    it->is_instanced = true;
-
     return (ecs_iter_t){
         .real_world = it->real_world,
         .world = it->world,
@@ -40044,8 +40041,8 @@ ecs_iter_t ecs_worker_iter(
             .count = count
         },
         .next = ecs_worker_next,
-        .chain_it = it,
-        .is_instanced = instanced
+        .chain_it = (ecs_iter_t*)it,
+        .is_instanced = it->is_instanced
     };
 
 error:
@@ -40123,6 +40120,9 @@ bool ecs_worker_next(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    it->chain_it->is_instanced = true;
 
     if (flecs_iter_next_row(it)) {
         return true;
