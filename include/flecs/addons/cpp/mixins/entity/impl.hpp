@@ -7,19 +7,19 @@ flecs::entity ref<T>::entity() const {
     return flecs::entity(m_world, m_entity);
 }
 
-template <typename Self, typename Base>
-inline Self& entity_builder<Self, Base>::add_switch(const flecs::type& sw) {
+template <typename Self>
+inline Self& entity_builder<Self>::add_switch(const flecs::type& sw) {
     return add_switch(sw.id());
 }
 
-template <typename Self, typename Base>
-inline Self& entity_builder<Self, Base>::remove_switch(const flecs::type& sw) {
+template <typename Self>
+inline Self& entity_builder<Self>::remove_switch(const flecs::type& sw) {
     return remove_switch(sw.id());
 }
 
-template <typename Self, typename Base>
+template <typename Self>
 template <typename Func, if_t< is_callable<Func>::value > >
-inline Self& entity_builder<Self, Base>::set(const Func& func) {
+inline Self& entity_builder<Self>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->m_id, func);
     return to_base();

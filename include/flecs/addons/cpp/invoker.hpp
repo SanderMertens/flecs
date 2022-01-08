@@ -127,10 +127,18 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 struct each_invoker : public invoker {
+    static constexpr int ArgCountDiff =
+         (arity<Func>::value) - (sizeof...(Components));
+
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
-        sizeof...(Components) == (arity<decay_t<Func>>::value - 1);
+        (sizeof...(Components) + 1) == (arity<Func>::value);
+
+    // If the number of arguments in the function is two more than the number of
+    // components in the query, extra iter + index arguments are required.
+    static constexpr bool PassIter = 
+        (sizeof...(Components) + 2) == (arity<Func>::value);
 
     static_assert(arity<Func>::value > 0, 
         "each() must have at least one argument");
@@ -174,7 +182,7 @@ private:
     // entity as argument.
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
+            (sizeof...(Components) == sizeof...(Args)) && PassEntity> = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -198,13 +206,44 @@ private:
         if (table) {
             ecs_table_unlock(iter->world, table);
         }
+#endif
+    }
+
+    // Number of function arguments is two more than number of components, pass
+    // iter + index as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, bool Enabled = PassIter, if_t< 
+            (sizeof...(Components) == sizeof...(Args)) && Enabled> = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+#ifndef NDEBUG
+        ecs_table_t *table = iter->table;
+        if (table) {
+            ecs_table_lock(iter->world, table);
+        }
+#endif
+
+        size_t count = static_cast<size_t>(iter->count);
+        flecs::iter it(iter);
+
+        for (size_t i = 0; i < count; i ++) {
+            func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...);
+        }
+
+#ifndef NDEBUG
+        if (table) {
+            ecs_table_unlock(iter->world, table);
+        }
 #endif        
     }
+
 
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && !PassEntity> = 0>
+            (sizeof...(Components) == sizeof...(Args)) && !PassEntity && !PassIter> = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {

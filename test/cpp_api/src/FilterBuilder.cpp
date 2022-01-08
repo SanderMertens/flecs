@@ -1608,7 +1608,7 @@ void FilterBuilder_name_arg() {
         count ++;
         test_int(p->x, 10);
         test_int(p->y, 20);
-        test_assert(it.term_source(1) == e);
+        test_assert(it.source(1) == e);
     });
 
     test_int(count, 1);

@@ -63,7 +63,12 @@ struct system final : entity
 {
     using entity::entity;
 
-    system(flecs::world_t *world, ecs_system_desc_t *desc) 
+    explicit system() {
+        m_id = 0;
+        m_world = nullptr;
+    }
+
+    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) 
         : entity(world, ecs_system_init(world, desc)) 
     {
         if (desc->query.filter.terms_buffer) {

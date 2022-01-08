@@ -719,7 +719,7 @@ void Query_compare_term_id() {
         .build();
     
     q.iter([&](flecs::iter& it) {
-        test_assert(it.term_id(1) == it.world().id<Tag>());
+        test_assert(it.id(1) == it.world().id<Tag>());
         test_assert(it.entity(0) == e);
         count ++;
     });
@@ -1794,4 +1794,34 @@ void Query_query_iter_w_func_no_ptr() {
     const Position *ptr = e.get<Position>();
     test_int(ptr->x, 11);
     test_int(ptr->y, 21);
+}
+
+void Query_query_each_w_iter() {
+    flecs::world w;
+
+    auto e1 = w.entity(); e1.set<Self>({e1});
+    e1.set<Position>({10, 20});
+    auto e2 = w.entity(); e2.set<Self>({e2});
+    e2.set<Position>({20, 30});
+
+    auto q = w.query<Self, Position>();
+
+    int32_t invoked = 0;
+    q.each([&](flecs::iter& it, int32_t i, Self& s, Position& p) {
+        test_int(it.count(), 2);
+        test_int(it.entity(i), s.value);
+        p.x ++;
+        p.y ++;
+        invoked ++;
+    });
+
+    test_int(invoked, 2);
+
+    const Position *ptr = e1.get<Position>();
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 21);
+
+    ptr = e2.get<Position>();
+    test_int(ptr->x, 21);
+    test_int(ptr->y, 31);
 }

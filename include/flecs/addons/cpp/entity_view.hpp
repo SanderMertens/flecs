@@ -12,7 +12,8 @@ namespace flecs
  * To obtain a mutable handle to the entity, use the "mut" function.
  */
 struct entity_view : public id {
-    entity_view() : flecs::id() { }
+
+    explicit entity_view() : flecs::id() { }
 
     /** Wrap an existing entity id.
      *
@@ -24,14 +25,6 @@ struct entity_view : public id {
             ? const_cast<flecs::world_t*>(ecs_get_world(world))
             : nullptr
         , id ) { }
-
-    /** Wrap an existing entity id.
-     *
-     * @param world Pointer to the world in which the entity is created.
-     * @param id The entity id.
-     */
-    explicit entity_view(world_t *world, const entity_view& id) 
-        : flecs::id( flecs::world(world).get_world(), id.id() ) { }
 
     /** Implicit conversion from flecs::entity_t to flecs::entity_view. */
     entity_view(entity_t id) 
@@ -498,7 +491,7 @@ struct entity_view : public id {
      */
     bool is_enabled(const flecs::entity_view& e) {
         return ecs_is_component_enabled_w_id(
-            m_world, m_id, e.id());
+            m_world, m_id, e);
     }
 
     /** Get current delta time.
