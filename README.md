@@ -55,6 +55,7 @@ Here is some awesome content provided by the community :heart: :
 - [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
 - [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320) 
 - [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
+- [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/18_flecs/source/main.c)
 
 ## Show me the code!
