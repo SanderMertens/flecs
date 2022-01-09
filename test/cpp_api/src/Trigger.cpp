@@ -81,7 +81,7 @@ void Trigger_on_add_tag_each() {
 
     world.trigger<MyTag>()
         .event(flecs::OnAdd)
-        .each([&](flecs::entity e, MyTag&) {
+        .each([&](flecs::entity e, MyTag) {
             invoked ++;
         });
 

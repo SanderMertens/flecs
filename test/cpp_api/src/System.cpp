@@ -504,7 +504,7 @@ void System_each_tag() {
     int invoked = 0;
 
     world.system<MyTag>()
-        .each([&](flecs::entity e, MyTag&) {
+        .each([&](flecs::entity e, MyTag) {
             invoked ++;
         });
 

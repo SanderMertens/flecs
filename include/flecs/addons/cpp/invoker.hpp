@@ -61,7 +61,8 @@ protected:
 
 // If type is not a pointer, return a reference to the type (default case)
 template <typename T>
-struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > > 
+struct each_column<T, if_t< !is_pointer<T>::value && 
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value > > 
     : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
@@ -76,7 +77,8 @@ struct each_column<T, if_t< !is_pointer<T>::value && is_actual<T>::value > >
 // This requires that the actual type can be converted to the type.
 // A typical scenario where this happens is when using flecs::pair types.
 template <typename T>
-struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> > 
+struct each_column<T, if_t< !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && !is_actual<T>::value> > 
     : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
@@ -87,9 +89,27 @@ struct each_column<T, if_t< !is_pointer<T>::value && !is_actual<T>::value> >
     }  
 };
 
+
+// If type is empty (indicating a tag) the query will pass a nullptr. To avoid
+// returning nullptr to reference arguments, return a temporary value.
+template <typename T>
+struct each_column<T, if_t< is_empty<actual_type_t<T>>::value && 
+        !is_pointer<T>::value > > 
+    : each_column_base 
+{
+    each_column(const _::term_ptr& term, size_t row) 
+        : each_column_base(term, row) { }
+
+    T get_row() {
+        return actual_type_t<T>();
+    }
+};
+
+
 // If type is a pointer (indicating an optional value) return the type as is
 template <typename T>
-struct each_column<T, if_t< is_pointer<T>::value > > 
+struct each_column<T, if_t< is_pointer<T>::value && 
+        !is_empty<actual_type_t<T>>::value > > 
     : each_column_base 
 {
     each_column(const _::term_ptr& term, size_t row) 
@@ -127,9 +147,6 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 struct each_invoker : public invoker {
-    static constexpr int ArgCountDiff =
-         (arity<Func>::value) - (sizeof...(Components));
-
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -182,16 +199,13 @@ private:
     // entity as argument.
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-            (sizeof...(Components) == sizeof...(Args)) && PassEntity> = 0>
+            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-#ifndef NDEBUG
-        ecs_table_t *table = iter->table;
-        if (table) {
-            ecs_table_lock(iter->world, table);
-        }
-#endif
+#       ifndef NDEBUG
+        ecs_table_lock(iter->world, iter->table);
+#       endif
 
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
@@ -202,36 +216,23 @@ private:
                     .get_row())...);
         }
 
-#ifndef NDEBUG
-        if (table) {
-            ecs_table_unlock(iter->world, table);
-        }
-#endif
+#       ifndef NDEBUG
+        ecs_table_unlock(iter->world, iter->table);
+#       endif
     }
 
-<<<<<<< HEAD
-    // Number of function arguments is two more than number of components, pass
-    // iter + index as argument.
-    template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, bool Enabled = PassIter, if_t< 
-            (sizeof...(Components) == sizeof...(Args)) && Enabled> = 0>
-=======
 
     // Number of function arguments is two more than number of components, pass
     // iter + index as argument.
     template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && PassIter> = 0>
->>>>>>> e947c867 (#575 add ability to access flecs::iter from each, add more C++ query examples)
+        typename... Args, int Enabled = PassIter, if_t< 
+            sizeof...(Components) == sizeof...(Args) && Enabled> = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-#ifndef NDEBUG
-        ecs_table_t *table = iter->table;
-        if (table) {
-            ecs_table_lock(iter->world, table);
-        }
-#endif
+#       ifndef NDEBUG
+        ecs_table_lock(iter->world, iter->table);
+#       endif
 
         size_t count = static_cast<size_t>(iter->count);
         flecs::iter it(iter);
@@ -241,22 +242,16 @@ private:
                 .get_row())...);
         }
 
-#ifndef NDEBUG
-        if (table) {
-            ecs_table_unlock(iter->world, table);
-        }
-#endif        
+#       ifndef NDEBUG
+        ecs_table_unlock(iter->world, iter->table);
+#       endif        
     }
 
 
     // Number of function arguments is equal to number of components, no entity
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-<<<<<<< HEAD
-            (sizeof...(Components) == sizeof...(Args)) && !PassEntity && !PassIter> = 0>
-=======
             sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
->>>>>>> e947c867 (#575 add ability to access flecs::iter from each, add more C++ query examples)
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -336,12 +331,9 @@ private:
     {
         flecs::iter it(iter);
 
-#ifndef NDEBUG
-        ecs_table_t *table = iter->table;
-        if (table) {
-            ecs_table_lock(iter->world, table);
-        }
-#endif
+#       ifndef NDEBUG
+        ecs_table_lock(iter->world, iter->table);
+#       endif
 
         func(it, ( static_cast< 
             remove_reference_t< 
@@ -349,11 +341,9 @@ private:
                     actual_type_t<Components> > >* >
                         (comps.ptr))...);
 
-#ifndef NDEBUG
-        if (table) {
-            ecs_table_unlock(iter->world, table);
-        }
-#endif                        
+#       ifndef NDEBUG
+        ecs_table_unlock(iter->world, iter->table);
+#       endif                        
     }
 
     template <typename... Targs, if_t<!IterOnly &&

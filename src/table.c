@@ -1973,8 +1973,10 @@ void ecs_table_lock(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
-        table->lock ++;
+    if (table) {
+        if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
+            table->lock ++;
+        }
     }
 }
 
@@ -1982,9 +1984,11 @@ void ecs_table_unlock(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
-        table->lock --;
-        ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
+    if (table) {
+        if (ecs_poly_is(world, ecs_world_t) && !world->is_readonly) {
+            table->lock --;
+            ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, NULL);
+        }
     }
 }
 

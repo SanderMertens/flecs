@@ -43,7 +43,7 @@ void Filter_term_each_tag() {
     e_3.add<Tag>();
 
     int32_t count = 0;
-    ecs.each<Foo>([&](flecs::entity e, Foo&) {
+    ecs.each<Foo>([&](flecs::entity e, Foo) {
         if (e == e_1 || e == e_2 || e == e_3) {
             count ++;
         }            
