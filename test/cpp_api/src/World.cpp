@@ -154,7 +154,6 @@ void World_multi_world_module() {
     test_int(ns::namespace_module::system_invoke_count, 2);
 }
 
-
 void World_type_id() {
     flecs::world ecs;
 
@@ -164,15 +163,14 @@ void World_type_id() {
 }
 
 void World_different_comp_same_name() {
+    install_test_abort();
+
     flecs::world ecs;
 
-    install_test_abort();
     test_expect_abort();
 
     ecs.component<Position>("Position");
     ecs.component<Velocity>("Position");
-
-    test_assert(false);
 }
 
 void World_reregister_after_reset() {
@@ -237,9 +235,10 @@ void World_reregister_namespace() {
 }
 
 void World_reregister_after_reset_different_name() {
+    install_test_abort();
+
     flecs::world ecs;
 
-    install_test_abort();
     test_expect_abort();    
 
     ecs.component<Position>("Position");
