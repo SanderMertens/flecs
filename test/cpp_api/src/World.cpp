@@ -171,6 +171,8 @@ void World_different_comp_same_name() {
 
     ecs.component<Position>("Position");
     ecs.component<Velocity>("Position");
+
+    test_assert(false);
 }
 
 void World_reregister_after_reset() {

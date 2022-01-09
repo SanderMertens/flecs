@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ctype.h>
+
 namespace flecs {
 
 namespace _ 
@@ -9,7 +11,8 @@ namespace _
 // https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
 //
 // The code from the link has been modified to work with more types, and across
-// multiple compilers.
+// multiple compilers. The resulting string should be the same on all platforms
+// for all compilers.
 //
 struct name_util {
     /* Remove parts from typename that aren't needed for component name */
@@ -52,6 +55,19 @@ struct name_util {
         if (len > const_len) {
             if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
                 typeName[len - const_len] = '\0';
+            }
+            len -= const_len;
+        }
+
+        /* Check if there are any remaining "struct " strings, which can happen
+         * if this is a template type on msvc. */
+        char *ptr = typeName;
+        while ((ptr = strstr(ptr + 1, "struct "))) {
+            // Make sure we're not matched with part of a longer identifier
+            // that contains 'struct'
+            if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
+                ecs_os_memmove(ptr, ptr + struct_len, len - struct_len);
+                len -= struct_len;
             }
         }
     }
