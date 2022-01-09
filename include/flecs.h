@@ -2980,7 +2980,7 @@ bool ecs_query_next_instanced(
 FLECS_API
 bool ecs_query_changed(
     ecs_query_t *query,
-    ecs_iter_t *it);
+    const ecs_iter_t *it);
 
 /** Skip a table while iterating.
  * This operation lets the query iterator know that a table was skipped while

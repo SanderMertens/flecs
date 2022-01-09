@@ -1825,3 +1825,56 @@ void Query_query_each_w_iter() {
     test_int(ptr->x, 21);
     test_int(ptr->y, 31);
 }
+
+void Query_change_tracking() {
+    flecs::world w;
+
+    auto qw = w.query<Position>();
+    auto qr = w.query<const Position>();
+
+    auto e1 = w.entity().add<Tag>().set<Position>({10, 20});
+    auto e2 = w.entity().set<Position>({20, 30});
+
+    test_bool(qr.changed(), true);
+    qr.iter([](flecs::iter&) { });
+    test_bool(qr.changed(), false);
+
+    int32_t count = 0, change_count = 0;
+
+    qw.iter([&](flecs::iter& it, Position* p) {
+        test_int(it.count(), 1);
+
+        count ++;
+
+        if (it.entity(0) == e1) {
+            it.skip();
+            return;
+        }
+
+        change_count ++;
+    });
+
+    test_int(count, 2);
+    test_int(change_count, 1);
+
+    count = 0;
+    change_count = 0;
+
+    test_bool(qr.changed(), true);
+
+    qr.iter([&](flecs::iter& it, const Position* p) {
+        test_int(it.count(), 1);
+
+        count ++;
+
+        if (it.entity(0) == e1) {
+            test_bool(it.changed(), false);
+        } else {
+            test_bool(it.changed(), true);
+            change_count ++;
+        }
+    });
+
+    test_int(count, 2);
+    test_int(change_count, 1);
+}

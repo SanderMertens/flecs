@@ -3114,7 +3114,7 @@ yield:
 
 bool ecs_query_changed(
     ecs_query_t *query,
-    ecs_iter_t *it)
+    const ecs_iter_t *it)
 {
     if (it) {
         ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);

@@ -156,7 +156,7 @@ public:
      *
      * @param it Pointer to C iterator.
      */
-    iter(const ecs_iter_t *it) : m_iter(it) { 
+    iter(ecs_iter_t *it) : m_iter(it) { 
         m_begin = 0;
         m_end = static_cast<std::size_t>(it->count);
     }
@@ -398,7 +398,24 @@ public:
 
         return flecs::column<T>(static_cast<T*>(ecs_iter_column_w_size(m_iter,
             sizeof(T), col)), static_cast<std::size_t>(m_iter->count), false);
-    }    
+    }
+
+    /** Check if the current table has changed since the last iteration.
+     * Can only be used when iterating queries and/or systems. */
+    bool changed() {
+        return ecs_query_changed(nullptr, m_iter);
+    }
+
+    /** Skip current table.
+     * This indicates to the query that the data in the current table is not
+     * modified. By default, iterating a table with a query will mark the 
+     * iterated components as dirty if they are annotated with InOut or Out.
+     * 
+     * When this operation is invoked, the components of the current table will
+     * not be marked dirty. */
+    void skip() {
+        ecs_query_skip(m_iter);
+    }
 
 private:
     /* Get term, check if correct type is used */
@@ -452,7 +469,7 @@ private:
             ecs_term_w_size(m_iter, 0, index), size, count, is_shared);
     }     
 
-    const flecs::iter_t *m_iter;
+    flecs::iter_t *m_iter;
     std::size_t m_begin;
     std::size_t m_end;
 };

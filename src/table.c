@@ -1923,9 +1923,7 @@ void flecs_table_replace_data(
 
 int32_t* flecs_table_get_dirty_state(
     ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-    
+{    
     if (!table->dirty_state) {
         int32_t column_count = ecs_vector_count(table->storage_type);
         table->dirty_state = ecs_os_malloc_n( int32_t, column_count + 1);

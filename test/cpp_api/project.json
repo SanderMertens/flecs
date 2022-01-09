@@ -437,7 +437,8 @@
                 "query_iter_w_func_ptr",
                 "query_each_w_func_no_ptr",
                 "query_iter_w_func_no_ptr",
-                "query_each_w_iter"
+                "query_each_w_iter",
+                "change_tracking"
             ]
         }, {
             "id": "QueryBuilder",
