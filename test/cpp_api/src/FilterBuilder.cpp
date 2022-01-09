@@ -1586,7 +1586,7 @@ void FilterBuilder_term_after_arg() {
     test_int(f.term_count(), 3);
 
     int count = 0;
-    f.each([&](flecs::entity e, TagA&, TagB&) {
+    f.each([&](flecs::entity e, TagA, TagB) {
         test_assert(e == e_1);
         count ++;
     });
