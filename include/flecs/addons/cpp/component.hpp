@@ -61,13 +61,15 @@ struct name_util {
 
         /* Check if there are any remaining "struct " strings, which can happen
          * if this is a template type on msvc. */
-        char *ptr = typeName;
-        while ((ptr = strstr(ptr + 1, "struct "))) {
-            // Make sure we're not matched with part of a longer identifier
-            // that contains 'struct'
-            if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
-                ecs_os_memmove(ptr, ptr + struct_len, len - struct_len);
-                len -= struct_len;
+        if (len > struct_len) {
+            char *ptr = typeName;
+            while ((ptr = strstr(ptr + 1, "struct "))) {
+                // Make sure we're not matched with part of a longer identifier
+                // that contains 'struct'
+                if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
+                    ecs_os_memmove(ptr, ptr + struct_len, len - struct_len);
+                    len -= struct_len;
+                }
             }
         }
     }
