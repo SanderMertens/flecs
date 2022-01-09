@@ -174,7 +174,7 @@ inline flecs::entity entity_view::lookup(const char *path) const {
 // Entity mixin implementation
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {
-    return flecs::entity(m_world, std::forward<Args>(args)...);
+    return flecs::entity(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T>
@@ -184,7 +184,7 @@ inline flecs::entity world::entity(const char *name) const {
 
 template <typename... Args>
 inline flecs::entity world::prefab(Args &&... args) const {
-    flecs::entity result = flecs::entity(m_world, std::forward<Args>(args)...);
+    flecs::entity result = flecs::entity(m_world, FLECS_FWD(args)...);
     result.add(flecs::Prefab);
     return result;
 }

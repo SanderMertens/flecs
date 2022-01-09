@@ -407,8 +407,6 @@ ecs_vector_t* _ecs_vector_copy(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <initializer_list>
-
 namespace flecs {
 
 template <typename T>
@@ -451,17 +449,6 @@ public:
     vector(size_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);
-        }
-    }
-
-    vector(std::initializer_list<T> elems) : m_vector( nullptr) {
-        init(elems.size());
-        *this = elems;
-    }
-
-    void operator=(std::initializer_list<T> elems) {
-        for (auto elem : elems) {
-            this->add(elem);
         }
     }
 

@@ -164,7 +164,7 @@ struct each_invoker : public invoker {
 
     template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit each_invoker(Func&& func) noexcept 
-        : m_func(std::move(func)) { }
+        : m_func(FLECS_MOV(func)) { }
 
     explicit each_invoker(const Func& func) noexcept 
         : m_func(func) { }
@@ -289,7 +289,7 @@ private:
 public:
     template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit iter_invoker(Func&& func) noexcept 
-        : m_func(std::move(func)) { }
+        : m_func(FLECS_MOV(func)) { }
 
     explicit iter_invoker(const Func& func) noexcept 
         : m_func(func) { }

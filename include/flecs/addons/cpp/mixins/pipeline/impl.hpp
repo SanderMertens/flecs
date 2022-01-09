@@ -16,7 +16,7 @@ struct pipeline : type_base<pipeline> {
 
 template <typename... Args>
 inline flecs::pipeline world::pipeline(Args &&... args) const {
-    return flecs::pipeline(m_world, std::forward<Args>(args)...);
+    return flecs::pipeline(m_world, FLECS_FWD(args)...);
 }
 
 inline void world::set_pipeline(const flecs::pipeline& pip) const {

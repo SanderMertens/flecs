@@ -31,7 +31,7 @@ struct trigger final : entity
 
 template <typename... Comps, typename... Args>
 inline trigger_builder<Comps...> world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::trigger_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs

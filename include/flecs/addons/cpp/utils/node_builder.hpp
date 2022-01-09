@@ -29,7 +29,7 @@ public:
     T iter(Func&& func) {
         using Invoker = typename _::iter_invoker<
             typename std::decay<Func>::type, Components...>;
-        return build<Invoker>(std::forward<Func>(func));
+        return build<Invoker>(FLECS_FWD(func));
     }
 
     /* Each is similar to action, but accepts a function that operates on a
@@ -39,7 +39,7 @@ public:
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
-        return build<Invoker>(std::forward<Func>(func));
+        return build<Invoker>(FLECS_FWD(func));
     }
 
 protected:
@@ -51,7 +51,7 @@ protected:
 private:
     template <typename Invoker, typename Func>
     T build(Func&& func) {
-        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+        auto ctx = FLECS_NEW(Invoker)(FLECS_FWD(func));
 
         m_desc.callback = Invoker::run;
         m_desc.binding_ctx = ctx;

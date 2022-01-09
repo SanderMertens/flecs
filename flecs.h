@@ -1557,71 +1557,9 @@ void ecs_map_memory(
         }\
     }
 #endif
+
 #ifdef __cplusplus
 }
-#endif
-
-/** C++ wrapper for map. */
-#ifdef __cplusplus
-#ifndef FLECS_NO_CPP
-
-#include <initializer_list>
-#include <utility>
-
-namespace flecs {
-
-/* C++ class mainly used as wrapper around internal ecs_map_t. Do not use
- * this class as a replacement for STL datastructures! */
-template <typename K, typename T>
-class map {
-public:
-    map(size_t count = 0) {
-        init(count);
-    }
-
-    map(std::initializer_list<std::pair<K, T>> elems) {
-        init(elems.size());
-        *this = elems;
-    }
-
-    void operator=(std::initializer_list<std::pair<K, T>> elems) {
-        for (auto elem : elems) {
-            this->set(elem.first, elem.second);
-        }
-    }
-
-    void clear() {
-        ecs_map_clear(m_map);
-    }
-
-    int32_t count() {
-        return ecs_map_count(m_map);
-    }
-
-    void set(K& key, T& value) {
-        _ecs_map_set(m_map, sizeof(T), reinterpret_cast<ecs_map_key_t>(key), &value);
-    }
-
-    T& get(K& key) {
-        static_cast<T*>(_ecs_map_get(m_map, sizeof(T),
-            reinterpret_cast<ecs_map_key_t>(key)));
-    }
-
-    void destruct() {
-        ecs_map_free(m_map);
-    }
-
-private:
-    void init(size_t count) {
-        m_map = ecs_map_new(T, static_cast<ecs_size_t>(count));
-    }
-
-    ecs_map_t *m_map;
-};
-
-}
-
-#endif
 #endif
 
 #endif
@@ -10804,6 +10742,16 @@ ecs_entity_t ecs_module_init(
     }                               \
   } while (false)
 
+/* Faster (compile time) alternatives to std::move / std::forward. From:
+ *   https://www.foonathan.net/2020/09/move-forward/
+ */
+
+#define FLECS_MOV(...) \
+  static_cast<flecs::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+
+#define FLECS_FWD(...) \
+  static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
+
 namespace flecs 
 {
 
@@ -12126,7 +12074,7 @@ void move_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
     }
 }
 
@@ -12156,7 +12104,7 @@ void move_ctor_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
     }
 }
 
@@ -12172,7 +12120,7 @@ void ctor_move_dtor_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
         src_arr[i].~T();
     }
 }
@@ -12191,7 +12139,7 @@ void move_dtor_impl(
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
         // Move assignment should free dst & assign dst to src
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
         // Destruct src. Move should have left object in a state where it no
         // longer holds resources, but it still needs to be destructed.
         src_arr[i].~T();
@@ -12214,7 +12162,7 @@ void move_dtor_impl(
         // Cleanup resources of dst
         dst_arr[i].~T();
         // Copy src to dst
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
         // No need to destruct src. Since this is a trivial move the code
         // should be agnostic to the address of the component which means we
         // can pretend nothing got destructed.
@@ -12461,7 +12409,7 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id, NULL));
-    dst = std::move(value);
+    dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
 }
@@ -12488,7 +12436,7 @@ inline void set(world_t *world, entity_t entity, T&& value, ecs_id_t id) {
     /* If type is not constructible get_mut should assert on new values */
     ecs_assert(!is_new, ECS_INTERNAL_ERROR, NULL);
 
-    dst = std::move(value);
+    dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
 }
@@ -12518,7 +12466,7 @@ inline void emplace(world_t *world, id_t entity, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
     
-    FLECS_PLACEMENT_NEW(&dst, T{std::forward<Args>(args)...});
+    FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 
     ecs_modified_id(world, entity, id);    
 }
@@ -12532,7 +12480,7 @@ inline void emplace(world_t *world, id_t entity, Args&&... args);
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, A&& value) {
     id_t id = _::cpp_type<T>::id(world);
-    flecs::set(world, entity, std::forward<A&&>(value), id);
+    flecs::set(world, entity, FLECS_FWD(value), id);
 }
 
 // set(const T&)
@@ -12934,7 +12882,7 @@ struct world final {
     template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
         flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
-            std::forward<T&&>(value));
+            FLECS_FWD(value));
     }
     
     /** Set singleton component inside a callback.
@@ -12945,7 +12893,7 @@ struct world final {
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
         flecs::emplace<T>(m_world, _::cpp_type<T>::id(m_world), 
-            std::forward<Args>(args)...);
+            FLECS_FWD(args)...);
     }        
 
     /** Get mut singleton component.
@@ -14136,7 +14084,7 @@ struct entity_view : public id {
 
         ecs_iter_t it = ecs_filter_iter(m_world, &f);
         while (ecs_filter_next(&it)) {
-            _::each_invoker<Func>(std::move(func)).invoke(&it);
+            _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }
 
@@ -14740,7 +14688,7 @@ struct entity_builder : entity_view {
     template <typename T>
     Self& set_override(T&& val) {
         this->override<T>();
-        this->set<T>(std::forward<T>(val));
+        this->set<T>(FLECS_FWD(val));
         return to_base();  
     }    
 
@@ -14922,7 +14870,7 @@ struct entity_builder : entity_view {
     template<typename T, if_t< 
         !is_callable<T>::value && is_actual<T>::value> = 0 >
     Self& set(T&& value) {
-        flecs::set<T>(this->m_world, this->m_id, std::forward<T&&>(value));
+        flecs::set<T>(this->m_world, this->m_id, FLECS_FWD(value));
         return to_base();
     }
 
@@ -14936,7 +14884,7 @@ struct entity_builder : entity_view {
     template<typename T, typename A = actual_type_t<T>, if_not_t< 
         is_callable<T>::value || is_actual<T>::value > = 0>
     Self& set(A&& value) {
-        flecs::set<T>(this->m_world, this->m_id, std::forward<A&&>(value));
+        flecs::set<T>(this->m_world, this->m_id, FLECS_FWD(value));
         return to_base();
     }
 
@@ -15039,7 +14987,7 @@ struct entity_builder : entity_view {
     template <typename T, typename ... Args>
     Self& emplace(Args&&... args) {
         flecs::emplace<T>(this->m_world, this->m_id, 
-            std::forward<Args>(args)...);
+            FLECS_FWD(args)...);
         return to_base();
     }
 
@@ -15518,7 +15466,7 @@ struct each_invoker : public invoker {
 
     template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit each_invoker(Func&& func) noexcept 
-        : m_func(std::move(func)) { }
+        : m_func(FLECS_MOV(func)) { }
 
     explicit each_invoker(const Func& func) noexcept 
         : m_func(func) { }
@@ -15643,7 +15591,7 @@ private:
 public:
     template < if_not_t< is_same< void(Func), void(Func)& >::value > = 0>
     explicit iter_invoker(Func&& func) noexcept 
-        : m_func(std::move(func)) { }
+        : m_func(FLECS_MOV(func)) { }
 
     explicit iter_invoker(const Func& func) noexcept 
         : m_func(func) { }
@@ -15925,7 +15873,7 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
+        iterate<_::each_invoker>(FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -15942,7 +15890,7 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), this->next_action());
+        iterate<_::iter_invoker>(FLECS_FWD(func), this->next_action());
     }
 
     /** Page iterator.
@@ -15978,7 +15926,7 @@ protected:
         ecs_iter_t it = this->get_iter();
         it.is_instanced |= Invoker<Func, Components...>::instanced();
 
-        while (next(&it, std::forward<Args>(args)...)) {
+        while (next(&it, FLECS_FWD(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
     }
@@ -16946,7 +16894,7 @@ inline flecs::id world::id() const {
 
 template <typename ... Args>
 inline flecs::id world::id(Args&&... args) const {
-    return flecs::id(m_world, std::forward<Args>(args)...);
+    return flecs::id(m_world, FLECS_FWD(args)...);
 }
 
 template <typename R, typename O>
@@ -17151,7 +17099,7 @@ inline flecs::entity entity_view::lookup(const char *path) const {
 // Entity mixin implementation
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {
-    return flecs::entity(m_world, std::forward<Args>(args)...);
+    return flecs::entity(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T>
@@ -17161,7 +17109,7 @@ inline flecs::entity world::entity(const char *name) const {
 
 template <typename... Args>
 inline flecs::entity world::prefab(Args &&... args) const {
-    flecs::entity result = flecs::entity(m_world, std::forward<Args>(args)...);
+    flecs::entity result = flecs::entity(m_world, FLECS_FWD(args)...);
     result.add(flecs::Prefab);
     return result;
 }
@@ -17182,7 +17130,7 @@ namespace flecs {
 // Component mixin implementation
 template <typename T, typename... Args>
 inline flecs::entity world::component(Args &&... args) const {
-    return flecs::component<T>(m_world, std::forward<Args>(args)...);
+    return flecs::component<T>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs
@@ -17194,7 +17142,7 @@ namespace flecs {
 // Type mixin implementation
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
-    return flecs::type(m_world, std::forward<Args>(args)...);
+    return flecs::type(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T>
@@ -17711,17 +17659,17 @@ private:
 // Term mixin implementation
 template <typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...);
+    return flecs::term(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T, typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...).id<T>();
+    return flecs::term(m_world, FLECS_FWD(args)...).id<T>();
 }
 
 template <typename R, typename O, typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...).id<R, O>();
+    return flecs::term(m_world, FLECS_FWD(args)...).id<R, O>();
 }
 
 // Builder implementation
@@ -18089,10 +18037,10 @@ public:
         return *this;
     }
 
-    filter(filter&& obj) : filter_base(std::move(obj)) { }
+    filter(filter&& obj) : filter_base(FLECS_MOV(obj)) { }
 
     filter& operator=(filter&& obj) {
-        filter_base(std::move(obj));
+        filter_base(FLECS_MOV(obj));
         return *this;
     }
 
@@ -18113,13 +18061,13 @@ private:
 // World mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::filter<Comps...> world::filter(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...)
+    return flecs::filter_builder<Comps...>(m_world, FLECS_FWD(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::filter_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 // world::each
@@ -18134,7 +18082,7 @@ struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
 {
     filter_invoker_w_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
-        f.each(std::move(func));
+        f.each(FLECS_MOV(func));
     }
 };
 
@@ -18147,7 +18095,7 @@ struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 {
     filter_invoker_no_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
-        f.each(std::move(func));
+        f.each(FLECS_MOV(func));
     }
 };
 
@@ -18158,14 +18106,14 @@ struct filter_invoker;
 template <typename Func>
 struct filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
     filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, std::move(func));
+        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
 template <typename Func>
 struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
     filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, std::move(func));
+        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
@@ -18173,7 +18121,7 @@ struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(*this, std::move(func));
+    _::filter_invoker<Func> f_invoker(*this, FLECS_MOV(func));
 }
 
 template <typename T, typename Func>
@@ -18488,13 +18436,13 @@ public:
 // Mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...)
+    return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 // Builder implementation
@@ -18546,7 +18494,7 @@ public:
     T iter(Func&& func) {
         using Invoker = typename _::iter_invoker<
             typename std::decay<Func>::type, Components...>;
-        return build<Invoker>(std::forward<Func>(func));
+        return build<Invoker>(FLECS_FWD(func));
     }
 
     /* Each is similar to action, but accepts a function that operates on a
@@ -18556,7 +18504,7 @@ public:
         using Invoker = typename _::each_invoker<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
-        return build<Invoker>(std::forward<Func>(func));
+        return build<Invoker>(FLECS_FWD(func));
     }
 
 protected:
@@ -18568,7 +18516,7 @@ protected:
 private:
     template <typename Invoker, typename Func>
     T build(Func&& func) {
-        auto ctx = FLECS_NEW(Invoker)(std::forward<Func>(func));
+        auto ctx = FLECS_NEW(Invoker)(FLECS_FWD(func));
 
         m_desc.callback = Invoker::run;
         m_desc.binding_ctx = ctx;
@@ -18696,7 +18644,7 @@ struct trigger final : entity
 
 template <typename... Comps, typename... Args>
 inline trigger_builder<Comps...> world::trigger(Args &&... args) const {
-    return flecs::trigger_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::trigger_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs
@@ -18819,7 +18767,7 @@ struct observer final : entity
 
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> world::observer(Args &&... args) const {
-    return flecs::observer_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::observer_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs
@@ -19194,7 +19142,7 @@ inline system world::system(flecs::entity e) const {
 
 template <typename... Comps, typename... Args>
 inline system_builder<Comps...> world::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::system_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs
@@ -19219,7 +19167,7 @@ struct pipeline : type_base<pipeline> {
 
 template <typename... Args>
 inline flecs::pipeline world::pipeline(Args &&... args) const {
-    return flecs::pipeline(m_world, std::forward<Args>(args)...);
+    return flecs::pipeline(m_world, FLECS_FWD(args)...);
 }
 
 inline void world::set_pipeline(const flecs::pipeline& pip) const {
@@ -19288,7 +19236,7 @@ namespace flecs {
 // Timer class
 struct timer final : entity {
     template <typename ... Args>
-    timer(Args&&... args) : entity(std::forward<Args>(args)...) { }
+    timer(Args&&... args) : entity(FLECS_FWD(args)...) { }
 };
 
 inline void system::interval(FLECS_FLOAT interval) {
@@ -19408,7 +19356,7 @@ private:
 // Snapshot mixin implementation
 template <typename... Args>
 inline flecs::snapshot world::snapshot(Args &&... args) const {
-    return flecs::snapshot(*this, std::forward<Args>(args)...);
+    return flecs::snapshot(*this, FLECS_FWD(args)...);
 }
 
 }
@@ -19536,7 +19484,7 @@ template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value >>
 inline void emplace(world_t *world, id_t entity, Args&&... args) {
     flecs::entity self(world, entity);
-    emplace<T>(world, entity, self, std::forward<Args>(args)...);
+    emplace<T>(world, entity, self, FLECS_FWD(args)...);
 }
 
 inline void world::init_builtin_components() {

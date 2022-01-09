@@ -137,10 +137,10 @@ public:
         return *this;
     }
 
-    filter(filter&& obj) : filter_base(std::move(obj)) { }
+    filter(filter&& obj) : filter_base(FLECS_MOV(obj)) { }
 
     filter& operator=(filter&& obj) {
-        filter_base(std::move(obj));
+        filter_base(FLECS_MOV(obj));
         return *this;
     }
 
@@ -161,13 +161,13 @@ private:
 // World mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::filter<Comps...> world::filter(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...)
+    return flecs::filter_builder<Comps...>(m_world, FLECS_FWD(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::filter_builder<Comps...> world::filter_builder(Args &&... args) const {
-    return flecs::filter_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::filter_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 // world::each
@@ -182,7 +182,7 @@ struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
 {
     filter_invoker_w_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
-        f.each(std::move(func));
+        f.each(FLECS_MOV(func));
     }
 };
 
@@ -195,7 +195,7 @@ struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 {
     filter_invoker_no_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
-        f.each(std::move(func));
+        f.each(FLECS_MOV(func));
     }
 };
 
@@ -206,14 +206,14 @@ struct filter_invoker;
 template <typename Func>
 struct filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
     filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, std::move(func));
+        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
 template <typename Func>
 struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
     filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, std::move(func));
+        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
@@ -221,7 +221,7 @@ struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(*this, std::move(func));
+    _::filter_invoker<Func> f_invoker(*this, FLECS_MOV(func));
 }
 
 template <typename T, typename Func>

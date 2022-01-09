@@ -123,7 +123,7 @@ void move_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
     }
 }
 
@@ -153,7 +153,7 @@ void move_ctor_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
     }
 }
 
@@ -169,7 +169,7 @@ void ctor_move_dtor_impl(
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        FLECS_PLACEMENT_NEW(&dst_arr[i], T(std::move(src_arr[i])));
+        FLECS_PLACEMENT_NEW(&dst_arr[i], T(FLECS_MOV(src_arr[i])));
         src_arr[i].~T();
     }
 }
@@ -188,7 +188,7 @@ void move_dtor_impl(
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
         // Move assignment should free dst & assign dst to src
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
         // Destruct src. Move should have left object in a state where it no
         // longer holds resources, but it still needs to be destructed.
         src_arr[i].~T();
@@ -211,7 +211,7 @@ void move_dtor_impl(
         // Cleanup resources of dst
         dst_arr[i].~T();
         // Copy src to dst
-        dst_arr[i] = std::move(src_arr[i]);
+        dst_arr[i] = FLECS_MOV(src_arr[i]);
         // No need to destruct src. Since this is a trivial move the code
         // should be agnostic to the address of the component which means we
         // can pretend nothing got destructed.

@@ -203,7 +203,7 @@ struct entity_builder : entity_view {
     template <typename T>
     Self& set_override(T&& val) {
         this->override<T>();
-        this->set<T>(std::forward<T>(val));
+        this->set<T>(FLECS_FWD(val));
         return to_base();  
     }    
 
@@ -385,7 +385,7 @@ struct entity_builder : entity_view {
     template<typename T, if_t< 
         !is_callable<T>::value && is_actual<T>::value> = 0 >
     Self& set(T&& value) {
-        flecs::set<T>(this->m_world, this->m_id, std::forward<T&&>(value));
+        flecs::set<T>(this->m_world, this->m_id, FLECS_FWD(value));
         return to_base();
     }
 
@@ -399,7 +399,7 @@ struct entity_builder : entity_view {
     template<typename T, typename A = actual_type_t<T>, if_not_t< 
         is_callable<T>::value || is_actual<T>::value > = 0>
     Self& set(A&& value) {
-        flecs::set<T>(this->m_world, this->m_id, std::forward<A&&>(value));
+        flecs::set<T>(this->m_world, this->m_id, FLECS_FWD(value));
         return to_base();
     }
 
@@ -502,7 +502,7 @@ struct entity_builder : entity_view {
     template <typename T, typename ... Args>
     Self& emplace(Args&&... args) {
         flecs::emplace<T>(this->m_world, this->m_id, 
-            std::forward<Args>(args)...);
+            FLECS_FWD(args)...);
         return to_base();
     }
 
