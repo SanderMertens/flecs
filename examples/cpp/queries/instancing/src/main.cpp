@@ -41,7 +41,7 @@ int main(int, char *[]) {
     // Create a query for Position, Velocity. We'll create a few entities that
     // have Velocity as owned and shared component.
     auto q = ecs.query_builder<Position, const Velocity>()
-        .arg(1).set(flecs::Self) // Ensure Position is never shared
+        .arg(1).owned()          // Position must always be owned by the entity
         .instanced()             // create instanced query
         .build();
 
@@ -63,7 +63,7 @@ int main(int, char *[]) {
 
     ecs.entity("e4")
         .set<Position>({10, 20})
-        .set<Velocity>({3, 4});
+        .set<Velocity>({4, 5});
 
 
     // Iterate the instanced query. Note how when a query is instanced, it needs

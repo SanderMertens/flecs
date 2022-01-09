@@ -98,7 +98,17 @@ struct term_id_builder_i {
     Base& max_depth(int32_t max_depth) {
         m_term_id->set.max_depth = max_depth;
         return *this;
-    }    
+    }
+
+    Base& owned(bool value = true) {
+        if (value) {
+            m_term_id->set.mask = flecs::Self;
+        } else {
+            m_term_id->set.mask = flecs::SuperSet;
+            m_term_id->set.relation = flecs::IsA;
+        }
+        return *this;
+    }
 
     ecs_term_id_t *m_term_id;
     
