@@ -3031,3 +3031,26 @@ void Entity_get_lambda_from_stage() {
     
     ecs.staging_end();
 }
+
+void Entity_default_ctor() {
+    flecs::world ecs;
+
+    flecs::entity e1;
+    flecs::entity e2 = {};
+
+    flecs::entity_view e3;
+    flecs::entity_view e4 = {};
+
+    flecs::id id1;
+    flecs::id id2 = {};
+
+    e1 = ecs.entity();
+    e2 = ecs.entity();
+    e3 = ecs.entity();
+    e4 = ecs.entity();
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+}

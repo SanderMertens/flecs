@@ -10,7 +10,7 @@ namespace flecs
  * This class provides access to entities. */
 struct entity : entity_builder<entity>
 {
-    explicit entity() : entity_builder<entity>() { }
+    entity() : entity_builder<entity>() { }
 
     /** Create entity.
      *

@@ -175,7 +175,8 @@
                 "id_get_invalid_entity",
                 "each_in_stage",
                 "iter_recycled_parent",
-                "get_lambda_from_stage"
+                "get_lambda_from_stage",
+                "default_ctor"
             ]
         }, {
             "id": "Pairs",

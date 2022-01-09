@@ -13,7 +13,7 @@ namespace flecs
  */
 struct entity_view : public id {
 
-    explicit entity_view() : flecs::id() { }
+    entity_view() : flecs::id() { }
 
     /** Wrap an existing entity id.
      *

@@ -10,7 +10,11 @@ struct entity;
  * pair, or role annotated id (such as SWITCH | Movement).
  */
 struct id {
-    explicit id(flecs::id_t value = 0) 
+    id()
+        : m_world(nullptr)
+        , m_id(0) { }
+    
+    explicit id(flecs::id_t value) 
         : m_world(nullptr)
         , m_id(value) { }
 
