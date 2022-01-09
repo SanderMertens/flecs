@@ -51,7 +51,7 @@ public:
 
     Pod(Pod&& obj) {
         move_ctor_invoked ++;
-        *this = std::move(obj);
+        *this = FLECS_MOV(obj);
     }
 
     Pod& operator=(const Pod& obj) {

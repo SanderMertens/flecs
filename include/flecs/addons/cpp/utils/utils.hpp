@@ -23,6 +23,16 @@
     }                               \
   } while (false)
 
+/* Faster (compile time) alternatives to std::move / std::forward. From:
+ *   https://www.foonathan.net/2020/09/move-forward/
+ */
+
+#define FLECS_MOV(...) \
+  static_cast<flecs::remove_reference_t<decltype(__VA_ARGS__)>&&>(__VA_ARGS__)
+
+#define FLECS_FWD(...) \
+  static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
+
 namespace flecs 
 {
 

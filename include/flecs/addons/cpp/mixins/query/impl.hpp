@@ -130,13 +130,13 @@ public:
 // Mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...)
+    return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...)
         .build();
 }
 
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
-    return flecs::query_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 // Builder implementation

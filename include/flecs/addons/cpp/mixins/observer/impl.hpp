@@ -33,7 +33,7 @@ struct observer final : entity
 
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> world::observer(Args &&... args) const {
-    return flecs::observer_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::observer_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs

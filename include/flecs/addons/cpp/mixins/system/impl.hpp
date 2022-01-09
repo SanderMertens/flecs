@@ -118,7 +118,7 @@ inline system world::system(flecs::entity e) const {
 
 template <typename... Comps, typename... Args>
 inline system_builder<Comps...> world::system(Args &&... args) const {
-    return flecs::system_builder<Comps...>(m_world, std::forward<Args>(args)...);
+    return flecs::system_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs

@@ -5,7 +5,7 @@ namespace flecs {
 // Type mixin implementation
 template <typename... Args>
 inline flecs::type world::type(Args &&... args) const {
-    return flecs::type(m_world, std::forward<Args>(args)...);
+    return flecs::type(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T>

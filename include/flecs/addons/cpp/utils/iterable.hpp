@@ -20,7 +20,7 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        iterate<_::each_invoker>(std::forward<Func>(func), 
+        iterate<_::each_invoker>(FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -37,7 +37,7 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(std::forward<Func>(func), this->next_action());
+        iterate<_::iter_invoker>(FLECS_FWD(func), this->next_action());
     }
 
     /** Page iterator.
@@ -73,7 +73,7 @@ protected:
         ecs_iter_t it = this->get_iter();
         it.is_instanced |= Invoker<Func, Components...>::instanced();
 
-        while (next(&it, std::forward<Args>(args)...)) {
+        while (next(&it, FLECS_FWD(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
     }

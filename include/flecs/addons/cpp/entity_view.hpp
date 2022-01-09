@@ -152,7 +152,7 @@ struct entity_view : public id {
 
         ecs_iter_t it = ecs_filter_iter(m_world, &f);
         while (ecs_filter_next(&it)) {
-            _::each_invoker<Func>(std::move(func)).invoke(&it);
+            _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }
 

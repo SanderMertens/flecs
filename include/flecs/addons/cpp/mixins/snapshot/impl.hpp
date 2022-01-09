@@ -79,7 +79,7 @@ private:
 // Snapshot mixin implementation
 template <typename... Args>
 inline flecs::snapshot world::snapshot(Args &&... args) const {
-    return flecs::snapshot(*this, std::forward<Args>(args)...);
+    return flecs::snapshot(*this, FLECS_FWD(args)...);
 }
 
 }

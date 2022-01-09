@@ -127,17 +127,17 @@ private:
 // Term mixin implementation
 template <typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...);
+    return flecs::term(m_world, FLECS_FWD(args)...);
 }
 
 template <typename T, typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...).id<T>();
+    return flecs::term(m_world, FLECS_FWD(args)...).id<T>();
 }
 
 template <typename R, typename O, typename... Args>
 inline flecs::term world::term(Args &&... args) const {
-    return flecs::term(m_world, std::forward<Args>(args)...).id<R, O>();
+    return flecs::term(m_world, FLECS_FWD(args)...).id<R, O>();
 }
 
 // Builder implementation

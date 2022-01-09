@@ -5,7 +5,7 @@ namespace flecs {
 // Timer class
 struct timer final : entity {
     template <typename ... Args>
-    timer(Args&&... args) : entity(std::forward<Args>(args)...) { }
+    timer(Args&&... args) : entity(FLECS_FWD(args)...) { }
 };
 
 inline void system::interval(FLECS_FLOAT interval) {
