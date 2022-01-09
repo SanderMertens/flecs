@@ -283,7 +283,9 @@
                 "get",
                 "get_out_of_range",
                 "has_from_stage",
-                "create_type_from_system"
+                "create_type_from_system",
+                "type_from_iter",
+                "type_from_staged_iter"
             ]
         }, {
             "id": "System",

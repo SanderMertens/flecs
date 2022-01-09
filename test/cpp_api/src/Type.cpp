@@ -174,3 +174,73 @@ void Type_create_type_from_system() {
     test_assert(e.has_switch<SwitchType>());
     test_assert(e.has_case<TagB>());
 }
+
+void Type_type_from_staged_iter() {
+    flecs::world ecs;
+
+    flecs::id taga_id = ecs.id<TagA>();
+    flecs::id_t taga_id_t = ecs.id<TagA>();
+
+    auto e = ecs.entity().add<TagA>();
+
+    flecs::id result;
+
+    int32_t count = 0;
+    ecs.system<TagA>()
+        .iter([&](flecs::iter& it)
+        {
+            test_int(it.count(), 1);
+            test_assert(it.entity(0) == e);
+            test_bool(it.type().has<TagA>(), true);
+            test_bool(it.type().has(taga_id), true);
+            test_bool(it.type().has(taga_id_t), true);
+            test_bool(it.type().has<TagB>(), false);
+
+            result = it.type().get(0);
+
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    ecs.progress();
+
+    test_int(count, 1);
+
+    test_str(result.str(), "TagA");
+}
+
+void Type_type_from_iter() {
+    flecs::world ecs;
+
+    flecs::id taga_id = ecs.id<TagA>();
+    flecs::id_t taga_id_t = ecs.id<TagA>();
+
+    auto e = ecs.entity().add<TagA>();
+    
+    flecs::id result;
+
+    int32_t count = 0;
+    auto s = ecs.system<TagA>()
+        .iter([&](flecs::iter& it)
+        {
+            test_int(it.count(), 1);
+            test_assert(it.entity(0) == e);
+            test_bool(it.type().has<TagA>(), true);
+            test_bool(it.type().has(taga_id), true);
+            test_bool(it.type().has(taga_id_t), true);
+            test_bool(it.type().has<TagB>(), false);
+
+            result = it.type().get(0);
+
+            count ++;
+        });
+
+    test_int(count, 0);
+
+    s.run();
+
+    test_int(count, 1);
+
+    test_str(result.str(), "TagA");
+}

@@ -76,7 +76,8 @@ struct type_base {
     }
 
     bool has(id_t id) {
-        return ecs_search(world(), m_table, id, 0) != -1;
+        const flecs::world_t *w = ecs_get_world(world());
+        return ecs_search(w, m_table, id, 0) != -1;
     }
 
     bool has(id_t relation, id_t object) {
@@ -129,7 +130,8 @@ struct type_base {
     }
 
     flecs::id get(int32_t index) {
-        return flecs::id(world(), vector().get(index));
+        const flecs::world_t *w = ecs_get_world(world());
+        return flecs::id(const_cast<flecs::world_t*>(w), vector().get(index));
     }
 
     /* Implicit conversion to type_t */

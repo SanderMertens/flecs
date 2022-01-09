@@ -1833,7 +1833,7 @@ void Query_change_tracking() {
     auto qr = w.query<const Position>();
 
     auto e1 = w.entity().add<Tag>().set<Position>({10, 20});
-    auto e2 = w.entity().set<Position>({20, 30});
+    w.entity().set<Position>({20, 30});
 
     test_bool(qr.changed(), true);
     qr.iter([](flecs::iter&) { });

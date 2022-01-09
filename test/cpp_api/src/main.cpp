@@ -270,6 +270,8 @@ void Type_get(void);
 void Type_get_out_of_range(void);
 void Type_has_from_stage(void);
 void Type_create_type_from_system(void);
+void Type_type_from_iter(void);
+void Type_type_from_staged_iter(void);
 
 // Testsuite 'System'
 void System_iter(void);
@@ -1803,6 +1805,14 @@ bake_test_case Type_testcases[] = {
     {
         "create_type_from_system",
         Type_create_type_from_system
+    },
+    {
+        "type_from_iter",
+        Type_type_from_iter
+    },
+    {
+        "type_from_staged_iter",
+        Type_type_from_staged_iter
     }
 };
 
@@ -3772,7 +3782,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        10,
+        12,
         Type_testcases
     },
     {

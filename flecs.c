@@ -3949,9 +3949,7 @@ void flecs_table_replace_data(
 
 int32_t* flecs_table_get_dirty_state(
     ecs_table_t *table)
-{
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
-    
+{    
     if (!table->dirty_state) {
         int32_t column_count = ecs_vector_count(table->storage_type);
         table->dirty_state = ecs_os_malloc_n( int32_t, column_count + 1);
@@ -12732,6 +12730,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_ALREADY_DEFINED);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
+    ECS_ERR_STR(ECS_NAME_IN_USE);
     ECS_ERR_STR(ECS_OUT_OF_MEMORY);
     ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_INVALID_CONVERSION);
@@ -38172,7 +38171,7 @@ yield:
 
 bool ecs_query_changed(
     ecs_query_t *query,
-    ecs_iter_t *it)
+    const ecs_iter_t *it)
 {
     if (it) {
         ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
