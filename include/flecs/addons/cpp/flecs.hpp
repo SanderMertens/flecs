@@ -2,7 +2,7 @@
  * @file flecs.hpp
  * @brief Flecs C++ API.
  *
- * Modern, type safe C++11 API
+ * Modern C++11 API
  */
 
 #pragma once

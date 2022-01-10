@@ -1,4 +1,5 @@
 #include <delta_time.h>
+#include <stdio.h>
 
 void PrintDeltaTime(ecs_iter_t *it) {
     // Print delta_time. The same value is passed to all systems.

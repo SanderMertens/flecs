@@ -1,4 +1,5 @@
 #include <hierarchies.h>
+#include <stdio.h>
 
 typedef struct {
     double x;

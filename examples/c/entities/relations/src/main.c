@@ -1,4 +1,5 @@
 #include <relations.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);

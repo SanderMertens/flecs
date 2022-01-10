@@ -11,13 +11,8 @@
 #define FLECS_API_DEFINES_H
 
 /* Standard library dependencies */
-#include <time.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-#include <limits.h>
 #include <string.h>
 
 /* Non-standard but required. If not provided by platform, add manually. */
@@ -49,6 +44,10 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 #include <stdbool.h>
+#endif
+
+#ifndef NULL
+#define NULL ((void*)0)
 #endif
 
 /* The API uses the native bool type in C++, or a custom one in C */

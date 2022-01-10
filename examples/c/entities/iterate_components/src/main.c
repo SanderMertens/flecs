@@ -1,4 +1,5 @@
 #include <iterate_components.h>
+#include <stdio.h>
 
 typedef struct {
     double x, y;

@@ -86,13 +86,8 @@
 #define FLECS_API_DEFINES_H
 
 /* Standard library dependencies */
-#include <time.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-#include <limits.h>
 #include <string.h>
 
 /* Non-standard but required. If not provided by platform, add manually. */
@@ -163,6 +158,10 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 #include <stdbool.h>
+#endif
+
+#ifndef NULL
+#define NULL ((void*)0)
 #endif
 
 /* The API uses the native bool type in C++, or a custom one in C */
@@ -1231,8 +1230,6 @@ ecs_vector_t* _ecs_vector_copy(
 #ifdef __cplusplus
 #ifndef FLECS_NO_CPP
 
-#include <initializer_list>
-
 namespace flecs {
 
 template <typename T>
@@ -1275,17 +1272,6 @@ public:
     vector(size_t count = 0) : m_vector( nullptr ) { 
         if (count) {
             init(count);
-        }
-    }
-
-    vector(std::initializer_list<T> elems) : m_vector( nullptr) {
-        init(elems.size());
-        *this = elems;
-    }
-
-    void operator=(std::initializer_list<T> elems) {
-        for (auto elem : elems) {
-            this->add(elem);
         }
     }
 
