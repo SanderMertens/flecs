@@ -2346,7 +2346,19 @@ typedef struct ecs_mixins_t ecs_mixins_t;
  * @{
  */
 
-/** Function prototype for systems and triggers.
+/** Function prototype for runnables (systems, observers).
+ * The run callback overrides the default behavior for iterating through the
+ * results of a runnable object.
+ * 
+ * The default runnable iterates the iterator, and calls an iter_action (see
+ * below) for each returned result.
+ * 
+ * @param it The iterator to be iterated by the runnable.
+ */
+typedef void (*ecs_run_action_t)(
+    ecs_iter_t *it);
+
+/** Function prototype for iterables.
  * A system may invoke a callback multiple times, typically once for each
  * matched table.
  * 
@@ -2600,7 +2612,7 @@ struct ecs_observer_t {
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;   
     
-    ecs_iter_action_t action;   /* Callback */
+    ecs_iter_action_t action;   /* See ecs_observer_desc_t::callback */
 
     void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
@@ -3730,8 +3742,16 @@ typedef struct ecs_observer_desc_t {
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* Callback to invoke on an event */
+    /* Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
+
+    /* Callback invoked on an event. When left to NULL the default runner
+     * is used which matches the event with the observer's filter, and calls
+     * 'callback' when it matches. 
+     * A reason to override the run function is to improve performance, if there
+     * are more efficient way to test whether an event matches the observer than
+     * the general purpose query matcher. */
+    ecs_run_action_t run;
 
     /* Associate with entity */
     ecs_entity_t self;
@@ -10696,7 +10716,7 @@ ecs_entity_t ecs_module_init(
  * @file flecs.hpp
  * @brief Flecs C++ API.
  *
- * Modern, type safe C++11 API
+ * Modern C++11 API
  */
 
 #pragma once
@@ -10835,6 +10855,7 @@ struct always_false {
 
 } // namespace flecs
 
+#include <stdlib.h>
 // Array class. Simple std::array like utility that is mostly there to aid
 // template code where template expansion would lead to an array with size 0.
 
@@ -10911,7 +10932,7 @@ template <typename T, size_t Size>
 struct array<T, Size, enable_if_t<Size == 0>> final {
     array() {};
     array(const T* (&elems)) { (void)elems; }
-    T operator[](size_t index) { abort(); (void)index; return T(); }
+    T operator[](size_t index) { ecs_os_abort(); (void)index; return T(); }
     array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
 

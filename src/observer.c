@@ -41,6 +41,9 @@ void observer_callback(ecs_iter_t *it) {
         prev_table = &world->store.root;
     }
 
+    static int obs_count = 0;
+    obs_count ++;
+
     /* Populate the column for the term that triggered. This will allow the
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
@@ -101,7 +104,8 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
-    ecs_check(desc->callback != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_check(desc->callback != NULL || desc->run != NULL, 
+        ECS_INVALID_OPERATION, NULL);
 
     /* If entity is provided, create it */
     ecs_entity_t existing = desc->entity.entity;
@@ -161,9 +165,23 @@ ecs_entity_t ecs_observer_init(
         /* Observer must have at least one event */
         ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
+        ecs_run_action_t run = desc->run;
+        if (!run) {
+            run = observer_callback;
+        }
+
+        observer->action = desc->callback;
+        observer->self = desc->self;
+        observer->ctx = desc->ctx;
+        observer->binding_ctx = desc->binding_ctx;
+        observer->ctx_free = desc->ctx_free;
+        observer->binding_ctx_free = desc->binding_ctx_free;
+        observer->entity = entity;
+        comp->observer = observer;
+
         /* Create a trigger for each term in the filter */
         ecs_trigger_desc_t tdesc = {
-            .callback = observer_callback,
+            .callback = run,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
             .match_prefab = observer->filter.match_prefab,
@@ -207,15 +225,6 @@ ecs_entity_t ecs_observer_init(
                 goto error;
             }
         }
-
-        observer->action = desc->callback;
-        observer->self = desc->self;
-        observer->ctx = desc->ctx;
-        observer->binding_ctx = desc->binding_ctx;
-        observer->ctx_free = desc->ctx_free;
-        observer->binding_ctx_free = desc->binding_ctx_free;
-        observer->entity = entity;
-        comp->observer = observer;
 
         if (desc->entity.name) {
             ecs_trace("#[green]observer#[reset] %s created", 

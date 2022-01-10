@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void Stresstests_setup() {
     ecs_log_set_level(-3);

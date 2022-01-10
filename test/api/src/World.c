@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void World_setup() {
     ecs_log_set_level(-3);

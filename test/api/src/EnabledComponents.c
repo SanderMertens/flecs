@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void EnabledComponents_is_component_enabled() {
     ecs_world_t *world = ecs_init();

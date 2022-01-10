@@ -142,7 +142,7 @@ void Hierarchies_path_depth_0() {
 
     char *path = ecs_get_fullpath(world, Parent);
     test_str(path, "Parent");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -155,7 +155,7 @@ void Hierarchies_path_depth_1() {
 
     char *path = ecs_get_fullpath(world, Child);
     test_str(path, "Parent.Child");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -169,7 +169,7 @@ void Hierarchies_path_depth_2() {
 
     char *path = ecs_get_fullpath(world, GrandChild);
     test_str(path, "Parent.Child.GrandChild");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -181,7 +181,7 @@ void Hierarchies_rel_path_from_root() {
 
     char *path = ecs_get_path(world, 0, Parent);
     test_str(path, "Parent");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -193,7 +193,7 @@ void Hierarchies_rel_path_from_self() {
 
     char *path = ecs_get_path(world, Parent, Parent);
     test_str(path, "");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -206,7 +206,7 @@ void Hierarchies_rel_path_depth_1() {
 
     char *path = ecs_get_path(world, Parent, Child);
     test_str(path, "Child");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -220,7 +220,7 @@ void Hierarchies_rel_path_depth_2() {
 
     char *path = ecs_get_path(world, Parent, GrandChild);
     test_str(path, "Child.GrandChild");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -234,7 +234,7 @@ void Hierarchies_rel_path_no_match() {
 
     char *path = ecs_get_path(world, Parent2, Child);
     test_str(path, "Parent.Child");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -247,7 +247,7 @@ void Hierarchies_path_custom_sep() {
 
     char *path = ecs_get_path_w_sep(world, 0, Child, "::", NULL);
     test_str(path, "Parent::Child");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -260,7 +260,7 @@ void Hierarchies_path_custom_prefix() {
 
     char *path = ecs_get_path_w_sep(world, 0, Child,  "::", "::");
     test_str(path, "::Parent::Child");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -274,7 +274,7 @@ void Hierarchies_path_prefix_rel_match() {
 
     char *path = ecs_get_path_w_sep(world, Parent, GrandChild, "::", "::");
     test_str(path, "Child::GrandChild");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -289,7 +289,7 @@ void Hierarchies_path_prefix_rel_no_match() {
 
     char *path = ecs_get_path_w_sep(world, Parent2, GrandChild, "::", "::");
     test_str(path, "::Parent::Child::GrandChild");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -302,7 +302,7 @@ void Hierarchies_path_w_number() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "1000.Foo");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -648,7 +648,7 @@ void Hierarchies_fullpath_for_core() {
 
     char *path = ecs_get_fullpath(world, ecs_id(EcsComponent));
     test_str(path, "Component");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -666,7 +666,7 @@ void Hierarchies_new_from_path_depth_0() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -684,7 +684,7 @@ void Hierarchies_new_from_path_depth_1() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -702,7 +702,7 @@ void Hierarchies_new_from_path_depth_2() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar.hello");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -770,7 +770,7 @@ void Hierarchies_add_path_depth_0() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -792,7 +792,7 @@ void Hierarchies_add_path_depth_1() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -814,7 +814,7 @@ void Hierarchies_add_path_depth_2() {
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar.hello");
-    free(path);
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
