@@ -130,6 +130,7 @@ struct always_false {
 
 } // namespace flecs
 
+#include <stdlib.h>
 #include "array.hpp"
 #include "string.hpp"
 #include "stringstream.hpp"

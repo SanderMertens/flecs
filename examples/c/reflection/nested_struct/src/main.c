@@ -1,4 +1,5 @@
 #include <nested_struct.h>
+#include <stdio.h>
 
 typedef struct {
     float x, y;

@@ -1,4 +1,5 @@
 #include <basics_deserialize.h>
+#include <stdio.h>
 
 typedef struct {
     float x, y;

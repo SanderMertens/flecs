@@ -1,4 +1,5 @@
 #include <pipeline.h>
+#include <stdio.h>
 
 typedef struct {
     double x, y;

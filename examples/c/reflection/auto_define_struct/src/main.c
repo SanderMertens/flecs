@@ -1,4 +1,5 @@
 #include <auto_define_struct.h>
+#include <stdio.h>
 
 // This type captured is used later to inject reflection data for Position
 ECS_STRUCT(Position, {

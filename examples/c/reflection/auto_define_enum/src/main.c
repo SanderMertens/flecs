@@ -1,4 +1,5 @@
 #include <auto_define_enum.h>
+#include <stdio.h>
 
 // Color is used by Car, so it must also be captured
 ECS_ENUM(Color, {

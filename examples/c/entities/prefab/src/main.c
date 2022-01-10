@@ -1,4 +1,5 @@
 #include <prefab.h>
+#include <stdio.h>
 
 typedef struct { double value; } Attack;
 typedef struct { double value; } Defense;

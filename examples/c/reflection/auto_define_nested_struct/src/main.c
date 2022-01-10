@@ -1,4 +1,5 @@
 #include <auto_define_nested_struct.h>
+#include <stdio.h>
 
 // Point is used by Line, so it must also be captured
 ECS_STRUCT(Point, {
