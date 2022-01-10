@@ -1,4 +1,5 @@
 #include "private_api.h"
+#include <stddef.h>
 
 static
 int32_t count_events(
@@ -427,7 +428,7 @@ void notify_entity_triggers(
 
         int32_t i, entity_count = it->count;
         for (i = 0; i < entity_count; i ++) {
-            if (entities && (entities[i] != t->term.subj.entity)) {
+            if (entities[i] != t->term.subj.entity) {
                 continue;
             }
 

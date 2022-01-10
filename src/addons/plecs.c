@@ -3,6 +3,8 @@
 #ifdef FLECS_PLECS
 
 #include "../private_api.h"
+#include <stdio.h>
+#include <ctype.h>
 
 #define TOK_NEWLINE '\n'
 #define TOK_WITH "with"

@@ -1,4 +1,5 @@
 #include "private_api.h"
+#include <stddef.h>
 
 #define INIT_CACHE(it, f, term_count)\
     if (!it->f && term_count) {\

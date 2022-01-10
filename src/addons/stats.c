@@ -11,6 +11,8 @@
 
 #ifdef FLECS_STATS
 
+#include <stdio.h>
+
 static
 int32_t t_next(
     int32_t t)

@@ -2,6 +2,8 @@
 
 #ifdef FLECS_RULES
 
+#include <stdio.h>
+
 /** Implementation of the rule query engine.
  * 
  * A rule (terminology borrowed from prolog) is a list of constraints that 

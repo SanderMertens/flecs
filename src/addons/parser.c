@@ -3,6 +3,7 @@
 #ifdef FLECS_PARSER
 
 #include "../private_api.h"
+#include <ctype.h>
 
 #define ECS_ANNOTATION_LENGTH_MAX (16)
 

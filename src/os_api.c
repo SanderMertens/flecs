@@ -1,4 +1,6 @@
 #include "private_api.h"
+#include <stdio.h>
+#include <ctype.h>
 
 void ecs_os_api_impl(ecs_os_api_t *api);
 

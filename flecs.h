@@ -8528,6 +8528,8 @@ int ecs_iter_to_json_buf(
 
 #ifdef FLECS_META
 
+#include <stddef.h>
+
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif

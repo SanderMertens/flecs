@@ -1,5 +1,6 @@
 
 #include "private_api.h"
+#include <ctype.h>
 
 static
 void term_error(

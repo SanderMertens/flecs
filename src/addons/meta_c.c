@@ -2,6 +2,8 @@
 
 #ifdef FLECS_META_C
 
+#include <ctype.h>
+
 #define ECS_META_IDENTIFIER_LENGTH (256)
 
 #define ecs_meta_error(ctx, ptr, ...)\
