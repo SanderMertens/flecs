@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdio.h>
 
 void probe_system_w_ctx(
     ecs_iter_t *it,

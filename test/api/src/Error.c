@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void Error_setup() {
     ecs_os_set_api_defaults();

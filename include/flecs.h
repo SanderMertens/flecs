@@ -182,7 +182,19 @@ typedef struct ecs_mixins_t ecs_mixins_t;
  * @{
  */
 
-/** Function prototype for systems and triggers.
+/** Function prototype for runnables (systems, observers).
+ * The run callback overrides the default behavior for iterating through the
+ * results of a runnable object.
+ * 
+ * The default runnable iterates the iterator, and calls an iter_action (see
+ * below) for each returned result.
+ * 
+ * @param it The iterator to be iterated by the runnable.
+ */
+typedef void (*ecs_run_action_t)(
+    ecs_iter_t *it);
+
+/** Function prototype for iterables.
  * A system may invoke a callback multiple times, typically once for each
  * matched table.
  * 
@@ -436,7 +448,7 @@ struct ecs_observer_t {
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
     int32_t event_count;   
     
-    ecs_iter_action_t action;   /* Callback */
+    ecs_iter_action_t action;   /* See ecs_observer_desc_t::callback */
 
     void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
@@ -707,8 +719,16 @@ typedef struct ecs_observer_desc_t {
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
-    /* Callback to invoke on an event */
+    /* Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
+
+    /* Callback invoked on an event. When left to NULL the default runner
+     * is used which matches the event with the observer's filter, and calls
+     * 'callback' when it matches. 
+     * A reason to override the run function is to improve performance, if there
+     * are more efficient way to test whether an event matches the observer than
+     * the general purpose query matcher. */
+    ecs_run_action_t run;
 
     /* Associate with entity */
     ecs_entity_t self;

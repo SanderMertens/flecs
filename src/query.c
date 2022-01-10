@@ -2373,18 +2373,35 @@ static
 void query_on_event(
     ecs_iter_t *it) 
 { 
-    ecs_query_t *query = it->ctx;
-    ecs_entity_t event = it->event;
+    /* Because this is the observer::run callback, checking if this is event is
+     * already handled is not done for us. */
+    ecs_world_t *world = it->world;
+    ecs_observer_t *o = it->ctx;
+    if (o->last_event_id == world->event_id) {
+        return;
+    }
+    o->last_event_id = world->event_id;
 
+    ecs_query_t *query = o->ctx;
+    ecs_table_t *table = it->table;
+
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* The observer isn't doing the matching because the query can do it more
+     * efficiently by checking the table with the query cache. */
+    if (ecs_table_cache_get(&query->cache, ecs_query_table_t, table) == NULL) {
+        return;
+    }
+
+    ecs_entity_t event = it->event;
     if (event == EcsOnTableEmpty) {
-        // printf("%p: table %p: empty\n");
-        update_table(query, it->table, true);
+        update_table(query, table, true);
     } else
     if (event == EcsOnTableFill) {
-        // printf("%p: table %p: fill\n");
-        update_table(query, it->table, false);
+        update_table(query, table, false);
     }
 }
+
 
 /* -- Public API -- */
 
@@ -2405,12 +2422,15 @@ ecs_query_t* ecs_query_init(
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
 
+    ecs_table_cache_init(
+        &result->cache, ecs_query_table_t, result, remove_table);
+
     if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
         goto error;
     }
 
     if (result->filter.term_count) {
-        observer_desc.callback = query_on_event;
+        observer_desc.run = query_on_event;
         observer_desc.ctx = result;
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
@@ -2425,9 +2445,6 @@ ecs_query_t* ecs_query_init(
     result->iterable.init = query_iter_init;
     result->system = desc->system;
     result->prev_match_count = -1;
-
-    ecs_table_cache_init(
-        &result->cache, ecs_query_table_t, result, remove_table);
 
     process_signature(world, result);
 

@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdio.h>
 
 void Lookup_setup() {
     ecs_log_set_level(-3);

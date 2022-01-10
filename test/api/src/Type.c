@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdio.h>
 
 static
 char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
@@ -22,7 +23,7 @@ void Type_type_of_1_tostr() {
     
     test_str(str, "Position");
 
-    free(str);
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -39,7 +40,7 @@ void Type_type_of_2_tostr() {
     
     test_str(str, "Position, Velocity");
 
-    free(str);
+    ecs_os_free(str);
 
     ecs_fini(world);
 }
@@ -55,7 +56,7 @@ void Type_type_of_2_tostr_no_id() {
     
     test_str(str, "100, 200");
 
-    free(str);
+    ecs_os_free(str);
 
     ecs_vector_free(t);
 
