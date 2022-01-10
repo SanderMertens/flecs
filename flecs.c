@@ -3443,6 +3443,12 @@ void init_iter(
         return;
     }
 
+    if (it->table_only) {
+        it->ids = it->priv.cache.ids;
+        it->ids[0] = it->event_id;
+        return;
+    }
+
     flecs_iter_init(it);
 
     *iter_set = true;
@@ -3537,6 +3543,10 @@ void notify_entity_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (it->table_only) {
+        return;
+    }
+
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;
     int32_t offset = it->offset, count = it->count;
@@ -3552,7 +3562,7 @@ void notify_entity_triggers(
 
         int32_t i, entity_count = it->count;
         for (i = 0; i < entity_count; i ++) {
-            if (entities[i] != t->term.subj.entity) {
+            if (entities && (entities[i] != t->term.subj.entity)) {
                 continue;
             }
 
@@ -3620,14 +3630,16 @@ void notify_set_base_triggers(
             continue;
         }
 
-        if (!it->subjects[0]) {
-            it->subjects[0] = obj;
-        }
+        if (!it->table_only) {
+            if (!it->subjects[0]) {
+                it->subjects[0] = obj;
+            }
 
-        if (column != -1) {
-            it->columns[0] = -(column + 1);
-        } else {
-            it->columns[0] = 0;
+            if (column != -1) {
+                it->columns[0] = -(column + 1);
+            } else {
+                it->columns[0] = 0;
+            }
         }
 
         it->is_filter = t->term.inout == EcsInOutFilter;
@@ -3651,6 +3663,10 @@ void notify_set_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (it->table_only) {
+        return;
+    }
 
     ecs_map_iter_t mit = ecs_map_iter(triggers);
     ecs_trigger_t *t;

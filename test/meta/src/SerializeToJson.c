@@ -1,4 +1,5 @@
 #include <meta.h>
+#include <stdio.h>
 
 void SerializeToJson_struct_bool() {
     typedef struct {
