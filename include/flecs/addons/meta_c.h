@@ -141,7 +141,7 @@ int ecs_meta_from_desc(
 
 
 /* Symbol export utility macro's */
-#if (defined(_MSC_VER) || defined(__MINGW32__))
+#if defined(ECS_TARGET_WINDOWS)
 #define FLECS_META_C_EXPORT __declspec(dllexport)
 #define FLECS_META_C_IMPORT __declspec(dllimport)
 #else

@@ -54,7 +54,7 @@ void ecs_os_fini(void) {
     }
 }
 
-#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !defined(_WIN32)
+#if !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
 #include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
 static
@@ -218,9 +218,10 @@ void ecs_os_fatal(
 }
 
 static
-void ecs_os_gettime(ecs_time_t *time)
-{
-    uint64_t now = flecs_os_time_now();
+void ecs_os_gettime(ecs_time_t *time) {
+    ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
+    
+    uint64_t now = ecs_os_now();
     uint64_t sec = now / 1000000000;
 
     assert(sec < UINT32_MAX);
@@ -300,18 +301,18 @@ char* ecs_os_api_module_to_dl(const char *module) {
     /* Best guess, use module name with underscores + OS library extension */
     char *file_base = module_file_base(module, '_');
 
-#if defined(ECS_OS_LINUX)
+#   if defined(ECS_TARGET_LINUX) || defined(ECS_TARGET_FREEBSD)
     ecs_strbuf_appendstr(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".so");
-#elif defined(ECS_OS_DARWIN)
+#   elif defined(ECS_TARGET_DARWIN)
     ecs_strbuf_appendstr(&lib, "lib");
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".dylib");
-#elif defined(ECS_OS_WINDOWS)
+#   elif defined(ECS_TARGET_WINDOWS)
     ecs_strbuf_appendstr(&lib, file_base);
     ecs_strbuf_appendstr(&lib, ".dll");
-#endif
+#   endif
 
     ecs_os_free(file_base);
 
@@ -339,8 +340,6 @@ void ecs_os_set_api_defaults(void)
     if (ecs_os_api_initialized != 0) {
         return;
     }
-
-    flecs_os_time_setup();
     
     /* Memory management */
     ecs_os_api.malloc_ = ecs_os_api_malloc;
@@ -352,7 +351,6 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.strdup_ = ecs_os_api_strdup;
 
     /* Time */
-    ecs_os_api.sleep_ = flecs_os_time_sleep;
     ecs_os_api.get_time_ = ecs_os_gettime;
 
     /* Logging */
@@ -396,7 +394,9 @@ bool ecs_os_has_threading(void) {
 bool ecs_os_has_time(void) {
     return 
         (ecs_os_api.get_time_ != NULL) &&
-        (ecs_os_api.sleep_ != NULL);
+        (ecs_os_api.sleep_ != NULL) &&
+        (ecs_os_api.now_ != NULL) &&
+        (ecs_os_api.enable_high_timer_resolution_ != NULL);
 }
 
 bool ecs_os_has_logging(void) {
@@ -416,15 +416,24 @@ bool ecs_os_has_modules(void) {
         (ecs_os_api.module_to_etc_ != NULL);
 }
 
-#if defined(_MSC_VER)
+void ecs_os_enable_high_timer_resolution(bool enable) {
+    if (ecs_os_api.enable_high_timer_resolution_) {
+        ecs_os_api.enable_high_timer_resolution_(enable);
+    } else {
+        ecs_assert(enable == false, ECS_MISSING_OS_API, 
+            "enable_high_timer_resolution");
+    }
+}
+
+#if defined(ECS_TARGET_WINDOWS)
 static char error_str[255];
 #endif
 
 const char* ecs_os_strerror(int err) {
-#if defined(_MSC_VER)
+#   if defined(ECS_TARGET_WINDOWS)
     strerror_s(error_str, 255, err);
     return error_str;
-#else
+#   else
     return strerror(err);
-#endif
+#   endif
 }

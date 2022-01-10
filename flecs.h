@@ -64,7 +64,7 @@
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 
 /* Don't enable web addons if we're running as a webasm app */
-#ifndef __EMSCRIPTEN__
+#ifndef ECS_TARGET_EM
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
 #endif
@@ -84,6 +84,37 @@
 
 #ifndef FLECS_API_DEFINES_H
 #define FLECS_API_DEFINES_H
+
+#if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
+#define ECS_TARGET_WINDOWS
+#elif defined(__linux__)
+#define ECS_TARGET_LINUX
+#define ECS_TARGET_POSIX
+#elif defined(__FreeBSD__)
+#define ECS_TARGET_FREEBSD
+#define ECS_TARGET_POSIX
+#elif defined(__APPLE__) && defined(__MACH__)
+#define ECS_TARGET_DARWIN
+#define ECS_TARGET_POSIX
+#elif defined(__EMSCRIPTEN__)
+#define ECS_TARGET_EM
+#define ECS_TARGET_POSIX
+#elif defined(__ANDROID__)
+#define ECS_TARGET_ANDROID
+#define ECS_TARGET_POSIX
+#endif
+
+#if defined(__MING32__)
+#define ECS_TARGET_POSIX
+#endif
+
+#if defined(_MSC_VER)
+#define ECS_TARGET_MSVC
+#endif
+
+#if defined(__GNUC__)
+#define ECS_TARGET_GNU
+#endif
 
 /* Standard library dependencies */
 #include <assert.h>
@@ -185,24 +216,24 @@ typedef int32_t ecs_size_t;
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
 #define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
-#elif defined(_MSC_VER)
+#elif defined(ECS_TARGET_MSVC)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
-#elif defined(__GNUC__)
+#elif defined(ECS_TARGET_GNU)
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(__GNUC__)
+#if defined(ECS_TARGET_GNU)
 #define ECS_UNUSED __attribute__((unused))
 #else
 #define ECS_UNUSED
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
-#if defined(__GNUC__)
+#if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
-#elif defined(_MSC_VER)
+#elif defined(ECS_TARGET_MSVC)
 #define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
 #else
 #define ECS_DEPRECATED(msg)
@@ -1771,22 +1802,12 @@ int32_t ecs_strbuf_written(
 #include <stdarg.h>
 #include <errno.h>
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
-#elif defined(__FreeBSD__)
+#elif defined(ECS_TARGET_FREEBSD)
 #include <stdlib.h>
 #else
 #include <alloca.h>
-#endif
-
-#if defined(_WIN32)
-#define ECS_OS_WINDOWS
-#elif defined(__linux__)
-#define ECS_OS_LINUX
-#elif defined(__APPLE__) && defined(__MACH__)
-#define ECS_OS_DARWIN
-#else
-/* Unknown OS */
 #endif
 
 #ifdef __cplusplus
@@ -1908,9 +1929,16 @@ void (*ecs_os_api_sleep_t)(
     int32_t sec,
     int32_t nanosec);
 
+typedef 
+void (*ecs_os_api_enable_high_timer_resolution_t)(
+    bool enable);
+
 typedef
 void (*ecs_os_api_get_time_t)(
     ecs_time_t *time_out);
+
+typedef
+uint64_t (*ecs_os_api_now_t)(void);
 
 /* Logging */
 typedef
@@ -1983,7 +2011,9 @@ typedef struct ecs_os_api_t {
 
     /* Time */
     ecs_os_api_sleep_t sleep_;
+    ecs_os_api_now_t now_;
     ecs_os_api_get_time_t get_time_;
+    ecs_os_api_enable_high_timer_resolution_t enable_high_timer_resolution_;
 
     /* Logging */
     ecs_os_api_log_t log_; /* Logging function. The level should be interpreted as: */
@@ -2051,7 +2081,7 @@ void ecs_os_set_api_defaults(void);
 #ifndef ecs_os_calloc
 #define ecs_os_calloc(size) ecs_os_api.calloc_(size)
 #endif
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(ECS_TARGET_WINDOWS)
 #define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
 #define ecs_os_alloca(size) alloca((size_t)(size))
@@ -2100,7 +2130,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memdup_t(ptr, T) ecs_os_memdup(ptr, ECS_SIZEOF(T))
 #define ecs_os_memdup_n(ptr, T, count) ecs_os_memdup(ptr, ECS_SIZEOF(T) * count)
 
-#if defined(_MSC_VER)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
@@ -2123,7 +2153,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Files */
-#if defined(_MSC_VER)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
 #else
 #define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
@@ -2152,7 +2182,11 @@ void ecs_os_set_api_defaults(void);
 
 /* Time */
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
+#define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
+
+FLECS_API
+void ecs_os_enable_high_timer_resolution(bool enable);
 
 /* Logging */
 FLECS_API
@@ -7621,6 +7655,10 @@ void FlecsTimerImport(
 #define FLECS_SYSTEM
 #endif
 
+#ifndef FLECS_OS_API_IMPL
+#define FLECS_OS_API_IMPL
+#endif
+
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 
@@ -9326,7 +9364,7 @@ int ecs_meta_from_desc(
 
 
 /* Symbol export utility macro's */
-#if (defined(_MSC_VER) || defined(__MINGW32__))
+#if defined(ECS_TARGET_WINDOWS)
 #define FLECS_META_C_EXPORT __declspec(dllexport)
 #define FLECS_META_C_IMPORT __declspec(dllimport)
 #else

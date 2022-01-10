@@ -10,6 +10,37 @@
 #ifndef FLECS_API_DEFINES_H
 #define FLECS_API_DEFINES_H
 
+#if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
+#define ECS_TARGET_WINDOWS
+#elif defined(__linux__)
+#define ECS_TARGET_LINUX
+#define ECS_TARGET_POSIX
+#elif defined(__FreeBSD__)
+#define ECS_TARGET_FREEBSD
+#define ECS_TARGET_POSIX
+#elif defined(__APPLE__) && defined(__MACH__)
+#define ECS_TARGET_DARWIN
+#define ECS_TARGET_POSIX
+#elif defined(__EMSCRIPTEN__)
+#define ECS_TARGET_EM
+#define ECS_TARGET_POSIX
+#elif defined(__ANDROID__)
+#define ECS_TARGET_ANDROID
+#define ECS_TARGET_POSIX
+#endif
+
+#if defined(__MING32__)
+#define ECS_TARGET_POSIX
+#endif
+
+#if defined(_MSC_VER)
+#define ECS_TARGET_MSVC
+#endif
+
+#if defined(__GNUC__)
+#define ECS_TARGET_GNU
+#endif
+
 /* Standard library dependencies */
 #include <assert.h>
 #include <stdarg.h>
@@ -71,24 +102,24 @@ typedef int32_t ecs_size_t;
 /* Use alignof in C++, or a trick in C. */
 #ifdef __cplusplus
 #define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
-#elif defined(_MSC_VER)
+#elif defined(ECS_TARGET_MSVC)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
-#elif defined(__GNUC__)
+#elif defined(ECS_TARGET_GNU)
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
-#if defined(__GNUC__)
+#if defined(ECS_TARGET_GNU)
 #define ECS_UNUSED __attribute__((unused))
 #else
 #define ECS_UNUSED
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
-#if defined(__GNUC__)
+#if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
-#elif defined(_MSC_VER)
+#elif defined(ECS_TARGET_MSVC)
 #define ECS_DEPRECATED(msg) __declspec(deprecated(msg))
 #else
 #define ECS_DEPRECATED(msg)

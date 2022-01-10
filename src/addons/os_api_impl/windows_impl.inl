@@ -1,3 +1,6 @@
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <WinSock2.h>
 #include <windows.h>
 
@@ -111,6 +114,99 @@ void win_cond_wait(
     SleepConditionVariableCS(cond, mutex, INFINITE);
 }
 
+static bool win_time_initialized;
+static double win_time_freq;
+static LARGE_INTEGER win_time_start;
+
+static
+void win_time_setup(void) {
+    if ( win_time_initialized) {
+        return;
+    }
+    
+    win_time_initialized = true;
+
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&win_time_start);
+    win_time_freq = (double)freq.QuadPart / 1000000000.0;
+}
+
+static
+void win_sleep(
+    int32_t sec, 
+    int32_t nanosec) 
+{
+    HANDLE timer;
+    LARGE_INTEGER ft;
+
+    ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
+
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
+}
+
+static double win_time_freq;
+static ULONG win_current_resolution;
+
+static
+void win_enable_high_timer_resolution(bool enable)
+{
+    HMODULE hntdll = GetModuleHandle((LPCTSTR)"ntdll.dll");
+    if (!hntdll) {
+        return;
+    }
+
+    LONG (__stdcall *pNtSetTimerResolution)(
+        ULONG desired, BOOLEAN set, ULONG * current);
+
+    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))
+        GetProcAddress(hntdll, "NtSetTimerResolution");
+
+    if(!pNtSetTimerResolution) {
+        return;
+    }
+
+    ULONG current, resolution = 10000; /* 1 ms */
+
+    if (!enable && win_current_resolution) {
+        pNtSetTimerResolution(win_current_resolution, 0, &current);
+        win_current_resolution = 0;
+        return;
+    } else if (!enable) {
+        return;
+    }
+
+    if (resolution == win_current_resolution) {
+        return;
+    }
+
+    if (win_current_resolution) {
+        pNtSetTimerResolution(win_current_resolution, 0, &current);
+    }
+
+    if (pNtSetTimerResolution(resolution, 1, &current)) {
+        /* Try setting a lower resolution */
+        resolution *= 2;
+        if(pNtSetTimerResolution(resolution, 1, &current)) return;
+    }
+
+    win_current_resolution = resolution;
+}
+
+static
+uint64_t win_time_now(void) {
+    uint64_t now;
+
+    LARGE_INTEGER qpc_t;
+    QueryPerformanceCounter(&qpc_t);
+    now = (uint64_t)(qpc_t.QuadPart / win_time_freq);
+
+    return now;
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -129,6 +225,11 @@ void ecs_set_os_api_impl(void) {
     api.cond_signal_ = win_cond_signal;
     api.cond_broadcast_ = win_cond_broadcast;
     api.cond_wait_ = win_cond_wait;
+    api.sleep_ = win_sleep;
+    api.now_ = win_time_now;
+    api.enable_high_timer_resolution_ = win_enable_high_timer_resolution;
+
+    win_time_setup();
 
     ecs_os_set_api(&api);
 }

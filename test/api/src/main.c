@@ -11755,5 +11755,6 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
+    ut_init(argv[0]);
     return bake_test_run("api", argc, argv, suites, 65);
 }

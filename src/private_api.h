@@ -570,23 +570,6 @@ bool flecs_iter_next_instanced(
     ecs_iter_t *it,
     bool result);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Time API
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_os_time_setup(void);
-
-uint64_t flecs_os_time_now(void);
-
-void flecs_os_time_sleep(
-    int32_t sec, 
-    int32_t nanosec);
-
-/* Increase or reset timer resolution (Windows only) */
-FLECS_API
-void flecs_increase_timer_resolution(
-    bool enable);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Poly API

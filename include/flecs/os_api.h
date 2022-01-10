@@ -16,22 +16,12 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
-#elif defined(__FreeBSD__)
+#elif defined(ECS_TARGET_FREEBSD)
 #include <stdlib.h>
 #else
 #include <alloca.h>
-#endif
-
-#if defined(_WIN32)
-#define ECS_OS_WINDOWS
-#elif defined(__linux__)
-#define ECS_OS_LINUX
-#elif defined(__APPLE__) && defined(__MACH__)
-#define ECS_OS_DARWIN
-#else
-/* Unknown OS */
 #endif
 
 #ifdef __cplusplus
@@ -153,9 +143,16 @@ void (*ecs_os_api_sleep_t)(
     int32_t sec,
     int32_t nanosec);
 
+typedef 
+void (*ecs_os_api_enable_high_timer_resolution_t)(
+    bool enable);
+
 typedef
 void (*ecs_os_api_get_time_t)(
     ecs_time_t *time_out);
+
+typedef
+uint64_t (*ecs_os_api_now_t)(void);
 
 /* Logging */
 typedef
@@ -228,7 +225,9 @@ typedef struct ecs_os_api_t {
 
     /* Time */
     ecs_os_api_sleep_t sleep_;
+    ecs_os_api_now_t now_;
     ecs_os_api_get_time_t get_time_;
+    ecs_os_api_enable_high_timer_resolution_t enable_high_timer_resolution_;
 
     /* Logging */
     ecs_os_api_log_t log_; /* Logging function. The level should be interpreted as: */
@@ -296,7 +295,7 @@ void ecs_os_set_api_defaults(void);
 #ifndef ecs_os_calloc
 #define ecs_os_calloc(size) ecs_os_api.calloc_(size)
 #endif
-#if defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(ECS_TARGET_WINDOWS)
 #define ecs_os_alloca(size) _alloca((size_t)(size))
 #else
 #define ecs_os_alloca(size) alloca((size_t)(size))
@@ -345,7 +344,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memdup_t(ptr, T) ecs_os_memdup(ptr, ECS_SIZEOF(T))
 #define ecs_os_memdup_n(ptr, T, count) ecs_os_memdup(ptr, ECS_SIZEOF(T) * count)
 
-#if defined(_MSC_VER)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
@@ -368,7 +367,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Files */
-#if defined(_MSC_VER)
+#if defined(ECS_TARGET_MSVC)
 #define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
 #else
 #define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
@@ -397,7 +396,11 @@ void ecs_os_set_api_defaults(void);
 
 /* Time */
 #define ecs_os_sleep(sec, nanosec) ecs_os_api.sleep_(sec, nanosec)
+#define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
+
+FLECS_API
+void ecs_os_enable_high_timer_resolution(bool enable);
 
 /* Logging */
 FLECS_API
