@@ -633,10 +633,12 @@ void Filter_term_w_self_min_max_depth() {
     ecs_fini(world);
 }
 
+#include <stdio.h>
+
 void Filter_term_w_self_invalid_min_depth() {
     install_test_abort();
 
-    ecs_world_t *world = ecs_mini();
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
 

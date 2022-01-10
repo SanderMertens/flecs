@@ -62,7 +62,7 @@
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
 
 /* Don't enable web addons if we're running as a webasm app */
-#ifndef __EMSCRIPTEN__
+#ifndef ECS_TARGET_EM
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
 #endif

@@ -1098,7 +1098,7 @@ int ecs_fini(
     
     fini_misc(world);
 
-    flecs_increase_timer_resolution(0);
+    ecs_os_enable_high_timer_resolution(false);
 
     /* End of the world */
     ecs_poly_free(world, ecs_world_t);
@@ -1151,15 +1151,6 @@ error:
     return;
 }
 
-/* Increase timer resolution based on target fps */
-static 
-void set_timer_resolution(
-    FLECS_FLOAT fps)
-{
-    if(fps >= 60.0f) flecs_increase_timer_resolution(1);
-    else flecs_increase_timer_resolution(0);
-}
-
 void ecs_set_target_fps(
     ecs_world_t *world,
     FLECS_FLOAT fps)
@@ -1169,7 +1160,7 @@ void ecs_set_target_fps(
 
     ecs_measure_frame_time(world, true);
     world->stats.target_fps = fps;
-    set_timer_resolution(fps);
+    ecs_os_enable_high_timer_resolution(fps >= 60.0f);
 error:
     return;
 }

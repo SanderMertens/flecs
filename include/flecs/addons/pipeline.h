@@ -23,6 +23,10 @@
 #define FLECS_SYSTEM
 #endif
 
+#ifndef FLECS_OS_API_IMPL
+#define FLECS_OS_API_IMPL
+#endif
+
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 

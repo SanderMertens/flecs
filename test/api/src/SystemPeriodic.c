@@ -1501,8 +1501,6 @@ void TestIsSharedOnNotSet(ecs_iter_t *it) {
 }
 
 void SystemPeriodic_is_shared_on_column_not_set() {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

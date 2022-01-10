@@ -1,6 +1,6 @@
 #include "../private_api.h"
 
-#ifndef _MSC_VER
+#ifdef ECS_TARGET_GNU
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
@@ -21,12 +21,12 @@ lookup3.c, by Bob Jenkins, May 2006, Public Domain.
 -------------------------------------------------------------------------------
 */
 
-#ifdef _MSC_VER
+#ifdef ECS_TARGET_MSVC
 //FIXME
 #else
 #include <sys/param.h>  /* attempt to define endianness */
 #endif
-#ifdef linux
+#ifdef ECS_TARGET_LINUX
 # include <endian.h>    /* attempt to define endianness */
 #endif
 

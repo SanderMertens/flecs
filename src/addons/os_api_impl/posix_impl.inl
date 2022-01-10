@@ -1,5 +1,12 @@
-
 #include "pthread.h"
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <mach/mach_time.h>
+#elif defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#else
+#include <time.h>
+#endif
 
 static
 ecs_os_thread_t posix_thread_new(
@@ -144,6 +151,88 @@ void posix_cond_wait(
     }
 }
 
+static bool posix_time_initialized;
+
+#if defined(__APPLE__) && defined(__MACH__)
+static mach_timebase_info_data_t posix_osx_timebase;
+static uint64_t posix_time_start;
+#else
+static uint64_t posix_time_start;
+#endif
+
+static
+void posix_time_setup(void) {
+    if (posix_time_initialized) {
+        return;
+    }
+    
+    posix_time_initialized = true;
+
+    #if defined(__APPLE__) && defined(__MACH__)
+        mach_timebase_info(&posix_osx_timebase);
+        posix_time_start = mach_absolute_time();
+    #else
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        posix_time_start = (uint64_t)ts.tv_sec*1000000000 + (uint64_t)ts.tv_nsec; 
+    #endif
+}
+
+static
+void posix_sleep(
+    int32_t sec, 
+    int32_t nanosec) 
+{
+    struct timespec sleepTime;
+    ecs_assert(sec >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(nanosec >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    sleepTime.tv_sec = sec;
+    sleepTime.tv_nsec = nanosec;
+    if (nanosleep(&sleepTime, NULL)) {
+        ecs_err("nanosleep failed");
+    }
+}
+
+static
+void posix_enable_high_timer_resolution(bool enable) {
+    (void)enable;
+}
+
+/* prevent 64-bit overflow when computing relative timestamp
+    see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
+*/
+#if defined(ECS_TARGET_DARWIN)
+static
+int64_t posix_int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
+    int64_t q = value / denom;
+    int64_t r = value % denom;
+    return q * numer + r * numer / denom;
+}
+#endif
+
+static
+uint64_t posix_time_now(void) {
+    ecs_assert(posix_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
+
+    uint64_t now;
+
+    #if defined(ECS_TARGET_DARWIN)
+        now = (uint64_t) posix_int64_muldiv(
+            (int64_t)mach_absolute_time(), 
+            (int64_t)posix_osx_timebase.numer, 
+            (int64_t)posix_osx_timebase.denom);
+    #elif defined(__EMSCRIPTEN__)
+        now = (long long)(emscripten_get_now() * 1000.0 * 1000);
+    #else
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        now = ((uint64_t)ts.tv_sec * 1000 * 1000 * 1000 + (uint64_t)ts.tv_nsec);
+    #endif
+
+    return now;
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -162,6 +251,11 @@ void ecs_set_os_api_impl(void) {
     api.cond_signal_ = posix_cond_signal;
     api.cond_broadcast_ = posix_cond_broadcast;
     api.cond_wait_ = posix_cond_wait;
+    api.sleep_ = posix_sleep;
+    api.now_ = posix_time_now;
+    api.enable_high_timer_resolution_ = posix_enable_high_timer_resolution;
+
+    posix_time_setup();
 
     ecs_os_set_api(&api);
 }
