@@ -8,30 +8,12 @@
 #endif
 
 #include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <time.h>
-#include <ctype.h>
-#include <math.h>
-#include <stddef.h>
-
-#ifdef _MSC_VER
-//FIXME
-#else
-#include <sys/param.h>  /* attempt to define endianness */
-#endif
-#ifdef linux
-# include <endian.h>    /* attempt to define endianness */
-#endif
+#include <limits.h>
 
 #include "flecs.h"
 #include "datastructures/entity_index.h"
 #include "flecs/private/bitset.h"
-#include "flecs/private/sparse.h"
 #include "flecs/private/switch_list.h"
-#include "flecs/private/hashmap.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
 #define ECS_MAX_ADD_REMOVE (32)

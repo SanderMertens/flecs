@@ -1,5 +1,6 @@
 
 #include "private_api.h"
+#include <ctype.h>
 
 static
 void flecs_notify_on_add(

@@ -1,4 +1,5 @@
 #include "private_api.h"
+#include <time.h>
 
 #ifndef NDEBUG
 static int64_t s_min[] = { 

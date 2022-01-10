@@ -1,5 +1,6 @@
-
 #include "private_api.h"
+#include <stdio.h>
+#include <ctype.h>
 
 #define ECS_NAME_BUFFER_LENGTH (64)
 

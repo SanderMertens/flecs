@@ -1,4 +1,5 @@
 #include "../private_api.h"
+#include <stdio.h>
 
 /**
  *  stm32tpl --  STM32 C++ Template Peripheral Library

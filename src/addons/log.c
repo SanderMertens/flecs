@@ -2,6 +2,9 @@
 
 #ifdef FLECS_LOG
 
+#include <stdio.h>
+#include <ctype.h>
+
 static
 char *ecs_vasprintf(
     const char *fmt,

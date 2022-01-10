@@ -1,4 +1,5 @@
 #include <collections.h>
+#include <stdlib.h>
 
 struct elem { int hash; char *value; } elems[] = {
     {1, "hello"},

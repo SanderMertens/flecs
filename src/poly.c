@@ -1,4 +1,5 @@
 #include "private_api.h"
+#include <stddef.h>
 
 static const char* mixin_kind_str[] = {
     [EcsMixinBase] = "base (should never be requested by application)",
