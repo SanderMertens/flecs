@@ -63,7 +63,7 @@ struct name_util {
          * if this is a template type on msvc. */
         if (len > struct_len) {
             char *ptr = typeName;
-            while ((ptr = strstr(ptr + 1, "struct "))) {
+            while ((ptr = strstr(ptr + 1, "struct ")) != 0) {
                 // Make sure we're not matched with part of a longer identifier
                 // that contains 'struct'
                 if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
