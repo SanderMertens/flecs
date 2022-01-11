@@ -273,7 +273,7 @@ bool test_iter(
                     e = expect->variables[v].entities[0];
                 }
                 if (e) {
-                    ecs_entity_t var = ecs_rule_variable(it, id);
+                    ecs_entity_t var = ecs_rule_get_var(it, id);
                     if (!if_test_assert(e == var)) {
                         return false;
                     }
@@ -284,7 +284,7 @@ bool test_iter(
                     name = expect->variables[v].entity_names[0];
                 }
                 if (name) {
-                    ecs_entity_t var = ecs_rule_variable(it, id);
+                    ecs_entity_t var = ecs_rule_get_var(it, id);
                     if (!if_test_str(name, ecs_get_name(it->world, var))) {
                         printf(" - variable id %d\n", id);
                         printf(" - index %d\n", entity_index);

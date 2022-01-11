@@ -1571,6 +1571,7 @@ ecs_table_t *traverse_from_expr(
             }
 
             if (ecs_term_finalize(world, name, &term)) {
+                ecs_term_fini(&term);
                 if (error) {
                     *error = true;
                 }
@@ -1578,6 +1579,7 @@ ecs_table_t *traverse_from_expr(
             }
 
             if (!ecs_term_is_trivial(&term)) {
+                ecs_term_fini(&term);
                 if (error) {
                     *error = true;
                 }

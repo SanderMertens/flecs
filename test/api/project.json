@@ -1509,7 +1509,11 @@
                 "3_terms_2_filter",
                 "term_obj_w_this",
                 "term_subj_w_this",
-                "rule_iter_frame_offset"
+                "rule_iter_frame_offset",
+                "rule_iter_set_var",
+                "rule_iter_set_2_vars",
+                "rule_iter_set_pred_var",
+                "rule_iter_set_var_for_2_terms"
             ]
         }, {
             "id": "TransitiveRules",

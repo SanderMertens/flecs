@@ -204,7 +204,8 @@ void Has_has_entity_owned_0() {
     test_assert(e != 0);
 
     test_expect_abort();
-    ecs_owns_id(world, 0, e);
+    bool dummy = ecs_owns_id(world, 0, e);
+    test_assert(!dummy); // should not reach this code
 }
 
 void Has_has_entity_owned_0_component() {

@@ -9504,26 +9504,32 @@ const ecs_filter_t* ecs_rule_filter(
     const ecs_rule_t *rule);
 
 FLECS_API
-int32_t ecs_rule_variable_count(
+int32_t ecs_rule_var_count(
     const ecs_rule_t *rule);
 
 FLECS_API
-int32_t ecs_rule_find_variable(
+int32_t ecs_rule_find_var(
     const ecs_rule_t *rule,
     const char *name);    
 
 FLECS_API
-const char* ecs_rule_variable_name(
+const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id);
 
 FLECS_API
-ecs_entity_t ecs_rule_variable(
+void ecs_rule_set_var(
+    ecs_iter_t *it,
+    int32_t var_id,
+    ecs_entity_t value);
+
+FLECS_API
+ecs_entity_t ecs_rule_get_var(
     ecs_iter_t *it,
     int32_t var_id);
 
 FLECS_API
-bool ecs_rule_variable_is_entity(
+bool ecs_rule_var_is_entity(
     const ecs_rule_t *rule,
     int32_t var_id);  
 

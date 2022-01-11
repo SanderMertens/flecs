@@ -1442,6 +1442,10 @@ void Rules_3_terms_2_filter(void);
 void Rules_term_obj_w_this(void);
 void Rules_term_subj_w_this(void);
 void Rules_rule_iter_frame_offset(void);
+void Rules_rule_iter_set_var(void);
+void Rules_rule_iter_set_2_vars(void);
+void Rules_rule_iter_set_pred_var(void);
+void Rules_rule_iter_set_var_for_2_terms(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7890,6 +7894,22 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_iter_frame_offset",
         Rules_rule_iter_frame_offset
+    },
+    {
+        "rule_iter_set_var",
+        Rules_rule_iter_set_var
+    },
+    {
+        "rule_iter_set_2_vars",
+        Rules_rule_iter_set_2_vars
+    },
+    {
+        "rule_iter_set_pred_var",
+        Rules_rule_iter_set_pred_var
+    },
+    {
+        "rule_iter_set_var_for_2_terms",
+        Rules_rule_iter_set_var_for_2_terms
     }
 };
 
@@ -11518,7 +11538,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        116,
+        120,
         Rules_testcases
     },
     {
