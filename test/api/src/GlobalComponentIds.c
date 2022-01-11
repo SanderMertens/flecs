@@ -147,5 +147,7 @@ void GlobalComponentIds_reuse_300_component_ids() {
     test_int(info->last_id, info_last_id);
     test_int(next_id, ecs_new_id(world));
 
+    ecs_os_free(ids);
+
     ecs_fini(world);
 }

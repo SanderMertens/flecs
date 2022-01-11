@@ -73,14 +73,20 @@ int finalize_term_var(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_id_t *identifier,
-    const char *name)
+    const char *name,
+    bool allocated)
 {
     if (identifier->var == EcsVarDefault) {
         const char *var = ecs_identifier_is_var(identifier->name);
-        if (ecs_identifier_is_var(identifier->name)) {
-            char *var_id = ecs_os_strdup(var);
-            ecs_os_free(identifier->name);
-            identifier->name = var_id;
+        if (var) {
+            if (allocated) {
+                char *var_dup = ecs_os_strdup(var);
+                ecs_os_free(identifier->name);
+                identifier->name = var_dup;
+            } else {
+                ecs_assert(!term->move, ECS_INTERNAL_ERROR, NULL);
+                identifier->name = (char*)var;
+            }
             identifier->var = EcsVarIsVariable;
         }
     }
@@ -128,7 +134,7 @@ int finalize_term_identifier(
     if (finalize_term_set(world, term, identifier, name)) {
         return -1;
     }
-    if (finalize_term_var(world, term, identifier, name)) {
+    if (finalize_term_var(world, term, identifier, name, false)) {
         return -1;
     }
     return 0;
@@ -185,15 +191,16 @@ static
 int finalize_term_vars(
     const ecs_world_t *world,
     ecs_term_t *term,
-    const char *name)
+    const char *name,
+    bool allocated)
 {
-    if (finalize_term_var(world, term, &term->pred, name)) {
+    if (finalize_term_var(world, term, &term->pred, name, allocated)) {
         return -1;
     }
-    if (finalize_term_var(world, term, &term->subj, name)) {
+    if (finalize_term_var(world, term, &term->subj, name, allocated)) {
         return -1;
     }
-    if (finalize_term_var(world, term, &term->obj, name)) {
+    if (finalize_term_var(world, term, &term->obj, name, allocated)) {
         return -1;
     }
     return 0;
@@ -607,7 +614,7 @@ int ecs_term_finalize(
     const char *name,
     ecs_term_t *term)
 {
-    if (finalize_term_vars(world, term, name)) {
+    if (finalize_term_vars(world, term, name, false)) {
         return -1;
     }
 
@@ -811,7 +818,6 @@ int ecs_filter_init(
     f.match_anything = true;
 
     if (terms) {
-        terms = desc->terms_buffer;
         term_count = desc->terms_buffer_count;
     } else {
         terms = (ecs_term_t*)desc->terms;
@@ -854,6 +860,11 @@ int ecs_filter_init(
                 terms = ecs_os_realloc(terms, 
                     buffer_count * ECS_SIZEOF(ecs_term_t));
             }
+
+            /* Check for identifiers that have a name that starts with _. If the
+             * variable kind is left to Default, the kind should be set to 
+             * variable and the _ prefix should be removed. */
+            finalize_term_vars(world, &term, name, true);
 
             terms[term_count] = term;
             term_count ++;

@@ -2760,7 +2760,7 @@ error:
 
 /* Public function that returns number of variables. This enables an application
  * to iterate the variables and obtain their values. */
-int32_t ecs_rule_variable_count(
+int32_t ecs_rule_var_count(
     const ecs_rule_t *rule)
 {
     ecs_assert(rule != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2768,7 +2768,7 @@ int32_t ecs_rule_variable_count(
 }
 
 /* Public function to find a variable by name */
-int32_t ecs_rule_find_variable(
+int32_t ecs_rule_find_var(
     const ecs_rule_t *rule,
     const char *name)
 {
@@ -2781,7 +2781,7 @@ int32_t ecs_rule_find_variable(
 }
 
 /* Public function to get the name of a variable. */
-const char* ecs_rule_variable_name(
+const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id)
 {
@@ -2789,7 +2789,7 @@ const char* ecs_rule_variable_name(
 }
 
 /* Public function to get the type of a variable. */
-bool ecs_rule_variable_is_entity(
+bool ecs_rule_var_is_entity(
     const ecs_rule_t *rule,
     int32_t var_id)
 {
@@ -2797,7 +2797,7 @@ bool ecs_rule_variable_is_entity(
 }
 
 /* Public function to get the value of a variable. */
-ecs_entity_t ecs_rule_variable(
+ecs_entity_t ecs_rule_get_var(
     ecs_iter_t *iter,
     int32_t var_id)
 {
@@ -2811,6 +2811,28 @@ ecs_entity_t ecs_rule_variable(
     } else {
         return 0;
     }
+}
+
+/* Public function to set the value of a variable before iterating. */
+void ecs_rule_set_var(
+    ecs_iter_t *it,
+    int32_t var_id,
+    ecs_entity_t value)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id != -1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(value != 0, ECS_INVALID_PARAMETER, NULL);
+    /* Can't set variable while iterating */
+    ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(it->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
+    const ecs_rule_t *r = iter->rule;
+    ecs_check(var_id < r->variable_count, ECS_INVALID_PARAMETER, NULL);
+
+    entity_reg_set(r, iter->registers, var_id, value);
+error:
+    return;
 }
 
 /* Create rule iterator */
