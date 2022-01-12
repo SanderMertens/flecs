@@ -4644,3 +4644,147 @@ void Rules_rule_iter_set_var_for_2_terms() {
 
     ecs_fini(world);
 }
+
+void Rules_rule_iter_set_cyclic_variable() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t bob = ecs_new_id(world);
+    ecs_entity_t alice = ecs_new_id(world);
+    ecs_entity_t jane = ecs_new_id(world);
+    ecs_entity_t john = ecs_new_id(world);
+
+    ecs_add_pair(world, bob, Likes, alice);
+    ecs_add_pair(world, bob, Likes, john);
+    ecs_add_pair(world, alice, Likes, bob);
+    ecs_add_pair(world, jane, Likes, john);
+    ecs_add_pair(world, john, Likes, jane);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { .pred.entity = Likes, .subj.name = "_X", .obj.name = "_Y"},
+            { .pred.entity = Likes, .subj.name = "_Y", .obj.name = "_X"}
+        }
+    });
+
+    int x_var = ecs_rule_find_var(r, "X");
+    int y_var = ecs_rule_find_var(r, "Y");
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    // First verify that all entities match when no variables are set
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), alice);
+    test_int(ecs_rule_get_var(&it, y_var), bob);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), bob);
+    test_int(ecs_rule_get_var(&it, y_var), alice);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), john);
+    test_int(ecs_rule_get_var(&it, y_var), jane);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), jane);
+    test_int(ecs_rule_get_var(&it, y_var), john);
+    test_bool( ecs_rule_next(&it), false );
+
+    // Iterate again with X = bob
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, bob);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), bob);
+    test_int(ecs_rule_get_var(&it, y_var), alice);
+    test_bool( ecs_rule_next(&it), false );
+
+    // Iterate again with Y = alice
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, alice);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(ecs_rule_get_var(&it, x_var), alice);
+    test_int(ecs_rule_get_var(&it, y_var), bob);
+    test_bool( ecs_rule_next(&it), false );
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_rule_iter_set_cyclic_variable_w_this() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+
+    ecs_entity_t bob = ecs_new_id(world);
+    ecs_entity_t alice = ecs_new_id(world);
+    ecs_entity_t jane = ecs_new_id(world);
+    ecs_entity_t john = ecs_new_id(world);
+
+    ecs_set_name(world, bob, "bob");
+    ecs_set_name(world, alice, "alice");
+
+    ecs_add_pair(world, bob, Likes, alice);
+    ecs_add_pair(world, bob, Likes, john);
+    ecs_add_pair(world, alice, Likes, bob);
+    ecs_add_pair(world, jane, Likes, john);
+    ecs_add_pair(world, john, Likes, jane);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { .pred.entity = Likes, .subj.entity = EcsThis, .obj.name = "_X"},
+            { .pred.entity = Likes, .subj.name = "_X", .obj.entity = EcsThis}
+        }
+    });
+
+    int x_var = ecs_rule_find_var(r, "X");
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    
+    // First verify that all entities match when no variables are set
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], alice);
+    test_int(ecs_rule_get_var(&it, x_var), bob);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], bob);
+    test_int(ecs_rule_get_var(&it, x_var), alice);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], john);
+    test_int(ecs_rule_get_var(&it, x_var), jane);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], jane);
+    test_int(ecs_rule_get_var(&it, x_var), john);
+    test_bool( ecs_rule_next(&it), false );
+
+    // Iterate again with X = bob
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, bob);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], alice);
+    test_int(ecs_rule_get_var(&it, x_var), bob);
+    test_bool( ecs_rule_next(&it), false );
+
+    // Iterate again with Y = alice
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, alice);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 1);
+    test_int(it.entities[0], bob);
+    test_int(ecs_rule_get_var(&it, x_var), alice);
+    test_bool( ecs_rule_next(&it), false );
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

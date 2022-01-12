@@ -31050,6 +31050,7 @@ typedef struct ecs_rule_var_t {
     ecs_rule_var_kind_t kind;
     char *name;       /* Variable name */
     int32_t id;       /* Unique variable id */
+    int32_t other;    /* Id to table variable (-1 if none exists) */
     int32_t occurs;   /* Number of occurrences (used for operation ordering) */
     int32_t depth;  /* Depth in dependency tree (used for operation ordering) */
     bool marked;      /* Used for cycle detection */
@@ -33231,6 +33232,35 @@ void create_variable_name_array(
     }
 }
 
+static
+void create_variable_cross_references(
+    ecs_rule_t *rule)
+{
+    if (rule->variable_count) {
+        int i;
+        for (i = 0; i < rule->variable_count; i ++) {
+            ecs_rule_var_t *var = &rule->variables[i];
+            if (var->kind == EcsRuleVarKindEntity) {
+                ecs_rule_var_t *tvar = find_variable(
+                    rule, EcsRuleVarKindTable, var->name);
+                if (tvar) {
+                    var->other = tvar->id;
+                } else {
+                    var->other = -1;
+                }
+            } else {
+                ecs_rule_var_t *evar = find_variable(
+                    rule, EcsRuleVarKindEntity, var->name);
+                if (evar) {
+                    var->other = evar->id;
+                } else {
+                    var->other = -1;
+                }
+            }
+        }
+    }
+}
+
 /* Implementation for iterable mixin */
 static
 void rule_iter_init(
@@ -33295,6 +33325,10 @@ ecs_rule_t* ecs_rule_init(
     /* Create array with variable names so this can be easily accessed by 
      * iterators without requiring access to the ecs_rule_t */
     create_variable_name_array(result);
+
+    /* Create cross-references between variables so it's easy to go from entity
+     * to table variable and vice versa */
+    create_variable_cross_references(result);
 
     /* Create lookup array for subject variables */
     result->subject_variables = ecs_os_malloc_n(int32_t, term_count);
@@ -33562,6 +33596,16 @@ void ecs_rule_set_var(
     ecs_check(var_id < r->variable_count, ECS_INVALID_PARAMETER, NULL);
 
     entity_reg_set(r, iter->registers, var_id, value);
+
+    /* Also set table variable if it exists */
+    ecs_rule_var_t *var = &r->variables[var_id];
+    if (var->other != -1) {
+        ecs_rule_var_t *tvar = &r->variables[var->other];
+        ecs_assert(tvar->kind == EcsRuleVarKindTable, 
+            ECS_INTERNAL_ERROR, NULL);
+        (void)tvar;
+        reg_set_entity(r, iter->registers, var->other, value);
+    }
 error:
     return;
 }
@@ -34145,25 +34189,49 @@ bool eval_select(
         return false;
     }
 
-    /* If this is not a redo, start at the beginning */
-    if (!redo) {
-        op_ctx->table_index = 0;
+    /* If the input register is not NULL, this is a variable that's been set by
+     * the application. */
+    table = iter->registers[r].table;
+    bool output_is_input = table != NULL;
 
-        /* Return the first table_record in the table set. */
-        table_record = find_next_table(&filter, op_ctx);
-    
-        /* If no table record was found, there are no results. */
-        if (!table_record.table) {
+    if (output_is_input && !redo) {
+        ecs_assert(regs[r].table == iter->registers[r].table, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        table = iter->registers[r].table;
+
+        /* Check if table can be found in the id record. If not, the provided 
+        * table does not match with the query. */
+        ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, 
+            ecs_table_record_t, table);
+        if (!tr) {
             return false;
         }
 
-        table = table_record.table;
+        column = columns[op->term] = tr->column;
+    }
 
-        /* Set current column to first occurrence of queried for entity */
-        column = columns[op->term] = table_record.column;
+    /* If this is not a redo, start at the beginning */
+    if (!redo) {
+        if (!table) {
+            op_ctx->table_index = 0;
 
-        /* Store table in register */
-        table_reg_set(rule, regs, r, table);
+            /* Return the first table_record in the table set. */
+            table_record = find_next_table(&filter, op_ctx);
+        
+            /* If no table record was found, there are no results. */
+            if (!table_record.table) {
+                return false;
+            }
+
+            table = table_record.table;
+
+            /* Set current column to first occurrence of queried for entity */
+            column = columns[op->term] = table_record.column;
+
+            /* Store table in register */
+            table_reg_set(rule, regs, r, table);
+        }
     
     /* If this is a redo, progress to the next match */
     } else {
@@ -34173,6 +34241,7 @@ bool eval_select(
             table = table_reg_get(rule, regs, r);
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+
             column = columns[op->term];
             column = find_next_column(world, table, column, &filter);
             columns[op->term] = column;
@@ -34180,6 +34249,10 @@ bool eval_select(
 
         /* If no next match was found for this table, move to next table */
         if (column == -1) {
+            if (output_is_input) {
+                return false;
+            }
+
             table_record = find_next_table(&filter, op_ctx);
             if (!table_record.table) {
                 return false;

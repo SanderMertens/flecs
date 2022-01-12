@@ -16058,6 +16058,7 @@ struct iter_iterable final : iterable<Components...> {
         m_next_each = it->next_action();
     }
 
+#ifdef FLECS_RULES
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
         ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
@@ -16073,6 +16074,7 @@ struct iter_iterable final : iterable<Components...> {
         ecs_rule_set_var(&m_it, var_id, value);
         return *this;
     }
+#endif
 
 protected:
     ecs_iter_t get_iter() const {
