@@ -1446,6 +1446,8 @@ void Rules_rule_iter_set_var(void);
 void Rules_rule_iter_set_2_vars(void);
 void Rules_rule_iter_set_pred_var(void);
 void Rules_rule_iter_set_var_for_2_terms(void);
+void Rules_rule_iter_set_cyclic_variable(void);
+void Rules_rule_iter_set_cyclic_variable_w_this(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7910,6 +7912,14 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_iter_set_var_for_2_terms",
         Rules_rule_iter_set_var_for_2_terms
+    },
+    {
+        "rule_iter_set_cyclic_variable",
+        Rules_rule_iter_set_cyclic_variable
+    },
+    {
+        "rule_iter_set_cyclic_variable_w_this",
+        Rules_rule_iter_set_cyclic_variable_w_this
     }
 };
 
@@ -11538,7 +11548,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        120,
+        122,
         Rules_testcases
     },
     {
@@ -11775,6 +11785,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    ut_init(argv[0]);
     return bake_test_run("api", argc, argv, suites, 65);
 }
