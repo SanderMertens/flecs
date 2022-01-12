@@ -106,6 +106,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term(const char *expr) {
         this->term();
         *this->m_term = flecs::term(this->world_v()).expr(expr).move();
+        this->m_term->move = true;
         return *this;
     }
 

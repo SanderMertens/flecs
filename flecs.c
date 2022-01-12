@@ -22003,9 +22003,12 @@ ecs_term_t ecs_term_move(
         src->pred.name = NULL;
         src->subj.name = NULL;
         src->obj.name = NULL;
+        dst.move = false;
         return dst;
     } else {
-        return ecs_term_copy(src);
+        ecs_term_t dst = ecs_term_copy(src);
+        dst.move = false;
+        return dst;
     }
 }
 
@@ -31342,7 +31345,7 @@ int32_t push_frame(
  * register will store a wildcard. */
 static
 ecs_rule_reg_t* get_register_frame(
-    ecs_rule_iter_t *it,
+    const ecs_rule_iter_t *it,
     int32_t frame)    
 {
     if (it->registers) {
@@ -31358,7 +31361,7 @@ ecs_rule_reg_t* get_register_frame(
  * register will store a wildcard. */
 static
 ecs_rule_reg_t* get_registers(
-    ecs_rule_iter_t *it,
+    const ecs_rule_iter_t *it,
     ecs_rule_op_t *op)    
 {
     return get_register_frame(it, op->frame);
@@ -33337,7 +33340,7 @@ void ecs_rule_fini(
     ecs_os_free(rule);
 }
 
-const ecs_filter_t* ecs_rule_filter(
+const ecs_filter_t* ecs_rule_get_filter(
     const ecs_rule_t *rule)
 {
     return &rule->filter; 
@@ -33526,10 +33529,10 @@ bool ecs_rule_var_is_entity(
 
 /* Public function to get the value of a variable. */
 ecs_entity_t ecs_rule_get_var(
-    ecs_iter_t *iter,
+    const ecs_iter_t *iter,
     int32_t var_id)
 {
-    ecs_rule_iter_t *it = &iter->priv.iter.rule;
+    const ecs_rule_iter_t *it = &iter->priv.iter.rule;
     const ecs_rule_t *rule = it->rule;
 
     /* We can only return entity variables */
@@ -34723,11 +34726,26 @@ bool is_control_flow(
     }
 }
 
+bool ecs_rule_next(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
+
+    if (flecs_iter_next_row(it)) {
+        return true;
+    }
+
+    return flecs_iter_next_instanced(it, ecs_rule_next_instanced(it));
+error:
+    return false;
+}
+
 /* Iterator next function. This evaluates the program until it reaches a Yield
  * operation, and returns the intermediate result(s) to the application. An
  * iterator can, depending on the program, either return a table, entity, or
  * just true/false, in case a rule doesn't contain the this variable. */
-bool ecs_rule_next(
+bool ecs_rule_next_instanced(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);

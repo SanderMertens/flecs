@@ -34,7 +34,7 @@ struct term final : term_builder_i<term> {
             value = t;
             value.move = false;
             this->set_term(&value);
-        }        
+        }
 
     term(flecs::world_t *world_ptr, id_t r, id_t o) 
         : term_builder_i<term>(&value)

@@ -547,6 +547,21 @@ void FilterBuilder_name_arg(void);
 void FilterBuilder_const_in_term(void);
 void FilterBuilder_create_w_no_template_args(void);
 
+// Testsuite 'RuleBuilder'
+void RuleBuilder_1_type(void);
+void RuleBuilder_2_types(void);
+void RuleBuilder_id_term(void);
+void RuleBuilder_type_term(void);
+void RuleBuilder_id_pair_term(void);
+void RuleBuilder_id_pair_wildcard_term(void);
+void RuleBuilder_type_pair_term(void);
+void RuleBuilder_pair_term_w_var(void);
+void RuleBuilder_2_pair_terms_w_var(void);
+void RuleBuilder_set_var(void);
+void RuleBuilder_set_2_vars(void);
+void RuleBuilder_set_var_by_name(void);
+void RuleBuilder_set_2_vars_by_name(void);
+
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
 void SystemBuilder_builder_build_to_auto(void);
@@ -2877,6 +2892,61 @@ bake_test_case FilterBuilder_testcases[] = {
     }
 };
 
+bake_test_case RuleBuilder_testcases[] = {
+    {
+        "1_type",
+        RuleBuilder_1_type
+    },
+    {
+        "2_types",
+        RuleBuilder_2_types
+    },
+    {
+        "id_term",
+        RuleBuilder_id_term
+    },
+    {
+        "type_term",
+        RuleBuilder_type_term
+    },
+    {
+        "id_pair_term",
+        RuleBuilder_id_pair_term
+    },
+    {
+        "id_pair_wildcard_term",
+        RuleBuilder_id_pair_wildcard_term
+    },
+    {
+        "type_pair_term",
+        RuleBuilder_type_pair_term
+    },
+    {
+        "pair_term_w_var",
+        RuleBuilder_pair_term_w_var
+    },
+    {
+        "2_pair_terms_w_var",
+        RuleBuilder_2_pair_terms_w_var
+    },
+    {
+        "set_var",
+        RuleBuilder_set_var
+    },
+    {
+        "set_2_vars",
+        RuleBuilder_set_2_vars
+    },
+    {
+        "set_var_by_name",
+        RuleBuilder_set_var_by_name
+    },
+    {
+        "set_2_vars_by_name",
+        RuleBuilder_set_2_vars_by_name
+    }
+};
+
 bake_test_case SystemBuilder_testcases[] = {
     {
         "builder_assign_same_type",
@@ -3835,6 +3905,13 @@ static bake_test_suite suites[] = {
         FilterBuilder_testcases
     },
     {
+        "RuleBuilder",
+        NULL,
+        NULL,
+        13,
+        RuleBuilder_testcases
+    },
+    {
         "SystemBuilder",
         NULL,
         NULL,
@@ -3921,6 +3998,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    ut_init(argv[0]);
-    return bake_test_run("cpp_api", argc, argv, suites, 24);
+    return bake_test_run("cpp_api", argc, argv, suites, 25);
 }

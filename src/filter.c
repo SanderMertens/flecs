@@ -691,9 +691,12 @@ ecs_term_t ecs_term_move(
         src->pred.name = NULL;
         src->subj.name = NULL;
         src->obj.name = NULL;
+        dst.move = false;
         return dst;
     } else {
-        return ecs_term_copy(src);
+        ecs_term_t dst = ecs_term_copy(src);
+        dst.move = false;
+        return dst;
     }
 }
 

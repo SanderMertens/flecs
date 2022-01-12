@@ -46,7 +46,7 @@ struct term_id_builder_i {
      */
     Base& name(const char *name) {
         ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
-        m_term_id->name = ecs_os_strdup(name);
+        m_term_id->name = const_cast<char*>(name);
         return *this;
     }
 
@@ -196,6 +196,8 @@ struct term_builder_i : term_id_builder_i<Base> {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
+        m_term->move = true;
+
         // Should not have more than one term
         ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
         return *this;
@@ -240,7 +242,28 @@ struct term_builder_i : term_id_builder_i<Base> {
         this->m_term_id->entity = entity;
         return *this;
     }
-    
+
+    /** Select predicate of term, initialize it with specified name. */
+    Base& pred(const char *n) {
+        this->pred();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
+    /** Select subject of term, initialize it with specified name. */
+    Base& subj(const char *n) {
+        this->subj();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
+    /** Select object of term, initialize it with specified name. */
+    Base& obj(const char *n) {
+        this->obj();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
     /** Select subject of term, initialize it with id from specified type. */
     template<typename T>
     Base& subj() {

@@ -45,4 +45,24 @@ inline flecs::type iter::type() const {
     return flecs::type(m_iter->world, m_iter->table);
 }
 
+#ifdef FLECS_RULES
+inline flecs::entity iter::get_var(int var_id) const {
+    ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+}
+
+/** Get value of variable by name.
+ * Get value of a query variable for current result.
+ */
+inline flecs::entity iter::get_var(const char *name) const {
+    ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_rule_iter_t *rit = &m_iter->priv.iter.rule;
+    const flecs::rule_t *r = rit->rule;
+    int var_id = ecs_rule_find_var(r, name);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+}
+#endif
+
 } // namespace flecs

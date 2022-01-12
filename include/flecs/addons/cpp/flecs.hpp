@@ -59,6 +59,9 @@ struct each_invoker;
 #ifdef FLECS_REST
 #include "mixins/rest/decl.hpp"
 #endif
+#ifdef FLECS_RULES
+#include "mixins/rule/decl.hpp"
+#endif
 
 #include "log.hpp"
 #include "pair.hpp"
@@ -101,5 +104,12 @@ struct each_invoker;
 #ifdef FLECS_DOC
 #include "mixins/doc/impl.hpp"
 #endif
+#ifdef FLECS_DOC
+#include "mixins/doc/impl.hpp"
+#endif
+#ifdef FLECS_RULES
+#include "mixins/rule/impl.hpp"
+#endif
+
 
 #include "impl.hpp"

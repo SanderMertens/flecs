@@ -720,6 +720,9 @@ struct world final {
 #   ifdef FLECS_SYSTEM
 #   include "mixins/system/mixin.inl"
 #   endif
+#   ifdef FLECS_RULES
+#   include "mixins/rule/mixin.inl"
+#   endif
 
 public:
     void init_builtin_components();
