@@ -33610,6 +33610,22 @@ error:
     return;
 }
 
+static
+void ecs_rule_iter_free(
+    ecs_iter_t *iter)
+{
+    ecs_rule_iter_t *it = &iter->priv.iter.rule;
+    ecs_os_free(it->registers);
+    ecs_os_free(it->columns);
+    ecs_os_free(it->op_ctx);
+    ecs_os_free(it->variables);
+    iter->columns = NULL;
+    it->registers = NULL;
+    it->columns = NULL;
+    it->op_ctx = NULL;
+    ecs_iter_fini(iter);
+}
+
 /* Create rule iterator */
 ecs_iter_t ecs_rule_iter(
     const ecs_world_t *world,
@@ -33662,25 +33678,11 @@ ecs_iter_t ecs_rule_iter(
     result.term_count = rule->filter.term_count;
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
+    result.fini = ecs_rule_iter_free;
     result.is_filter = rule->filter.filter;
     result.columns = it->columns; /* prevent alloc */
 
     return result;
-}
-
-void ecs_rule_iter_free(
-    ecs_iter_t *iter)
-{
-    ecs_rule_iter_t *it = &iter->priv.iter.rule;
-    ecs_os_free(it->registers);
-    ecs_os_free(it->columns);
-    ecs_os_free(it->op_ctx);
-    ecs_os_free(it->variables);
-    iter->columns = NULL;
-    it->registers = NULL;
-    it->columns = NULL;
-    it->op_ctx = NULL;
-    ecs_iter_fini(iter);
 }
 
 /* Edge case: if the filter has the same variable for both predicate and
