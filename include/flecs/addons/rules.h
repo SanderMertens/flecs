@@ -21,69 +21,224 @@
 extern "C" {
 #endif
 
+/** Create a rule.
+ * A rule accepts the same descriptor as a filter, but has the additional
+ * ability to use query variables.
+ * 
+ * Query variables can be used to constrain wildcards across multiple terms to
+ * the same entity. Regular ECS queries do this in a limited form, as querying
+ * for Position, Velocity only returns entities that have both components.
+ * 
+ * Query variables expand this to constrain entities that are resolved while the
+ * query is being matched. Consider a query for all entities and the mission
+ * they are on:
+ *   (Mission, *)
+ * 
+ * If an entity is on multiple missions, the wildcard will match it multiple
+ * times. Now say we want to only list combat missions. Naively we could try:
+ *   (Mission, *), CombatMission(*)
+ * 
+ * But this doesn't work, as term 1 returns entities with missions, and term 2
+ * returns all combat missions for all entities. Query variables make it 
+ * possible to apply CombatMission to the found mission:
+ *   (Mission, _M), CombatMission(_M)
+ * 
+ * By using the same variable ('M') we ensure that CombatMission is applied to
+ * the mission found in the current result.
+ * 
+ * Variables can be used in each part of the term (predicate, subject, object).
+ * This is a valid query:
+ *   Likes(_X, _Y), Likes(_Y, _X)
+ * 
+ * This is also a valid query:
+ *   _Component, Serializable(_Component)
+ * 
+ * In the query expression syntax, variables are prefixed with a _. When using
+ * the descriptor, do this:
+ *   desc.terms[0].obj.name = "_X";
+ * 
+ * or
+ * 
+ *   desc.terms[0].obj.name = "X";
+ *   desc.terms[0].obj.var = EcsVarIsVariable;
+ * 
+ * Different terms with the same variable name are automatically correlated by
+ * the query engine.
+ * 
+ * A rule needs to be explicitly deleted with ecs_rule_fini.
+ * 
+ * @param world The world.
+ * @param desc The descriptor (see ecs_filter_desc_t)
+ * @return The rule.
+ */
 FLECS_API
 ecs_rule_t* ecs_rule_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *desc);
 
+/** Delete a rule. 
+ * 
+ * @param rule The rule.
+ */
 FLECS_API
 void ecs_rule_fini(
     ecs_rule_t *rule);
 
+/** Obtain filter from rule.
+ * This operation returns the filter with which the rule was created.
+ * 
+ * @param rule The rule.
+ * @return The filter.
+ */
 FLECS_API
 const ecs_filter_t* ecs_rule_get_filter(
     const ecs_rule_t *rule);
 
+/** Return number of variables in rule.
+ * 
+ * @param rule The rule.
+ * @return The number of variables/
+ */
 FLECS_API
 int32_t ecs_rule_var_count(
     const ecs_rule_t *rule);
 
+/** Find variable index.
+ * This operation looks up the index of a variable in the rule. This index can
+ * be used in operations like ecs_rule_set_var and ecs_rule_get_var.
+ * 
+ * @param rule The rule.
+ * @param name The variable name.
+ * @return The variable index.
+ */
 FLECS_API
 int32_t ecs_rule_find_var(
     const ecs_rule_t *rule,
     const char *name);    
 
+/** Get variable name.
+ * This operation returns the variable name for an index.
+ * 
+ * @param rule The rule.
+ * @param var_id The variable index.
+ */
 FLECS_API
 const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id);
 
+/** Set variable to a value.
+ * This operation initializes the variable to the specified entity. By default
+ * variables are initialized with a wildcard. By setting the variable it is
+ * possible to reuse a single rule for different data sets. For example:
+ * 
+ * // Rule that matches (Eats, *)
+ * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+ *   .terms = {
+ *     { .pred.entity = Eats, .obj.name = "_Food" }
+ *   }
+ * });
+ * 
+ * int food_var = ecs_rule_find_var(r, "Food");
+ * 
+ * // Set Food to Apples, so we're only matching (Eats, Apples)
+ * ecs_iter_t it = ecs_rule_iter(world, r);
+ * ecs_rule_set_var(&it, food_var, Apples);
+ * 
+ * while (ecs_rule_next(&it)) {
+ *   for (int i = 0; i < it.count; i ++) {
+ *     // iterate as usual
+ *   }
+ * }
+ * 
+ * That the variable must be initialized after calling ecs_rule_iter and before
+ * calling ecs_rule_next.
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ * @param value The entity to initialize the variable with.
+ */
 FLECS_API
 void ecs_rule_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t value);
 
+/** Get value of variable for current result.
+ * This operation should be called after ecs_rule_next has returned true.
+ * 
+ * If a variable has not been initialized with a value (for example, if it 
+ * occurs in a term with an optional operator) this operation will return
+ * EcsWildcard.
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ * @return The value of the variable.
+ */
 FLECS_API
 ecs_entity_t ecs_rule_get_var(
     const ecs_iter_t *it,
     int32_t var_id);
 
+/** Test if variable is an entity.
+ * Internally the rule engine has entity variables and table variables. When
+ * iterating through rule variables (by using ecs_rule_variable_count) only
+ * the values for entity variables are accessible. This operation enables an
+ * appliction to check if a variable is an entity variable.
+ * 
+ * @param rule The rule.
+ * @param var_id The variable id.
+ */
 FLECS_API
 bool ecs_rule_var_is_entity(
     const ecs_rule_t *rule,
     int32_t var_id);  
 
+/** Iterate a rule.
+ * Note that rule iterators may allocate memory, and that unless the iterator
+ * is iterated until completion, it may still hold resources. When stopping
+ * iteration before ecs_rule_next has returned false, use ecs_iter_fini to
+ * cleanup any remaining resources.
+ * 
+ * @param world The world.
+ * @param rule The rule.
+ * @return An iterator.
+ */
 FLECS_API
 ecs_iter_t ecs_rule_iter(
     const ecs_world_t *world,
     const ecs_rule_t *rule);
 
-FLECS_API
-void ecs_rule_iter_free(
-    ecs_iter_t *iter);
-
+/** Progress rule iterator.
+ * 
+ * @param it The iterator.
+ */
 FLECS_API
 bool ecs_rule_next(
     ecs_iter_t *it);
 
+/** Progress instanced iterator.
+ * Should not be called unless you know what you're doing :-)
+ * 
+ * @param it The iterator.
+ */
 FLECS_API
 bool ecs_rule_next_instanced(
     ecs_iter_t *it);
 
+/** Convert rule to a string.
+ * This will convert the rule program to a string which can aid in debugging
+ * the behavior of a rule.
+ * 
+ * The returned string must be freed with ecs_os_free.
+ * 
+ * @param rule The rule.
+ * @return The string
+ */
 FLECS_API
 char* ecs_rule_str(
     ecs_rule_t *rule);
+
 
 #ifdef __cplusplus
 }
