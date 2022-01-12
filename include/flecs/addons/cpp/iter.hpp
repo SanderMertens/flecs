@@ -417,6 +417,18 @@ public:
         ecs_query_skip(m_iter);
     }
 
+#ifdef FLECS_RULES
+    /** Get value of variable by id.
+     * Get value of a query variable for current result.
+     */
+    flecs::entity get_var(int var_id) const;
+
+    /** Get value of variable by name.
+     * Get value of a query variable for current result.
+     */
+    flecs::entity get_var(const char *name) const;
+#endif
+
 private:
     /* Get term, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>

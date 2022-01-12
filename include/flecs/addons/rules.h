@@ -31,7 +31,7 @@ void ecs_rule_fini(
     ecs_rule_t *rule);
 
 FLECS_API
-const ecs_filter_t* ecs_rule_filter(
+const ecs_filter_t* ecs_rule_get_filter(
     const ecs_rule_t *rule);
 
 FLECS_API
@@ -56,7 +56,7 @@ void ecs_rule_set_var(
 
 FLECS_API
 ecs_entity_t ecs_rule_get_var(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t var_id);
 
 FLECS_API
@@ -75,6 +75,10 @@ void ecs_rule_iter_free(
 
 FLECS_API
 bool ecs_rule_next(
+    ecs_iter_t *it);
+
+FLECS_API
+bool ecs_rule_next_instanced(
     ecs_iter_t *it);
 
 FLECS_API

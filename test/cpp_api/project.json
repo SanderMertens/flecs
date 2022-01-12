@@ -576,6 +576,23 @@
                 "create_w_no_template_args"
             ]
         }, {
+            "id": "RuleBuilder",
+            "testcases": [
+                "1_type",
+                "2_types",
+                "id_term",
+                "type_term",
+                "id_pair_term",
+                "id_pair_wildcard_term",
+                "type_pair_term",
+                "pair_term_w_var",
+                "2_pair_terms_w_var",
+                "set_var",
+                "set_2_vars",
+                "set_var_by_name",
+                "set_2_vars_by_name"
+            ]
+        }, {
             "id": "SystemBuilder",
             "testcases": [
                 "builder_assign_same_type",

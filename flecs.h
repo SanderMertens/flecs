@@ -9500,7 +9500,7 @@ void ecs_rule_fini(
     ecs_rule_t *rule);
 
 FLECS_API
-const ecs_filter_t* ecs_rule_filter(
+const ecs_filter_t* ecs_rule_get_filter(
     const ecs_rule_t *rule);
 
 FLECS_API
@@ -9525,7 +9525,7 @@ void ecs_rule_set_var(
 
 FLECS_API
 ecs_entity_t ecs_rule_get_var(
-    ecs_iter_t *it,
+    const ecs_iter_t *it,
     int32_t var_id);
 
 FLECS_API
@@ -9544,6 +9544,10 @@ void ecs_rule_iter_free(
 
 FLECS_API
 bool ecs_rule_next(
+    ecs_iter_t *it);
+
+FLECS_API
+bool ecs_rule_next_instanced(
     ecs_iter_t *it);
 
 FLECS_API
@@ -11338,6 +11342,7 @@ using type_t = ecs_type_t;
 using table_t = ecs_table_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
+using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
 using ComponentLifecycle = EcsComponentLifecycle;
@@ -11840,6 +11845,22 @@ namespace flecs {
 namespace rest {
     using Rest = EcsRest;
 }
+
+}
+
+#endif
+#ifdef FLECS_RULES
+#pragma once
+
+namespace flecs {
+
+struct rule_base;
+
+template<typename ... Components>
+struct rule;
+
+template<typename ... Components>
+struct rule_builder;
 
 }
 
@@ -13441,6 +13462,27 @@ template <typename... Components, typename... Args>
 flecs::system_builder<Components...> system(Args &&... args) const;
 
 #   endif
+#   ifdef FLECS_RULES
+
+/** Create a rule.
+ * @see ecs_rule_init
+ */
+template <typename... Comps, typename... Args>
+flecs::rule<Comps...> rule(Args &&... args) const;
+
+/** Create a subrule.
+ * @see ecs_rule_init
+ */
+template <typename... Comps, typename... Args>
+flecs::rule<Comps...> rule(flecs::rule_base& parent, Args &&... args) const;
+
+/** Create a rule builder.
+ * @see ecs_rule_init
+ */
+template <typename... Comps, typename... Args>
+flecs::rule_builder<Comps...> rule_builder(Args &&... args) const;
+
+#   endif
 
 public:
     void init_builtin_components();
@@ -13869,6 +13911,18 @@ public:
     void skip() {
         ecs_query_skip(m_iter);
     }
+
+#ifdef FLECS_RULES
+    /** Get value of variable by id.
+     * Get value of a query variable for current result.
+     */
+    flecs::entity get_var(int var_id) const;
+
+    /** Get value of variable by name.
+     * Get value of a query variable for current result.
+     */
+    flecs::entity get_var(const char *name) const;
+#endif
 
 private:
     /* Get term, check if correct type is used */
@@ -15908,6 +15962,9 @@ struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
 namespace flecs {
 
 template <typename ... Components>
+struct iter_iterable;
+
+template <typename ... Components>
 struct page_iterable;
 
 template <typename ... Components>
@@ -15946,6 +16003,11 @@ struct iterable {
         iterate<_::iter_invoker>(FLECS_FWD(func), this->next_action());
     }
 
+    /** Create iterator.
+     * Create an iterator object that can be modified before iterating.
+     */
+    iter_iterable<Components...> iter();
+
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
      * 
@@ -15967,6 +16029,7 @@ struct iterable {
 
     virtual ~iterable() { }
 protected:
+    friend iter_iterable<Components...>;
     friend page_iterable<Components...>;
     friend worker_iterable<Components...>;
 
@@ -15984,6 +16047,57 @@ protected:
         }
     }
 };
+
+template <typename ... Components>
+struct iter_iterable final : iterable<Components...> {
+    template <typename Iterable>
+    iter_iterable(Iterable *it) 
+    {
+        m_it = it->get_iter();
+        m_next = it->next_action();
+        m_next_each = it->next_action();
+    }
+
+    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
+        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+        ecs_rule_set_var(&m_it, var_id, value);
+        return *this;
+    }
+
+    iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
+        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+        ecs_rule_iter_t *rit = &m_it.priv.iter.rule;
+        int var_id = ecs_rule_find_var(rit->rule, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_rule_set_var(&m_it, var_id, value);
+        return *this;
+    }
+
+protected:
+    ecs_iter_t get_iter() const {
+        return m_it;
+    }
+
+    ecs_iter_next_action_t next_action() const {
+        return m_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const {
+        return m_next_each;
+    }
+
+private:
+    ecs_iter_t m_it;
+    ecs_iter_next_action_t m_next;
+    ecs_iter_next_action_t m_next_each;
+};
+
+template <typename ... Components>
+iter_iterable<Components...> iterable<Components...>::iter() 
+{
+    return iter_iterable<Components...>(this);
+}
 
 template <typename ... Components>
 struct page_iterable final : iterable<Components...> {
@@ -16125,7 +16239,7 @@ struct name_util {
          * if this is a template type on msvc. */
         if (len > struct_len) {
             char *ptr = typeName;
-            while ((ptr = strstr(ptr + 1, "struct "))) {
+            while ((ptr = strstr(ptr + 1, "struct ")) != 0) {
                 // Make sure we're not matched with part of a longer identifier
                 // that contains 'struct'
                 if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
@@ -17311,7 +17425,7 @@ struct term_id_builder_i {
      */
     Base& name(const char *name) {
         ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, NULL);
-        m_term_id->name = ecs_os_strdup(name);
+        m_term_id->name = const_cast<char*>(name);
         return *this;
     }
 
@@ -17461,6 +17575,8 @@ struct term_builder_i : term_id_builder_i<Base> {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
+        m_term->move = true;
+
         // Should not have more than one term
         ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
         return *this;
@@ -17505,7 +17621,28 @@ struct term_builder_i : term_id_builder_i<Base> {
         this->m_term_id->entity = entity;
         return *this;
     }
-    
+
+    /** Select predicate of term, initialize it with specified name. */
+    Base& pred(const char *n) {
+        this->pred();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
+    /** Select subject of term, initialize it with specified name. */
+    Base& subj(const char *n) {
+        this->subj();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
+    /** Select object of term, initialize it with specified name. */
+    Base& obj(const char *n) {
+        this->obj();
+        this->m_term_id->name = const_cast<char*>(n);
+        return *this;
+    }
+
     /** Select subject of term, initialize it with id from specified type. */
     template<typename T>
     Base& subj() {
@@ -17619,7 +17756,7 @@ struct term final : term_builder_i<term> {
             value = t;
             value.move = false;
             this->set_term(&value);
-        }        
+        }
 
     term(flecs::world_t *world_ptr, id_t r, id_t o) 
         : term_builder_i<term>(&value)
@@ -17905,6 +18042,7 @@ struct filter_builder_i : term_builder_i<Base> {
     Base& term(const char *expr) {
         this->term();
         *this->m_term = flecs::term(this->world_v()).expr(expr).move();
+        this->m_term->move = true;
         return *this;
     }
 
@@ -19451,6 +19589,134 @@ inline void set_link(flecs::entity& e, const char *description) {
 }
 
 #endif
+#ifdef FLECS_DOC
+#endif
+#ifdef FLECS_RULES
+#pragma once
+
+#pragma once
+
+
+namespace flecs {
+namespace _ {
+    template <typename ... Components>
+    using rule_builder_base = builder<
+        rule, ecs_filter_desc_t, rule_builder<Components...>, 
+        filter_builder_i, Components ...>;
+}
+
+template <typename ... Components>
+struct rule_builder final : _::rule_builder_base<Components...> {
+    rule_builder(flecs::world_t* world)
+        : _::rule_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+    }
+};
+
+}
+
+
+namespace flecs {
+
+////////////////////////////////////////////////////////////////////////////////
+//// Persistent queries
+////////////////////////////////////////////////////////////////////////////////
+
+struct rule_base {
+    rule_base()
+        : m_world(nullptr)
+        , m_rule(nullptr) { }    
+    
+    rule_base(world_t *world, rule_t *rule = nullptr)
+        : m_world(world)
+        , m_rule(rule) { }
+
+    rule_base(world_t *world, ecs_filter_desc_t *desc) 
+        : m_world(world)
+    {
+        m_rule = ecs_rule_init(world, desc);
+
+        if (!m_rule) {
+            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        }
+
+        if (desc->terms_buffer) {
+            ecs_os_free(desc->terms_buffer);
+        }
+    }
+
+    operator rule_t*() const {
+        return m_rule;
+    }
+
+    /** Free the rule.
+     */
+    void destruct() {
+        ecs_rule_fini(m_rule);
+        m_world = nullptr;
+        m_rule = nullptr;
+    }
+
+    flecs::string str() {
+        const ecs_filter_t *f = ecs_rule_get_filter(m_rule);
+        char *result = ecs_filter_str(m_world, f);
+        return flecs::string(result);
+    }
+
+    operator rule<>() const;
+
+protected:
+    world_t *m_world;
+    rule_t *m_rule;
+};
+
+template<typename ... Components>
+struct rule final : rule_base, iterable<Components...> {
+private:
+    using Terms = typename _::term_ptrs<Components...>::array;
+
+    ecs_iter_t get_iter() const override {
+        return ecs_rule_iter(m_world, m_rule);
+    }
+
+    ecs_iter_next_action_t next_action() const override {
+        return ecs_rule_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const override {
+        return ecs_rule_next_instanced;
+    }
+
+public:
+    using rule_base::rule_base;
+
+    int32_t find_var(const char *name) {
+        return ecs_rule_find_var(m_rule, name);
+    }
+};
+
+// Mixin implementation
+template <typename... Comps, typename... Args>
+inline flecs::rule<Comps...> world::rule(Args &&... args) const {
+    return flecs::rule_builder<Comps...>(m_world, FLECS_FWD(args)...)
+        .build();
+}
+
+template <typename... Comps, typename... Args>
+inline flecs::rule_builder<Comps...> world::rule_builder(Args &&... args) const {
+    return flecs::rule_builder<Comps...>(m_world, FLECS_FWD(args)...);
+}
+
+// rule_base implementation
+inline rule_base::operator rule<>() const {
+    return flecs::rule<>(m_world, m_rule);
+}
+
+} // namespace flecs
+
+#endif
+
 
 
 
@@ -19524,6 +19790,26 @@ inline flecs::entity iter::id(int32_t index) const {
 inline flecs::type iter::type() const {
     return flecs::type(m_iter->world, m_iter->table);
 }
+
+#ifdef FLECS_RULES
+inline flecs::entity iter::get_var(int var_id) const {
+    ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+}
+
+/** Get value of variable by name.
+ * Get value of a query variable for current result.
+ */
+inline flecs::entity iter::get_var(const char *name) const {
+    ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_rule_iter_t *rit = &m_iter->priv.iter.rule;
+    const flecs::rule_t *r = rit->rule;
+    int var_id = ecs_rule_find_var(r, name);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+}
+#endif
 
 } // namespace flecs
 

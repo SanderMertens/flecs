@@ -2,6 +2,9 @@
 namespace flecs {
 
 template <typename ... Components>
+struct iter_iterable;
+
+template <typename ... Components>
 struct page_iterable;
 
 template <typename ... Components>
@@ -40,6 +43,11 @@ struct iterable {
         iterate<_::iter_invoker>(FLECS_FWD(func), this->next_action());
     }
 
+    /** Create iterator.
+     * Create an iterator object that can be modified before iterating.
+     */
+    iter_iterable<Components...> iter();
+
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
      * 
@@ -61,6 +69,7 @@ struct iterable {
 
     virtual ~iterable() { }
 protected:
+    friend iter_iterable<Components...>;
     friend page_iterable<Components...>;
     friend worker_iterable<Components...>;
 
@@ -78,6 +87,59 @@ protected:
         }
     }
 };
+
+template <typename ... Components>
+struct iter_iterable final : iterable<Components...> {
+    template <typename Iterable>
+    iter_iterable(Iterable *it) 
+    {
+        m_it = it->get_iter();
+        m_next = it->next_action();
+        m_next_each = it->next_action();
+    }
+
+#ifdef FLECS_RULES
+    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
+        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+        ecs_rule_set_var(&m_it, var_id, value);
+        return *this;
+    }
+
+    iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
+        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+        ecs_rule_iter_t *rit = &m_it.priv.iter.rule;
+        int var_id = ecs_rule_find_var(rit->rule, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_rule_set_var(&m_it, var_id, value);
+        return *this;
+    }
+#endif
+
+protected:
+    ecs_iter_t get_iter() const {
+        return m_it;
+    }
+
+    ecs_iter_next_action_t next_action() const {
+        return m_next;
+    }
+
+    ecs_iter_next_action_t next_each_action() const {
+        return m_next_each;
+    }
+
+private:
+    ecs_iter_t m_it;
+    ecs_iter_next_action_t m_next;
+    ecs_iter_next_action_t m_next_each;
+};
+
+template <typename ... Components>
+iter_iterable<Components...> iterable<Components...>::iter() 
+{
+    return iter_iterable<Components...>(this);
+}
 
 template <typename ... Components>
 struct page_iterable final : iterable<Components...> {

@@ -12,6 +12,7 @@ using type_t = ecs_type_t;
 using table_t = ecs_table_t;
 using filter_t = ecs_filter_t;
 using query_t = ecs_query_t;
+using rule_t = ecs_rule_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
 using ComponentLifecycle = EcsComponentLifecycle;
