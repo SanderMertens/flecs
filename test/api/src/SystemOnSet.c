@@ -449,7 +449,7 @@ void SystemOnSet_add_base_to_1_of_2_overridden() {
 }
 
 void SystemOnSet_on_set_after_remove_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

@@ -103,6 +103,7 @@ void ecs_emit(
     ecs_table_t *table = desc->table;
     int32_t row = desc->offset;
     int32_t i, count = desc->count;
+    ecs_entity_t relation = desc->relation;
 
     if (!count) {
         count = ecs_table_count(table) - row;
@@ -126,7 +127,12 @@ void ecs_emit(
     ecs_observable_t *observable = ecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_triggers_notify(&it, observable, ids, event);
+    if (!desc->relation) {
+        flecs_triggers_notify(&it, observable, ids, event);
+    } else {
+        flecs_set_triggers_notify(&it, observable, ids, event, 
+            ecs_pair(relation, EcsWildcard));
+    }
 
     if (count && !desc->table_event) {
         ecs_record_t **recs = ecs_vector_get(

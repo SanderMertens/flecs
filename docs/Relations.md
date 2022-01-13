@@ -740,41 +740,6 @@ LocatedIn.add(flecs::Transitive);
 
 When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
 
-### TransitiveSelf relations
-A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `TransitiveSelf` becomes more obvious with an example:
-
-Given this dataset:
-```
-IsA(Oak, Tree)
-```
-
-we can ask whether an oak is a tree:
-```
-IsA(Oak, Tree)
-- Yes, an Oak is a tree (Oak has (IsA, Tree))
-```
-
-We can also ask whether a tree is a tree, which it obviously is:
-```
-IsA(Tree, Tree)
-- Yes, even though Tree does not have (IsA, Tree)
-```
-
-However, this does not apply to all relations. Consider a dataset with a 
-`LocatedIn` relation:
-
-```
-LocatedIn(SanFrancisco, UnitedStates)
-```
-
-we can now ask whether SanFrancisco is located in SanFrancisco, which it is not:
-```
-LocatedIn(SanFrancisco, SanFrancisco)
-- No
-```
-
-In these examples, `IsA` is an inclusive relation, whereas `LocatedIn` is not.
-
 ### Tag relations
 A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:
 
@@ -852,6 +817,55 @@ const Position *p = e.get<Serializable, Position>();
 
 The `Tag` property is only interpreted when it is added to the relation part of a pair.
 
+### TransitiveSelf relations
+A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `TransitiveSelf` becomes more obvious with an example:
+
+Given this dataset:
+```
+IsA(Oak, Tree)
+```
+
+we can ask whether an oak is a tree:
+```
+IsA(Oak, Tree)
+- Yes, an Oak is a tree (Oak has (IsA, Tree))
+```
+
+We can also ask whether a tree is a tree, which it obviously is:
+```
+IsA(Tree, Tree)
+- Yes, even though Tree does not have (IsA, Tree)
+```
+
+However, this does not apply to all relations. Consider a dataset with a 
+`LocatedIn` relation:
+
+```
+LocatedIn(SanFrancisco, UnitedStates)
+```
+
+we can now ask whether SanFrancisco is located in SanFrancisco, which it is not:
+```
+LocatedIn(SanFrancisco, SanFrancisco)
+- No
+```
+
+In these examples, `IsA` is an inclusive relation, whereas `LocatedIn` is not.
+
+### Acyclic relations
+A relationship can be marked with the `Acyclic` property to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic.
+
+Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident. A number of features are only available for acyclic relationships, such as event propagation and query substitution. For example, the following query is only valid if `LocatedIn` is acyclic:
+
+```c
+// Find Position by traversing LocatedIn relationship upwards
+Position(superset(LocatedIn))
+```
+
+The same goes for observers/triggers that subscribe for events propagated through a relationship. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Acyclic`, as this could cause infinite loops.
+
+Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
+
 ### Exclusive relations
 The `Exclusive` property enforces that an entity can only have a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relation with the `Exclusive` property is the builtin `ChildOf` relation:
 
@@ -862,6 +876,24 @@ ecs_add_pair(world, child, EcsChildOf, parent_b); // replaces (ChildOf, parent_a
 ```cpp
 e.child_of(parent_a);
 e.child_of(parent_b); // replaces (ChildOf, parent_a)
+```
+
+### Symmetric relations
+The `Symmetric` property enforces that when a relation `(R, Y)` is added to entity `X`, the relation `(R, X)` will be added to entity `Y`. The reverse is also true, if relation `(R, Y)` is removed from `X`, relation `(R, X)` will be removed from `Y`.
+
+The symmetric property is useful for relations that do not make sense unless they are bidirectional. Examples of such relations are `AlliesWith`, `MarriedTo`, `TradingWith` and so on. An example:
+
+```c
+ecs_entity_t MarriedTo = ecs_new_w_id(world, EcsSymmetric);
+ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Alice = ecs_new_id(world);
+ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
+```
+```c
+auto MarriedTo = world.entity().add(flecs::Symmetric);
+auto Bob = ecs.entity();
+auto Alice = ecs.entity();
+Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
 ## Relation performance

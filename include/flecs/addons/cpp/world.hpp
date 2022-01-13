@@ -723,6 +723,9 @@ struct world final {
 #   ifdef FLECS_RULES
 #   include "mixins/rule/mixin.inl"
 #   endif
+#   ifdef FLECS_PLECS
+#   include "mixins/plecs/mixin.inl"
+#   endif
 
 public:
     void init_builtin_components();

@@ -6073,7 +6073,7 @@ bool ecs_query_next_instanced(
  * - matched entities were deleted
  * - matched components were changed
  * 
- * The operxation will not return true after a write-only (EcsOut) or filter
+ * The operation will not return true after a write-only (EcsOut) or filter
  * (EcsInOutFilter) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  * 
@@ -6212,6 +6212,9 @@ typedef struct ecs_event_desc_t {
     /* Table events apply to tables, not the entities in the table. When
      * enabled, (super)set triggers are not notified. */
     bool table_event;
+
+    /* When set, events will only be propagated by traversing the relation */
+    ecs_entity_t relation;
 } ecs_event_desc_t;
 
 /** Send event.
@@ -11605,6 +11608,7 @@ static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
+static const flecs::entity_t Symmetric = EcsSymmetric;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
@@ -13658,6 +13662,23 @@ template <typename... Comps, typename... Args>
 flecs::rule_builder<Comps...> rule_builder(Args &&... args) const;
 
 #   endif
+#   ifdef FLECS_PLECS
+
+/** Load plecs string.
+ * @see ecs_plecs_from_str
+ */
+int plecs_from_str(const char *name, const char *str) const {
+    return ecs_plecs_from_str(m_world, name, str);
+}
+
+/** Load plecs from file.
+ * @see ecs_plecs_from_file
+ */
+int plecs_from_file(const char *filename) const {
+    return ecs_plecs_from_file(m_world, filename);
+}
+
+#   endif
 
 public:
     void init_builtin_components();
@@ -13953,6 +13974,13 @@ public:
      * @param index The term index.
      */
     flecs::entity id(int32_t index) const;
+
+    /** Convert current iterator result to string.
+     */
+    flecs::string str() const {
+        char *s = ecs_iter_str(m_iter);
+        return flecs::string(s);
+    }
 
     /** Obtain term with const type.
      * If the specified term index does not match with the provided type, the

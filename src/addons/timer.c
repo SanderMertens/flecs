@@ -1,9 +1,8 @@
 #include "flecs.h"
+#include "system/system.h"
+#include "../private_api.h"
 
 #ifdef FLECS_TIMER
-
-#include "../private_api.h"
-#include "system/system.h"
 
 static
 void AddTickSource(ecs_iter_t *it) {

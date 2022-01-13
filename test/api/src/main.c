@@ -1562,6 +1562,9 @@ void Trigger_entity_source_2_triggers(void);
 void Trigger_entity_source_base_set(void);
 void Trigger_not_from_superset(void);
 void Trigger_create_stresstest(void);
+void Trigger_add_non_existing_entity(void);
+void Trigger_on_add_self_trigger_with_add_isa(void);
+void Trigger_on_set_self_trigger_with_add_isa(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8369,6 +8372,18 @@ bake_test_case Trigger_testcases[] = {
     {
         "create_stresstest",
         Trigger_create_stresstest
+    },
+    {
+        "add_non_existing_entity",
+        Trigger_add_non_existing_entity
+    },
+    {
+        "on_add_self_trigger_with_add_isa",
+        Trigger_on_add_self_trigger_with_add_isa
+    },
+    {
+        "on_set_self_trigger_with_add_isa",
+        Trigger_on_set_self_trigger_with_add_isa
     }
 };
 
@@ -11577,7 +11592,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        90,
+        93,
         Trigger_testcases
     },
     {

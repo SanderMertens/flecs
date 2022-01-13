@@ -3462,7 +3462,7 @@ void Trigger_on_add_base_w_override() {
 }
 
 void Trigger_on_set_base_w_override() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3691,6 +3691,100 @@ void Trigger_create_stresstest() {
     }
 
     test_assert(true);
+
+    ecs_fini(world);
+}
+
+static
+void Trigger_w_new_entity_value(ecs_iter_t *it) {
+    probe_iter(it);
+}
+
+void Trigger_add_non_existing_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(Rel, EcsWildcard),
+        .events = {EcsOnAdd},
+        .callback = Trigger_w_new_entity_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, 1000);
+
+    test_assert( ecs_has_pair(world, e, Rel, 1000));
+    test_assert( ecs_is_alive(world, 1000));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t1);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, 1000));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_add_self_trigger_with_add_isa() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = Tag,
+        .term.subj.set.mask = EcsSelf,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_assert(t1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, Tag);
+    test_int(ctx.invoked, 1);
+
+    ctx = (Probe){0};
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_trigger_with_add_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_id(Position),
+        .term.subj.set.mask = EcsSelf,
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_assert(t1 != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    ctx = (Probe){0};
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_int(ctx.invoked, 0);
 
     ecs_fini(world);
 }

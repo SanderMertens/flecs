@@ -22,7 +22,7 @@ struct State { };
 struct City { };
 struct Person { };
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
     flecs::world ecs;
 
     // Register the LocatedIn relationship as transitive
