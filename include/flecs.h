@@ -2995,7 +2995,7 @@ bool ecs_query_next_instanced(
  * - matched entities were deleted
  * - matched components were changed
  * 
- * The operxation will not return true after a write-only (EcsOut) or filter
+ * The operation will not return true after a write-only (EcsOut) or filter
  * (EcsInOutFilter) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  * 
@@ -3134,6 +3134,9 @@ typedef struct ecs_event_desc_t {
     /* Table events apply to tables, not the entities in the table. When
      * enabled, (super)set triggers are not notified. */
     bool table_event;
+
+    /* When set, events will only be propagated by traversing the relation */
+    ecs_entity_t relation;
 } ecs_event_desc_t;
 
 /** Send event.

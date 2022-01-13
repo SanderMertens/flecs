@@ -207,9 +207,9 @@ void World_entity_range_add_existing_in_progress() {
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
-    test_assert(e < 500);
+    test_assert(e < 1000);
 
-    ecs_set_entity_range(world, 500, 1000);
+    ecs_set_entity_range(world, 1000, 1500);
 
     ecs_progress(world, 1);
 

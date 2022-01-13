@@ -290,7 +290,8 @@ void notify(
     int32_t row,
     int32_t count,
     ecs_entity_t event,
-    ecs_ids_t *ids)
+    ecs_ids_t *ids,
+    ecs_entity_t relation)
 {
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = event,
@@ -299,7 +300,8 @@ void notify(
         .other_table = other_table,
         .offset = row,
         .count = count,
-        .observable = world
+        .observable = world,
+        .relation = relation
     });
 }
 
@@ -471,20 +473,26 @@ bool override_component(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_type_t type,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     ecs_column_t *column,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    bool notify_on_set);
 
 static
 bool override_from_base(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t component,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     ecs_column_t *column,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool notify_on_set)
 {
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -525,12 +533,40 @@ bool override_from_base(
             }                    
         }
 
+        ecs_ids_t ids = {
+            .array = (ecs_id_t[]){ component },
+            .count = 1
+        };
+
+        if (notify_on_set) {
+            /* Check if the component was available for the previous table. If
+             * the override is caused by an add operation, it does not introduce
+             * a new component value, and the application should not be 
+             * notified. 
+             * 
+             * If the override is the result if adding a IsA relation
+             * with an entity that has components with the OVERRIDE flag, an
+             * event should be generated, since this represents a new component
+             * (and component value) for the entity.
+             * 
+             * Note that this is an edge case, regular (self) triggers won't be 
+             * notified because the event id is not the component but an IsA
+             * relationship. Superset triggers will not be invoked because the
+             * component is owned. */
+            int32_t c = ecs_search_relation(world, other_table, 0, component, 
+                EcsIsA, 1, 0, 0, 0, 0);
+            if (c == -1) {
+                notify(
+                    world, table, other_table, row, count, EcsOnSet, &ids, 0);
+            }
+        }
+
         return true;
     } else {
         /* If component not found on base, check if base itself inherits */
         ecs_type_t base_type = base_info.table->type;
-        return override_component(world, component, base_type, data, column, 
-            row, count);
+        return override_component(world, component, base_type, table, 
+            other_table, data, column, row, count, notify_on_set);
     }
 }
 
@@ -539,10 +575,13 @@ bool override_component(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_type_t type,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     ecs_column_t *column,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool notify_on_set)
 {
     ecs_entity_t *type_array = ecs_vector_first(type, ecs_entity_t);
     int32_t i, type_count = ecs_vector_count(type);
@@ -558,7 +597,7 @@ bool override_component(
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
             if (override_from_base(world, ecs_pair_object(world, e), component,
-                data, column, row, count))
+                table, other_table, data, column, row, count, notify_on_set))
             {
                 return true;
             }
@@ -572,10 +611,12 @@ static
 void components_override(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     ecs_data_t *data,
     int32_t row,
     int32_t count,
-    ecs_ids_t *added)
+    ecs_ids_t *added,
+    bool notify_on_set)
 {
     ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -623,7 +664,8 @@ void components_override(
             continue;
         }
 
-        override_component(world, id, type, data, column, row, count);
+        override_component(world, id, type, table, other_table, data, column, 
+            row, count, notify_on_set);
     }
 error:
     return;
@@ -692,7 +734,8 @@ int32_t new_entity(
     ecs_entity_info_t *info,
     ecs_table_t *new_table,
     ecs_table_diff_t *diff,
-    bool construct)
+    bool construct,
+    bool notify_on_set)
 {
     ecs_record_t *record = info->record;
     ecs_data_t *new_data = &new_table->storage;
@@ -713,7 +756,7 @@ int32_t new_entity(
 
     if (new_table->flags & EcsTableHasAddActions) {
         flecs_notify_on_add(
-            world, new_table, NULL, new_data, new_row, 1, diff, true);       
+            world, new_table, NULL, new_data, new_row, 1, diff, notify_on_set);       
     }
 
     info->data = new_data;
@@ -731,7 +774,8 @@ int32_t move_entity(
     int32_t src_row,
     ecs_table_t *dst_table,
     ecs_table_diff_t *diff,
-    bool construct)
+    bool construct,
+    bool notify_on_set)
 {    
     ecs_data_t *dst_data = &dst_table->storage;
     ecs_assert(src_data != dst_data, ECS_INTERNAL_ERROR, NULL);
@@ -771,7 +815,7 @@ int32_t move_entity(
     if (src_table != dst_table || diff->added.count) {
         if (diff->added.count && (dst_table->flags & EcsTableHasAddActions)) {
             flecs_notify_on_add(world, dst_table, src_table, dst_data, 
-                dst_row, 1, diff, true);
+                dst_row, 1, diff, notify_on_set);
         }
     }
 
@@ -869,7 +913,8 @@ void commit(
     ecs_entity_info_t *info,
     ecs_table_t *dst_table,   
     ecs_table_diff_t *diff,
-    bool construct)
+    bool construct,
+    bool notify_on_set)
 {
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
     
@@ -895,7 +940,7 @@ void commit(
 
         if (dst_table->type) { 
             info->row = move_entity(world, entity, info, src_table, 
-                src_data, info->row, dst_table, diff, construct);
+                src_data, info->row, dst_table, diff, construct, notify_on_set);
             info->table = dst_table;
         } else {
             delete_entity(world, src_table, src_data, info->row, diff);
@@ -907,7 +952,7 @@ void commit(
     } else {        
         if (dst_table->type) {
             info->row = new_entity(
-                world, entity, info, dst_table, diff, construct);
+                world, entity, info, dst_table, diff, construct, notify_on_set);
             info->table = dst_table;
         }        
     }
@@ -946,7 +991,7 @@ void new(
         table = table_append(world, table, to_add->array[i], &diff);
     }
 
-    new_entity(world, entity, &info, table, &diff, true);
+    new_entity(world, entity, &info, table, &diff, true, true);
 
     diff_free(&diff);
 }
@@ -1075,7 +1120,9 @@ void add_id_w_info(
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
 
-    commit(world, entity, info, dst_table, &diff, construct);
+    commit(world, entity, info, dst_table, &diff, construct, 
+        false); /* notify_on_set = false, this function is only called from
+                 * functions that are about to set the component. */
 }
 
 static
@@ -1098,7 +1145,7 @@ void add_id(
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
 
-    commit(world, entity, &info, dst_table, &diff, true);
+    commit(world, entity, &info, dst_table, &diff, true, true);
 
     flecs_defer_flush(world, stage);
 }
@@ -1123,7 +1170,7 @@ void remove_id(
     ecs_table_t *dst_table = flecs_table_traverse_remove(
         world, src_table, &id, &diff);
 
-    commit(world, entity, &info, dst_table, &diff, true);
+    commit(world, entity, &info, dst_table, &diff, true, true);
 
     flecs_defer_flush(world, stage);
 }
@@ -1188,7 +1235,8 @@ void flecs_notify_on_add(
 
     if (diff->added.count) {
         if (table->flags & EcsTableHasIsA) {
-            components_override(world, table, data, row, count, &diff->added);
+            components_override(world, table, other_table, data, row, count, 
+                &diff->added, run_on_set);
         }
 
         if (table->flags & EcsTableHasSwitch) {
@@ -1198,12 +1246,16 @@ void flecs_notify_on_add(
 
         if (table->flags & EcsTableHasOnAdd) {
             notify(world, table, other_table, row, count, EcsOnAdd, 
-                &diff->added);
+                &diff->added, 0);
         }
     }
 
+    /* When a IsA relation is added to an entity, that entity inherits the
+     * components from the base. Send OnSet notifications so that an application
+     * can respond to these new components. */
     if (run_on_set && diff->on_set.count) {
-        notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set);
+        notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set, 
+            EcsIsA);
     }
 }
 
@@ -1219,16 +1271,17 @@ void flecs_notify_on_remove(
 
     if (count) {
         if (diff->un_set.count) {
-            notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set);
+            notify(world, table, other_table, row, count, EcsUnSet, &diff->un_set, 0);
         }
 
         if (table->flags & EcsTableHasOnRemove && diff->removed.count) {
             notify(world, table, other_table, row, count, EcsOnRemove, 
-                &diff->removed);
+                &diff->removed, 0);
         }
 
         if (table->flags & EcsTableHasIsA && diff->on_set.count) {
-            notify(world, table, other_table, row, count, EcsOnSet, &diff->on_set);
+            notify(world, table, other_table, row, count, EcsOnSet, 
+                &diff->on_set, 0);
         }
     }
 }
@@ -1289,7 +1342,7 @@ void flecs_notify_on_set(
 
     /* Run OnSet notifications */
     if (table->flags & EcsTableHasOnSet && ids->count) {
-        notify(world, table, NULL, row, count, EcsOnSet, ids);
+        notify(world, table, NULL, row, count, EcsOnSet, ids, 0);
     }
 }
 
@@ -1390,7 +1443,7 @@ bool ecs_commit(
         diff.added = *removed;
     }
     
-    commit(world, entity, &info, table, &diff, true);
+    commit(world, entity, &info, table, &diff, true, true);
 
     return src_table != table;
 error:
@@ -1763,7 +1816,7 @@ int traverse_add(
     /* Commit entity to destination table */
     if (src_table != table) {
         ecs_defer_begin(world);
-        commit(world, result, &info, table, &diff, true);
+        commit(world, result, &info, table, &diff, true, true);
         ecs_defer_end(world);
     }
 
@@ -2642,7 +2695,8 @@ ecs_entity_t ecs_clone(
     ecs_table_diff_t diff = {.added = flecs_type_to_ids(src_type)};
 
     ecs_entity_info_t dst_info = {0};
-    dst_info.row = new_entity(world, dst, &dst_info, src_table, &diff, true);
+    dst_info.row = new_entity(world, dst, &dst_info, src_table, &diff, 
+        true, true);
 
     if (copy_value) {
         flecs_table_move(world, dst, src, src_table, dst_info.data, 

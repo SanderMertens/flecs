@@ -9,6 +9,9 @@
 
 #include <stdlib.h>
 #include <limits.h>
+#ifndef NDEBUG
+#include <stdio.h> /* easier debugging, throws warning in release for printfs */
+#endif
 
 #include "flecs.h"
 #include "datastructures/entity_index.h"

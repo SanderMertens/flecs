@@ -1633,7 +1633,10 @@
                "entity_source_2_triggers",
                "entity_source_base_set",
                "not_from_superset",
-               "create_stresstest"
+               "create_stresstest",
+               "add_non_existing_entity",
+               "on_add_self_trigger_with_add_isa",
+               "on_set_self_trigger_with_add_isa"
            ]
         }, {
             "id": "Observer",

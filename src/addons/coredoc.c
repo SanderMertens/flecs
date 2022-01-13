@@ -37,6 +37,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsFlecs, "https://github.com/SanderMertens/flecs");
 
     ecs_doc_set_brief(world, EcsFlecsCore, "Flecs module with builtin components");
+    ecs_doc_set_brief(world, EcsFlecsHidden, "Flecs module with internal/anonymous entities");
 
     ecs_doc_set_brief(world, EcsWorld, "Entity associated with world");
 
@@ -49,10 +50,15 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
     ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
 
+    ecs_doc_set_brief(world, ecs_id(EcsComponentLifecycle), "Callbacks for component constructors, destructors, copy and move operations");
+
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
     ecs_doc_set_brief(world, EcsTransitiveSelf, "TransitiveSelf relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
+    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
+    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relation property");
+    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relation property");
     ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relation cleanup property");
     ecs_doc_set_brief(world, EcsOnDeleteObject, "OnDeleteObject relation cleanup property");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
@@ -67,9 +73,12 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#inclusive-relations");
+    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#transitiveself-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
+    ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-relations");
+    ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-relations");
+    ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-relations");
     ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#relation-cleanup-properties");
     ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#relation-cleanup-properties");
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#relation-cleanup-properties");

@@ -284,6 +284,13 @@ public:
      */
     flecs::entity id(int32_t index) const;
 
+    /** Convert current iterator result to string.
+     */
+    flecs::string str() const {
+        char *s = ecs_iter_str(m_iter);
+        return flecs::string(s);
+    }
+
     /** Obtain term with const type.
      * If the specified term index does not match with the provided type, the
      * function will assert.
