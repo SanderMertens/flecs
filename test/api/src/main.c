@@ -1327,6 +1327,7 @@ void Pairs_add_existing_exclusive_pair_after_pair(void);
 void Pairs_add_symmetric_relation(void);
 void Pairs_remove_symmetric_relation(void);
 void Pairs_delete_entity_w_symmetric_relation(void);
+void Pairs_add_symmetric_exclusive_relation(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -7447,6 +7448,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "delete_entity_w_symmetric_relation",
         Pairs_delete_entity_w_symmetric_relation
+    },
+    {
+        "add_symmetric_exclusive_relation",
+        Pairs_add_symmetric_exclusive_relation
     }
 };
 
@@ -11571,7 +11576,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        77,
+        78,
         Pairs_testcases
     },
     {
