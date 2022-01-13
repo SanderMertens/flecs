@@ -1392,7 +1392,8 @@
                 "add_existing_exclusive_pair_after_pair",
                 "add_symmetric_relation",
                 "remove_symmetric_relation",
-                "delete_entity_w_symmetric_relation"
+                "delete_entity_w_symmetric_relation",
+                "add_symmetric_exclusive_relation"
             ]
         }, {
             "id": "Rules",

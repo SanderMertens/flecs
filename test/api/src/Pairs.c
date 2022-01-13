@@ -2378,3 +2378,26 @@ void Pairs_delete_entity_w_symmetric_relation() {
 
     ecs_fini(world);
 }
+
+void Pairs_add_symmetric_exclusive_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+    ECS_TAG(world, ObjC);
+
+    ecs_add_id(world, Rel, EcsSymmetric);
+    ecs_add_id(world, Rel, EcsExclusive);
+
+    ecs_add_pair(world, ObjA, Rel, ObjB);
+    test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));
+    test_assert(ecs_has_pair(world, ObjB, Rel, ObjA));
+
+    ecs_add_pair(world, ObjA, Rel, ObjC);
+    test_assert(ecs_has_pair(world, ObjA, Rel, ObjC));
+    test_assert(!ecs_has_pair(world, ObjB, Rel, ObjA));
+    test_assert(ecs_has_pair(world, ObjC, Rel, ObjA));
+
+    ecs_fini(world);
+}
