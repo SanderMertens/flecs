@@ -116,6 +116,24 @@ struct iter_iterable final : iterable<Components...> {
     }
 #endif
 
+    // Return total number of entities in result.
+    int32_t count() {
+        int32_t result = 0;
+        while (m_next_each(&m_it)) {
+            result += m_it.count;
+        }
+        return result;
+    }
+
+    // Returns true if iterator yields at least once result.
+    bool is_true() {
+        bool result = m_next_each(&m_it);
+        if (result) {
+            ecs_iter_fini(&m_it);
+        }
+        return result;
+    }
+
 protected:
     ecs_iter_t get_iter() const {
         return m_it;

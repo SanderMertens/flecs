@@ -1389,7 +1389,10 @@
                 "add_exclusive_non_empty_table_w_pairs",
                 "add_pair_to_entity_w_exclusive_pair",
                 "add_pair_to_entity_w_scope",
-                "add_existing_exclusive_pair_after_pair"
+                "add_existing_exclusive_pair_after_pair",
+                "add_symmetric_relation",
+                "remove_symmetric_relation",
+                "delete_entity_w_symmetric_relation"
             ]
         }, {
             "id": "Rules",

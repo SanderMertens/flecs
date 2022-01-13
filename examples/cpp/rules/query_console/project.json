@@ -1,0 +1,10 @@
+{
+    "id": "query_console",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

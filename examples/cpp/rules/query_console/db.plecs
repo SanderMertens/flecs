@@ -1,0 +1,22 @@
+// Example data for rule example.
+
+// The example stubs data for a space simulator where players can accept 
+// missions. Missions have certain requirements that players need to meet before
+// they are able to accept.
+
+Faction(Earh)
+Faction(Mars)
+Faction(Belters)
+
+Earth = (AtWar, Belters)
+Belters = (AtWar, Earth)
+
+Mission(Mission_01) {
+    (Departure, Sol)
+    (Destination, Sirius)
+    (Transport, SpaceAlloy)
+    (Organization, FooBar)
+}
+
+
+
