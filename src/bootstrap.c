@@ -133,6 +133,52 @@ void register_on_delete_object(ecs_iter_t *it) {
 }
 
 static
+void on_symmetric_add_remove(ecs_iter_t *it) {
+    ecs_entity_t pair = ecs_term_id(it, 1);
+
+    if (!ECS_HAS_ROLE(pair, PAIR)) {
+        /* If relationship was not added as a pair, there's nothing to do */
+        return;
+    }
+
+    ecs_entity_t rel = ECS_PAIR_RELATION(pair);
+    ecs_entity_t obj = ECS_PAIR_OBJECT(pair);
+    ecs_entity_t event = it->event;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t subj = it->entities[i];
+        if (event == EcsOnAdd) {
+            if (!ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
+                ecs_add_pair(it->world, obj, rel, subj);   
+            }
+        } else {
+            if (ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
+                ecs_remove_pair(it->world, obj, rel, subj);   
+            }
+        }
+    }
+}
+
+static
+void register_symmetric(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t r = it->entities[i];
+
+        /* Create trigger that adds the reverse relationship when R(X, Y) is
+         * added, or remove the reverse relationship when R(X, Y) is removed. */
+        ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+            .term.id = ecs_pair(r, EcsWildcard),
+            .callback = on_symmetric_add_remove,
+            .events = {EcsOnAdd, EcsOnRemove}
+        });
+    } 
+}
+
+static
 void on_set_component_lifecycle(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
@@ -375,6 +421,7 @@ void flecs_bootstrap(
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
     flecs_bootstrap_tag(world, EcsTransitiveSelf);
+    flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsExclusive);
@@ -423,6 +470,8 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDisabled, EcsFinal);
     ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
+    ecs_add_id(world, EcsTransitiveSelf, EcsFinal);
+    ecs_add_id(world, EcsSymmetric, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsTag, EcsFinal);
     ecs_add_id(world, EcsExclusive, EcsFinal);
@@ -457,6 +506,13 @@ void flecs_bootstrap(
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });
+
+    /* Define trigger for symmetric property */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsSymmetric },
+        .callback = register_symmetric,
         .events = {EcsOnAdd}
     });
 

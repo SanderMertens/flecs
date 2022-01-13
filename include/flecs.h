@@ -943,28 +943,48 @@ FLECS_API extern const ecs_entity_t EcsWildcard;
 /* This entity (".", "This"). Used in expressions to indicate This entity */
 FLECS_API extern const ecs_entity_t EcsThis;
 
-/* Can be added to relation to indicate it is transitive. */
+/* Marks a relationship as transitive. 
+ * Behavior: 
+ *   if R(X, Y) and R(Y, Z) then R(X, Z)
+ */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/* Can be added to transitive relation to indicate it is inclusive. */
+/* Can be added to transitive relation to indicate it should match itself.
+ * Behavior: 
+ *   R(X, X) == true
+ */
 FLECS_API extern const ecs_entity_t EcsTransitiveSelf;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not
  * attempt to substitute a component/relationship with IsA subsets if they are
- * final. */
+ * final. 
+ * 
+ * Behavior: 
+ *   if IsA(X, Y) and Final(Y) throw error
+ */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
-/* Can be added to relation to indicate that it should never hold data, even
- * when it or the relation object is a component. */
-FLECS_API extern const ecs_entity_t EcsTag;
+/* Marks relationship as commutative.
+ * Behavior:
+ *   if R(X, Y) then R(Y, X)
+ */
+FLECS_API extern const ecs_entity_t EcsSymmetric;
 
 /* Can be added to relation to indicate that the relationship can only occur
- * once on an entity. Adding a 2nd instance will replace the 1st. */
+ * once on an entity. Adding a 2nd instance will replace the 1st. 
+ *
+ * Behavior:
+ *   R(X, Y) + R(X, Z) = R(X, Z)
+ */
 FLECS_API extern const ecs_entity_t EcsExclusive;
 
 /* Marks a relation as acyclic. Acyclic relations may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
+
+/* Can be added to relation to indicate that it should never hold data, even
+ * when it or the relation object is a component. */
+FLECS_API extern const ecs_entity_t EcsTag;
 
 /* Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
@@ -2975,7 +2995,7 @@ bool ecs_query_next_instanced(
  * - matched entities were deleted
  * - matched components were changed
  * 
- * The operation will not return true after a write-only (EcsOut) or filter
+ * The operxation will not return true after a write-only (EcsOut) or filter
  * (EcsInOutFilter) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  * 

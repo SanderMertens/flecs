@@ -76,10 +76,6 @@ void inc_trigger_count(
             unregister_event_trigger(evt, id);
         }
     }
-
-    // printf("id = %s.%s, count = %d (%d)\n", 
-    //     ecs_get_fullpath(world, event),
-    //     ecs_id_str(world, id), idt->trigger_count, value);
 }
 
 static

@@ -2892,8 +2892,6 @@ void ecs_rule_iter_free(
     it->registers = NULL;
     it->columns = NULL;
     it->op_ctx = NULL;
-    iter->fini = NULL;
-    ecs_iter_fini(iter);
 }
 
 /* Create rule iterator */
@@ -4183,7 +4181,7 @@ bool ecs_rule_next_instanced(
         }
     } while (iter->op != -1);
 
-    ecs_rule_iter_free(it);
+    ecs_iter_fini(it);
 
 error:
     return false;

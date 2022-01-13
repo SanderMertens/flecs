@@ -2294,7 +2294,7 @@ void Pairs_add_pair_to_entity_w_scope() {
 }
 
 void Pairs_add_existing_exclusive_pair_after_pair() {
-    ecs_world_t *world = ecs_init();    
+    ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -2319,6 +2319,62 @@ void Pairs_add_existing_exclusive_pair_after_pair() {
     test_assert( ecs_has_pair(world, e, EcsChildOf, ObjA));
     test_assert( ecs_has_pair(world, e, RelA, ObjA));
     test_assert( ecs_has_pair(world, e, RelB, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_add_symmetric_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_add_id(world, Rel, EcsSymmetric);
+
+    ecs_add_pair(world, ObjA, Rel, ObjB);
+    test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));
+    test_assert(ecs_has_pair(world, ObjB, Rel, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_remove_symmetric_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_add_id(world, Rel, EcsSymmetric);
+
+    ecs_add_pair(world, ObjA, Rel, ObjB);
+    test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));
+    test_assert(ecs_has_pair(world, ObjB, Rel, ObjA));
+
+    ecs_remove_pair(world, ObjA, Rel, ObjB);
+    test_assert(!ecs_has_pair(world, ObjA, Rel, ObjB));
+    test_assert(!ecs_has_pair(world, ObjB, Rel, ObjA));
+
+    ecs_fini(world);
+}
+
+void Pairs_delete_entity_w_symmetric_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_add_id(world, Rel, EcsSymmetric);
+
+    ecs_add_pair(world, ObjA, Rel, ObjB);
+    test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));
+    test_assert(ecs_has_pair(world, ObjB, Rel, ObjA));
+
+    ecs_delete(world, ObjA);
+
+    test_assert(!ecs_has_pair(world, ObjB, Rel, ObjA));
 
     ecs_fini(world);
 }
