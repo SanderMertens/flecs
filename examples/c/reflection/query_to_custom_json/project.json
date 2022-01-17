@@ -1,0 +1,9 @@
+{
+    "id": "query_to_custom_json",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

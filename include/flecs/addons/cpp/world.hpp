@@ -726,6 +726,12 @@ struct world final {
 #   ifdef FLECS_PLECS
 #   include "mixins/plecs/mixin.inl"
 #   endif
+#   ifdef FLECS_META
+#   include "mixins/meta/world.inl"
+#   endif
+#   ifdef FLECS_JSON
+#   include "mixins/json/world.inl"
+#   endif
 
 public:
     void init_builtin_components();

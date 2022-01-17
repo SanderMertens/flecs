@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     // Convert position component to flecs expression string
     const Position *ptr = ecs_get(ecs, ent, Position);
     char *str = ecs_ptr_to_expr(ecs, ecs_id(Position), ptr);
-    printf("Position = %s\n", str);
+    printf("%s\n", str); // {x: 10, y: 20}
     ecs_os_free(str);
 
     ecs_fini(ecs);

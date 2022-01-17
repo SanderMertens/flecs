@@ -545,6 +545,10 @@ struct entity_view : public id {
      */
     flecs::entity mut(const flecs::entity_view& e) const;
 
+#   ifdef FLECS_JSON
+#   include "mixins/json/entity.inl"
+#   endif
+
 private:
     flecs::entity set_stage(world_t *stage);
 };

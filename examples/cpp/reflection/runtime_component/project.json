@@ -1,0 +1,10 @@
+{
+    "id": "runtime_component",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

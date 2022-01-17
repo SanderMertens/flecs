@@ -351,7 +351,7 @@ int ecs_meta_pop(
 
 /** Is the current scope a collection? */
 FLECS_API
-int ecs_meta_is_collection(
+bool ecs_meta_is_collection(
     ecs_meta_cursor_t *cursor);
 
 /** Get type of current element. */

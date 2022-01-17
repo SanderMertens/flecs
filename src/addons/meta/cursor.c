@@ -381,7 +381,7 @@ int ecs_meta_pop(
     return 0;
 }
 
-int ecs_meta_is_collection(
+bool ecs_meta_is_collection(
     ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = get_scope(cursor);

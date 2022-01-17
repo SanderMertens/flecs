@@ -40,4 +40,12 @@ inline void system::set_tick_source(flecs::entity e) {
     ecs_set_tick_source(m_world, m_id, e);
 }
 
+namespace _ {
+
+inline void timer_init(flecs::world& world) {
+    world.component<RateFilter>("flecs::timer::RateFilter");
+    world.component<Timer>("flecs::timer::Timer");
+}
+
+}
 }

@@ -19,18 +19,20 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-#   ifdef FLECS_DOC
-    component<doc::Description>("flecs::doc::Description");
-#   endif
-#   ifdef FLECS_REST
-    component<rest::Rest>("flecs::rest::Rest");
-#   endif
 #   ifdef FLECS_SYSTEM
-    component<TickSource>("flecs::system::TickSource");
+    _::system_init(*this);
 #   endif
 #   ifdef FLECS_TIMER
-    component<RateFilter>("flecs::timer::RateFilter");
-    component<Timer>("flecs::timer::Timer");
+    _::timer_init(*this);
+#   endif
+#   ifdef FLECS_DOC
+    doc::_::init(*this);
+#   endif
+#   ifdef FLECS_REST
+    rest::_::init(*this);
+#   endif
+#   ifdef FLECS_META
+    meta::_::init(*this);
 #   endif
 }
 
