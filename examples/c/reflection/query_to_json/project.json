@@ -1,0 +1,10 @@
+{
+    "id": "query_to_json",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

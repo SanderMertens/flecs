@@ -1,10 +1,14 @@
 #pragma once
 
 namespace flecs {
-
-/* REST components */
 namespace rest {
-    using Rest = EcsRest;
-}
 
+using Rest = EcsRest;
+
+namespace _ {
+
+void init(flecs::world& world);
+
+}
+}
 }

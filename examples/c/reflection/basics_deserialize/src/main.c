@@ -32,20 +32,20 @@ int main(int argc, char *argv[]) {
     ecs_meta_pop(&cur);           // }
 
     char *str = ecs_ptr_to_expr(ecs, ecs_id(Position), ptr);
-    printf("%s\n", str); // {x: 10, y: 20}
+    printf("%s\n", str); // {x: 10.00, y: 20.00}
     ecs_os_free(str);
 
-    // Alternatively, we can use member names before assigning values
+    // Use member names before assigning values
     cur = ecs_meta_cursor(ecs, ecs_id(Position), ptr);
     ecs_meta_push(&cur);          // {
     ecs_meta_member(&cur, "y");   //   y: 
     ecs_meta_set_float(&cur, 10); //   10
-    ecs_meta_member(&cur, "x");   //   y: 
+    ecs_meta_member(&cur, "x");   //   x: 
     ecs_meta_set_float(&cur, 20); //   20
     ecs_meta_pop(&cur);           // }
 
     str = ecs_ptr_to_expr(ecs, ecs_id(Position), ptr);
-    printf("%s\n", str); // {x: 20, y: 10}
+    printf("%s\n", str); // {x: 20.00, y: 10.00}
     ecs_os_free(str);
 
     ecs_fini(ecs);

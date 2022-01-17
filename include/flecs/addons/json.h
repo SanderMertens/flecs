@@ -186,13 +186,13 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;    /* Exclude term (query) component ids from result */
-    bool serialize_ids;         /* Exclude actual (matched) component ids from result */
-    bool serialize_subjects;    /* Exclude subjects from result */
-    bool serialize_variables;   /* Exclude variables from result */
-    bool serialize_is_set;      /* Exclude is_set (for optional terms) */
-    bool serialize_values;      /* Exclude component values from result */
-    bool serialize_entities;    /* Exclude entities (for This terms) */
+    bool serialize_term_ids;    /* Include term (query) component ids */
+    bool serialize_ids;         /* Include actual (matched) component ids */
+    bool serialize_subjects;    /* Include subjects */
+    bool serialize_variables;   /* Include variables */
+    bool serialize_is_set;      /* Include is_set (for optional terms) */
+    bool serialize_values;      /* Include component values */
+    bool serialize_entities;    /* Include entities (for This terms) */
     bool measure_eval_duration; /* Include evaluation duration */
     bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;

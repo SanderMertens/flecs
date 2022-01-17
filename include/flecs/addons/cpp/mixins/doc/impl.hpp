@@ -1,7 +1,6 @@
 #pragma once
 
 namespace flecs {
-
 namespace doc {
 
 inline const char* get_brief(const flecs::entity_view& e) {
@@ -28,6 +27,12 @@ inline void set_link(flecs::entity& e, const char *description) {
     ecs_doc_set_link(e.world(), e, description);
 }
 
+namespace _ {
+
+inline void init(flecs::world& world) {
+    world.component<doc::Description>("flecs::doc::Description");
 }
 
-}
+} // namespace _
+} // namespace doc
+} // namespace flecs

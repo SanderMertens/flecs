@@ -4,7 +4,7 @@
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    // Create component out of "thin air", type does not exist at compile time
+    // Create component for a type that isn't known at compile time
     ecs_entity_t ecs_id(Position) = ecs_struct_init(ecs, &(ecs_struct_desc_t) {
         .members = {
             { .name = "x", .type = ecs_id(ecs_f32_t) }, // builtin float type

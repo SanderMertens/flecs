@@ -18,6 +18,12 @@ namespace flecs
 struct world;
 struct world_async_stage;
 struct iter;
+struct entity_view;
+struct entity;
+struct untyped_component;
+
+template <typename T>
+struct component;
 
 namespace _ 
 {
@@ -26,6 +32,7 @@ struct cpp_type;
 
 template <typename Func, typename ... Components>
 struct each_invoker;
+
 } // namespace _
 } // namespace flecs
 
@@ -61,6 +68,12 @@ struct each_invoker;
 #endif
 #ifdef FLECS_RULES
 #include "mixins/rule/decl.hpp"
+#endif
+#ifdef FLECS_META
+#include "mixins/meta/decl.hpp"
+#endif
+#ifdef FLECS_JSON
+#include "mixins/json/decl.hpp"
 #endif
 
 #include "log.hpp"
@@ -107,9 +120,14 @@ struct each_invoker;
 #ifdef FLECS_DOC
 #include "mixins/doc/impl.hpp"
 #endif
+#ifdef FLECS_REST
+#include "mixins/rest/impl.hpp"
+#endif
 #ifdef FLECS_RULES
 #include "mixins/rule/impl.hpp"
 #endif
-
+#ifdef FLECS_META
+#include "mixins/meta/impl.hpp"
+#endif
 
 #include "impl.hpp"

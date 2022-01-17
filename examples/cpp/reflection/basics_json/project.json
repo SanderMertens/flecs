@@ -1,0 +1,11 @@
+{
+    "id": "basics_json",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

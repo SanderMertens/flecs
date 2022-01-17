@@ -121,4 +121,11 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
+namespace _ {
+
+inline void system_init(flecs::world& world) {
+    world.component<TickSource>("flecs::system::TickSource");
+}
+
+} // namespace _
 } // namespace flecs

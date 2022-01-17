@@ -133,29 +133,56 @@ struct name_util {
 // Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
-struct symbol_helper
-{
-    static char* symbol(void) {
-        const char *name = name_helper<T>::name();
+inline char* symbol(void) {
+    const char *name = name_helper<T>::name();
 
-        // Symbol is same as name, but with '::' replaced with '.'
-        char *ptr, *sym = ecs_os_strdup(name);
-        ecs_size_t i, len = ecs_os_strlen(sym);
-        ptr = sym;
-        for (i = 0, ptr = sym; i < len && *ptr; i ++, ptr ++) {
-            if (*ptr == ':') {
-                sym[i] = '.';
-                ptr ++;
-            } else {
-                sym[i] = *ptr;
-            }
+    // Symbol is same as name, but with '::' replaced with '.'
+    char *ptr, *sym = ecs_os_strdup(name);
+    ecs_size_t i, len = ecs_os_strlen(sym);
+    ptr = sym;
+    for (i = 0, ptr = sym; i < len && *ptr; i ++, ptr ++) {
+        if (*ptr == ':') {
+            sym[i] = '.';
+            ptr ++;
+        } else {
+            sym[i] = *ptr;
         }
-
-        sym[i] = '\0';
-
-        return sym;
     }
-};
+
+    sym[i] = '\0';
+
+    return sym;
+}
+template <> inline char* symbol<uint8_t>(void) {
+    return ecs_os_strdup("u8");
+}
+template <> inline char* symbol<uint16_t>(void) {
+    return ecs_os_strdup("u16");
+}
+template <> inline char* symbol<uint32_t>(void) {
+    return ecs_os_strdup("u32");
+}
+template <> inline char* symbol<uint64_t>(void) {
+    return ecs_os_strdup("u64");
+}
+template <> inline char* symbol<int8_t>(void) {
+    return ecs_os_strdup("i8");
+}
+template <> inline char* symbol<int16_t>(void) {
+    return ecs_os_strdup("i16");
+}
+template <> inline char* symbol<int32_t>(void) {
+    return ecs_os_strdup("i32");
+}
+template <> inline char* symbol<int64_t>(void) {
+    return ecs_os_strdup("i64");
+}
+template <> inline char* symbol<float>(void) {
+    return ecs_os_strdup("f32");
+}
+template <> inline char* symbol<double>(void) {
+    return ecs_os_strdup("f64");
+}
 
 // If type is trivial, don't register lifecycle actions. While the functions
 // that obtain the lifecycle callback do detect whether the callback is required
@@ -314,13 +341,13 @@ struct cpp_type_impl {
             // One type can only be associated with a single type
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
 
-            char *symbol = nullptr;
+            char *symb = nullptr;
 
             // If an explicit id is provided, it is possible that the symbol and
             // name differ from the actual type, as the application may alias
             // one type to another.
             if (!id) {
-                symbol = symbol_helper<T>::symbol();
+                symb = symbol<T>();
                 if (!name) {
                     // If no name was provided, retrieve the name implicitly from
                     // the name_helper class.
@@ -339,14 +366,14 @@ struct cpp_type_impl {
             desc.entity.name = name;
             desc.entity.sep = "::";
             desc.entity.root_sep = "::";
-            desc.entity.symbol = symbol;
+            desc.entity.symbol = symb;
             desc.size = cpp_type_size<T>::size(allow_tag);
             desc.alignment = cpp_type_size<T>::alignment(allow_tag);
 
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
-            ecs_os_free(symbol);
+            ecs_os_free(symb);
             
             init(world, s_id, allow_tag);
             s_id = entity;
@@ -493,146 +520,168 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
 
 } // namespace _
 
-/** Register a component.
- * If the component was already registered, this operation will return a handle
- * to the existing component.
- * 
- * @param world The world for which to register the component.
- * @param name Optional name (overrides typename).
- * @param allow_tag If true, empty types will be registered with size 0.
- * @param id Optional id to register component with.
- * @return Handle to component.
- */
-template <typename T>
-flecs::entity component(
-    flecs::world_t *world, 
-    const char *name = nullptr, 
-    bool allow_tag = true, 
-    flecs::id_t id = 0) 
-{
-    const char *n = name;
-    bool implicit_name = false;
-    if (!n) {
-        n = _::name_helper<T>::name();
-
-        /* Keep track of whether name was explicitly set. If not, and the 
-         * component was already registered, just use the registered name.
-         *
-         * The registered name may differ from the typename as the registered
-         * name includes the flecs scope. This can in theory be different from
-         * the C++ namespace though it is good practice to keep them the same */
-        implicit_name = true;
-    }
-
-    if (_::cpp_type<T>::registered()) {
-        /* Obtain component id. Because the component is already registered,
-         * this operation does nothing besides returning the existing id */
-        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
-
-        /* If entity has a name check if it matches */
-        if (ecs_get_name(world, id) != nullptr) {
-            if (!implicit_name && id >= EcsFirstUserComponentId) {
-                char *path = ecs_get_path_w_sep(
-                    world, 0, id, "::", nullptr);
-                ecs_assert(!strcmp(path, n), 
-                    ECS_INCONSISTENT_NAME, name);
-                ecs_os_free(path);
-            }
-        } else {
-            /* Register name with entity, so that when the entity is created the
-             * correct id will be resolved from the name. Only do this when the
-             * entity is empty.*/
-            ecs_add_path_w_sep(world, id, 0, n, "::", "::");
-        }
-
-        /* If a component was already registered with this id but with a 
-         * different size, the ecs_component_init function will fail. */
-
-        /* We need to explicitly call ecs_component_init here again. Even though
-         * the component was already registered, it may have been registered
-         * with a different world. This ensures that the component is registered
-         * with the same id for the current world. 
-         * If the component was registered already, nothing will change. */
-        ecs_component_desc_t desc = {};
-        desc.entity.entity = id;
-        desc.size = _::cpp_type<T>::size();
-        desc.alignment = _::cpp_type<T>::alignment();
-        ecs_entity_t entity = ecs_component_init(world, &desc);
-        (void)entity;
-        
-        ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
-
-        /* This functionality could have been put in id_explicit, but since
-         * this code happens when a component is registered, and the entire API
-         * calls id_explicit, this would add a lot of overhead to each call.
-         * This is why when using multiple worlds, components should be 
-         * registered explicitly. */
-    } else {
-        /* If the component is not yet registered, ensure no other component
-         * or entity has been registered with this name. Ensure component is 
-         * looked up from root. */
-        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-        ecs_entity_t entity;
-        if (id) {
-            entity = id;
-        } else {
-            entity = ecs_lookup_path_w_sep(world, 0, n, "::", "::", false);
-        }
-
-        ecs_set_scope(world, prev_scope);
-
-        /* If entity exists, compare symbol name to ensure that the component
-         * we are trying to register under this name is the same */
-        if (entity) {
-            if (!id) {
-                const char *sym = ecs_get_symbol(world, entity);
-                ecs_assert(sym != NULL, ECS_INTERNAL_ERROR, NULL);
-                (void)sym;
-
-                char *symbol = _::symbol_helper<T>::symbol();
-                ecs_assert(!ecs_os_strcmp(sym, symbol), ECS_NAME_IN_USE, n);
-                ecs_os_free(symbol);
-
-            /* If an existing id was provided, it's possible that this id was
-             * registered with another type. Make sure that in this case at
-             * least the component size/alignment matches.
-             * This allows applications to alias two different types to the same
-             * id, which enables things like redefining a C type in C++ by
-             * inheriting from it & adding utility functions etc. */
-            } else {
-                const EcsComponent *comp = ecs_get(world, entity, EcsComponent);
-                if (comp) {
-                    ecs_assert(comp->size == ECS_SIZEOF(T),
-                        ECS_INVALID_COMPONENT_SIZE, NULL);
-                    ecs_assert(comp->alignment == ECS_ALIGNOF(T),
-                        ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
-                } else {
-                    /* If the existing id is not a component, no checking is
-                     * needed. */
-                }
-            }
-
-        /* If no entity is found, lookup symbol to check if the component was
-         * registered under a different name. */
-        } else {
-            char *symbol = _::symbol_helper<T>::symbol();
-            entity = ecs_lookup_symbol(world, symbol, false);
-            ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
-            ecs_os_free(symbol);
-        }
-
-        /* Register id as usual */
-        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
-    }
-
-    auto result = flecs::entity(world, id);
-
-    if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world, result);
-    }
+struct untyped_component : entity {
+    using entity::entity;
     
-    return result;
-}
+#   ifdef FLECS_META
+#   include "mixins/meta/component.inl"
+#   endif
+};
+
+template <typename T>
+struct component : untyped_component {
+    /** Register a component.
+     * If the component was already registered, this operation will return a handle
+     * to the existing component.
+     * 
+     * @param world The world for which to register the component.
+     * @param name Optional name (overrides typename).
+     * @param allow_tag If true, empty types will be registered with size 0.
+     * @param id Optional id to register component with.
+     */
+    component(
+        flecs::world_t *world, 
+        const char *name = nullptr, 
+        bool allow_tag = true, 
+        flecs::id_t id = 0) 
+    {
+        const char *n = name;
+        bool implicit_name = false;
+        if (!n) {
+            n = _::name_helper<T>::name();
+
+            /* Keep track of whether name was explicitly set. If not, and the 
+            * component was already registered, just use the registered name.
+            *
+            * The registered name may differ from the typename as the registered
+            * name includes the flecs scope. This can in theory be different from
+            * the C++ namespace though it is good practice to keep them the same */
+            implicit_name = true;
+        }
+
+        if (_::cpp_type<T>::registered()) {
+            /* Obtain component id. Because the component is already registered,
+             * this operation does nothing besides returning the existing id */
+            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+
+            /* If entity has a name check if it matches */
+            if (ecs_get_name(world, id) != nullptr) {
+                if (!implicit_name && id >= EcsFirstUserComponentId) {
+#                   ifndef NDEBUG
+                    char *path = ecs_get_path_w_sep(
+                        world, 0, id, "::", nullptr);
+                    if (ecs_os_strcmp(path, n)) {
+                        ecs_err("component '%s' already registered with name '%s'",
+                            n, path);
+                        ecs_abort(ECS_INCONSISTENT_NAME, NULL);
+                    }
+                    ecs_os_free(path);
+#                   endif
+                }
+            } else {
+                /* Register name with entity, so that when the entity is created the
+                * correct id will be resolved from the name. Only do this when the
+                * entity is empty.*/
+                ecs_add_path_w_sep(world, id, 0, n, "::", "::");
+            }
+
+            /* If a component was already registered with this id but with a 
+            * different size, the ecs_component_init function will fail. */
+
+            /* We need to explicitly call ecs_component_init here again. Even though
+            * the component was already registered, it may have been registered
+            * with a different world. This ensures that the component is registered
+            * with the same id for the current world. 
+            * If the component was registered already, nothing will change. */
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = id;
+            desc.size = _::cpp_type<T>::size();
+            desc.alignment = _::cpp_type<T>::alignment();
+            ecs_entity_t ent = ecs_component_init(world, &desc);
+            (void)ent;
+            
+            ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
+
+            /* This functionality could have been put in id_explicit, but since
+            * this code happens when a component is registered, and the entire API
+            * calls id_explicit, this would add a lot of overhead to each call.
+            * This is why when using multiple worlds, components should be 
+            * registered explicitly. */
+        } else {
+            /* If the component is not yet registered, ensure no other component
+            * or entity has been registered with this name. Ensure component is 
+            * looked up from root. */
+            ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+            ecs_entity_t ent;
+            if (id) {
+                ent = id;
+            } else {
+                ent = ecs_lookup_path_w_sep(world, 0, n, "::", "::", false);
+            }
+
+            ecs_set_scope(world, prev_scope);
+
+            /* If entity exists, compare symbol name to ensure that the component
+            * we are trying to register under this name is the same */
+            if (ent) {
+                if (!id) {
+                    const char *sym = ecs_get_symbol(world, ent);
+                    ecs_assert(sym != NULL, ECS_MISSING_SYMBOL, 
+                        ecs_get_name(world, ent));
+                    (void)sym;
+
+                    char *symbol = _::symbol<T>();
+#                   ifndef NDEBUG
+                    if (ecs_os_strcmp(sym, symbol)) {
+                        ecs_err(
+                            "component with name '%s' is already registered for"\
+                            " type '%s' (trying to register for type '%s')",
+                                n, sym, symbol);
+                        ecs_abort(ECS_NAME_IN_USE, NULL);
+                    }
+#                   endif
+                    ecs_os_free(symbol);
+
+                /* If an existing id was provided, it's possible that this id was
+                * registered with another type. Make sure that in this case at
+                * least the component size/alignment matches.
+                * This allows applications to alias two different types to the same
+                * id, which enables things like redefining a C type in C++ by
+                * inheriting from it & adding utility functions etc. */
+                } else {
+                    const EcsComponent *comp = ecs_get(world, ent, EcsComponent);
+                    if (comp) {
+                        ecs_assert(comp->size == ECS_SIZEOF(T),
+                            ECS_INVALID_COMPONENT_SIZE, NULL);
+                        ecs_assert(comp->alignment == ECS_ALIGNOF(T),
+                            ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
+                    } else {
+                        /* If the existing id is not a component, no checking is
+                        * needed. */
+                    }
+                }
+
+            /* If no entity is found, lookup symbol to check if the component was
+            * registered under a different name. */
+            } else {
+                char *symbol = _::symbol<T>();
+                ent = ecs_lookup_symbol(world, symbol, false);
+                ecs_assert(ent == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
+                ecs_os_free(symbol);
+            }
+
+            /* Register id as usual */
+            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+        }
+
+        if (_::cpp_type<T>::size()) {
+            _::register_lifecycle_actions<T>(world, id);
+        }
+
+        m_world = world;
+        m_id = id;
+    }
+};
 
 template <typename T>
 flecs::entity_t type_id() {

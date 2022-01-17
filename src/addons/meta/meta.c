@@ -910,7 +910,8 @@ void FlecsMetaImport(
     #define ECS_PRIMITIVE(world, type, primitive_kind)\
         ecs_entity_init(world, &(ecs_entity_desc_t) {\
             .entity = ecs_id(ecs_##type##_t),\
-            .name = #type });\
+            .name = #type,\
+            .symbol = #type });\
         ecs_set(world, ecs_id(ecs_##type##_t), EcsPrimitive, {\
             .kind = primitive_kind\
         });

@@ -1,0 +1,10 @@
+{
+    "id": "basics_enum",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

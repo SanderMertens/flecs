@@ -66,38 +66,39 @@ int main(int, char *[]) {
         .add<Human>()
         .add<Eats, Apples>();
 
-    std::cout << "Bob's components\n";
+    std::cout << "Bob's components:\n";
     iterate_components(bob);
 
     // We can use the same function to iterate the components of a component
+    std::cout << "Position's components:\n";
     iterate_components(ecs.component<Position>());
 }
 
 // Output:
 
 // Bob's components:
-// ecs_type_str: Position,Velocity,Human,(Eats,Apples)
-
+// Position, Velocity, Human, (Eats,Apples)
+// 
 // 0: Position
 // 1: Velocity
 // 2: Human
 // 3: (Eats,Apples)
-
+// 
 // 0: entity: Position
 // 1: entity: Velocity
 // 2: entity: Human
-// 3: role: PAIR, rel: Eats, obj: Eats
-
-
+// 3: role: PAIR, rel: Eats, obj: Apples
+// 
+// 
 // Position's components:
-// ecs_type_str: EcsComponent,(Identifier,Name),(Identifier,Symbol),(OnDelete,Throw)
-
+// Component, (Identifier,Name), (Identifier,Symbol), (OnDelete,Throw)
+// 
 // 0: Component
 // 1: (Identifier,Name)
 // 2: (Identifier,Symbol)
 // 3: (OnDelete,Throw)
-
+// 
 // 0: entity: Component
-// 1: role: PAIR, rel: Identifier, obj: Identifier
-// 2: role: PAIR, rel: Identifier, obj: Identifier
-// 3: role: PAIR, rel: OnDelete, obj: OnDelete
+// 1: role: PAIR, rel: Identifier, obj: Name
+// 2: role: PAIR, rel: Identifier, obj: Symbol
+// 3: role: PAIR, rel: OnDelete, obj: Throw
