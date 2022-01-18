@@ -312,7 +312,8 @@ void* ecs_term_w_size(
     int32_t term)
 {
     ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!size || ecs_term_size(it, term) == size, 
+    ecs_check(!size || ecs_term_size(it, term) == size || 
+        (!ecs_term_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
         ECS_INVALID_PARAMETER, NULL);
 
     (void)size;

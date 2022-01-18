@@ -817,6 +817,7 @@ int ecs_log_last_error(void);
 #define ECS_INCONSISTENT_COMPONENT_ID (26)
 #define ECS_INCONSISTENT_COMPONENT_ACTION (27)
 #define ECS_MODULE_UNDEFINED (28)
+#define ECS_MISSING_SYMBOL (29)
 
 #define ECS_COLUMN_ACCESS_VIOLATION (40)
 #define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
@@ -8477,13 +8478,13 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;    /* Exclude term (query) component ids from result */
-    bool serialize_ids;         /* Exclude actual (matched) component ids from result */
-    bool serialize_subjects;    /* Exclude subjects from result */
-    bool serialize_variables;   /* Exclude variables from result */
-    bool serialize_is_set;      /* Exclude is_set (for optional terms) */
-    bool serialize_values;      /* Exclude component values from result */
-    bool serialize_entities;    /* Exclude entities (for This terms) */
+    bool serialize_term_ids;    /* Include term (query) component ids */
+    bool serialize_ids;         /* Include actual (matched) component ids */
+    bool serialize_subjects;    /* Include subjects */
+    bool serialize_variables;   /* Include variables */
+    bool serialize_is_set;      /* Include is_set (for optional terms) */
+    bool serialize_values;      /* Include component values */
+    bool serialize_entities;    /* Include entities (for This terms) */
     bool measure_eval_duration; /* Include evaluation duration */
     bool serialize_type_info;   /* Include type information */
 } ecs_iter_to_json_desc_t;
@@ -8886,7 +8887,7 @@ int ecs_meta_pop(
 
 /** Is the current scope a collection? */
 FLECS_API
-int ecs_meta_is_collection(
+bool ecs_meta_is_collection(
     ecs_meta_cursor_t *cursor);
 
 /** Get type of current element. */
@@ -11494,6 +11495,12 @@ namespace flecs
 struct world;
 struct world_async_stage;
 struct iter;
+struct entity_view;
+struct entity;
+struct untyped_component;
+
+template <typename T>
+struct component;
 
 namespace _ 
 {
@@ -11502,6 +11509,7 @@ struct cpp_type;
 
 template <typename Func, typename ... Components>
 struct each_invoker;
+
 } // namespace _
 } // namespace flecs
 
@@ -11950,7 +11958,12 @@ struct system;
 template<typename ... Components>
 struct system_builder;
 
-}
+namespace _ {
+
+void system_init(flecs::world& world);
+
+} // namespace _
+} // namespace flecs
 
 #endif
 #ifdef FLECS_PIPELINE
@@ -11985,7 +11998,12 @@ using RateFilter = EcsRateFilter;
 
 struct timer;
 
-}
+namespace _ {
+
+void timer_init(flecs::world& world);
+
+} // namespace _
+} // namespace flecs
 
 #endif
 #ifdef FLECS_SNAPSHOT
@@ -12004,14 +12022,18 @@ struct snapshot;
 #pragma once
 
 namespace flecs {
-
 namespace doc {
-    using Description = EcsDocDescription;
-    static const flecs::entity_t Brief = EcsDocBrief;
-    static const flecs::entity_t Detail = EcsDocDetail;
-    static const flecs::entity_t Link = EcsDocLink;
+
+using Description = EcsDocDescription;
+static const flecs::entity_t Brief = EcsDocBrief;
+static const flecs::entity_t Detail = EcsDocDetail;
+static const flecs::entity_t Link = EcsDocLink;
+
+namespace _ {
+void init(flecs::world& world);
 }
 
+}
 }
 
 #endif
@@ -12019,12 +12041,16 @@ namespace doc {
 #pragma once
 
 namespace flecs {
-
-/* REST components */
 namespace rest {
-    using Rest = EcsRest;
-}
 
+using Rest = EcsRest;
+
+namespace _ {
+
+void init(flecs::world& world);
+
+}
+}
 }
 
 #endif
@@ -12040,6 +12066,153 @@ struct rule;
 
 template<typename ... Components>
 struct rule_builder;
+
+}
+
+#endif
+#ifdef FLECS_META
+#pragma once
+
+namespace flecs {
+
+using bool_t = ecs_bool_t;
+using char_t = ecs_char_t;
+using u8_t = ecs_u8_t;
+using u16_t = ecs_u16_t;
+using u32_t = ecs_u32_t;
+using u64_t = ecs_u64_t;
+using i8_t = ecs_i8_t;
+using i16_t = ecs_i16_t;
+using i32_t = ecs_i32_t;
+using i64_t = ecs_i64_t;
+using f32_t = ecs_f32_t;
+using f64_t = ecs_f64_t;
+
+using type_kind_t = ecs_type_kind_t;
+using primitive_kind_t = ecs_primitive_kind_t;
+using member_t = ecs_member_t;
+using enum_constant_t = ecs_enum_constant_t;
+using bitmask_constant_t = ecs_bitmask_constant_t;
+
+using MetaType = EcsMetaType;
+using MetaTypeSerialized = EcsMetaTypeSerialized;
+using Primitive = EcsPrimitive;
+using Enum = EcsEnum;
+using Bitmask = EcsBitmask;
+using Member = EcsMember;
+using Struct = EcsStruct;
+using Array = EcsArray;
+using Vector = EcsVector;
+
+static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
+static const flecs::entity_t Char = ecs_id(ecs_char_t);
+static const flecs::entity_t Byte = ecs_id(ecs_byte_t);
+static const flecs::entity_t U8 = ecs_id(ecs_u8_t);
+static const flecs::entity_t U16 = ecs_id(ecs_u16_t);
+static const flecs::entity_t U32 = ecs_id(ecs_u32_t);
+static const flecs::entity_t U64 = ecs_id(ecs_u64_t);
+static const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
+static const flecs::entity_t I8 = ecs_id(ecs_i8_t);
+static const flecs::entity_t I16 = ecs_id(ecs_i16_t);
+static const flecs::entity_t I32 = ecs_id(ecs_i32_t);
+static const flecs::entity_t I64 = ecs_id(ecs_i64_t);
+static const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
+static const flecs::entity_t F32 = ecs_id(ecs_f32_t);
+static const flecs::entity_t F64 = ecs_id(ecs_f64_t);
+static const flecs::entity_t String = ecs_id(ecs_string_t);
+
+static const flecs::entity_t Constant = EcsConstant;
+
+namespace meta {
+
+struct cursor {
+    cursor(flecs::world_t *world, flecs::entity_t type_id, void *ptr) {
+        m_cursor = ecs_meta_cursor(world, type_id, ptr);
+    }
+
+    int push() {
+        return ecs_meta_push(&m_cursor);
+    }
+
+    int pop() {
+        return ecs_meta_pop(&m_cursor);
+    }
+
+    int next() {
+        return ecs_meta_next(&m_cursor);
+    }
+
+    int member(const char *name) {
+        return ecs_meta_member(&m_cursor, name);
+    }
+
+    bool is_collection() {
+        return ecs_meta_is_collection(&m_cursor);
+    }
+
+    flecs::entity_t get_type() {
+        return ecs_meta_get_type(&m_cursor);
+    }
+
+    void* get_ptr() {
+        return ecs_meta_get_ptr(&m_cursor);
+    }
+
+    int set_bool(bool value) {
+        return ecs_meta_set_bool(&m_cursor, value);
+    }
+
+    int set_char(char value) {
+        return ecs_meta_set_char(&m_cursor, value);
+    }
+
+    int set_int(int64_t value) {
+        return ecs_meta_set_int(&m_cursor, value);
+    }
+
+    int set_uint(uint64_t value) {
+        return ecs_meta_set_uint(&m_cursor, value);
+    }
+
+    int set_float(double value) {
+        return ecs_meta_set_float(&m_cursor, value);
+    }
+
+    int set_string(const char *value) {
+        return ecs_meta_set_string(&m_cursor, value);
+    }
+
+    int set_string_literal(const char *value) {
+        return ecs_meta_set_string_literal(&m_cursor, value);
+    }
+
+    int set_entity(flecs::entity_t value) {
+        return ecs_meta_set_entity(&m_cursor, value);
+    }
+
+    int set_null() {
+        return ecs_meta_set_null(&m_cursor);
+    }
+
+    ecs_meta_cursor_t m_cursor;
+};
+
+namespace _ {
+
+void init(flecs::world& world);
+
+} // namespace _
+} // namespace meta
+} // namespace flecs
+
+#endif
+#ifdef FLECS_JSON
+#pragma once
+
+namespace flecs {
+
+using entity_to_json_desc_t = ecs_entity_to_json_desc_t;
+using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
 
 }
 
@@ -13378,7 +13551,12 @@ flecs::id pair(entity_t r, entity_t o) const;
 /** Register a component.
  */
 template <typename T, typename... Args>
-flecs::entity component(Args &&... args) const;
+flecs::component<T> component(Args &&... args) const;
+
+/** Register a component.
+ */
+template <typename... Args>
+flecs::untyped_component component(Args &&... args) const;
 
 
 /** Create an entity.
@@ -13676,6 +13854,44 @@ int plecs_from_str(const char *name, const char *str) const {
  */
 int plecs_from_file(const char *filename) const {
     return ecs_plecs_from_file(m_world, filename);
+}
+
+#   endif
+#   ifdef FLECS_META
+
+flecs::string to_expr(flecs::entity_t tid, const void* value) {
+    char *expr = ecs_ptr_to_expr(m_world, tid, value);
+    return flecs::string(expr);
+}
+
+template <typename T>
+flecs::string to_expr(const T* value) {
+    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    return to_expr(tid, value);
+}
+
+flecs::meta::cursor cursor(flecs::entity_t tid, void *ptr) {
+    return flecs::meta::cursor(m_world, tid, ptr);
+}
+
+template <typename T>
+flecs::meta::cursor cursor(void *ptr) {
+    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    return cursor(tid, ptr);
+}
+
+#   endif
+#   ifdef FLECS_JSON
+
+flecs::string to_json(flecs::entity_t tid, const void* value) {
+    char *json = ecs_ptr_to_json(m_world, tid, value);
+    return flecs::string(json);
+}
+
+template <typename T>
+flecs::string to_json(const T* value) {
+    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    return to_json(tid, value);
 }
 
 #   endif
@@ -14786,6 +15002,15 @@ struct entity_view : public id {
      * @return An entity handle that allows for mutations in the current stage.
      */
     flecs::entity mut(const flecs::entity_view& e) const;
+
+#   ifdef FLECS_JSON
+
+flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
+    char *json = ecs_entity_to_json(m_world, m_id, desc);
+    return flecs::string(json);
+}
+
+#   endif
 
 private:
     flecs::entity set_stage(world_t *stage);
@@ -16261,23 +16486,33 @@ struct iter_iterable final : iterable<Components...> {
         m_next_each = it->next_action();
     }
 
-#ifdef FLECS_RULES
-    iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
-        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-        ecs_rule_set_var(&m_it, var_id, value);
-        return *this;
-    }
+#   ifdef FLECS_RULES
 
-    iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
-        ecs_rule_iter_t *rit = &m_it.priv.iter.rule;
-        int var_id = ecs_rule_find_var(rit->rule, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
-        ecs_rule_set_var(&m_it, var_id, value);
-        return *this;
-    }
-#endif
+iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
+    ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+    ecs_rule_set_var(&m_it, var_id, value);
+    return *this;
+}
+
+iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
+    ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
+    ecs_rule_iter_t *rit = &m_it.priv.iter.rule;
+    int var_id = ecs_rule_find_var(rit->rule, name);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+    ecs_rule_set_var(&m_it, var_id, value);
+    return *this;
+}
+
+#   endif
+#   ifdef FLECS_JSON
+
+flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
+    char *json = ecs_iter_to_json(m_it.real_world, &m_it, desc);
+    return flecs::string(json);
+}
+
+#   endif
 
     // Return total number of entities in result.
     int32_t count() {
@@ -16532,29 +16767,56 @@ struct name_util {
 // Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
-struct symbol_helper
-{
-    static char* symbol(void) {
-        const char *name = name_helper<T>::name();
+inline char* symbol(void) {
+    const char *name = name_helper<T>::name();
 
-        // Symbol is same as name, but with '::' replaced with '.'
-        char *ptr, *sym = ecs_os_strdup(name);
-        ecs_size_t i, len = ecs_os_strlen(sym);
-        ptr = sym;
-        for (i = 0, ptr = sym; i < len && *ptr; i ++, ptr ++) {
-            if (*ptr == ':') {
-                sym[i] = '.';
-                ptr ++;
-            } else {
-                sym[i] = *ptr;
-            }
+    // Symbol is same as name, but with '::' replaced with '.'
+    char *ptr, *sym = ecs_os_strdup(name);
+    ecs_size_t i, len = ecs_os_strlen(sym);
+    ptr = sym;
+    for (i = 0, ptr = sym; i < len && *ptr; i ++, ptr ++) {
+        if (*ptr == ':') {
+            sym[i] = '.';
+            ptr ++;
+        } else {
+            sym[i] = *ptr;
         }
-
-        sym[i] = '\0';
-
-        return sym;
     }
-};
+
+    sym[i] = '\0';
+
+    return sym;
+}
+template <> inline char* symbol<uint8_t>(void) {
+    return ecs_os_strdup("u8");
+}
+template <> inline char* symbol<uint16_t>(void) {
+    return ecs_os_strdup("u16");
+}
+template <> inline char* symbol<uint32_t>(void) {
+    return ecs_os_strdup("u32");
+}
+template <> inline char* symbol<uint64_t>(void) {
+    return ecs_os_strdup("u64");
+}
+template <> inline char* symbol<int8_t>(void) {
+    return ecs_os_strdup("i8");
+}
+template <> inline char* symbol<int16_t>(void) {
+    return ecs_os_strdup("i16");
+}
+template <> inline char* symbol<int32_t>(void) {
+    return ecs_os_strdup("i32");
+}
+template <> inline char* symbol<int64_t>(void) {
+    return ecs_os_strdup("i64");
+}
+template <> inline char* symbol<float>(void) {
+    return ecs_os_strdup("f32");
+}
+template <> inline char* symbol<double>(void) {
+    return ecs_os_strdup("f64");
+}
 
 // If type is trivial, don't register lifecycle actions. While the functions
 // that obtain the lifecycle callback do detect whether the callback is required
@@ -16713,13 +16975,13 @@ struct cpp_type_impl {
             // One type can only be associated with a single type
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
 
-            char *symbol = nullptr;
+            char *symb = nullptr;
 
             // If an explicit id is provided, it is possible that the symbol and
             // name differ from the actual type, as the application may alias
             // one type to another.
             if (!id) {
-                symbol = symbol_helper<T>::symbol();
+                symb = symbol<T>();
                 if (!name) {
                     // If no name was provided, retrieve the name implicitly from
                     // the name_helper class.
@@ -16738,14 +17000,14 @@ struct cpp_type_impl {
             desc.entity.name = name;
             desc.entity.sep = "::";
             desc.entity.root_sep = "::";
-            desc.entity.symbol = symbol;
+            desc.entity.symbol = symb;
             desc.size = cpp_type_size<T>::size(allow_tag);
             desc.alignment = cpp_type_size<T>::alignment(allow_tag);
 
             ecs_entity_t entity = ecs_component_init(world, &desc);
             ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
-            ecs_os_free(symbol);
+            ecs_os_free(symb);
             
             init(world, s_id, allow_tag);
             s_id = entity;
@@ -16892,146 +17154,223 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
 
 } // namespace _
 
-/** Register a component.
- * If the component was already registered, this operation will return a handle
- * to the existing component.
- * 
- * @param world The world for which to register the component.
- * @param name Optional name (overrides typename).
- * @param allow_tag If true, empty types will be registered with size 0.
- * @param id Optional id to register component with.
- * @return Handle to component.
- */
-template <typename T>
-flecs::entity component(
-    flecs::world_t *world, 
-    const char *name = nullptr, 
-    bool allow_tag = true, 
-    flecs::id_t id = 0) 
-{
-    const char *n = name;
-    bool implicit_name = false;
-    if (!n) {
-        n = _::name_helper<T>::name();
-
-        /* Keep track of whether name was explicitly set. If not, and the 
-         * component was already registered, just use the registered name.
-         *
-         * The registered name may differ from the typename as the registered
-         * name includes the flecs scope. This can in theory be different from
-         * the C++ namespace though it is good practice to keep them the same */
-        implicit_name = true;
-    }
-
-    if (_::cpp_type<T>::registered()) {
-        /* Obtain component id. Because the component is already registered,
-         * this operation does nothing besides returning the existing id */
-        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
-
-        /* If entity has a name check if it matches */
-        if (ecs_get_name(world, id) != nullptr) {
-            if (!implicit_name && id >= EcsFirstUserComponentId) {
-                char *path = ecs_get_path_w_sep(
-                    world, 0, id, "::", nullptr);
-                ecs_assert(!strcmp(path, n), 
-                    ECS_INCONSISTENT_NAME, name);
-                ecs_os_free(path);
-            }
-        } else {
-            /* Register name with entity, so that when the entity is created the
-             * correct id will be resolved from the name. Only do this when the
-             * entity is empty.*/
-            ecs_add_path_w_sep(world, id, 0, n, "::", "::");
-        }
-
-        /* If a component was already registered with this id but with a 
-         * different size, the ecs_component_init function will fail. */
-
-        /* We need to explicitly call ecs_component_init here again. Even though
-         * the component was already registered, it may have been registered
-         * with a different world. This ensures that the component is registered
-         * with the same id for the current world. 
-         * If the component was registered already, nothing will change. */
-        ecs_component_desc_t desc = {};
-        desc.entity.entity = id;
-        desc.size = _::cpp_type<T>::size();
-        desc.alignment = _::cpp_type<T>::alignment();
-        ecs_entity_t entity = ecs_component_init(world, &desc);
-        (void)entity;
-        
-        ecs_assert(entity == id, ECS_INTERNAL_ERROR, NULL);
-
-        /* This functionality could have been put in id_explicit, but since
-         * this code happens when a component is registered, and the entire API
-         * calls id_explicit, this would add a lot of overhead to each call.
-         * This is why when using multiple worlds, components should be 
-         * registered explicitly. */
-    } else {
-        /* If the component is not yet registered, ensure no other component
-         * or entity has been registered with this name. Ensure component is 
-         * looked up from root. */
-        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-        ecs_entity_t entity;
-        if (id) {
-            entity = id;
-        } else {
-            entity = ecs_lookup_path_w_sep(world, 0, n, "::", "::", false);
-        }
-
-        ecs_set_scope(world, prev_scope);
-
-        /* If entity exists, compare symbol name to ensure that the component
-         * we are trying to register under this name is the same */
-        if (entity) {
-            if (!id) {
-                const char *sym = ecs_get_symbol(world, entity);
-                ecs_assert(sym != NULL, ECS_INTERNAL_ERROR, NULL);
-                (void)sym;
-
-                char *symbol = _::symbol_helper<T>::symbol();
-                ecs_assert(!ecs_os_strcmp(sym, symbol), ECS_NAME_IN_USE, n);
-                ecs_os_free(symbol);
-
-            /* If an existing id was provided, it's possible that this id was
-             * registered with another type. Make sure that in this case at
-             * least the component size/alignment matches.
-             * This allows applications to alias two different types to the same
-             * id, which enables things like redefining a C type in C++ by
-             * inheriting from it & adding utility functions etc. */
-            } else {
-                const EcsComponent *comp = ecs_get(world, entity, EcsComponent);
-                if (comp) {
-                    ecs_assert(comp->size == ECS_SIZEOF(T),
-                        ECS_INVALID_COMPONENT_SIZE, NULL);
-                    ecs_assert(comp->alignment == ECS_ALIGNOF(T),
-                        ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
-                } else {
-                    /* If the existing id is not a component, no checking is
-                     * needed. */
-                }
-            }
-
-        /* If no entity is found, lookup symbol to check if the component was
-         * registered under a different name. */
-        } else {
-            char *symbol = _::symbol_helper<T>::symbol();
-            entity = ecs_lookup_symbol(world, symbol, false);
-            ecs_assert(entity == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
-            ecs_os_free(symbol);
-        }
-
-        /* Register id as usual */
-        id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
-    }
-
-    auto result = flecs::entity(world, id);
-
-    if (_::cpp_type<T>::size()) {
-        _::register_lifecycle_actions<T>(world, result);
-    }
+struct untyped_component : entity {
+    using entity::entity;
     
-    return result;
+#   ifdef FLECS_META
+
+/** Add member. */
+untyped_component& member(const char *name, flecs::entity_t type_id, int32_t count = 0) {
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    ecs_entity_t eid = ecs_entity_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    flecs::entity e(m_world, eid);
+    e.set(flecs::Member{type_id, count});
+
+    return *this;
 }
+
+/** Add member. */
+template <typename MemberType>
+untyped_component& member(const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
+    return member(name, type_id, count);
+}
+
+/** Add constant. */
+untyped_component& constant(const char *name, int32_t value) {
+    ecs_add_id(m_world, m_id, _::cpp_type<flecs::Enum>::id(m_world));
+
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    ecs_entity_t eid = ecs_entity_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_set_id(m_world, eid, 
+        ecs_pair(flecs::Constant, flecs::I32), sizeof(int32_t),
+        &value);
+
+    return *this;
+}
+
+/** Add bitmask constant. */
+untyped_component& bit(const char *name, uint32_t value) {
+    ecs_add_id(m_world, m_id, _::cpp_type<flecs::Bitmask>::id(m_world));
+
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    ecs_entity_t eid = ecs_entity_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_set_id(m_world, eid, 
+        ecs_pair(flecs::Constant, flecs::U32), sizeof(uint32_t),
+        &value);
+
+    return *this;
+}
+
+#   endif
+};
+
+template <typename T>
+struct component : untyped_component {
+    /** Register a component.
+     * If the component was already registered, this operation will return a handle
+     * to the existing component.
+     * 
+     * @param world The world for which to register the component.
+     * @param name Optional name (overrides typename).
+     * @param allow_tag If true, empty types will be registered with size 0.
+     * @param id Optional id to register component with.
+     */
+    component(
+        flecs::world_t *world, 
+        const char *name = nullptr, 
+        bool allow_tag = true, 
+        flecs::id_t id = 0) 
+    {
+        const char *n = name;
+        bool implicit_name = false;
+        if (!n) {
+            n = _::name_helper<T>::name();
+
+            /* Keep track of whether name was explicitly set. If not, and the 
+            * component was already registered, just use the registered name.
+            *
+            * The registered name may differ from the typename as the registered
+            * name includes the flecs scope. This can in theory be different from
+            * the C++ namespace though it is good practice to keep them the same */
+            implicit_name = true;
+        }
+
+        if (_::cpp_type<T>::registered()) {
+            /* Obtain component id. Because the component is already registered,
+             * this operation does nothing besides returning the existing id */
+            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+
+            /* If entity has a name check if it matches */
+            if (ecs_get_name(world, id) != nullptr) {
+                if (!implicit_name && id >= EcsFirstUserComponentId) {
+#                   ifndef NDEBUG
+                    char *path = ecs_get_path_w_sep(
+                        world, 0, id, "::", nullptr);
+                    if (ecs_os_strcmp(path, n)) {
+                        ecs_err("component '%s' already registered with name '%s'",
+                            n, path);
+                        ecs_abort(ECS_INCONSISTENT_NAME, NULL);
+                    }
+                    ecs_os_free(path);
+#                   endif
+                }
+            } else {
+                /* Register name with entity, so that when the entity is created the
+                * correct id will be resolved from the name. Only do this when the
+                * entity is empty.*/
+                ecs_add_path_w_sep(world, id, 0, n, "::", "::");
+            }
+
+            /* If a component was already registered with this id but with a 
+            * different size, the ecs_component_init function will fail. */
+
+            /* We need to explicitly call ecs_component_init here again. Even though
+            * the component was already registered, it may have been registered
+            * with a different world. This ensures that the component is registered
+            * with the same id for the current world. 
+            * If the component was registered already, nothing will change. */
+            ecs_component_desc_t desc = {};
+            desc.entity.entity = id;
+            desc.size = _::cpp_type<T>::size();
+            desc.alignment = _::cpp_type<T>::alignment();
+            ecs_entity_t ent = ecs_component_init(world, &desc);
+            (void)ent;
+            
+            ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
+
+            /* This functionality could have been put in id_explicit, but since
+            * this code happens when a component is registered, and the entire API
+            * calls id_explicit, this would add a lot of overhead to each call.
+            * This is why when using multiple worlds, components should be 
+            * registered explicitly. */
+        } else {
+            /* If the component is not yet registered, ensure no other component
+            * or entity has been registered with this name. Ensure component is 
+            * looked up from root. */
+            ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+            ecs_entity_t ent;
+            if (id) {
+                ent = id;
+            } else {
+                ent = ecs_lookup_path_w_sep(world, 0, n, "::", "::", false);
+            }
+
+            ecs_set_scope(world, prev_scope);
+
+            /* If entity exists, compare symbol name to ensure that the component
+            * we are trying to register under this name is the same */
+            if (ent) {
+                if (!id) {
+                    const char *sym = ecs_get_symbol(world, ent);
+                    ecs_assert(sym != NULL, ECS_MISSING_SYMBOL, 
+                        ecs_get_name(world, ent));
+                    (void)sym;
+
+                    char *symbol = _::symbol<T>();
+#                   ifndef NDEBUG
+                    if (ecs_os_strcmp(sym, symbol)) {
+                        ecs_err(
+                            "component with name '%s' is already registered for"\
+                            " type '%s' (trying to register for type '%s')",
+                                n, sym, symbol);
+                        ecs_abort(ECS_NAME_IN_USE, NULL);
+                    }
+#                   endif
+                    ecs_os_free(symbol);
+
+                /* If an existing id was provided, it's possible that this id was
+                * registered with another type. Make sure that in this case at
+                * least the component size/alignment matches.
+                * This allows applications to alias two different types to the same
+                * id, which enables things like redefining a C type in C++ by
+                * inheriting from it & adding utility functions etc. */
+                } else {
+                    const EcsComponent *comp = ecs_get(world, ent, EcsComponent);
+                    if (comp) {
+                        ecs_assert(comp->size == ECS_SIZEOF(T),
+                            ECS_INVALID_COMPONENT_SIZE, NULL);
+                        ecs_assert(comp->alignment == ECS_ALIGNOF(T),
+                            ECS_INVALID_COMPONENT_ALIGNMENT, NULL);
+                    } else {
+                        /* If the existing id is not a component, no checking is
+                        * needed. */
+                    }
+                }
+
+            /* If no entity is found, lookup symbol to check if the component was
+            * registered under a different name. */
+            } else {
+                char *symbol = _::symbol<T>();
+                ent = ecs_lookup_symbol(world, symbol, false);
+                ecs_assert(ent == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
+                ecs_os_free(symbol);
+            }
+
+            /* Register id as usual */
+            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+        }
+
+        if (_::cpp_type<T>::size()) {
+            _::register_lifecycle_actions<T>(world, id);
+        }
+
+        m_world = world;
+        m_id = id;
+    }
+};
 
 template <typename T>
 flecs::entity_t type_id() {
@@ -17519,8 +17858,13 @@ namespace flecs {
 
 // Component mixin implementation
 template <typename T, typename... Args>
-inline flecs::entity world::component(Args &&... args) const {
+inline flecs::component<T> world::component(Args &&... args) const {
     return flecs::component<T>(m_world, FLECS_FWD(args)...);
+}
+
+template <typename... Args>
+inline flecs::untyped_component world::component(Args &&... args) const {
+    return flecs::untyped_component(m_world, FLECS_FWD(args)...);
 }
 
 } // namespace flecs
@@ -19220,7 +19564,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    char *symbol = _::symbol_helper<T>::symbol();
+    char *symbol = _::symbol<T>();
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     
@@ -19559,6 +19903,13 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
+namespace _ {
+
+inline void system_init(flecs::world& world) {
+    world.component<TickSource>("flecs::system::TickSource");
+}
+
+} // namespace _
 } // namespace flecs
 
 #endif
@@ -19685,6 +20036,14 @@ inline void system::set_tick_source(flecs::entity e) {
     ecs_set_tick_source(m_world, m_id, e);
 }
 
+namespace _ {
+
+inline void timer_init(flecs::world& world) {
+    world.component<RateFilter>("flecs::timer::RateFilter");
+    world.component<Timer>("flecs::timer::Timer");
+}
+
+}
 }
 
 #endif
@@ -19780,7 +20139,6 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 #pragma once
 
 namespace flecs {
-
 namespace doc {
 
 inline const char* get_brief(const flecs::entity_view& e) {
@@ -19807,12 +20165,34 @@ inline void set_link(flecs::entity& e, const char *description) {
     ecs_doc_set_link(e.world(), e, description);
 }
 
+namespace _ {
+
+inline void init(flecs::world& world) {
+    world.component<doc::Description>("flecs::doc::Description");
 }
 
-}
+} // namespace _
+} // namespace doc
+} // namespace flecs
 
 #endif
 #ifdef FLECS_DOC
+#endif
+#ifdef FLECS_REST
+#pragma once
+
+namespace flecs {
+namespace rest {
+namespace _ {
+
+inline void init(flecs::world& world) {
+    world.component<rest::Rest>("flecs::rest::Rest");
+}
+ 
+} // namespace _
+} // namespace rest
+} // namespace flecs
+
 #endif
 #ifdef FLECS_RULES
 #pragma once
@@ -19939,7 +20319,50 @@ inline rule_base::operator rule<>() const {
 } // namespace flecs
 
 #endif
+#ifdef FLECS_META
+#pragma once
 
+namespace flecs {
+
+namespace meta {
+namespace _ {
+
+inline void init(flecs::world& world) {
+    world.component<bool_t>("flecs::meta::bool");
+    world.component<char_t>("flecs::meta::char");
+    world.component<u8_t>("flecs::meta::u8");
+    world.component<u16_t>("flecs::meta::u16");
+    world.component<u32_t>("flecs::meta::u32");
+    world.component<u64_t>("flecs::meta::u64");
+    world.component<i8_t>("flecs::meta::i8");
+    world.component<i16_t>("flecs::meta::i16");
+    world.component<i32_t>("flecs::meta::i32");
+    world.component<i64_t>("flecs::meta::i64");
+    world.component<f32_t>("flecs::meta::f32");
+    world.component<f64_t>("flecs::meta::f64");
+
+    world.component<type_kind_t>("flecs::meta::type_kind");
+    world.component<primitive_kind_t>("flecs::meta::primitive_kind");
+    world.component<member_t>("flecs::meta::member");
+    world.component<enum_constant_t>("flecs::meta::enum_constant");
+    world.component<bitmask_constant_t>("flecs::meta::bitmask_constant");
+
+    world.component<MetaType>("flecs::meta::MetaType");
+    world.component<MetaTypeSerialized>("flecs::meta::MetaTypeSerialized");
+    world.component<Primitive>("flecs::meta::Primitive");
+    world.component<Enum>("flecs::meta::Enum");
+    world.component<Bitmask>("flecs::meta::Bitmask");
+    world.component<Member>("flecs::meta::Member");
+    world.component<Struct>("flecs::meta::Struct");
+    world.component<Array>("flecs::meta::Array");
+    world.component<Vector>("flecs::meta::Vector");
+}
+
+} // namespace _
+} // namespace meta
+} // namespace flecs
+
+#endif
 
 
 
@@ -20057,18 +20480,20 @@ inline void world::init_builtin_components() {
     component<Observer>("flecs::core::Observer");
     component<Query>("flecs::core::Query");
 
-#   ifdef FLECS_DOC
-    component<doc::Description>("flecs::doc::Description");
-#   endif
-#   ifdef FLECS_REST
-    component<rest::Rest>("flecs::rest::Rest");
-#   endif
 #   ifdef FLECS_SYSTEM
-    component<TickSource>("flecs::system::TickSource");
+    _::system_init(*this);
 #   endif
 #   ifdef FLECS_TIMER
-    component<RateFilter>("flecs::timer::RateFilter");
-    component<Timer>("flecs::timer::Timer");
+    _::timer_init(*this);
+#   endif
+#   ifdef FLECS_DOC
+    doc::_::init(*this);
+#   endif
+#   ifdef FLECS_REST
+    rest::_::init(*this);
+#   endif
+#   ifdef FLECS_META
+    meta::_::init(*this);
 #   endif
 }
 

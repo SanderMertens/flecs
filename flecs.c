@@ -12767,6 +12767,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_INVALID_CONVERSION);
     ECS_ERR_STR(ECS_MODULE_UNDEFINED);
+    ECS_ERR_STR(ECS_MISSING_SYMBOL);
     ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
     ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
     ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
@@ -21866,7 +21867,8 @@ void FlecsMetaImport(
     #define ECS_PRIMITIVE(world, type, primitive_kind)\
         ecs_entity_init(world, &(ecs_entity_desc_t) {\
             .entity = ecs_id(ecs_##type##_t),\
-            .name = #type });\
+            .name = #type,\
+            .symbol = #type });\
         ecs_set(world, ecs_id(ecs_##type##_t), EcsPrimitive, {\
             .kind = primitive_kind\
         });
@@ -22362,7 +22364,7 @@ int ecs_meta_pop(
     return 0;
 }
 
-int ecs_meta_is_collection(
+bool ecs_meta_is_collection(
     ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = get_scope(cursor);
@@ -40057,7 +40059,8 @@ void* ecs_term_w_size(
     int32_t term)
 {
     ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!size || ecs_term_size(it, term) == size, 
+    ecs_check(!size || ecs_term_size(it, term) == size || 
+        (!ecs_term_size(it, term) && (!it->ptrs || !it->ptrs[term - 1])), 
         ECS_INVALID_PARAMETER, NULL);
 
     (void)size;

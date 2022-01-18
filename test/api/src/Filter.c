@@ -2729,6 +2729,57 @@ void Filter_filter_iter_2_tags_1_optional() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_2_components_1_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+
+    ecs_add(world, e_3, Position);
+
+    ecs_entity_t e_4 = ecs_new(world, Position); /* Non matching entity */
+    ecs_add_id(world, e_4, TagB);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { ecs_id(Position), .oper = EcsOptional }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), ecs_id(Position));
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_bool(ecs_term_is_set(&it, 2), false);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_assert(ecs_term(&it, Position, 2) == NULL);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), ecs_id(Position));
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_bool(ecs_term_is_set(&it, 2), true);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_assert(ecs_term(&it, Position, 2) != NULL);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_in_stage() {
     ecs_world_t *world = ecs_mini();
 

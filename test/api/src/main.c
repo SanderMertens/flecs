@@ -1104,6 +1104,7 @@ void Filter_filter_iter_pair_2_pred_obj(void);
 void Filter_filter_iter_null(void);
 void Filter_filter_iter_1_not_tag(void);
 void Filter_filter_iter_2_tags_1_optional(void);
+void Filter_filter_iter_2_components_1_optional(void);
 void Filter_filter_iter_in_stage(void);
 void Filter_filter_iter_10_tags(void);
 void Filter_filter_iter_20_tags(void);
@@ -1431,6 +1432,7 @@ void Rules_childof_0(void);
 void Rules_childof_this(void);
 void Rules_childof_this_as_identifier(void);
 void Rules_optional_term(void);
+void Rules_optional_term_w_component(void);
 void Rules_optional_term_on_entity(void);
 void Rules_optional_term_on_variable(void);
 void Rules_optional_term_on_wildcard(void);
@@ -6573,6 +6575,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_tags_1_optional
     },
     {
+        "filter_iter_2_components_1_optional",
+        Filter_filter_iter_2_components_1_optional
+    },
+    {
         "filter_iter_in_stage",
         Filter_filter_iter_in_stage
     },
@@ -7859,6 +7865,10 @@ bake_test_case Rules_testcases[] = {
     {
         "optional_term",
         Rules_optional_term
+    },
+    {
+        "optional_term_w_component",
+        Rules_optional_term_w_component
     },
     {
         "optional_term_on_entity",
@@ -11555,7 +11565,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        126,
+        127,
         Filter_testcases
     },
     {
@@ -11583,7 +11593,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        122,
+        123,
         Rules_testcases
     },
     {

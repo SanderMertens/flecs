@@ -3745,6 +3745,52 @@ void Rules_optional_term() {
     ecs_fini(world);
 }
 
+void Rules_optional_term_w_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, TagA, Final);
+    ECS_ENTITY(world, TagB, Final);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    
+    ecs_add(world, e2, Position);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "TagA, ?Position"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), ecs_id(Position));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_assert(ecs_term(&it, Position, 2) == NULL);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), ecs_id(Position));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_assert(ecs_term(&it, Position, 2) != NULL);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 void Rules_optional_term_on_entity() {
     ecs_world_t *world = ecs_init();
 
