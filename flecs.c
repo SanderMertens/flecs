@@ -19256,10 +19256,21 @@ bool eval_superset(
     ecs_rule_pair_t pair = op->filter;
 
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
+    ecs_entity_t rel = ECS_PAIR_RELATION(filter.mask);
     ecs_rule_filter_t super_filter = { 
-        .mask = ecs_pair(ECS_PAIR_RELATION(filter.mask), EcsWildcard) 
+        .mask = ecs_pair(rel, EcsWildcard) 
     };
     ecs_table_t *table = NULL;
+
+    /* If the input register is not NULL, this is a variable that's been set by
+     * the application. */
+    ecs_entity_t result = iter->registers[r].entity;
+    bool output_is_input = result != EcsWildcard;
+
+    if (output_is_input && !redo) {
+        ecs_assert(regs[r].entity == iter->registers[r].entity, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 
     if (!redo) {
         op_ctx->stack = op_ctx->storage;
@@ -19273,8 +19284,26 @@ bool eval_superset(
         ecs_assert(obj != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
 
         /* Find first matching column in table */
-        table = table_from_entity(world, obj);
-        int32_t column = find_next_column(world, table, -1, &super_filter);
+        if (!table) {
+            table = table_from_entity(world, obj);
+        }
+
+        /* If output variable is already set, check if it matches */
+        int32_t column;
+
+        if (output_is_input) {
+            ecs_id_t id = ecs_pair(rel, result);
+            ecs_entity_t subj = 0;
+            column = ecs_search_relation(world, table, 0, id, rel, 
+                0, 0, &subj, 0, NULL);
+            if (column != -1) {
+                if (subj != 0) {
+                    table = ecs_get_table(world, subj);
+                }
+            }
+        } else {
+            column = find_next_column(world, table, -1, &super_filter);
+        }
 
         /* If no matching column was found, there are no supersets */
         if (column == -1) {
@@ -19291,6 +19320,8 @@ bool eval_superset(
         frame->column = column;
 
         return true;
+    } else if (output_is_input) {
+        return false;
     }
 
     sp = op_ctx->sp;
@@ -19873,9 +19904,22 @@ bool eval_store(
     ecs_rule_reg_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
+    ecs_entity_t out, in = reg_get_entity(rule, op, regs, r_in);
 
-    ecs_entity_t e = reg_get_entity(rule, op, regs, r_in);
-    reg_set_entity(rule, regs, r_out, e);
+    out = iter->registers[r_out].entity;
+    bool output_is_input = out && out != EcsWildcard;
+
+    if (output_is_input && !redo) {
+        ecs_assert(regs[r_out].entity == iter->registers[r_out].entity, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        if (out != in) {
+            /* If output variable is set it must match the input */
+            return false;
+        }
+    }
+
+    reg_set_entity(rule, regs, r_out, in);
 
     if (op->term >= 0) {
         ecs_rule_filter_t filter = pair_to_filter(iter, op, op->filter);
