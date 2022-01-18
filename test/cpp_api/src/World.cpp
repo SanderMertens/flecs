@@ -154,6 +154,45 @@ void World_multi_world_module() {
     test_int(ns::namespace_module::system_invoke_count, 2);
 }
 
+void World_multi_world_recycled_component() {
+    flecs::entity c;
+    {
+        flecs::world ecs;
+        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+            ecs_new_low_id(ecs);
+        }
+
+        ecs.entity().destruct();
+        c = ecs.component<Position>();
+    }
+    {
+        flecs::world ecs;
+        test_assert((c == ecs.component<Position>()));
+    }
+}
+
+void World_multi_world_recycled_component_different_generation() {
+    flecs::entity c;
+    {
+        flecs::world ecs;
+        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+            ecs_new_low_id(ecs);
+        }
+
+        ecs.entity().destruct();
+        c = ecs.component<Position>();
+    }
+    {
+        flecs::world ecs;
+        for (int i = 0; i < ECS_HI_COMPONENT_ID; i ++) {
+            ecs_new_low_id(ecs);
+        }
+
+        ecs.entity().destruct();
+        test_assert((c == ecs.component<Position>()));
+    }
+}
+
 void World_type_id() {
     flecs::world ecs;
 

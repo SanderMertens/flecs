@@ -16990,7 +16990,7 @@ struct cpp_type_impl {
             } else {
                 // If an explicit id is provided but it has no name, inherit
                 // the name from the type.
-                if (!ecs_get_name(world, id)) {
+                if (!ecs_is_valid(world, id) || !ecs_get_name(world, id)) {
                     name = strip_module(world);
                 }
             }
@@ -17254,7 +17254,7 @@ struct component : untyped_component {
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
 
             /* If entity has a name check if it matches */
-            if (ecs_get_name(world, id) != nullptr) {
+            if (ecs_is_valid(world, id) && ecs_get_name(world, id) != nullptr) {
                 if (!implicit_name && id >= EcsFirstUserComponentId) {
 #                   ifndef NDEBUG
                     char *path = ecs_get_path_w_sep(
@@ -17268,9 +17268,14 @@ struct component : untyped_component {
 #                   endif
                 }
             } else {
+                /* Ensure that the entity id valid */
+                if (!ecs_is_alive(world, id)) {
+                    ecs_ensure(world, id);
+                }
+
                 /* Register name with entity, so that when the entity is created the
                 * correct id will be resolved from the name. Only do this when the
-                * entity is empty.*/
+                * entity is empty. */
                 ecs_add_path_w_sep(world, id, 0, n, "::", "::");
             }
 
