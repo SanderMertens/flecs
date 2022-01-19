@@ -18,11 +18,11 @@ int main(int, char *[]) {
         .member("i32", flecs::I32) // Use platform-independent type ids
         .member("intptr", flecs::Uptr);
 
-    // Create entity with Position as usual
+    // Create entity with PortableType
     auto e = ecs.entity()
         .set<PortableType>({10, 20});
 
-    // Convert position component to flecs expression string
+    // Convert PortableType component to flecs expression string
     const PortableType *ptr = e.get<PortableType>();
     std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {i32: 10, inptr: 20}
 }
