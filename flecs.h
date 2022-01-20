@@ -4031,11 +4031,11 @@ FLECS_API extern const ecs_entity_t EcsThis;
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/* Can be added to transitive relation to indicate it should match itself.
+/* Marks a relatoinship as reflexive.
  * Behavior: 
  *   R(X, X) == true
  */
-FLECS_API extern const ecs_entity_t EcsTransitiveSelf;
+FLECS_API extern const ecs_entity_t EcsReflexive;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not
@@ -11614,7 +11614,7 @@ static const flecs::entity_t World = EcsWorld;
 static const flecs::entity_t Wildcard = EcsWildcard;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
-static const flecs::entity_t TransitiveSelf = EcsTransitiveSelf;
+static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;

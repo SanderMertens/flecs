@@ -16259,7 +16259,7 @@ typedef struct ecs_rule_pair_t {
     int32_t reg_mask; /* bit 1 = predicate, bit 2 = object */
     bool transitive; /* Is predicate transitive */
     bool final;      /* Is predicate final */
-    bool inclusive;  /* Is predicate inclusive */
+    bool reflexive;  /* Is predicate reflexive */
     bool obj_0;
 } ecs_rule_pair_t;
 
@@ -16984,8 +16984,8 @@ ecs_rule_pair_t term_to_pair(
             result.final = true;
         }
 
-        if (ecs_has_id(rule->world, pred_id, EcsTransitiveSelf)) {
-            result.inclusive = true;
+        if (ecs_has_id(rule->world, pred_id, EcsReflexive)) {
+            result.reflexive = true;
         }
     }
 
@@ -17824,14 +17824,14 @@ void insert_yield(
 
 /* Return superset/subset including the root */
 static
-void insert_inclusive_set(
+void insert_reflexive_set(
     ecs_rule_t *rule,
     ecs_rule_op_kind_t op_kind,
     ecs_rule_var_t *out,
     const ecs_rule_pair_t pair,
     int32_t c,
     bool *written,
-    bool inclusive)
+    bool reflexive)
 {
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -17847,9 +17847,9 @@ void insert_inclusive_set(
     int32_t prev_op = setjmp_lbl - 1;
 
     /* Insert 4 operations at once, so we don't have to worry about how
-     * the instruction array reallocs. If operation is not inclusive, we only
+     * the instruction array reallocs. If operation is not reflexive, we only
      * need to insert the set operation. */
-    if (inclusive) {
+    if (reflexive) {
         insert_operation(rule, -1, written);
         insert_operation(rule, -1, written);
         insert_operation(rule, -1, written);
@@ -17861,7 +17861,7 @@ void insert_inclusive_set(
     ecs_rule_op_t *set = op - 1;
     ecs_rule_op_t *jump = op;
 
-    if (!inclusive) {
+    if (!reflexive) {
         set_lbl = setjmp_lbl;
         set = op;
         setjmp = NULL;
@@ -17873,7 +17873,7 @@ void insert_inclusive_set(
 
     /* The SetJmp operation stores a conditional jump label that either
      * points to the Store or *Set operation */
-    if (inclusive) {
+    if (reflexive) {
         setjmp->kind = EcsRuleSetJmp;
         setjmp->on_pass = store_lbl;
         setjmp->on_fail = set_lbl;
@@ -17885,7 +17885,7 @@ void insert_inclusive_set(
     /* The Store operation yields the root of the subtree. After yielding,
      * this operation will fail and return to SetJmp, which will cause it
      * to switch to the *Set operation. */
-    if (inclusive) {
+    if (reflexive) {
         store->kind = EcsRuleStore;
         store->on_pass = next_op;
         store->on_fail = setjmp_lbl;
@@ -17936,7 +17936,7 @@ void insert_inclusive_set(
         set->filter.reg_mask |= RULE_PAIR_OBJECT;
     }
 
-    if (inclusive) {
+    if (reflexive) {
         /* The jump operation jumps to either the store or subset operation,
         * depending on whether the store operation already yielded. The 
         * operation is inserted last, so that the on_fail label of the next 
@@ -17955,12 +17955,12 @@ void insert_inclusive_set(
 }
 
 static
-ecs_rule_var_t* store_inclusive_set(
+ecs_rule_var_t* store_reflexive_set(
     ecs_rule_t *rule,
     ecs_rule_op_kind_t op_kind,
     ecs_rule_pair_t *pair,
     bool *written,
-    bool inclusive)
+    bool reflexive)
 {
     /* The subset operation returns tables */
     ecs_rule_var_kind_t var_kind = EcsRuleVarKindTable;
@@ -17988,7 +17988,7 @@ ecs_rule_var_t* store_inclusive_set(
     }
 
     /* Generate the operations */
-    insert_inclusive_set(rule, op_kind, av, *pair, -1, written, inclusive);
+    insert_reflexive_set(rule, op_kind, av, *pair, -1, written, reflexive);
 
     /* Make sure to return entity variable, and that it is populated */
     return ensure_entity_written(rule, av, written);
@@ -18105,7 +18105,7 @@ void insert_select_or_with(
                 .pred.ent = EcsIsA,
                 .obj.ent = term->subj.entity
             };
-            evar = subj = store_inclusive_set(
+            evar = subj = store_reflexive_set(
                 rule, EcsRuleSuperSet, &isa_pair, written, true);
             tvar = NULL;
             eval_subject_supersets = true;
@@ -18190,7 +18190,7 @@ void prepare_predicate(
             .obj.ent = pair->pred.ent
         };
 
-        ecs_rule_var_t *pred = store_inclusive_set(
+        ecs_rule_var_t *pred = store_reflexive_set(
             rule, EcsRuleSubSet, &isa_pair, written, true);
 
         pair->pred.reg = pred->id;
@@ -18224,7 +18224,7 @@ void insert_term_2(
         if (is_known(subj, written)) {
             if (is_known(obj, written)) {
                 if (filter->obj.ent != EcsWildcard) {
-                    ecs_rule_var_t *obj_subsets = store_inclusive_set(
+                    ecs_rule_var_t *obj_subsets = store_reflexive_set(
                         rule, EcsRuleSubSet, filter, written, true);
 
                     if (subj) {
@@ -18256,8 +18256,8 @@ void insert_term_2(
                         set_pair.obj.ent = term->subj.entity;
                     }
 
-                    insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
-                        c, written, filter->inclusive);
+                    insert_reflexive_set(rule, EcsRuleSuperSet, obj, set_pair, 
+                        c, written, filter->reflexive);
 
                 /* If subject is variable, first find matching pair for the 
                  * evaluated entity(s) and return supersets */
@@ -18280,9 +18280,9 @@ void insert_term_2(
                     push_frame(rule);
 
                     /* Find supersets for returned initial object. Make sure
-                     * this is always inclusive since it needs to return the
+                     * this is always reflexive since it needs to return the
                      * object from the pair that the entity has itself. */
-                    insert_inclusive_set(rule, EcsRuleSuperSet, obj, set_pair, 
+                    insert_reflexive_set(rule, EcsRuleSuperSet, obj, set_pair, 
                         c, written, true);
                 }
             }
@@ -18302,56 +18302,61 @@ void insert_term_2(
                     set_pair.obj.ent = term->obj.entity;
                 }
 
-                insert_inclusive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
-                    written, filter->inclusive);
+                insert_reflexive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
+                    written, filter->reflexive);
             } else if (subj == obj) {
                 insert_select_or_with(rule, c, term, subj, filter, written);
             } else {
                 ecs_assert(obj != NULL, ECS_INTERNAL_ERROR, NULL);
 
+                ecs_rule_var_t *av = NULL;
+                if (!filter->reflexive) {
+                    av = create_anonymous_variable(rule, EcsRuleVarKindEntity);
+                }
+
                 subj = &rule->variables[subj_id];
                 obj = &rule->variables[obj_id];
                 obj = to_entity(rule, obj);
-
-                /* TODO: this instruction currently does not return inclusive
-                 * results. For example, it will return IsA(XWing, Machine) and
-                 * IsA(XWing, Thing), but not IsA(XWing, XWing). To enable
-                 * inclusive behavior, we need to be able to find all subjects
-                 * that have IsA relationships, without expanding to all
-                 * IsA relationships. For this a new mode needs to be supported
-                 * where an operation never does a redo.
-                 *
-                 * This select can then be used to find all subjects, and those
-                 * same subjects can then be used to find all (inclusive) 
-                 * supersets for those subjects. */
 
                 /* Insert instruction to find all subjects and objects */
                 ecs_rule_op_t *op = insert_operation(rule, -1, written);
                 op->kind = EcsRuleSelect;
                 set_output_to_subj(rule, op, term, subj);
                 op->filter.pred = filter->pred;
-                op->filter.obj.ent = EcsWildcard;
-                op->filter.reg_mask = filter->reg_mask & RULE_PAIR_PREDICATE;
+
+                if (filter->reflexive) {
+                    op->filter.obj.ent = EcsWildcard;
+                    op->filter.reg_mask = filter->reg_mask & RULE_PAIR_PREDICATE;
+                } else {
+                    op->filter.obj.reg = av->id;
+                    op->filter.reg_mask = filter->reg_mask | RULE_PAIR_OBJECT;
+                    written[av->id] = true;
+                }
 
                 written[subj->id] = true;
 
-                /* Create new frame for operations that create inclusive set */
+                /* Create new frame for operations that create reflexive set */
                 push_frame(rule);
 
-                subj = ensure_most_specific_var(rule, subj, written);
-                ecs_assert(subj->kind == EcsRuleVarKindEntity, 
-                    ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(written[subj->id] == true, ECS_INTERNAL_ERROR, NULL);
-
-                obj = &rule->variables[obj_id];
-                ecs_rule_pair_t super_filter = {0};
-                super_filter.pred = filter->pred;
-                super_filter.obj.reg = subj->id;
-                super_filter.reg_mask = filter->reg_mask & RULE_PAIR_OBJECT;
-
                 /* Insert superset instruction to find all supersets */
-                insert_inclusive_set(rule, EcsRuleSuperSet, obj, 
-                    super_filter, c, written, true);
+                if (filter->reflexive) {
+                    subj = ensure_most_specific_var(rule, subj, written);
+                    ecs_assert(subj->kind == EcsRuleVarKindEntity, 
+                        ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(written[subj->id] == true,
+                        ECS_INTERNAL_ERROR, NULL);
+
+                    ecs_rule_pair_t super_filter = {0};
+                    super_filter.pred = filter->pred;
+                    super_filter.obj.reg = subj->id;
+                    super_filter.reg_mask = filter->reg_mask & RULE_PAIR_OBJECT;
+
+                    insert_reflexive_set(rule, EcsRuleSuperSet, obj, 
+                        super_filter, c, written, true);
+                } else {
+                    insert_reflexive_set(rule, EcsRuleSuperSet, obj, 
+                        op->filter, c, written, true);
+                }
             }
         }
     }
@@ -18969,6 +18974,8 @@ void ecs_rule_set_var(
     ecs_check(it->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
 
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
+    ecs_check(iter->registers != NULL, ECS_INVALID_PARAMETER, NULL);
+
     const ecs_rule_t *r = iter->rule;
     ecs_check(var_id < r->variable_count, ECS_INVALID_PARAMETER, NULL);
 
@@ -19736,17 +19743,17 @@ bool eval_with(
      * the first time the operation is evaluated, variables may have changed
      * since last time, which could change the table set to lookup. */
     } else {
-        /* Transitive queries are inclusive, which means that if we have a
+        /* Predicates can be reflexive, which means that if we have a
          * transitive predicate which is provided with the same subject and
          * object, it should return true. By default with will not return true
          * as the subject likely does not have itself as a relationship, which
          * is why this is a special case. 
          *
-         * TODO: might want to move this code to a separate with_inclusive
+         * TODO: might want to move this code to a separate with_reflexive
          * instruction to limit branches for non-transitive queries (and to keep
          * code more readable).
          */
-        if (pair.transitive && pair.inclusive) {
+        if (pair.transitive && pair.reflexive) {
             ecs_entity_t subj = 0, obj = 0;
             
             if (r == UINT8_MAX) {
@@ -27043,7 +27050,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(EcsComponentLifecycle), "Callbacks for component constructors, destructors, copy and move operations");
 
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsTransitiveSelf, "TransitiveSelf relation property");
+    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
@@ -27063,7 +27070,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#transitiveself-relations");
+    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#transitiveself-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-relations");
@@ -30251,7 +30258,7 @@ const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
 const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 13;
-const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsReflexive =        ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 17;
@@ -42182,7 +42189,7 @@ void flecs_bootstrap(
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
-    flecs_bootstrap_tag(world, EcsTransitiveSelf);
+    flecs_bootstrap_tag(world, EcsReflexive);
     flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
@@ -42217,7 +42224,7 @@ void flecs_bootstrap(
 
     /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
-    ecs_add_id(world, EcsIsA, EcsTransitiveSelf);
+    ecs_add_id(world, EcsIsA, EcsReflexive);
 
     /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
@@ -42232,7 +42239,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDisabled, EcsFinal);
     ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
-    ecs_add_id(world, EcsTransitiveSelf, EcsFinal);
+    ecs_add_id(world, EcsReflexive, EcsFinal);
     ecs_add_id(world, EcsSymmetric, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsTag, EcsFinal);

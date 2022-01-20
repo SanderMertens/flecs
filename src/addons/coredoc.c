@@ -53,7 +53,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(EcsComponentLifecycle), "Callbacks for component constructors, destructors, copy and move operations");
 
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
-    ecs_doc_set_brief(world, EcsTransitiveSelf, "TransitiveSelf relation property");
+    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
@@ -73,7 +73,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsTransitiveSelf, URL_ROOT "#transitiveself-relations");
+    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#transitiveself-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-relations");

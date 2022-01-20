@@ -952,11 +952,11 @@ FLECS_API extern const ecs_entity_t EcsThis;
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/* Can be added to transitive relation to indicate it should match itself.
+/* Marks a relatoinship as reflexive.
  * Behavior: 
  *   R(X, X) == true
  */
-FLECS_API extern const ecs_entity_t EcsTransitiveSelf;
+FLECS_API extern const ecs_entity_t EcsReflexive;
 
 /* Can be added to component/relation to indicate it is final. Final components/
  * relations cannot be derived from using an IsA relationship. Queries will not

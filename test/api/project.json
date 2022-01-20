@@ -1523,6 +1523,7 @@
                 "value_set",
                 "term_w_this_this_this",
                 "term_w_x_x_x",
+                "term_w_same_subj_obj_var",
                 "filter_term",
                 "2_terms_1_filter",
                 "3_terms_2_filter",
@@ -1534,19 +1535,15 @@
                 "rule_iter_set_pred_var",
                 "rule_iter_set_var_for_2_terms",
                 "rule_iter_set_cyclic_variable",
-                "rule_iter_set_cyclic_variable_w_this",
-                "rule_iter_set_transitive_variable",
-                "rule_iter_set_transitive_self_variable",
-                "rule_iter_set_transitive_2_variables_set_one",
-                "rule_iter_set_transitive_2_variables_set_both",
-                "rule_iter_set_transitive_self_2_variables_set_both"
+                "rule_iter_set_cyclic_variable_w_this"
             ]
         }, {
             "id": "TransitiveRules",
             "testcases": [
                 "trans_X_X",
+                "trans_reflexive_X_X",
                 "trans_X_X_2",
-                "trans_X_Y",
+                "trans_reflexive_X_Y",
                 "trans_X_Y_2_levels",
                 "trans_pred_This_X__pred_X",
                 "trans_constrained_x_y",
@@ -1560,7 +1557,12 @@
                 "transitive_not_w_var",
                 "transitive_w_not_nonfinal",
                 "transitive_w_optional_nonfinal",
-                "transitive_w_optional_nonfinal_w_var"
+                "transitive_w_optional_nonfinal_w_var",
+                "rule_iter_set_transitive_variable",
+                "rule_iter_set_transitive_self_variable",
+                "rule_iter_set_transitive_2_variables_set_one",
+                "rule_iter_set_transitive_2_variables_set_both",
+                "rule_iter_set_transitive_self_2_variables_set_both"
             ]
         }, {
            "id": "Trigger",

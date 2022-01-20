@@ -1833,9 +1833,7 @@ void register_monitors(
     };
 }
 
-#ifndef NDEBUG
-static
-bool is_term_id_supported(
+bool ecs_is_term_id_supported(
     ecs_term_id_t *term_id)
 {
     if (term_id->var != EcsVarIsVariable) {
@@ -1846,7 +1844,6 @@ bool is_term_id_supported(
     }
     return false;
 }
-#endif
 
 static
 void process_signature(
@@ -1868,9 +1865,9 @@ void process_signature(
         (void)obj;
 
         /* Queries do not support named variables */
-        ecs_check(is_term_id_supported(pred), ECS_UNSUPPORTED, NULL);
-        ecs_check(is_term_id_supported(obj),  ECS_UNSUPPORTED, NULL);
-        ecs_check(is_term_id_supported(subj) || subj->entity == EcsThis, 
+        ecs_check(ecs_is_term_id_supported(pred), ECS_UNSUPPORTED, NULL);
+        ecs_check(ecs_is_term_id_supported(obj),  ECS_UNSUPPORTED, NULL);
+        ecs_check(ecs_is_term_id_supported(subj) || subj->entity == EcsThis, 
             ECS_UNSUPPORTED, NULL);
 
         /* If self is not included in set, always start from depth 1 */

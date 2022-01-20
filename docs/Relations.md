@@ -817,8 +817,8 @@ const Position *p = e.get<Serializable, Position>();
 
 The `Tag` property is only interpreted when it is added to the relation part of a pair.
 
-### TransitiveSelf relations
-A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `TransitiveSelf` becomes more obvious with an example:
+### Reflexive relations
+A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `Reflexive` becomes more obvious with an example:
 
 Given this dataset:
 ```

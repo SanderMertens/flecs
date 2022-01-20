@@ -421,7 +421,7 @@ void flecs_bootstrap(
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);
-    flecs_bootstrap_tag(world, EcsTransitiveSelf);
+    flecs_bootstrap_tag(world, EcsReflexive);
     flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsTag);
@@ -456,7 +456,7 @@ void flecs_bootstrap(
 
     /* Transitive relations */
     ecs_add_id(world, EcsIsA, EcsTransitive);
-    ecs_add_id(world, EcsIsA, EcsTransitiveSelf);
+    ecs_add_id(world, EcsIsA, EcsReflexive);
 
     /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
@@ -471,7 +471,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDisabled, EcsFinal);
     ecs_add_id(world, EcsPrefab, EcsFinal);
     ecs_add_id(world, EcsTransitive, EcsFinal);
-    ecs_add_id(world, EcsTransitiveSelf, EcsFinal);
+    ecs_add_id(world, EcsReflexive, EcsFinal);
     ecs_add_id(world, EcsSymmetric, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
     ecs_add_id(world, EcsTag, EcsFinal);

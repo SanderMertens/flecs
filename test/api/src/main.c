@@ -1455,6 +1455,7 @@ void Rules_terms_set(void);
 void Rules_value_set(void);
 void Rules_term_w_this_this_this(void);
 void Rules_term_w_x_x_x(void);
+void Rules_term_w_same_subj_obj_var(void);
 void Rules_filter_term(void);
 void Rules_2_terms_1_filter(void);
 void Rules_3_terms_2_filter(void);
@@ -1467,16 +1468,12 @@ void Rules_rule_iter_set_pred_var(void);
 void Rules_rule_iter_set_var_for_2_terms(void);
 void Rules_rule_iter_set_cyclic_variable(void);
 void Rules_rule_iter_set_cyclic_variable_w_this(void);
-void Rules_rule_iter_set_transitive_variable(void);
-void Rules_rule_iter_set_transitive_self_variable(void);
-void Rules_rule_iter_set_transitive_2_variables_set_one(void);
-void Rules_rule_iter_set_transitive_2_variables_set_both(void);
-void Rules_rule_iter_set_transitive_self_2_variables_set_both(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
+void TransitiveRules_trans_reflexive_X_X(void);
 void TransitiveRules_trans_X_X_2(void);
-void TransitiveRules_trans_X_Y(void);
+void TransitiveRules_trans_reflexive_X_Y(void);
 void TransitiveRules_trans_X_Y_2_levels(void);
 void TransitiveRules_trans_pred_This_X__pred_X(void);
 void TransitiveRules_trans_constrained_x_y(void);
@@ -1491,6 +1488,11 @@ void TransitiveRules_transitive_not_w_var(void);
 void TransitiveRules_transitive_w_not_nonfinal(void);
 void TransitiveRules_transitive_w_optional_nonfinal(void);
 void TransitiveRules_transitive_w_optional_nonfinal_w_var(void);
+void TransitiveRules_rule_iter_set_transitive_variable(void);
+void TransitiveRules_rule_iter_set_transitive_self_variable(void);
+void TransitiveRules_rule_iter_set_transitive_2_variables_set_one(void);
+void TransitiveRules_rule_iter_set_transitive_2_variables_set_both(void);
+void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -7977,6 +7979,10 @@ bake_test_case Rules_testcases[] = {
         Rules_term_w_x_x_x
     },
     {
+        "term_w_same_subj_obj_var",
+        Rules_term_w_same_subj_obj_var
+    },
+    {
         "filter_term",
         Rules_filter_term
     },
@@ -8023,26 +8029,6 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_iter_set_cyclic_variable_w_this",
         Rules_rule_iter_set_cyclic_variable_w_this
-    },
-    {
-        "rule_iter_set_transitive_variable",
-        Rules_rule_iter_set_transitive_variable
-    },
-    {
-        "rule_iter_set_transitive_self_variable",
-        Rules_rule_iter_set_transitive_self_variable
-    },
-    {
-        "rule_iter_set_transitive_2_variables_set_one",
-        Rules_rule_iter_set_transitive_2_variables_set_one
-    },
-    {
-        "rule_iter_set_transitive_2_variables_set_both",
-        Rules_rule_iter_set_transitive_2_variables_set_both
-    },
-    {
-        "rule_iter_set_transitive_self_2_variables_set_both",
-        Rules_rule_iter_set_transitive_self_2_variables_set_both
     }
 };
 
@@ -8052,12 +8038,16 @@ bake_test_case TransitiveRules_testcases[] = {
         TransitiveRules_trans_X_X
     },
     {
+        "trans_reflexive_X_X",
+        TransitiveRules_trans_reflexive_X_X
+    },
+    {
         "trans_X_X_2",
         TransitiveRules_trans_X_X_2
     },
     {
-        "trans_X_Y",
-        TransitiveRules_trans_X_Y
+        "trans_reflexive_X_Y",
+        TransitiveRules_trans_reflexive_X_Y
     },
     {
         "trans_X_Y_2_levels",
@@ -8114,6 +8104,26 @@ bake_test_case TransitiveRules_testcases[] = {
     {
         "transitive_w_optional_nonfinal_w_var",
         TransitiveRules_transitive_w_optional_nonfinal_w_var
+    },
+    {
+        "rule_iter_set_transitive_variable",
+        TransitiveRules_rule_iter_set_transitive_variable
+    },
+    {
+        "rule_iter_set_transitive_self_variable",
+        TransitiveRules_rule_iter_set_transitive_self_variable
+    },
+    {
+        "rule_iter_set_transitive_2_variables_set_one",
+        TransitiveRules_rule_iter_set_transitive_2_variables_set_one
+    },
+    {
+        "rule_iter_set_transitive_2_variables_set_both",
+        TransitiveRules_rule_iter_set_transitive_2_variables_set_both
+    },
+    {
+        "rule_iter_set_transitive_self_2_variables_set_both",
+        TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both
     }
 };
 
@@ -11683,14 +11693,14 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        134,
+        130,
         Rules_testcases
     },
     {
         "TransitiveRules",
         NULL,
         NULL,
-        17,
+        23,
         TransitiveRules_testcases
     },
     {
