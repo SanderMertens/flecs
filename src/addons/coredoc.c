@@ -74,7 +74,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#transitiveself-relations");
+    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#reflexive-relations");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-relations");
