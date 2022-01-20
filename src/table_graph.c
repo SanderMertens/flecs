@@ -321,45 +321,38 @@ ecs_table_t *create_table(
 
 static
 void add_id_to_ids(
-    ecs_type_t type,
+    ecs_vector_t **idv,
     ecs_entity_t add,
-    ecs_ids_t *out,
     ecs_entity_t r_exclusive)
 {
-    int32_t count = ecs_vector_count(type);
-    ecs_id_t *array = ecs_vector_first(type, ecs_id_t);    
-    bool added = false;
+    int32_t i, count = ecs_vector_count(idv[0]);
+    ecs_id_t *array = ecs_vector_first(idv[0], ecs_id_t);
 
-    int32_t i, el = 0;
     for (i = 0; i < count; i ++) {
         ecs_id_t e = array[i];
 
-        if (!added) {
-            if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
-                if (ECS_PAIR_RELATION(e) == r_exclusive) {
-                    out->array[el ++] = add;
-                    added = true;
-                    continue; /* don't add original element */
-                }
-            }
+        if (e == add) {
+            return;
+        }
 
-            if (e >= add) {
-                if (e != add) {
-                    out->array[el ++] = add;
-                }
-                added = true;
+        if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
+            if (ECS_PAIR_RELATION(e) == r_exclusive) {
+                array[i] = add; /* Replace */
+                return;
             }
         }
 
-        out->array[el ++] = e;
-        ecs_assert(el <= out->count, ECS_INTERNAL_ERROR, NULL);
+        if (e >= add) {
+            if (e != add) {
+                ecs_id_t *ptr = ecs_vector_insert_at(idv, ecs_id_t, i);
+                ptr[0] = add;
+                return;
+            }
+        }
     }
 
-    if (!added) {
-        out->array[el ++] = add;
-    }
-
-    out->count = el;
+    ecs_id_t *ptr = ecs_vector_add(idv, ecs_id_t);
+    ptr[0] = add;
 }
 
 static
@@ -671,6 +664,46 @@ void compute_table_diff(
 }
 
 static
+void add_with_ids_to_ids(
+    ecs_world_t *world,
+    ecs_vector_t **idv,
+    ecs_entity_t r,
+    ecs_entity_t o)
+{
+    /* Check if component/relation has With pairs, which contain ids
+     * that need to be added to the table. */
+    ecs_table_t *id_table = ecs_get_table(world, r);
+    if (!id_table) {
+        return;
+    }
+    
+    ecs_table_record_t *tr = flecs_get_table_record(world, id_table, 
+        ecs_pair(EcsWith, EcsWildcard));
+    if (tr) {
+        int32_t i, with_count = tr->count;
+        int32_t start = tr->column;
+        int32_t end = start + with_count;
+        ecs_id_t *id_ids = ecs_vector_first(id_table->type, ecs_id_t);
+
+        for (i = start; i < end; i ++) {
+            ecs_assert(ECS_PAIR_RELATION(id_ids[i]) == EcsWith, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_id_t id_r = ECS_PAIR_OBJECT(id_ids[i]);
+            ecs_id_t id = id_r;
+            if (o) {
+                id = ecs_pair(id_r, o);
+            }
+
+            /* Always make sure vector has room for one more */
+            add_id_to_ids(idv, id, 0);
+
+            /* Add recursively in case id also has With pairs */
+            add_with_ids_to_ids(world, idv, id_r, o);
+        }
+    }
+}
+
+static
 ecs_table_t* find_or_create_table_with_id(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -683,24 +716,31 @@ ecs_table_t* find_or_create_table_with_id(
         return node;
     } else {
         ecs_type_t type = node->type;
-        int32_t count = ecs_vector_count(type);
         ecs_entity_t r_exclusive = 0;
+        ecs_entity_t r = 0, o = 0;
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t r = ecs_pair_relation(world, id);
+            r = ecs_pair_relation(world, id);
+            o = ECS_PAIR_OBJECT(id);
             if (ecs_has_id(world, r, EcsExclusive)) {
                 r_exclusive = (uint32_t)r;
             }
+        } else {
+            r = id & ECS_COMPONENT_MASK;
         }
 
+        ecs_vector_t *idv = ecs_vector_copy(type, ecs_id_t);
+        add_id_to_ids(&idv, id, r_exclusive);
+        add_with_ids_to_ids(world, &idv, r, o);
+
         ecs_ids_t ids = {
-            .array = ecs_os_alloca_n(ecs_id_t, count + 1),
-            .count = count + 1
+            .array = ecs_vector_first(idv, ecs_id_t),
+            .count = ecs_vector_count(idv)
         };
 
-        add_id_to_ids(type, id, &ids, r_exclusive);
-
-        return flecs_table_find_or_create(world, &ids);
+        ecs_table_t *result = flecs_table_find_or_create(world, &ids);
+        ecs_vector_free(idv);
+        return result;
     }
 }
 

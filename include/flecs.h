@@ -985,6 +985,14 @@ FLECS_API extern const ecs_entity_t EcsExclusive;
 /* Marks a relation as acyclic. Acyclic relations may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
 
+/* Ensure that a component always is added together with another component.
+ * 
+ * Behavior:
+ *   If With(R, O) and R(X) then O(X)
+ *   If With(R, O) and R(X, Y) then O(X, Y)
+ */
+FLECS_API extern const ecs_entity_t EcsWith;
+
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;

@@ -162,6 +162,20 @@ void* _ecs_vector_add(
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
+/** Insert element to vector. */
+FLECS_API
+void* _ecs_vector_insert_at(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index);
+
+#define ecs_vector_insert_at(vector, T, index) \
+    ((T*)_ecs_vector_insert_at(vector, ECS_VECTOR_T(T), index))
+
+#define ecs_vector_insert_at_t(vector, size, alignment, index) \
+    _ecs_vector_insert_at(vector, ECS_VECTOR_U(size, alignment), index)
+
 /** Add n elements to the vector. */
 FLECS_API
 void* _ecs_vector_addn(

@@ -1407,7 +1407,13 @@
                 "add_symmetric_relation",
                 "remove_symmetric_relation",
                 "delete_entity_w_symmetric_relation",
-                "add_symmetric_exclusive_relation"
+                "add_symmetric_exclusive_relation",
+                "with",
+                "2_with",
+                "nested_with",
+                "with_relation",
+                "2_with_relation",
+                "nested_with_relation"
             ]
         }, {
             "id": "Rules",
@@ -1555,7 +1561,7 @@
                 "trans_constrained_x_y",
                 "trans_entity_X_non_inclusive",
                 "trans_X_entity_non_inclusive",
-                "trans_entity_entity_non_inclusive",
+                "trans_entity_entity_non_reflexive",
                 "trans_this_x_after_tag_this",
                 "trans_this_x_before_tag_this",
                 "trans_this_x_after_tag_this_2_lvls",

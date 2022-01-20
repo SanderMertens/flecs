@@ -896,6 +896,43 @@ auto Alice = ecs.entity();
 Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
+### With relations
+The `With` relation can be added to components to indicate that it must always come together with another component. The following example shows how `With` can be used with regular components/tags:
+
+```c
+ecs_entity_t Responsibility = ecs_new_id(world);
+ecs_entity_t Power = ecs_new_w_pair(world, EcsWith, Responsibility);
+
+// Create new entity that has both Power and Responsibility
+ecs_entity_t e = ecs_new_w_id(world, Power);
+```
+```cpp
+auto Responsibility = world.entity();
+auto Power = world.entity().add(flecs::With, Responsibility);
+
+// Create new entity that has both Power and Responsibility
+auto e = world.entity().add(Power);
+```
+
+When the `With` relation is added to a relation, the additional id added to the entity will be a relation pair as well, with the same object as the original relation:
+
+```c
+ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Loves = ecs_new_w_pair(world, EcsWith, Likes);
+ecs_entity_t Pears = ecs_new_id(world);
+
+// Create new entity with both (Loves, Pears) and (Likes, Pears)
+ecs_entity_t e = ecs_new_w_pair(world, Loves, Pears);
+```
+```cpp
+auto Likes = world.entity();
+auto Loves = world.entity().add(flecs::With, Likes);
+auto Pears = world.entity();
+
+// Create new entity with both (Loves, Pears) and (Likes, Pears)
+auto e = world.entity().add(Loves, Pears);
+```
+
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.
 

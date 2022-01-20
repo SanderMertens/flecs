@@ -101,6 +101,7 @@ static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
 static const flecs::entity_t Symmetric = EcsSymmetric;
+static const flecs::entity_t With = EcsWith;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

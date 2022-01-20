@@ -1017,6 +1017,20 @@ void* _ecs_vector_add(
 #define ecs_vector_add_t(vector, size, alignment) \
     _ecs_vector_add(vector, ECS_VECTOR_U(size, alignment))
 
+/** Insert element to vector. */
+FLECS_API
+void* _ecs_vector_insert_at(
+    ecs_vector_t **array_inout,
+    ecs_size_t elem_size,
+    int16_t offset,
+    int32_t index);
+
+#define ecs_vector_insert_at(vector, T, index) \
+    ((T*)_ecs_vector_insert_at(vector, ECS_VECTOR_T(T), index))
+
+#define ecs_vector_insert_at_t(vector, size, alignment, index) \
+    _ecs_vector_insert_at(vector, ECS_VECTOR_U(size, alignment), index)
+
 /** Add n elements to the vector. */
 FLECS_API
 void* _ecs_vector_addn(
@@ -2110,14 +2124,14 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, static_cast<size_t>(num))
 #define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, static_cast<size_t>(num))
 #define ecs_os_memset(ptr, value, num) memset(ptr, value, static_cast<size_t>(num))
-#define ecs_os_memmove(ptr, value, num) memmove(ptr, value, static_cast<size_t>(num))
+#define ecs_os_memmove(dst, src, size) memmove(dst, src, static_cast<size_t>(size))
 #else
 #define ecs_os_strlen(str) (ecs_size_t)strlen(str)
 #define ecs_os_strncmp(str1, str2, num) strncmp(str1, str2, (size_t)(num))
 #define ecs_os_memcmp(ptr1, ptr2, num) memcmp(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memcpy(ptr1, ptr2, num) memcpy(ptr1, ptr2, (size_t)(num))
 #define ecs_os_memset(ptr, value, num) memset(ptr, value, (size_t)(num))
-#define ecs_os_memmove(ptr, value, num) memmove(ptr, value, (size_t)(num))
+#define ecs_os_memmove(dst, src, size) memmove(dst, src, (size_t)(size))
 #endif
 
 #define ecs_os_memcpy_t(ptr1, ptr2, T) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T))
@@ -4063,6 +4077,14 @@ FLECS_API extern const ecs_entity_t EcsExclusive;
 
 /* Marks a relation as acyclic. Acyclic relations may not form cycles. */
 FLECS_API extern const ecs_entity_t EcsAcyclic;
+
+/* Ensure that a component always is added together with another component.
+ * 
+ * Behavior:
+ *   If With(R, O) and R(X) then O(X)
+ *   If With(R, O) and R(X, Y) then O(X, Y)
+ */
+FLECS_API extern const ecs_entity_t EcsWith;
 
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
@@ -11620,6 +11642,7 @@ static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
 static const flecs::entity_t Symmetric = EcsSymmetric;
+static const flecs::entity_t With = EcsWith;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

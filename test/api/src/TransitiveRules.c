@@ -4,7 +4,7 @@
  * will be moved here */
 
 void TransitiveRules_trans_X_X() {
-    test_quarantine("01-20-2020");
+    ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
 
@@ -360,7 +360,9 @@ void TransitiveRules_trans_X_entity_non_inclusive() {
     ecs_fini(world);
 }
 
-void TransitiveRules_trans_entity_entity_non_inclusive() {
+void TransitiveRules_trans_entity_entity_non_reflexive() {
+    ecs_log_set_level(-4);
+    
     ecs_world_t *world = ecs_init();
 
     const char *ruleset = 
@@ -372,40 +374,8 @@ void TransitiveRules_trans_entity_entity_non_inclusive() {
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(Universe, Universe)"
     });
-    test_assert(r != NULL);
+    test_assert(r == NULL);
 
-    ecs_iter_t it = ecs_rule_iter(world, r);
-    test_bool(false, ecs_rule_next(&it));
-    ecs_rule_fini(r);
-
-    r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(Earth, Earth)"
-    });
-    test_assert(r != NULL);
-
-    it = ecs_rule_iter(world, r);
-    test_bool(false, ecs_rule_next(&it));
-    ecs_rule_fini(r);
-
-    r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(Earth, Universe)"
-    });
-    test_assert(r != NULL);
-
-    it = ecs_rule_iter(world, r);
-    test_bool(true, ecs_rule_next(&it));
-    char *expect =
-    HEAD "term: (LocatedIn,Universe)"
-    LINE "subj: Earth"
-    LINE;
-
-    char *result = ecs_iter_str(&it);
-    test_str(result, expect);
-    ecs_os_free(result);
-
-    test_bool(false, ecs_rule_next(&it));
-
-    ecs_rule_fini(r);
     ecs_fini(world);
 }
 

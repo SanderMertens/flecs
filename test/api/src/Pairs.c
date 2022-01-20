@@ -2401,3 +2401,94 @@ void Pairs_add_symmetric_exclusive_relation() {
 
     ecs_fini(world);
 }
+
+void Pairs_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_ENTITY(world, TagB, (With, TagA));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagB);
+    test_assert( ecs_has(world, e, TagA));
+    test_assert( ecs_has(world, e, TagB));
+
+    ecs_fini(world);
+}
+
+void Pairs_2_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_ENTITY(world, TagC, (With, TagA), (With, TagB));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagC);
+    test_assert( ecs_has(world, e, TagA));
+    test_assert( ecs_has(world, e, TagB));
+    test_assert( ecs_has(world, e, TagC));
+
+    ecs_fini(world);
+}
+
+void Pairs_nested_with() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_ENTITY(world, TagB, (With, TagA));
+    ECS_ENTITY(world, TagC, (With, TagB));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagC);
+    test_assert( ecs_has(world, e, TagA));
+    test_assert( ecs_has(world, e, TagB));
+    test_assert( ecs_has(world, e, TagC));
+
+    ecs_fini(world);
+}
+
+void Pairs_with_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, RelA);
+    ECS_ENTITY(world, RelB, (With, RelA));
+
+    ecs_entity_t e = ecs_new_w_pair(world, RelB, Obj);
+    test_assert( ecs_has_pair(world, e, RelA, Obj));
+    test_assert( ecs_has_pair(world, e, RelB, Obj));
+
+    ecs_fini(world);
+}
+
+void Pairs_2_with_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_ENTITY(world, RelC, (With, RelA), (With, RelB));
+
+    ecs_entity_t e = ecs_new_w_pair(world, RelC, Obj);
+    test_assert( ecs_has_pair(world, e, RelA, Obj));
+    test_assert( ecs_has_pair(world, e, RelB, Obj));
+
+    ecs_fini(world);
+}
+
+void Pairs_nested_with_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Obj);
+    ECS_TAG(world, RelA);
+    ECS_ENTITY(world, RelB, (With, RelA));
+    ECS_ENTITY(world, RelC, (With, RelB));
+
+    ecs_entity_t e = ecs_new_w_pair(world, RelC, Obj);
+    test_assert( ecs_has_pair(world, e, RelA, Obj));
+    test_assert( ecs_has_pair(world, e, RelB, Obj));
+    test_assert( ecs_has_pair(world, e, RelC, Obj));
+
+    ecs_fini(world);
+}

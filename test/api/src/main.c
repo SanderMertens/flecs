@@ -1342,6 +1342,12 @@ void Pairs_add_symmetric_relation(void);
 void Pairs_remove_symmetric_relation(void);
 void Pairs_delete_entity_w_symmetric_relation(void);
 void Pairs_add_symmetric_exclusive_relation(void);
+void Pairs_with(void);
+void Pairs_2_with(void);
+void Pairs_nested_with(void);
+void Pairs_with_relation(void);
+void Pairs_2_with_relation(void);
+void Pairs_nested_with_relation(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -1485,7 +1491,7 @@ void TransitiveRules_trans_pred_This_X__pred_X(void);
 void TransitiveRules_trans_constrained_x_y(void);
 void TransitiveRules_trans_entity_X_non_inclusive(void);
 void TransitiveRules_trans_X_entity_non_inclusive(void);
-void TransitiveRules_trans_entity_entity_non_inclusive(void);
+void TransitiveRules_trans_entity_entity_non_reflexive(void);
 void TransitiveRules_trans_this_x_after_tag_this(void);
 void TransitiveRules_trans_this_x_before_tag_this(void);
 void TransitiveRules_trans_this_x_after_tag_this_2_lvls(void);
@@ -7536,6 +7542,30 @@ bake_test_case Pairs_testcases[] = {
     {
         "add_symmetric_exclusive_relation",
         Pairs_add_symmetric_exclusive_relation
+    },
+    {
+        "with",
+        Pairs_with
+    },
+    {
+        "2_with",
+        Pairs_2_with
+    },
+    {
+        "nested_with",
+        Pairs_nested_with
+    },
+    {
+        "with_relation",
+        Pairs_with_relation
+    },
+    {
+        "2_with_relation",
+        Pairs_2_with_relation
+    },
+    {
+        "nested_with_relation",
+        Pairs_nested_with_relation
     }
 };
 
@@ -8100,8 +8130,8 @@ bake_test_case TransitiveRules_testcases[] = {
         TransitiveRules_trans_X_entity_non_inclusive
     },
     {
-        "trans_entity_entity_non_inclusive",
-        TransitiveRules_trans_entity_entity_non_inclusive
+        "trans_entity_entity_non_reflexive",
+        TransitiveRules_trans_entity_entity_non_reflexive
     },
     {
         "trans_this_x_after_tag_this",
@@ -11716,7 +11746,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        78,
+        84,
         Pairs_testcases
     },
     {
