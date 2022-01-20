@@ -1046,6 +1046,12 @@ void Filter_filter_3_terms_w_or(void);
 void Filter_filter_4_terms_w_or_at_1(void);
 void Filter_filter_1_term_wildcard(void);
 void Filter_filter_1_term_any(void);
+void Filter_filter_1_term_same_subj_obj(void);
+void Filter_filter_1_term_acyclic_same_subj_obj(void);
+void Filter_filter_1_term_acyclic_reflexive_same_subj_obj(void);
+void Filter_filter_1_term_same_subj_obj_var(void);
+void Filter_filter_1_term_acyclic_same_subj_obj_var(void);
+void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
@@ -1472,7 +1478,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this(void);
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
 void TransitiveRules_trans_reflexive_X_X(void);
-void TransitiveRules_trans_X_X_2(void);
+void TransitiveRules_trans_reflexive_X_X_2(void);
 void TransitiveRules_trans_reflexive_X_Y(void);
 void TransitiveRules_trans_X_Y_2_levels(void);
 void TransitiveRules_trans_pred_This_X__pred_X(void);
@@ -6363,6 +6369,30 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_1_term_any
     },
     {
+        "filter_1_term_same_subj_obj",
+        Filter_filter_1_term_same_subj_obj
+    },
+    {
+        "filter_1_term_acyclic_same_subj_obj",
+        Filter_filter_1_term_acyclic_same_subj_obj
+    },
+    {
+        "filter_1_term_acyclic_reflexive_same_subj_obj",
+        Filter_filter_1_term_acyclic_reflexive_same_subj_obj
+    },
+    {
+        "filter_1_term_same_subj_obj_var",
+        Filter_filter_1_term_same_subj_obj_var
+    },
+    {
+        "filter_1_term_acyclic_same_subj_obj_var",
+        Filter_filter_1_term_acyclic_same_subj_obj_var
+    },
+    {
+        "filter_1_term_acyclic_reflexive_same_subj_obj_var",
+        Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var
+    },
+    {
         "filter_w_pair_id",
         Filter_filter_w_pair_id
     },
@@ -8042,8 +8072,8 @@ bake_test_case TransitiveRules_testcases[] = {
         TransitiveRules_trans_reflexive_X_X
     },
     {
-        "trans_X_X_2",
-        TransitiveRules_trans_X_X_2
+        "trans_reflexive_X_X_2",
+        TransitiveRules_trans_reflexive_X_X_2
     },
     {
         "trans_reflexive_X_Y",
@@ -11665,7 +11695,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        129,
+        135,
         Filter_testcases
     },
     {

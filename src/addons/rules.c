@@ -186,9 +186,11 @@ typedef struct ecs_rule_pair_t {
         ecs_entity_t ent;
     } obj;
     int32_t reg_mask; /* bit 1 = predicate, bit 2 = object */
+
     bool transitive; /* Is predicate transitive */
     bool final;      /* Is predicate final */
     bool reflexive;  /* Is predicate reflexive */
+    bool acyclic;    /* Is predicate acyclic */
     bool obj_0;
 } ecs_rule_pair_t;
 
@@ -237,6 +239,8 @@ typedef enum ecs_rule_op_kind_t {
     EcsRuleSetJmp,      /* Set label for jump operation to one of two values */
     EcsRuleJump,        /* Jump to an operation label */
     EcsRuleNot,         /* Invert result of an operation */
+    EcsRuleInTable,     /* Test if entity (subject) is in table (r_in) */
+    EcsRuleEq,          /* Test if entity in (subject) and (r_in) are equal */
     EcsRuleYield        /* Yield result */
 } ecs_rule_op_kind_t;
 
@@ -915,6 +919,10 @@ ecs_rule_pair_t term_to_pair(
 
         if (ecs_has_id(rule->world, pred_id, EcsReflexive)) {
             result.reflexive = true;
+        }
+
+        if (ecs_has_id(rule->world, pred_id, EcsAcyclic)) {
+            result.acyclic = true;
         }
     }
 
@@ -2146,11 +2154,17 @@ void insert_term_2(
         obj_id = obj->id;
     }
 
+    bool subj_known = is_known(subj, written);
+    bool same_obj_subj = false;
+    if (subj && obj) {
+        same_obj_subj = !ecs_os_strcmp(subj->name, obj->name);
+    }
+
     if (!filter->transitive) {
         insert_select_or_with(rule, c, term, subj, filter, written);
 
     } else if (filter->transitive) {
-        if (is_known(subj, written)) {
+        if (subj_known) {
             if (is_known(obj, written)) {
                 if (filter->obj.ent != EcsWildcard) {
                     ecs_rule_var_t *obj_subsets = store_reflexive_set(
@@ -2286,6 +2300,38 @@ void insert_term_2(
                     insert_reflexive_set(rule, EcsRuleSuperSet, obj, 
                         op->filter, c, written, true);
                 }
+            }
+        }
+    }
+
+    if (same_obj_subj) {
+        /* Can't have relation with same variables that is acyclic and not
+         * reflexive, this should've been caught earlier. */
+        ecs_assert(!filter->acyclic || filter->reflexive, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        /* If relation is reflexive and entity has an instance of R, no checks
+         * are needed because R(X, X) is always true. */
+        if (!filter->reflexive) {
+            push_frame(rule);
+
+            /* Insert check if the (R, X) pair that was found matches with one
+             * of the entities in the table with the pair. */
+            ecs_rule_op_t *op = insert_operation(rule, -1, written);
+            obj = get_most_specific_var(rule, obj, written);
+            ecs_assert(obj->kind == EcsRuleVarKindEntity, 
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(written[subj->id] == true, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(written[obj->id] == true, ECS_INTERNAL_ERROR, NULL);
+            
+            set_input_to_subj(rule, op, term, subj);
+            op->filter.obj.reg = obj->id;
+            op->filter.reg_mask = RULE_PAIR_OBJECT;
+
+            if (subj->kind == EcsRuleVarKindTable) {
+                op->kind = EcsRuleInTable;
+            } else {
+                op->kind = EcsRuleEq;
             }
         }
     }
@@ -2780,6 +2826,14 @@ char* ecs_rule_str(
             break;
         case EcsRuleNot:
             ecs_strbuf_append(&buf, "not      ");
+            break;
+        case EcsRuleInTable:
+            ecs_strbuf_append(&buf, "intable  ");
+            has_filter = true;
+            break;
+        case EcsRuleEq:
+            ecs_strbuf_append(&buf, "eq       ");
+            has_filter = true;
             break;            
         case EcsRuleYield:
             ecs_strbuf_append(&buf, "yield    ");
@@ -2807,7 +2861,8 @@ char* ecs_rule_str(
                 ecs_strbuf_append(&buf, "I:%s%s ", 
                     r_in->kind == EcsRuleVarKindTable ? "t" : "",
                     r_in->name);
-            } else if (op->subject) {
+            }
+            if (op->subject) {
                 char *subj_path = ecs_get_fullpath(world, op->subject);
                 ecs_strbuf_append(&buf, "I:%s ", subj_path);
                 ecs_os_free(subj_path);
@@ -2815,6 +2870,9 @@ char* ecs_rule_str(
         }
 
         if (has_filter) {
+            if (!pred_name) {
+                pred_name = "-";
+            }
             if (!obj && !pair.obj_0) {
                 ecs_os_sprintf(filter_expr, "(%s)", pred_name);
             } else {
@@ -3960,6 +4018,37 @@ bool eval_not(
     return !redo;
 }
 
+/* Check if entity is stored in table */
+static
+bool eval_intable(
+    ecs_iter_t *it,
+    ecs_rule_op_t *op,
+    int32_t op_index,
+    bool redo)
+{
+    (void)op_index;
+    
+    if (redo) {
+        return false;
+    }
+
+    ecs_rule_iter_t *iter = &it->priv.iter.rule;
+    const ecs_rule_t  *rule = iter->rule;
+    ecs_world_t *world = rule->world;
+    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_table_t *table = table_reg_get(rule, regs, op->r_in);
+
+    ecs_rule_pair_t pair = op->filter;
+    ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
+    ecs_entity_t obj = ECS_PAIR_OBJECT(filter.mask);
+    ecs_assert(obj != 0 && obj != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+    obj = ecs_get_alive(world, obj);
+    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *obj_table = ecs_get_table(world, obj);
+    return obj_table == table;
+}
+
 /* Yield operation. This is the simplest operation, as all it does is return
  * false. This will move the solver back to the previous instruction which
  * forces redo's on previous operations, for as long as there are matching
@@ -4010,6 +4099,8 @@ bool eval_op(
         return eval_jump(it, op, op_index, redo);
     case EcsRuleNot:
         return eval_not(it, op, op_index, redo);
+    case EcsRuleInTable:
+        return eval_intable(it, op, op_index, redo);
     case EcsRuleYield:
         return eval_yield(it, op, op_index, redo);
     default:

@@ -4,8 +4,8 @@
  * will be moved here */
 
 void TransitiveRules_trans_X_X() {
-    test_quarantine("01-20-2022");
-
+    test_quarantine("01-20-2020");
+    
     ecs_world_t *world = ecs_init();
 
     const char *ruleset = 
@@ -17,13 +17,8 @@ void TransitiveRules_trans_X_X() {
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
         .expr = "LocatedIn(_X, _X)"
     });
-    test_assert(r != NULL);
+    test_assert(r == NULL);
 
-    ecs_iter_t it = ecs_rule_iter(world, r);
-
-    test_bool(false, ecs_rule_next(&it));
-
-    ecs_rule_fini(r);
     ecs_fini(world);
 }
 
@@ -60,11 +55,12 @@ void TransitiveRules_trans_reflexive_X_X() {
     ecs_fini(world);
 }
 
-void TransitiveRules_trans_X_X_2() {
+void TransitiveRules_trans_reflexive_X_X_2() {
     ecs_world_t *world = ecs_init();
 
     const char *ruleset = 
     HEAD "Transitive(LocatedIn)"
+    LINE "Reflexive(LocatedIn)"
     LINE "Final(LocatedIn)"
     LINE "LocatedIn(UnitedStates, Earth)\n"
     LINE "LocatedIn(SanFrancisco, UnitedStates)\n";

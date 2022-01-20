@@ -271,6 +271,166 @@ void Filter_filter_1_term_any() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_term_same_subj_obj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "Foo", .obj.name = "Foo" }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, Foo));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, Foo);
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsEntity);
+    test_int(f.terms[0].obj.entity, Foo);
+    test_int(f.terms[0].obj.var, EcsVarIsEntity);
+    test_int(f.terms[0].obj.set.mask, EcsSelf);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_acyclic_same_subj_obj() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Acyclic);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "Foo", .obj.name = "Foo" }}
+    });
+    test_assert(r != 0);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_acyclic_reflexive_same_subj_obj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Acyclic, Reflexive);
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "Foo", .obj.name = "Foo" }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, Foo));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, Foo);
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsEntity);
+    test_int(f.terms[0].obj.entity, Foo);
+    test_int(f.terms[0].obj.var, EcsVarIsEntity);
+    test_int(f.terms[0].obj.set.mask, EcsSelf);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_same_subj_obj_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_str(f.terms[0].subj.name, "X");
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+    test_str(f.terms[0].obj.name, "X");
+    test_int(f.terms[0].obj.var, EcsVarIsVariable);
+    test_int(f.terms[0].obj.set.mask, EcsSelf);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_acyclic_same_subj_obj_var() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Acyclic);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+    });
+    test_assert(r != 0);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Acyclic, Reflexive);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_str(f.terms[0].subj.name, "X");
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+    test_str(f.terms[0].obj.name, "X");
+    test_int(f.terms[0].obj.var, EcsVarIsVariable);
+    test_int(f.terms[0].obj.set.mask, EcsSelf);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();
 
@@ -5736,4 +5896,3 @@ void Filter_or_term() {
 
     ecs_fini(world);
 }
-

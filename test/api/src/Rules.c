@@ -5113,5 +5113,45 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
 }
 
 void Rules_term_w_same_subj_obj_var() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Final);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "Rel(_X, _X)"
+    });
+
+    int x_var = ecs_rule_find_var(r, "X");
+    test_assert(x_var != -1);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add_pair(world, e1, Rel, e1);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add_pair(world, e2, Rel, e1);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add_pair(world, e3, Rel, e1);
+
+    ecs_entity_t e4 = ecs_new_id(world);
+    ecs_add_pair(world, e4, Rel, e3);
+
+    ecs_entity_t e5 = ecs_new_id(world);
+    ecs_add_pair(world, e5, Rel, e5);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e1));
+    test_int( ecs_rule_get_var(&it, x_var), e1);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e5));
+    test_int( ecs_rule_get_var(&it, x_var), e5);
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_fini(world);
 }

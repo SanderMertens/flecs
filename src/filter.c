@@ -489,6 +489,34 @@ int verify_term_consistency(
         }
     }
 
+    if (term->pred.var == EcsVarIsEntity) {
+        const ecs_term_id_t *tsubj = &term->subj;
+        const ecs_term_id_t *tobj = &term->obj;
+
+        if (ecs_term_id_is_set(tsubj) && ecs_term_id_is_set(tobj)) {
+            if (tsubj->var == tobj->var) {
+                bool is_same = false;
+
+                if (tsubj->var == EcsVarIsEntity) {
+                    is_same = tsubj->entity == tobj->entity;
+                } else if (tsubj->name && tobj->name) {
+                    is_same = !ecs_os_strcmp(tsubj->name, tobj->name);
+                }
+
+                if (is_same && ecs_has_id(world, term->pred.entity, EcsAcyclic)
+                    && !ecs_has_id(world, term->pred.entity, EcsReflexive)) 
+                {
+                    char *pred_str = ecs_get_fullpath(world, term->pred.entity);
+                    term_error(world, term, name, "term with acyclic relation"
+                        " '%s' cannot have same subject and object",
+                            pred_str);
+                    ecs_os_free(pred_str);
+                    return -1;
+                }
+            }
+        }
+    }
+
     return 0;
 }
 
