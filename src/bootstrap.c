@@ -417,6 +417,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
+    bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);

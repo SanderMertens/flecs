@@ -781,9 +781,11 @@ void Rules_wildcard_as_subject() {
     ECS_ENTITY(world, Tag, Final);
 
     ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
 
-    ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
         .expr = "Tag, ChildOf(*, This)"
@@ -791,13 +793,30 @@ void Rules_wildcard_as_subject() {
 
     test_assert(r != NULL);
 
+    printf("%s\n", ecs_rule_str(r));
+
     ecs_iter_t it = ecs_rule_iter(world, r);
+    while (ecs_rule_next(&it)) {
+        printf("%s\n", ecs_iter_str(&it));
+    }
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_childof(e1));
+    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_source(&it, 2), c1);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+    test_int(ecs_term_id(&it, 1), Tag);
+    test_int(ecs_term_id(&it, 2), ecs_childof(e2));
+    test_int(ecs_term_source(&it, 1), 0);
+    test_int(ecs_term_source(&it, 2), c2);
     test_bool(true, ecs_term_is_set(&it, 1));
     test_bool(true, ecs_term_is_set(&it, 2));
 
@@ -4935,6 +4954,214 @@ void Rules_rule_iter_set_transitive_self_variable() {
 
     it = ecs_rule_iter(world, r);
     ecs_rule_set_var(&it, x_var, Soma);
+    test_bool( ecs_rule_next(&it), false );
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_rule_iter_set_transitive_2_variables_set_one() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, LocatedIn, Transitive, Final);
+    ECS_ENTITY(world, Earth, 0);
+    ECS_ENTITY(world, NorthAmerica, (LocatedIn, Earth));
+    ECS_ENTITY(world, UnitedStates, (LocatedIn, NorthAmerica));
+    ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
+    ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "LocatedIn(_X, _Y)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "X");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "Y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), UnitedStates);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), Earth);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), UnitedStates);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), Soma);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), false );
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_rule_iter_set_transitive_2_variables_set_both() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, LocatedIn, Transitive, Final);
+    ECS_ENTITY(world, Earth, 0);
+    ECS_ENTITY(world, NorthAmerica, (LocatedIn, Earth));
+    ECS_ENTITY(world, UnitedStates, (LocatedIn, NorthAmerica));
+    ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
+    ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "LocatedIn(_X, _Y)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "X");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "Y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, UnitedStates);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), UnitedStates);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, Earth);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), Earth);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, Soma);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, SanFrancisco);
+    test_bool( ecs_rule_next(&it), false );
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_rule_iter_set_transitive_self_2_variables_set_both() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, LocatedIn, Transitive, TransitiveSelf, Final);
+    ECS_ENTITY(world, Earth, 0);
+    ECS_ENTITY(world, NorthAmerica, (LocatedIn, Earth));
+    ECS_ENTITY(world, UnitedStates, (LocatedIn, NorthAmerica));
+    ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
+    ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "LocatedIn(_X, _Y)"
+    });
+
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    int x_var = ecs_rule_find_var(r, "X");
+    test_assert(x_var != -1);
+    int y_var = ecs_rule_find_var(r, "Y");
+    test_assert(y_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    while (ecs_rule_next(&it)) {
+        printf("%s\n", ecs_iter_str(&it));
+    }
+
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, UnitedStates);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), UnitedStates);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, Earth);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), Earth);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, Soma);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, SanFrancisco);
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), SanFrancisco);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);

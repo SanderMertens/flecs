@@ -219,6 +219,58 @@ void Filter_filter_4_terms_w_or_at_1() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_term_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ EcsWildcard }}
+    });
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, EcsWildcard);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, EcsWildcard);
+    test_int(f.terms[0].pred.var, EcsVarIsVariable);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+    test_int(f.terms[0].obj.entity, 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_any() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ EcsAny }}
+    });
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, EcsAny);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, EcsAny);
+    test_int(f.terms[0].pred.var, EcsVarIsVariable);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSelf|EcsSuperSet);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+    test_int(f.terms[0].obj.entity, 0);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();
 
@@ -5684,3 +5736,4 @@ void Filter_or_term() {
 
     ecs_fini(world);
 }
+

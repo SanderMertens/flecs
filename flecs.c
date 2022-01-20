@@ -17388,7 +17388,8 @@ void ensure_all_variables(
 
         /* If predicate is a variable, make sure it has been registered */
         if (term->pred.var == EcsVarIsVariable) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->pred));
+            ensure_variable(rule, EcsRuleVarKindEntity, 
+                term_id_var_name(&term->pred));
         }
 
         /* If subject is a variable and it is not This, make sure it is 
@@ -17396,13 +17397,15 @@ void ensure_all_variables(
          * correctly return all permutations */
         if (term->subj.var == EcsVarIsVariable) {
             if (term->subj.entity != EcsThis) {
-                ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->subj));
+                ensure_variable(rule, EcsRuleVarKindEntity, 
+                    term_id_var_name(&term->subj));
             }
         }
 
         /* If object is a variable, make sure it has been registered */
         if (obj_is_set(term) && (term->obj.var == EcsVarIsVariable)) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->obj));
+            ensure_variable(rule, EcsRuleVarKindEntity, 
+                term_id_var_name(&term->obj));
         }
     }    
 }
@@ -20146,7 +20149,7 @@ void populate_iterator(
         int32_t v = rule->subject_variables[i];
         if (v != -1) {
             ecs_rule_var_t *var = &rule->variables[v];
-            if (var->kind == EcsRuleVarKindEntity) {
+            if (var->kind == EcsRuleVarKindEntity && var->name[0] != '.') {
                 iter->subjects[i] = regs[var->id].entity;
             }
         }
@@ -20227,7 +20230,10 @@ bool ecs_rule_next_instanced(
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *t = &rule->filter.terms[i];
             ecs_term_id_t *subj = &t->subj;
-            if (subj->var == EcsVarIsEntity && subj->entity != EcsThis) {
+            ecs_assert(subj->var == EcsVarIsVariable || subj->entity != EcsThis,
+                ECS_INTERNAL_ERROR, NULL);
+
+            if (subj->var == EcsVarIsEntity) {
                 it->subjects[i] = subj->entity;
             }
         }
@@ -30208,14 +30214,15 @@ const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 6;
 
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
-const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 11;
-const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 12;
-const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 13;
-const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 14;
-const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 15;
-const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 17;
-const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 18;
+const ecs_entity_t EcsAny =                   ECS_HI_COMPONENT_ID + 11;
+const ecs_entity_t EcsThis =                  ECS_HI_COMPONENT_ID + 12;
+const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 13;
+const ecs_entity_t EcsTransitiveSelf =        ECS_HI_COMPONENT_ID + 14;
+const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 15;
+const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 16;
+const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 17;
+const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 18;
+const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 19;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
@@ -32346,6 +32353,16 @@ int finalize_term_vars(
 }
 
 static
+bool entity_is_var(
+    ecs_entity_t e)
+{
+    if (e == EcsThis || e == EcsWildcard || e == EcsAny) {
+        return true;
+    }
+    return false;
+}
+
+static
 int finalize_term_identifiers(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -32404,13 +32421,13 @@ int finalize_term_identifiers(
         term->subj.entity = EcsThis;
     }
     
-    if (term->pred.entity == EcsThis) {
+    if (entity_is_var(term->pred.entity)) {
         term->pred.var = EcsVarIsVariable;
     }
-    if (term->subj.entity == EcsThis) {
+    if (entity_is_var(term->subj.entity)) {
         term->subj.var = EcsVarIsVariable;
     }
-    if (term->obj.entity == EcsThis) {
+    if (entity_is_var(term->obj.entity)) {
         term->obj.var = EcsVarIsVariable;
     }
 
@@ -42114,6 +42131,7 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsWorld, "World", EcsFlecsCore);
     bootstrap_entity(world, EcsThis, "This", EcsFlecsCore);
     bootstrap_entity(world, EcsWildcard, "*", EcsFlecsCore);
+    bootstrap_entity(world, EcsAny, "_", EcsFlecsCore);
 
     /* Component/relationship properties */
     flecs_bootstrap_tag(world, EcsTransitive);

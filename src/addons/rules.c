@@ -1317,7 +1317,8 @@ void ensure_all_variables(
 
         /* If predicate is a variable, make sure it has been registered */
         if (term->pred.var == EcsVarIsVariable) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->pred));
+            ensure_variable(rule, EcsRuleVarKindEntity, 
+                term_id_var_name(&term->pred));
         }
 
         /* If subject is a variable and it is not This, make sure it is 
@@ -1325,13 +1326,15 @@ void ensure_all_variables(
          * correctly return all permutations */
         if (term->subj.var == EcsVarIsVariable) {
             if (term->subj.entity != EcsThis) {
-                ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->subj));
+                ensure_variable(rule, EcsRuleVarKindEntity, 
+                    term_id_var_name(&term->subj));
             }
         }
 
         /* If object is a variable, make sure it has been registered */
         if (obj_is_set(term) && (term->obj.var == EcsVarIsVariable)) {
-            ensure_variable(rule, EcsRuleVarKindEntity, term_id_var_name(&term->obj));
+            ensure_variable(rule, EcsRuleVarKindEntity, 
+                term_id_var_name(&term->obj));
         }
     }    
 }
@@ -4075,7 +4078,7 @@ void populate_iterator(
         int32_t v = rule->subject_variables[i];
         if (v != -1) {
             ecs_rule_var_t *var = &rule->variables[v];
-            if (var->kind == EcsRuleVarKindEntity) {
+            if (var->kind == EcsRuleVarKindEntity && var->name[0] != '.') {
                 iter->subjects[i] = regs[var->id].entity;
             }
         }
@@ -4156,7 +4159,10 @@ bool ecs_rule_next_instanced(
         for (i = 0; i < rule->filter.term_count; i ++) {
             ecs_term_t *t = &rule->filter.terms[i];
             ecs_term_id_t *subj = &t->subj;
-            if (subj->var == EcsVarIsEntity && subj->entity != EcsThis) {
+            ecs_assert(subj->var == EcsVarIsVariable || subj->entity != EcsThis,
+                ECS_INTERNAL_ERROR, NULL);
+
+            if (subj->var == EcsVarIsEntity) {
                 it->subjects[i] = subj->entity;
             }
         }

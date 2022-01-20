@@ -1099,6 +1099,8 @@
                 "filter_3_terms",
                 "filter_3_terms_w_or",
                 "filter_4_terms_w_or_at_1",
+                "filter_1_term_wildcard",
+                "filter_1_term_any",
                 "filter_w_pair_id",
                 "filter_w_pred_obj",
                 "filter_move",
@@ -1523,7 +1525,10 @@
                 "rule_iter_set_cyclic_variable",
                 "rule_iter_set_cyclic_variable_w_this",
                 "rule_iter_set_transitive_variable",
-                "rule_iter_set_transitive_self_variable"
+                "rule_iter_set_transitive_self_variable",
+                "rule_iter_set_transitive_2_variables_set_one",
+                "rule_iter_set_transitive_2_variables_set_both",
+                "rule_iter_set_transitive_self_2_variables_set_both"
             ]
         }, {
             "id": "TransitiveRules",

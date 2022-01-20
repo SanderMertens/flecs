@@ -207,6 +207,16 @@ int finalize_term_vars(
 }
 
 static
+bool entity_is_var(
+    ecs_entity_t e)
+{
+    if (e == EcsThis || e == EcsWildcard || e == EcsAny) {
+        return true;
+    }
+    return false;
+}
+
+static
 int finalize_term_identifiers(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -265,13 +275,13 @@ int finalize_term_identifiers(
         term->subj.entity = EcsThis;
     }
     
-    if (term->pred.entity == EcsThis) {
+    if (entity_is_var(term->pred.entity)) {
         term->pred.var = EcsVarIsVariable;
     }
-    if (term->subj.entity == EcsThis) {
+    if (entity_is_var(term->subj.entity)) {
         term->subj.var = EcsVarIsVariable;
     }
-    if (term->obj.entity == EcsThis) {
+    if (entity_is_var(term->obj.entity)) {
         term->obj.var = EcsVarIsVariable;
     }
 

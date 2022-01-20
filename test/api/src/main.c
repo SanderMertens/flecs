@@ -1039,6 +1039,8 @@ void Filter_filter_2_terms(void);
 void Filter_filter_3_terms(void);
 void Filter_filter_3_terms_w_or(void);
 void Filter_filter_4_terms_w_or_at_1(void);
+void Filter_filter_1_term_wildcard(void);
+void Filter_filter_1_term_any(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
@@ -1456,6 +1458,9 @@ void Rules_rule_iter_set_cyclic_variable(void);
 void Rules_rule_iter_set_cyclic_variable_w_this(void);
 void Rules_rule_iter_set_transitive_variable(void);
 void Rules_rule_iter_set_transitive_self_variable(void);
+void Rules_rule_iter_set_transitive_2_variables_set_one(void);
+void Rules_rule_iter_set_transitive_2_variables_set_both(void);
+void Rules_rule_iter_set_transitive_self_2_variables_set_both(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -6317,6 +6322,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_4_terms_w_or_at_1
     },
     {
+        "filter_1_term_wildcard",
+        Filter_filter_1_term_wildcard
+    },
+    {
+        "filter_1_term_any",
+        Filter_filter_1_term_any
+    },
+    {
         "filter_w_pair_id",
         Filter_filter_w_pair_id
     },
@@ -7963,6 +7976,18 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_iter_set_transitive_self_variable",
         Rules_rule_iter_set_transitive_self_variable
+    },
+    {
+        "rule_iter_set_transitive_2_variables_set_one",
+        Rules_rule_iter_set_transitive_2_variables_set_one
+    },
+    {
+        "rule_iter_set_transitive_2_variables_set_both",
+        Rules_rule_iter_set_transitive_2_variables_set_both
+    },
+    {
+        "rule_iter_set_transitive_self_2_variables_set_both",
+        Rules_rule_iter_set_transitive_self_2_variables_set_both
     }
 };
 
@@ -11575,7 +11600,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        127,
+        129,
         Filter_testcases
     },
     {
@@ -11603,7 +11628,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        125,
+        128,
         Rules_testcases
     },
     {

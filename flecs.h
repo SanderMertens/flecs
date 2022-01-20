@@ -4016,8 +4016,11 @@ FLECS_API extern const ecs_entity_t EcsFlecsHidden;
 /* Entity associated with world (used for "attaching" components to world) */
 FLECS_API extern const ecs_entity_t EcsWorld;
 
-/* Wildcard entity ("*"), Used in expressions to indicate wildcard matching */
+/* Wildcard entity ("*"). Matches any id, returns all matches. */
 FLECS_API extern const ecs_entity_t EcsWildcard;
+
+/* Any entity ("_"). Matches any id, returns only the first. */
+FLECS_API extern const ecs_entity_t EcsAny;
 
 /* This entity (".", "This"). Used in expressions to indicate This entity */
 FLECS_API extern const ecs_entity_t EcsThis;
