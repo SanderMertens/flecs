@@ -246,3 +246,18 @@ void Internals_no_duplicate_root_table_id() {
     
     ecs_fini(world);
 }
+
+void Internals_override_os_api_w_addon() {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+
+    ecs_os_set_api(&os_api);
+
+    test_assert(ecs_os_has_threading());
+    test_assert(ecs_os_has_time());
+    test_assert(ecs_os_has_logging());
+    test_assert(ecs_os_has_heap());
+
+    ecs_world_t *world = ecs_init();
+    ecs_fini(world);
+}

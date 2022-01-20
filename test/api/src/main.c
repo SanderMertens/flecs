@@ -2377,6 +2377,7 @@ void Internals_no_double_system_table_after_merge(void);
 void Internals_recreate_deleted_table(void);
 void Internals_create_65k_tables(void);
 void Internals_no_duplicate_root_table_id(void);
+void Internals_override_os_api_w_addon(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -11470,6 +11471,10 @@ bake_test_case Internals_testcases[] = {
     {
         "no_duplicate_root_table_id",
         Internals_no_duplicate_root_table_id
+    },
+    {
+        "override_os_api_w_addon",
+        Internals_override_os_api_w_addon
     }
 };
 
@@ -11970,7 +11975,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        9,
+        10,
         Internals_testcases
     },
     {

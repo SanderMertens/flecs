@@ -309,7 +309,7 @@ void World_dim() {
     os_api.malloc_ = test_malloc;
     os_api.calloc_ = test_calloc;
     os_api.realloc_ = test_realloc;
-    ecs_os_set_api(&os_api);    
+    ecs_os_set_api(&os_api);
 
     ecs_world_t *world = ecs_init();
 

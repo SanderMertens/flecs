@@ -3891,7 +3891,7 @@ bool eval_each(
 
         /* Skip builtin entities that could confuse operations */
         e = entities[row];
-        while (e == EcsWildcard || e == EcsThis) {
+        while (e == EcsWildcard || e == EcsThis || e == EcsAny) {
             row ++;
             if (row == count) {
                 return false;

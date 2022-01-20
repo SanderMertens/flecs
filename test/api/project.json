@@ -2506,7 +2506,8 @@
                 "no_double_system_table_after_merge",
                 "recreate_deleted_table",
                 "create_65k_tables",
-                "no_duplicate_root_table_id"
+                "no_duplicate_root_table_id",
+                "override_os_api_w_addon"
             ]
         }, {
             "id": "Error",
