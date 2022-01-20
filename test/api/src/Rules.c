@@ -2563,8 +2563,20 @@ void Rules_transitive_all() {
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "CelestialBody");
+    test_var(&it, y_var, "CelestialBody");
+    test_term_id(&it, 1, "(IsA,CelestialBody)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "CelestialBody");
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Character");
+    test_var(&it, y_var, "Character");
+    test_term_id(&it, 1, "(IsA,Character)");
     test_int(it.count, 0);
 
     test_assert(ecs_rule_next(&it));
@@ -2575,18 +2587,24 @@ void Rules_transitive_all() {
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Machine");
+    test_var(&it, y_var, "Machine");
+    test_term_id(&it, 1, "(IsA,Machine)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Machine");
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
     test_int(it.count, 0);
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Planet");
-    test_var(&it, y_var, "CelestialBody");
-    test_term_id(&it, 1, "(IsA,CelestialBody)");
+    test_var(&it, y_var, "Planet");
+    test_term_id(&it, 1, "(IsA,Planet)");
     test_int(it.count, 0); 
 
     test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Moon");
+    test_var(&it, x_var, "Planet");
     test_var(&it, y_var, "CelestialBody");
     test_term_id(&it, 1, "(IsA,CelestialBody)");
     test_int(it.count, 0); 
@@ -2595,6 +2613,18 @@ void Rules_transitive_all() {
     test_var(&it, x_var, "Planet");
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
+    test_int(it.count, 0); 
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Moon");
+    test_var(&it, y_var, "Moon");
+    test_term_id(&it, 1, "(IsA,Moon)");
+    test_int(it.count, 0); 
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Moon");
+    test_var(&it, y_var, "CelestialBody");
+    test_term_id(&it, 1, "(IsA,CelestialBody)");
     test_int(it.count, 0); 
 
     test_assert(ecs_rule_next(&it));
@@ -2605,12 +2635,12 @@ void Rules_transitive_all() {
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Human");
-    test_var(&it, y_var, "Character");
-    test_term_id(&it, 1, "(IsA,Character)");
+    test_var(&it, y_var, "Human");
+    test_term_id(&it, 1, "(IsA,Human)");
     test_int(it.count, 0);
 
     test_assert(ecs_rule_next(&it));
-    test_var(&it, x_var, "Creature");
+    test_var(&it, x_var, "Human");
     test_var(&it, y_var, "Character");
     test_term_id(&it, 1, "(IsA,Character)");
     test_int(it.count, 0);
@@ -2623,9 +2653,27 @@ void Rules_transitive_all() {
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Creature");
+    test_var(&it, y_var, "Creature");
+    test_term_id(&it, 1, "(IsA,Creature)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Creature");
+    test_var(&it, y_var, "Character");
+    test_term_id(&it, 1, "(IsA,Character)");
+    test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Creature");
     test_var(&it, y_var, "Thing");
     test_term_id(&it, 1, "(IsA,Thing)");
     test_int(it.count, 0);
+
+    test_assert(ecs_rule_next(&it));
+    test_var(&it, x_var, "Droid");
+    test_var(&it, y_var, "Droid");
+    test_term_id(&it, 1, "(IsA,Droid)");
+    test_int(it.count, 0);    
 
     test_assert(ecs_rule_next(&it));
     test_var(&it, x_var, "Droid");
@@ -5305,19 +5353,15 @@ void Rules_rule_iter_set_transitive_self_2_variables_set_both() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, LocatedIn, Transitive, TransitiveSelf, Final);
-    ECS_ENTITY(world, Earth, 0);
-    ECS_ENTITY(world, NorthAmerica, (LocatedIn, Earth));
+    ECS_ENTITY(world, NorthAmerica, 0);
     ECS_ENTITY(world, UnitedStates, (LocatedIn, NorthAmerica));
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
-    ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
         .expr = "LocatedIn(_X, _Y)"
     });
 
     test_assert(r != NULL);
-
-    printf("%s\n", ecs_rule_str(r));
 
     int x_var = ecs_rule_find_var(r, "X");
     test_assert(x_var != -1);
@@ -5326,12 +5370,53 @@ void Rules_rule_iter_set_transitive_self_2_variables_set_both() {
 
     ecs_iter_t it = ecs_rule_iter(world, r);
 
-    while (ecs_rule_next(&it)) {
-        printf("%s\n", ecs_iter_str(&it));
-    }
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
+    test_int(ecs_rule_get_var(&it, x_var), UnitedStates);
+    test_int(ecs_rule_get_var(&it, y_var), UnitedStates);
 
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), UnitedStates);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, SanFrancisco));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), SanFrancisco);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), UnitedStates);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
+
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
+    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_rule_set_var(&it, y_var, SanFrancisco);
+
+    test_bool( ecs_rule_next(&it), true );
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, SanFrancisco));
+    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
+    test_int(ecs_rule_get_var(&it, y_var), SanFrancisco);
+    test_bool( ecs_rule_next(&it), false );
+
+    it = ecs_rule_iter(world, r);
     ecs_rule_set_var(&it, x_var, SanFrancisco);
     ecs_rule_set_var(&it, y_var, UnitedStates);
+
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
@@ -5342,36 +5427,12 @@ void Rules_rule_iter_set_transitive_self_2_variables_set_both() {
     it = ecs_rule_iter(world, r);
     ecs_rule_set_var(&it, x_var, SanFrancisco);
     ecs_rule_set_var(&it, y_var, NorthAmerica);
+
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
     test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
     test_int(ecs_rule_get_var(&it, y_var), NorthAmerica);
-    test_bool( ecs_rule_next(&it), false );
-
-    it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, Earth);
-    test_bool( ecs_rule_next(&it), true );
-    test_int(it.count, 0);
-    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
-    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
-    test_int(ecs_rule_get_var(&it, y_var), Earth);
-    test_bool( ecs_rule_next(&it), false );
-
-    it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, Soma);
-    test_bool( ecs_rule_next(&it), false );
-
-    it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, SanFrancisco);
-    test_bool( ecs_rule_next(&it), true );
-    test_int(it.count, 0);
-    test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
-    test_int(ecs_rule_get_var(&it, x_var), SanFrancisco);
-    test_int(ecs_rule_get_var(&it, y_var), SanFrancisco);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);
