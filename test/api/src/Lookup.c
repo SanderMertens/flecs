@@ -302,6 +302,16 @@ void Lookup_lookup_wildcard() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_any() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t lookup = ecs_lookup(world, "_");
+    test_assert(lookup != 0);
+    test_assert(lookup == EcsAny);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_path_this() {
     ecs_world_t *world = ecs_init();
 
@@ -359,3 +369,5 @@ void Lookup_resolve_builtin_symbols() {
 
     ecs_fini(world);
 }
+
+

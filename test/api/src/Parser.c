@@ -83,6 +83,16 @@ void Parser_resolve_wildcard() {
     ecs_fini(world);
 }
 
+void Parser_resolve_any() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "_");
+    test_assert(e != 0);
+    test_assert(e == EcsAny);
+
+    ecs_fini(world);
+}
+
 void Parser_resolve_is_a() {
     ecs_world_t *world = ecs_init();
 
@@ -234,6 +244,30 @@ void Parser_component_explicit_subject_wildcard() {
     ecs_fini(world);
 }
 
+void Parser_component_explicit_subject_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(_)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsAny, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Parser_this_as_predicate() {
     ecs_world_t *world = ecs_init();
 
@@ -352,6 +386,58 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     test_pred(terms[0], Pred, EcsSelf|EcsSubSet);
     test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
     test_obj(terms[0], EcsWildcard, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_any_pred() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "(_, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], EcsAny, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], Obj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_any_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "(Pred, _)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Pred, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], EcsAny, EcsSelf);
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);
 

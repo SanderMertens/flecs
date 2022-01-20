@@ -165,6 +165,8 @@ ecs_entity_t get_builtin(
         return EcsThis;
     } else if (name[0] == '*' && name[1] == '\0') {
         return EcsWildcard;
+    } else if (name[0] == '_' && name[1] == '\0') {
+        return EcsAny;
     }
 
     return 0;

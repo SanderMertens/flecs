@@ -162,7 +162,7 @@ ecs_entity_t term_id_entity(
     ecs_term_id_t *term_id)
 {
     if (term_id->entity && term_id->entity != EcsThis && 
-        term_id->entity != EcsWildcard) 
+        term_id->entity != EcsWildcard && term_id->entity != EcsAny) 
     {
         if (!(term_id->entity & ECS_ROLE_MASK)) {
             return term_id->entity;
@@ -175,7 +175,7 @@ ecs_entity_t term_id_entity(
             !ecs_identifier_is_var(term_id->name))) 
         {
             ecs_entity_t e = ecs_lookup_fullpath(world, term_id->name);
-            if (e != EcsWildcard && e != EcsThis) {
+            if (e != EcsWildcard && e != EcsThis && e != EcsAny) {
                 return e;
             }
             return 0;
@@ -511,7 +511,7 @@ const char* ecs_identifier_is_var(
     }
 
     /* Identifiers that start with _ are variables */
-    if (id[0] == '_') {
+    if (id[0] == '_' && id[1] != 0) {
         return &id[1];
     }
 

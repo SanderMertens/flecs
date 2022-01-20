@@ -775,14 +775,229 @@ void Rules_2_fact_pairs_false() {
     ecs_fini(world);
 }
 
-void Rules_wildcard_as_subject() {
+void Rules_wildcard_pred() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, MatchWith);
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e1, TagB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "*, MatchWith"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_wildcard_subj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
+
+    ecs_entity_t e1 = ecs_new(world, MatchWith);
+    ecs_entity_t e2 = ecs_new(world, MatchWith);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "MatchWith(*)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_source(&it, 1), e1);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_source(&it, 1), e2);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_wildcard_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_add_pair(world, e1, Rel, ObjB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjA));
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjB));
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_any_pred() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, MatchWith);
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e1, TagB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "_, MatchWith"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_any_subj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MatchWith); /* Tag so we don't match everything */
+
+    ecs_new(world, MatchWith);
+    ecs_new(world, MatchWith);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "MatchWith(_)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(false, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_any_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_add_pair(world, e1, Rel, ObjB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjA));
+    test_int(ecs_term_source(&it, 1), 0);
+    test_bool(true, ecs_term_is_set(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_2_wildcard_as_subject() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, Final);
 
     ecs_entity_t e1 = ecs_new(world, Tag);
     ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_new(world, Tag);
 
     ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, e2);
@@ -793,12 +1008,7 @@ void Rules_wildcard_as_subject() {
 
     test_assert(r != NULL);
 
-    printf("%s\n", ecs_rule_str(r));
-
     ecs_iter_t it = ecs_rule_iter(world, r);
-    while (ecs_rule_next(&it)) {
-        printf("%s\n", ecs_iter_str(&it));
-    }
 
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);

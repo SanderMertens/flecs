@@ -220,6 +220,7 @@ void Remove_not_added(void);
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
 void Parser_resolve_wildcard(void);
+void Parser_resolve_any(void);
 void Parser_resolve_is_a(void);
 void Parser_0(void);
 void Parser_component_implicit_subject(void);
@@ -227,11 +228,14 @@ void Parser_component_explicit_subject(void);
 void Parser_component_explicit_subject_this(void);
 void Parser_component_explicit_subject_this_by_name(void);
 void Parser_component_explicit_subject_wildcard(void);
+void Parser_component_explicit_subject_any(void);
 void Parser_this_as_predicate(void);
 void Parser_this_as_object(void);
 void Parser_pair_implicit_subject(void);
 void Parser_pair_implicit_subject_wildcard_pred(void);
 void Parser_pair_implicit_subject_wildcard_obj(void);
+void Parser_pair_implicit_subject_any_pred(void);
+void Parser_pair_implicit_subject_any_obj(void);
 void Parser_pair_implicit_subject_this_pred(void);
 void Parser_pair_implicit_subject_this_obj(void);
 void Parser_pair_explicit_subject(void);
@@ -800,6 +804,7 @@ void Lookup_lookup_null(void);
 void Lookup_lookup_symbol_null(void);
 void Lookup_lookup_this(void);
 void Lookup_lookup_wildcard(void);
+void Lookup_lookup_any(void);
 void Lookup_lookup_path_this(void);
 void Lookup_lookup_path_wildcard(void);
 void Lookup_lookup_path_this_from_scope(void);
@@ -1358,7 +1363,13 @@ void Rules_1_fact_pair_false(void);
 void Rules_2_fact_pairs_true(void);
 void Rules_2_fact_pairs_1_false(void);
 void Rules_2_fact_pairs_false(void);
-void Rules_wildcard_as_subject(void);
+void Rules_wildcard_pred(void);
+void Rules_wildcard_subj(void);
+void Rules_wildcard_obj(void);
+void Rules_any_pred(void);
+void Rules_any_subj(void);
+void Rules_any_obj(void);
+void Rules_2_wildcard_as_subject(void);
 void Rules_find_1_pair(void);
 void Rules_find_2_pairs(void);
 void Rules_find_w_pred_var(void);
@@ -3173,6 +3184,10 @@ bake_test_case Parser_testcases[] = {
         Parser_resolve_wildcard
     },
     {
+        "resolve_any",
+        Parser_resolve_any
+    },
+    {
         "resolve_is_a",
         Parser_resolve_is_a
     },
@@ -3201,6 +3216,10 @@ bake_test_case Parser_testcases[] = {
         Parser_component_explicit_subject_wildcard
     },
     {
+        "component_explicit_subject_any",
+        Parser_component_explicit_subject_any
+    },
+    {
         "this_as_predicate",
         Parser_this_as_predicate
     },
@@ -3219,6 +3238,14 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_implicit_subject_wildcard_obj",
         Parser_pair_implicit_subject_wildcard_obj
+    },
+    {
+        "pair_implicit_subject_any_pred",
+        Parser_pair_implicit_subject_any_pred
+    },
+    {
+        "pair_implicit_subject_any_obj",
+        Parser_pair_implicit_subject_any_obj
     },
     {
         "pair_implicit_subject_this_pred",
@@ -5413,6 +5440,10 @@ bake_test_case Lookup_testcases[] = {
         Lookup_lookup_wildcard
     },
     {
+        "lookup_any",
+        Lookup_lookup_any
+    },
+    {
         "lookup_path_this",
         Lookup_lookup_path_this
     },
@@ -7578,8 +7609,32 @@ bake_test_case Rules_testcases[] = {
         Rules_2_fact_pairs_false
     },
     {
-        "wildcard_as_subject",
-        Rules_wildcard_as_subject
+        "wildcard_pred",
+        Rules_wildcard_pred
+    },
+    {
+        "wildcard_subj",
+        Rules_wildcard_subj
+    },
+    {
+        "wildcard_obj",
+        Rules_wildcard_obj
+    },
+    {
+        "any_pred",
+        Rules_any_pred
+    },
+    {
+        "any_subj",
+        Rules_any_subj
+    },
+    {
+        "any_obj",
+        Rules_any_obj
+    },
+    {
+        "2_wildcard_as_subject",
+        Rules_2_wildcard_as_subject
     },
     {
         "find_1_pair",
@@ -11467,7 +11522,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        150,
+        154,
         Parser_testcases
     },
     {
@@ -11551,7 +11606,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        28,
+        29,
         Lookup_testcases
     },
     {
@@ -11628,7 +11683,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        128,
+        134,
         Rules_testcases
     },
     {
