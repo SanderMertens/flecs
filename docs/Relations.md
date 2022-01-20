@@ -818,7 +818,7 @@ const Position *p = e.get<Serializable, Position>();
 The `Tag` property is only interpreted when it is added to the relation part of a pair.
 
 ### Reflexive relations
-A relation can be marked inclusive which means that a query like `Relation(Entity, Entity)` should evaluate to true. Inclusivity only applies to relations that are also transitive. The utility of `Reflexive` becomes more obvious with an example:
+A relation can be marked reflexive which means that a query like `Relation(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:
 
 Given this dataset:
 ```
@@ -850,7 +850,7 @@ LocatedIn(SanFrancisco, SanFrancisco)
 - No
 ```
 
-In these examples, `IsA` is an inclusive relation, whereas `LocatedIn` is not.
+In these examples, `IsA` is a reflexive relation, whereas `LocatedIn` is not.
 
 ### Acyclic relations
 A relationship can be marked with the `Acyclic` property to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic.
