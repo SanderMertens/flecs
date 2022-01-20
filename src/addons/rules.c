@@ -2292,7 +2292,7 @@ void insert_term_2(
                     ecs_rule_pair_t super_filter = {0};
                     super_filter.pred = filter->pred;
                     super_filter.obj.reg = subj->id;
-                    super_filter.reg_mask = filter->reg_mask & RULE_PAIR_OBJECT;
+                    super_filter.reg_mask = filter->reg_mask | RULE_PAIR_OBJECT;
 
                     insert_reflexive_set(rule, EcsRuleSuperSet, obj, 
                         super_filter, c, written, true);
@@ -3319,9 +3319,9 @@ bool eval_superset(
             table = table_from_entity(world, obj);
         }
 
-        /* If output variable is already set, check if it matches */
         int32_t column;
 
+        /* If output variable is already set, check if it matches */
         if (output_is_input) {
             ecs_id_t id = ecs_pair(rel, result);
             ecs_entity_t subj = 0;

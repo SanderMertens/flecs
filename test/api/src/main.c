@@ -1487,6 +1487,7 @@ void TransitiveRules_trans_reflexive_X_X(void);
 void TransitiveRules_trans_reflexive_X_X_2(void);
 void TransitiveRules_trans_reflexive_X_Y(void);
 void TransitiveRules_trans_X_Y_2_levels(void);
+void TransitiveRules_trans_X_Y_2_levels_nonfinal(void);
 void TransitiveRules_trans_pred_This_X__pred_X(void);
 void TransitiveRules_trans_constrained_x_y(void);
 void TransitiveRules_trans_entity_X_non_inclusive(void);
@@ -8115,6 +8116,10 @@ bake_test_case TransitiveRules_testcases[] = {
         TransitiveRules_trans_X_Y_2_levels
     },
     {
+        "trans_X_Y_2_levels_nonfinal",
+        TransitiveRules_trans_X_Y_2_levels_nonfinal
+    },
+    {
         "trans_pred_This_X__pred_X",
         TransitiveRules_trans_pred_This_X__pred_X
     },
@@ -11765,7 +11770,7 @@ static bake_test_suite suites[] = {
         "TransitiveRules",
         NULL,
         NULL,
-        23,
+        24,
         TransitiveRules_testcases
     },
     {
