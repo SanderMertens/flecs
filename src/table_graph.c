@@ -109,7 +109,7 @@ int32_t ensure_columns(
 }
 
 static
-ecs_type_t ids_to_type(
+ecs_vector_t* ids_to_vector(
     const ecs_ids_t *entities)
 {
     if (entities->count) {
@@ -255,10 +255,8 @@ void init_flags(
 static
 void init_table(
     ecs_world_t *world,
-    ecs_table_t *table,
-    const ecs_ids_t *entities)
+    ecs_table_t *table)
 {
-    table->type = ids_to_type(entities);
     table->c_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
@@ -283,14 +281,15 @@ void init_table(
 static
 ecs_table_t *create_table(
     ecs_world_t *world,
-    const ecs_ids_t *entities,
+    ecs_type_t type,
     flecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->id = flecs_sparse_last_id(world->store.tables);
+    result->type = type;
 
-    init_table(world, result, entities);
+    init_table(world, result);
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
@@ -317,6 +316,43 @@ ecs_table_t *create_table(
     ecs_log_pop();
 
     return result;
+}
+
+static
+ecs_table_t* find_or_create(
+    ecs_world_t *world,
+    const ecs_ids_t *ids,
+    ecs_vector_t *type)
+{    
+    ecs_poly_assert(world, ecs_world_t);   
+
+    /* Make sure array is ordered and does not contain duplicates */
+    int32_t id_count = ids->count;
+
+    if (!id_count) {
+        return &world->store.root;
+    }
+
+    ecs_table_t *table;
+    flecs_hashmap_result_t elem = flecs_hashmap_ensure(
+        world->store.table_map, ids, ecs_table_t*);
+    if ((table = *(ecs_table_t**)elem.value)) {
+        if (type) {
+            ecs_vector_free(type);
+        }
+        return table;
+    }
+
+    if (!type) {
+        type = ids_to_vector(ids);
+    }
+
+    /* If we get here, table needs to be created which is only allowed when the
+     * application is not currently in progress */
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+
+    /* If we get here, the table has not been found, so create it. */
+    return create_table(world, type, elem);
 }
 
 static
@@ -738,9 +774,7 @@ ecs_table_t* find_or_create_table_with_id(
             .count = ecs_vector_count(idv)
         };
 
-        ecs_table_t *result = flecs_table_find_or_create(world, &ids);
-        ecs_vector_free(idv);
-        return result;
+        return find_or_create(world, &ids, idv);
     }
 }
 
@@ -994,46 +1028,12 @@ int32_t ecs_entity_array_dedup(
     return count - (k - j);
 }
 
-static
-ecs_table_t* find_or_create(
-    ecs_world_t *world,
-    const ecs_ids_t *ids)
-{    
-    ecs_poly_assert(world, ecs_world_t);   
-
-    /* Make sure array is ordered and does not contain duplicates */
-    int32_t id_count = ids->count;
-
-    if (!id_count) {
-        return &world->store.root;
-    }
-
-    ecs_table_t *table;
-    flecs_hashmap_result_t elem = flecs_hashmap_ensure(
-        world->store.table_map, ids, ecs_table_t*);
-    if ((table = *(ecs_table_t**)elem.value)) {
-        return table;
-    }
-
-    /* If we get here, table needs to be created which is only allowed when the
-     * application is not currently in progress */
-    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
-
-    /* If we get here, the table has not been found, so create it. */
-    ecs_table_t *result = create_table(world, ids, elem);
-    
-    ecs_assert(ids->count == ecs_vector_count(result->type), 
-        ECS_INTERNAL_ERROR, NULL);
-
-    return result;
-}
-
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     const ecs_ids_t *ids)
 {
     ecs_poly_assert(world, ecs_world_t);
-    return find_or_create(world, ids);
+    return find_or_create(world, ids, NULL);
 }
 
 void flecs_init_root_table(
@@ -1046,7 +1046,8 @@ void flecs_init_root_table(
         .count = 0
     };
 
-    init_table(world, &world->store.root, &entities);
+    world->store.root.type = ids_to_vector(&entities);
+    init_table(world, &world->store.root);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
     uint64_t new_id = flecs_sparse_new_id(world->store.tables);
