@@ -6713,13 +6713,10 @@ void on_delete_object_action(
         const ecs_table_record_t *tables = flecs_id_record_tables(idr);
         int32_t i, count = flecs_id_record_count(idr);
 
-        for (i = 0; i < count; i ++) {
+        for (i = count - 1; i >= 0; i --) {
             const ecs_table_record_t *tr = &tables[i];
             ecs_table_t *table = tr->table;
-
-            if (!ecs_table_count(table)) {
-                continue;
-            }
+            ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
             ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -6739,7 +6736,6 @@ void on_delete_object_action(
              
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
-                i = 0; count = flecs_id_record_count(idr);
             } else if (action == EcsDelete) {
                 delete_objects(world, table);
             } else if (action == EcsThrow) {
