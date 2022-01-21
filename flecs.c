@@ -39920,48 +39920,6 @@ error:
     return NULL;
 }
 
-static
-bool ecs_entity_array_is_ordered(
-    const ecs_ids_t *entities)
-{
-    ecs_entity_t prev = 0;
-    ecs_entity_t *array = entities->array;
-    int32_t i, count = entities->count;
-
-    for (i = 0; i < count; i ++) {
-        if (!array[i] && !prev) {
-            continue;
-        }
-        if (array[i] <= prev) {
-            return false;
-        }
-        prev = array[i];
-    }    
-
-    return true;
-}
-
-static
-int32_t ecs_entity_array_dedup(
-    ecs_entity_t *array,
-    int32_t count)
-{
-    int32_t j, k;
-    ecs_entity_t prev = array[0];
-
-    for (k = j = 1; k < count; j ++, k++) {
-        ecs_entity_t e = array[k];
-        if (e == prev) {
-            k ++;
-        }
-
-        array[j] = e;
-        prev = e;
-    }
-
-    return count - (k - j);
-}
-
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     const ecs_ids_t *ids)
