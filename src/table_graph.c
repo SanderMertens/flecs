@@ -110,7 +110,7 @@ int32_t ensure_columns(
 
 static
 ecs_type_t ids_to_type(
-    ecs_ids_t *entities)
+    const ecs_ids_t *entities)
 {
     if (entities->count) {
         ecs_vector_t *result = NULL;
@@ -256,7 +256,7 @@ static
 void init_table(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_ids_t *entities)
+    const ecs_ids_t *entities)
 {
     table->type = ids_to_type(entities);
     table->c_info = NULL;
@@ -283,7 +283,7 @@ void init_table(
 static
 ecs_table_t *create_table(
     ecs_world_t *world,
-    ecs_ids_t *entities,
+    const ecs_ids_t *entities,
     flecs_hashmap_result_t table_elem)
 {
     ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
@@ -1003,36 +1003,14 @@ ecs_table_t* find_or_create(
 
     /* Make sure array is ordered and does not contain duplicates */
     int32_t id_count = ids->count;
-    ecs_id_t *ordered = NULL;
 
     if (!id_count) {
         return &world->store.root;
     }
 
-    if (!ecs_entity_array_is_ordered(ids)) {
-        if (id_count > world->store.id_cache.count) {
-            ecs_os_free(world->store.id_cache.array);
-            world->store.id_cache.array = ecs_os_malloc_n(ecs_id_t, id_count);
-            world->store.id_cache.count = id_count;
-        }
-
-        ordered = world->store.id_cache.array;
-        ecs_os_memcpy_n(ordered, ids->array, ecs_id_t, id_count);
-        qsort(ordered, (size_t)id_count, sizeof(ecs_entity_t), 
-            flecs_entity_compare_qsort);
-        id_count = ecs_entity_array_dedup(ordered, id_count);  
-    } else {
-        ordered = ids->array;
-    }
-
-    ecs_ids_t ordered_ids = {
-        .array = ordered,
-        .count = id_count
-    };
-
     ecs_table_t *table;
     flecs_hashmap_result_t elem = flecs_hashmap_ensure(
-        world->store.table_map, &ordered_ids, ecs_table_t*);
+        world->store.table_map, ids, ecs_table_t*);
     if ((table = *(ecs_table_t**)elem.value)) {
         return table;
     }
@@ -1042,9 +1020,9 @@ ecs_table_t* find_or_create(
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     /* If we get here, the table has not been found, so create it. */
-    ecs_table_t *result = create_table(world, &ordered_ids, elem);
+    ecs_table_t *result = create_table(world, ids, elem);
     
-    ecs_assert(ordered_ids.count == ecs_vector_count(result->type), 
+    ecs_assert(ids->count == ecs_vector_count(result->type), 
         ECS_INTERNAL_ERROR, NULL);
 
     return result;
@@ -1054,7 +1032,7 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     const ecs_ids_t *ids)
 {
-    ecs_poly_assert(world, ecs_world_t);   
+    ecs_poly_assert(world, ecs_world_t);
     return find_or_create(world, ids);
 }
 

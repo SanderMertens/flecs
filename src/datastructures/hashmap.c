@@ -93,7 +93,7 @@ void* _flecs_hashmap_get(
 flecs_hashmap_result_t _flecs_hashmap_ensure(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
-    void *key,
+    const void *key,
     ecs_size_t value_size)
 {
     ecs_assert(map.key_size == key_size, ECS_INVALID_PARAMETER, NULL);

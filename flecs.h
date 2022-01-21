@@ -3483,7 +3483,7 @@ FLECS_DBG_API
 flecs_hashmap_result_t _flecs_hashmap_ensure(
     const ecs_hashmap_t map,
     ecs_size_t key_size,
-    void *key,
+    const void *key,
     ecs_size_t value_size);
 
 #define flecs_hashmap_ensure(map, key, V)\
