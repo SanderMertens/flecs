@@ -501,6 +501,8 @@ struct ecs_id_record_t {
 
     ecs_entity_t on_delete;         /* Cleanup action for removing id */
     ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+
+    uint64_t id; /* Id to element in storage */
 };
 
 typedef struct ecs_store_t {
@@ -549,7 +551,7 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_map_t *id_index;         /* map<id, ecs_id_record_t> */
+    ecs_map_t *id_index;         /* map<id, ecs_id_record_t*> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
     /* -- Mixins -- */
@@ -574,6 +576,7 @@ struct ecs_world_t {
     ecs_sparse_t *queries;       /* sparse<query_id, ecs_query_t> */
     ecs_sparse_t *triggers;      /* sparse<query_id, ecs_trigger_t> */
     ecs_sparse_t *observers;     /* sparse<query_id, ecs_observer_t> */
+    ecs_sparse_t *id_records;    /* sparse<idr_id, ecs_id_record_t> */
     
 
     /* Keep track of components that were added/removed to/from monitored

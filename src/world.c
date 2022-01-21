@@ -504,13 +504,15 @@ ecs_world_t *ecs_mini(void) {
 
     world->self = world;
     world->type_info = flecs_sparse_new(ecs_type_info_t);
-    world->id_index = ecs_map_new(ecs_id_record_t, 8);
+    world->id_index = ecs_map_new(ecs_id_record_t*, ECS_HI_COMPONENT_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
 
     world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
+    world->id_records = flecs_sparse_new(ecs_id_record_t);
+
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->aliases = flecs_string_hashmap_new(ecs_entity_t);
     world->symbols = flecs_string_hashmap_new(ecs_entity_t);
@@ -1004,13 +1006,14 @@ void fini_id_index(
 {
     ecs_map_iter_t it = ecs_map_iter(world->id_index);
     ecs_id_record_t *idr;
-    while ((idr = ecs_map_next(&it, ecs_id_record_t, NULL))) {
+    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, NULL))) {
         ecs_table_cache_fini(&idr->cache);
         ecs_map_free(idr->add_refs);
         ecs_map_free(idr->remove_refs);
     }
 
     ecs_map_free(world->id_index);
+    flecs_sparse_free(world->id_records);
 }
 
 /* Cleanup aliases & symbols */
@@ -1680,8 +1683,16 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = ecs_map_ensure(world->id_index, ecs_id_record_t, 
+    ecs_id_record_t **idr_ptr = ecs_map_ensure(world->id_index, ecs_id_record_t*, 
         ecs_strip_generation(id));
+    ecs_id_record_t *idr;
+    if (!*idr_ptr) {
+        idr = flecs_sparse_add(world->id_records, ecs_id_record_t);
+        idr->id = flecs_sparse_last_id(world->id_records);
+        *idr_ptr = idr;
+    } else {
+        idr = *idr_ptr;
+    }
 
     if (!ecs_table_cache_is_initialized(&idr->cache)) {
         ecs_table_cache_init(&idr->cache, ecs_table_record_t, world, NULL);
@@ -1694,7 +1705,7 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_get(world->id_index, ecs_id_record_t, 
+    return ecs_map_get_ptr(world->id_index, ecs_id_record_t*,
         ecs_strip_generation(id));
 }
 
@@ -1755,7 +1766,8 @@ void flecs_clear_id_record(
     }
 
     ecs_id_record_t idr = *idr_ptr;
-
+    
+    flecs_sparse_remove(world->id_records, idr.id);
     ecs_map_remove(world->id_index, ecs_strip_generation(id));
 
     ecs_table_cache_fini_delete_all(world, &idr.cache, ecs_table_record_t);

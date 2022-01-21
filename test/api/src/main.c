@@ -1174,6 +1174,7 @@ void Filter_match_switch_w_case(void);
 void Filter_match_switch_w_case_2_terms(void);
 void Filter_and_term(void);
 void Filter_or_term(void);
+void Filter_iter_while_creating_components(void);
 
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
@@ -6887,6 +6888,10 @@ bake_test_case Filter_testcases[] = {
     {
         "or_term",
         Filter_or_term
+    },
+    {
+        "iter_while_creating_components",
+        Filter_iter_while_creating_components
     }
 };
 
@@ -11735,7 +11740,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        135,
+        136,
         Filter_testcases
     },
     {

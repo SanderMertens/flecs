@@ -5896,3 +5896,54 @@ void Filter_or_term() {
 
     ecs_fini(world);
 }
+
+static
+void create_ids(ecs_world_t *world, int count) {
+    for (int i = 0; i < count; i ++) {
+        ecs_entity_t e = ecs_new_id(world);
+        ecs_add_id(world, e, e);
+    }
+}
+
+void Filter_iter_while_creating_components() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    });
+    test_int(r, 0);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+
+    create_ids(world, 100);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+
+    create_ids(world, 100);
+
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}

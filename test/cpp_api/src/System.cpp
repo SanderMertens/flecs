@@ -883,8 +883,6 @@ void System_new_from_iter() {
 void System_each_w_mut_children_it() {
     flecs::world world;
 
-    world.component<Velocity>();
-
     auto parent = world.entity().set<Position>({0, 0});
     auto e1 = world.entity().set<Position>({0, 0}).child_of(parent);
     auto e2 = world.entity().set<Position>({0, 0}).child_of(parent);
