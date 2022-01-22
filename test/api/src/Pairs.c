@@ -2505,3 +2505,13 @@ void Pairs_65k_relations() {
 
     ecs_fini(world);
 }
+
+void Pairs_add_not_alive_relation() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t obj = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, 2000, obj);
+    test_assert(ecs_has_pair(world, e, 2000, obj));
+
+    ecs_fini(world);
+}

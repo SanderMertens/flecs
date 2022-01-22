@@ -39688,21 +39688,25 @@ ecs_table_t* find_or_create_table_with_id(
     } else {
         ecs_type_t type = node->type;
         ecs_entity_t r_exclusive = 0;
-        ecs_entity_t r = 0, o = 0;
+        ecs_entity_t r = 0, o = 0, re = 0;
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            r = ecs_pair_relation(world, id);
+            r = ECS_PAIR_RELATION(id);
             o = ECS_PAIR_OBJECT(id);
-            if (ecs_has_id(world, r, EcsExclusive)) {
-                r_exclusive = (uint32_t)r;
+            re = ecs_get_alive(world, r);
+            if (re && ecs_has_id(world, re, EcsExclusive)) {
+                r_exclusive = (uint32_t)re;
             }
         } else {
             r = id & ECS_COMPONENT_MASK;
+            re = ecs_get_alive(world, r);
         }
 
         ecs_vector_t *idv = ecs_vector_copy(type, ecs_id_t);
         add_id_to_ids(&idv, id, r_exclusive);
-        add_with_ids_to_ids(world, &idv, r, o);
+        if (re) {
+            add_with_ids_to_ids(world, &idv, re, o);
+        }
 
         ecs_ids_t ids = {
             .array = ecs_vector_first(idv, ecs_id_t),

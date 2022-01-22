@@ -1350,6 +1350,7 @@ void Pairs_with_relation(void);
 void Pairs_2_with_relation(void);
 void Pairs_nested_with_relation(void);
 void Pairs_65k_relations(void);
+void Pairs_add_not_alive_relation(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -7578,6 +7579,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "65k_relations",
         Pairs_65k_relations
+    },
+    {
+        "add_not_alive_relation",
+        Pairs_add_not_alive_relation
     }
 };
 
@@ -11766,7 +11771,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        85,
+        86,
         Pairs_testcases
     },
     {
