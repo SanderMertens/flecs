@@ -891,18 +891,16 @@ int ecs_log_last_error(void);
 extern "C" {
 #endif
 
-/* Public, so we can do compile-time header size calculation */
-struct ecs_vector_t {
-    int32_t count;
-    int32_t size;
-    
-#ifndef NDEBUG
-    int64_t elem_size;
+#ifdef NDEBUG
+#define ECS_VECTOR_T_SIZE\
+    (ECS_SIZEOF(int32_t) + ECS_SIZEOF(int32_t))
+#else
+#define ECS_VECTOR_T_SIZE\
+    (ECS_SIZEOF(int32_t) + ECS_SIZEOF(int32_t) + ECS_SIZEOF(int64_t))
 #endif
-};
 
 /* Compute the header size of the vector from size & alignment */
-#define ECS_VECTOR_U(size, alignment) size, ECS_CAST(int16_t, ECS_MAX(ECS_SIZEOF(ecs_vector_t), alignment))
+#define ECS_VECTOR_U(size, alignment) size, ECS_CAST(int16_t, ECS_MAX(ECS_VECTOR_T_SIZE, alignment))
 
 /* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))

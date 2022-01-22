@@ -8933,6 +8933,15 @@ error:
 }
 
 
+struct ecs_vector_t {
+    int32_t count;
+    int32_t size;
+    
+#ifndef NDEBUG
+    int64_t elem_size; /* Used in debug mode to validate size */
+#endif
+};
+
 /** Resize the vector buffer */
 static
 ecs_vector_t* resize(
