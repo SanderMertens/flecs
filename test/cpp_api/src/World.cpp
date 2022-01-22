@@ -1159,3 +1159,23 @@ void World_get_scope() {
     test_assert(s == e);
     test_str(s.name(), "scope");
 }
+
+struct Outer
+{
+    struct Inner { };
+};
+
+void World_register_namespace_after_component() {
+    flecs::world ecs;
+    auto inn = ecs.component<Outer::Inner>();
+    auto out = ecs.component<Outer>();
+
+    test_str(inn.path().c_str(), "::Outer::Inner");
+    test_str(out.path().c_str(), "::Outer");
+
+    const char *inn_sym = ecs_get_symbol(ecs, inn);
+    const char *out_sym = ecs_get_symbol(ecs, out);
+
+    test_str(inn_sym, "Outer.Inner");
+    test_str(out_sym, "Outer");
+}

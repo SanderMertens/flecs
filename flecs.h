@@ -17340,9 +17340,9 @@ struct component : untyped_component {
             ecs_set_scope(world, prev_scope);
 
             /* If entity exists, compare symbol name to ensure that the component
-            * we are trying to register under this name is the same */
+             * we are trying to register under this name is the same */
             if (ent) {
-                if (!id) {
+                if (!id && ecs_has(world, ent, EcsComponent)) {
                     const char *sym = ecs_get_symbol(world, ent);
                     ecs_assert(sym != NULL, ECS_MISSING_SYMBOL, 
                         ecs_get_name(world, ent));
