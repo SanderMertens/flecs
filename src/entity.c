@@ -3350,11 +3350,6 @@ bool ecs_is_valid(
     if (!entity) {
         return false;
     }
-
-    /* Entities should not contain data in dead zone bits */
-    if (entity & ~0xFF00FFFFFFFFFFFF) {
-        return false;
-    }
     
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -3363,7 +3358,13 @@ bool ecs_is_valid(
      * stripped away. Just test if the entity is 0 or not. */
     if (ECS_HAS_ROLE(entity, PAIR)) {
         return ECS_PAIR_RELATION(entity) != 0;
-    } else
+    }
+
+    /* Entities should not contain data in dead zone bits */
+    if (entity & ~0xFF00FFFFFFFFFFFF) {
+        return false;
+    }
+
     if (entity & ECS_ROLE) {
         return ecs_entity_t_lo(entity) != 0;
     }

@@ -2492,3 +2492,16 @@ void Pairs_nested_with_relation() {
 
     ecs_fini(world);
 }
+
+void Pairs_65k_relations() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_entity_range(world, 65536, 0);
+
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t obj = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, rel, obj);
+    test_assert(ecs_has_pair(world, e, rel, obj));
+
+    ecs_fini(world);
+}

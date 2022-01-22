@@ -1414,7 +1414,8 @@
                 "nested_with",
                 "with_relation",
                 "2_with_relation",
-                "nested_with_relation"
+                "nested_with_relation",
+                "65k_relations"
             ]
         }, {
             "id": "Rules",
