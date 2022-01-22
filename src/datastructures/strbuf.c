@@ -1,5 +1,6 @@
 #include "../private_api.h"
 #include <stdio.h>
+#include <math.h>
 
 /**
  *  stm32tpl --  STM32 C++ Template Peripheral Library
@@ -28,13 +29,33 @@ static
 int ecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
-    int precision)
+    int precision,
+    char nan_delim)
 {
     char buf[64];
 	char * ptr = buf;
 	char * p1;
 	char c;
 	int64_t intPart;
+
+    if (isnan(f)) {
+        if (nan_delim) {
+            ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendstr(out, "NaN");
+            return ecs_strbuf_appendch(out, nan_delim);
+        } else {
+            return ecs_strbuf_appendstr(out, "NaN");
+        }
+    }
+    if (isinf(f)) {
+        if (nan_delim) {
+            ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendstr(out, "Inf");
+            return ecs_strbuf_appendch(out, nan_delim);
+        } else {
+            return ecs_strbuf_appendstr(out, "Inf");
+        }
+    }
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
@@ -392,10 +413,11 @@ bool ecs_strbuf_appendch(
 
 bool ecs_strbuf_appendflt(
     ecs_strbuf_t *b,
-    double flt)
+    double flt,
+    char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_ftoa(b, flt, 2);
+    return ecs_strbuf_ftoa(b, flt, 2, nan_delim);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(

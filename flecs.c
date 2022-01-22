@@ -11077,6 +11077,7 @@ error:
 }
 
 #include <stdio.h>
+#include <math.h>
 
 /**
  *  stm32tpl --  STM32 C++ Template Peripheral Library
@@ -11105,13 +11106,33 @@ static
 int ecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
-    int precision)
+    int precision,
+    char nan_delim)
 {
     char buf[64];
 	char * ptr = buf;
 	char * p1;
 	char c;
 	int64_t intPart;
+
+    if (isnan(f)) {
+        if (nan_delim) {
+            ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendstr(out, "NaN");
+            return ecs_strbuf_appendch(out, nan_delim);
+        } else {
+            return ecs_strbuf_appendstr(out, "NaN");
+        }
+    }
+    if (isinf(f)) {
+        if (nan_delim) {
+            ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendstr(out, "Inf");
+            return ecs_strbuf_appendch(out, nan_delim);
+        } else {
+            return ecs_strbuf_appendstr(out, "Inf");
+        }
+    }
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
@@ -11469,10 +11490,11 @@ bool ecs_strbuf_appendch(
 
 bool ecs_strbuf_appendflt(
     ecs_strbuf_t *b,
-    double flt)
+    double flt,
+    char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_ftoa(b, flt, 2);
+    return ecs_strbuf_ftoa(b, flt, 2, nan_delim);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
@@ -23089,10 +23111,10 @@ int expr_ser_primitive(
         ecs_strbuf_append(str, "%lld", *(int64_t*)base);
         break;
     case EcsF32:
-        ecs_strbuf_appendflt(str, (double)*(float*)base);
+        ecs_strbuf_appendflt(str, (double)*(float*)base, 0);
         break;
     case EcsF64:
-        ecs_strbuf_appendflt(str, *(double*)base);
+        ecs_strbuf_appendflt(str, *(double*)base, 0);
         break;
     case EcsIPtr:
         ecs_strbuf_append(str, "%i", *(intptr_t*)base);
@@ -25328,7 +25350,7 @@ void json_number(
     ecs_strbuf_t *buf,
     double value)
 {
-    ecs_strbuf_appendflt(buf, value);
+    ecs_strbuf_appendflt(buf, value, '"');
 }
 
 void json_true(
@@ -25620,6 +25642,14 @@ int json_ser_type_op(
     case EcsOpPop:
         /* Should not be parsed as single op */
         ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        break;
+    case EcsOpF32:
+        ecs_strbuf_appendflt(str, 
+            (ecs_f64_t)*(ecs_f32_t*)ECS_OFFSET(ptr, op->offset), '"');
+        break;
+    case EcsOpF64:
+        ecs_strbuf_appendflt(str, 
+            *(ecs_f64_t*)ECS_OFFSET(ptr, op->offset), '"');
         break;
     case EcsOpEnum:
         if (json_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {

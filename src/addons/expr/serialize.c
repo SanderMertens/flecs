@@ -85,10 +85,10 @@ int expr_ser_primitive(
         ecs_strbuf_append(str, "%lld", *(int64_t*)base);
         break;
     case EcsF32:
-        ecs_strbuf_appendflt(str, (double)*(float*)base);
+        ecs_strbuf_appendflt(str, (double)*(float*)base, 0);
         break;
     case EcsF64:
-        ecs_strbuf_appendflt(str, *(double*)base);
+        ecs_strbuf_appendflt(str, *(double*)base, 0);
         break;
     case EcsIPtr:
         ecs_strbuf_append(str, "%i", *(intptr_t*)base);

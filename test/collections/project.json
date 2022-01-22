@@ -121,7 +121,11 @@
                 "append_511_chars",
                 "append_512_chars",
                 "append_513_chars",
-                "append_flt"
+                "append_flt",
+                "append_nan",
+                "append_inf",
+                "append_nan_delim",
+                "append_inf_delim"
             ]
         }]
     }

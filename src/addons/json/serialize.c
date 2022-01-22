@@ -207,6 +207,14 @@ int json_ser_type_op(
         /* Should not be parsed as single op */
         ecs_throw(ECS_INVALID_PARAMETER, NULL);
         break;
+    case EcsOpF32:
+        ecs_strbuf_appendflt(str, 
+            (ecs_f64_t)*(ecs_f32_t*)ECS_OFFSET(ptr, op->offset), '"');
+        break;
+    case EcsOpF64:
+        ecs_strbuf_appendflt(str, 
+            *(ecs_f64_t*)ECS_OFFSET(ptr, op->offset), '"');
+        break;
     case EcsOpEnum:
         if (json_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
             goto error;

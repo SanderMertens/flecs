@@ -115,7 +115,8 @@ bool ecs_strbuf_appendch(
 FLECS_API
 bool ecs_strbuf_appendflt(
     ecs_strbuf_t *buffer,
-    double v);
+    double v,
+    char nan_delim);
 
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */

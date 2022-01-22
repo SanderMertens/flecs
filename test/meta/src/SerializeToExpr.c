@@ -1,4 +1,5 @@
 #include <meta.h>
+#include <math.h>
 
 void SerializeToExpr_bool() {
     ecs_world_t *world = ecs_init();
@@ -404,6 +405,78 @@ void SerializeToExpr_double() {
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
     test_assert(expr != NULL);
     test_str(expr, "-10.50");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_float_nan() {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_f32_t value = NAN;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "NaN");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_float_inf() {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_f32_t value = INFINITY;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Inf");
+    ecs_os_free(expr);
+    }
+
+    {
+    ecs_f32_t value = -INFINITY;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Inf");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_double_nan() {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_f64_t value = NAN;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "NaN");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_double_inf() {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_f64_t value = INFINITY;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Inf");
+    ecs_os_free(expr);
+    }
+
+    {
+    ecs_f64_t value = -INFINITY;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Inf");
     ecs_os_free(expr);
     }
 

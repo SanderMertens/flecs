@@ -1,6 +1,7 @@
 #include <meta.h>
 #include <stdio.h>
 #include <limits.h>
+#include <math.h>
 
 void SerializeToJson_struct_bool() {
     typedef struct {
@@ -353,6 +354,116 @@ void SerializeToJson_struct_double() {
     test_assert(expr != NULL);
     test_str(expr, "{\"x\":10.50}");
     ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_float_nan() {
+    typedef struct {
+        ecs_f32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    T value = {NAN};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"NaN\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_float_inf() {
+    typedef struct {
+        ecs_f32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    {
+        T value = {INFINITY};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"Inf\"}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {-INFINITY};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"Inf\"}");
+        ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_nan() {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    T value = {NAN};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"NaN\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_inf() {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    {
+        T value = {INFINITY};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"Inf\"}");
+        ecs_os_free(expr);
+    }
+    {
+        T value = {-INFINITY};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"Inf\"}");
+        ecs_os_free(expr);
+    }
 
     ecs_fini(world);
 }

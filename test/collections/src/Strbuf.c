@@ -1,4 +1,5 @@
 #include <collections.h>
+#include <math.h>
 
 void Strbuf_setup() {
     ecs_os_set_api_defaults();
@@ -234,10 +235,72 @@ void Strbuf_append_513_chars() {
 
 void Strbuf_append_flt() {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
-    ecs_strbuf_appendflt(&b, 10.5);
+    ecs_strbuf_appendflt(&b, 10.5, 0);
 
     char *str = ecs_strbuf_get(&b);
     test_assert(str != NULL);
     test_str(str, "10.50");
     ecs_os_free(str);
+}
+
+void Strbuf_append_nan() {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    ecs_strbuf_appendflt(&b, NAN, 0);
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    test_str(str, "NaN");
+    ecs_os_free(str);
+}
+
+void Strbuf_append_inf() {
+    {
+        ecs_strbuf_t b = ECS_STRBUF_INIT;
+        ecs_strbuf_appendflt(&b, INFINITY, 0);
+
+        char *str = ecs_strbuf_get(&b);
+        test_assert(str != NULL);
+        test_str(str, "Inf");
+        ecs_os_free(str);
+    }
+    {
+        ecs_strbuf_t b = ECS_STRBUF_INIT;
+        ecs_strbuf_appendflt(&b, -INFINITY, 0);
+
+        char *str = ecs_strbuf_get(&b);
+        test_assert(str != NULL);
+        test_str(str, "Inf");
+        ecs_os_free(str);
+    }
+}
+
+void Strbuf_append_nan_delim() {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    ecs_strbuf_appendflt(&b, NAN, '"');
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    test_str(str, "\"NaN\"");
+    ecs_os_free(str);
+}
+
+void Strbuf_append_inf_delim() {
+    {
+        ecs_strbuf_t b = ECS_STRBUF_INIT;
+        ecs_strbuf_appendflt(&b, INFINITY, '"');
+
+        char *str = ecs_strbuf_get(&b);
+        test_assert(str != NULL);
+        test_str(str, "\"Inf\"");
+        ecs_os_free(str);
+    }
+    {
+        ecs_strbuf_t b = ECS_STRBUF_INIT;
+        ecs_strbuf_appendflt(&b, -INFINITY, '"');
+
+        char *str = ecs_strbuf_get(&b);
+        test_assert(str != NULL);
+        test_str(str, "\"Inf\"");
+        ecs_os_free(str);
+    }
 }

@@ -19,7 +19,7 @@ void json_number(
     ecs_strbuf_t *buf,
     double value)
 {
-    ecs_strbuf_appendflt(buf, value);
+    ecs_strbuf_appendflt(buf, value, '"');
 }
 
 void json_true(
