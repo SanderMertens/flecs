@@ -480,6 +480,9 @@ void SerializeTypeInfoToJson_enum(void);
 void SerializeTypeInfoToJson_bitmask(void);
 void SerializeTypeInfoToJson_struct(void);
 void SerializeTypeInfoToJson_nested_struct(void);
+void SerializeTypeInfoToJson_struct_array_i32_2(void);
+void SerializeTypeInfoToJson_struct_array_struct_2(void);
+void SerializeTypeInfoToJson_struct_array_type(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -2315,6 +2318,18 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "nested_struct",
         SerializeTypeInfoToJson_nested_struct
+    },
+    {
+        "struct_array_i32_2",
+        SerializeTypeInfoToJson_struct_array_i32_2
+    },
+    {
+        "struct_array_struct_2",
+        SerializeTypeInfoToJson_struct_array_struct_2
+    },
+    {
+        "struct_array_type",
+        SerializeTypeInfoToJson_struct_array_type
     }
 };
 
@@ -2469,7 +2484,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        21,
+        24,
         SerializeTypeInfoToJson_testcases
     },
     {

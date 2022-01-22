@@ -510,7 +510,10 @@
                 "enum",
                 "bitmask",
                 "struct",
-                "nested_struct"
+                "nested_struct",
+                "struct_array_i32_2",
+                "struct_array_struct_2",
+                "struct_array_type"
             ]
         }, {
             "id": "MetaUtils",

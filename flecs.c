@@ -26561,6 +26561,8 @@ int json_typeinfo_ser_array(
 {
     json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"array\"");
+
+    json_next(str);
     if (json_typeinfo_ser_type(world, elem_type, str)) {
         goto error;
     }
@@ -26600,6 +26602,8 @@ int json_typeinfo_ser_vector(
 
     json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"vector\"");
+
+    json_next(str);
     if (json_typeinfo_ser_type(world, arr->type, str)) {
         goto error;
     }
