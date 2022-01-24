@@ -68,7 +68,7 @@ An id is a 64 bit number that can encode anything that can be added to an entity
 The following sections describe components, tags and pairs in more detail.
 
 ## Component
-A component is a type of which instances can be added and removed to entities. Each component can added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. In C++ this happens automatically.
+A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. In C++ this happens automatically.
 
 ```c
 ECS_COMPONENT(world, Position);
