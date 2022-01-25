@@ -1416,7 +1416,10 @@
                 "2_with_relation",
                 "nested_with_relation",
                 "65k_relations",
-                "add_not_alive_relation"
+                "add_not_alive_relation",
+                "remove_wildcard",
+                "remove_relation_wildcard",
+                "remove_wildcard_all"
             ]
         }, {
             "id": "Rules",

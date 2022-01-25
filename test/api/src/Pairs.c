@@ -2506,12 +2506,99 @@ void Pairs_65k_relations() {
     ecs_fini(world);
 }
 
+void Pairs_remove_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, RelA, ObjA);
+    ecs_add_pair(world, e, RelA, ObjB);
+    ecs_add_pair(world, e, RelB, ObjA);
+    ecs_add_pair(world, e, RelB, ObjB);
+
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjB));
+
+    ecs_remove_pair(world, e, RelA, EcsWildcard);
+
+    test_assert( !ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( !ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjB));
+    
+    ecs_fini(world);
+}
+
+void Pairs_remove_relation_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, RelA, ObjA);
+    ecs_add_pair(world, e, RelA, ObjB);
+    ecs_add_pair(world, e, RelB, ObjA);
+    ecs_add_pair(world, e, RelB, ObjB);
+
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjB));
+
+    ecs_remove_pair(world, e, EcsWildcard, ObjA);
+    
+    test_assert( !ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( !ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjB));
+
+    ecs_fini(world);
+}
+
 void Pairs_add_not_alive_relation() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t obj = ecs_new_id(world);
     ecs_entity_t e = ecs_new_w_pair(world, 2000, obj);
     test_assert(ecs_has_pair(world, e, 2000, obj));
+
+    ecs_fini(world);
+}
+
+void Pairs_remove_wildcard_all() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, RelA, ObjA);
+    ecs_add_pair(world, e, RelA, ObjB);
+    ecs_add_pair(world, e, RelB, ObjA);
+    ecs_add_pair(world, e, RelB, ObjB);
+
+    test_assert( ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( ecs_has_pair(world, e, RelB, ObjB));
+
+    ecs_remove_pair(world, e, EcsWildcard, EcsWildcard);
+    
+    test_assert( !ecs_has_pair(world, e, RelA, ObjA));
+    test_assert( !ecs_has_pair(world, e, RelA, ObjB));
+    test_assert( !ecs_has_pair(world, e, RelB, ObjA));
+    test_assert( !ecs_has_pair(world, e, RelB, ObjB));
 
     ecs_fini(world);
 }
