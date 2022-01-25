@@ -35,6 +35,7 @@ namespace _ {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
+#ifndef ECS_TARGET_WINDOWS
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -42,6 +43,15 @@ constexpr bool enum_constant_is_valid() {
         (__PRETTY_FUNCTION__[string::length(__PRETTY_FUNCTION__) - 2] <= '9')
     );
 }
+#else
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return !(
+        (__FUNCTION__[string::length(__FUNCTION__) - 2] >= '0') &&
+        (__FUNCTION__[string::length(__FUNCTION__) - 2] <= '9')
+    );
+}
+#endif
 
 template <typename E, E C>
 struct enum_is_valid {
@@ -51,7 +61,11 @@ struct enum_is_valid {
 /** Extract name of constant from string */
 template <typename E, E C>
 static char* enum_constant_to_name() {
+#ifndef ECS_TARGET_WINDOWS
     const char *name = __PRETTY_FUNCTION__;
+#else
+    const char *name = __FUNCTION__;
+#endif
     ecs_size_t len = ecs_os_strlen(name);
     const char *last_space = strrchr(name, ' ');
     const char *last_paren = strrchr(name, ')');
@@ -93,6 +107,10 @@ struct enum_type {
     static enum_type<E>& get(flecs::world_t *world, flecs::entity_t enum_id) {
         static _::enum_type<E> instance(world, enum_id);
         return instance;
+    }
+
+    flecs::entity_t entity(E value) const {
+        return data.constants[value].id;
     }
 
 private:
@@ -156,6 +174,7 @@ private:
     }
 
     enum_type(flecs::world_t *world, flecs::entity_t id) {
+        ecs_add_id(world, id, flecs::Exclusive);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
         init< enum_max<E>::value >(world);

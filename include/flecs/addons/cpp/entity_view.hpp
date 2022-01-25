@@ -178,7 +178,7 @@ struct entity_view : public id {
      *         have the component.
      */
     template <typename T, typename A = actual_type_t<T>, 
-        if_not_t< is_actual<T>::value > = 0>
+        if_t< flecs::is_pair<T>::value > = 0>
     const A* get() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
@@ -246,6 +246,14 @@ struct entity_view : public id {
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
+
+    /** Get enum constant.
+     * 
+     * @tparam T The enum type for which to get the constant
+     * @return Constant entity if found, 0 entity if not.
+     */
+    template <typename T, if_t< is_enum<T>::value > = 0>
+    flecs::entity get() const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation

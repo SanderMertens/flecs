@@ -114,7 +114,8 @@ using base_arg_type_t = typename base_arg_type<T>::type;
 // Test if type is the same as its actual type
 template <typename T>
 struct is_actual {
-    static constexpr bool value = std::is_same<T, actual_type_t<T> >::value;
+    static constexpr bool value = 
+        std::is_same<T, actual_type_t<T> >::value && !is_enum<T>::value;
 };
 
 } // flecs
