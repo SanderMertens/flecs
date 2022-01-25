@@ -7,9 +7,8 @@
 
 #pragma once
 
-// C++ utilities
+// STL includes
 #include <type_traits>
-#include "utils/utils.hpp"
 
 // Forward declarations
 namespace flecs 
@@ -38,6 +37,9 @@ struct each_invoker;
 
 // Types imported from C API
 #include "c_types.hpp"
+
+// C++ utilities
+#include "utils/utils.hpp"
 
 // Mixin forward declarations
 #include "mixins/id/decl.hpp"

@@ -242,6 +242,12 @@
                 "get_object_for_id_not_found"
             ]
         }, {
+            "id": "Enum",
+            "testcases": [
+                "add_enum_constant",
+                "add_2_enum_constants"
+            ]
+        }, {
             "id": "Switch",
             "testcases": [
                 "add_case",

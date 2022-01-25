@@ -3057,4 +3057,6 @@ void Entity_default_ctor() {
     test_assert(e2 != 0);
     test_assert(e3 != 0);
     test_assert(e4 != 0);
+
+    test_assert(id2 == 0);
 }

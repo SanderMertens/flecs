@@ -2,6 +2,16 @@
 
 namespace flecs {
 
+template<>
+struct enum_max<type_kind_t> {
+    static constexpr type_kind_t value = EcsTypeKindLast;
+};
+
+template<>
+struct enum_max<primitive_kind_t> {
+    static constexpr primitive_kind_t value = EcsPrimitiveKindLast;
+};
+
 namespace meta {
 namespace _ {
 
