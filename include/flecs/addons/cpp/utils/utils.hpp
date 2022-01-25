@@ -89,6 +89,7 @@ using std::is_pointer;
 using std::is_reference;
 using std::is_volatile;
 using std::is_same;
+using std::is_enum;
 
 
 // Apply cv modifiers from source type to destination type
@@ -133,5 +134,6 @@ struct always_false {
 #include <stdlib.h>
 #include "array.hpp"
 #include "string.hpp"
+#include "enum.hpp"
 #include "stringstream.hpp"
 #include "function_traits.hpp"

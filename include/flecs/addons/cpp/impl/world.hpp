@@ -134,4 +134,14 @@ void world::set(const Func& func) {
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
+template <typename E>
+inline flecs::entity enum_data<E>::entity(int value) {
+    return flecs::entity(world_, impl_.constants[value].id);
+}
+
+template <typename E>
+inline flecs::entity enum_data<E>::entity(E value) {
+    return flecs::entity(world_, impl_.constants[value].id);
+}
+
 } // namespace flecs

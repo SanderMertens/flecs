@@ -377,6 +377,9 @@ struct cpp_type_impl {
             
             init(world, s_id, allow_tag);
             s_id = entity;
+
+            // If component is enum type, register constants
+            _::init_enum<T>(world, entity);
         }
 
         // By now the identifier must be valid and known with the world.

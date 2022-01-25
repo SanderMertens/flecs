@@ -131,7 +131,8 @@ typedef enum ecs_type_kind_t {
     EcsEnumType,
     EcsStructType,
     EcsArrayType,
-    EcsVectorType
+    EcsVectorType,
+    EcsTypeKindLast = EcsVectorType
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
@@ -156,7 +157,8 @@ typedef enum ecs_primitive_kind_t {
     EcsUPtr,
     EcsIPtr,
     EcsString,
-    EcsEntity
+    EcsEntity,
+    EcsPrimitiveKindLast = EcsEntity
 } ecs_primitive_kind_t;
 
 typedef struct EcsPrimitive {

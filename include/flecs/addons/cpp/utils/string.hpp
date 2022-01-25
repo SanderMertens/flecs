@@ -97,6 +97,11 @@ struct string {
         return static_cast<std::size_t>(m_length);
     }
 
+    template <size_t N>
+    static constexpr size_t length( char const (&)[N] ) {
+        return N - 1;
+    }
+
     std::size_t size() {
         return length();
     }

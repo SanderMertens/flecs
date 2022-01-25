@@ -66,6 +66,20 @@ struct entity_builder : entity_view {
         return this->add(_::cpp_type<R>::id(this->m_world), object);
     }
 
+    // /** Add pair from enum constant.
+    //  * This operation will add a pair to the entity where R is the enumeration
+    //  * type, and O is the entity representing the enum constant.
+    //  * 
+    //  * @tparam E The enumeration type.
+    //  * @param O The enumeration constant.
+    //  */
+    // template <E C, typename E, if_t< is_enum<E>::value > = 0>
+    // Self& add() {
+    //     // flecs::entity_t r = _::cpp_type<E>::id(m_world);
+    //     // flecs::entity_t o = _::cpp_constant<C>::id(m_world);
+    //     return *this;
+    // }
+
     /** Shortcut for add(IsA, obj).
      *
      * @param object the object id.

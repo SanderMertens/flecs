@@ -233,6 +233,10 @@ void Pairs_get_object_for_id_self(void);
 void Pairs_get_object_for_id_base(void);
 void Pairs_get_object_for_id_not_found(void);
 
+// Testsuite 'Enum'
+void Enum_add_enum_constant(void);
+void Enum_add_2_enum_constants(void);
+
 // Testsuite 'Switch'
 void Switch_add_case(void);
 void Switch_get_case(void);
@@ -1686,6 +1690,17 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_object_for_id_not_found",
         Pairs_get_object_for_id_not_found
+    }
+};
+
+bake_test_case Enum_testcases[] = {
+    {
+        "add_enum_constant",
+        Enum_add_enum_constant
+    },
+    {
+        "add_2_enum_constants",
+        Enum_add_2_enum_constants
     }
 };
 
@@ -3850,6 +3865,13 @@ static bake_test_suite suites[] = {
         Pairs_testcases
     },
     {
+        "Enum",
+        NULL,
+        NULL,
+        2,
+        Enum_testcases
+    },
+    {
         "Switch",
         NULL,
         NULL,
@@ -4013,5 +4035,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 25);
+    return bake_test_run("cpp_api", argc, argv, suites, 26);
 }

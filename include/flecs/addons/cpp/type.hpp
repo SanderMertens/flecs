@@ -134,6 +134,10 @@ struct type_base {
         return flecs::id(const_cast<flecs::world_t*>(w), vector().get(index));
     }
 
+    size_t count() {
+        return vector().count();
+    }
+
     /* Implicit conversion to type_t */
     operator type_t() const { return ecs_table_get_type(m_table); }
 

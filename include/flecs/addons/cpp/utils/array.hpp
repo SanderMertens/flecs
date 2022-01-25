@@ -46,6 +46,10 @@ struct array<T, Size, enable_if_t<Size != 0> > final {
         }
     }
 
+    T& operator[](int index) {
+        return m_array[index];
+    }
+
     T& operator[](size_t index) {
         return m_array[index];
     }
