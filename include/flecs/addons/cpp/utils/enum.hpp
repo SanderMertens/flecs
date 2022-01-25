@@ -35,23 +35,13 @@ namespace _ {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
-#ifndef ECS_TARGET_WINDOWS
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
-        (__PRETTY_FUNCTION__[string::length(__PRETTY_FUNCTION__) - 2] >= '0') &&
-        (__PRETTY_FUNCTION__[string::length(__PRETTY_FUNCTION__) - 2] <= '9')
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] >= '0') &&
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] <= '9')
     );
 }
-#else
-template <typename E, E C>
-constexpr bool enum_constant_is_valid() {
-    return !(
-        (__FUNCTION__[string::length(__FUNCTION__) - 2] >= '0') &&
-        (__FUNCTION__[string::length(__FUNCTION__) - 2] <= '9')
-    );
-}
-#endif
 
 template <typename E, E C>
 struct enum_is_valid {
@@ -60,24 +50,11 @@ struct enum_is_valid {
 
 /** Extract name of constant from string */
 template <typename E, E C>
-static char* enum_constant_to_name() {
-#ifndef ECS_TARGET_WINDOWS
-    const char *name = __PRETTY_FUNCTION__;
-#else
-    const char *name = __FUNCTION__;
-#endif
-    ecs_size_t len = ecs_os_strlen(name);
-    const char *last_space = strrchr(name, ' ');
-    const char *last_paren = strrchr(name, ')');
-    const char *last_colon = strrchr(name, ':');
-    const char *start = (last_space > last_paren ? last_space : last_paren);
-    start = start > last_colon ? start : last_colon;
-    start ++;
-    ecs_size_t constant_len = static_cast<ecs_size_t>(len - (start - name) - 1);
-    char *result = ecs_os_malloc_n(char, constant_len + 1);
-    ecs_os_memcpy_n(result, start, char, constant_len);
-    result[constant_len] = '\0';
-    return result;
+static const char* enum_constant_to_name() {
+    static const size_t len = ECS_FUNC_TYPE_LEN("enum_constant_to_name", ECS_FUNC_NAME);
+    static char result[len + 1] = {};
+    return ecs_cpp_get_constant_name(
+        result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME));
 }
 
 /** Enumeration constant data */
@@ -129,40 +106,21 @@ private:
         return static_cast<int>(Value != from_int<0>());
     }
 
-    static void init_constant_entity(
-        flecs::world_t *world,
-        flecs::entity_t parent,
-        const char *name,
-        int v)
-    {
-        flecs::entity_t prev = ecs_set_scope(world, parent);
-        ecs_entity_desc_t desc = {};
-        desc.entity = data.constants[v].id;
-        desc.name = name;
-        flecs::entity_t id = ecs_entity_init(world, &desc);
-        ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
-        data.constants[v].id = id;
-        ecs_set_scope(world, prev);
-    }
-
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
     static void init_constant(flecs::world_t*) { }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
     static void init_constant(flecs::world_t *world) {
         int v = to_int<Value>();
-        char *name = enum_constant_to_name<E, Value>();
+        const char *name = enum_constant_to_name<E, Value>();
         data.constants[v].next = data.min;
-
-        if (v < data.min) {
-            data.min = v;
-        }
-        if (v > data.max) {
+        data.min = v;
+        if (!data.max) {
             data.max = v;
         }
 
-        init_constant_entity(world, data.id, name, v);
-        ecs_os_free(name);
+        data.constants[v].id = ecs_cpp_enum_constant_register(
+            world, data.id, data.constants[v].id, name);
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
