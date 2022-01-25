@@ -1,7 +1,5 @@
 #include <hello_world.h>
-#include <iostream>
-
-#include <hello_world.h>
+#include <stdio.h>
 
 // Component types
 struct Position {
@@ -36,7 +34,7 @@ int main(int, char *[]) {
         .add<Eats, Apples>();
 
     // Show us what you got
-    std::cout << Bob.name() << "'s got: [" << Bob.type().str() << "]" << std::endl;
+    printf("%s's got: [%s]\n", Bob.name().c_str(), Bob.type().str().c_str());
 
     // Run systems twice. Usually this function is called once per frame
     ecs.progress();

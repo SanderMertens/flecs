@@ -4143,6 +4143,10 @@ void* ecs_record_get_column(
 
 #include "flecs/addons/flecs_c.h"
 
+#ifdef FLECS_CPP
+#include "flecs/addons/flecs_cpp.h"
+#endif
+
 #ifdef __cplusplus
 }
 

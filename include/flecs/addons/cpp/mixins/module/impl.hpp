@@ -4,7 +4,7 @@ namespace flecs {
 
 template <typename T>
 ecs_entity_t do_import(world& world, const char *symbol) {
-    ecs_trace("import %s", _::name_helper<T>::name());
+    ecs_trace("import %s", _::type_name<T>());
     ecs_log_push();
 
     ecs_entity_t scope = ecs_get_scope(world);
@@ -31,7 +31,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    char *symbol = _::symbol<T>();
+    const char *symbol = _::symbol_name<T>();
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
     
@@ -51,8 +51,6 @@ flecs::entity import(world& world) {
     } else if (!m) {
         m = do_import<T>(world, symbol);
     }
-
-    ecs_os_free(symbol);
 
     return flecs::entity(world, m);
 }
