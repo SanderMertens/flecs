@@ -397,18 +397,28 @@ void add_id_to_ids(
 static
 void remove_id_from_ids(
     ecs_type_t type,
-    ecs_entity_t remove,
+    ecs_id_t remove,
     ecs_ids_t *out)
 {
     int32_t count = ecs_vector_count(type);
     ecs_id_t *array = ecs_vector_first(type, ecs_id_t);
-
     int32_t i, el = 0;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t e = array[i];
-        if (e != remove) {
-            out->array[el ++] = e;
-            ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
+
+    if (ecs_id_is_wildcard(remove)) {
+        for (i = 0; i < count; i ++) {
+            ecs_id_t id = array[i];
+            if (!ecs_id_match(id, remove)) {
+                out->array[el ++] = id;
+                ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
+            }
+        }
+    } else {
+        for (i = 0; i < count; i ++) {
+            ecs_id_t id = array[i];
+            if (id != remove) {
+                out->array[el ++] = id;
+                ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
+            }
         }
     }
 

@@ -1351,6 +1351,9 @@ void Pairs_2_with_relation(void);
 void Pairs_nested_with_relation(void);
 void Pairs_65k_relations(void);
 void Pairs_add_not_alive_relation(void);
+void Pairs_remove_wildcard(void);
+void Pairs_remove_relation_wildcard(void);
+void Pairs_remove_wildcard_all(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -7583,6 +7586,18 @@ bake_test_case Pairs_testcases[] = {
     {
         "add_not_alive_relation",
         Pairs_add_not_alive_relation
+    },
+    {
+        "remove_wildcard",
+        Pairs_remove_wildcard
+    },
+    {
+        "remove_relation_wildcard",
+        Pairs_remove_relation_wildcard
+    },
+    {
+        "remove_wildcard_all",
+        Pairs_remove_wildcard_all
     }
 };
 
@@ -11771,7 +11786,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        86,
+        89,
         Pairs_testcases
     },
     {
