@@ -66,20 +66,6 @@ struct entity_builder : entity_view {
         return this->add(_::cpp_type<R>::id(this->m_world), object);
     }
 
-    // /** Add pair from enum constant.
-    //  * This operation will add a pair to the entity where R is the enumeration
-    //  * type, and O is the entity representing the enum constant.
-    //  * 
-    //  * @tparam E The enumeration type.
-    //  * @param O The enumeration constant.
-    //  */
-    // template <E C, typename E, if_t< is_enum<E>::value > = 0>
-    // Self& add() {
-    //     // flecs::entity_t r = _::cpp_type<E>::id(m_world);
-    //     // flecs::entity_t o = _::cpp_constant<C>::id(m_world);
-    //     return *this;
-    // }
-
     /** Shortcut for add(IsA, obj).
      *
      * @param object the object id.
@@ -132,7 +118,7 @@ struct entity_builder : entity_view {
      *
      * @tparam T the type of the component to remove.
      */
-    template <typename T>
+    template <typename T, if_not_t< is_enum<T>::value > = 0>
     Self& remove() {
         ecs_remove_id(this->m_world, this->m_id, _::cpp_type<T>::id(this->m_world));
         return to_base();
@@ -317,6 +303,34 @@ struct entity_builder : entity_view {
     template<typename T>
     Self& remove_case() {
         return this->remove_case(_::cpp_type<T>::id());
+    }
+
+    /** Add pair for enum constant.
+     * This operation will add a pair to the entity where R is the enumeration
+     * type, and O is the entity representing the enum constant.
+     * 
+     * The operation may be used with regular (C style) enumerations as well as
+     * enum classes.
+     * 
+     * @param value The enumeration value.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& add(E value) {
+        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
+        const auto& et = _::enum_type<E>::get(this->m_world, r);
+        flecs::entity_t o = et.entity(value);
+        return this->add(r, o);
+    }
+
+    /** Remove pair for enum.
+     * This operation will remove any (Enum, *) pair from the entity.
+     * 
+     * @tparam E The enumeration type.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& remove() {
+        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
+        return this->remove(r, flecs::Wildcard);
     }
 
     /** Enable an entity.

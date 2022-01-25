@@ -42,6 +42,12 @@ inline flecs::entity entity_view::get_case() const {
     return get_case(_::cpp_type<T>::id(m_world));
 }
 
+template <typename T, if_t< is_enum<T>::value > >
+flecs::entity entity_view::get() const {
+    auto r = _::cpp_type<T>::id(m_world);
+    return flecs::entity(m_world, ecs_get_object(m_world, m_id, r, 0));
+}
+
 inline flecs::entity entity_view::get_object(
     flecs::entity_t relation, 
     int32_t index) const 

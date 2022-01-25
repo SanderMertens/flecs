@@ -11502,11 +11502,23 @@ struct string_view : string {
 #include <string.h>
 #include <stdio.h>
 
-#define FLECS_ENUM_MAX(T) static_cast<T>(128)
+#define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
 namespace flecs {
 
+/** Int to enum */
+namespace _ {
+template <typename E, int Value>
+struct to_constant {
+    static constexpr E value = static_cast<E>(Value);
+};
+
+template <typename E, int Value>
+constexpr E to_constant<E, Value>::value;
+}
+
+/** Convenience type with enum reflection data */
 template <typename E>
 struct enum_data;
 
@@ -11524,6 +11536,7 @@ namespace _ {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
+#ifndef ECS_TARGET_WINDOWS
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -11531,6 +11544,15 @@ constexpr bool enum_constant_is_valid() {
         (__PRETTY_FUNCTION__[string::length(__PRETTY_FUNCTION__) - 2] <= '9')
     );
 }
+#else
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return !(
+        (__FUNCTION__[string::length(__FUNCTION__) - 2] >= '0') &&
+        (__FUNCTION__[string::length(__FUNCTION__) - 2] <= '9')
+    );
+}
+#endif
 
 template <typename E, E C>
 struct enum_is_valid {
@@ -11540,7 +11562,11 @@ struct enum_is_valid {
 /** Extract name of constant from string */
 template <typename E, E C>
 static char* enum_constant_to_name() {
+#ifndef ECS_TARGET_WINDOWS
     const char *name = __PRETTY_FUNCTION__;
+#else
+    const char *name = __FUNCTION__;
+#endif
     ecs_size_t len = ecs_os_strlen(name);
     const char *last_space = strrchr(name, ' ');
     const char *last_paren = strrchr(name, ')');
@@ -11554,15 +11580,6 @@ static char* enum_constant_to_name() {
     result[constant_len] = '\0';
     return result;
 }
-
-/** Int to enum */
-template <typename E, int Value>
-struct to_constant {
-    static constexpr E value = static_cast<E>(Value);
-};
-
-template <typename E, int Value>
-constexpr E to_constant<E, Value>::value;
 
 /** Enumeration constant data */
 struct enum_constant_data {
@@ -11591,6 +11608,10 @@ struct enum_type {
     static enum_type<E>& get(flecs::world_t *world, flecs::entity_t enum_id) {
         static _::enum_type<E> instance(world, enum_id);
         return instance;
+    }
+
+    flecs::entity_t entity(E value) const {
+        return data.constants[value].id;
     }
 
 private:
@@ -11654,6 +11675,7 @@ private:
     }
 
     enum_type(flecs::world_t *world, flecs::entity_t id) {
+        ecs_add_id(world, id, flecs::Exclusive);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
         init< enum_max<E>::value >(world);
@@ -12619,7 +12641,8 @@ using base_arg_type_t = typename base_arg_type<T>::type;
 // Test if type is the same as its actual type
 template <typename T>
 struct is_actual {
-    static constexpr bool value = std::is_same<T, actual_type_t<T> >::value;
+    static constexpr bool value = 
+        std::is_same<T, actual_type_t<T> >::value && !is_enum<T>::value;
 };
 
 } // flecs
@@ -14885,7 +14908,7 @@ struct entity_view : public id {
      *         have the component.
      */
     template <typename T, typename A = actual_type_t<T>, 
-        if_not_t< is_actual<T>::value > = 0>
+        if_t< flecs::is_pair<T>::value > = 0>
     const A* get() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
@@ -14953,6 +14976,14 @@ struct entity_view : public id {
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
+
+    /** Get enum constant.
+     * 
+     * @tparam T The enum type for which to get the constant
+     * @return Constant entity if found, 0 entity if not.
+     */
+    template <typename T, if_t< is_enum<T>::value > = 0>
+    flecs::entity get() const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
@@ -15335,20 +15366,6 @@ struct entity_builder : entity_view {
         return this->add(_::cpp_type<R>::id(this->m_world), object);
     }
 
-    // /** Add pair from enum constant.
-    //  * This operation will add a pair to the entity where R is the enumeration
-    //  * type, and O is the entity representing the enum constant.
-    //  * 
-    //  * @tparam E The enumeration type.
-    //  * @param O The enumeration constant.
-    //  */
-    // template <E C, typename E, if_t< is_enum<E>::value > = 0>
-    // Self& add() {
-    //     // flecs::entity_t r = _::cpp_type<E>::id(m_world);
-    //     // flecs::entity_t o = _::cpp_constant<C>::id(m_world);
-    //     return *this;
-    // }
-
     /** Shortcut for add(IsA, obj).
      *
      * @param object the object id.
@@ -15401,7 +15418,7 @@ struct entity_builder : entity_view {
      *
      * @tparam T the type of the component to remove.
      */
-    template <typename T>
+    template <typename T, if_not_t< is_enum<T>::value > = 0>
     Self& remove() {
         ecs_remove_id(this->m_world, this->m_id, _::cpp_type<T>::id(this->m_world));
         return to_base();
@@ -15586,6 +15603,34 @@ struct entity_builder : entity_view {
     template<typename T>
     Self& remove_case() {
         return this->remove_case(_::cpp_type<T>::id());
+    }
+
+    /** Add pair for enum constant.
+     * This operation will add a pair to the entity where R is the enumeration
+     * type, and O is the entity representing the enum constant.
+     * 
+     * The operation may be used with regular (C style) enumerations as well as
+     * enum classes.
+     * 
+     * @param value The enumeration value.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& add(E value) {
+        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
+        const auto& et = _::enum_type<E>::get(this->m_world, r);
+        flecs::entity_t o = et.entity(value);
+        return this->add(r, o);
+    }
+
+    /** Remove pair for enum.
+     * This operation will remove any (Enum, *) pair from the entity.
+     * 
+     * @tparam E The enumeration type.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& remove() {
+        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
+        return this->remove(r, flecs::Wildcard);
     }
 
     /** Enable an entity.
@@ -17969,6 +18014,12 @@ inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
 template <typename T>
 inline flecs::entity entity_view::get_case() const {
     return get_case(_::cpp_type<T>::id(m_world));
+}
+
+template <typename T, if_t< is_enum<T>::value > >
+flecs::entity entity_view::get() const {
+    auto r = _::cpp_type<T>::id(m_world);
+    return flecs::entity(m_world, ecs_get_object(m_world, m_id, r, 0));
 }
 
 inline flecs::entity entity_view::get_object(
