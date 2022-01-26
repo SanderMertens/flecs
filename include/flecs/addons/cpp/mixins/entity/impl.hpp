@@ -43,9 +43,20 @@ inline flecs::entity entity_view::get_case() const {
 }
 
 template <typename T, if_t< is_enum<T>::value > >
-flecs::entity entity_view::get() const {
-    auto r = _::cpp_type<T>::id(m_world);
-    return flecs::entity(m_world, ecs_get_object(m_world, m_id, r, 0));
+const T* entity_view::get() const {
+    entity_t r = _::cpp_type<T>::id(m_world);
+    entity_t c = ecs_get_object(m_world, m_id, r, 0);
+
+    if (c) {
+        // Get constant value from constant entity
+        const T* v = static_cast<const T*>(ecs_get_id(m_world, c, r));
+        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
+            "missing enum constant value");
+        return v;
+    } else {
+        // If there is no matching pair for (r, *), try just r
+        return static_cast<const T*>(ecs_get_id(m_world, m_id, r));
+    }
 }
 
 inline flecs::entity entity_view::get_object(

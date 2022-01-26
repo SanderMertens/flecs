@@ -329,7 +329,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t id,
-    const char *name)
+    const char *name,
+    int value)
 {
     ecs_entity_t prev = ecs_set_scope(world, parent);
     id = ecs_entity_init(world, &(ecs_entity_desc_t) {
@@ -338,6 +339,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     });
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
     ecs_set_scope(world, prev);
+
+    ecs_set_id(world, id, parent, sizeof(int), &value);
+
     return id;
 }
 
