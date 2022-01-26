@@ -1,9 +1,10 @@
 /**
- * @file cpp.h
+ * @file flecs_cpp.h
  * @brief C++ utility functions
  *
  * This header contains utility functions that are accessible from both C and
- * C++ code.
+ * C++ code. These functions are not part of the public API and are not meant
+ * to be used directly by applications.
  */
 
 #ifdef FLECS_CPP
@@ -16,7 +17,7 @@ extern "C" {
 #endif
 
 #if defined(__clang__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 1u)
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
@@ -24,7 +25,7 @@ extern "C" {
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 1u)
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">") - 1u)
 #define ECS_FUNC_NAME __FUNCTION__
 #else
@@ -91,7 +92,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t id,
-    const char *name);
+    const char *name,
+    int value);
 
 #ifdef __cplusplus
 }

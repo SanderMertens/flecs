@@ -253,7 +253,7 @@ struct entity_view : public id {
      * @return Constant entity if found, 0 entity if not.
      */
     template <typename T, if_t< is_enum<T>::value > = 0>
-    flecs::entity get() const;
+    const T* get() const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
@@ -341,7 +341,30 @@ struct entity_view : public id {
      */
     template <typename T>
     bool has() const {
-        return ecs_has_id(m_world, m_id, _::cpp_type<T>::id(m_world));
+        flecs::id_t cid = _::cpp_type<T>::id(m_world);
+        bool result = ecs_has_id(m_world, m_id, cid);
+        if (result) {
+            return result;
+        }
+
+        if (is_enum<T>::value) {
+            return ecs_has_pair(m_world, m_id, cid, flecs::Wildcard);
+        }
+
+        return false;
+    }
+
+    /** Check if entity has the provided enum constant.
+     *
+     * @tparam E The enum type (can be deduced).
+     * @param value The enum constant to check. 
+     * @return True if the entity has the provided constant, false otherwise.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    bool has(E value) const {
+        auto r = _::cpp_type<E>::id(m_world);
+        auto o = _::enum_type<E>::get(m_world).entity(value);
+        return ecs_has_pair(m_world, m_id, r, o);
     }
 
     /** Check if entity has the provided pair.

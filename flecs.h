@@ -10965,11 +10965,12 @@ ecs_entity_t ecs_module_init(
 
 #ifdef FLECS_CPP
 /**
- * @file cpp.h
+ * @file flecs_cpp.h
  * @brief C++ utility functions
  *
  * This header contains utility functions that are accessible from both C and
- * C++ code.
+ * C++ code. These functions are not part of the public API and are not meant
+ * to be used directly by applications.
  */
 
 #ifdef FLECS_CPP
@@ -10982,7 +10983,7 @@ extern "C" {
 #endif
 
 #if defined(__clang__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 1u)
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
@@ -10990,7 +10991,7 @@ extern "C" {
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 1u)
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">") - 1u)
 #define ECS_FUNC_NAME __FUNCTION__
 #else
@@ -11057,7 +11058,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t id,
-    const char *name);
+    const char *name,
+    int value);
 
 #ifdef __cplusplus
 }
@@ -11632,9 +11634,18 @@ template <typename E>
 static enum_data<E> enum_type(flecs::world_t *world);
 
 template <typename E>
-struct enum_max {
+struct enum_last {
     static constexpr E value = FLECS_ENUM_MAX(E);
 };
+
+/* Utility macro to override enum_last trait */
+#define FLECS_ENUM_LAST(T, Last)\
+    namespace flecs {\
+    template<>\
+    struct enum_last<T> {\
+        static constexpr T value = Last;\
+    };\
+    }
 
 namespace _ {
 
@@ -11727,7 +11738,7 @@ private:
         }
 
         data.constants[v].id = ecs_cpp_enum_constant_register(
-            world, data.id, data.constants[v].id, name);
+            world, data.id, data.constants[v].id, name, v);
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
@@ -11740,9 +11751,10 @@ private:
 
     enum_type(flecs::world_t *world, flecs::entity_t id) {
         ecs_add_id(world, id, flecs::Exclusive);
+        ecs_add_id(world, id, flecs::Tag);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
-        init< enum_max<E>::value >(world);
+        init< enum_last<E>::value >(world);
     }
 };
 
@@ -11774,12 +11786,16 @@ struct enum_data {
         return impl_.min;
     }
 
+    int last() {
+        return impl_.max;
+    }
+
     int next(int cur) {
         return impl_.constants[cur].next;
     }
 
+    flecs::entity entity();
     flecs::entity entity(int value);
-
     flecs::entity entity(E value);
 
     flecs::world_t *world_;
@@ -15047,7 +15063,7 @@ struct entity_view : public id {
      * @return Constant entity if found, 0 entity if not.
      */
     template <typename T, if_t< is_enum<T>::value > = 0>
-    flecs::entity get() const;
+    const T* get() const;
 
     /** Get the object part from a pair.
      * This operation gets the value for a pair from the entity. The relation
@@ -15135,7 +15151,30 @@ struct entity_view : public id {
      */
     template <typename T>
     bool has() const {
-        return ecs_has_id(m_world, m_id, _::cpp_type<T>::id(m_world));
+        flecs::id_t cid = _::cpp_type<T>::id(m_world);
+        bool result = ecs_has_id(m_world, m_id, cid);
+        if (result) {
+            return result;
+        }
+
+        if (is_enum<T>::value) {
+            return ecs_has_pair(m_world, m_id, cid, flecs::Wildcard);
+        }
+
+        return false;
+    }
+
+    /** Check if entity has the provided enum constant.
+     *
+     * @tparam E The enum type (can be deduced).
+     * @param value The enum constant to check. 
+     * @return True if the entity has the provided constant, false otherwise.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    bool has(E value) const {
+        auto r = _::cpp_type<E>::id(m_world);
+        auto o = _::enum_type<E>::get(m_world).entity(value);
+        return ecs_has_pair(m_world, m_id, r, o);
     }
 
     /** Check if entity has the provided pair.
@@ -17280,7 +17319,6 @@ struct cpp_type_impl {
 private:
     static entity_t s_id;
     static flecs::string s_name;
-    static flecs::string s_symbol;
     static size_t s_size;
     static size_t s_alignment;
     static bool s_allow_tag;
@@ -17766,9 +17804,20 @@ inline flecs::entity entity_view::get_case() const {
 }
 
 template <typename T, if_t< is_enum<T>::value > >
-flecs::entity entity_view::get() const {
-    auto r = _::cpp_type<T>::id(m_world);
-    return flecs::entity(m_world, ecs_get_object(m_world, m_id, r, 0));
+const T* entity_view::get() const {
+    entity_t r = _::cpp_type<T>::id(m_world);
+    entity_t c = ecs_get_object(m_world, m_id, r, 0);
+
+    if (c) {
+        // Get constant value from constant entity
+        const T* v = static_cast<const T*>(ecs_get_id(m_world, c, r));
+        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
+            "missing enum constant value");
+        return v;
+    } else {
+        // If there is no matching pair for (r, *), try just r
+        return static_cast<const T*>(ecs_get_id(m_world, m_id, r));
+    }
 }
 
 inline flecs::entity entity_view::get_object(
@@ -20395,17 +20444,10 @@ inline rule_base::operator rule<>() const {
 #ifdef FLECS_META
 #pragma once
 
+FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
+FLECS_ENUM_LAST(flecs::primitive_kind_t, EcsPrimitiveKindLast)
+
 namespace flecs {
-
-template<>
-struct enum_max<type_kind_t> {
-    static constexpr type_kind_t value = EcsTypeKindLast;
-};
-
-template<>
-struct enum_max<primitive_kind_t> {
-    static constexpr primitive_kind_t value = EcsPrimitiveKindLast;
-};
 
 namespace meta {
 namespace _ {
@@ -20679,13 +20721,18 @@ void world::set(const Func& func) {
 }
 
 template <typename E>
+inline flecs::entity enum_data<E>::entity() {
+    return flecs::entity(world_, impl_.id);
+}
+
+template <typename E>
 inline flecs::entity enum_data<E>::entity(int value) {
     return flecs::entity(world_, impl_.constants[value].id);
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) {
-    return flecs::entity(world_, impl_.constants[value].id);
+    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
 }
 
 } // namespace flecs

@@ -135,13 +135,18 @@ void world::set(const Func& func) {
 }
 
 template <typename E>
+inline flecs::entity enum_data<E>::entity() {
+    return flecs::entity(world_, impl_.id);
+}
+
+template <typename E>
 inline flecs::entity enum_data<E>::entity(int value) {
     return flecs::entity(world_, impl_.constants[value].id);
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) {
-    return flecs::entity(world_, impl_.constants[value].id);
+    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
 }
 
 } // namespace flecs

@@ -274,7 +274,6 @@ struct cpp_type_impl {
 private:
     static entity_t s_id;
     static flecs::string s_name;
-    static flecs::string s_symbol;
     static size_t s_size;
     static size_t s_alignment;
     static bool s_allow_tag;

@@ -25,9 +25,18 @@ template <typename E>
 static enum_data<E> enum_type(flecs::world_t *world);
 
 template <typename E>
-struct enum_max {
+struct enum_last {
     static constexpr E value = FLECS_ENUM_MAX(E);
 };
+
+/* Utility macro to override enum_last trait */
+#define FLECS_ENUM_LAST(T, Last)\
+    namespace flecs {\
+    template<>\
+    struct enum_last<T> {\
+        static constexpr T value = Last;\
+    };\
+    }
 
 namespace _ {
 
@@ -120,7 +129,7 @@ private:
         }
 
         data.constants[v].id = ecs_cpp_enum_constant_register(
-            world, data.id, data.constants[v].id, name);
+            world, data.id, data.constants[v].id, name, v);
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
@@ -133,9 +142,10 @@ private:
 
     enum_type(flecs::world_t *world, flecs::entity_t id) {
         ecs_add_id(world, id, flecs::Exclusive);
+        ecs_add_id(world, id, flecs::Tag);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
-        init< enum_max<E>::value >(world);
+        init< enum_last<E>::value >(world);
     }
 };
 
@@ -167,12 +177,16 @@ struct enum_data {
         return impl_.min;
     }
 
+    int last() {
+        return impl_.max;
+    }
+
     int next(int cur) {
         return impl_.constants[cur].next;
     }
 
+    flecs::entity entity();
     flecs::entity entity(int value);
-
     flecs::entity entity(E value);
 
     flecs::world_t *world_;
