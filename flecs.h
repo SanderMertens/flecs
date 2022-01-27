@@ -10991,9 +10991,9 @@ extern "C" {
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 3u)
-#define ECS_FUNC_NAME_BACK (sizeof(">") - 1u)
-#define ECS_FUNC_NAME __FUNCTION__
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *__cdecl flecs::_::"#name"<") - 3u)
+#define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
+#define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif
@@ -11656,8 +11656,8 @@ namespace _ {
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] >= '0') &&
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] <= '9')
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] >= '0') &&
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] <= '9')
     );
 }
 

@@ -47,8 +47,8 @@ namespace _ {
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] >= '0') &&
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - 2] <= '9')
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] >= '0') &&
+        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] <= '9')
     );
 }
 
