@@ -291,3 +291,78 @@ void Event_evt_implicit_typed_ctx() {
 
     test_int(count, 1);
 }
+
+void Event_evt_1_id_pair_rel_id_obj_id_entity() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
+    auto e1 = ecs.entity().add(rel, obj);
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id(rel, obj)
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.event(evt)
+        .id(rel, obj)
+        .entity(e1)
+        .emit();
+
+    test_int(count, 1);
+}
+
+void Event_evt_1_id_pair_rel_obj_id_entity() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto obj = ecs.entity();
+    auto e1 = ecs.entity().add<IdA>(obj);
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id<IdA>(obj)
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.event(evt)
+        .id<IdA>(obj)
+        .entity(e1)
+        .emit();
+
+    test_int(count, 1);
+}
+
+void Event_evt_1_id_pair_rel_obj_entity() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto e1 = ecs.entity().add<IdA, IdB>();
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id<IdA, IdB>()
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.event(evt)
+        .id<IdA, IdB>()
+        .entity(e1)
+        .emit();
+
+    test_int(count, 1);
+}

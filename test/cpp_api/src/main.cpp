@@ -350,6 +350,9 @@ void Event_evt_2_components(void);
 void Event_evt_void_ctx(void);
 void Event_evt_typed_ctx(void);
 void Event_evt_implicit_typed_ctx(void);
+void Event_evt_1_id_pair_rel_id_obj_id_entity(void);
+void Event_evt_1_id_pair_rel_obj_id_entity(void);
+void Event_evt_1_id_pair_rel_obj_entity(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add(void);
@@ -2142,6 +2145,18 @@ bake_test_case Event_testcases[] = {
     {
         "evt_implicit_typed_ctx",
         Event_evt_implicit_typed_ctx
+    },
+    {
+        "evt_1_id_pair_rel_id_obj_id_entity",
+        Event_evt_1_id_pair_rel_id_obj_id_entity
+    },
+    {
+        "evt_1_id_pair_rel_obj_id_entity",
+        Event_evt_1_id_pair_rel_obj_id_entity
+    },
+    {
+        "evt_1_id_pair_rel_obj_entity",
+        Event_evt_1_id_pair_rel_obj_entity
     }
 };
 
@@ -3953,7 +3968,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        10,
+        13,
         Event_testcases
     },
     {
@@ -4085,5 +4100,6 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
+    ut_init(argv[0]);
     return bake_test_run("cpp_api", argc, argv, suites, 26);
 }

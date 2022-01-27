@@ -369,7 +369,10 @@
                 "evt_2_components",
                 "evt_void_ctx",
                 "evt_typed_ctx",
-                "evt_implicit_typed_ctx"
+                "evt_implicit_typed_ctx",
+                "evt_1_id_pair_rel_id_obj_id_entity",
+                "evt_1_id_pair_rel_obj_id_entity",
+                "evt_1_id_pair_rel_obj_entity"
             ]
         }, {
             "id": "Trigger",

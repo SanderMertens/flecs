@@ -19,6 +19,9 @@
 
 /* Headers of public dependencies */
 #include <flecs.h>
+#ifdef __BAKE__
+#include <bake_util.h>
+#endif
 #include <bake_test.h>
 
 #endif
