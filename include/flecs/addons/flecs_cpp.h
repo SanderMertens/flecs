@@ -25,9 +25,9 @@ extern "C" {
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("flecs::_::"#name"<") - 3u)
-#define ECS_FUNC_NAME_BACK (sizeof(">") - 1u)
-#define ECS_FUNC_NAME __FUNCTION__
+#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *__cdecl flecs::_::"#name"<") - 3u)
+#define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
+#define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif

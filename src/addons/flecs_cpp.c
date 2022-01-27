@@ -8,35 +8,41 @@
 /* Convert compiler-specific typenames extracted from __PRETTY_FUNCTION__ to
  * a uniform identifier */
 
+#define ECS_CONST_PREFIX "const "
+#define ECS_STRUCT_PREFIX "struct "
+#define ECS_CLASS_PREFIX "class "
+#define ECS_ENUM_PREFIX "enum "
+
+#define ECS_CONST_LEN (-1 + (ecs_size_t)sizeof(ECS_CONST_PREFIX))
+#define ECS_STRUCT_LEN (-1 + (ecs_size_t)sizeof(ECS_STRUCT_PREFIX))
+#define ECS_CLASS_LEN (-1 + (ecs_size_t)sizeof(ECS_CLASS_PREFIX))
+#define ECS_ENUM_LEN (-1 + (ecs_size_t)sizeof(ECS_ENUM_PREFIX))
+
+static
+ecs_size_t ecs_cpp_strip_prefix(
+    char *typeName,
+    ecs_size_t len,
+    const char *prefix,
+    ecs_size_t prefix_len)
+{
+    if ((len > prefix_len) && !ecs_os_strncmp(typeName, prefix, prefix_len)) {
+        ecs_os_memmove(typeName, typeName + prefix_len, len - prefix_len);
+        typeName[len - prefix_len] = '\0';
+        len -= prefix_len;
+    }
+    return len;
+}
+
 static 
 void ecs_cpp_trim_type_name(
     char *typeName) 
 {
     ecs_size_t len = ecs_os_strlen(typeName);
-    
-    /* Remove 'const' */
-    ecs_size_t const_len = ecs_os_strlen("const ");
-    if ((len > const_len) && !ecs_os_strncmp(typeName, "const ", const_len)) {
-        ecs_os_memmove(typeName, typeName + const_len, len - const_len);
-        typeName[len - const_len] = '\0';
-        len -= const_len;
-    }
 
-    /* Remove 'struct' */
-    ecs_size_t struct_len = ecs_os_strlen("struct ");
-    if ((len > struct_len) && !ecs_os_strncmp(typeName, "struct ", struct_len)) {
-        ecs_os_memmove(typeName, typeName + struct_len, len - struct_len);
-        typeName[len - struct_len] = '\0';
-        len -= struct_len;
-    }
-
-    /* Remove 'class' */
-    ecs_size_t class_len = ecs_os_strlen("class ");
-    if ((len > class_len) && !ecs_os_strncmp(typeName, "class ", class_len)) {
-        ecs_os_memmove(typeName, typeName + class_len, len - class_len);
-        typeName[len - class_len] = '\0';
-        len -= class_len;
-    }            
+    len = ecs_cpp_strip_prefix(typeName, len, ECS_CONST_PREFIX, ECS_CONST_LEN);
+    len = ecs_cpp_strip_prefix(typeName, len, ECS_STRUCT_PREFIX, ECS_STRUCT_LEN);
+    len = ecs_cpp_strip_prefix(typeName, len, ECS_CLASS_PREFIX, ECS_CLASS_LEN);
+    len = ecs_cpp_strip_prefix(typeName, len, ECS_ENUM_PREFIX, ECS_ENUM_LEN);
 
     while (typeName[len - 1] == ' ' ||
             typeName[len - 1] == '&' ||
@@ -47,23 +53,23 @@ void ecs_cpp_trim_type_name(
     }
 
     /* Remove const at end of string */
-    if (len > const_len) {
-        if (!ecs_os_strncmp(&typeName[len - const_len], " const", const_len)) {
-            typeName[len - const_len] = '\0';
+    if (len > ECS_CONST_LEN) {
+        if (!ecs_os_strncmp(&typeName[len - ECS_CONST_LEN], " const", ECS_CONST_LEN)) {
+            typeName[len - ECS_CONST_LEN] = '\0';
         }
-        len -= const_len;
+        len -= ECS_CONST_LEN;
     }
 
     /* Check if there are any remaining "struct " strings, which can happen
      * if this is a template type on msvc. */
-    if (len > struct_len) {
+    if (len > ECS_STRUCT_LEN) {
         char *ptr = typeName;
-        while ((ptr = strstr(ptr + 1, "struct ")) != 0) {
+        while ((ptr = strstr(ptr + 1, ECS_STRUCT_PREFIX)) != 0) {
             /* Make sure we're not matched with part of a longer identifier
              * that contains 'struct' */
             if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
-                ecs_os_memmove(ptr, ptr + struct_len, len - struct_len);
-                len -= struct_len;
+                ecs_os_memmove(ptr, ptr + ECS_STRUCT_LEN, len - ECS_STRUCT_LEN);
+                len -= ECS_STRUCT_LEN;
             }
         }
     }
@@ -104,19 +110,43 @@ char* ecs_cpp_get_symbol_name(
     return symbol_name;
 }
 
+static
+const char* cpp_func_rchr(
+    const char *func_name,
+    ecs_size_t func_name_len,
+    char ch)
+{
+    const char *r = strrchr(func_name, ch);
+    if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, ECS_FUNC_NAME_BACK))) {
+        return NULL;
+    }
+    return r;
+}
+
+static
+const char* cpp_func_max(
+    const char *a,
+    const char *b)
+{
+    if (a > b) return a;
+    return b;
+}
+
 char* ecs_cpp_get_constant_name(
     char *constant_name,
     const char *func_name,
     size_t func_name_len)
 {
-    const char *last_space = strrchr(func_name, ' ');
-    const char *last_paren = strrchr(func_name, ')');
-    const char *last_colon = strrchr(func_name, ':');
-    const char *start = (last_space > last_paren ? last_space : last_paren);
-    start = start > last_colon ? start : last_colon;
-    start ++;
     ecs_size_t f_len = flecs_uto(ecs_size_t, func_name_len);
-    ecs_size_t len = flecs_uto(ecs_size_t, (f_len - (start - func_name) - 1));
+    const char *start = cpp_func_rchr(func_name, f_len, ' ');
+    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ')'));
+    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ':'));
+    start = cpp_func_max(start, cpp_func_rchr(func_name, f_len, ','));
+    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
+    start ++;
+    
+    ecs_size_t len = flecs_uto(ecs_size_t, 
+        (f_len - (start - func_name) - flecs_uto(ecs_size_t, ECS_FUNC_NAME_BACK)));
     ecs_os_memcpy_n(constant_name, start, char, len);
     constant_name[len] = '\0';
     return constant_name;
@@ -237,7 +267,7 @@ ecs_entity_t ecs_cpp_component_register(
     /* If entity exists, compare symbol name to ensure that the component
     * we are trying to register under this name is the same */
     if (ent) {
-        if (!id) {
+        if (!id && ecs_has(world, ent, EcsComponent)) {
             const char *sym = ecs_get_symbol(world, ent);
             ecs_assert(sym != NULL, ECS_MISSING_SYMBOL, 
                 ecs_get_name(world, ent));
