@@ -149,6 +149,24 @@ void Enum_add_enum_constant() {
     test_assert(id == ecs.pair(r, c));
 }
 
+void Enum_add_enum_class_constant() {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add(EnumClass::Sand);
+    test_str(e.type().str().c_str(), "(EnumClass,EnumClass.Sand)");
+
+    flecs::id id = e.type().get(0);
+    test_assert(id.is_pair());
+
+    auto r = id.relation();
+    test_assert(r == ecs.component<EnumClass>());
+
+    auto c = r.lookup("Sand");
+    test_assert(r != 0);
+
+    test_assert(id == ecs.pair(r, c));
+}
+
 void Enum_replace_enum_constants() {
     flecs::world ecs;
 

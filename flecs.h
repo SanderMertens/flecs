@@ -11705,7 +11705,7 @@ struct enum_type {
     }
 
     flecs::entity_t entity(E value) const {
-        return data.constants[value].id;
+        return data.constants[static_cast<int>(value)].id;
     }
 
 private:

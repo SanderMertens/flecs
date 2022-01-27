@@ -238,6 +238,7 @@ void Enum_standard_enum_reflection(void);
 void Enum_sparse_enum_reflection(void);
 void Enum_enum_class_reflection(void);
 void Enum_add_enum_constant(void);
+void Enum_add_enum_class_constant(void);
 void Enum_replace_enum_constants(void);
 void Enum_has_enum(void);
 void Enum_has_enum_wildcard(void);
@@ -1718,6 +1719,10 @@ bake_test_case Enum_testcases[] = {
     {
         "add_enum_constant",
         Enum_add_enum_constant
+    },
+    {
+        "add_enum_class_constant",
+        Enum_add_enum_class_constant
     },
     {
         "replace_enum_constants",
@@ -3913,7 +3918,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        11,
+        12,
         Enum_testcases
     },
     {

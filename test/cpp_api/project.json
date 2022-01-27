@@ -248,6 +248,7 @@
                 "sparse_enum_reflection",
                 "enum_class_reflection",
                 "add_enum_constant",
+                "add_enum_class_constant",
                 "replace_enum_constants",
                 "has_enum",
                 "has_enum_wildcard",
