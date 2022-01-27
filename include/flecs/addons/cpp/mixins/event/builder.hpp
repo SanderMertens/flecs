@@ -24,6 +24,35 @@ struct event_builder_base {
         m_ids.count ++;
         return *this;
     }
+    
+    /** 
+     * Add pair to trigger on
+     * @tparam R the relation type.
+     * @tparam O the object type.
+     */
+    template <typename R, typename O>
+    Base& id() {
+        return id(ecs_pair(_::cpp_type<R>::id(this->m_world), _::cpp_type<O>::id(this->m_world)));
+    }
+
+    /** 
+     * Add pair to trigger on
+     * @tparam R the relation type.
+     * @param object The object id.
+     */
+    template <typename R>
+    Base& id(entity_t object) {
+        return id(ecs_pair(_::cpp_type<R>::id(this->m_world), object));
+    }
+
+    /** 
+     * Add pair to trigger on
+     * @param relation The relation type.
+     * @param object The object id.
+     */
+    Base& id(entity_t relation, entity_t object) {
+        return id(ecs_pair(relation, object));
+    }
 
     /** Add (component) id to trigger on */
     Base& id(flecs::id_t id) {
