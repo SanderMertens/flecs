@@ -34,12 +34,12 @@ int main(int, char*[]) {
     std::cout << "Bob's type: [" << bob.type().str() << "]\n";
 
     // Relations can be iterated for an entity. This iterates (Eats, *):
-    bob.each<Eats>([](flecs::entity obj) {
-        std::cout << "Bob eats " << obj.name() << "\n";
+    bob.each<Eats>([](flecs::entity second) {
+        std::cout << "Bob eats " << second.name() << "\n";
     });
 
     // Iterate by explicitly providing the pair. This iterates (*, Pears):
     bob.each(flecs::Wildcard, pears, [](flecs::id id) {
-        std::cout << "Bob " << id.relation().name() << " pears\n";
+        std::cout << "Bob " << id.first().name() << " pears\n";
     });
 }

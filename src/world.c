@@ -180,6 +180,64 @@ ecs_stage_t *flecs_stage_from_world(
     return NULL;
 }
 
+ecs_world_t* flecs_suspend_readonly(
+    ecs_world_t *stage_world,
+    ecs_suspend_readonly_state_t *state)
+{
+    ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage_world);
+    ecs_poly_assert(world, ecs_world_t);
+
+    bool is_readonly = world->is_readonly;
+    bool is_deferred = ecs_is_deferred(world);
+
+    if (!world->is_readonly && !is_deferred) {
+        state->is_readonly = false;
+        state->is_deferred = false;
+        return world;
+    }
+
+    /* Cannot suspend when running with multiple threads */
+    ecs_assert(ecs_get_stage_count(world) <= 1, 
+        ECS_INVALID_WHILE_ITERATING, NULL);
+
+    state->is_readonly = is_readonly;
+    state->is_deferred = is_deferred;
+
+    /* Silence readonly checks */
+    world->is_readonly = false;
+
+    /* Hack around safety checks (this ought to look ugly) */
+    ecs_world_t *temp_world = world;
+    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
+    state->defer_count = stage->defer;
+    state->defer_queue = stage->defer_queue;
+    stage->defer = 0;
+    stage->defer_queue = NULL;
+    
+    return world;
+}
+
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_world_t *temp_world = world;
+    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
+
+    if (state->is_readonly || state->is_deferred) {
+        /* Restore readonly state / defer count */
+        world->is_readonly = state->is_readonly;
+        stage->defer = state->defer_count;
+        stage->defer_queue = state->defer_queue;
+    }
+}
+
 /* Evaluate component monitor. If a monitored entity changed it will have set a
  * flag in one of the world's component monitors. Queries can register 
  * themselves with component monitors to determine whether they need to rematch

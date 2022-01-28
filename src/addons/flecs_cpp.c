@@ -362,6 +362,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     const char *name,
     int value)
 {
+    ecs_suspend_readonly_state_t readonly_state;
+    world = flecs_suspend_readonly(world, &readonly_state);
+
     ecs_entity_t prev = ecs_set_scope(world, parent);
     id = ecs_entity_init(world, &(ecs_entity_desc_t) {
         .entity = id,
@@ -371,6 +374,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_set_scope(world, prev);
 
     ecs_set_id(world, id, parent, sizeof(int), &value);
+
+    flecs_resume_readonly(world, &readonly_state);
 
     return id;
 }

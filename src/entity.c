@@ -2067,32 +2067,8 @@ ecs_entity_t ecs_component_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
-    world = (ecs_world_t*)ecs_get_world(world);
-
-    bool is_readonly = world->is_readonly;
-    bool is_deferred = ecs_is_deferred(world);
-    int32_t defer_count = 0;
-    ecs_vector_t *defer_queue = NULL;
-    ecs_stage_t *stage = NULL;
-
-    /* If world is readonly or deferring is enabled, component registration can
-     * still happen directly on the main storage, but only if the application
-     * is singlethreaded. */
-    if (is_readonly || is_deferred) {
-        ecs_assert(ecs_get_stage_count(world) <= 1, 
-            ECS_INVALID_WHILE_ITERATING, NULL);
-
-        /* Silence readonly warnings */
-        world->is_readonly = false;
-
-        /* Hack around safety checks (this ought to look ugly) */
-        ecs_world_t *temp_world = world;
-        stage = flecs_stage_from_world(&temp_world);
-        defer_count = stage->defer;
-        defer_queue = stage->defer_queue;
-        stage->defer = 0;
-        stage->defer_queue = NULL;
-    }
+    ecs_suspend_readonly_state_t readonly_state;
+    world = flecs_suspend_readonly(world, &readonly_state);
 
     ecs_entity_desc_t entity_desc = desc->entity;
     entity_desc.use_low_id = true;
@@ -2137,12 +2113,7 @@ ecs_entity_t ecs_component_init(
     /* Ensure components cannot be deleted */
     ecs_add_pair(world, result, EcsOnDelete, EcsThrow);
 
-    if (is_readonly || is_deferred) {
-        /* Restore readonly state / defer count */
-        world->is_readonly = is_readonly;
-        stage->defer = defer_count;
-        stage->defer_queue = defer_queue;
-    }
+    flecs_resume_readonly(world, &readonly_state);
     
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);

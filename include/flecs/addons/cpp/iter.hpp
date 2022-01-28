@@ -278,11 +278,18 @@ public:
      */    
     flecs::entity source(int32_t index) const;
 
-    /** Obtain component/tag entity of term.
+    /** Obtain component id of term.
      *
      * @param index The term index.
      */
     flecs::entity id(int32_t index) const;
+
+    /** Obtain pair id of term.
+     * This operation will fail if the term is not a pair.
+     * 
+     * @param index The term index.
+     */
+    flecs::id pair(int32_t index) const;
 
     /** Convert current iterator result to string.
      */

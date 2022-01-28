@@ -11,7 +11,7 @@ inline flecs::entity id::role() const {
     return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
 }
 
-inline flecs::entity id::relation() const {
+inline flecs::entity id::first() const {
     ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
 
     flecs::entity_t e = ECS_PAIR_RELATION(m_id);
@@ -22,13 +22,21 @@ inline flecs::entity id::relation() const {
     }
 }
 
-inline flecs::entity id::object() const {
+inline flecs::entity id::second() const {
     flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {
         return flecs::entity(m_world, e);
     }
+}
+
+inline flecs::entity id::relation() const {
+    return first();
+}
+
+inline flecs::entity id::object() const {
+    return second();
 }
 
 inline flecs::entity id::add_role(flecs::id_t role) const {
@@ -59,6 +67,12 @@ inline flecs::world id::world() const {
 template <typename T>
 inline flecs::id world::id() const {
     return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename E, if_t< is_enum<E>::value >>
+inline flecs::id world::id(E value) const {
+    flecs::id_t constant = _::enum_type<E>::get(m_world).entity(value);
+    return flecs::id(m_world, constant);
 }
 
 template <typename ... Args>

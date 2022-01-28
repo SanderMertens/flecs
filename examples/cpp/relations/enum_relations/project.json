@@ -1,0 +1,11 @@
+{
+    "id": "enum_relations",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

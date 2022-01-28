@@ -254,12 +254,12 @@ auto q = world.query_builder()
   .build();
 
 q.iter([](flecs::iter& it) {
-  auto id = it.term_id(1);
+  auto id = it.pair(1);
 
   for (auto i : it) {
     cout << "entity " << it.entity(i) << " has relation "
-      << id.relation().name() << ", "
-      << id.object().name() << endl;
+      << id.first().name() << ", "
+      << id.second().name() << endl;
   }
 });
 ```
@@ -319,7 +319,7 @@ Bob.add(Eats, Pears);
 
 // Find all (Eats, *) relations in Bob's type
 bob.match(world.pair(Eats, flecs::Wildcard), [](flecs::id id) {
-  cout << "Bob eats " << id.object().name() << endl;
+  cout << "Bob eats " << id.second().name() << endl;
 });
 
 // For object wildcard pairs, each() can be used:

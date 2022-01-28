@@ -12079,18 +12079,22 @@ struct id {
         return ECS_PAIR_RELATION(m_id) == relation;
     }
 
-    /** Get relation from pair.
+    /** Get first element from a pair.
      * If the id is not a pair, this operation will fail. When the id has a
      * world, the operation will ensure that the returned id has the correct
-     * generation count.
-     */
+     * generation count. */
+    flecs::entity first() const;
+
+    /** Get second element from a pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count. */
+    flecs::entity second() const;
+
+    /** Same as first() */
     flecs::entity relation() const;
 
-    /** Get object from pair.
-     * If the id is not a pair, this operation will fail. When the id has a
-     * world, the operation will ensure that the returned id has the correct
-     * generation count.
-     */
+    /** Same as second() */
     flecs::entity object() const;
 
     /* Convert id to string */
@@ -13909,6 +13913,11 @@ struct world final {
 template <typename T>
 flecs::id id() const;
 
+/** Get id from an enum constant.
+ */
+template <typename E, if_t< is_enum<E>::value > = 0>
+flecs::id id(E value) const;
+
 /** Id factory.
  */
 template <typename ... Args>
@@ -14566,11 +14575,18 @@ public:
      */    
     flecs::entity source(int32_t index) const;
 
-    /** Obtain component/tag entity of term.
+    /** Obtain component id of term.
      *
      * @param index The term index.
      */
     flecs::entity id(int32_t index) const;
+
+    /** Obtain pair id of term.
+     * This operation will fail if the term is not a pair.
+     * 
+     * @param index The term index.
+     */
+    flecs::id pair(int32_t index) const;
 
     /** Convert current iterator result to string.
      */
@@ -17345,7 +17361,6 @@ struct cpp_type_impl {
         s_name.clear();
     }
 
-private:
     static entity_t s_id;
     static flecs::string s_name;
     static size_t s_size;
@@ -17506,7 +17521,7 @@ struct component : untyped_component {
 
 template <typename T>
 flecs::entity_t type_id() {
-    return _::cpp_type<T>::id();
+    return _::cpp_type<T>::s_id;
 }
 
 }
@@ -17707,7 +17722,7 @@ inline flecs::entity id::role() const {
     return flecs::entity(m_world, m_id & ECS_ROLE_MASK);
 }
 
-inline flecs::entity id::relation() const {
+inline flecs::entity id::first() const {
     ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
 
     flecs::entity_t e = ECS_PAIR_RELATION(m_id);
@@ -17718,13 +17733,21 @@ inline flecs::entity id::relation() const {
     }
 }
 
-inline flecs::entity id::object() const {
+inline flecs::entity id::second() const {
     flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {
         return flecs::entity(m_world, e);
     }
+}
+
+inline flecs::entity id::relation() const {
+    return first();
+}
+
+inline flecs::entity id::object() const {
+    return second();
 }
 
 inline flecs::entity id::add_role(flecs::id_t role) const {
@@ -17755,6 +17778,12 @@ inline flecs::world id::world() const {
 template <typename T>
 inline flecs::id world::id() const {
     return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+}
+
+template <typename E, if_t< is_enum<E>::value >>
+inline flecs::id world::id(E value) const {
+    flecs::id_t constant = _::enum_type<E>::get(m_world).entity(value);
+    return flecs::id(m_world, constant);
 }
 
 template <typename ... Args>
@@ -17921,7 +17950,7 @@ inline void entity_view::each(const Func& func) const {
         if ((id & ECS_ROLE_MASK) == flecs::Switch) {
             ent = flecs::id(
                 m_world, flecs::Case | ecs_get_case(
-                        m_world, m_id, ent.object().id()));
+                        m_world, m_id, ent.second().id()));
             func(ent);
         }
     }
@@ -17963,7 +17992,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
 template <typename Func>
 inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
     return this->each(rel, flecs::Wildcard, [&](flecs::id id) {
-        flecs::entity obj = id.object();
+        flecs::entity obj = id.second();
         func(obj);
     });
 }
@@ -18725,6 +18754,13 @@ struct filter_builder_i : term_builder_i<Base> {
         this->term();
         *this->m_term = flecs::term(id).move();
         return *this;
+    }
+
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Base& term(E value) {
+        flecs::entity_t r = _::cpp_type<E>::id(this->world_v());
+        auto o = _::enum_type<E>::get(this->world_v()).entity(value);
+        return term(r, o);
     }
 
     template<typename R, typename O>
@@ -20584,6 +20620,14 @@ inline flecs::entity iter::source(int32_t index) const {
 
 inline flecs::entity iter::id(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
+}
+
+inline flecs::id iter::pair(int32_t index) const {
+    flecs::id_t id = ecs_term_id(m_iter, index);
+    ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    return flecs::id(m_iter->world, id);
+error:
+    return flecs::id();
 }
 
 /* Obtain type of iter */

@@ -223,11 +223,11 @@ auto q = world.query_builder<>()
 
 q.iter([](flecs::iter& it) {
   // Get the type id for the first term.
-  auto likes = it.term_id(1);
+  auto likes = it.id(1);
 
   // Extract the object from the pair
   std::cout << "Entities like " 
-    << likes.object().name() 
+    << likes.second().name() 
     << std::endl;
 });
 ```
@@ -237,7 +237,7 @@ Alternatively, the `iter` call can be written in such a way that it is fully gen
 ```cpp
 q.iter([](flecs::iter& it) {
   for (int t = 0; t < it.term_count(); t++) {
-    auto id = it.term_id(t);
+    auto id = it.id(t);
     auto data = it.term(t);
 
     // Use id & data, for example for reflection

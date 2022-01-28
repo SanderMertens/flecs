@@ -89,18 +89,22 @@ struct id {
         return ECS_PAIR_RELATION(m_id) == relation;
     }
 
-    /** Get relation from pair.
+    /** Get first element from a pair.
      * If the id is not a pair, this operation will fail. When the id has a
      * world, the operation will ensure that the returned id has the correct
-     * generation count.
-     */
+     * generation count. */
+    flecs::entity first() const;
+
+    /** Get second element from a pair.
+     * If the id is not a pair, this operation will fail. When the id has a
+     * world, the operation will ensure that the returned id has the correct
+     * generation count. */
+    flecs::entity second() const;
+
+    /** Same as first() */
     flecs::entity relation() const;
 
-    /** Get object from pair.
-     * If the id is not a pair, this operation will fail. When the id has a
-     * world, the operation will ensure that the returned id has the correct
-     * generation count.
-     */
+    /** Same as second() */
     flecs::entity object() const;
 
     /* Convert id to string */

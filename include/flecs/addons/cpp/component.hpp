@@ -271,7 +271,6 @@ struct cpp_type_impl {
         s_name.clear();
     }
 
-private:
     static entity_t s_id;
     static flecs::string s_name;
     static size_t s_size;
@@ -377,7 +376,7 @@ struct component : untyped_component {
 
 template <typename T>
 flecs::entity_t type_id() {
-    return _::cpp_type<T>::id();
+    return _::cpp_type<T>::s_id;
 }
 
 }

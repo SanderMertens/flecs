@@ -237,6 +237,7 @@ void Pairs_get_object_for_id_not_found(void);
 void Enum_standard_enum_reflection(void);
 void Enum_sparse_enum_reflection(void);
 void Enum_enum_class_reflection(void);
+void Enum_get_constant_id(void);
 void Enum_add_enum_constant(void);
 void Enum_add_enum_class_constant(void);
 void Enum_replace_enum_constants(void);
@@ -246,6 +247,10 @@ void Enum_get_enum(void);
 void Enum_remove_enum(void);
 void Enum_remove_wildcard(void);
 void Enum_enum_as_component(void);
+void Enum_query_enum_wildcard(void);
+void Enum_query_enum_constant(void);
+void Enum_enum_type_from_stage(void);
+void Enum_add_enum_from_stage(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1720,6 +1725,10 @@ bake_test_case Enum_testcases[] = {
         Enum_enum_class_reflection
     },
     {
+        "get_constant_id",
+        Enum_get_constant_id
+    },
+    {
         "add_enum_constant",
         Enum_add_enum_constant
     },
@@ -1754,6 +1763,22 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_as_component",
         Enum_enum_as_component
+    },
+    {
+        "query_enum_wildcard",
+        Enum_query_enum_wildcard
+    },
+    {
+        "query_enum_constant",
+        Enum_query_enum_constant
+    },
+    {
+        "enum_type_from_stage",
+        Enum_enum_type_from_stage
+    },
+    {
+        "add_enum_from_stage",
+        Enum_add_enum_from_stage
     }
 };
 
@@ -3933,7 +3958,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        12,
+        17,
         Enum_testcases
     },
     {

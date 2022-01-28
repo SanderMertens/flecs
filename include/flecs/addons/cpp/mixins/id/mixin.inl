@@ -4,6 +4,11 @@
 template <typename T>
 flecs::id id() const;
 
+/** Get id from an enum constant.
+ */
+template <typename E, if_t< is_enum<E>::value > = 0>
+flecs::id id(E value) const;
+
 /** Id factory.
  */
 template <typename ... Args>

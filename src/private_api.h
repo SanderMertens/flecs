@@ -191,6 +191,33 @@ void flecs_observer_fini(
     ecs_world_t *world,
     ecs_observer_t *observer);
 
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ */
+typedef struct {
+    bool is_readonly;
+    bool is_deferred;
+    int32_t defer_count;
+    ecs_vector_t *defer_queue;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
+ecs_world_t* flecs_suspend_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API

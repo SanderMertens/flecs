@@ -235,18 +235,18 @@ ecs_id_t id = ecs_pair(Likes, Bob);
 flecs::id id = world.pair(Likes, Bob);
 ```
 
-The following examples show how to get back the relation and object pairs from a pair id:
+The following examples show how to get back the elements from a pair:
 
 ```c
 if (ecs_id_is_pair(id)) {
-    ecs_entity_t rel = ecs_pair_relation(world, id);
-    ecs_entity_t obj = ecs_pair_object(world, id);
+    ecs_entity_t relation = ecs_pair_relation(world, id);
+    ecs_entity_t target = ecs_pair_object(world, id);
 }
 ```
 ```cpp
 if (id.is_pair()) {
-    auto rel = id.relation();
-    auto obj = id.object();
+    auto relation = id.first();
+    auto target = id.second();
 }
 ```
 

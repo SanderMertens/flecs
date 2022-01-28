@@ -40,6 +40,14 @@ inline flecs::entity iter::id(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_term_id(m_iter, index));
 }
 
+inline flecs::id iter::pair(int32_t index) const {
+    flecs::id_t id = ecs_term_id(m_iter, index);
+    ecs_check(ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    return flecs::id(m_iter->world, id);
+error:
+    return flecs::id();
+}
+
 /* Obtain type of iter */
 inline flecs::type iter::type() const {
     return flecs::type(m_iter->world, m_iter->table);

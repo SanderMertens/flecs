@@ -42,9 +42,9 @@ void iterate_components(flecs::entity e) {
 
         if (id.is_pair()) {
             // If id is a pair, extract & print both parts of the pair
-            flecs::entity rel = id.relation();
-            flecs::entity obj = id.object();
-            std::cout << "rel: " << rel.name() << ", " << "obj: " << obj.name();
+            flecs::entity rel = id.first();
+            flecs::entity target = id.second();
+            std::cout << "rel: " << rel.name() << ", " << "obj: " << target.name();
         } else {
             // Id contains a regular entity. Strip role before printing.
             flecs::entity comp = id.entity();

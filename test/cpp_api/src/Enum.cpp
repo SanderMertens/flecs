@@ -131,6 +131,19 @@ void Enum_enum_class_reflection() {
     test_bool(enum_type.is_valid(3), false);
 }
 
+void Enum_get_constant_id() {
+    flecs::world ecs;
+
+    flecs::entity red = ecs.component<StandardEnum>().lookup("Red");
+    const StandardEnum *v = red.get<StandardEnum>();
+    test_assert(v != NULL);
+    test_assert(v[0] == StandardEnum::Red);
+    test_assert(red == ecs.id(StandardEnum::Red));
+
+    auto e = flecs::enum_type<StandardEnum>(ecs);
+    test_assert(e.entity(StandardEnum::Red) == red);
+}
+
 void Enum_add_enum_constant() {
     flecs::world ecs;
 
@@ -272,4 +285,83 @@ void Enum_enum_as_component() {
     flecs::id id = e.type().get(0);
     test_bool(id.is_pair(), false);
     test_assert(id == ecs.component<StandardEnum>());
+}
+
+void Enum_query_enum_wildcard() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add(StandardEnum::Red);
+    auto e2 = ecs.entity().add(StandardEnum::Green);
+    auto e3 = ecs.entity().add(StandardEnum::Blue);
+
+    auto q = ecs.query_builder()
+        .term<StandardEnum>(flecs::Wildcard)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Red));
+            count ++;
+        }
+        if (it.entity(index) == e2) {
+            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Green));
+            count ++;
+        }
+        if (it.entity(index) == e3) {
+            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Blue));
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Enum_query_enum_constant() {
+    flecs::world ecs;
+
+    ecs.entity().add(StandardEnum::Red);
+    ecs.entity().add(StandardEnum::Green);
+    auto e1 = ecs.entity().add(StandardEnum::Blue);
+
+    auto q = ecs.query_builder()
+        .term<StandardEnum>(StandardEnum::Blue)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t index) {
+        test_assert(it.entity(index) == e1);
+        test_assert(it.pair(1).second() == ecs.id(StandardEnum::Blue));
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Enum_enum_type_from_stage() {
+    flecs::world ecs;
+
+    auto stage = ecs.get_stage(0);
+
+    ecs.staging_begin();
+
+    auto enum_type = flecs::enum_type<StandardEnum>(stage);
+    test_assert(enum_type.entity() == ecs.component<StandardEnum>());
+
+    ecs.staging_end();
+}
+
+void Enum_add_enum_from_stage() {
+    flecs::world ecs;
+
+    auto stage = ecs.get_stage(0);
+
+    ecs.staging_begin();
+
+    auto e = stage.entity().add(StandardEnum::Red);
+    test_assert(!e.has(StandardEnum::Red));
+
+    ecs.staging_end();
+
+    test_assert(e.has(StandardEnum::Red));
 }

@@ -131,7 +131,7 @@ inline void entity_view::each(const Func& func) const {
         if ((id & ECS_ROLE_MASK) == flecs::Switch) {
             ent = flecs::id(
                 m_world, flecs::Case | ecs_get_case(
-                        m_world, m_id, ent.object().id()));
+                        m_world, m_id, ent.second().id()));
             func(ent);
         }
     }
@@ -173,7 +173,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
 template <typename Func>
 inline void entity_view::each(const flecs::entity_view& rel, const Func& func) const {
     return this->each(rel, flecs::Wildcard, [&](flecs::id id) {
-        flecs::entity obj = id.object();
+        flecs::entity obj = id.second();
         func(obj);
     });
 }
