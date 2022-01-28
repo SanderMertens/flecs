@@ -598,7 +598,9 @@
                 "term_after_arg",
                 "name_arg",
                 "const_in_term",
-                "create_w_no_template_args"
+                "create_w_no_template_args",
+                "2_terms_w_expr",
+                "assert_on_multiple_expr_calls"
             ]
         }, {
             "id": "RuleBuilder",

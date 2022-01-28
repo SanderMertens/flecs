@@ -1675,3 +1675,46 @@ void FilterBuilder_create_w_no_template_args() {
     
     test_int(count, 1);
 }
+
+void FilterBuilder_2_terms_w_expr() {
+    flecs::world ecs;
+
+    auto a = ecs.entity("A");
+    auto b = ecs.entity("B");
+
+    auto e1 = ecs.entity().add(a).add(b);
+
+    auto f = ecs.filter_builder()
+        .term("A")
+        .term("B")
+        .build();
+    
+    test_int(f.term_count(), 2);
+
+    int32_t count = 0;
+    f.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert(it.id(1) == a);
+            test_assert(it.id(2) == b);
+            count ++;
+        }
+    });
+
+    test_int(count, 1);
+}
+
+void FilterBuilder_assert_on_multiple_expr_calls() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity("A");
+    ecs.entity("B");
+
+    test_expect_abort();
+
+    auto f = ecs.filter_builder()
+        .term().expr("A")
+        .term().expr("B")
+        .build();
+}

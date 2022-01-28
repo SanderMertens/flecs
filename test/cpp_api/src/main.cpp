@@ -569,6 +569,8 @@ void FilterBuilder_term_after_arg(void);
 void FilterBuilder_name_arg(void);
 void FilterBuilder_const_in_term(void);
 void FilterBuilder_create_w_no_template_args(void);
+void FilterBuilder_2_terms_w_expr(void);
+void FilterBuilder_assert_on_multiple_expr_calls(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -3008,6 +3010,14 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "create_w_no_template_args",
         FilterBuilder_create_w_no_template_args
+    },
+    {
+        "2_terms_w_expr",
+        FilterBuilder_2_terms_w_expr
+    },
+    {
+        "assert_on_multiple_expr_calls",
+        FilterBuilder_assert_on_multiple_expr_calls
     }
 };
 
@@ -4063,7 +4073,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        66,
+        68,
         FilterBuilder_testcases
     },
     {

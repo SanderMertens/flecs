@@ -10,6 +10,7 @@ template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
     filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
+        , m_expr_count(0)
         , m_desc(desc) { }
 
     Base& instanced() {
@@ -18,7 +19,11 @@ struct filter_builder_i : term_builder_i<Base> {
     }
 
     Base& expr(const char *expr) {
+        ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
+            "filter_builder::expr() called more than once");
         m_desc->expr = expr;
+        m_expr_count ++;
+    error:
         return *this;
     }
 
@@ -112,7 +117,7 @@ struct filter_builder_i : term_builder_i<Base> {
 
     Base& term(const char *expr) {
         this->term();
-        *this->m_term = flecs::term(this->world_v()).expr(expr).move();
+        *this->m_term = flecs::term(this->world_v(), expr).move();
         this->m_term->move = true;
         return *this;
     }
@@ -132,6 +137,7 @@ struct filter_builder_i : term_builder_i<Base> {
 protected:
     virtual flecs::world_t* world_v() = 0;
     int32_t m_term_index;
+    int32_t m_expr_count;
 
 private:
     operator Base&() {
