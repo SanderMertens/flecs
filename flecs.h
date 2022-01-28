@@ -19086,7 +19086,7 @@ public:
     filter(const filter& obj) : filter_base(obj) { }
 
     filter& operator=(const filter& obj) {
-        *this = obj;
+        filter_base::operator=(obj);
         return *this;
     }
 

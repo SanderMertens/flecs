@@ -509,6 +509,7 @@ void FilterBuilder_builder_assign_to_empty(void);
 void FilterBuilder_builder_build(void);
 void FilterBuilder_builder_build_to_auto(void);
 void FilterBuilder_builder_build_n_statements(void);
+void FilterBuilder_builder_force_assign_operator(void);
 void FilterBuilder_1_type(void);
 void FilterBuilder_add_1_type(void);
 void FilterBuilder_add_2_types(void);
@@ -2769,6 +2770,10 @@ bake_test_case FilterBuilder_testcases[] = {
         FilterBuilder_builder_build_n_statements
     },
     {
+        "builder_force_assign_operator",
+        FilterBuilder_builder_force_assign_operator
+    },
+    {
         "1_type",
         FilterBuilder_1_type
     },
@@ -4058,7 +4063,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        65,
+        66,
         FilterBuilder_testcases
     },
     {

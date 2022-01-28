@@ -59,6 +59,29 @@ void FilterBuilder_builder_assign_from_empty() {
     test_int(count, 1);
 }
 
+template<typename ... Components>
+struct FilterWrapper
+{
+    FilterWrapper(flecs::filter<Components...> f) : f_(f) {}
+    flecs::filter<Components...> f_;
+};
+
+void FilterBuilder_builder_force_assign_operator() {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({10, 20});
+
+    auto f = ecs.entity().emplace<FilterWrapper<>>(
+        ecs.filter_builder().term<Position>().build()
+    );
+
+    int32_t count = 0;
+    f.get<FilterWrapper<>>()->f_.each([&](flecs::entity e) {
+        test_assert(e == e1);
+        count ++;
+    });
+}
+
 void FilterBuilder_builder_build() {
     flecs::world ecs;
 
