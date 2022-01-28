@@ -95,6 +95,12 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     const char *name,
     int value);
 
+FLECS_API 
+int32_t ecs_cpp_reset_count_get(void);
+
+FLECS_API
+int32_t ecs_cpp_reset_count_inc(void);
+
 #ifdef __cplusplus
 }
 #endif

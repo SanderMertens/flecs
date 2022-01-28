@@ -142,6 +142,8 @@ struct cpp_type_impl {
             s_size = 0;
             s_alignment = 0;
         }
+
+        s_reset_count = ecs_cpp_reset_count_get();
     }
 
     // Obtain a component identifier for explicit component registration.
@@ -196,7 +198,7 @@ struct cpp_type_impl {
         bool allow_tag = true) 
     {
         // If no id has been registered yet, do it now.
-        if (!s_id || (world && !ecs_exists(world, s_id))) {
+        if (!registered() || (world && !ecs_exists(world, s_id))) {
             ecs_entity_t prev_scope = 0;
             ecs_id_t prev_with = 0;
 
@@ -258,6 +260,9 @@ struct cpp_type_impl {
 
     // Was the component already registered.
     static bool registered() {
+        if (s_reset_count != ecs_cpp_reset_count_get()) {
+            reset();
+        }
         return s_id != 0;
     }
 
@@ -276,6 +281,7 @@ struct cpp_type_impl {
     static size_t s_size;
     static size_t s_alignment;
     static bool s_allow_tag;
+    static int32_t s_reset_count;
 };
 
 // Global templated variables that hold component identifier and other info
@@ -284,6 +290,7 @@ template <typename T> flecs::string cpp_type_impl<T>::s_name;
 template <typename T> size_t        cpp_type_impl<T>::s_size;
 template <typename T> size_t        cpp_type_impl<T>::s_alignment;
 template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
+template <typename T> int32_t       cpp_type_impl<T>::s_reset_count;
 
 // Front facing class for implicitly registering a component & obtaining 
 // static component data
@@ -378,7 +385,35 @@ struct component : untyped_component {
  * component yet, this operation will return 0. */
 template <typename T>
 flecs::entity_t type_id() {
-    return _::cpp_type<T>::s_id;
+    if (_::cpp_type<T>::s_reset_count == ecs_cpp_reset_count_get()) {
+        return _::cpp_type<T>::s_id;
+    } else {
+        return 0;
+    }
+}
+
+/** Reset static component variables.
+ * When components are registered their component ids are stored in a static
+ * type specific variable. This stored id is passed into component registration
+ * functions to ensure consistent ids across worlds.
+ * 
+ * In some cases this can be undesirable, like when a process repeatedly creates
+ * worlds with different components. A typical example where this can happen is
+ * when running multiple tests in a single process, where each test registers
+ * its own set of components.
+ * 
+ * This operation can be used to prevent reusing of component ids and force 
+ * generating a new ids upon registration.
+ * 
+ * Note that this operation should *never* be called while there are still
+ * alive worlds in a process. Doing so results in undefined behavior.
+ * 
+ * Also note that this operation does not actually change the static component
+ * variables. It only ensures that the next time a component id is requested, a
+ * new id will be generated.
+ */
+inline void reset() {
+    ecs_cpp_reset_count_inc();
 }
 
 }

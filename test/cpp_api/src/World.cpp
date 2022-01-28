@@ -1248,3 +1248,27 @@ void World_ensure() {
     test_assert(e_2 == e_3);
     test_assert(e_3.is_alive());
 }
+
+void World_reset_all() {
+    flecs::entity pos, vel;
+
+    {
+        flecs::world ecs;
+        pos = ecs.component<Position>();
+        vel = ecs.component<Velocity>();
+    }
+
+    test_assert(flecs::type_id<Position>() == pos);
+    test_assert(flecs::type_id<Velocity>() == vel);
+
+    flecs::reset();
+
+    test_assert(flecs::type_id<Position>() == 0);
+
+    /* Register components in opposite order, should result in different ids */
+    {
+        flecs::world ecs;
+        test_assert(ecs.component<Position>() != 0);
+        test_assert(ecs.component<Velocity>() != 0);
+    }
+}

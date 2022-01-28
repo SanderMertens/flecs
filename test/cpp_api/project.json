@@ -850,7 +850,8 @@
                 "is_valid",
                 "exists",
                 "get_alive",
-                "ensure"
+                "ensure",
+                "reset_all"
             ]
         }, {
             "id": "Singleton",

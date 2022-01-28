@@ -380,4 +380,14 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     return id;
 }
 
+static int32_t flecs_reset_count = 0;
+
+int32_t ecs_cpp_reset_count_get(void) {
+    return flecs_reset_count;
+}
+
+int32_t ecs_cpp_reset_count_inc(void) {
+    return ++flecs_reset_count;
+}
+
 #endif
