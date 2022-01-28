@@ -724,6 +724,9 @@ struct world final {
      */
     flecs::entity get_alive(flecs::entity_t e) const;
 
+/* Prevent clashing with Unreal define. Unreal applications will have to use
+ *  ecs_ensure. */
+#ifndef ensure
     /** Ensures that entity with provided generation is alive.
      * Ths operation will fail if an entity exists with the same id and a 
      * different, non-zero generation.
@@ -731,6 +734,7 @@ struct world final {
      * @see ecs_ensure
      */
     flecs::entity ensure(flecs::entity_t e) const;
+#endif
 
 #   include "mixins/id/mixin.inl"
 #   include "mixins/component/mixin.inl"
