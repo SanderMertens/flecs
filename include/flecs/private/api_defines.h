@@ -12,6 +12,9 @@
 
 #if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
 #define ECS_TARGET_WINDOWS
+#elif defined(__ANDROID__)
+#define ECS_TARGET_ANDROID
+#define ECS_TARGET_POSIX
 #elif defined(__linux__)
 #define ECS_TARGET_LINUX
 #define ECS_TARGET_POSIX
@@ -23,9 +26,6 @@
 #define ECS_TARGET_POSIX
 #elif defined(__EMSCRIPTEN__)
 #define ECS_TARGET_EM
-#define ECS_TARGET_POSIX
-#elif defined(__ANDROID__)
-#define ECS_TARGET_ANDROID
 #define ECS_TARGET_POSIX
 #endif
 
