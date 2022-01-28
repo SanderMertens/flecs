@@ -32733,6 +32733,7 @@ void notify_subset(
 {
     ecs_id_t pair = ecs_pair(EcsWildcard, entity);
     ecs_id_record_t *idr = flecs_get_id_record(world, pair);
+
     if (!idr) {
         return;
     }
@@ -32758,6 +32759,10 @@ void notify_subset(
         it->other_table = NULL;
         it->offset = 0;
         it->count = entity_count;
+
+        /* Treat as new event as this could trigger observers again for
+         * different tables. */
+        world->event_id ++;
 
         flecs_set_triggers_notify(it, observable, ids, event,
             ecs_pair(rel, EcsWildcard));

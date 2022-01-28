@@ -1685,7 +1685,8 @@
                "create_stresstest",
                "add_non_existing_entity",
                "on_add_self_trigger_with_add_isa",
-               "on_set_self_trigger_with_add_isa"
+               "on_set_self_trigger_with_add_isa",
+               "notify_propagated_twice"
            ]
         }, {
             "id": "Observer",
@@ -1740,7 +1741,8 @@
                 "2_terms_1_filter",
                 "3_terms_2_filter",
                 "and_from",
-                "or_from"
+                "or_from",
+                "notify_propagated_twice"
             ]                
         }, {
             "id": "TriggerOnAdd",

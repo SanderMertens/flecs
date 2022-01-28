@@ -1614,6 +1614,7 @@ void Trigger_create_stresstest(void);
 void Trigger_add_non_existing_entity(void);
 void Trigger_on_add_self_trigger_with_add_isa(void);
 void Trigger_on_set_self_trigger_with_add_isa(void);
+void Trigger_notify_propagated_twice(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1667,6 +1668,7 @@ void Observer_2_terms_1_filter(void);
 void Observer_3_terms_2_filter(void);
 void Observer_and_from(void);
 void Observer_or_from(void);
+void Observer_notify_propagated_twice(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -8630,6 +8632,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_self_trigger_with_add_isa",
         Trigger_on_set_self_trigger_with_add_isa
+    },
+    {
+        "notify_propagated_twice",
+        Trigger_notify_propagated_twice
     }
 };
 
@@ -8837,6 +8843,10 @@ bake_test_case Observer_testcases[] = {
     {
         "or_from",
         Observer_or_from
+    },
+    {
+        "notify_propagated_twice",
+        Observer_notify_propagated_twice
     }
 };
 
@@ -11842,14 +11852,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        93,
+        94,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        51,
+        52,
         Observer_testcases
     },
     {

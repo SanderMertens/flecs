@@ -3789,3 +3789,59 @@ void Trigger_on_set_self_trigger_with_add_isa() {
 
     ecs_fini(world);
 }
+
+static int invoke_count = 0;
+static ecs_entity_t base_ent = 0;
+static ecs_entity_t inst_ent_a = 0;
+static ecs_entity_t inst_ent_b = 0;
+
+static void TriggerTwice(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_assert(base_ent != 0);
+    test_assert(inst_ent_a != 0);
+    test_assert(inst_ent_b != 0);
+    test_int(it->count, 1);
+
+    if (invoke_count == 0) {
+        test_assert(it->entities[0] == base_ent);
+        invoke_count ++;
+    } else if (invoke_count == 1) {
+        test_assert(it->entities[0] == inst_ent_a);
+        invoke_count ++;
+    } else {
+        test_int(invoke_count, 2);
+        test_assert(it->entities[0] == inst_ent_b);
+        invoke_count ++;
+    }
+}
+
+void Trigger_notify_propagated_twice() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnAdd},
+        .callback = TriggerTwice,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    base_ent = ecs_new_id(world);
+    inst_ent_a = ecs_new_w_pair(world, EcsIsA, base_ent);
+    ecs_add(world, inst_ent_a, TagB);
+    inst_ent_b = ecs_new_w_pair(world, EcsIsA, base_ent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, base_ent, TagA);
+
+    test_int(ctx.invoked, 3);
+    test_int(invoke_count, 3);
+
+    ecs_fini(world);
+}
