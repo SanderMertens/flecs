@@ -215,10 +215,8 @@ void on_event_iterable_init(
     ecs_term_t *filter)
 {
     ecs_iter_poly(world, poly, it, filter);
-    it->event = EcsOnAdd;
     it->event_id = filter->id;
 }
-
 
 /* -- Bootstrapping -- */
 

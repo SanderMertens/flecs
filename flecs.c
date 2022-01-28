@@ -42044,6 +42044,7 @@ void trigger_yield_existing(
         it.system = trigger->entity;
         it.ctx = trigger->ctx;
         it.binding_ctx = trigger->binding_ctx;
+        it.event = evt;
 
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -42691,10 +42692,8 @@ void on_event_iterable_init(
     ecs_term_t *filter)
 {
     ecs_iter_poly(world, poly, it, filter);
-    it->event = EcsOnAdd;
     it->event_id = filter->id;
 }
-
 
 /* -- Bootstrapping -- */
 
