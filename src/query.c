@@ -2453,6 +2453,13 @@ ecs_query_t* ecs_query_init(
         observer_desc.events[0] = EcsOnTableEmpty;
         observer_desc.events[1] = EcsOnTableFill;
         observer_desc.filter.filter = true;
+
+        /* ecs_filter_init could have moved away resources from the terms array
+         * in the descriptor, so use the terms array from the filter. */
+        observer_desc.filter.terms_buffer = result->filter.terms;
+        observer_desc.filter.terms_buffer_count = result->filter.term_count;
+        observer_desc.filter.expr = NULL; /* Already parsed */
+
         result->observer = ecs_observer_init(world, &observer_desc);
         if (!result->observer) {
             goto error;

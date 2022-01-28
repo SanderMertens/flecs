@@ -618,7 +618,8 @@
                 "set_var",
                 "set_2_vars",
                 "set_var_by_name",
-                "set_2_vars_by_name"
+                "set_2_vars_by_name",
+                "expr_w_var"
             ]
         }, {
             "id": "SystemBuilder",

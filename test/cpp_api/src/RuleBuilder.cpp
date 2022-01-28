@@ -436,3 +436,27 @@ void RuleBuilder_set_2_vars_by_name() {
 
     r.destruct();
 }
+
+void RuleBuilder_expr_w_var() {
+    flecs::world ecs;
+
+    auto rel = ecs.entity("Rel");
+    auto obj = ecs.entity();
+    auto e = ecs.entity().add(rel, obj);
+
+    auto r = ecs.rule_builder()
+        .term("(Rel, _X)")
+        .build();
+
+    int x_var = r.find_var("X");
+    test_assert(x_var != -1);
+
+    int32_t count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        test_assert(it.entity(index) == e);
+        test_assert(it.pair(1).second() == obj);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

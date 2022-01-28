@@ -190,6 +190,7 @@ struct term_builder_i : term_id_builder_i<Base> {
      *   Position, Velocity // incorrect
      */
     Base& expr(const char *expr) {
+#       ifdef FLECS_PARSER
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
         const char *ptr;
         if ((ptr = ecs_parse_term(this->world_v(), nullptr, expr, expr, m_term)) == nullptr) {
@@ -200,6 +201,10 @@ struct term_builder_i : term_id_builder_i<Base> {
 
         // Should not have more than one term
         ecs_assert(ptr[0] == 0, ECS_INVALID_PARAMETER, NULL);
+#       else
+        (void)expr;
+        ecs_abort(ECS_UNSUPPORTED, "parser addon required for expr()");
+#       endif
         return *this;
     }
 

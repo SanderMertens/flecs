@@ -73,20 +73,14 @@ int finalize_term_var(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_term_id_t *identifier,
-    const char *name,
-    bool allocated)
+    const char *name)
 {
     if (identifier->var == EcsVarDefault) {
         const char *var = ecs_identifier_is_var(identifier->name);
         if (var) {
-            if (allocated) {
-                char *var_dup = ecs_os_strdup(var);
-                ecs_os_free(identifier->name);
-                identifier->name = var_dup;
-            } else {
-                ecs_assert(!term->move, ECS_INTERNAL_ERROR, NULL);
-                identifier->name = (char*)var;
-            }
+            char *var_dup = ecs_os_strdup(var);
+            ecs_os_free(identifier->name);
+            identifier->name = var_dup;
             identifier->var = EcsVarIsVariable;
         }
     }
@@ -134,7 +128,7 @@ int finalize_term_identifier(
     if (finalize_term_set(world, term, identifier, name)) {
         return -1;
     }
-    if (finalize_term_var(world, term, identifier, name, false)) {
+    if (finalize_term_var(world, term, identifier, name)) {
         return -1;
     }
     return 0;
@@ -191,16 +185,15 @@ static
 int finalize_term_vars(
     const ecs_world_t *world,
     ecs_term_t *term,
-    const char *name,
-    bool allocated)
+    const char *name)
 {
-    if (finalize_term_var(world, term, &term->pred, name, allocated)) {
+    if (finalize_term_var(world, term, &term->pred, name)) {
         return -1;
     }
-    if (finalize_term_var(world, term, &term->subj, name, allocated)) {
+    if (finalize_term_var(world, term, &term->subj, name)) {
         return -1;
     }
-    if (finalize_term_var(world, term, &term->obj, name, allocated)) {
+    if (finalize_term_var(world, term, &term->obj, name)) {
         return -1;
     }
     return 0;
@@ -652,7 +645,7 @@ int ecs_term_finalize(
     const char *name,
     ecs_term_t *term)
 {
-    if (finalize_term_vars(world, term, name, false)) {
+    if (finalize_term_vars(world, term, name)) {
         return -1;
     }
 
@@ -905,7 +898,7 @@ int ecs_filter_init(
             /* Check for identifiers that have a name that starts with _. If the
              * variable kind is left to Default, the kind should be set to 
              * variable and the _ prefix should be removed. */
-            finalize_term_vars(world, &term, name, true);
+            finalize_term_vars(world, &term, name);
 
             terms[term_count] = term;
             term_count ++;
@@ -926,36 +919,42 @@ int ecs_filter_init(
 #endif
     }
 
+    /* Copy term resources. */
+    if (term_count) {
+        ecs_term_t *dst_terms = terms;
+        if (!f.expr) {
+            if (term_count <= ECS_TERM_CACHE_SIZE) {
+                dst_terms = f.term_cache;
+                f.term_cache_used = true;
+            } else {
+                dst_terms = ecs_os_malloc_n(ecs_term_t, term_count);
+            }
+        }
+
+        for (i = 0; i < term_count; i ++) {
+            dst_terms[i] = ecs_term_move(&terms[i]);
+        }
+        f.terms = dst_terms;
+    } else {
+        f.terms = NULL;
+    }
+
     /* Ensure all fields are consistent and properly filled out */
     if (ecs_filter_finalize(world, &f)) {
         goto error;
     }
 
     *filter_out = f;
-
-    /* Copy term resources. */
-    if (term_count) {
-        if (!filter_out->expr) {
-            if (term_count <= ECS_TERM_CACHE_SIZE) {
-                filter_out->terms = filter_out->term_cache;
-                filter_out->term_cache_used = true;
-            } else {
-                filter_out->terms = ecs_os_malloc_n(ecs_term_t, term_count);
-            }
-        }
-
-        for (i = 0; i < term_count; i ++) {
-            filter_out->terms[i] = ecs_term_move(&terms[i]);
-        }        
-    } else {
-        filter_out->terms = NULL;
+    if (f.term_cache_used) {
+        filter_out->terms = filter_out->term_cache;
     }
-
     filter_out->name = ecs_os_strdup(desc->name);
     filter_out->expr = ecs_os_strdup(desc->expr);
 
     ecs_assert(!filter_out->term_cache_used || 
         filter_out->terms == filter_out->term_cache,
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(filter_out->term_count == f.term_count,
         ECS_INTERNAL_ERROR, NULL);
 
     filter_out->iterable.init = filter_iter_init;
@@ -1035,6 +1034,10 @@ void ecs_filter_fini(
 
     ecs_os_free(filter->name);
     ecs_os_free(filter->expr);
+
+    filter->terms = NULL;
+    filter->name = NULL;
+    filter->expr = NULL;
 }
 
 static

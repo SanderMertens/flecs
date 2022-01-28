@@ -587,6 +587,7 @@ void RuleBuilder_set_var(void);
 void RuleBuilder_set_2_vars(void);
 void RuleBuilder_set_var_by_name(void);
 void RuleBuilder_set_2_vars_by_name(void);
+void RuleBuilder_expr_w_var(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -3078,6 +3079,10 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "set_2_vars_by_name",
         RuleBuilder_set_2_vars_by_name
+    },
+    {
+        "expr_w_var",
+        RuleBuilder_expr_w_var
     }
 };
 
@@ -4085,7 +4090,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        13,
+        14,
         RuleBuilder_testcases
     },
     {
