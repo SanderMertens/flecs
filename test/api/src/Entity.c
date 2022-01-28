@@ -831,7 +831,7 @@ void Entity_is_junk_valid() {
 
     test_bool(ecs_is_valid(world, 500), true);
     test_bool(ecs_is_valid(world, 0xFFFFFFFF), true);
-    test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCD), true);
+    test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCD), false);
     
     test_bool(ecs_is_alive(world, 500), false);
     test_bool(ecs_is_alive(world, 0xFFFFFFFF), false);
@@ -859,6 +859,18 @@ void Entity_is_not_alive_valid() {
     ecs_delete(world, e);
     test_bool(ecs_is_valid(world, e), false);
     test_bool(ecs_is_alive(world, e), false);
+
+    ecs_fini(world);
+}
+
+void Entity_is_nonzero_gen_valid() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t id = ECS_GENERATION_INC(1000);
+    test_int(ECS_GENERATION(id), 1);
+    test_bool(ecs_is_alive(world, id), false);
+    test_bool(ecs_exists(world, id), false);
+    test_bool(ecs_is_valid(world, id), false);
 
     ecs_fini(world);
 }
@@ -950,4 +962,120 @@ void Entity_record_find_from_stage() {
     ecs_staging_end(world);
 
     ecs_fini(world);
+}
+
+void Entity_ensure_zero_gen() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t id = 1000;
+    test_bool(ecs_is_alive(world, id), false);
+    test_bool(ecs_is_valid(world, id), true);
+    test_bool(ecs_exists(world, id), false);
+
+    ecs_ensure(world, id);
+    test_bool(ecs_is_alive(world, id), true);
+    test_bool(ecs_is_valid(world, id), true);
+    test_bool(ecs_exists(world, id), true);
+
+    ecs_fini(world);
+}
+
+void Entity_ensure_nonzero_gen() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t id = ECS_GENERATION_INC(1000);
+    test_int(ECS_GENERATION(id), 1);
+    test_bool(ecs_is_alive(world, id), false);
+    test_bool(ecs_is_valid(world, id), false);
+    test_bool(ecs_exists(world, id), false);
+
+    ecs_ensure(world, id);
+    test_bool(ecs_is_alive(world, id), true);
+    test_bool(ecs_is_valid(world, id), true);
+    test_bool(ecs_exists(world, id), true);
+
+    ecs_fini(world);
+}
+
+void Entity_ensure_zero_gen_exists() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_ensure(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(ecs_is_valid(world, e));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_ensure_nonzero_gen_exists() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    e = ECS_GENERATION_INC(e);
+    e = ECS_GENERATION_INC(e); /* one above the current value */
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_ensure(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(ecs_is_valid(world, e));
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_ensure_zero_gen_exists_alive() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    ecs_delete(world, e);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    test_assert(e1 != e);
+    test_assert(ecs_strip_generation(e1) == e);
+
+    test_expect_abort();
+    ecs_ensure(world, e); // not allowed, can't ensure gen 0 if gen 1 is alive
+}
+
+void Entity_ensure_nonzero_gen_exists_alive() {
+    install_test_abort();
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_delete(world, e);
+    test_assert(ecs_exists(world, e));
+    test_assert(!ecs_is_valid(world, e));
+    test_assert(!ecs_is_alive(world, e));
+    ecs_delete(world, e);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    test_assert(e1 != e);
+    test_assert(ecs_strip_generation(e1) == e);
+
+    e = ECS_GENERATION_INC(e);
+    e = ECS_GENERATION_INC(e);
+
+    test_expect_abort();
+    ecs_ensure(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
 }

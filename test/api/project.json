@@ -55,11 +55,18 @@
                     "is_0_valid",
                     "is_junk_valid",
                     "is_not_alive_valid",
+                    "is_nonzero_gen_valid",
                     "init_w_name_deferred",
                     "init_w_name_staged",
                     "record_find_for_empty",
                     "record_find",
-                    "record_find_from_stage"
+                    "record_find_from_stage",
+                    "ensure_zero_gen",
+                    "ensure_nonzero_gen",
+                    "ensure_zero_gen_exists",
+                    "ensure_nonzero_gen_exists",
+                    "ensure_zero_gen_exists_alive",
+                    "ensure_nonzero_gen_exists_alive"
                 ]
             }, {
                 "id": "Event",

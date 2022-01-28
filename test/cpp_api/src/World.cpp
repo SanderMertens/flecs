@@ -1179,3 +1179,72 @@ void World_register_namespace_after_component() {
     test_str(inn_sym, "Outer.Inner");
     test_str(out_sym, "Outer");
 }
+
+void World_is_alive() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    test_bool(ecs.is_alive(e), true);
+    test_bool(ecs.is_alive(1000), false);
+
+    e.destruct();
+
+    test_bool(ecs.is_alive(e), false);
+}
+
+void World_is_valid() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    test_bool(ecs.is_valid(e), true);
+    test_bool(ecs.is_valid(1000), true);
+    test_bool(ecs.is_valid(0), false);
+
+    e.destruct();
+
+    test_bool(ecs.is_valid(e), false);
+}
+
+void World_exists() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    test_bool(ecs.exists(e), true);
+    test_bool(ecs.exists(1000), false);
+}
+
+void World_get_alive() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity();
+    auto e_no_gen = flecs::strip_generation(e_1);
+    test_assert(e_1 == e_no_gen);
+    e_1.destruct();
+
+    auto e_2 = ecs.entity();
+    test_assert(e_1 != e_2);
+    test_assert(e_no_gen == flecs::strip_generation(e_2));
+
+    test_assert(ecs.get_alive(e_no_gen) == e_2);
+}
+
+void World_ensure() {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity();
+    e_1.destruct();
+    test_assert(!e_1.is_alive());
+
+    auto e_2 = ecs.entity();
+    test_assert(e_1 != e_2);
+    test_assert(e_1 == flecs::strip_generation(e_2));
+    e_2.destruct();
+    test_assert(!e_2.is_alive());
+
+    auto e_3 = ecs.ensure(e_2);
+    test_assert(e_2 == e_3);
+    test_assert(e_3.is_alive());
+}

@@ -374,6 +374,8 @@ struct component : untyped_component {
     }
 };
 
+/** Get id currently assigned to component. If no world has registered the
+ * component yet, this operation will return 0. */
 template <typename T>
 flecs::entity_t type_id() {
     return _::cpp_type<T>::s_id;

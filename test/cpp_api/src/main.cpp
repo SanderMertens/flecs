@@ -794,6 +794,11 @@ void World_remove_all_pair(void);
 void World_remove_all_pair_type(void);
 void World_get_scope(void);
 void World_register_namespace_after_component(void);
+void World_is_alive(void);
+void World_is_valid(void);
+void World_exists(void);
+void World_get_alive(void);
+void World_ensure(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3846,6 +3851,26 @@ bake_test_case World_testcases[] = {
     {
         "register_namespace_after_component",
         World_register_namespace_after_component
+    },
+    {
+        "is_alive",
+        World_is_alive
+    },
+    {
+        "is_valid",
+        World_is_valid
+    },
+    {
+        "exists",
+        World_exists
+    },
+    {
+        "get_alive",
+        World_get_alive
+    },
+    {
+        "ensure",
+        World_ensure
     }
 };
 
@@ -4105,7 +4130,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        59,
+        64,
         World_testcases
     },
     {
@@ -4125,6 +4150,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    ut_init(argv[0]);
     return bake_test_run("cpp_api", argc, argv, suites, 26);
 }

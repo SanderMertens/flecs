@@ -996,12 +996,6 @@ void ecs_vector_assert_size(
     ecs_vector_t* vector_inout,
     ecs_size_t elem_size);
 
-/** Assert when the provided alignment does not match the vector type. */
-FLECS_API
-void ecs_vector_assert_alignment(
-    ecs_vector_t* vector,
-    ecs_size_t elem_alignment);    
-
 /** Add element to vector. */
 FLECS_API
 void* _ecs_vector_add(
@@ -5101,21 +5095,18 @@ ecs_entity_t ecs_get_alive(
  * This operation ensures that the provided id is alive. This is useful in
  * scenarios where an application has an existing id that has not been created
  * with ecs_new (such as a global constant or an id from a remote application).
+ * 
+ * When this operation is successful it guarantees that the provided id exists, 
+ * is valid and is alive.
  *
- * Before this operation the id must either not yet exist, or must exist with
- * the same generation as the provided id. If the id has been recycled and the
- * provided id does not have the same generation count, the function will fail.
- *
- * If the provided entity is not alive, and the provided generation count is
- * equal to the current generation (which is the future generation when the id
- * will be recycled) the id will become alive again.
+ * Before this operation the id must either not be alive or have a generation
+ * that is equal to the passed in entity.
  *
  * If the provided id has a non-zero generation count and the id does not exist
  * in the world, the id will be created with the specified generation.
- *
- * This behavior ensures that an application can use ecs_ensure to track the
- * lifecycle of an id without explicitly having to create it. It also protects
- * against reviving an id with a generation count that was not yet due.
+ * 
+ * If the provided id is alive and has a generation count that does not match
+ * the provided id, the operation will fail.
  *
  * @param world The world.
  * @param entity The entity id to make alive.
@@ -5124,6 +5115,29 @@ FLECS_API
 void ecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity);
+
+/** Same as ecs_ensure, but for (component) ids.
+ * An id can be an entity or pair, and can contain type flags. This operation
+ * ensures that the entity (or entities, for a pair) are alive.
+ * 
+ * When this operation is successful it guarantees that the provided id can be
+ * used in operations that accept an id.
+ * 
+ * Since entities in a pair do not encode their generation ids, this operation
+ * will not fail when an entity with non-zero generation count already exists in
+ * the world. 
+ * 
+ * This is different from ecs_ensure, which will fail if attempted with an id
+ * that has generation 0 and an entity with a non-zero generation is currently 
+ * alive.
+ * 
+ * @param world The world.
+ * @param id The id to make alive.
+ */
+FLECS_API
+void ecs_ensure_id(
+    ecs_world_t *world,
+    ecs_id_t id);
 
 /** Test whether an entity exists.
  * Similar as ecs_is_alive, but ignores entity generation count.
@@ -13742,13 +13756,6 @@ struct world final {
     template <typename T>
     void remove() const;
 
-    /** Get id for type.
-     */
-    template <typename T>
-    entity_t type_id() {
-        return _::cpp_type<T>::id(m_world);
-    }
-
     /** Get singleton entity for type.
      */
     template <typename T>
@@ -13906,6 +13913,48 @@ struct world final {
         func();
         ecs_defer_end(m_world);
     }
+
+    /** Check if entity id exists in the world.
+     * Ignores entity relation.
+     * 
+     * @see ecs_exists
+     */
+    bool exists(flecs::entity_t e) const {
+        return ecs_exists(m_world, e);
+    }
+
+    /** Check if entity id exists in the world.
+     * Ignores entity relation.
+     *
+     * @see ecs_is_alive
+     */
+    bool is_alive(flecs::entity_t e) const {
+        return ecs_is_alive(m_world, e);
+    }
+
+    /** Check if entity id is valid.
+     * Invalid entities cannot be used with API functions.
+     * 
+     * @see ecs_is_valid
+     */
+    bool is_valid(flecs::entity_t e) const {
+        return ecs_is_valid(m_world, e);
+    }
+
+    /** Get alive entity for id.
+     * Returns the entity with the current generation.
+     * 
+     * @see ecs_get_alive
+     */
+    flecs::entity get_alive(flecs::entity_t e) const;
+
+    /** Ensures that entity with provided generation is alive.
+     * Ths operation will fail if an entity exists with the same id and a 
+     * different, non-zero generation.
+     * 
+     * @see ecs_ensure
+     */
+    flecs::entity ensure(flecs::entity_t e) const;
 
 
 /** Get id from a type.
@@ -14292,6 +14341,20 @@ public:
     world_t *m_world;
     bool m_owned;
 };
+
+/** Return id without generation.
+ * 
+ * @see ecs_strip_generation
+ */
+inline flecs::id_t strip_generation(flecs::entity_t e) {
+    return ecs_strip_generation(e);
+}
+
+/** Return entity generation.
+ */
+inline uint32_t get_generation(flecs::entity_t e) {
+    return ECS_GENERATION(e);
+}
 
 } // namespace flecs
 
@@ -17519,6 +17582,8 @@ struct component : untyped_component {
     }
 };
 
+/** Get id currently assigned to component. If no world has registered the
+ * component yet, this operation will return 0. */
 template <typename T>
 flecs::entity_t type_id() {
     return _::cpp_type<T>::s_id;
@@ -20791,6 +20856,16 @@ void world::set(const Func& func) {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
+}
+
+inline flecs::entity world::get_alive(flecs::entity_t e) const {
+    e = ecs_get_alive(m_world, e);
+    return flecs::entity(m_world, e);
+}
+
+inline flecs::entity world::ensure(flecs::entity_t e) const {
+    ecs_ensure(m_world, e);
+    return flecs::entity(m_world, e);
 }
 
 template <typename E>

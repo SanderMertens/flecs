@@ -144,7 +144,7 @@ void Singleton_type_id_from_world() {
 
     world.set<Position>({10, 20});
 
-    flecs::entity_t id = world.type_id<Position>();
+    flecs::entity_t id = world.id<Position>();
     test_assert(id == flecs::type_id<Position>());
 
     auto s = world.singleton<Position>();

@@ -134,6 +134,16 @@ void world::set(const Func& func) {
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
+inline flecs::entity world::get_alive(flecs::entity_t e) const {
+    e = ecs_get_alive(m_world, e);
+    return flecs::entity(m_world, e);
+}
+
+inline flecs::entity world::ensure(flecs::entity_t e) const {
+    ecs_ensure(m_world, e);
+    return flecs::entity(m_world, e);
+}
+
 template <typename E>
 inline flecs::entity enum_data<E>::entity() {
     return flecs::entity(world_, impl_.id);

@@ -49,11 +49,18 @@ void Entity_is_recycled_valid(void);
 void Entity_is_0_valid(void);
 void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
+void Entity_is_nonzero_gen_valid(void);
 void Entity_init_w_name_deferred(void);
 void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
 void Entity_record_find_from_stage(void);
+void Entity_ensure_zero_gen(void);
+void Entity_ensure_nonzero_gen(void);
+void Entity_ensure_zero_gen_exists(void);
+void Entity_ensure_nonzero_gen_exists(void);
+void Entity_ensure_zero_gen_exists_alive(void);
+void Entity_ensure_nonzero_gen_exists_alive(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2566,6 +2573,10 @@ bake_test_case Entity_testcases[] = {
         Entity_is_not_alive_valid
     },
     {
+        "is_nonzero_gen_valid",
+        Entity_is_nonzero_gen_valid
+    },
+    {
         "init_w_name_deferred",
         Entity_init_w_name_deferred
     },
@@ -2584,6 +2595,30 @@ bake_test_case Entity_testcases[] = {
     {
         "record_find_from_stage",
         Entity_record_find_from_stage
+    },
+    {
+        "ensure_zero_gen",
+        Entity_ensure_zero_gen
+    },
+    {
+        "ensure_nonzero_gen",
+        Entity_ensure_nonzero_gen
+    },
+    {
+        "ensure_zero_gen_exists",
+        Entity_ensure_zero_gen_exists
+    },
+    {
+        "ensure_nonzero_gen_exists",
+        Entity_ensure_nonzero_gen_exists
+    },
+    {
+        "ensure_zero_gen_exists_alive",
+        Entity_ensure_zero_gen_exists_alive
+    },
+    {
+        "ensure_nonzero_gen_exists_alive",
+        Entity_ensure_nonzero_gen_exists_alive
     }
 };
 
@@ -11576,7 +11611,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        45,
+        52,
         Entity_testcases
     },
     {
