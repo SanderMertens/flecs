@@ -11628,7 +11628,6 @@ struct string_view : string {
 }
 
 #include <string.h>
-#include <stdio.h>
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -18621,6 +18620,14 @@ struct term final : term_builder_i<term> {
             this->id(r, o);
         }
 
+    term(flecs::world_t *world_ptr, const char *expr) 
+        : term_builder_i<term>(&value)
+        , value({})
+        , m_world(world_ptr)
+    {
+        this->expr(expr);
+    }
+
     term(const term& t) : term_builder_i<term>(&value) {
         m_world = t.m_world;
         value = ecs_term_copy(&t.value);
@@ -18801,6 +18808,7 @@ template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
     filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
+        , m_expr_count(0)
         , m_desc(desc) { }
 
     Base& instanced() {
@@ -18809,11 +18817,22 @@ struct filter_builder_i : term_builder_i<Base> {
     }
 
     Base& expr(const char *expr) {
+        ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
+            "filter_builder::expr() called more than once");
         m_desc->expr = expr;
+        m_expr_count ++;
+
+    error:
         return *this;
     }
 
     Base& term() {
+        if (this->m_term) {
+            ecs_check(ecs_term_is_initialized(this->m_term), 
+                ECS_INVALID_OPERATION, 
+                    "filter_builder::term() called without initializing term");
+        }
+
         if (m_term_index >= ECS_TERM_DESC_CACHE_SIZE) {
             if (m_term_index == ECS_TERM_DESC_CACHE_SIZE) {
                 m_desc->terms_buffer = ecs_os_calloc_n(
@@ -18835,6 +18854,8 @@ struct filter_builder_i : term_builder_i<Base> {
         }
 
         m_term_index ++;
+    
+    error:
         return *this;
     }
     
@@ -18844,7 +18865,8 @@ struct filter_builder_i : term_builder_i<Base> {
         m_term_index = term_index - 1;
         this->term();
         m_term_index = prev_index;
-        ecs_assert(ecs_term_is_initialized(this->m_term), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(ecs_term_is_initialized(this->m_term), 
+            ECS_INVALID_PARAMETER, NULL);
         return *this;
     }    
 
@@ -18903,7 +18925,7 @@ struct filter_builder_i : term_builder_i<Base> {
 
     Base& term(const char *expr) {
         this->term();
-        *this->m_term = flecs::term(this->world_v()).expr(expr).move();
+        *this->m_term = flecs::term(this->world_v(), expr).move();
         this->m_term->move = true;
         return *this;
     }
@@ -18923,6 +18945,7 @@ struct filter_builder_i : term_builder_i<Base> {
 protected:
     virtual flecs::world_t* world_v() = 0;
     int32_t m_term_index;
+    int32_t m_expr_count;
 
 private:
     operator Base&() {

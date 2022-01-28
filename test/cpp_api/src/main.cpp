@@ -571,6 +571,7 @@ void FilterBuilder_const_in_term(void);
 void FilterBuilder_create_w_no_template_args(void);
 void FilterBuilder_2_terms_w_expr(void);
 void FilterBuilder_assert_on_multiple_expr_calls(void);
+void FilterBuilder_assert_on_uninitialized_term(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -3018,6 +3019,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "assert_on_multiple_expr_calls",
         FilterBuilder_assert_on_multiple_expr_calls
+    },
+    {
+        "assert_on_uninitialized_term",
+        FilterBuilder_assert_on_uninitialized_term
     }
 };
 
@@ -4073,7 +4078,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        68,
+        69,
         FilterBuilder_testcases
     },
     {

@@ -1718,3 +1718,19 @@ void FilterBuilder_assert_on_multiple_expr_calls() {
         .term().expr("B")
         .build();
 }
+
+void FilterBuilder_assert_on_uninitialized_term() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity("A");
+    ecs.entity("B");
+
+    test_expect_abort();
+
+    auto f = ecs.filter_builder()
+        .term()
+        .term()
+        .build();
+}

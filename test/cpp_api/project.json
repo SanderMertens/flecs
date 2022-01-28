@@ -600,7 +600,8 @@
                 "const_in_term",
                 "create_w_no_template_args",
                 "2_terms_w_expr",
-                "assert_on_multiple_expr_calls"
+                "assert_on_multiple_expr_calls",
+                "assert_on_uninitialized_term"
             ]
         }, {
             "id": "RuleBuilder",
