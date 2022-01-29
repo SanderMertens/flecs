@@ -34965,21 +34965,12 @@ yield:
 
 static
 int32_t type_search(
-    const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
+    ecs_id_record_t *idr,
     ecs_id_t *ids,
     ecs_id_t *id_out,
     ecs_table_record_t **tr_out)
-{
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr) {
-        return -1;
-    }
-    
+{    
     ecs_table_record_t *tr = ecs_table_cache_get(
         &idr->cache, ecs_table_record_t, table);
 
@@ -34995,24 +34986,18 @@ int32_t type_search(
 
 static
 int32_t type_offset_search(
-    const ecs_world_t *world,
     const ecs_table_t *table,
     int32_t offset,
     ecs_id_t id,
     ecs_id_t *ids,
     int32_t count,
-    ecs_id_t *id_out,
-    ecs_table_record_t **tr_out)
+    ecs_id_t *id_out)
 {
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(offset >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(offset > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
-
-    if (!offset) {
-        return type_search(world, table, id, ids, id_out, tr_out);
-    }
 
     while (offset < count) {
         ecs_id_t type_id = ids[offset ++];
@@ -35029,8 +35014,8 @@ static
 int32_t type_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    int32_t offset,
     ecs_id_t id,
+    ecs_id_record_t *idr,
     uint32_t rel,
     int32_t min_depth,
     int32_t max_depth,
@@ -35043,8 +35028,7 @@ int32_t type_search_relation(
     int32_t count = ecs_vector_count(type);
 
     if (min_depth <= 0) {
-        int32_t r = type_offset_search(world, table, offset, id, ids, count, 
-            id_out, tr_out);
+        int32_t r = type_search(table, idr, ids, id_out, tr_out);
         if (r != -1) {
             return r;
         }
@@ -35073,9 +35057,9 @@ int32_t type_search_relation(
 
                     ecs_table_t *obj_table = rec->table;
                     if (obj_table) {
-                        r = type_search_relation(world, obj_table, 0, id, rel, 
-                            min_depth - 1, max_depth - 1, subject_out, id_out,
-                            tr_out);
+                        r = type_search_relation(world, obj_table, id, idr, 
+                            rel, min_depth - 1, max_depth - 1, subject_out, 
+                            id_out, tr_out);
                         if (r != -1) {
                             if (subject_out && !subject_out[0]) {
                                 subject_out[0] = ecs_get_alive(world, obj);
@@ -35084,9 +35068,9 @@ int32_t type_search_relation(
                         }
 
                         if (!is_a) {
-                            r = type_search_relation(world, obj_table, 0, id,
-                                (uint32_t)EcsIsA, 1, INT_MAX, subject_out, id_out, 
-                                tr_out);
+                            r = type_search_relation(world, obj_table, id, 
+                                idr, (uint32_t)EcsIsA, 1, INT_MAX, subject_out, 
+                                id_out, tr_out);
                             if (r != -1) {
                                 if (subject_out && !subject_out[0]) {
                                     subject_out[0] = ecs_get_alive(world, obj);
@@ -35134,7 +35118,24 @@ int32_t ecs_search_relation(
     bool is_case = ECS_HAS_ROLE(id, CASE);
     id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
     
-    return type_search_relation(world, table, offset, id, (uint32_t)rel, 
+    if (offset) {
+        ecs_assert(min_depth == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_type_t type = table->type;
+        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t count = ecs_vector_count(type);
+        int32_t r = type_offset_search(table, offset, id, ids, count, id_out);
+        if (r != -1) {
+            return r;
+        }
+        min_depth ++;
+    }
+
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return -1;
+    }
+
+    return type_search_relation(world, table, id, idr, (uint32_t)rel, 
         min_depth, max_depth, subject_out, id_out, tr_out);
 }
 
@@ -35149,9 +35150,14 @@ int32_t ecs_search(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return -1;
+    }
+
     ecs_type_t type = table->type;
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    return type_search(world, table, id, ids, id_out, NULL);
+    return type_search(table, idr, ids, id_out, NULL);
 }
 
 int32_t ecs_search_offset(
@@ -35166,8 +35172,25 @@ int32_t ecs_search_offset(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return type_search_relation(world, table, offset, id, 0, 
-        0, 0, 0, id_out, NULL);
+    int32_t min_depth = 0;
+    if (offset) {
+        ecs_type_t type = table->type;
+        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+        int32_t count = ecs_vector_count(type);
+        int32_t r = type_offset_search(table, offset, id, ids, count, id_out);
+        if (r != -1) {
+            return r;
+        }
+        min_depth ++;
+    }
+
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return -1;
+    }
+
+    return type_search_relation(world, table, id, idr, 0, 
+        min_depth, 0, 0, id_out, NULL);
 }
 
 
@@ -42692,6 +42715,18 @@ void register_on_delete_object(ecs_iter_t *it) {
 }
 
 static
+void register_exclusive(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+        r->flags |= ECS_ID_EXCLUSIVE;
+    } 
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -43070,6 +43105,13 @@ void flecs_bootstrap(
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });
+
+    /* Define trigger for exclusive property */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsExclusive },
+        .callback = register_exclusive,
         .events = {EcsOnAdd}
     });
 

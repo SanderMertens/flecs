@@ -2013,9 +2013,9 @@ void World_get_tick(void);
 void World_entity_range_offset(void);
 void World_entity_range_offset_out_of_range(void);
 void World_entity_range_limit_out_of_range(void);
-void World_entity_range_add_existing_in_progress(void);
-void World_entity_range_add_in_range_in_progress(void);
-void World_entity_range_add_out_of_range_in_progress(void);
+void World_entity_range_add_existing_staged(void);
+void World_entity_range_add_in_range_staged(void);
+void World_entity_range_add_out_of_range_staged(void);
 void World_entity_range_out_of_range_check_disabled(void);
 void World_entity_range_check_after_delete(void);
 void World_dim(void);
@@ -10130,16 +10130,16 @@ bake_test_case World_testcases[] = {
         World_entity_range_limit_out_of_range
     },
     {
-        "entity_range_add_existing_in_progress",
-        World_entity_range_add_existing_in_progress
+        "entity_range_add_existing_staged",
+        World_entity_range_add_existing_staged
     },
     {
-        "entity_range_add_in_range_in_progress",
-        World_entity_range_add_in_range_in_progress
+        "entity_range_add_in_range_staged",
+        World_entity_range_add_in_range_staged
     },
     {
-        "entity_range_add_out_of_range_in_progress",
-        World_entity_range_add_out_of_range_in_progress
+        "entity_range_add_out_of_range_staged",
+        World_entity_range_add_out_of_range_staged
     },
     {
         "entity_range_out_of_range_check_disabled",
