@@ -23,7 +23,6 @@ int32_t type_search(
 
 static
 int32_t type_offset_search(
-    const ecs_table_t *table,
     int32_t offset,
     ecs_id_t id,
     ecs_id_t *ids,
@@ -150,8 +149,6 @@ int32_t ecs_search_relation(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
-
     bool is_case = ECS_HAS_ROLE(id, CASE);
     id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
     
@@ -160,17 +157,15 @@ int32_t ecs_search_relation(
         ecs_type_t type = table->type;
         ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
         int32_t count = ecs_vector_count(type);
-        int32_t r = type_offset_search(table, offset, id, ids, count, id_out);
-        if (r != -1) {
-            return r;
-        }
-        min_depth ++;
+        return type_offset_search(offset, id, ids, count, id_out);
     }
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
         return -1;
     }
+
+    max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
 
     return type_search_relation(world, table, id, idr, (uint32_t)rel, 
         min_depth, max_depth, subject_out, id_out, tr_out);
@@ -204,28 +199,16 @@ int32_t ecs_search_offset(
     ecs_id_t id,
     ecs_id_t *id_out)
 {
+    if (!offset) {
+        return ecs_search(world, table, id, id_out);
+    }
+
     if (!table) return -1;
 
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t min_depth = 0;
-    if (offset) {
-        ecs_type_t type = table->type;
-        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-        int32_t count = ecs_vector_count(type);
-        int32_t r = type_offset_search(table, offset, id, ids, count, id_out);
-        if (r != -1) {
-            return r;
-        }
-        min_depth ++;
-    }
-
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr) {
-        return -1;
-    }
-
-    return type_search_relation(world, table, id, idr, 0, 
-        min_depth, 0, 0, id_out, NULL);
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t count = ecs_vector_count(type);
+    return type_offset_search(offset, id, ids, count, id_out);
 }

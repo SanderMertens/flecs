@@ -35,7 +35,8 @@ int32_t get_bucket_id(
     ecs_map_key_t key) 
 {
     ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
-    int32_t result = (int32_t)(key & ((uint64_t)bucket_count - 1));
+    uint32_t k32 = (uint32_t)key ^ (uint32_t)(key >> 32);
+    int32_t result = (int32_t)(k32 & ((uint32_t)bucket_count - 1));
     ecs_assert(result < INT32_MAX, ECS_INTERNAL_ERROR, NULL);
     return result;
 }
