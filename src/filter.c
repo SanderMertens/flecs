@@ -1801,6 +1801,49 @@ const ecs_filter_t* init_filter_iter(
     return filter;
 }
 
+int32_t ecs_filter_pivot_term(
+    const ecs_world_t *world,
+    const ecs_filter_t *filter)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_term_t *terms = filter->terms;
+    int32_t i, term_count = filter->term_count;
+    int32_t pivot_term = -1, min_count = -1;
+
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_id_t id = term->id;
+
+        if (term->oper != EcsAnd) {
+            continue;
+        }
+
+        if (term->subj.entity != EcsThis) {
+            continue;
+        }
+
+        ecs_id_record_t *idr = flecs_get_id_record(world,   
+            actual_match_id(id));
+        if (!idr) {
+            /* If one of the terms does not match with any data, iterator 
+             * should not return anything */
+            return -2; /* -2 indicates filter doesn't match anything */
+        }
+
+        int32_t table_count = flecs_id_record_count(idr);
+        if (min_count == -1 || table_count < min_count) {
+            min_count = table_count;
+            pivot_term = i;
+        }
+    }
+
+    return pivot_term;
+error:
+    return -2;
+}
+
 ecs_iter_t ecs_filter_iter(
     const ecs_world_t *stage,
     const ecs_filter_t *filter)
@@ -1821,47 +1864,25 @@ ecs_iter_t ecs_filter_iter(
 
     filter = init_filter_iter(world, &it, filter);
 
-    int32_t i, term_count = filter->term_count;
-    ecs_term_t *terms = filter->terms;
-    int32_t min_count = -1;
-    int32_t pivot_term = -1;
-    ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
-
     /* Find term that represents smallest superset */
     if (filter->match_this) {
+        ecs_term_t *terms = filter->terms;
+        int32_t pivot_term = -1;
+        ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
+
         iter->kind = EcsIterEvalIndex;
 
-        for (i = 0; i < term_count; i ++) {
-            ecs_term_t *term = &terms[i];
-            ecs_id_t id = term->id;
-
-            if (term->oper != EcsAnd) {
-                continue;
-            }
-
-            if (term->subj.entity != EcsThis) {
-                continue;
-            }
-
-            ecs_id_record_t *idr = flecs_get_id_record(world,   
-                actual_match_id(id));
-            if (!idr) {
-                /* If one of the terms does not match with any data, iterator 
-                 * should not return anything */
-                term_iter_init_no_data(&iter->term_iter);
-                return it;
-            }
-
-            int32_t table_count = flecs_id_record_count(idr);
-            if (min_count == -1 || table_count < min_count) {
-                min_count = table_count;
-                pivot_term = i;
-            }
-        }
-
-        if (pivot_term == -1) {
+        pivot_term = ecs_filter_pivot_term(world, filter);
+        if (pivot_term == -2) {
+            /* One or more terms have no matching results */
+            term_iter_init_no_data(&iter->term_iter);
+            return it;
+        } else if (pivot_term == -1) {
+            /* No terms meet the criteria to be a pivot term, evaluate filter
+             * against all tables */
             term_iter_init_wildcard(world, &iter->term_iter);
         } else {
+            ecs_assert(pivot_term >= 0, ECS_INTERNAL_ERROR, NULL);
             term_iter_init(world, &terms[pivot_term], &iter->term_iter);
         }
 

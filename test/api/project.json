@@ -1742,7 +1742,9 @@
                 "3_terms_2_filter",
                 "and_from",
                 "or_from",
-                "notify_propagated_twice"
+                "notify_propagated_twice",
+                "on_add_yield_existing",
+                "on_add_yield_existing_2_tables"
             ]                
         }, {
             "id": "TriggerOnAdd",

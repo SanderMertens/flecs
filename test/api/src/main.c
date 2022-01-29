@@ -1669,6 +1669,8 @@ void Observer_3_terms_2_filter(void);
 void Observer_and_from(void);
 void Observer_or_from(void);
 void Observer_notify_propagated_twice(void);
+void Observer_on_add_yield_existing(void);
+void Observer_on_add_yield_existing_2_tables(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -8847,6 +8849,14 @@ bake_test_case Observer_testcases[] = {
     {
         "notify_propagated_twice",
         Observer_notify_propagated_twice
+    },
+    {
+        "on_add_yield_existing",
+        Observer_on_add_yield_existing
+    },
+    {
+        "on_add_yield_existing_2_tables",
+        Observer_on_add_yield_existing_2_tables
     }
 };
 
@@ -11859,7 +11869,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        52,
+        54,
         Observer_testcases
     },
     {

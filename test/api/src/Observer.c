@@ -2328,3 +2328,51 @@ void Observer_notify_propagated_twice() {
 
     ecs_fini(world);
 }
+
+void Observer_on_add_yield_existing() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ Tag }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, Tag);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], Tag);
+
+    // Ensure normal triggering also still works
+    ecs_os_zeromem(&ctx);
+    ecs_new(world, Tag);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_yield_existing_2_tables() {
+    // Implement testcase
+}

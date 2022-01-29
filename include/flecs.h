@@ -719,6 +719,9 @@ typedef struct ecs_observer_desc_t {
     /* Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[ECS_TRIGGER_DESC_EVENT_COUNT_MAX];
 
+    /* See ecs_trigger_desc_t */
+    bool yield_existing;
+
     /* Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
 
@@ -2866,6 +2869,30 @@ ecs_iter_t ecs_filter_iter(
 FLECS_API
 ecs_iter_t ecs_filter_chain_iter(
     const ecs_iter_t *it,
+    const ecs_filter_t *filter);
+
+/** Get pivot term for filter.
+ * The pivot term is the term that matches the smallest set of tables, and is
+ * a good default starting point for a search.
+ * 
+ * The following conditions must be met for a term to be considered as pivot:
+ * - It must have a This subject
+ * - It must have the And operator
+ * 
+ * When a filter does not have any terms that match those conditions, it will
+ * return -1.
+ * 
+ * If one or more terms in the filter have no matching tables the filter won't
+ * yield any results. In this case the operation will return -2 which gives a
+ * search function the option to early out.
+ * 
+ * @param world The world.
+ * @param filter The filter.
+ * @return Index of the pivot term (use with filter->terms)
+ */
+FLECS_API
+int32_t ecs_filter_pivot_term(
+    const ecs_world_t *world,
     const ecs_filter_t *filter);
 
 /** Iterate tables matched by filter.

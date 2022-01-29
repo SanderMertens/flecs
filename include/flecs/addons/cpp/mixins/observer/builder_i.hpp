@@ -35,6 +35,11 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
         return *this;
     }
 
+    /** Invoke observer for anything that matches its filter on creation */
+    Base& yield_existing(bool value = true) {
+        m_desc->yield_existing = value;
+    }
+
     /** Associate observer with entity */
     Base& self(flecs::entity self) {
         m_desc->self = self;

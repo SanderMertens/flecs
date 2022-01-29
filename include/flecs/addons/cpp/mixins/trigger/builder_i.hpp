@@ -32,6 +32,12 @@ struct trigger_builder_i : term_builder_i<Base> {
         m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
         return *this;
     }
+
+    /** Invoke observer for anything that matches its filter on creation */
+    Base& yield_existing(bool value = true) {
+        m_desc->yield_existing = value;
+    }
+
     /** Associate trigger with entity */
     Base& self(flecs::entity self) {
         m_desc->self = self;
