@@ -391,7 +391,8 @@
                 "on_add_id",
                 "on_add_id_arg",
                 "on_add_expr",
-                "create_w_no_template_args"
+                "create_w_no_template_args",
+                "yield_existing"
             ]
         }, {
             "id": "Iterable",
@@ -658,7 +659,9 @@
                 "2_entities_iter",
                 "2_entities_table_column",
                 "2_entities_each",
-                "create_w_no_template_args"
+                "create_w_no_template_args",
+                "yield_existing",
+                "yield_existing_2_terms"
             ]
         }, {
             "id": "Filter",

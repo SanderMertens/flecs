@@ -195,3 +195,27 @@ void Trigger_create_w_no_template_args() {
 
     test_int(invoked, 1);
 }
+
+void Trigger_yield_existing() {
+    flecs::world world;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto e1 = world.entity().add<TagA>();
+    auto e2 = world.entity().add<TagA>();
+    auto e3 = world.entity().add<TagA>().add<TagB>();
+
+    int32_t count = 0;
+
+    world.trigger<TagA>()
+        .event(flecs::OnAdd)
+        .yield_existing()
+        .each([&](flecs::entity e, TagA) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 6);
+}

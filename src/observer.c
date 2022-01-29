@@ -95,37 +95,46 @@ done:
     ecs_iter_fini(&user_it);
 }
 
-// static
-// void trigger_yield_existing(
-//     ecs_world_t *world,
-//     ecs_observer_t *observer)
-// {
-//     ecs_iter_action_t callback = observer->action;
+static
+void observer_yield_existing(
+    ecs_world_t *world,
+    ecs_observer_t *observer)
+{
+    ecs_run_action_t callback = observer->run;
 
-//     /* If yield existing is enabled, trigger for each thing that matches
-//      * the event, if the event is iterable. */
-//     int i, count = observer->event_count;
-//     for (i = 0; i < count; i ++) {
-//         ecs_entity_t evt = observer->events[i];
-//         const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
-//         if (!iterable) {
-//             continue;
-//         }
+    int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
+    if (pivot_term < 0) {
+        return;
+    }
 
-//         ecs_iter_t it;
-//         iterable->init(world, world, &it, &trigger->term);
-//         it.system = trigger->entity;
-//         it.ctx = trigger->ctx;
-//         it.binding_ctx = trigger->binding_ctx;
-//         it.event = evt;
+    /* If yield existing is enabled, trigger for each thing that matches
+     * the event, if the event is iterable. */
+    int i, count = observer->event_count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t evt = observer->events[i];
+        const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
+        if (!iterable) {
+            continue;
+        }
 
-//         ecs_iter_next_action_t next = it.next;
-//         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-//         while (next(&it)) {
-//             callback(&it);
-//         }
-//     }
-// }
+        ecs_iter_t it;
+        iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
+        it.terms = observer->filter.terms;
+        it.term_count = observer->filter.term_count;
+        it.term_index = pivot_term;
+        it.system = observer->entity;
+        it.ctx = observer;
+        it.binding_ctx = observer->binding_ctx;
+        it.event = evt;
+
+        ecs_iter_next_action_t next = it.next;
+        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
+        while (next(&it)) {
+            callback(&it);
+            world->event_id ++;
+        }
+    }
+}
 
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
@@ -203,6 +212,7 @@ ecs_entity_t ecs_observer_init(
         }
 
         observer->action = desc->callback;
+        observer->run = run;
         observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
@@ -261,6 +271,10 @@ ecs_entity_t ecs_observer_init(
         if (desc->entity.name) {
             ecs_trace("#[green]observer#[reset] %s created", 
                 ecs_get_name(world, entity));
+        }
+
+        if (desc->yield_existing) {
+            observer_yield_existing(world, observer);
         }
     } else {
         ecs_assert(comp->observer != NULL, ECS_INTERNAL_ERROR, NULL);

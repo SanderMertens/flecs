@@ -370,6 +370,7 @@ void Trigger_on_add_id(void);
 void Trigger_on_add_id_arg(void);
 void Trigger_on_add_expr(void);
 void Trigger_create_w_no_template_args(void);
+void Trigger_yield_existing(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -623,6 +624,8 @@ void Observer_2_entities_iter(void);
 void Observer_2_entities_table_column(void);
 void Observer_2_entities_each(void);
 void Observer_create_w_no_template_args(void);
+void Observer_yield_existing(void);
+void Observer_yield_existing_2_terms(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2236,6 +2239,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "create_w_no_template_args",
         Trigger_create_w_no_template_args
+    },
+    {
+        "yield_existing",
+        Trigger_yield_existing
     }
 };
 
@@ -3213,6 +3220,14 @@ bake_test_case Observer_testcases[] = {
     {
         "create_w_no_template_args",
         Observer_create_w_no_template_args
+    },
+    {
+        "yield_existing",
+        Observer_yield_existing
+    },
+    {
+        "yield_existing_2_terms",
+        Observer_yield_existing_2_terms
     }
 };
 
@@ -4055,7 +4070,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        10,
+        11,
         Trigger_testcases
     },
     {
@@ -4104,7 +4119,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        11,
+        13,
         Observer_testcases
     },
     {

@@ -1744,7 +1744,8 @@
                 "or_from",
                 "notify_propagated_twice",
                 "on_add_yield_existing",
-                "on_add_yield_existing_2_tables"
+                "on_add_yield_existing_2_tables",
+                "on_add_yield_existing_2_terms"
             ]                
         }, {
             "id": "TriggerOnAdd",

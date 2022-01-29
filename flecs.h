@@ -2656,6 +2656,8 @@ struct ecs_observer_t {
     
     ecs_iter_action_t action;   /* See ecs_observer_desc_t::callback */
 
+    ecs_run_action_t run;       /* See ecs_observer_desc_t::run */
+
     void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
 
@@ -19681,6 +19683,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     /** Invoke observer for anything that matches its filter on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
+        return *this;
     }
 
     /** Associate trigger with entity */
@@ -19810,6 +19813,7 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     /** Invoke observer for anything that matches its filter on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
+        return *this;
     }
 
     /** Associate observer with entity */

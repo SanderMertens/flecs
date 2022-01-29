@@ -2374,5 +2374,108 @@ void Observer_on_add_yield_existing() {
 }
 
 void Observer_on_add_yield_existing_2_tables() {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_add(world, e3, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], TagA);
+
+    // Ensure normal triggering also still works
+    ecs_os_zeromem(&ctx);
+    ecs_new(world, TagA);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_yield_existing_2_terms() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA); /* no match */
+    ecs_entity_t e5 = ecs_new(world, TagB); /* no match */
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(e4 != 0);
+    test_assert(e5 != 0);
+
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagB);
+
+    ecs_add(world, e3, TagC);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }, { TagB }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], TagB);
+    test_int(ctx.c[1][0], TagA);
+    test_int(ctx.c[1][1], TagB);
+
+    // Ensure normal triggering also still works
+    ecs_os_zeromem(&ctx);
+    ecs_entity_t e6 = ecs_new(world, TagA);
+    test_int(ctx.invoked, 0);
+    ecs_add(world, e6, TagB);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
 }

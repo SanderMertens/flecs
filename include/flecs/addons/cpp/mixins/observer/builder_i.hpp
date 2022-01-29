@@ -38,6 +38,7 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     /** Invoke observer for anything that matches its filter on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
+        return *this;
     }
 
     /** Associate observer with entity */

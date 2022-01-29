@@ -36,6 +36,7 @@ struct trigger_builder_i : term_builder_i<Base> {
     /** Invoke observer for anything that matches its filter on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
+        return *this;
     }
 
     /** Associate trigger with entity */

@@ -450,6 +450,8 @@ struct ecs_observer_t {
     
     ecs_iter_action_t action;   /* See ecs_observer_desc_t::callback */
 
+    ecs_run_action_t run;       /* See ecs_observer_desc_t::run */
+
     void *ctx;                  /* Callback context */
     void *binding_ctx;          /* Binding context (for language bindings) */
 

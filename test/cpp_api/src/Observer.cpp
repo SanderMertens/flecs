@@ -356,3 +356,53 @@ void Observer_create_w_no_template_args() {
     e1.set<Position>({10, 20});
     test_int(count, 1);
 }
+
+void Observer_yield_existing() {
+    flecs::world world;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto e1 = world.entity().add<TagA>();
+    auto e2 = world.entity().add<TagA>();
+    auto e3 = world.entity().add<TagA>().add<TagB>();
+
+    int32_t count = 0;
+
+    world.observer<TagA>()
+        .event(flecs::OnAdd)
+        .yield_existing()
+        .each([&](flecs::entity e, TagA) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 6);
+}
+
+void Observer_yield_existing_2_terms() {
+    flecs::world world;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto e1 = world.entity().add<TagA>().add<TagB>();
+    auto e2 = world.entity().add<TagA>().add<TagB>();
+    auto e3 = world.entity().add<TagA>().add<TagB>().add<TagC>();
+    world.entity().add<TagA>();
+    world.entity().add<TagB>();
+
+    int32_t count = 0;
+
+    world.observer<TagA, TagB>()
+        .event(flecs::OnAdd)
+        .yield_existing()
+        .each([&](flecs::entity e, TagA, TagB) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 6);
+}
