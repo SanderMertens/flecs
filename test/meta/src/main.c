@@ -90,6 +90,7 @@ void StructTypes_i32_bool_bool_bool(void);
 void StructTypes_i32_i64(void);
 void StructTypes_i32_i64_i32(void);
 void StructTypes_incomplete_member(void);
+void StructTypes_omitted_member(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -808,6 +809,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "incomplete_member",
         StructTypes_incomplete_member
+    },
+    {
+        "omitted_member",
+        StructTypes_omitted_member
     }
 };
 
@@ -2414,7 +2419,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        12,
+        13,
         StructTypes_testcases
     },
     {

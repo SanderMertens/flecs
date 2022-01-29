@@ -395,3 +395,39 @@ void StructTypes_incomplete_member() {
 
     ecs_fini(world);
 }
+
+void StructTypes_omitted_member() {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+    
+    ECS_COMPONENT(world, T);
+
+    ecs_entity_t ref_id = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(T),
+        .members = {
+            {"x", ecs_id(ecs_i32_t), 0, 0},
+            {"z", ecs_id(ecs_i32_t), 0, 8}
+        }
+    });
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, T, {10, 20, 30});
+    const T *val = ecs_get(world, e, T);
+    
+    meta_test_struct(world, ref_id, T);
+
+    test_assert(val->x == 10);
+    test_assert(val->y == 20);
+    test_assert(val->z == 30);
+
+    char *expr = ecs_ptr_to_expr(world,  ecs_id(T), val);
+    test_assert(expr != NULL);
+    test_str(expr, "{x: 10, z: 30}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

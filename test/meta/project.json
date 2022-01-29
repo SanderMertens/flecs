@@ -100,7 +100,8 @@
                 "i32_bool_bool_bool",
                 "i32_i64",
                 "i32_i64_i32",
-                "incomplete_member"
+                "incomplete_member",
+                "omitted_member"
             ]
         }, {
             "id": "NestedStructTypes",
