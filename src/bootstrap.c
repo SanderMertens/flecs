@@ -133,6 +133,18 @@ void register_on_delete_object(ecs_iter_t *it) {
 }
 
 static
+void register_exclusive(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+        r->flags |= ECS_ID_EXCLUSIVE;
+    } 
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -511,6 +523,13 @@ void flecs_bootstrap(
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
         .callback = register_on_delete_object,
+        .events = {EcsOnAdd}
+    });
+
+    /* Define trigger for exclusive property */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsExclusive },
+        .callback = register_exclusive,
         .events = {EcsOnAdd}
     });
 
