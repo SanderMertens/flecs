@@ -12,7 +12,14 @@ int32_t type_search(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return -1;
+    }
+    
+    ecs_table_record_t *tr = ecs_table_cache_get(
+        &idr->cache, ecs_table_record_t, table);
+
     if (tr) {
         int32_t r = tr->column;
         if (tr_out) tr_out[0] = tr;

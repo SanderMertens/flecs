@@ -177,6 +177,36 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Flags for quickly querying properties of component/relation id
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_ID_ON_DELETE_REMOVE          (1u << 0)
+#define ECS_ID_ON_DELETE_DELETE          (1u << 1)
+#define ECS_ID_ON_DELETE_THROW           (1u << 2)
+#define ECS_ID_ON_DELETE_MASK\
+    (ECS_ID_ON_DELETE_THROW|ECS_ID_ON_DELETE_REMOVE|ECS_ID_ON_DELETE_DELETE)
+
+#define ECS_ID_ON_DELETE_OBJECT_REMOVE   (1u << 3)
+#define ECS_ID_ON_DELETE_OBJECT_DELETE   (1u << 4)
+#define ECS_ID_ON_DELETE_OBJECT_THROW    (1u << 5)
+#define ECS_ID_ON_DELETE_OBJECT_MASK\
+    (ECS_ID_ON_DELETE_OBJECT_THROW|ECS_ID_ON_DELETE_OBJECT_REMOVE|\
+        ECS_ID_ON_DELETE_OBJECT_DELETE)
+
+#define ECS_ID_EXCLUSIVE                 (1u << 6)
+#define ECS_ID_DONT_INHERIT              (1u << 7)
+#define ECS_ID_ACYCLIC                   (1u << 8)
+
+/* Utilities for converting from flags to delete policies and vice versa */
+#define ECS_ID_ON_DELETE(flags) \
+    ((ecs_entity_t[]){0, EcsRemove, EcsDelete, 0, EcsThrow}\
+        [((flags) & ECS_ID_ON_DELETE_MASK)])
+#define ECS_ID_ON_DELETE_OBJECT(flags) ECS_ID_ON_DELETE(flags >> 3)
+#define ECS_ID_ON_DELETE_FLAG(id) (1u << ((id) - EcsRemove))
+#define ECS_ID_ON_DELETE_OBJECT_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Convert between C typenames and variables
 ////////////////////////////////////////////////////////////////////////////////
 

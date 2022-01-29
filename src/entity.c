@@ -2414,10 +2414,10 @@ void on_delete_object_action(
             if (!action) {
                 idrr = flecs_get_id_record(world, rel);
                 if (idrr) {
-                    action =idrr->on_delete_object;
+                    action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
                 } 
             }
-             
+
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
             } else if (action == EcsDelete) {
@@ -2440,7 +2440,7 @@ void on_delete_id_action(
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
         if (!action) {
-            action = idr->on_delete;
+            action = ECS_ID_ON_DELETE(idr->flags);
         }
 
         if (action == EcsThrow) {
@@ -3834,23 +3834,26 @@ bool remove_invalid(
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_get_id_record(world, rel);
-                if (!idr || (idr->on_delete_object == EcsRemove)) {
-                    *id_out = 0;
-                    return true;
-                } else {
-                    if (idr->on_delete_object == EcsDelete) {
+                if (idr) {
+                    ecs_entity_t action = ECS_ID_ON_DELETE_OBJECT(idr->flags);
+                    if (action == EcsDelete) {
                         /* Entity should be deleted, don't bother checking
                          * other ids */
                         return false;
-                    } else if (idr->on_delete_object == EcsThrow) {
+                    } else if (action == EcsThrow) {
                         /* If policy is throw this object should not have
                          * been deleted */
                         throw_invalid_delete(world, id);
+                    } else {
+                        *id_out = 0;
+                        return true;
                     }
+                } else {
+                    *id_out = 0;
+                    return true;
                 }
             }
         }
-
     } else {
         id &= ECS_COMPONENT_MASK;
         if (!is_entity_valid(world, id)) {

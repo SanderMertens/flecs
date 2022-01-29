@@ -738,6 +738,7 @@
         }, {
             "id": "OnDelete",
             "testcases": [
+                "on_delete_flags",
                 "on_delete_id_default",
                 "on_delete_id_remove",
                 "on_delete_id_delete",
@@ -1426,7 +1427,8 @@
                 "add_not_alive_relation",
                 "remove_wildcard",
                 "remove_relation_wildcard",
-                "remove_wildcard_all"
+                "remove_wildcard_all",
+                "inherit_exclusive"
             ]
         }, {
             "id": "Rules",

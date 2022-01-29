@@ -499,8 +499,8 @@ struct ecs_id_record_t {
     /* All tables for which an incoming (remove) edge to the id was created */
     ecs_map_t *remove_refs;
 
-    ecs_entity_t on_delete;         /* Cleanup action for removing id */
-    ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+    /* Flags for id */
+    ecs_flags32_t flags;
 
     uint64_t id; /* Id to element in storage */
 };

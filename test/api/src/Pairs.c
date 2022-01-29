@@ -2602,3 +2602,25 @@ void Pairs_remove_wildcard_all() {
 
     ecs_fini(world);
 }
+
+void Pairs_inherit_exclusive() {
+    test_quarantine("Jan 28th 2022");
+    
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t base = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert( ecs_has_pair(world, inst, Rel, ObjA));
+
+    ecs_add_pair(world, inst, Rel, ObjB);
+
+    test_assert( ecs_has_pair(world, inst, Rel, ObjB));
+    test_assert( !ecs_has_pair(world, inst, Rel, ObjA));
+
+    ecs_fini(world);
+}
