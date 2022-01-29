@@ -1,5 +1,39 @@
 #include <api.h>
 
+void OnDelete_on_delete_flags() {
+    ecs_flags32_t f_remove = ECS_ID_ON_DELETE_REMOVE;
+    ecs_flags32_t f_delete = ECS_ID_ON_DELETE_DELETE;
+    ecs_flags32_t f_throw = ECS_ID_ON_DELETE_THROW;
+
+    ecs_flags32_t f_obj_remove = ECS_ID_ON_DELETE_OBJECT_REMOVE;
+    ecs_flags32_t f_obj_delete = ECS_ID_ON_DELETE_OBJECT_DELETE;
+    ecs_flags32_t f_obj_throw = ECS_ID_ON_DELETE_OBJECT_THROW;
+
+    test_int(ECS_ID_ON_DELETE(f_remove), EcsRemove);
+    test_int(ECS_ID_ON_DELETE(f_delete), EcsDelete);
+    test_int(ECS_ID_ON_DELETE(f_throw), EcsThrow);
+
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_remove), EcsRemove);
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_delete), EcsDelete);
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_throw), EcsThrow);
+
+    test_int(ECS_ID_ON_DELETE(f_obj_remove), 0);
+    test_int(ECS_ID_ON_DELETE(f_obj_delete), 0);
+    test_int(ECS_ID_ON_DELETE(f_obj_throw), 0);
+
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_remove), 0);
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_delete), 0);
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_throw), 0);
+
+    test_int(ECS_ID_ON_DELETE_FLAG(EcsRemove), f_remove);
+    test_int(ECS_ID_ON_DELETE_FLAG(EcsDelete), f_delete);
+    test_int(ECS_ID_ON_DELETE_FLAG(EcsThrow), f_throw);
+
+    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsRemove), f_obj_remove);
+    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsDelete), f_obj_delete);
+    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsThrow), f_obj_throw);
+}
+
 void OnDelete_on_delete_id_default() {
     ecs_world_t *world = ecs_init();
 

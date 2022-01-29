@@ -760,8 +760,8 @@ struct ecs_id_record_t {
     /* All tables for which an incoming (remove) edge to the id was created */
     ecs_map_t *remove_refs;
 
-    ecs_entity_t on_delete;         /* Cleanup action for removing id */
-    ecs_entity_t on_delete_object;  /* Cleanup action for removing object */
+    /* Flags for id */
+    ecs_flags32_t flags;
 
     uint64_t id; /* Id to element in storage */
 };
@@ -6729,10 +6729,10 @@ void on_delete_object_action(
             if (!action) {
                 idrr = flecs_get_id_record(world, rel);
                 if (idrr) {
-                    action =idrr->on_delete_object;
+                    action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
                 } 
             }
-             
+
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
             } else if (action == EcsDelete) {
@@ -6755,7 +6755,7 @@ void on_delete_id_action(
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
         if (!action) {
-            action = idr->on_delete;
+            action = ECS_ID_ON_DELETE(idr->flags);
         }
 
         if (action == EcsThrow) {
@@ -8149,23 +8149,26 @@ bool remove_invalid(
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_get_id_record(world, rel);
-                if (!idr || (idr->on_delete_object == EcsRemove)) {
-                    *id_out = 0;
-                    return true;
-                } else {
-                    if (idr->on_delete_object == EcsDelete) {
+                if (idr) {
+                    ecs_entity_t action = ECS_ID_ON_DELETE_OBJECT(idr->flags);
+                    if (action == EcsDelete) {
                         /* Entity should be deleted, don't bother checking
                          * other ids */
                         return false;
-                    } else if (idr->on_delete_object == EcsThrow) {
+                    } else if (action == EcsThrow) {
                         /* If policy is throw this object should not have
                          * been deleted */
                         throw_invalid_delete(world, id);
+                    } else {
+                        *id_out = 0;
+                        return true;
                     }
+                } else {
+                    *id_out = 0;
+                    return true;
                 }
             }
         }
-
     } else {
         id &= ECS_COMPONENT_MASK;
         if (!is_entity_valid(world, id)) {
@@ -34972,7 +34975,14 @@ int32_t type_search(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_table_record_t *tr = flecs_get_table_record(world, table, id);
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return -1;
+    }
+    
+    ecs_table_record_t *tr = ecs_table_cache_get(
+        &idr->cache, ecs_table_record_t, table);
+
     if (tr) {
         int32_t r = tr->column;
         if (tr_out) tr_out[0] = tr;
@@ -42655,11 +42665,11 @@ void register_on_delete(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->on_delete = ECS_PAIR_OBJECT(id);
+        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
 
         r = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->on_delete = ECS_PAIR_OBJECT(id);
+        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
@@ -42675,7 +42685,7 @@ void register_on_delete_object(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->on_delete_object = ECS_PAIR_OBJECT(id);
+        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_OBJECT(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    

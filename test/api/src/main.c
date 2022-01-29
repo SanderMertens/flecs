@@ -696,6 +696,7 @@ void Delete_move_w_no_dtor_move(void);
 void Delete_wrap_generation_count(void);
 
 // Testsuite 'OnDelete'
+void OnDelete_on_delete_flags(void);
 void OnDelete_on_delete_id_default(void);
 void OnDelete_on_delete_id_remove(void);
 void OnDelete_on_delete_id_delete(void);
@@ -1361,6 +1362,7 @@ void Pairs_add_not_alive_relation(void);
 void Pairs_remove_wildcard(void);
 void Pairs_remove_relation_wildcard(void);
 void Pairs_remove_wildcard_all(void);
+void Pairs_inherit_exclusive(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -5056,6 +5058,10 @@ bake_test_case Delete_testcases[] = {
 
 bake_test_case OnDelete_testcases[] = {
     {
+        "on_delete_flags",
+        OnDelete_on_delete_flags
+    },
+    {
         "on_delete_id_default",
         OnDelete_on_delete_id_default
     },
@@ -7638,6 +7644,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "remove_wildcard_all",
         Pairs_remove_wildcard_all
+    },
+    {
+        "inherit_exclusive",
+        Pairs_inherit_exclusive
     }
 };
 
@@ -11762,7 +11772,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        59,
+        60,
         OnDelete_testcases
     },
     {
@@ -11846,7 +11856,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        89,
+        90,
         Pairs_testcases
     },
     {
