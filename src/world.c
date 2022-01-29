@@ -56,10 +56,11 @@ const ecs_entity_t EcsTransitive =            ECS_HI_COMPONENT_ID + 13;
 const ecs_entity_t EcsReflexive =             ECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 16;
-const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 17;
-const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsDontInherit =           ECS_HI_COMPONENT_ID + 17;
+const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 18;
+const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 19;
+const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 21;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;

@@ -308,6 +308,7 @@ typedef int32_t ecs_size_t;
         ECS_ID_ON_DELETE_OBJECT_DELETE)
 
 #define ECS_ID_EXCLUSIVE                 (1u << 6)
+#define ECS_ID_PRIVATE                   (1u << 7)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \
@@ -4077,15 +4078,21 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/* Can be added to component/relation to indicate it is final. Final components/
- * relations cannot be derived from using an IsA relationship. Queries will not
- * attempt to substitute a component/relationship with IsA subsets if they are
- * final. 
+/** Ensures that entity/component cannot be used as object in IsA relation.
+ * Final can improve the performance of rule-based queries, as they will not 
+ * attempt to substitute a final component with its subsets.
  * 
  * Behavior: 
  *   if IsA(X, Y) and Final(Y) throw error
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
+
+/** Ensures that component is never inherited from an IsA object.
+ * 
+ * Behavior:
+ *   if DontInherit(X) and X(B) and IsA(A, B) then X(A) is false.
+ */
+FLECS_API extern const ecs_entity_t EcsDontInherit;
 
 /* Marks relationship as commutative.
  * Behavior:

@@ -434,6 +434,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsReflexive);
     flecs_bootstrap_tag(world, EcsSymmetric);
     flecs_bootstrap_tag(world, EcsFinal);
+    flecs_bootstrap_tag(world, EcsDontInherit);
     flecs_bootstrap_tag(world, EcsTag);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
@@ -488,6 +489,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsReflexive, EcsFinal);
     ecs_add_id(world, EcsSymmetric, EcsFinal);
     ecs_add_id(world, EcsFinal, EcsFinal);
+    ecs_add_id(world, EcsDontInherit, EcsFinal);
     ecs_add_id(world, EcsTag, EcsFinal);
     ecs_add_id(world, EcsExclusive, EcsFinal);
     ecs_add_id(world, EcsAcyclic, EcsFinal);
