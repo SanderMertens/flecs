@@ -1742,13 +1742,22 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t **idr_ptr = ecs_map_ensure(world->id_index, ecs_id_record_t*, 
-        ecs_strip_generation(id));
+    ecs_id_record_t **idr_ptr = ecs_map_ensure(world->id_index, 
+        ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr;
     if (!*idr_ptr) {
         idr = flecs_sparse_add(world->id_records, ecs_id_record_t);
         idr->id = flecs_sparse_last_id(world->id_records);
         *idr_ptr = idr;
+
+        /* If id is a pair, inherit flags from relation id record */
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_id_record_t *idr_r = flecs_get_id_record(
+                world, ECS_PAIR_RELATION(id));
+            if (idr_r) {
+                idr->flags = idr_r->flags;
+            }
+        }
     } else {
         idr = *idr_ptr;
     }

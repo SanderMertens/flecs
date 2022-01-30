@@ -43,22 +43,30 @@ int32_t get_bucket_index(
     return (int32_t)(hash & ((uint32_t)bucket_count - 1));
 }
 
-/* Get bucket for key */
+/* Get bucket for hash */
 static
-ecs_bucket_t* get_bucket(
+ecs_bucket_t* get_bucket_for_hash(
     const ecs_map_t *map,
-    ecs_map_key_t key)
+    int32_t hash)
 {
     int32_t bucket_count = map->bucket_count;
     if (!bucket_count) {
         return NULL;
     }
 
-    uint32_t hash = get_key_hash(key);
     int32_t bucket_id = get_bucket_index(bucket_count, hash);
     ecs_assert(bucket_id < bucket_count, ECS_INTERNAL_ERROR, NULL);
-
     return &map->buckets[bucket_id];
+}
+
+/* Get bucket for key */
+static
+ecs_bucket_t* get_bucket(
+    const ecs_map_t *map,
+    ecs_map_key_t key)
+{
+    uint32_t hash = get_key_hash(key);
+    return get_bucket_for_hash(map, hash);
 }
 
 /* Ensure that map has at least new_count buckets */

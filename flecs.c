@@ -11799,22 +11799,30 @@ int32_t get_bucket_index(
     return (int32_t)(hash & ((uint32_t)bucket_count - 1));
 }
 
-/* Get bucket for key */
+/* Get bucket for hash */
 static
-ecs_bucket_t* get_bucket(
+ecs_bucket_t* get_bucket_for_hash(
     const ecs_map_t *map,
-    ecs_map_key_t key)
+    int32_t hash)
 {
     int32_t bucket_count = map->bucket_count;
     if (!bucket_count) {
         return NULL;
     }
 
-    uint32_t hash = get_key_hash(key);
     int32_t bucket_id = get_bucket_index(bucket_count, hash);
     ecs_assert(bucket_id < bucket_count, ECS_INTERNAL_ERROR, NULL);
-
     return &map->buckets[bucket_id];
+}
+
+/* Get bucket for key */
+static
+ecs_bucket_t* get_bucket(
+    const ecs_map_t *map,
+    ecs_map_key_t key)
+{
+    uint32_t hash = get_key_hash(key);
+    return get_bucket_for_hash(map, hash);
 }
 
 /* Ensure that map has at least new_count buckets */
@@ -12892,6 +12900,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_OPERATION);
     ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
+    ECS_ERR_STR(ECS_ID_IN_USE);
     }
 
     return "unknown error code";
@@ -35022,7 +35031,8 @@ int32_t type_search_relation(
     const ecs_table_t *table,
     ecs_id_t id,
     ecs_id_record_t *idr,
-    uint32_t rel,
+    ecs_id_t rel,
+    ecs_id_record_t *idr_r,
     int32_t min_depth,
     int32_t max_depth,
     ecs_entity_t *subject_out,
@@ -35042,7 +35052,7 @@ int32_t type_search_relation(
 
     ecs_flags32_t flags = table->flags;
     if ((flags & EcsTableHasPairs) && max_depth && rel) {
-        bool is_a = rel == EcsIsA;
+        bool is_a = rel == ecs_pair(EcsIsA, EcsWildcard);
         if (is_a) {
             if (!(flags & EcsTableHasIsA)) {
                 return -1;
@@ -35055,10 +35065,11 @@ int32_t type_search_relation(
             }
         }
 
-        ecs_id_t rel_wildcard = ecs_pair(rel, EcsWildcard);
-        ecs_id_record_t *idr_r = flecs_get_id_record(world, rel_wildcard);
         if (!idr_r) {
-            return -1;
+            idr_r = flecs_get_id_record(world, rel);
+            if (!idr_r) {
+                return -1;
+            }
         }
 
         ecs_id_t id_r;
@@ -35074,7 +35085,7 @@ int32_t type_search_relation(
             ecs_table_t *obj_table = rec->table;
             if (obj_table) {
                 r = type_search_relation(world, obj_table, id, idr, 
-                    rel, min_depth - 1, max_depth - 1, subject_out, 
+                    rel, idr_r, min_depth - 1, max_depth - 1, subject_out, 
                     id_out, tr_out);
                 if (r != -1) {
                     if (subject_out && !subject_out[0]) {
@@ -35085,7 +35096,7 @@ int32_t type_search_relation(
 
                 if (!is_a) {
                     r = type_search_relation(world, obj_table, id, 
-                        idr, (uint32_t)EcsIsA, 1, INT_MAX, subject_out, 
+                        idr, ecs_pair(EcsIsA, EcsWildcard), NULL, 1, INT_MAX, subject_out, 
                         id_out, tr_out);
                     if (r != -1) {
                         if (subject_out && !subject_out[0]) {
@@ -35096,8 +35107,7 @@ int32_t type_search_relation(
                 }
             }
 
-            r_column = type_offset_search(
-                r_column + 1, rel_wildcard, ids, count, &id_r);
+            r_column = type_offset_search(r_column + 1, rel, ids, count, &id_r);
         }
     }
 
@@ -35139,8 +35149,9 @@ int32_t ecs_search_relation(
 
     max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
 
-    return type_search_relation(world, table, id, idr, (uint32_t)rel, 
-        min_depth, max_depth, subject_out, id_out, tr_out);
+    return type_search_relation(world, table, id, idr, 
+        ecs_pair(rel, EcsWildcard), NULL, min_depth, max_depth, subject_out, 
+            id_out, tr_out);
 }
 
 int32_t ecs_search(
@@ -42671,6 +42682,28 @@ static ECS_MOVE(EcsObserver, dst, src, {
 /* -- Builtin triggers -- */
 
 static
+void assert_relation_unused(
+    ecs_world_t *world, 
+    ecs_entity_t rel,
+    ecs_entity_t property)
+{
+    if (flecs_get_id_record(world, ecs_pair(rel, EcsWildcard)) != NULL) {
+        char *r_str = ecs_get_fullpath(world, rel);
+        char *p_str = ecs_get_fullpath(world, property);
+
+        ecs_throw(ECS_ID_IN_USE, 
+            "cannot add property '%s' to relation '%s': already in use",
+            p_str, r_str);
+        
+        ecs_os_free(r_str);
+        ecs_os_free(p_str);
+    }
+
+error:
+    return;
+}
+
+static
 void register_on_delete(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
@@ -42679,10 +42712,6 @@ void register_on_delete(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
-
-        r = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
 
@@ -42713,6 +42742,8 @@ void register_exclusive(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, EcsExclusive);
+
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         r->flags |= ECS_ID_EXCLUSIVE;
     } 
@@ -42725,6 +42756,8 @@ void register_dont_inherit(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, EcsDontInherit);
+
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         r->flags |= ECS_ID_DONT_INHERIT;
     } 
@@ -42765,6 +42798,7 @@ void register_symmetric(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t r = it->entities[i];
+        assert_relation_unused(world, r, EcsSymmetric);
 
         /* Create trigger that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */

@@ -2409,13 +2409,12 @@ void on_delete_object_action(
             /* delete_object_action should be invoked for relations */
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
-            /* Get the record for the relation, to find the delete action */
-            ecs_id_record_t *idrr;
+            /* Find delete action for relation */
             if (!action) {
-                idrr = flecs_get_id_record(world, rel);
+                ecs_id_record_t *idrr = flecs_get_id_record(world, rel);
                 if (idrr) {
                     action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
-                } 
+                }
             }
 
             if (!action || action == EcsRemove) {

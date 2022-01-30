@@ -97,6 +97,53 @@ static ECS_MOVE(EcsObserver, dst, src, {
 /* -- Builtin triggers -- */
 
 static
+void assert_relation_unused(
+    ecs_world_t *world, 
+    ecs_entity_t rel,
+    ecs_entity_t property)
+{
+    if (flecs_get_id_record(world, ecs_pair(rel, EcsWildcard)) != NULL) {
+        char *r_str = ecs_get_fullpath(world, rel);
+        char *p_str = ecs_get_fullpath(world, property);
+
+        ecs_throw(ECS_ID_IN_USE, 
+            "cannot add property '%s' to relation '%s': already in use",
+            p_str, r_str);
+        
+        ecs_os_free(r_str);
+        ecs_os_free(p_str);
+    }
+
+error:
+    return;
+}
+
+static
+void register_final(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    ecs_id_t id = ecs_term_id(it, 1);
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (flecs_get_id_record(world, ecs_pair(EcsIsA, e)) != NULL) {
+            char *e_str = ecs_get_fullpath(world, e);
+            ecs_throw(ECS_ID_IN_USE,
+                "cannot add property 'Final' to '%s': already inherited from");
+            ecs_os_free(e_str);
+        error:
+            continue;
+        }
+
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
+
+        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
+    }
+}
+
+static
 void register_on_delete(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
@@ -104,11 +151,9 @@ void register_on_delete(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
+        assert_relation_unused(world, e, EcsOnDelete);
 
-        r = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
 
@@ -124,6 +169,8 @@ void register_on_delete_object(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, EcsOnDeleteObject);
+
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_OBJECT(id));
@@ -139,6 +186,8 @@ void register_exclusive(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, EcsExclusive);
+
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         r->flags |= ECS_ID_EXCLUSIVE;
     } 
@@ -151,6 +200,8 @@ void register_dont_inherit(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, EcsDontInherit);
+
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         r->flags |= ECS_ID_DONT_INHERIT;
     } 
@@ -191,6 +242,7 @@ void register_symmetric(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t r = it->entities[i];
+        assert_relation_unused(world, r, EcsSymmetric);
 
         /* Create trigger that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
@@ -314,16 +366,23 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
+    /* Before creating table, manually set delete policy for ChildOf, as this
+     * can no longer be done after tables are created with the relation. */
+    ecs_id_record_t *childof_idr = flecs_ensure_id_record(world, EcsChildOf);
+    childof_idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE;
+
     ecs_id_t entities[] = {
         ecs_id(EcsComponent), 
+        EcsFinal,
         ecs_pair(ecs_id(EcsIdentifier), EcsName),
         ecs_pair(ecs_id(EcsIdentifier), EcsSymbol),
-        ecs_pair(EcsChildOf, EcsFlecsCore)
+        ecs_pair(EcsChildOf, EcsFlecsCore),
+        ecs_pair(EcsOnDelete, EcsThrow)
     };
     
     ecs_ids_t array = {
         .array = entities,
-        .count = 4
+        .count = 6
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
@@ -490,28 +549,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
 
-    /* Final components/relations */
-    ecs_add_id(world, ecs_id(EcsComponent), EcsFinal);
-    ecs_add_id(world, ecs_id(EcsComponentLifecycle), EcsFinal);
-    ecs_add_id(world, ecs_id(EcsIdentifier), EcsFinal);
-    ecs_add_id(world, EcsModule, EcsFinal);
-    ecs_add_id(world, EcsDisabled, EcsFinal);
-    ecs_add_id(world, EcsPrefab, EcsFinal);
-    ecs_add_id(world, EcsTransitive, EcsFinal);
-    ecs_add_id(world, EcsReflexive, EcsFinal);
-    ecs_add_id(world, EcsSymmetric, EcsFinal);
-    ecs_add_id(world, EcsFinal, EcsFinal);
-    ecs_add_id(world, EcsDontInherit, EcsFinal);
-    ecs_add_id(world, EcsTag, EcsFinal);
-    ecs_add_id(world, EcsExclusive, EcsFinal);
-    ecs_add_id(world, EcsAcyclic, EcsFinal);
-    ecs_add_id(world, EcsWith, EcsFinal);
-    ecs_add_id(world, EcsIsA, EcsFinal);
-    ecs_add_id(world, EcsChildOf, EcsFinal);
-    ecs_add_id(world, EcsOnDelete, EcsFinal);
-    ecs_add_id(world, EcsOnDeleteObject, EcsFinal);
-    ecs_add_id(world, EcsDefaultChildComponent, EcsFinal);
-
     /* Acyclic relations */
     ecs_add_id(world, EcsIsA, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
@@ -527,53 +564,59 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
+    /* Removal of ChildOf objects (parents) deletes the subject (child) */
+    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete); 
+
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard)},
-        .callback = register_on_delete,
-        .events = {EcsOnAdd}
+        .term = {.id = EcsFinal, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_final
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard)},
-        .callback = register_on_delete_object,
-        .events = {EcsOnAdd}
+        .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_on_delete
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsExclusive },
-        .callback = register_exclusive,
-        .events = {EcsOnAdd}
+        .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_on_delete_object
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsSymmetric },
-        .callback = register_symmetric,
-        .events = {EcsOnAdd}
+        .term = {.id = EcsExclusive, .subj.set.mask = EcsSelf  },
+        .events = {EcsOnAdd},
+        .callback = register_exclusive
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsDontInherit },
-        .callback = register_dont_inherit,
-        .events = {EcsOnAdd}
+        .term = {.id = EcsSymmetric, .subj.set.mask = EcsSelf  },
+        .events = {EcsOnAdd},
+        .callback = register_symmetric
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsDontInherit, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_dont_inherit
     });
 
     /* Define trigger to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = EcsModule},
-        .callback = ensure_module_tag,
-        .events = {EcsOnAdd}
+        .term = {.id = EcsModule, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = ensure_module_tag
     });
 
     /* Define trigger for when component lifecycle is set for component */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_id(EcsComponentLifecycle)},
-        .callback = on_set_component_lifecycle,
-        .events = {EcsOnSet}
+        .term = {.id = ecs_id(EcsComponentLifecycle), .subj.set.mask = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = on_set_component_lifecycle
     });  
-
-    /* Removal of ChildOf objects (parents) deletes the subject (child) */
-    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);  
 
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
