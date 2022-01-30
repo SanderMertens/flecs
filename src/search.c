@@ -78,12 +78,10 @@ int32_t type_search_relation(
             if (!(flags & EcsTableHasIsA)) {
                 return -1;
             }
-            if (id == EcsPrefab || id == EcsDisabled ||
-                ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier) ||
-                ECS_PAIR_RELATION(id) == EcsChildOf)
-            {
+            if (idr->flags & ECS_ID_DONT_INHERIT) {
                 return -1;
             }
+            idr_r = world->idr_isa_wildcard;
         }
 
         if (!idr_r) {
@@ -116,9 +114,9 @@ int32_t type_search_relation(
                 }
 
                 if (!is_a) {
-                    r = type_search_relation(world, obj_table, id, 
-                        idr, ecs_pair(EcsIsA, EcsWildcard), NULL, 1, INT_MAX, subject_out, 
-                        id_out, tr_out);
+                    r = type_search_relation(world, obj_table, id, idr, 
+                        ecs_pair(EcsIsA, EcsWildcard), world->idr_isa_wildcard, 
+                            1, INT_MAX, subject_out, id_out, tr_out);
                     if (r != -1) {
                         if (subject_out && !subject_out[0]) {
                             subject_out[0] = ecs_get_alive(world, obj);
