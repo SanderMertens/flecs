@@ -308,7 +308,7 @@ typedef int32_t ecs_size_t;
         ECS_ID_ON_DELETE_OBJECT_DELETE)
 
 #define ECS_ID_EXCLUSIVE                 (1u << 6)
-#define ECS_ID_PRIVATE                   (1u << 7)
+#define ECS_ID_DONT_INHERIT              (1u << 7)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \

@@ -35041,61 +35041,63 @@ int32_t type_search_relation(
     }
 
     ecs_flags32_t flags = table->flags;
-    if ((flags & EcsTableHasPairs) && max_depth && rel && id != EcsPrefab && 
-        id != EcsDisabled && ECS_PAIR_RELATION(id) != ecs_id(EcsIdentifier) &&
-        ECS_PAIR_RELATION(id) != EcsChildOf)
-    {
+    if ((flags & EcsTableHasPairs) && max_depth && rel) {
         bool is_a = rel == EcsIsA;
-        if (is_a && !(flags & EcsTableHasIsA)) {
+        if (is_a) {
+            if (!(flags & EcsTableHasIsA)) {
+                return -1;
+            }
+            if (id == EcsPrefab || id == EcsDisabled ||
+                ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier) ||
+                ECS_PAIR_RELATION(id) == EcsChildOf)
+            {
+                return -1;
+            }
+        }
+
+        ecs_id_t rel_wildcard = ecs_pair(rel, EcsWildcard);
+        ecs_id_record_t *idr_r = flecs_get_id_record(world, rel_wildcard);
+        if (!idr_r) {
             return -1;
         }
 
-        int32_t i, r;
-        for (i = 0; i < count; i ++) {
-            ecs_id_t tid = ids[i];
-            if (ECS_PAIR_RELATION(tid) == rel) {
-                do {
-                    ecs_entity_t obj = ECS_PAIR_OBJECT(tid);
-                    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_id_t id_r;
+        ecs_table_record_t *tr_r;
+        int32_t r, r_column = type_search(table, idr_r, ids, &id_r, &tr_r);
+        while (r_column != -1) {
+            ecs_entity_t obj = ECS_PAIR_OBJECT(id_r);
+            ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
-                    ecs_record_t *rec = ecs_eis_get_any(world, obj);
-                    ecs_assert(rec != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_record_t *rec = ecs_eis_get_any(world, obj);
+            ecs_assert(rec != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                    ecs_table_t *obj_table = rec->table;
-                    if (obj_table) {
-                        r = type_search_relation(world, obj_table, id, idr, 
-                            rel, min_depth - 1, max_depth - 1, subject_out, 
-                            id_out, tr_out);
-                        if (r != -1) {
-                            if (subject_out && !subject_out[0]) {
-                                subject_out[0] = ecs_get_alive(world, obj);
-                            }
-                            return r;
-                        }
-
-                        if (!is_a) {
-                            r = type_search_relation(world, obj_table, id, 
-                                idr, (uint32_t)EcsIsA, 1, INT_MAX, subject_out, 
-                                id_out, tr_out);
-                            if (r != -1) {
-                                if (subject_out && !subject_out[0]) {
-                                    subject_out[0] = ecs_get_alive(world, obj);
-                                }
-                                return r;
-                            }
-                        }
+            ecs_table_t *obj_table = rec->table;
+            if (obj_table) {
+                r = type_search_relation(world, obj_table, id, idr, 
+                    rel, min_depth - 1, max_depth - 1, subject_out, 
+                    id_out, tr_out);
+                if (r != -1) {
+                    if (subject_out && !subject_out[0]) {
+                        subject_out[0] = ecs_get_alive(world, obj);
                     }
+                    return r;
+                }
 
-                    i ++;
-                    if (i >= count) {
-                        break;
+                if (!is_a) {
+                    r = type_search_relation(world, obj_table, id, 
+                        idr, (uint32_t)EcsIsA, 1, INT_MAX, subject_out, 
+                        id_out, tr_out);
+                    if (r != -1) {
+                        if (subject_out && !subject_out[0]) {
+                            subject_out[0] = ecs_get_alive(world, obj);
+                        }
+                        return r;
                     }
-
-                    tid = ids[i];
-                } while (ECS_PAIR_RELATION(tid) == rel);
-
-                break;
+                }
             }
+
+            r_column = type_offset_search(
+                r_column + 1, rel_wildcard, ids, count, &id_r);
         }
     }
 
@@ -42717,6 +42719,18 @@ void register_exclusive(ecs_iter_t *it) {
 }
 
 static
+void register_dont_inherit(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+        r->flags |= ECS_ID_DONT_INHERIT;
+    } 
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -43087,7 +43101,6 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
-    /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard)},
         .callback = register_on_delete,
@@ -43100,17 +43113,21 @@ void flecs_bootstrap(
         .events = {EcsOnAdd}
     });
 
-    /* Define trigger for exclusive property */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsExclusive },
         .callback = register_exclusive,
         .events = {EcsOnAdd}
     });
 
-    /* Define trigger for symmetric property */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsSymmetric },
         .callback = register_symmetric,
+        .events = {EcsOnAdd}
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsDontInherit },
+        .callback = register_dont_inherit,
         .events = {EcsOnAdd}
     });
 
