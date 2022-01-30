@@ -27652,6 +27652,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsTransitive, "Transitive relation property");
     ecs_doc_set_brief(world, EcsReflexive, "Reflexive relation property");
     ecs_doc_set_brief(world, EcsFinal, "Final relation property");
+    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relation property");
     ecs_doc_set_brief(world, EcsTag, "Tag relation property");
     ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relation property");
     ecs_doc_set_brief(world, EcsExclusive, "Exclusive relation property");
@@ -27670,19 +27671,20 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsOnSet, "Builtin OnSet event");
     ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
 
-    ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-relations");
-    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#reflexive-relations");
+    ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-property");
+    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#reflexive-property");
     ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
-    ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-relations");
-    ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-relations");
-    ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-relations");
-    ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-relations");
-    ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-relations");
-    ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#relation-cleanup-properties");
-    ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#relation-cleanup-properties");
-    ecs_doc_set_link(world, EcsRemove, URL_ROOT "#relation-cleanup-properties");
-    ecs_doc_set_link(world, EcsDelete, URL_ROOT "#relation-cleanup-properties");
-    ecs_doc_set_link(world, EcsThrow, URL_ROOT "#relation-cleanup-properties");
+    ecs_doc_set_link(world, EcsDontInherit, URL_ROOT "#dontinherit-property");
+    ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-property");
+    ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-property");
+    ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-property");
+    ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
+    ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");
+    ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsThrow, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relation");
     ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relation"); 
     
