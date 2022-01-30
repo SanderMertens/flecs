@@ -35024,6 +35024,29 @@ int32_t type_offset_search(
 }
 
 static
+bool type_can_inherit_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_id_record_t *idr,
+    ecs_id_t id)
+{
+    if (idr->flags & ECS_ID_DONT_INHERIT) {
+        return false;
+    }
+    if (idr->flags & ECS_ID_EXCLUSIVE) {
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_entity_t er = ECS_PAIR_RELATION(id);
+            if (flecs_get_table_record(
+                world, table, ecs_pair(er, EcsWildcard))) 
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+static
 int32_t type_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -35055,7 +35078,7 @@ int32_t type_search_relation(
             if (!(flags & EcsTableHasIsA)) {
                 return -1;
             }
-            if (idr->flags & ECS_ID_DONT_INHERIT) {
+            if (!type_can_inherit_id(world, table, idr, id)) {
                 return -1;
             }
             idr_r = world->idr_isa_wildcard;

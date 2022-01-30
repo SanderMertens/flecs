@@ -2603,9 +2603,7 @@ void Pairs_remove_wildcard_all() {
     ecs_fini(world);
 }
 
-void Pairs_inherit_exclusive() {
-    test_quarantine("Jan 28th 2022");
-    
+void Pairs_inherit_exclusive() {    
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Rel, Exclusive);
