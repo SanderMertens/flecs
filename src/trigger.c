@@ -571,11 +571,7 @@ void notify_set_triggers(
                 continue;
             }
 
-            ecs_entity_t event_id = it->event_id;
-            it->event_id = t->term.id;
-
             it->is_filter = t->term.inout == EcsInOutFilter;
-            it->ids[0] = t->term.id;
             it->system = t->entity;
             it->self = t->self;
             it->ctx = t->ctx;
@@ -597,8 +593,6 @@ void notify_set_triggers(
                 }
                 it->entities = entities;
             }
-
-            it->event_id = event_id;
         }
 
         it->entities[0] = subj;

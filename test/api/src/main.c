@@ -1618,6 +1618,7 @@ void Trigger_add_non_existing_entity(void);
 void Trigger_on_add_self_trigger_with_add_isa(void);
 void Trigger_on_set_self_trigger_with_add_isa(void);
 void Trigger_notify_propagated_twice(void);
+void Trigger_trigger_superset_wildcard(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -1675,6 +1676,9 @@ void Observer_notify_propagated_twice(void);
 void Observer_on_add_yield_existing(void);
 void Observer_on_add_yield_existing_2_tables(void);
 void Observer_on_add_yield_existing_2_terms(void);
+void Observer_observer_superset_wildcard(void);
+void Observer_observer_superset_wildcard_add_isa(void);
+void Observer_observer_superset_wildcard_add_isa_at_offset(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -8654,6 +8658,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "notify_propagated_twice",
         Trigger_notify_propagated_twice
+    },
+    {
+        "trigger_superset_wildcard",
+        Trigger_trigger_superset_wildcard
     }
 };
 
@@ -8877,6 +8885,18 @@ bake_test_case Observer_testcases[] = {
     {
         "on_add_yield_existing_2_terms",
         Observer_on_add_yield_existing_2_terms
+    },
+    {
+        "observer_superset_wildcard",
+        Observer_observer_superset_wildcard
+    },
+    {
+        "observer_superset_wildcard_add_isa",
+        Observer_observer_superset_wildcard_add_isa
+    },
+    {
+        "observer_superset_wildcard_add_isa_at_offset",
+        Observer_observer_superset_wildcard_add_isa_at_offset
     }
 };
 
@@ -11882,14 +11902,14 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        94,
+        95,
         Trigger_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        55,
+        58,
         Observer_testcases
     },
     {

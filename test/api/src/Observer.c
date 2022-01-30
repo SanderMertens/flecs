@@ -2479,3 +2479,133 @@ void Observer_on_add_yield_existing_2_terms() {
 
     ecs_fini(world);
 }
+
+void Observer_observer_superset_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t inst = ecs_new_id(world);
+    ecs_add_pair(world, inst, EcsIsA, base);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, base, Rel, ObjA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, ObjA));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, base, Rel, ObjB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, ObjB));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Observer_observer_superset_wildcard_add_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_pair(world, base, Rel, ObjA);
+    ecs_add_pair(world, base, Rel, ObjB);
+
+    ecs_entity_t inst = ecs_new_id(world);
+    
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, inst, EcsIsA, base);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_fini(world);
+}
+
+void Observer_observer_superset_wildcard_add_isa_at_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, Tag);
+    ecs_add_pair(world, base, Rel, ObjA);
+    ecs_add_pair(world, base, Rel, ObjB);
+
+    ecs_entity_t inst = ecs_new_id(world);
+    
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .subj.set.mask = EcsSuperSet }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, inst, EcsIsA, base);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_fini(world);
+}

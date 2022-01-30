@@ -153,8 +153,7 @@ int32_t ecs_search_relation(
     bool is_case = ECS_HAS_ROLE(id, CASE);
     id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
     
-    if (offset) {
-        ecs_assert(min_depth == 0, ECS_INVALID_PARAMETER, NULL);
+    if (offset && !min_depth) {
         ecs_type_t type = table->type;
         ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
         int32_t count = ecs_vector_count(type);
@@ -168,9 +167,15 @@ int32_t ecs_search_relation(
 
     max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
 
-    return type_search_relation(world, table, id, idr, 
+    int32_t result = type_search_relation(world, table, id, idr, 
         ecs_pair(rel, EcsWildcard), NULL, min_depth, max_depth, subject_out, 
             id_out, tr_out);
+
+    /* Searching for a relation at an offset for a relation isn't suppported at
+     * the moment, if an offset is provided make sure it matches the returned
+     * column index */
+    ecs_assert(!offset || result == offset, ECS_INVALID_PARAMETER, NULL);
+    return result;
 }
 
 int32_t ecs_search(

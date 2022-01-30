@@ -3845,3 +3845,53 @@ void Trigger_notify_propagated_twice() {
 
     ecs_fini(world);
 }
+
+void Trigger_trigger_superset_wildcard() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t inst = ecs_new_id(world);
+    ecs_add_pair(world, inst, EcsIsA, base);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(Rel, EcsWildcard), 
+        .term.subj.set.mask = EcsSuperSet,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+    test_assert(t != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, base, Rel, ObjA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, ObjA));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, base, Rel, ObjB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, ecs_pair(Rel, ObjB));
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
+
+    ecs_fini(world);
+}

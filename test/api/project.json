@@ -1689,7 +1689,8 @@
                "add_non_existing_entity",
                "on_add_self_trigger_with_add_isa",
                "on_set_self_trigger_with_add_isa",
-               "notify_propagated_twice"
+               "notify_propagated_twice",
+               "trigger_superset_wildcard"
            ]
         }, {
             "id": "Observer",
@@ -1748,7 +1749,10 @@
                 "notify_propagated_twice",
                 "on_add_yield_existing",
                 "on_add_yield_existing_2_tables",
-                "on_add_yield_existing_2_terms"
+                "on_add_yield_existing_2_terms",
+                "observer_superset_wildcard",
+                "observer_superset_wildcard_add_isa",
+                "observer_superset_wildcard_add_isa_at_offset"
             ]                
         }, {
             "id": "TriggerOnAdd",
