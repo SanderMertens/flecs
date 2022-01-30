@@ -370,6 +370,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_OPERATION);
     ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
+    ECS_ERR_STR(ECS_ID_IN_USE);
     }
 
     return "unknown error code";

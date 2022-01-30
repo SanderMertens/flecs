@@ -302,7 +302,7 @@ ecs_hashmap_t _flecs_string_hashmap_new(ecs_size_t size) {
 
 void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
-        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)},
+        .term = {.id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), .subj.set.mask = EcsSelf },
         .callback = on_set_symbol,
         .events = {EcsOnSet},
         .yield_existing = true
