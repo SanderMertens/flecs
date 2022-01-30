@@ -145,6 +145,18 @@ void register_exclusive(ecs_iter_t *it) {
 }
 
 static
+void register_dont_inherit(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+        r->flags |= ECS_ID_DONT_INHERIT;
+    } 
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -515,7 +527,6 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
-    /* Define triggers for when relationship cleanup rules are assigned */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard)},
         .callback = register_on_delete,
@@ -528,17 +539,21 @@ void flecs_bootstrap(
         .events = {EcsOnAdd}
     });
 
-    /* Define trigger for exclusive property */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsExclusive },
         .callback = register_exclusive,
         .events = {EcsOnAdd}
     });
 
-    /* Define trigger for symmetric property */
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsSymmetric },
         .callback = register_symmetric,
+        .events = {EcsOnAdd}
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsDontInherit },
+        .callback = register_dont_inherit,
         .events = {EcsOnAdd}
     });
 
