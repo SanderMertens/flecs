@@ -13,10 +13,6 @@
 void flecs_bootstrap(
     ecs_world_t *world);
 
-ecs_type_t flecs_bootstrap_type(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
 #define flecs_bootstrap_component(world, id)\
     ecs_component_init(world, &(ecs_component_desc_t){\
         .entity = {\

@@ -129,7 +129,8 @@ void register_final(ecs_iter_t *it) {
         if (flecs_get_id_record(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_fullpath(world, e);
             ecs_throw(ECS_ID_IN_USE,
-                "cannot add property 'Final' to '%s': already inherited from");
+                "cannot add property 'Final' to '%s': already inherited from",
+                    e_str);
             ecs_os_free(e_str);
         error:
             continue;
@@ -340,22 +341,6 @@ void _bootstrap_component(
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
 }
 
-/** Create type for component */
-ecs_type_t flecs_bootstrap_type(
-    ecs_world_t *world,
-    ecs_entity_t entity)
-{
-    ecs_table_t *table = flecs_table_find_or_create(world, &(ecs_ids_t){
-        .array = (ecs_entity_t[]){entity},
-        .count = 1
-    });
-
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->type != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return table->type;
-}
-
 /** Initialize component table. This table is manually constructed to bootstrap
  * flecs. After this function has been called, the builtin components can be
  * created. 
@@ -366,10 +351,15 @@ static
 ecs_table_t* bootstrap_component_table(
     ecs_world_t *world)
 {
-    /* Before creating table, manually set delete policy for ChildOf, as this
-     * can no longer be done after tables are created with the relation. */
+    /* Before creating table, manually set flags for ChildOf/Identifier, as this
+     * can no longer be done after they are in use. */
     ecs_id_record_t *childof_idr = flecs_ensure_id_record(world, EcsChildOf);
     childof_idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE;
+    childof_idr->flags |= ECS_ID_DONT_INHERIT;
+
+    ecs_id_record_t *ident_idr = flecs_ensure_id_record(
+        world, ecs_id(EcsIdentifier));
+    ident_idr->flags |= ECS_ID_DONT_INHERIT;
 
     ecs_id_t entities[] = {
         ecs_id(EcsComponent), 
@@ -567,6 +557,14 @@ void flecs_bootstrap(
     /* Removal of ChildOf objects (parents) deletes the subject (child) */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete); 
 
+    /* ChildOf, Identifier, Disabled and Prefab should never be inherited */
+    ecs_add_id(world, EcsChildOf, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
+
+    /* The (IsA, *) id record is used often in searches, so cache it */
+    world->idr_isa_wildcard = flecs_ensure_id_record(world, 
+        ecs_pair(EcsIsA, EcsWildcard));
+
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = EcsFinal, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
@@ -617,6 +615,9 @@ void flecs_bootstrap(
         .events = {EcsOnSet},
         .callback = on_set_component_lifecycle
     });  
+
+    ecs_add_id(world, EcsDisabled, EcsDontInherit);
+    ecs_add_id(world, EcsPrefab, EcsDontInherit);
 
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);

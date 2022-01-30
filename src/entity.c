@@ -82,7 +82,6 @@ void* get_base_component(
     ecs_table_t *table,
     ecs_id_t id,
     ecs_id_record_t *table_index,
-    ecs_id_record_t *table_index_isa,
     int32_t recur_depth)
 {
     /* Cycle detected in IsA relation */
@@ -98,19 +97,10 @@ void* get_base_component(
         return NULL;
     }
 
-    /* Should always be an id record for IsA, otherwise a table with a 
-     * HasBase flag set should not exist. */
-    if (!table_index_isa) {
-        ecs_id_record_t *idr = flecs_get_id_record(
-            world, ecs_pair(EcsIsA, EcsWildcard));
-        ecs_check(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table_index_isa = idr;
-    }
-
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
     const ecs_table_record_t *tr_isa = flecs_id_record_table(
-        table_index_isa, table);
+        world->idr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = table->type;
@@ -144,7 +134,7 @@ void* get_base_component(
 
         if (!tr) {
             ptr = get_base_component(world, table, id, table_index, 
-                table_index_isa, recur_depth + 1);
+                recur_depth + 1);
         } else {
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             ptr = get_component_w_index(table, tr->column, row);
@@ -2717,7 +2707,7 @@ const void* ecs_get_id(
     }
 
     if (!tr) {
-       return get_base_component(world, table, id, idr, NULL, 0);
+       return get_base_component(world, table, id, idr, 0);
     }
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);

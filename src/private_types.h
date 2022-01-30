@@ -554,6 +554,9 @@ struct ecs_world_t {
     ecs_map_t *id_index;         /* map<id, ecs_id_record_t*> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
+    /* Cached handle to (IsA, *) */
+    ecs_id_record_t *idr_isa_wildcard;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;

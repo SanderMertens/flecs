@@ -445,26 +445,6 @@ d->value == 75; // true
 
 This ability to inherit and override components is one of the key enabling features of Flecs prefabs, and is further explained in the [Inheritance section](Manual.md#Inheritance) of the manual.
 
-#### Final entities
-Entities can be annotated with the `Final` property, which prevents using them with the `IsA` relation. This is similar to the concept of a final class as something that cannot be extended. The following example shows how to add final to an entity:
-
-```c
-ecs_entity_t e = ecs_new_id(world);
-ecs_add_id(world, e, EcsFinal);
-
-ecs_entity_t i = ecs_new_id(world);
-ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
-```
-```cpp
-auto e = ecs.entity()
-  .add(flecs::Final);
-
-auto i = ecs.entity()
-  .is_a(e); // not allowed
-```
-
-Queries may use the final property to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md). By default, all components are created final.
-
 ### The ChildOf relation
 The `ChildOf` relation is the builtin relation that allows for the creation of entity hierarchies. The following example shows how hierarchies can be created with `ChildOf`:
 
@@ -566,10 +546,10 @@ auto parent = world.entity().scope([&]{
 Scopes are the mechanism that ensure contents of a module are created as children of the module, without having to explicitly add the module as a parent.
 
 ## Relation properties
-Relations can be assigned properties that change the way they are treated by flecs. Properties are modelled as components, tags and relations that you can add to the relation entity.
+Relation properties are tags that can be added to relations to modify their behavior.
 
-### Relation cleanup properties
-When either the relation or object entity of a relation is deleted, by default all of the instances of the relation are removed from the store. Consider the following example:
+### Cleanup properties
+Cleanup properties determine what happens when a component, tag, relation or relation object is deleted. The default behavior is that all instances of the deleted id will be removed. Consider the following example:
 
 ```c
 ecs_entity_t Likes = ecs_new_id(world);
@@ -685,62 +665,9 @@ Likes.add(flecs::OnDelete, flecs::Delete);
 Likes.add(flecs::OnDelete, flecs::Throw);
 ```
 
-By default, components are created with the `(OnDelete, Throw)` policy.
+To prevent accidentally deleting a component, components are created by default with the `(OnDelete, Throw)` policy.
 
-### Transitive relations
-Relations can be marked as transitive. A formal-ish definition if transitivity in the context of relations is:
-
-```
-If Relation(EntityA, EntityB) And Relation(EntityB, EntityC) Then Relation(EntityA, EntityC)
-```
-
-What this means becomes more obvious when translated to a real-life example:
-
-```
-If Manhattan is located in New York, and New York is located in the USA, then Manhattan is located in the USA.
-```
-
-In this example, `LocatedIn` is the relation and `Manhattan`, `New York` and `USA` are entities `A`, `B` and `C`. Another common example of transitivity is found in OOP inheritance:
-
-```
-If a Square is a Rectangle and a Rectangle is a Shape, then a Square is a Shape.
-```
-
-In this example `IsA` is the relation and `Square`, `Rectangle` and `Shape` are the entities.
-
-When relations in Flecs are marked as transitive, queries can follow the transitive relation to see if an entity matches. Consider this example dataset:
-
-```c
-ecs_entity_t LocatedIn = ecs_new_id(world);
-ecs_entity_t Manhattan = ecs_new_id(world);
-ecs_entity_t NewYork = ecs_new_id(world);
-ecs_entity_t USA = ecs_new_id(world);
-
-ecs_add_pair(world, Manhattan, LocatedIn, NewYork);
-ecs_add_pair(world, NewYork, LocatedIn, USA);
-```
-```cpp
-auto LocatedIn = world.entity();
-auto Manhattan = world.entity();
-auto NewYork = world.entity();
-auto USA = world.entity();
-
-ManHattan.add(LocatedIn, NewYork);
-NewYork.add(LocatedIn, USA);
-```
-
-If we were now to query for `(LocatedIn, USA)` we would only match `NewYork`, because we never added `(LocatedIn, USA)` to `Manhattan`. To make sure queries `Manhattan` as well we have to make the `LocatedIn` relation transitive. We can simply do this by adding the transitive property to the relation entity:
-
-```c
-ecs_add_id(world, LocatedIn, Transitive);
-```
-```cpp
-LocatedIn.add(flecs::Transitive);
-```
-
-When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
-
-### Tag relations
+### Tag property
 A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:
 
 ```c
@@ -817,7 +744,113 @@ const Position *p = e.get<Serializable, Position>();
 
 The `Tag` property is only interpreted when it is added to the relation part of a pair.
 
-### Reflexive relations
+### Final property
+Entities can be annotated with the `Final` property, which prevents using them with `IsA` relation. This is similar to the concept of a final class as something that cannot be extended. The following example shows how use `Final`:
+
+```c
+ecs_entity_t e = ecs_new_id(world);
+ecs_add_id(world, e, EcsFinal);
+
+ecs_entity_t i = ecs_new_id(world);
+ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
+```
+```cpp
+auto e = ecs.entity()
+  .add(flecs::Final);
+
+auto i = ecs.entity()
+  .is_a(e); // not allowed
+```
+
+Queries may use the final property to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md). By default, all components are created as final.
+
+### DontInherit property
+The `DontInherit` property prevents inheriting a component from a base entity (`IsA` object). Consider the following example:
+
+```c
+ecs_entity_t TagA = ecs_new_id(world);
+ecs_entity_t TagB = ecs_new_id(world);
+ecs_add_id(world, TagB, EcsDontInherit);
+
+ecs_entity_t base = ecs_new_id(world);
+ecs_add_id(world, base, TagA);
+ecs_add_id(world, base, TagB);
+
+ecs_entity_t inst = ecs_new_id(world);
+ecs_has_id(world, inst, TagA); // true
+ecs_has_id(world, inst, TagB); // false
+```
+```cpp
+struct TagA = { };
+struct TagB = { };
+
+world.component<TagB>().add(flecs::DontInherit);
+
+auto base = world.entity()
+  .add<TagA>()
+  .add<TagB>();
+
+auto inst = world.entity().is_a(base);
+inst.has<TagA>(); // true
+inst.has<TagB>(); // false
+```
+
+The builtin `Prefab`, `Disabled`, `Identifier` and `ChildOf` tags/relations are marked as `DontInherit`.
+
+### Transitive property
+Relations can be marked as transitive. A formal-ish definition if transitivity in the context of relations is:
+
+```
+If Relation(EntityA, EntityB) And Relation(EntityB, EntityC) Then Relation(EntityA, EntityC)
+```
+
+What this means becomes more obvious when translated to a real-life example:
+
+```
+If Manhattan is located in New York, and New York is located in the USA, then Manhattan is located in the USA.
+```
+
+In this example, `LocatedIn` is the relation and `Manhattan`, `New York` and `USA` are entities `A`, `B` and `C`. Another common example of transitivity is found in OOP inheritance:
+
+```
+If a Square is a Rectangle and a Rectangle is a Shape, then a Square is a Shape.
+```
+
+In this example `IsA` is the relation and `Square`, `Rectangle` and `Shape` are the entities.
+
+When relations in Flecs are marked as transitive, queries can follow the transitive relation to see if an entity matches. Consider this example dataset:
+
+```c
+ecs_entity_t LocatedIn = ecs_new_id(world);
+ecs_entity_t Manhattan = ecs_new_id(world);
+ecs_entity_t NewYork = ecs_new_id(world);
+ecs_entity_t USA = ecs_new_id(world);
+
+ecs_add_pair(world, Manhattan, LocatedIn, NewYork);
+ecs_add_pair(world, NewYork, LocatedIn, USA);
+```
+```cpp
+auto LocatedIn = world.entity();
+auto Manhattan = world.entity();
+auto NewYork = world.entity();
+auto USA = world.entity();
+
+ManHattan.add(LocatedIn, NewYork);
+NewYork.add(LocatedIn, USA);
+```
+
+If we were now to query for `(LocatedIn, USA)` we would only match `NewYork`, because we never added `(LocatedIn, USA)` to `Manhattan`. To make sure queries `Manhattan` as well we have to make the `LocatedIn` relation transitive. We can simply do this by adding the transitive property to the relation entity:
+
+```c
+ecs_add_id(world, LocatedIn, Transitive);
+```
+```cpp
+LocatedIn.add(flecs::Transitive);
+```
+
+When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relation and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the section in the query manual on transitivity: [Query transitivity](Queries.md#Transitivity).
+
+### Reflexive property
 A relation can be marked reflexive which means that a query like `Relation(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:
 
 Given this dataset:
@@ -852,7 +885,7 @@ LocatedIn(SanFrancisco, SanFrancisco)
 
 In these examples, `IsA` is a reflexive relation, whereas `LocatedIn` is not.
 
-### Acyclic relations
+### Acyclic property
 A relationship can be marked with the `Acyclic` property to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic.
 
 Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident. A number of features are only available for acyclic relationships, such as event propagation and query substitution. For example, the following query is only valid if `LocatedIn` is acyclic:
@@ -866,7 +899,7 @@ The same goes for observers/triggers that subscribe for events propagated throug
 
 Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
 
-### Exclusive relations
+### Exclusive property
 The `Exclusive` property enforces that an entity can only have a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relation with the `Exclusive` property is the builtin `ChildOf` relation:
 
 ```c
@@ -878,7 +911,7 @@ e.child_of(parent_a);
 e.child_of(parent_b); // replaces (ChildOf, parent_a)
 ```
 
-### Symmetric relations
+### Symmetric property
 The `Symmetric` property enforces that when a relation `(R, Y)` is added to entity `X`, the relation `(R, X)` will be added to entity `Y`. The reverse is also true, if relation `(R, Y)` is removed from `X`, relation `(R, X)` will be removed from `Y`.
 
 The symmetric property is useful for relations that do not make sense unless they are bidirectional. Examples of such relations are `AlliesWith`, `MarriedTo`, `TradingWith` and so on. An example:
@@ -896,7 +929,7 @@ auto Alice = ecs.entity();
 Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
-### With relations
+### With property
 The `With` relation can be added to components to indicate that it must always come together with another component. The following example shows how `With` can be used with regular components/tags:
 
 ```c

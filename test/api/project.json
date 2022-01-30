@@ -1428,7 +1428,8 @@
                 "remove_wildcard",
                 "remove_relation_wildcard",
                 "remove_wildcard_all",
-                "inherit_exclusive"
+                "inherit_exclusive",
+                "dont_inherit"
             ]
         }, {
             "id": "Rules",

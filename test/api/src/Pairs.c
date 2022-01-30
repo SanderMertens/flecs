@@ -2624,3 +2624,23 @@ void Pairs_inherit_exclusive() {
 
     ecs_fini(world);
 }
+
+void Pairs_dont_inherit() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ecs_add_id(world, TagA, EcsDontInherit);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t base = ecs_new_w_id(world, TagA);
+    ecs_add(world, base, TagB);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert( ecs_has(world, base, TagA));
+    test_assert( !ecs_has(world, inst, TagA));
+
+    test_assert( ecs_has(world, base, TagB));
+    test_assert( ecs_has(world, inst, TagB));
+
+    ecs_fini(world);
+}

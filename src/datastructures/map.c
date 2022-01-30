@@ -47,7 +47,7 @@ int32_t get_bucket_index(
 static
 ecs_bucket_t* get_bucket_for_hash(
     const ecs_map_t *map,
-    int32_t hash)
+    uint32_t hash)
 {
     int32_t bucket_count = map->bucket_count;
     if (!bucket_count) {

@@ -1363,6 +1363,7 @@ void Pairs_remove_wildcard(void);
 void Pairs_remove_relation_wildcard(void);
 void Pairs_remove_wildcard_all(void);
 void Pairs_inherit_exclusive(void);
+void Pairs_dont_inherit(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -7648,6 +7649,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "inherit_exclusive",
         Pairs_inherit_exclusive
+    },
+    {
+        "dont_inherit",
+        Pairs_dont_inherit
     }
 };
 
@@ -11856,7 +11861,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        90,
+        91,
         Pairs_testcases
     },
     {
