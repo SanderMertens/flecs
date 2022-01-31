@@ -231,7 +231,14 @@ int finalize_term_identifiers(
     /* By default select supersets for subjects. For example, when an entity has
      * (IsA, SpaceShip), also search the components of SpaceShip. */
     if (term->subj.set.mask == EcsDefaultSet) {
-        term->subj.set.mask = EcsSelf|EcsSuperSet;
+        ecs_entity_t e = term_id_entity(world, &term->pred);
+
+        /* If the component has the DontInherit tag, use EcsSelf */
+        if (!e || !ecs_has_id(world, e, EcsDontInherit)) {
+            term->subj.set.mask = EcsSelf|EcsSuperSet;
+        } else {
+            term->subj.set.mask = EcsSelf;
+        }
     }
 
     /* By default select self for objects. */
@@ -507,6 +514,17 @@ int verify_term_consistency(
                     return -1;
                 }
             }
+        }
+    }
+
+    if (term->subj.set.relation && !term->subj.set.max_depth) {
+        if (!ecs_has_id(world, term->subj.set.relation, EcsAcyclic)) {
+            char *r_str = ecs_get_fullpath(world, term->subj.set.relation);
+            term_error(world, term, name, 
+                "relation '%s' is used with SuperSet/SubSet but is not acyclic", 
+                    r_str);
+            ecs_os_free(r_str);
+            return -1;
         }
     }
 

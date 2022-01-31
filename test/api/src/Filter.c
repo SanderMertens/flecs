@@ -430,6 +430,81 @@ void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_term_non_acyclic_superset() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = Tag, 
+            .subj.set = {.mask = EcsSuperSet, .relation = Rel }
+        }}
+    });
+    test_assert(r != 0); /* cyclic superset is invalid  */
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_dont_inherit_default_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, DontInherit);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = Tag }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, Tag);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Tag);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSelf);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_dont_inherit_pair_default_set() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, DontInherit);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Rel);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSelf);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
 
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();

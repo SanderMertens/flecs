@@ -2759,7 +2759,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
@@ -2785,7 +2785,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pred);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){

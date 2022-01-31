@@ -491,7 +491,7 @@ void SystemCascade_custom_relation_cascade_depth_1() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -558,7 +558,7 @@ void SystemCascade_custom_relation_cascade_depth_2() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -640,7 +640,7 @@ void SystemCascade_custom_relation_add_after_match() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -718,7 +718,7 @@ void SystemCascade_custom_relation_adopt_after_match() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -791,7 +791,7 @@ void SystemCascade_custom_relation_rematch_w_empty_table() {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Acyclic);
 
     ecs_query_t *q = ecs_query_new(world, "?Position(cascade(Rel)), Velocity");
     test_assert(q != NULL);

@@ -1061,6 +1061,9 @@ void Filter_filter_1_term_acyclic_reflexive_same_subj_obj(void);
 void Filter_filter_1_term_same_subj_obj_var(void);
 void Filter_filter_1_term_acyclic_same_subj_obj_var(void);
 void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var(void);
+void Filter_filter_1_term_non_acyclic_superset(void);
+void Filter_filter_1_term_dont_inherit_default_set(void);
+void Filter_filter_1_term_dont_inherit_pair_default_set(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
@@ -6461,6 +6464,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_1_term_acyclic_reflexive_same_subj_obj_var",
         Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var
+    },
+    {
+        "filter_1_term_non_acyclic_superset",
+        Filter_filter_1_term_non_acyclic_superset
+    },
+    {
+        "filter_1_term_dont_inherit_default_set",
+        Filter_filter_1_term_dont_inherit_default_set
+    },
+    {
+        "filter_1_term_dont_inherit_pair_default_set",
+        Filter_filter_1_term_dont_inherit_pair_default_set
     },
     {
         "filter_w_pair_id",
@@ -11865,7 +11880,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        136,
+        139,
         Filter_testcases
     },
     {
@@ -12130,6 +12145,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    ut_init(argv[0]);
     return bake_test_run("api", argc, argv, suites, 65);
 }
