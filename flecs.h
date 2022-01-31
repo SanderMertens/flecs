@@ -21014,11 +21014,14 @@ inline flecs::entity world::get_alive(flecs::entity_t e) const {
     e = ecs_get_alive(m_world, e);
     return flecs::entity(m_world, e);
 }
-
+/* Prevent clashing with Unreal define. Unreal applications will have to use
+ *  ecs_ensure. */
+#ifndef ensure
 inline flecs::entity world::ensure(flecs::entity_t e) const {
     ecs_ensure(m_world, e);
     return flecs::entity(m_world, e);
 }
+#endif
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() {
