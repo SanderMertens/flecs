@@ -74,6 +74,7 @@ void Event_emit_event_case_for_case_id(void);
 void Event_emit_event_case_for_case_id_wildcard(void);
 void Event_emit_event_switch_for_case_id(void);
 void Event_emit_table_event(void);
+void Event_emit_staged(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -2678,6 +2679,10 @@ bake_test_case Event_testcases[] = {
     {
         "emit_table_event",
         Event_emit_table_event
+    },
+    {
+        "emit_staged",
+        Event_emit_staged
     }
 };
 
@@ -11678,7 +11683,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        11,
+        12,
         Event_testcases
     },
     {
@@ -12125,5 +12130,6 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
+    ut_init(argv[0]);
     return bake_test_run("api", argc, argv, suites, 65);
 }
