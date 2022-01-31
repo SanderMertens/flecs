@@ -248,6 +248,7 @@
                 "standard_enum_reflection",
                 "sparse_enum_reflection",
                 "enum_class_reflection",
+                "prefixed_enum_reflection",
                 "get_constant_id",
                 "add_enum_constant",
                 "add_enum_class_constant",

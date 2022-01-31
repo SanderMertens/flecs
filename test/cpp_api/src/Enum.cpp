@@ -12,6 +12,10 @@ enum class EnumClass {
     Grass, Sand, Stone
 };
 
+enum PrefixEnum {
+    PrefixEnumFoo, PrefixEnumBar
+};
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -129,6 +133,36 @@ void Enum_enum_class_reflection() {
     test_assert(e_stone.get<EnumClass>()[0] == EnumClass::Stone);
 
     test_bool(enum_type.is_valid(3), false);
+}
+
+void Enum_prefixed_enum_reflection() {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<PrefixEnum>(ecs);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<PrefixEnum>());
+    test_str(e.path().c_str(), "::PrefixEnum");
+    test_int(enum_type.first(), PrefixEnum::PrefixEnumFoo);
+    test_int(enum_type.last(), PrefixEnum::PrefixEnumBar);
+
+    auto e_foo = enum_type.entity(PrefixEnum::PrefixEnumFoo);
+    auto e_bar = enum_type.entity(PrefixEnum::PrefixEnumBar);
+
+    test_assert(e_foo != 0);
+    test_str(e_foo.path().c_str(), "::PrefixEnum::Foo");
+    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumFoo), true);
+    test_assert(e_foo.get<PrefixEnum>() != nullptr);
+    test_assert(e_foo.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumFoo);
+
+    test_assert(e_bar != 0);
+    test_str(e_bar.path().c_str(), "::PrefixEnum::Bar");
+    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumFoo), true);
+    test_assert(e_bar.get<PrefixEnum>() != nullptr);
+    test_assert(e_bar.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumBar);
+
+    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar + 1), false);
 }
 
 void Enum_get_constant_id() {

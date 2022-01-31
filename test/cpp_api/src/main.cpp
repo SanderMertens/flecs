@@ -238,6 +238,7 @@ void Pairs_get_object_for_id_not_found(void);
 void Enum_standard_enum_reflection(void);
 void Enum_sparse_enum_reflection(void);
 void Enum_enum_class_reflection(void);
+void Enum_prefixed_enum_reflection(void);
 void Enum_get_constant_id(void);
 void Enum_add_enum_constant(void);
 void Enum_add_enum_class_constant(void);
@@ -1747,6 +1748,10 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_class_reflection",
         Enum_enum_class_reflection
+    },
+    {
+        "prefixed_enum_reflection",
+        Enum_prefixed_enum_reflection
     },
     {
         "get_constant_id",
@@ -4058,7 +4063,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        17,
+        18,
         Enum_testcases
     },
     {
