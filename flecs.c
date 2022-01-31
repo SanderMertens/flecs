@@ -40282,7 +40282,8 @@ void compute_table_diff(
     added_count += next_count - i_next;
     removed_count += node_count - i_node;
 
-    trivial_edge &= (added_count + removed_count) <= 1;
+    trivial_edge &= (added_count + removed_count) <= 1 && 
+        !ecs_id_is_wildcard(id);
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it.

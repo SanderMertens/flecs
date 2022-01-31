@@ -1694,7 +1694,9 @@
                "on_add_self_trigger_with_add_isa",
                "on_set_self_trigger_with_add_isa",
                "notify_propagated_twice",
-               "trigger_superset_wildcard"
+               "trigger_superset_wildcard",
+               "remove_wildcard_1_id",
+               "remove_wildcard_2_ids"
            ]
         }, {
             "id": "Observer",

@@ -1623,6 +1623,8 @@ void Trigger_on_add_self_trigger_with_add_isa(void);
 void Trigger_on_set_self_trigger_with_add_isa(void);
 void Trigger_notify_propagated_twice(void);
 void Trigger_trigger_superset_wildcard(void);
+void Trigger_remove_wildcard_1_id(void);
+void Trigger_remove_wildcard_2_ids(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -8682,6 +8684,14 @@ bake_test_case Trigger_testcases[] = {
     {
         "trigger_superset_wildcard",
         Trigger_trigger_superset_wildcard
+    },
+    {
+        "remove_wildcard_1_id",
+        Trigger_remove_wildcard_1_id
+    },
+    {
+        "remove_wildcard_2_ids",
+        Trigger_remove_wildcard_2_ids
     }
 };
 
@@ -11922,7 +11932,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        95,
+        97,
         Trigger_testcases
     },
     {
