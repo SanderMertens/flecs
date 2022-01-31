@@ -1079,3 +1079,28 @@ void Entity_ensure_nonzero_gen_exists_alive() {
     test_expect_abort();
     ecs_ensure(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
 }
+
+void Entity_set_scope_w_entity_init_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_staging_begin(world);
+    ecs_entity_t parent = ecs_set_name(stage, 0, "Parent");
+    ecs_set_scope(stage, parent);
+    ecs_entity_t child = ecs_entity_init(stage, &(ecs_entity_desc_t) {
+        .name = "Child"
+    });
+    ecs_set_scope(stage, 0);
+    ecs_staging_end(world);
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    test_str( ecs_get_name(world, parent), "Parent");
+    test_str( ecs_get_name(world, child), "Child");
+
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent));
+
+    ecs_fini(world);
+}

@@ -1898,7 +1898,7 @@ ecs_entity_t ecs_entity_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_entity_t scope = ecs_get_scope(world);
+    ecs_entity_t scope = stage->scope;
     ecs_id_t with = ecs_get_with(world);
 
     const char *name = desc->name;

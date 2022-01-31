@@ -712,7 +712,6 @@ struct ecs_stage_t {
     ecs_vector_t *post_frame_actions;
 
     /* Namespacing */
-    ecs_table_t *scope_table;    /* Table for current scope */
     ecs_entity_t scope;          /* Entity of current scope */
     ecs_entity_t with;           /* Id to add by default to new entities */
     ecs_entity_t base;           /* Currently instantiated top-level base */
@@ -6213,7 +6212,7 @@ ecs_entity_t ecs_entity_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_entity_t scope = ecs_get_scope(world);
+    ecs_entity_t scope = stage->scope;
     ecs_id_t with = ecs_get_with(world);
 
     const char *name = desc->name;
@@ -43799,14 +43798,6 @@ ecs_entity_t ecs_set_scope(
 
     ecs_entity_t cur = stage->scope;
     stage->scope = scope;
-
-    if (scope) {
-        ecs_id_t id = ecs_pair(EcsChildOf, scope);
-        stage->scope_table = flecs_table_traverse_add(
-            world, &world->store.root, &id, NULL);
-    } else {
-        stage->scope_table = &world->store.root;
-    }
 
     return cur;
 error:

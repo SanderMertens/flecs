@@ -61,6 +61,7 @@ void Entity_ensure_zero_gen_exists(void);
 void Entity_ensure_nonzero_gen_exists(void);
 void Entity_ensure_zero_gen_exists_alive(void);
 void Entity_ensure_nonzero_gen_exists_alive(void);
+void Entity_set_scope_w_entity_init_from_stage(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2637,6 +2638,10 @@ bake_test_case Entity_testcases[] = {
     {
         "ensure_nonzero_gen_exists_alive",
         Entity_ensure_nonzero_gen_exists_alive
+    },
+    {
+        "set_scope_w_entity_init_from_stage",
+        Entity_set_scope_w_entity_init_from_stage
     }
 };
 
@@ -11701,7 +11706,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        52,
+        53,
         Entity_testcases
     },
     {

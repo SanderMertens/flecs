@@ -686,6 +686,28 @@ void World_with_scope_type() {
     test_assert(child == parent.lookup("Child"));
 }
 
+void World_with_scope_type_staged() {
+    flecs::world ecs;
+
+    flecs::entity e;
+    flecs::world stage = ecs.get_stage(0);
+    
+    ecs.staging_begin();
+    stage.scope<ParentScope>([&]{
+        e = stage.entity("Child");
+    });
+    ecs.staging_end();
+
+    test_assert( e.has(flecs::ChildOf, ecs.id<ParentScope>()) );
+
+    auto parent = ecs.lookup("ParentScope");
+    test_assert(parent != 0);
+
+    auto child = ecs.lookup("ParentScope::Child");
+    test_assert(child != 0);
+    test_assert(child == parent.lookup("Child"));
+}
+
 void World_with_tag_nested() {
     flecs::world ecs;
 

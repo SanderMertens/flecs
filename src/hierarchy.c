@@ -549,14 +549,6 @@ ecs_entity_t ecs_set_scope(
     ecs_entity_t cur = stage->scope;
     stage->scope = scope;
 
-    if (scope) {
-        ecs_id_t id = ecs_pair(EcsChildOf, scope);
-        stage->scope_table = flecs_table_traverse_add(
-            world, &world->store.root, &id, NULL);
-    } else {
-        stage->scope_table = &world->store.root;
-    }
-
     return cur;
 error:
     return 0;

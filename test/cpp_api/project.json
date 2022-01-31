@@ -829,6 +829,7 @@
                 "with_scope",
                 "with_scope_nested",
                 "with_scope_type",
+                "with_scope_type_staged",
                 "recursive_lookup",
                 "type_w_tag_name",
                 "entity_w_tag_name",
