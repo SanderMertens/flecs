@@ -669,6 +669,23 @@ void World_with_scope() {
     test_int(count, 3);
 }
 
+struct ParentScope { };
+
+void World_with_scope_type() {
+    flecs::world ecs;
+
+    ecs.scope<ParentScope>([&]{
+        ecs.entity("Child");
+    });
+
+    auto parent = ecs.lookup("ParentScope");
+    test_assert(parent != 0);
+
+    auto child = ecs.lookup("ParentScope::Child");
+    test_assert(child != 0);
+    test_assert(child == parent.lookup("Child"));
+}
+
 void World_with_tag_nested() {
     flecs::world ecs;
 

@@ -13930,6 +13930,14 @@ struct world final {
         func();
         ecs_set_scope(m_world, prev);
     }
+    
+    /** Same as scope(parent, func), but with T as parent.
+     */
+    template <typename T, typename Func>
+    void scope(const Func& func) const {
+        flecs::id_t parent = _::cpp_type<T>::id(m_world);
+        scope(parent, func);
+    }
 
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {

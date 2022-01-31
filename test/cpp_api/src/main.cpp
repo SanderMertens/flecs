@@ -84,6 +84,7 @@ void Entity_set_copy(void);
 void Entity_set_deduced(void);
 void Entity_override(void);
 void Entity_set_override(void);
+void Entity_set_override_lvalue(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
 void Entity_implicit_type_str_to_char(void);
@@ -775,6 +776,7 @@ void World_with_relation_object_type(void);
 void World_with_tag_nested(void);
 void World_with_scope(void);
 void World_with_scope_nested(void);
+void World_with_scope_type(void);
 void World_recursive_lookup(void);
 void World_type_w_tag_name(void);
 void World_entity_w_tag_name(void);
@@ -1135,6 +1137,10 @@ bake_test_case Entity_testcases[] = {
     {
         "set_override",
         Entity_set_override
+    },
+    {
+        "set_override_lvalue",
+        Entity_set_override_lvalue
     },
     {
         "implicit_name_to_char",
@@ -3786,6 +3792,10 @@ bake_test_case World_testcases[] = {
         World_with_scope_nested
     },
     {
+        "with_scope_type",
+        World_with_scope_type
+    },
+    {
         "recursive_lookup",
         World_recursive_lookup
     },
@@ -4014,7 +4024,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        162,
+        163,
         Entity_testcases
     },
     {
@@ -4175,7 +4185,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        65,
+        66,
         World_testcases
     },
     {

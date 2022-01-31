@@ -1279,6 +1279,30 @@ void Entity_set_override() {
     test_int(p_base->y, 20);
 }
 
+void Entity_set_override_lvalue() {
+    flecs::world world;
+
+    Position plvalue = {10, 20};
+
+    auto base = world.entity()
+        .set_override<Position>(plvalue);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has<Position>());
+    test_assert(e.owns<Position>());
+
+    const Position* p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position* p_base = base.get<Position>();
+    test_assert(p != p_base);
+    test_int(p_base->x, 10);
+    test_int(p_base->y, 20);
+}
+
 void Entity_implicit_name_to_char() {
     flecs::world world;
 
