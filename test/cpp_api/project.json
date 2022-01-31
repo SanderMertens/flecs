@@ -830,6 +830,8 @@
                 "with_scope_nested",
                 "with_scope_type",
                 "with_scope_type_staged",
+                "with_scope_no_lambda",
+                "with_scope_type_no_lambda",
                 "recursive_lookup",
                 "type_w_tag_name",
                 "entity_w_tag_name",

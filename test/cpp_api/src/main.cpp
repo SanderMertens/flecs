@@ -778,6 +778,8 @@ void World_with_scope(void);
 void World_with_scope_nested(void);
 void World_with_scope_type(void);
 void World_with_scope_type_staged(void);
+void World_with_scope_no_lambda(void);
+void World_with_scope_type_no_lambda(void);
 void World_recursive_lookup(void);
 void World_type_w_tag_name(void);
 void World_entity_w_tag_name(void);
@@ -3801,6 +3803,14 @@ bake_test_case World_testcases[] = {
         World_with_scope_type_staged
     },
     {
+        "with_scope_no_lambda",
+        World_with_scope_no_lambda
+    },
+    {
+        "with_scope_type_no_lambda",
+        World_with_scope_type_no_lambda
+    },
+    {
         "recursive_lookup",
         World_recursive_lookup
     },
@@ -4190,7 +4200,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        67,
+        69,
         World_testcases
     },
     {
