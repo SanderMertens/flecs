@@ -806,6 +806,7 @@ void World_remove_all_type(void);
 void World_remove_all_pair(void);
 void World_remove_all_pair_type(void);
 void World_get_scope(void);
+void World_get_scope_type(void);
 void World_register_namespace_after_component(void);
 void World_is_alive(void);
 void World_is_valid(void);
@@ -3915,6 +3916,10 @@ bake_test_case World_testcases[] = {
         World_get_scope
     },
     {
+        "get_scope_type",
+        World_get_scope_type
+    },
+    {
         "register_namespace_after_component",
         World_register_namespace_after_component
     },
@@ -4200,7 +4205,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        69,
+        70,
         World_testcases
     },
     {

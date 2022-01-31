@@ -1218,6 +1218,16 @@ void World_get_scope() {
     test_str(s.name(), "scope");
 }
 
+void World_get_scope_type() {
+    flecs::world ecs;
+
+    ecs.set_scope<ParentScope>();
+
+    auto s = ecs.get_scope();
+    test_assert(s == ecs.id<ParentScope>());
+    test_str(s.name(), "ParentScope");
+}
+
 struct Outer
 {
     struct Inner { };

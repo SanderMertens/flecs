@@ -103,7 +103,7 @@ struct restore_scope {
     flecs::entity_t m_old_scope;
 };
 
-};
+}
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -473,13 +473,18 @@ struct world {
      * @param scope The scope to set.
      * @return The current scope;
      */
-    flecs::entity set_scope(const flecs::entity& scope) const;
+    flecs::entity set_scope(const flecs::entity_t scope) const;
 
     /** Get current scope.
      *
      * @return The current scope.
      */
     flecs::entity get_scope() const;
+
+    /** Same as set_scope but with type.
+     */
+    template <typename T>
+    flecs::entity set_scope() const;
 
     /** Lookup entity by name.
      * 

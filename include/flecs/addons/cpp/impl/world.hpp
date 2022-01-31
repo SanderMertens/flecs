@@ -66,12 +66,17 @@ inline void world::use(flecs::entity e, const char *alias) {
     ecs_use(m_world, eid, alias);
 }
 
-inline flecs::entity world::set_scope(const flecs::entity& s) const {
-    return flecs::entity(ecs_set_scope(m_world, s.id()));
+inline flecs::entity world::set_scope(const flecs::entity_t s) const {
+    return flecs::entity(ecs_set_scope(m_world, s));
 }
 
 inline flecs::entity world::get_scope() const {
     return flecs::entity(m_world, ecs_get_scope(m_world));
+}
+
+template <typename T>
+inline flecs::entity world::set_scope() const {
+    return set_scope( _::cpp_type<T>::id(m_world) ); 
 }
 
 inline entity world::lookup(const char *name) const {

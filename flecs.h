@@ -13386,11 +13386,25 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     flecs::set(world, entity, value, id);
 }
 
+namespace _ {
+
+/** Utility for using scope without lambda */
+struct restore_scope {
+    ~restore_scope() {
+        ecs_set_scope(m_world, m_old_scope);
+    }
+
+    flecs::world_t *m_world;
+    flecs::entity_t m_old_scope;
+};
+
+}
+
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
  * deleted, all data in the world will be deleted as well.
  */
-struct world final {
+struct world {
     /** Create world.
      */
     explicit world() 
@@ -13754,13 +13768,18 @@ struct world final {
      * @param scope The scope to set.
      * @return The current scope;
      */
-    flecs::entity set_scope(const flecs::entity& scope) const;
+    flecs::entity set_scope(const flecs::entity_t scope) const;
 
     /** Get current scope.
      *
      * @return The current scope.
      */
     flecs::entity get_scope() const;
+
+    /** Same as set_scope but with type.
+     */
+    template <typename T>
+    flecs::entity set_scope() const;
 
     /** Lookup entity by name.
      * 
@@ -13937,6 +13956,23 @@ struct world final {
     void scope(const Func& func) const {
         flecs::id_t parent = _::cpp_type<T>::id(m_world);
         scope(parent, func);
+    }
+
+    /** Use provided scope for operations ran on returned world.
+     * Operations need to be ran in a single statement.
+     */
+    flecs::world& scope(id_t parent, _::restore_scope tmp = {}) {
+        tmp.m_world = m_world;
+        tmp.m_old_scope = ecs_set_scope(m_world, parent);
+        return *this;
+    }
+
+    template <typename T>
+    flecs::world& scope(_::restore_scope tmp = {}) {
+        flecs::id_t parent = _::cpp_type<T>::id(m_world);
+        tmp.m_world = m_world;
+        tmp.m_old_scope = ecs_set_scope(m_world, parent);
+        return *this;
     }
 
     /** Delete all entities with specified id. */
@@ -20961,12 +20997,17 @@ inline void world::use(flecs::entity e, const char *alias) {
     ecs_use(m_world, eid, alias);
 }
 
-inline flecs::entity world::set_scope(const flecs::entity& s) const {
-    return flecs::entity(ecs_set_scope(m_world, s.id()));
+inline flecs::entity world::set_scope(const flecs::entity_t s) const {
+    return flecs::entity(ecs_set_scope(m_world, s));
 }
 
 inline flecs::entity world::get_scope() const {
     return flecs::entity(m_world, ecs_get_scope(m_world));
+}
+
+template <typename T>
+inline flecs::entity world::set_scope() const {
+    return set_scope( _::cpp_type<T>::id(m_world) ); 
 }
 
 inline entity world::lookup(const char *name) const {
