@@ -205,6 +205,17 @@ struct entity_builder : entity_view {
         this->override<T>();
         this->set<T>(FLECS_FWD(val));
         return to_base();  
+    }
+
+    /** Set value, add owned flag.
+     *
+     * @tparam T The component to set and for which to add the OVERRIDE flag
+     */    
+    template <typename T>
+    Self& set_override(const T& val) {
+        this->override<T>();
+        this->set<T>(val);
+        return to_base();  
     }    
 
     /** Add a switch to an entity by id.
