@@ -84,7 +84,7 @@ static const flecs::entity_t UnSet = EcsUnSet;
 static const flecs::entity_t Pair = ECS_PAIR;
 static const flecs::entity_t Switch = ECS_SWITCH;
 static const flecs::entity_t Case = ECS_CASE;
-static const flecs::entity_t Owned = ECS_OVERRIDE;
+static const flecs::entity_t Override = ECS_OVERRIDE;
 
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;

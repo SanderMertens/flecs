@@ -28844,7 +28844,7 @@ void FlecsDocImport(
 #define TOK_PARENT "parent"
 #define TOK_ALL "all"
 
-#define TOK_OWNED "OVERRIDE"
+#define TOK_OVERRIDE "OVERRIDE"
 
 #define TOK_ROLE_PAIR "PAIR"
 #define TOK_ROLE_AND "AND"
@@ -29154,7 +29154,7 @@ ecs_entity_t parse_role(
         return ECS_SWITCH;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
         return ECS_CASE;
-    } else if (!ecs_os_strcmp(token, TOK_OWNED)) {
+    } else if (!ecs_os_strcmp(token, TOK_OVERRIDE)) {
         return ECS_OVERRIDE;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
         return ECS_DISABLED;        
