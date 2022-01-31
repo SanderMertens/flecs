@@ -27673,7 +27673,7 @@ void FlecsCoreDocImport(
 
     ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-property");
     ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#reflexive-property");
-    ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-entities");
+    ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-property");
     ecs_doc_set_link(world, EcsDontInherit, URL_ROOT "#dontinherit-property");
     ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-property");
     ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-property");
