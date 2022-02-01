@@ -805,7 +805,7 @@ public:
 struct scoped_world : world {
     scoped_world(
         flecs::world_t *w, 
-        flecs::entity_t s) : world()
+        flecs::entity_t s) : world(nullptr)
     {
         m_prev_scope = ecs_set_scope(w, s);
         m_world = w;
@@ -816,7 +816,7 @@ struct scoped_world : world {
         ecs_set_scope(m_world, m_prev_scope);
     }
 
-    scoped_world(const scoped_world& obj) : world() {
+    scoped_world(const scoped_world& obj) : world(nullptr) {
         m_prev_scope = obj.m_prev_scope;
         m_world = obj.m_world;
         m_owned = obj.m_owned;
