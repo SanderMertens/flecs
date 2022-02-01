@@ -213,6 +213,11 @@ void init_flags(
             table->flags |= EcsTableHasIsA;
         }
 
+        /* Does table have ChildOf relations */
+        if (ECS_HAS_RELATION(id, EcsChildOf)) {
+            table->flags |= EcsTableHasChildOf;
+        }
+
         /* Does table have switch columns */
         if (ECS_HAS_ROLE(id, SWITCH)) {
             table->flags |= EcsTableHasSwitch;

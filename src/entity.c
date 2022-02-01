@@ -1759,7 +1759,6 @@ int traverse_add(
         }
     }
 
-
     /* Find destination table */
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
 
@@ -1787,6 +1786,9 @@ int traverse_add(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         table = table_append(world, table, id, &diff);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
+            scope = ECS_PAIR_OBJECT(id);
+        }
     }
 
     /* Add components from the 'add_expr' expression */
@@ -1865,6 +1867,9 @@ void deferred_add_remove(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         ecs_add_id(world, entity, id);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
+            scope = ECS_PAIR_OBJECT(id);
+        }
     }
 
     /* Add components from the 'add_expr' expression */

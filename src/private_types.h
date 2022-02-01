@@ -131,19 +131,20 @@ struct ecs_data_t {
 /** Flags for quickly checking for special properties of a table. */
 #define EcsTableHasBuiltins         1u    /* Does table have builtin components */
 #define EcsTableIsPrefab            2u    /* Does the table store prefabs */
-#define EcsTableHasIsA              4u    /* Does the table type has IsA */
-#define EcsTableHasPairs            8u    /* Does the table type have pairs */
-#define EcsTableHasModule           16u   /* Does the table have module data */
-#define EcsTableHasXor              32u   /* Does the table type has XOR */
-#define EcsTableIsDisabled          64u   /* Does the table type has EcsDisabled */
-#define EcsTableHasCtors            128u
-#define EcsTableHasDtors            256u
-#define EcsTableHasCopy             512u
-#define EcsTableHasMove             1024u
-#define EcsTableHasOnAdd            2048u
-#define EcsTableHasOnRemove         4096u
-#define EcsTableHasOnSet            8192u
-#define EcsTableHasUnSet            16384u
+#define EcsTableHasIsA              4u    /* Does the table have IsA relation */
+#define EcsTableHasChildOf          8u    /* Does the table type ChildOf relation */
+#define EcsTableHasPairs            16u   /* Does the table type have pairs */
+#define EcsTableHasModule           32u   /* Does the table have module data */
+#define EcsTableHasXor              64u   /* Does the table type has XOR */
+#define EcsTableIsDisabled          128u   /* Does the table type has EcsDisabled */
+#define EcsTableHasCtors            256u
+#define EcsTableHasDtors            512u
+#define EcsTableHasCopy             1024u
+#define EcsTableHasMove             2048u
+#define EcsTableHasOnAdd            4096u
+#define EcsTableHasOnRemove         8192u
+#define EcsTableHasOnSet            16384u
+#define EcsTableHasUnSet            32768u
 #define EcsTableHasSwitch           65536u
 #define EcsTableHasDisabled         131072u
 

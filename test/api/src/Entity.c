@@ -1104,3 +1104,115 @@ void Entity_set_scope_w_entity_init_from_stage() {
 
     ecs_fini(world);
 }
+
+void Entity_entity_init_w_childof_and_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
+    ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
+
+    ecs_set_scope(world, parent_a);
+    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child",
+        .add = { ecs_childof(parent_b) }
+    });
+    ecs_set_scope(world, 0);
+
+    test_assert( !ecs_has_pair(world, child, EcsChildOf, parent_a) );
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_b) );
+    test_str(ecs_get_name(world, child), "Child");
+
+    char *path = ecs_get_fullpath(world, child);
+    test_str(path, "ParentB.Child");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_init_w_childof_and_scope_and_scoped_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
+    ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
+
+    ecs_set_scope(world, parent_a);
+    ecs_entity_t grand_child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child.GrandChild",
+        .add = { ecs_childof(parent_b) }
+    });
+    ecs_set_scope(world, 0);
+
+    test_assert( !ecs_has_pair(world, grand_child, EcsChildOf, parent_a) );
+    test_assert( !ecs_has_pair(world, grand_child, EcsChildOf, parent_b) );
+    test_str(ecs_get_name(world, grand_child), "GrandChild");
+
+    ecs_entity_t child = ecs_lookup_child(world, parent_b, "Child");
+    test_assert(child != 0);
+    test_assert( ecs_has_pair(world, grand_child, EcsChildOf, child));
+
+    char *path = ecs_get_fullpath(world, grand_child);
+    test_str(path, "ParentB.Child.GrandChild");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Entity_deferred_entity_init_w_childof_and_scope() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
+    ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
+
+    ecs_defer_begin(world);
+
+    ecs_set_scope(world, parent_a);
+    ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child",
+        .add = { ecs_childof(parent_b) }
+    });
+    ecs_set_scope(world, 0);
+
+    ecs_defer_end(world);
+
+    test_assert( !ecs_has_pair(world, child, EcsChildOf, parent_a) );
+    test_assert( ecs_has_pair(world, child, EcsChildOf, parent_b) );
+    test_str(ecs_get_name(world, child), "Child");
+
+    char *path = ecs_get_fullpath(world, child);
+    test_str(path, "ParentB.Child");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
+    ecs_entity_t parent_b = ecs_set_name(world, 0, "ParentB");
+
+    ecs_defer_begin(world);
+
+    ecs_set_scope(world, parent_a);
+    ecs_entity_t grand_child = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child.GrandChild",
+        .add = { ecs_childof(parent_b) }
+    });
+    ecs_set_scope(world, 0);
+
+    ecs_defer_end(world);
+
+    test_assert( !ecs_has_pair(world, grand_child, EcsChildOf, parent_a) );
+    test_assert( !ecs_has_pair(world, grand_child, EcsChildOf, parent_b) );
+    test_str(ecs_get_name(world, grand_child), "GrandChild");
+
+    ecs_entity_t child = ecs_lookup_child(world, parent_b, "Child");
+    test_assert(child != 0);
+    test_assert( ecs_has_pair(world, grand_child, EcsChildOf, child));
+
+    char *path = ecs_get_fullpath(world, grand_child);
+    test_str(path, "ParentB.Child.GrandChild");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
