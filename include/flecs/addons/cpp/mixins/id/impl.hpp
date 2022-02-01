@@ -69,12 +69,6 @@ inline flecs::id world::id() const {
     return flecs::id(m_world, _::cpp_type<T>::id(m_world));
 }
 
-template <typename E, if_t< is_enum<E>::value >>
-inline flecs::id world::id(E value) const {
-    flecs::id_t constant = _::enum_type<E>::get(m_world).entity(value);
-    return flecs::id(m_world, constant);
-}
-
 template <typename ... Args>
 inline flecs::id world::id(Args&&... args) const {
     return flecs::id(m_world, FLECS_FWD(args)...);

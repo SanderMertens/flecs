@@ -14091,11 +14091,6 @@ struct world {
 template <typename T>
 flecs::id id() const;
 
-/** Get id from an enum constant.
- */
-template <typename E, if_t< is_enum<E>::value > = 0>
-flecs::id id(E value) const;
-
 /** Id factory.
  */
 template <typename ... Args>
@@ -14131,6 +14126,16 @@ flecs::untyped_component component(Args &&... args) const;
  */
 template <typename... Args>
 flecs::entity entity(Args &&... args) const;
+
+/** Get id from an enum constant.
+ */
+template <typename E, if_t< is_enum<E>::value > = 0>
+flecs::entity id(E value) const;
+
+/** Get id from an enum constant.
+ */
+template <typename E, if_t< is_enum<E>::value > = 0>
+flecs::entity entity(E value) const;
 
 /** Create a prefab.
  */
@@ -18043,12 +18048,6 @@ inline flecs::id world::id() const {
     return flecs::id(m_world, _::cpp_type<T>::id(m_world));
 }
 
-template <typename E, if_t< is_enum<E>::value >>
-inline flecs::id world::id(E value) const {
-    flecs::id_t constant = _::enum_type<E>::get(m_world).entity(value);
-    return flecs::id(m_world, constant);
-}
-
 template <typename ... Args>
 inline flecs::id world::id(Args&&... args) const {
     return flecs::id(m_world, FLECS_FWD(args)...);
@@ -18274,6 +18273,12 @@ inline flecs::entity entity_view::lookup(const char *path) const {
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {
     return flecs::entity(m_world, FLECS_FWD(args)...);
+}
+
+template <typename E, if_t< is_enum<E>::value >>
+inline flecs::entity world::id(E value) const {
+    flecs::entity_t constant = _::enum_type<E>::get(m_world).entity(value);
+    return flecs::entity(m_world, constant);
 }
 
 template <typename T>
