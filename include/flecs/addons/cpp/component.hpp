@@ -17,7 +17,7 @@ namespace _ {
 #if defined(__GNUC__) || defined(_WIN32)
 template <typename T>
 inline static const char* type_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("type_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len);
 } 
@@ -29,7 +29,7 @@ inline static const char* type_name() {
 // registration of components/modules across language boundaries.
 template <typename T>
 inline static const char* symbol_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("symbol_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, symbol_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};  
     return ecs_cpp_get_symbol_name(result, type_name<T>(), len);
 }

@@ -43,6 +43,7 @@ namespace _ {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
+#ifndef ECS_TARGET_MSVC
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -50,6 +51,22 @@ constexpr bool enum_constant_is_valid() {
         (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] <= '9')
     );
 }
+#else
+/* Use different trick on MSVC, since it uses hexadecimal representation for
+ * invalid enum constants. We can leverage that msvc inserts a C-style cast
+ * into the name, and the location of its first character ('(') is known. */
+template <typename E>
+constexpr size_t enum_type_len() {
+    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME) 
+        - (sizeof("unsigned __int64") - 1u);
+}
+
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+        enum_type_len<E>() + 1] != '(';
+}
+#endif
 
 template <typename E, E C>
 struct enum_is_valid {
@@ -59,7 +76,7 @@ struct enum_is_valid {
 /** Extract name of constant from string */
 template <typename E, E C>
 static const char* enum_constant_to_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("enum_constant_to_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, enum_constant_to_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_constant_name(
         result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME));

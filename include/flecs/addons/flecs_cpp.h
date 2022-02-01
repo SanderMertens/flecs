@@ -17,23 +17,23 @@ extern "C" {
 #endif
 
 #if defined(__clang__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [with T = ") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [with T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *__cdecl flecs::_::"#name"<") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" __cdecl flecs::_::<") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
 #define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif
 
-#define ECS_FUNC_TYPE_LEN(name, str)\
-    (flecs::string::length(str) - (ECS_FUNC_NAME_FRONT(name) + ECS_FUNC_NAME_BACK))
+#define ECS_FUNC_TYPE_LEN(type, name, str)\
+    (flecs::string::length(str) - (ECS_FUNC_NAME_FRONT(type, name) + ECS_FUNC_NAME_BACK))
 
 FLECS_API
 char* ecs_cpp_get_type_name(
