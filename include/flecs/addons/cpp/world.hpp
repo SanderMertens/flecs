@@ -175,6 +175,13 @@ struct world {
         return stats->frame_count_total;
     }
 
+    /** Get current simulation time.
+     */
+    FLECS_FLOAT time() const {
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->world_time_total;
+    }
+
     /** Signal application should quit.
      * After calling this operation, the next call to progress() returns false.
      */
