@@ -922,7 +922,7 @@ ecs_entity_t Bob = ecs_new_id(world);
 ecs_entity_t Alice = ecs_new_id(world);
 ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
-```c
+```cpp
 auto MarriedTo = world.entity().add(flecs::Symmetric);
 auto Bob = ecs.entity();
 auto Alice = ecs.entity();
