@@ -14460,9 +14460,9 @@ public:
 struct scoped_world : world {
     scoped_world(
         flecs::world_t *w, 
-        flecs::entity_t scope) : world()
+        flecs::entity_t s) : world()
     {
-        m_prev_scope = ecs_set_scope(w, scope);
+        m_prev_scope = ecs_set_scope(w, s);
         m_world = w;
         m_owned = false;
     }
