@@ -91,19 +91,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     flecs::set(world, entity, value, id);
 }
 
-namespace _ {
-
-/** Utility for using scope without lambda */
-struct restore_scope {
-    ~restore_scope() {
-        ecs_set_scope(m_world, m_old_scope);
-    }
-
-    flecs::world_t *m_world;
-    flecs::entity_t m_old_scope;
-};
-
-}
+struct scoped_world;
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -666,19 +654,10 @@ struct world {
     /** Use provided scope for operations ran on returned world.
      * Operations need to be ran in a single statement.
      */
-    flecs::world& scope(id_t parent, _::restore_scope tmp = {}) {
-        tmp.m_world = m_world;
-        tmp.m_old_scope = ecs_set_scope(m_world, parent);
-        return *this;
-    }
+    flecs::scoped_world scope(id_t parent);
 
     template <typename T>
-    flecs::world& scope(_::restore_scope tmp = {}) {
-        flecs::id_t parent = _::cpp_type<T>::id(m_world);
-        tmp.m_world = m_world;
-        tmp.m_old_scope = ecs_set_scope(m_world, parent);
-        return *this;
-    }
+    flecs::scoped_world scope();
 
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
@@ -821,6 +800,29 @@ public:
 
     world_t *m_world;
     bool m_owned;
+};
+
+struct scoped_world : world {
+    scoped_world(
+        flecs::world_t *world, 
+        flecs::entity_t scope)
+    {
+        m_prev_scope = ecs_set_scope(world, scope);
+        m_world = world;
+        m_owned = false;
+    }
+
+    ~scoped_world() {
+        ecs_set_scope(m_world, m_prev_scope);
+    }
+
+    scoped_world(const scoped_world& obj) {
+        m_prev_scope = obj.m_prev_scope;
+        m_world = obj.m_world;
+        m_owned = obj.m_owned;
+    }
+
+    flecs::entity_t m_prev_scope;
 };
 
 /** Return id without generation.

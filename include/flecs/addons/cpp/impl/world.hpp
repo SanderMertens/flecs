@@ -167,4 +167,17 @@ inline flecs::entity enum_data<E>::entity(E value) {
     return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
 }
 
+/** Use provided scope for operations ran on returned world.
+ * Operations need to be ran in a single statement.
+ */
+inline flecs::scoped_world world::scope(id_t parent) {
+    return scoped_world(m_world, parent);
+}
+
+template <typename T>
+inline flecs::scoped_world world::scope() {
+    flecs::id_t parent = _::cpp_type<T>::id(m_world);
+    return scoped_world(m_world, parent);
+}
+
 } // namespace flecs
