@@ -475,6 +475,7 @@ struct ecs_table_t {
     int32_t bs_column_offset;
 
     int32_t lock;
+    int32_t refcount;
 };
 
 /** Table cache */
@@ -2152,6 +2153,7 @@ void init_storage_table(
     if (storage_ids.count && storage_ids.count != count) {
         table->storage_table = flecs_table_find_or_create(world, &storage_ids);
         table->storage_type = table->storage_table->type;
+        table->storage_table->refcount ++;
         ecs_assert(table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
     } else if (storage_ids.count) {
         table->storage_table = table;
@@ -2678,12 +2680,29 @@ void flecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    bool is_root = table == &world->store.root;
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(is_root || flecs_sparse_is_alive(world->store.tables, table->id),
+        ECS_INTERNAL_ERROR, NULL);
     (void)world;
+
+    if (--table->refcount != 0) {
+        ecs_assert(table->refcount >= 0, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
+    if (!is_root) {
+        flecs_notify_queries(
+            world, &(ecs_query_event_t){
+                .kind = EcsQueryTableUnmatch,
+                .table = table
+            });
+    }
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_2("#[green]table#[reset] [%s] deleted", expr);
+    ecs_dbg_2("#[green]table#[normal] [%s] deleted with id %d", expr, table->id);
     ecs_os_free(expr);
 #endif    
 
@@ -2692,7 +2711,15 @@ void flecs_table_free(
 
     flecs_table_clear_edges(world, table);
 
-    flecs_unregister_table(world, table);
+    if (!is_root) {
+        flecs_unregister_table(world, table);
+
+        ecs_ids_t ids = {
+            .array = ecs_vector_first(table->type, ecs_id_t),
+            .count = ecs_vector_count(table->type)
+        };
+        flecs_hashmap_remove(world->store.table_map, &ids, ecs_table_t*);
+    }
 
     ecs_os_free(table->dirty_state);
     ecs_os_free(table->storage_map);
@@ -2701,7 +2728,15 @@ void flecs_table_free(
         ecs_os_free(table->c_info);
     }
 
-    table->id = 0;
+    if (table->storage_table && table->storage_table != table) {
+        flecs_table_free(world, table->storage_table);
+    }
+
+    if (!world->is_fini) {
+        ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
+        flecs_table_free_type(table);
+        flecs_sparse_remove(world->store.tables, table->id);
+    }
 }
 
 /* Free table type. Do this separately from freeing the table as types can be
@@ -31212,15 +31247,24 @@ void clean_tables(
 {
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+    /* Ensure that first table in sparse set has id 0. This is a dummy table
+     * that only exists so that there is no table with id 0 */
+    ecs_table_t *first = flecs_sparse_get_dense(world->store.tables, 
+        ecs_table_t, 0);
+    ecs_assert(first->id == 0, ECS_INTERNAL_ERROR, NULL);
+    (void)first;
+
+    for (i = 1; i < count; i ++) {
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+            ecs_table_t, i);
         flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+    for (i = 1; i < count; i ++) {
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+            ecs_table_t, i);
         flecs_table_free_type(t);
     }    
 
@@ -32380,23 +32424,7 @@ void flecs_delete_table(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t); 
-
-    /* Notify queries that table is to be removed */
-    flecs_notify_queries(
-        world, &(ecs_query_event_t){
-            .kind = EcsQueryTableUnmatch,
-            .table = table
-        });
-
-    uint64_t id = table->id;
-
-    /* Free resources associated with table */
     flecs_table_free(world, table);
-    flecs_table_free_type(table);
-
-    /* Remove table from sparse set */
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_remove(world->store.tables, id);
 }
 
 static
@@ -39900,6 +39928,7 @@ void init_table(
     table->dirty_state = NULL;
     table->alloc_count = 0;
     table->lock = 0;
+    table->refcount = 1;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);
@@ -42763,7 +42792,6 @@ error:
 static
 void register_final(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_id_t id = ecs_term_id(it, 1);
     
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -42777,12 +42805,6 @@ void register_final(ecs_iter_t *it) {
         error:
             continue;
         }
-
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
-
-        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
 }
 

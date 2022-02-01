@@ -126,6 +126,7 @@ void init_storage_table(
     if (storage_ids.count && storage_ids.count != count) {
         table->storage_table = flecs_table_find_or_create(world, &storage_ids);
         table->storage_type = table->storage_table->type;
+        table->storage_table->refcount ++;
         ecs_assert(table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
     } else if (storage_ids.count) {
         table->storage_table = table;
@@ -652,12 +653,29 @@ void flecs_table_free(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    bool is_root = table == &world->store.root;
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(is_root || flecs_sparse_is_alive(world->store.tables, table->id),
+        ECS_INTERNAL_ERROR, NULL);
     (void)world;
+
+    if (--table->refcount != 0) {
+        ecs_assert(table->refcount >= 0, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
+    if (!is_root) {
+        flecs_notify_queries(
+            world, &(ecs_query_event_t){
+                .kind = EcsQueryTableUnmatch,
+                .table = table
+            });
+    }
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_2("#[green]table#[reset] [%s] deleted", expr);
+    ecs_dbg_2("#[green]table#[normal] [%s] deleted with id %d", expr, table->id);
     ecs_os_free(expr);
 #endif    
 
@@ -666,7 +684,15 @@ void flecs_table_free(
 
     flecs_table_clear_edges(world, table);
 
-    flecs_unregister_table(world, table);
+    if (!is_root) {
+        flecs_unregister_table(world, table);
+
+        ecs_ids_t ids = {
+            .array = ecs_vector_first(table->type, ecs_id_t),
+            .count = ecs_vector_count(table->type)
+        };
+        flecs_hashmap_remove(world->store.table_map, &ids, ecs_table_t*);
+    }
 
     ecs_os_free(table->dirty_state);
     ecs_os_free(table->storage_map);
@@ -675,7 +701,15 @@ void flecs_table_free(
         ecs_os_free(table->c_info);
     }
 
-    table->id = 0;
+    if (table->storage_table && table->storage_table != table) {
+        flecs_table_free(world, table->storage_table);
+    }
+
+    if (!world->is_fini) {
+        ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
+        flecs_table_free_type(table);
+        flecs_sparse_remove(world->store.tables, table->id);
+    }
 }
 
 /* Free table type. Do this separately from freeing the table as types can be

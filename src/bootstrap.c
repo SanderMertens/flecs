@@ -121,7 +121,6 @@ error:
 static
 void register_final(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_id_t id = ecs_term_id(it, 1);
     
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -135,12 +134,6 @@ void register_final(ecs_iter_t *it) {
         error:
             continue;
         }
-
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
-
-        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
 }
 

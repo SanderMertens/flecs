@@ -214,6 +214,7 @@ struct ecs_table_t {
     int32_t bs_column_offset;
 
     int32_t lock;
+    int32_t refcount;
 };
 
 /** Table cache */

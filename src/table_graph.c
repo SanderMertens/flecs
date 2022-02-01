@@ -256,6 +256,7 @@ void init_table(
     table->dirty_state = NULL;
     table->alloc_count = 0;
     table->lock = 0;
+    table->refcount = 1;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);

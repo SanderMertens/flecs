@@ -389,15 +389,24 @@ void clean_tables(
 {
     int32_t i, count = flecs_sparse_count(world->store.tables);
 
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+    /* Ensure that first table in sparse set has id 0. This is a dummy table
+     * that only exists so that there is no table with id 0 */
+    ecs_table_t *first = flecs_sparse_get_dense(world->store.tables, 
+        ecs_table_t, 0);
+    ecs_assert(first->id == 0, ECS_INTERNAL_ERROR, NULL);
+    (void)first;
+
+    for (i = 1; i < count; i ++) {
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+            ecs_table_t, i);
         flecs_table_free(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+    for (i = 1; i < count; i ++) {
+        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+            ecs_table_t, i);
         flecs_table_free_type(t);
     }    
 
@@ -1557,23 +1566,7 @@ void flecs_delete_table(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t); 
-
-    /* Notify queries that table is to be removed */
-    flecs_notify_queries(
-        world, &(ecs_query_event_t){
-            .kind = EcsQueryTableUnmatch,
-            .table = table
-        });
-
-    uint64_t id = table->id;
-
-    /* Free resources associated with table */
     flecs_table_free(world, table);
-    flecs_table_free_type(table);
-
-    /* Remove table from sparse set */
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_remove(world->store.tables, id);
 }
 
 static
