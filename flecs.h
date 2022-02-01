@@ -11062,23 +11062,23 @@ extern "C" {
 #endif
 
 #if defined(__clang__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [T = ") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *flecs::_::"#name"() [with T = ") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [with T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
-#define ECS_FUNC_NAME_FRONT(name) (sizeof("const char *__cdecl flecs::_::"#name"<") - 3u)
+#define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" __cdecl flecs::_::<") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
 #define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif
 
-#define ECS_FUNC_TYPE_LEN(name, str)\
-    (flecs::string::length(str) - (ECS_FUNC_NAME_FRONT(name) + ECS_FUNC_NAME_BACK))
+#define ECS_FUNC_TYPE_LEN(type, name, str)\
+    (flecs::string::length(str) - (ECS_FUNC_NAME_FRONT(type, name) + ECS_FUNC_NAME_BACK))
 
 FLECS_API
 char* ecs_cpp_get_type_name(
@@ -11738,6 +11738,7 @@ namespace _ {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
+#ifndef ECS_TARGET_MSVC
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -11745,6 +11746,22 @@ constexpr bool enum_constant_is_valid() {
         (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] <= '9')
     );
 }
+#else
+/* Use different trick on MSVC, since it uses hexadecimal representation for
+ * invalid enum constants. We can leverage that msvc inserts a C-style cast
+ * into the name, and the location of its first character ('(') is known. */
+template <typename E>
+constexpr size_t enum_type_len() {
+    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME) 
+        - (sizeof("unsigned __int64") - 1u);
+}
+
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+        enum_type_len<E>() + 1] != '(';
+}
+#endif
 
 template <typename E, E C>
 struct enum_is_valid {
@@ -11754,7 +11771,7 @@ struct enum_is_valid {
 /** Extract name of constant from string */
 template <typename E, E C>
 static const char* enum_constant_to_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("enum_constant_to_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, enum_constant_to_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_constant_name(
         result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME));
@@ -13386,19 +13403,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     flecs::set(world, entity, value, id);
 }
 
-namespace _ {
-
-/** Utility for using scope without lambda */
-struct restore_scope {
-    ~restore_scope() {
-        ecs_set_scope(m_world, m_old_scope);
-    }
-
-    flecs::world_t *m_world;
-    flecs::entity_t m_old_scope;
-};
-
-}
+struct scoped_world;
 
 /** The world.
  * The world is the container of all ECS data and systems. If the world is
@@ -13961,19 +13966,10 @@ struct world {
     /** Use provided scope for operations ran on returned world.
      * Operations need to be ran in a single statement.
      */
-    flecs::world& scope(id_t parent, _::restore_scope tmp = {}) {
-        tmp.m_world = m_world;
-        tmp.m_old_scope = ecs_set_scope(m_world, parent);
-        return *this;
-    }
+    flecs::scoped_world scope(id_t parent);
 
     template <typename T>
-    flecs::world& scope(_::restore_scope tmp = {}) {
-        flecs::id_t parent = _::cpp_type<T>::id(m_world);
-        tmp.m_world = m_world;
-        tmp.m_old_scope = ecs_set_scope(m_world, parent);
-        return *this;
-    }
+    flecs::scoped_world scope();
 
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
@@ -14459,6 +14455,29 @@ public:
 
     world_t *m_world;
     bool m_owned;
+};
+
+struct scoped_world : world {
+    scoped_world(
+        flecs::world_t *w, 
+        flecs::entity_t scope)
+    {
+        m_prev_scope = ecs_set_scope(w, scope);
+        m_world = w;
+        m_owned = false;
+    }
+
+    ~scoped_world() {
+        ecs_set_scope(m_world, m_prev_scope);
+    }
+
+    scoped_world(const scoped_world& obj) {
+        m_prev_scope = obj.m_prev_scope;
+        m_world = obj.m_world;
+        m_owned = obj.m_owned;
+    }
+
+    flecs::entity_t m_prev_scope;
 };
 
 /** Return id without generation.
@@ -17300,7 +17319,7 @@ namespace _ {
 #if defined(__GNUC__) || defined(_WIN32)
 template <typename T>
 inline static const char* type_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("type_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len);
 } 
@@ -17312,7 +17331,7 @@ inline static const char* type_name() {
 // registration of components/modules across language boundaries.
 template <typename T>
 inline static const char* symbol_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN("symbol_name", ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, symbol_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};  
     return ecs_cpp_get_symbol_name(result, type_name<T>(), len);
 }
@@ -21096,6 +21115,19 @@ inline flecs::entity enum_data<E>::entity(int value) {
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) {
     return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+}
+
+/** Use provided scope for operations ran on returned world.
+ * Operations need to be ran in a single statement.
+ */
+inline flecs::scoped_world world::scope(id_t parent) {
+    return scoped_world(m_world, parent);
+}
+
+template <typename T>
+inline flecs::scoped_world world::scope() {
+    flecs::id_t parent = _::cpp_type<T>::id(m_world);
+    return scoped_world(m_world, parent);
 }
 
 } // namespace flecs

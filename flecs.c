@@ -14740,7 +14740,7 @@ char* ecs_cpp_get_type_name(
     const char *func_name,
     size_t len)
 {
-    memcpy(type_name, func_name + ECS_FUNC_NAME_FRONT("type_name"), len);
+    memcpy(type_name, func_name + ECS_FUNC_NAME_FRONT(const char*, type_name), len);
     type_name[len] = '\0';
     ecs_cpp_trim_type_name(type_name);
     return type_name;
