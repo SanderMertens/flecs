@@ -17322,6 +17322,7 @@ worker_iterable<Components...> iterable<Components...>::worker(
 #pragma once
 
 #include <ctype.h>
+#include <stdio.h>
 
 namespace flecs {
 
@@ -17739,6 +17740,16 @@ struct component : untyped_component {
                 _::cpp_type<T>::alignment(),
                 implicit_name);
         } else {
+            /* If component is registered from an existing scope, ignore the
+             * namespace in the name of the component. */
+            if (implicit_name && (ecs_get_scope(world) != 0)) {
+                const char *last_elem = strrchr(n, ':');
+                if (last_elem) {
+                    name = last_elem + 1;
+                    implicit_name = false;
+                }
+            }
+
             /* Find or register component */
             id = ecs_cpp_component_register(world, id, n, _::symbol_name<T>(),
                 ECS_SIZEOF(T), ECS_ALIGNOF(T));

@@ -1354,3 +1354,31 @@ void World_get_tick() {
 
     test_int(ecs.tick(), 2);
 }
+
+struct Scope { };
+
+struct FromScope { };
+
+namespace Nested { 
+    struct FromScope { };
+};
+
+void World_register_from_scope() {
+    flecs::world ecs;
+
+    ecs.set_scope<Scope>();
+    auto c = ecs.component<FromScope>();
+    ecs.set_scope(0);
+
+    test_assert(c.has(flecs::ChildOf, ecs.id<Scope>()));
+}
+
+void World_register_nested_from_scope() {
+    flecs::world ecs;
+
+    ecs.set_scope<Scope>();
+    auto c = ecs.component<Nested::FromScope>();
+    ecs.set_scope(0);
+
+    test_assert(c.has(flecs::ChildOf, ecs.id<Scope>()));
+}

@@ -867,7 +867,9 @@
                 "get_alive",
                 "ensure",
                 "reset_all",
-                "get_tick"
+                "get_tick",
+                "register_from_scope",
+                "register_nested_from_scope"
             ]
         }, {
             "id": "Singleton",

@@ -816,6 +816,8 @@ void World_get_alive(void);
 void World_ensure(void);
 void World_reset_all(void);
 void World_get_tick(void);
+void World_register_from_scope(void);
+void World_register_nested_from_scope(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3956,6 +3958,14 @@ bake_test_case World_testcases[] = {
     {
         "get_tick",
         World_get_tick
+    },
+    {
+        "register_from_scope",
+        World_register_from_scope
+    },
+    {
+        "register_nested_from_scope",
+        World_register_nested_from_scope
     }
 };
 
@@ -4215,7 +4225,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        71,
+        73,
         World_testcases
     },
     {
