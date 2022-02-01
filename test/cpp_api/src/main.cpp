@@ -815,6 +815,7 @@ void World_exists(void);
 void World_get_alive(void);
 void World_ensure(void);
 void World_reset_all(void);
+void World_get_tick(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3951,6 +3952,10 @@ bake_test_case World_testcases[] = {
     {
         "reset_all",
         World_reset_all
+    },
+    {
+        "get_tick",
+        World_get_tick
     }
 };
 
@@ -4210,7 +4215,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        70,
+        71,
         World_testcases
     },
     {

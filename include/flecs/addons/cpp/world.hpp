@@ -168,6 +168,13 @@ struct world {
         return stats->delta_time;
     }
 
+    /** Get current tick.
+     */
+    int32_t tick() const {
+        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
+        return stats->frame_count_total;
+    }
+
     /** Signal application should quit.
      * After calling this operation, the next call to progress() returns false.
      */

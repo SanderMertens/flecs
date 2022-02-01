@@ -866,7 +866,8 @@
                 "exists",
                 "get_alive",
                 "ensure",
-                "reset_all"
+                "reset_all",
+                "get_tick"
             ]
         }, {
             "id": "Singleton",

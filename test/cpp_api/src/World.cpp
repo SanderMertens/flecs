@@ -1340,3 +1340,17 @@ void World_reset_all() {
         test_assert(ecs.component<Velocity>() != 0);
     }
 }
+
+void World_get_tick() {
+    flecs::world ecs;
+
+    test_int(ecs.tick(), 0);
+
+    ecs.progress();
+
+    test_int(ecs.tick(), 1);
+
+    ecs.progress();
+
+    test_int(ecs.tick(), 2);
+}
