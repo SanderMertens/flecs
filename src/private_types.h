@@ -506,6 +506,13 @@ struct ecs_id_record_t {
     uint64_t id; /* Id to element in storage */
 };
 
+/* Convenience struct to iterate table array for id */
+typedef struct ecs_table_iter_t {
+    const ecs_table_record_t *begin;
+    const ecs_table_record_t *end;
+    const ecs_table_record_t *cur;
+} ecs_table_iter_t;
+
 typedef struct ecs_store_t {
     /* Entity lookup */
     ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
@@ -581,6 +588,7 @@ struct ecs_world_t {
     ecs_sparse_t *triggers;      /* sparse<query_id, ecs_trigger_t> */
     ecs_sparse_t *observers;     /* sparse<query_id, ecs_observer_t> */
     ecs_sparse_t *id_records;    /* sparse<idr_id, ecs_id_record_t> */
+    ecs_sparse_t *empty_tables;  /* sparse<table_id, ecs_table_t*> */
     
 
     /* Keep track of components that were added/removed to/from monitored
