@@ -287,6 +287,17 @@ struct entity_view : public id {
      * index can be used to iterate through objects, in case the entity has
      * multiple instances for the same relation.
      *
+     * @tparam R The relation for which to retrieve the object.
+     * @param index The index (0 for the first instance of the relation).
+     */
+    template<typename R>
+    flecs::entity get_object(int32_t index = 0) const;
+
+    /** Get object for a given relation.
+     * This operation returns the object for a given relation. The optional
+     * index can be used to iterate through objects, in case the entity has
+     * multiple instances for the same relation.
+     *
      * @param relation The relation for which to retrieve the object.
      * @param index The index (0 for the first instance of the relation).
      */

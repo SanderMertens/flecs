@@ -59,6 +59,13 @@ const T* entity_view::get() const {
     }
 }
 
+template<typename R>
+inline flecs::entity entity_view::get_object(int32_t index) const 
+{
+    return flecs::entity(m_world, 
+        ecs_get_object(m_world, m_id, _::cpp_type<R>::id(m_world), index));
+}
+
 inline flecs::entity entity_view::get_object(
     flecs::entity_t relation, 
     int32_t index) const 
