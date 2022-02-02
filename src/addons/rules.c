@@ -3139,13 +3139,15 @@ ecs_table_record_t find_next_table(
     ecs_rule_with_ctx_t *op_ctx)
 {
     ecs_id_record_t *idr = op_ctx->idr;
-    const ecs_table_record_t *tables = flecs_id_record_tables(idr);
-    int32_t i = op_ctx->table_index, count = flecs_id_record_count(idr);
+    ecs_table_iter_t it;
+    flecs_idr_iter(idr, &it);
+    it.cur = it.begin + op_ctx->table_index;
+
     ecs_table_t *table = NULL;
     int32_t column = -1;
 
-    for (; i < count && (column == -1); i ++) {
-        const ecs_table_record_t *tr = &tables[i];
+    for (; it.cur < it.end && (column == -1); ++ it.cur) {
+        const ecs_table_record_t *tr = it.cur;
         table = tr->table;
 
         /* Should only iterate non-empty tables */
@@ -3161,7 +3163,7 @@ ecs_table_record_t find_next_table(
         table = NULL;
     }
 
-    op_ctx->table_index = i;
+    op_ctx->table_index = (int32_t)(it.cur - it.begin);
 
     return (ecs_table_record_t){.table = table, .column = column};
 }
@@ -3172,11 +3174,10 @@ ecs_id_record_t* find_tables(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!flecs_id_record_count(idr)) {
+    if (!idr || !ecs_table_cache_count(&idr->cache)) {
         /* Skip ids that don't have (non-empty) tables */
         return NULL;
     }
-
     return idr;
 }
 

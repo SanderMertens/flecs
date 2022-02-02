@@ -1611,25 +1611,35 @@ static
 const ecs_table_record_t *next_table(
     ecs_term_iter_t *iter)
 {
-    const ecs_table_record_t *tables = NULL;
-    ecs_id_record_t *cur = iter->cur;
+    ecs_id_record_t *idr = iter->cur;
+    if (!idr) {
+        return NULL;
+    }
 
+    ecs_table_iter_t it;
+    
     if (iter->empty_tables) {
-        tables = flecs_id_record_empty_tables(cur);
-        if (iter->index >= flecs_id_record_empty_count(cur)) {
+        if (flecs_idr_empty_iter(idr, &it)) {
+            it.cur = it.begin + iter->index;
+        }
+        if (it.cur >= it.end) {
             iter->empty_tables = false;
             iter->index = 0;
         }
     }
 
     if (!iter->empty_tables) {
-        tables = flecs_id_record_tables(cur);
-        if (iter->index >= flecs_id_record_count(cur)) {
+        if (flecs_idr_iter(idr, &it)) {
+            it.cur = it.begin + iter->index;
+        }
+        if (it.cur >= it.end) {
             return NULL;
         }
     }
 
-    return &tables[iter->index ++];
+    iter->index ++;
+
+    return it.cur;
 }
 
 static
@@ -1850,7 +1860,7 @@ int32_t ecs_filter_pivot_term(
             return -2; /* -2 indicates filter doesn't match anything */
         }
 
-        int32_t table_count = flecs_id_record_count(idr);
+        int32_t table_count = ecs_table_cache_count(&idr->cache);
         if (min_count == -1 || table_count < min_count) {
             min_count = table_count;
             pivot_term = i;
