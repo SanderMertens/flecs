@@ -255,7 +255,7 @@ void* _ecs_table_cache_get(
     return result;
 }
 
-void ecs_table_cache_set_empty(
+bool ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
     bool empty)
@@ -265,14 +265,14 @@ void ecs_table_cache_set_empty(
 
     int32_t *index = ecs_map_get(cache->index, int32_t, table->id);
     if (!index) {
-        return;
+        return false;
     }
 
     /* If table is already in the correct array nothing needs to be done */
     if (empty && index[0] < 0) {
-        return;
+        return false;
     } else if (!empty && index[0] >= 0) {
-        return;
+        return false;
     }
 
     if (index[0] < 0) {
@@ -282,6 +282,8 @@ void ecs_table_cache_set_empty(
         index[0] = move_table(
             cache, table, index[0], &cache->empty_tables, cache->tables, empty);
     }
+
+    return true;
 }
 
 void* _ecs_table_cache_tables(

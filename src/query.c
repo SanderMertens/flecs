@@ -1518,6 +1518,7 @@ void build_sorted_table_range(
     }
 
     int to_sort = 0;
+
     sort_helper_t *helper = ecs_os_malloc_n(sort_helper_t, list->count);
     ecs_query_table_node_t *cur, *end = list->last->next;
     for (cur = list->first; cur != end; cur = cur->next) {
@@ -1525,6 +1526,7 @@ void build_sorted_table_range(
         ecs_table_t *table = match->table;
         ecs_data_t *data = &table->storage;
         ecs_vector_t *entities;
+
         if (!(entities = data->entities) || !ecs_table_count(table)) {
             continue;
         }
@@ -1569,6 +1571,8 @@ void build_sorted_table_range(
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      
     }
+
+    ecs_assert(to_sort != 0, ECS_INTERNAL_ERROR, NULL);
 
     bool proceed;
     do {
@@ -2610,6 +2614,8 @@ ecs_iter_t ecs_query_iter(
 
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 
+    flecs_process_pending_tables(world);
+
     sort_tables(world, query);
 
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
@@ -2946,7 +2952,7 @@ int bitset_column_next(
                 cur_last = last;
             }
         }
-        
+
         last = cur_last;
         int32_t elem_count = last - first;
 
@@ -3092,6 +3098,7 @@ bool ecs_query_next_instanced(
                             &cur) == -1) 
                         {
                             /* No more enabled components for table */
+                            iter->bitset_first = 0;
                             break;
                         } else {
                             found = true;
@@ -3110,6 +3117,7 @@ bool ecs_query_next_instanced(
                                 found = false;
                             } else {
                                 /* Nothing found */
+                                iter->bitset_first = 0;
                                 break;
                             }
                         } else {
@@ -3174,12 +3182,16 @@ bool ecs_query_changed(
         ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_poly_assert(query, ecs_query_t);
 
+        flecs_process_pending_tables(it->real_world);
+
         return check_match_monitor(query, qt);
     }
 
     ecs_poly_assert(query, ecs_query_t);
     ecs_check(!(query->flags & EcsQueryIsOrphaned), 
         ECS_INVALID_PARAMETER, NULL);
+
+    flecs_process_pending_tables(query->world);
 
     if (!(query->flags & EcsQueryHasMonitor)) {
         query->flags |= EcsQueryHasMonitor;

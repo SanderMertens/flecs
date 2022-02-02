@@ -136,6 +136,9 @@ const ecs_table_record_t* flecs_id_record_table(
     ecs_id_record_t *idr,
     ecs_table_t *table);
 
+void flecs_process_pending_tables(
+    const ecs_world_t *world);
+
 ecs_id_record_t* flecs_table_iter(
     ecs_world_t *world,
     ecs_id_t id,

@@ -3010,6 +3010,8 @@ ecs_iter_t ecs_rule_iter(
     result.world = (ecs_world_t*)world;
     result.real_world = (ecs_world_t*)ecs_get_world(rule->world);
 
+    flecs_process_pending_tables(result.real_world);
+
     ecs_rule_iter_t *it = &result.priv.iter.rule;
     it->rule = rule;
 

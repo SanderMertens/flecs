@@ -2290,11 +2290,11 @@ static void TriggerTwice(ecs_iter_t *it) {
         test_assert(it->entities[0] == base_ent);
         invoke_count ++;
     } else if (invoke_count == 1) {
-        test_assert(it->entities[0] == inst_ent_a);
+        test_assert(it->entities[0] == inst_ent_b);
         invoke_count ++;
     } else {
         test_int(invoke_count, 2);
-        test_assert(it->entities[0] == inst_ent_b);
+        test_assert(it->entities[0] == inst_ent_a);
         invoke_count ++;
     }
 }

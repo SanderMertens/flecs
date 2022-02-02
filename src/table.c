@@ -356,32 +356,6 @@ void run_on_remove(
 
 /* -- Private functions -- */
 
-/* If table goes from 0 to >0 entities or from >0 entities to 0 entities notify
- * queries. This allows systems associated with queries to move inactive tables
- * out of the main loop. */
-static
-void table_activate(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    bool activate)
-{
-    ecs_entity_t evt = activate ? EcsOnTableFill : EcsOnTableEmpty;
-    ecs_ids_t ids = {
-        .array = ecs_vector_first(table->type, ecs_id_t),
-        .count = ecs_vector_count(table->type)
-    };
-
-    ecs_emit(world, &(ecs_event_desc_t) {
-        .event = evt,
-        .table = table,
-        .ids = &ids,
-        .observable = world,
-        .table_event = true
-    });
-
-    flecs_table_set_empty(world, table);
-}
-
 static
 void ctor_component(
     ecs_world_t *world,
@@ -604,7 +578,7 @@ void fini_data(
     data->record_ptrs = NULL;
 
     if (deactivate && count) {
-        table_activate(world, table, false);
+        flecs_table_set_empty(world, table);
     }
 }
 
@@ -1013,7 +987,7 @@ int32_t grow_data(
     mark_table_dirty(world, table, 0);
 
     if (!world->is_readonly && !cur_count) {
-        table_activate(world, table, true);
+        flecs_table_set_empty(world, table);
     }
 
     table->alloc_count ++;
@@ -1080,7 +1054,7 @@ int32_t flecs_table_append(
     if (!(table->flags & EcsTableIsComplex)) {
         fast_append(columns, column_count);
         if (!count) {
-            table_activate(world, table, true); /* See below */
+            flecs_table_set_empty(world, table); /* See below */
         }
         return count;
     }
@@ -1138,7 +1112,7 @@ int32_t flecs_table_append(
     /* If this is the first entity in this table, signal queries so that the
      * table moves from an inactive table to an active table. */
     if (!count) {
-        table_activate(world, table, true);
+        flecs_table_set_empty(world, table);
     } 
 
     return count;
@@ -1223,7 +1197,7 @@ void flecs_table_delete(
 
     /* If table is empty, deactivate it */
     if (!count) {
-        table_activate(world, table, false);
+        flecs_table_set_empty(world, table);
     }
 
     /* Destruct component data */
@@ -1923,7 +1897,7 @@ void flecs_table_merge(
     new_table->alloc_count ++;
 
     if (!new_count && old_count) {
-        table_activate(world, new_table, true);
+        flecs_table_set_empty(world, new_table);
     }
 }
 
@@ -1950,9 +1924,9 @@ void flecs_table_replace_data(
     int32_t count = ecs_table_count(table);
 
     if (!prev_count && count) {
-        table_activate(world, table, true);
+        flecs_table_set_empty(world, table);
     } else if (prev_count && !count) {
-        table_activate(world, table, false);
+        flecs_table_set_empty(world, table);
     }
 
     table->alloc_count ++;

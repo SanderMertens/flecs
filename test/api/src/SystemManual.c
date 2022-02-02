@@ -138,7 +138,8 @@ void SystemManual_activate_status() {
     test_int(normal_count, 0);
 
     reset_status();
-    ecs_new(world, Position);    
+    ecs_new(world, Position);
+    ecs_force_aperiodic(world);
 
     test_bool(system_status_action_invoked, true);
     test_assert(enable_status == EcsSystemStatusNone);

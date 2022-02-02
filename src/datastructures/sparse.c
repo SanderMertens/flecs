@@ -529,6 +529,7 @@ void* _flecs_sparse_remove_get(
         dense_array[dense] = index | inc_gen(cur_gen);
         
         int32_t count = sparse->count;
+        
         if (dense == (count - 1)) {
             /* If dense is the last used element, simply decrease count */
             sparse->count --;

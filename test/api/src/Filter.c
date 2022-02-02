@@ -2266,13 +2266,13 @@ void Filter_term_iter_w_superset_pair_obj_wildcard() {
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_3);
+    test_int(it.entities[0], e_4);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
     test_int(ecs_term_source(&it, 1), base_2);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
-    test_int(it.entities[0], e_4);
+    test_int(it.entities[0], e_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, Obj_2));
     test_int(ecs_term_source(&it, 1), base_2);
 
@@ -2509,18 +2509,18 @@ void Filter_filter_iter_3_tags_2_or() {
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
     test_assert(ecs_filter_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], e_3);
-    test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_term_id(&it, 2), TagC);
-    test_int(ecs_term_source(&it, 1), 0);
-
-    test_assert(ecs_filter_next(&it));
     test_int(it.count, 2);
     test_int(it.entities[0], e_1);
     test_int(it.entities[1], e_2);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
+    test_int(ecs_term_source(&it, 1), 0);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), TagC);
     test_int(ecs_term_source(&it, 1), 0);
 
     test_assert(!ecs_filter_next(&it));
@@ -4687,12 +4687,12 @@ void Filter_term_iter_w_filter_term() {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) { 
         .id = ecs_id(Position),
         .inout = EcsInOutFilter
     });
-
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     test_bool(ecs_term_next(&it), true);
     test_assert(it.ids != NULL);
@@ -5792,13 +5792,13 @@ void Filter_match_empty_tables() {
 
     test_bool( ecs_filter_next(&it), true);
     test_int(it.count, 1);
-    test_int(it.entities[0], e4);
-    test_assert(it.table == t4);
+    test_int(it.entities[0], e3);
+    test_assert(it.table == t3);
 
     test_bool( ecs_filter_next(&it), true);
     test_int(it.count, 1);
-    test_int(it.entities[0], e3);
-    test_assert(it.table == t3);
+    test_int(it.entities[0], e4);
+    test_assert(it.table == t4);
 
     test_bool( ecs_filter_next(&it), false);
 
