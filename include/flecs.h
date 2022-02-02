@@ -1463,6 +1463,20 @@ FLECS_API
 int32_t ecs_get_threads(
     ecs_world_t *world);
 
+/** Force aperiodic actions.
+ * The world may delay certain operations until they are necessary for the
+ * application to function correctly. This may cause observable side effects
+ * such as delayed triggering of events, which can be inconvenient when for
+ * example running a test suite.
+ * 
+ * This operation forces runs all aperiodic actions to run.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_force_aperiodic(
+    ecs_world_t *world);
+
 /** @} */
 
 /**

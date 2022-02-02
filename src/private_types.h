@@ -584,11 +584,16 @@ struct ecs_world_t {
 
     /* --  Storages for API objects -- */
 
-    ecs_sparse_t *queries;       /* sparse<query_id, ecs_query_t> */
-    ecs_sparse_t *triggers;      /* sparse<query_id, ecs_trigger_t> */
-    ecs_sparse_t *observers;     /* sparse<query_id, ecs_observer_t> */
-    ecs_sparse_t *id_records;    /* sparse<idr_id, ecs_id_record_t> */
-    ecs_sparse_t *empty_tables;  /* sparse<table_id, ecs_table_t*> */
+    ecs_sparse_t *queries;         /* sparse<query_id, ecs_query_t> */
+    ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
+    ecs_sparse_t *observers;       /* sparse<query_id, ecs_observer_t> */
+    ecs_sparse_t *id_records;      /* sparse<idr_id, ecs_id_record_t> */
+
+
+    /* --  Pending table event buffers -- */
+
+    ecs_sparse_t *pending_buffer;  /* sparse<table_id, ecs_table_t*> */
+    ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
     
 
     /* Keep track of components that were added/removed to/from monitored

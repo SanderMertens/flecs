@@ -232,6 +232,8 @@ void flecs_resume_readonly(
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
 
     if (state->is_readonly || state->is_deferred) {
+        ecs_force_aperiodic(world);
+
         /* Restore readonly state / defer count */
         world->is_readonly = state->is_readonly;
         stage->defer = state->defer_count;
@@ -247,6 +249,8 @@ static
 void eval_component_monitor(
     ecs_world_t *world)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_relation_monitor_t *rm = &world->monitors;
 
     if (!rm->is_dirty) {
@@ -580,7 +584,9 @@ ecs_world_t *ecs_mini(void) {
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
     world->id_records = flecs_sparse_new(ecs_id_record_t);
-    world->empty_tables = flecs_sparse_new(ecs_table_t*);
+    
+    world->pending_tables = flecs_sparse_new(ecs_table_t*);
+    world->pending_buffer = flecs_sparse_new(ecs_table_t*);
 
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
     world->aliases = flecs_string_hashmap_new(ecs_entity_t);
@@ -1080,7 +1086,8 @@ void fini_id_index(
 
     ecs_map_free(world->id_index);
     flecs_sparse_free(world->id_records);
-    flecs_sparse_free(world->empty_tables);
+    flecs_sparse_free(world->pending_tables);
+    flecs_sparse_free(world->pending_buffer);
 }
 
 /* Cleanup aliases & symbols */
@@ -1195,7 +1202,8 @@ void ecs_dim(
 void flecs_eval_component_monitors(
     ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_world_t);    
+    ecs_poly_assert(world, ecs_world_t);  
+    flecs_process_pending_tables(world);  
     eval_component_monitor(world);
 }
 
@@ -1569,7 +1577,7 @@ void flecs_delete_table(
 }
 
 static
-void register_table(
+bool register_table(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -1603,10 +1611,12 @@ void register_table(
     if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
         table->flags |= EcsTableHasUnSet;
     }
+
+    return true;
 }
 
 static
-void unregister_table(
+bool unregister_table(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -1616,7 +1626,7 @@ void unregister_table(
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
-        return;
+        return false;
     }
 
     ecs_table_cache_remove(&idr->cache, ecs_table_record_t, table);
@@ -1624,10 +1634,12 @@ void unregister_table(
     if (ecs_table_cache_is_empty(&idr->cache)) {
         flecs_clear_id_record(world, id);
     }
+
+    return true;
 }
 
 static
-void set_empty(
+bool set_empty(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -1637,22 +1649,24 @@ void set_empty(
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (idr) {
-        ecs_table_cache_set_empty(&idr->cache, table, 
+        return ecs_table_cache_set_empty(&idr->cache, table, 
             ecs_table_count(table) == 0);
     }
+    return false;
 }
 
 static
-void for_each_id(
+bool for_each_id(
     ecs_world_t *world,
     ecs_table_t *table,
-    void(*action)(ecs_world_t*, ecs_table_t*, ecs_id_t, int32_t),
+    bool(*action)(ecs_world_t*, ecs_table_t*, ecs_id_t, int32_t),
     bool set_watch)
 {
     int32_t i, count = ecs_vector_count(table->type);
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     bool has_childof = false;
-    
+    bool result = false;
+
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
 
@@ -1661,20 +1675,20 @@ void for_each_id(
             has_childof = true;
         } 
 
-        action(world, table, ecs_strip_generation(id), i);
-        action(world, table, EcsWildcard, i);
+        result |= action(world, table, ecs_strip_generation(id), i);
+        result |= action(world, table, EcsWildcard, i);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
                 ECS_PAIR_RELATION(id), EcsWildcard);       
-            action(world, table, pred_w_wildcard, i);
+            result |= action(world, table, pred_w_wildcard, i);
 
             ecs_entity_t obj_w_wildcard = ecs_pair(
                 EcsWildcard, ECS_PAIR_OBJECT(id));
-            action(world, table, obj_w_wildcard, i);
+            result |= action(world, table, obj_w_wildcard, i);
 
             ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
-            action(world, table, all_wildcard, i);
+            result |= action(world, table, all_wildcard, i);
 
             if (set_watch) {
                 ecs_entity_t rel = ecs_pair_relation(world, id);
@@ -1688,7 +1702,7 @@ void for_each_id(
         } else {
             if (id & ECS_ROLE_MASK) {
                 id &= ECS_COMPONENT_MASK;
-                action(world, table, ecs_pair(id, EcsWildcard), i);
+                result |= action(world, table, ecs_pair(id, EcsWildcard), i);
             }
 
             if (set_watch) {
@@ -1698,8 +1712,10 @@ void for_each_id(
     }
 
     if (!has_childof) {
-        action(world, table, ecs_pair(EcsChildOf, 0), 0);
+        result |= action(world, table, ecs_pair(EcsChildOf, 0), 0);
     }
+
+    return result;
 }
 
 void flecs_register_table(
@@ -1723,11 +1739,97 @@ void flecs_unregister_table(
     flecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
+/** Walk over tables that had a state change which requires bookkeeping */
+void flecs_process_pending_tables(
+    const ecs_world_t *world_r)
+{
+    ecs_poly_assert(world_r, ecs_world_t);
+
+    /* We can't update the administration while in readonly mode, but we can
+     * ensure that when this function is called there are no pending events. */
+    if (world_r->is_readonly) {
+        ecs_assert(flecs_sparse_count(world_r->pending_tables) == 0,
+            ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
+
+    /* Safe to cast, world is not readonly */
+    ecs_world_t *world = (ecs_world_t*)world_r;
+
+    /* If pending buffer is NULL there already is a stackframe that's iterating
+     * the table list. This can happen when a trigger for a table event results
+     * in a mutation that causes another table to change state. A typical 
+     * example of this is a system that becomes active/inactive as the result of
+     * a query (and as a result, its matched tables) becoming empty/non empty */
+    if (!world->pending_buffer) {
+        return;
+    }
+
+    /* Swap buffer. The logic could in theory have been implemented with a
+     * single sparse set, but that would've complicated (and slowed down) the
+     * iteration. Additionally, by using a double buffer approach we can still
+     * keep most of the original ordering of events intact, which is desirable
+     * as it means that the ordering of tables in the internal datastructures is
+     * more predictable. */
+    int32_t i, count = flecs_sparse_count(world->pending_tables);
+    if (!count) {
+        return;
+    }
+
+    do {
+        ecs_sparse_t *pending_tables = world->pending_tables;
+        world->pending_tables = world->pending_buffer;
+        world->pending_buffer = NULL;
+
+        for (i = 0; i < count; i ++) {
+            ecs_table_t *table = flecs_sparse_get_dense(
+                pending_tables, ecs_table_t*, i)[0];
+            if (!table->id) {
+                /* Table is being deleted, ignore empty events */
+                continue;
+            }
+
+            /* For each id in the table, add it to the empty/non empty list
+             * based on its current state */
+            if (for_each_id(world, table, set_empty, false)) {
+                /* Only emit an event when there was a change in the 
+                 * administration. It is possible that a table ended up in the
+                 * pending_tables list by going from empty->non-empty, but then
+                 * became empty again. By the time we run this code, no changes
+                 * in the administration would actually be made. */
+                ecs_ids_t ids = {
+                    .array = ecs_vector_first(table->type, ecs_id_t),
+                    .count = ecs_vector_count(table->type)
+                };
+
+                ecs_emit(world, &(ecs_event_desc_t) {
+                    .event = ecs_table_count(table) 
+                        ? EcsOnTableFill 
+                        : EcsOnTableEmpty
+                        ,
+                    .table = table,
+                    .ids = &ids,
+                    .observable = world,
+                    .table_event = true
+                });
+            }
+        }
+        flecs_sparse_clear(pending_tables);
+
+        world->pending_buffer = pending_tables;
+    } while ((count = flecs_sparse_count(world->pending_tables)));
+}
+
 void flecs_table_set_empty(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    for_each_id(world, table, set_empty, false);
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_sparse_set_generation(world->pending_tables, (uint32_t)table->id);
+    flecs_sparse_ensure(world->pending_tables, ecs_table_t*, 
+        (uint32_t)table->id)[0] = table;
 }
 
 ecs_id_record_t* flecs_ensure_id_record(
@@ -1896,6 +1998,10 @@ ecs_id_record_t* flecs_table_iter(
         return NULL;
     }
 
+    flecs_process_pending_tables(world);
+
+    ecs_assert( flecs_sparse_count(world->pending_tables) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
     flecs_idr_iter(idr, out);
     return idr;
 }
@@ -1910,6 +2016,17 @@ ecs_id_record_t* flecs_empty_table_iter(
         return NULL;
     }
 
+    flecs_process_pending_tables(world);
+
+    ecs_assert( flecs_sparse_count(world->pending_tables) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
     flecs_idr_empty_iter(idr, out);
     return idr;
+}
+
+void ecs_force_aperiodic(
+    ecs_world_t *world)
+{
+    flecs_process_pending_tables(world);
+    flecs_eval_component_monitors(world);
 }

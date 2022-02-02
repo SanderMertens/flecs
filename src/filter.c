@@ -1559,6 +1559,8 @@ ecs_iter_t ecs_term_iter(
 
     const ecs_world_t *world = ecs_get_world(stage);
 
+    flecs_process_pending_tables(world);
+
     if (ecs_term_finalize(world, NULL, term)) {
         ecs_throw(ECS_INVALID_PARAMETER, NULL);
     }
@@ -1879,6 +1881,8 @@ ecs_iter_t ecs_filter_iter(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
+    
+    flecs_process_pending_tables(world);
 
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,

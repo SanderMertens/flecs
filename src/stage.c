@@ -502,6 +502,8 @@ bool ecs_staging_begin(
 {
     ecs_poly_assert(world, ecs_world_t);
 
+    flecs_process_pending_tables(world);
+
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
         ecs_defer_begin(ecs_get_stage(world, i));

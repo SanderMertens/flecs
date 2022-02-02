@@ -39,18 +39,14 @@ void notify_subset(
     ecs_ids_t *ids)
 {
     ecs_id_t pair = ecs_pair(EcsWildcard, entity);
-    ecs_id_record_t *idr = flecs_get_id_record(world, pair);
-
+    ecs_table_iter_t idt;
+    ecs_id_record_t *idr = flecs_table_iter(world, pair, &idt);
     if (!idr) {
         return;
     }
 
-    ecs_table_record_t *trs = ecs_table_cache_tables(
-        &idr->cache, ecs_table_record_t);
-    int32_t i, count = ecs_table_cache_count(&idr->cache);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &trs[i];
+    for (; idt.cur < idt.end; ++ idt.cur) {
+        const ecs_table_record_t *tr = idt.cur;
         ecs_table_t *table = tr->table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
         ecs_entity_t rel = ECS_PAIR_RELATION(id);
