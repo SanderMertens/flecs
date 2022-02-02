@@ -2515,8 +2515,8 @@ void dtor_all_components(
                         ECS_INTERNAL_ERROR, NULL);
                 } else {
                     // If this is not a delete, clear the entity index record
-                    ecs_record_t r = {NULL, 0};
-                    ecs_eis_set(world, e, &r);                
+                    records[i]->table = NULL;
+                    records[i]->row = 0;
                 }
             } else {
                 /* This should only happen in rare cases, such as when the data
@@ -2549,9 +2549,10 @@ void dtor_all_components(
                 ecs_assert(!e || records[i] == ecs_eis_get(world, e), 
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(!e || records[i]->table == table, 
-                    ECS_INTERNAL_ERROR, NULL);                
-                ecs_record_t r = {NULL, 0};
-                ecs_eis_set(world, e, &r);
+                    ECS_INTERNAL_ERROR, NULL);
+                records[i]->table = NULL;
+                records[i]->row = 0;
+                (void)e;
             }
         }      
     }
@@ -2573,7 +2574,9 @@ void fini_data(
         return;
     }
 
-    if (do_on_remove) {
+    ecs_flags32_t flags = table->flags;
+
+    if (do_on_remove && (flags & EcsTableHasOnRemove)) {
         run_on_remove(world, table, data);        
     }
 
@@ -6708,12 +6711,12 @@ void delete_objects(
     if (data) {
         ecs_entity_t *entities = ecs_vector_first(
             data->entities, ecs_entity_t);
+        ecs_record_t **records = ecs_vector_first(
+            data->record_ptrs, ecs_record_t*);
 
         int32_t i, count = ecs_vector_count(data->entities);
         for (i = 0; i < count; i ++) {
-            ecs_entity_t e = entities[i];
-            ecs_record_t *r = flecs_sparse_get(
-                world->store.entity_index, ecs_record_t, e);
+            ecs_record_t *r = records[i];
             
             /* If entity is flagged, it could have delete actions. */
             uint32_t flags;
