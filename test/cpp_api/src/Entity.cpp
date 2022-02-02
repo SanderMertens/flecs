@@ -3060,3 +3060,20 @@ void Entity_default_ctor() {
 
     test_assert(id2 == 0);
 }
+
+void Entity_get_obj_by_template() {
+    flecs::world ecs;
+
+    struct Rel {};
+
+    flecs::entity e1 = ecs.entity();
+    flecs::entity o1 = ecs.entity();
+    flecs::entity o2 = ecs.entity();
+
+    e1.add<Rel>(o1);
+    e1.add<Rel>(o2);
+
+    test_assert(o1 == e1.get_object<Rel>());
+    test_assert(o1 == e1.get_object<Rel>(0));
+    test_assert(o2 == e1.get_object<Rel>(1));
+}
