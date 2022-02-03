@@ -11795,10 +11795,24 @@ typedef struct ecs_bucket_t {
 struct ecs_map_t {
     ecs_bucket_t *buckets;
     int16_t elem_size;
-    uint16_t bucket_shift;
+    uint8_t bucket_shift;
     int32_t bucket_count;
     int32_t count;
 };
+
+static
+uint8_t ecs_log2(uint32_t v) {
+    static const uint8_t log2table[32] = 
+        {0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
+         8, 12, 20, 28, 15, 17, 24, 7,  19, 27, 23, 6,  26, 5,  4, 31};
+
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    return log2table[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+}
 
 /* Get bucket count for number of elements */
 static
@@ -11810,10 +11824,10 @@ int32_t get_bucket_count(
 
 /* Get bucket shift amount for a given bucket count */
 static
-uint16_t get_bucket_shift (
+uint8_t get_bucket_shift (
     int32_t bucket_count)
 {
-    return (uint16_t)(64u - (uint16_t)log2(bucket_count));
+    return (uint8_t)(64u - ecs_log2((uint32_t)bucket_count));
 }
 
 /* Get bucket index for provided map key */
@@ -11858,7 +11872,6 @@ void ensure_buckets(
         map->buckets = ecs_os_realloc(map->buckets, new_count * ECS_SIZEOF(ecs_bucket_t));
         map->bucket_count = new_count;
         map->bucket_shift = get_bucket_shift(new_count);
-
         ecs_os_memset(
             ECS_OFFSET(map->buckets, bucket_count * ECS_SIZEOF(ecs_bucket_t)), 
             0, (new_count - bucket_count) * ECS_SIZEOF(ecs_bucket_t));
@@ -12192,6 +12205,7 @@ void ecs_map_clear(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     clear_buckets(map);
     map->count = 0;
+    ensure_buckets(map, 2);
 }
 
 ecs_map_iter_t ecs_map_iter(
