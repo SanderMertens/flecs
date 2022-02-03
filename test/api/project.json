@@ -57,6 +57,11 @@
                     "is_not_alive_valid",
                     "is_nonzero_gen_valid",
                     "init_w_name_deferred",
+                    "init_w_name_twice_deferred",
+                    "init_w_nested_name_twice_deferred",
+                    "init_w_scope_name_twice_deferred",
+                    "init_w_childof_name_twice_deferred",
+                    "init_w_childof_nested_name_twice_deferred",
                     "init_w_name_staged",
                     "record_find_for_empty",
                     "record_find",
@@ -68,11 +73,13 @@
                     "ensure_zero_gen_exists_alive",
                     "ensure_nonzero_gen_exists_alive",
                     "set_scope_w_entity_init_from_stage",
+                    "entity_init_w_scope_twice",
+                    "entity_init_w_childof_twice",
+                    "entity_init_w_childof_nested_name_twice",
                     "entity_init_w_childof_and_scope",
                     "entity_init_w_childof_and_scope_and_scoped_name",
                     "deferred_entity_init_w_childof_and_scope",
-                    "deferred_entity_init_w_childof_and_scope_and_scoped_name",
-                    "deferred_entity_init_w_name_twice"
+                    "deferred_entity_init_w_childof_and_scope_and_scoped_name"
                 ]
             }, {
                 "id": "Event",

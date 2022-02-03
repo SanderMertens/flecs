@@ -347,6 +347,19 @@ typedef int32_t ecs_size_t;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Debug macro's
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef NDEBUG
+#define ECS_TABLE_LOCK(world, table) ecs_table_lock(world, table)
+#define ECS_TABLE_UNLOCK(world, table) ecs_table_unlock(world, table)
+#else
+#define ECS_TABLE_LOCK(world, table)
+#define ECS_TABLE_UNLOCK(world, table)
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Convenience macro's for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16755,9 +16768,7 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-#       ifndef NDEBUG
-        ecs_table_lock(iter->world, iter->table);
-#       endif
+        ECS_TABLE_LOCK(iter->world, iter->table);
 
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
@@ -16768,9 +16779,7 @@ private:
                     .get_row())...);
         }
 
-#       ifndef NDEBUG
-        ecs_table_unlock(iter->world, iter->table);
-#       endif
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
 
@@ -16782,9 +16791,7 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
-#       ifndef NDEBUG
-        ecs_table_lock(iter->world, iter->table);
-#       endif
+        ECS_TABLE_LOCK(iter->world, iter->table);
 
         size_t count = static_cast<size_t>(iter->count);
         flecs::iter it(iter);
@@ -16794,9 +16801,7 @@ private:
                 .get_row())...);
         }
 
-#       ifndef NDEBUG
-        ecs_table_unlock(iter->world, iter->table);
-#       endif        
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
 
@@ -16883,9 +16888,7 @@ private:
     {
         flecs::iter it(iter);
 
-#       ifndef NDEBUG
-        ecs_table_lock(iter->world, iter->table);
-#       endif
+        ECS_TABLE_LOCK(iter->world, iter->table);
 
         func(it, ( static_cast< 
             remove_reference_t< 
@@ -16893,9 +16896,7 @@ private:
                     actual_type_t<Components> > >* >
                         (comps.ptr))...);
 
-#       ifndef NDEBUG
-        ecs_table_unlock(iter->world, iter->table);
-#       endif                        
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
     template <typename... Targs, if_t<!IterOnly &&

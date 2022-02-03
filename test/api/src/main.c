@@ -51,6 +51,11 @@ void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
 void Entity_is_nonzero_gen_valid(void);
 void Entity_init_w_name_deferred(void);
+void Entity_init_w_name_twice_deferred(void);
+void Entity_init_w_nested_name_twice_deferred(void);
+void Entity_init_w_scope_name_twice_deferred(void);
+void Entity_init_w_childof_name_twice_deferred(void);
+void Entity_init_w_childof_nested_name_twice_deferred(void);
 void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
@@ -62,11 +67,13 @@ void Entity_ensure_nonzero_gen_exists(void);
 void Entity_ensure_zero_gen_exists_alive(void);
 void Entity_ensure_nonzero_gen_exists_alive(void);
 void Entity_set_scope_w_entity_init_from_stage(void);
+void Entity_entity_init_w_scope_twice(void);
+void Entity_entity_init_w_childof_twice(void);
+void Entity_entity_init_w_childof_nested_name_twice(void);
 void Entity_entity_init_w_childof_and_scope(void);
 void Entity_entity_init_w_childof_and_scope_and_scoped_name(void);
 void Entity_deferred_entity_init_w_childof_and_scope(void);
 void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void);
-void Entity_deferred_entity_init_w_name_twice(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2605,6 +2612,26 @@ bake_test_case Entity_testcases[] = {
         Entity_init_w_name_deferred
     },
     {
+        "init_w_name_twice_deferred",
+        Entity_init_w_name_twice_deferred
+    },
+    {
+        "init_w_nested_name_twice_deferred",
+        Entity_init_w_nested_name_twice_deferred
+    },
+    {
+        "init_w_scope_name_twice_deferred",
+        Entity_init_w_scope_name_twice_deferred
+    },
+    {
+        "init_w_childof_name_twice_deferred",
+        Entity_init_w_childof_name_twice_deferred
+    },
+    {
+        "init_w_childof_nested_name_twice_deferred",
+        Entity_init_w_childof_nested_name_twice_deferred
+    },
+    {
         "init_w_name_staged",
         Entity_init_w_name_staged
     },
@@ -2649,6 +2676,18 @@ bake_test_case Entity_testcases[] = {
         Entity_set_scope_w_entity_init_from_stage
     },
     {
+        "entity_init_w_scope_twice",
+        Entity_entity_init_w_scope_twice
+    },
+    {
+        "entity_init_w_childof_twice",
+        Entity_entity_init_w_childof_twice
+    },
+    {
+        "entity_init_w_childof_nested_name_twice",
+        Entity_entity_init_w_childof_nested_name_twice
+    },
+    {
         "entity_init_w_childof_and_scope",
         Entity_entity_init_w_childof_and_scope
     },
@@ -2663,10 +2702,6 @@ bake_test_case Entity_testcases[] = {
     {
         "deferred_entity_init_w_childof_and_scope_and_scoped_name",
         Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name
-    },
-    {
-        "deferred_entity_init_w_name_twice",
-        Entity_deferred_entity_init_w_name_twice
     }
 };
 
@@ -11731,7 +11766,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        58,
+        65,
         Entity_testcases
     },
     {

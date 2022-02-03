@@ -178,7 +178,8 @@
                 "iter_recycled_parent",
                 "get_lambda_from_stage",
                 "default_ctor",
-                "get_obj_by_template"
+                "get_obj_by_template",
+                "create_named_twice_deferred"
             ]
         }, {
             "id": "Pairs",

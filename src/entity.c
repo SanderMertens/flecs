@@ -1782,9 +1782,19 @@ int traverse_add(
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        table = table_append(world, table, id, &diff);
+        bool should_add = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
             scope = ECS_PAIR_OBJECT(id);
+            if (!desc->entity || (name && !name_assigned)) {
+                /* If name is added to entity, pass scope to add_path instead
+                 * of adding it to the table. The provided name may have nested
+                 * elements, in which case the parent provided here is not the
+                 * parent the entity will end up with. */
+                should_add = false;
+            }
+        }
+        if (should_add) {
+            table = table_append(world, table, id, &diff);
         }
     }
 
@@ -1863,9 +1873,17 @@ void deferred_add_remove(
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
-        ecs_add_id(world, entity, id);
+        bool defer = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
             scope = ECS_PAIR_OBJECT(id);
+            if (!desc->entity || (name && !name_assigned)) {
+                /* New named entities are created by temporarily going out of
+                 * readonly mode to ensure no duplicates are created. */
+                defer = false;
+            }
+        }
+        if (defer) {
+            ecs_add_id(world, entity, id);
         }
     }
 
@@ -1880,7 +1898,12 @@ void deferred_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);
+        /* To prevent creating two entities with the same name, temporarily go
+         * out of readonly mode if it's safe to do so. */
+        ecs_suspend_readonly_state_t state;
+        ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
+        ecs_add_path_w_sep(real_world, entity, scope, name, sep, NULL);
+        flecs_resume_readonly(real_world, &state);
     }
 
     /* Currently it's not supported to set the symbol from a deferred context */
@@ -1938,6 +1961,18 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t result = desc->entity;
     if (!result) {
         if (name) {
+            /* If add array contains a ChildOf pair, use it as scope instead */
+            const ecs_id_t *ids = desc->add;
+            ecs_id_t id;
+            int32_t i = 0;
+            while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+                if (ECS_HAS_ROLE(id, PAIR) && 
+                    (ECS_PAIR_RELATION(id) == EcsChildOf))
+                {
+                    scope = ECS_PAIR_OBJECT(id);
+                }
+            }
+
             result = ecs_lookup_path_w_sep(
                 world, scope, name, sep, root_sep, false);
             if (result) {

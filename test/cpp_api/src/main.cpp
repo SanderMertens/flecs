@@ -173,6 +173,7 @@ void Entity_iter_recycled_parent(void);
 void Entity_get_lambda_from_stage(void);
 void Entity_default_ctor(void);
 void Entity_get_obj_by_template(void);
+void Entity_create_named_twice_deferred(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1502,6 +1503,10 @@ bake_test_case Entity_testcases[] = {
     {
         "get_obj_by_template",
         Entity_get_obj_by_template
+    },
+    {
+        "create_named_twice_deferred",
+        Entity_create_named_twice_deferred
     }
 };
 
@@ -4069,7 +4074,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        163,
+        165,
         Entity_testcases
     },
     {
@@ -4250,6 +4255,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    ut_init(argv[0]);
     return bake_test_run("cpp_api", argc, argv, suites, 26);
 }

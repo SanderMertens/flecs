@@ -213,12 +213,14 @@ typedef struct {
     bool is_readonly;
     bool is_deferred;
     int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
     ecs_vector_t *defer_queue;
     ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
 
 ecs_world_t* flecs_suspend_readonly(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_suspend_readonly_state_t *state);
 
 void flecs_resume_readonly(

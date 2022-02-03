@@ -2099,8 +2099,6 @@ void Entity_defer_new_w_name() {
     ecs.defer([&]{
         e = ecs.entity("Foo");
         test_assert(e != 0);
-        test_assert(0 == ecs.lookup("Foo"));
-        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
@@ -2115,9 +2113,6 @@ void Entity_defer_new_w_nested_name() {
     ecs.defer([&]{
         e = ecs.entity("Foo::Bar");
         test_assert(e != 0);
-        test_assert(0 == ecs.lookup("Foo"));
-        test_assert(0 == ecs.lookup("Bar"));
-        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has<flecs::Identifier>(flecs::Name));
@@ -2135,8 +2130,6 @@ void Entity_defer_new_w_scope_name() {
         parent.scope([&]{
             e = ecs.entity("Foo");
             test_assert(e != 0);
-            test_assert(0 == ecs.lookup("Foo"));
-            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
     });
 
@@ -2154,9 +2147,6 @@ void Entity_defer_new_w_scope_nested_name() {
         parent.scope([&]{
             e = ecs.entity("Foo::Bar");
             test_assert(e != 0);
-            test_assert(0 == ecs.lookup("Foo"));
-            test_assert(0 == ecs.lookup("Bar"));
-            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
     });
 
@@ -2174,15 +2164,7 @@ void Entity_defer_new_w_deferred_scope_nested_name() {
         parent = ecs.entity("Parent").scope([&]{
             e = ecs.entity("Foo::Bar");
             test_assert(e != 0);
-            test_assert(0 == ecs.lookup("Foo"));
-            test_assert(0 == ecs.lookup("Bar"));
-            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
-
-        test_assert(0 == ecs.lookup("Parent"));
-        test_assert(0 == ecs.lookup("Foo"));
-        test_assert(0 == ecs.lookup("Bar"));
-        test_assert(!parent.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(parent.has<flecs::Identifier>(flecs::Name));
@@ -2235,17 +2217,11 @@ void Entity_defer_new_w_name_scope_with() {
             parent.scope([&]{
                 e = ecs.entity("Foo");
                 test_assert(e != 0);
-                test_assert(0 == ecs.lookup("Foo"));
                 test_assert(!e.has(Tag));
-                test_assert(!e.has<flecs::Identifier>(flecs::Name));
             });
-            test_assert(0 == ecs.lookup("Foo"));
             test_assert(!e.has(Tag));
-            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
-        test_assert(0 == ecs.lookup("Foo"));
         test_assert(!e.has(Tag));
-        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has(Tag));
@@ -2264,18 +2240,11 @@ void Entity_defer_new_w_nested_name_scope_with() {
             parent.scope([&]{
                 e = ecs.entity("Foo::Bar");
                 test_assert(e != 0);
-                test_assert(0 == ecs.lookup("Foo"));
-                test_assert(0 == ecs.lookup("Bar"));
                 test_assert(!e.has(Tag));
-                test_assert(!e.has<flecs::Identifier>(flecs::Name));
             });
-            test_assert(0 == ecs.lookup("Foo"));
             test_assert(!e.has(Tag));
-            test_assert(!e.has<flecs::Identifier>(flecs::Name));
         });
-        test_assert(0 == ecs.lookup("Foo"));
         test_assert(!e.has(Tag));
-        test_assert(!e.has<flecs::Identifier>(flecs::Name));
     });
 
     test_assert(e.has(Tag));
@@ -3100,4 +3069,29 @@ void Entity_get_obj_by_template() {
     test_assert(o1 == e1.get_object<Rel>());
     test_assert(o1 == e1.get_object<Rel>(0));
     test_assert(o2 == e1.get_object<Rel>(1));
+}
+
+void Entity_create_named_twice_deferred() {
+    flecs::world ecs;
+
+    ecs.defer_begin();
+
+    auto e1 = ecs.entity("e");
+    auto e2 = ecs.entity("e");
+
+    auto f1 = ecs.entity("p::f");
+    auto f2 = ecs.entity("p::f");
+
+    auto g1 = ecs.scope(ecs.entity("q")).entity("g");
+    auto g2 = ecs.scope(ecs.entity("q")).entity("g");
+
+    ecs.defer_end();
+
+    test_str(e1.path().c_str(), "::e");
+    test_str(f1.path().c_str(), "::p::f");
+    test_str(g1.path().c_str(), "::q::g");
+
+    test_assert(e1 == e2);
+    test_assert(f1 == f2);
+    test_assert(g1 == g2);
 }

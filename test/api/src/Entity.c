@@ -884,12 +884,154 @@ void Entity_init_w_name_deferred() {
         .name = "Foo"
     });
 
-    test_assert(e != 0);
-    test_str(ecs_get_name(world, e), NULL);
-
     ecs_defer_end(world);
 
     test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_name_twice_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e1), "Foo");
+    test_str(ecs_get_name(world, e2), "Foo");
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_nested_name_twice_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Bar"
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Bar"
+    });
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e1), "Bar");
+    test_str(ecs_get_name(world, e2), "Bar");
+    test_assert(e1 == e2);
+
+    ecs_entity_t parent = ecs_lookup(world, "Foo");
+    test_assert(parent != 0);
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_scope_name_twice_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Bar"
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Bar"
+    });
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e1), "Bar");
+    test_str(ecs_get_name(world, e2), "Bar");
+    test_assert(e1 == e2);
+
+    ecs_entity_t parent = ecs_lookup(world, "Foo");
+    test_assert(parent != 0);
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_childof_name_twice_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+    test_assert(parent != 0);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Bar",
+        .add = {ecs_pair(EcsChildOf, parent)}
+    });
+    test_assert(e1 != 0);
+
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Bar",
+        .add = {ecs_pair(EcsChildOf, parent)}
+    });
+    test_assert(e2 != 0);
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e1), "Bar");
+    test_str(ecs_get_name(world, e2), "Bar");
+    test_assert(e1 == e2);
+
+    test_assert(parent == ecs_lookup(world, "Foo"));
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Entity_init_w_childof_nested_name_twice_deferred() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t parent = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+    test_assert(parent != 0);
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Bar.Hello",
+        .add = {ecs_pair(EcsChildOf, parent)}
+    });
+    test_assert(e1 != 0);
+
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Bar.Hello",
+        .add = {ecs_pair(EcsChildOf, parent)}
+    });
+    test_assert(e2 != 0);
+
+    ecs_defer_end(world);
+
+    test_str(ecs_get_name(world, e1), "Hello");
+
+    char *path = ecs_get_fullpath(world, e1);
+    test_str(path, "Foo.Bar.Hello");
+    ecs_os_free(path);
+
+    test_assert(parent == ecs_lookup(world, "Foo"));
+    ecs_entity_t bar = ecs_lookup_child(world, parent, "Bar");
+    test_assert(bar != 0);
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, bar));
+
+    test_assert(e1 == e2);
 
     ecs_fini(world);
 }
@@ -904,9 +1046,7 @@ void Entity_init_w_name_staged() {
     ecs_entity_t e = ecs_entity_init(stage, &(ecs_entity_desc_t) {
         .name = "Foo"
     });
-
     test_assert(e != 0);
-    test_str(ecs_get_name(stage, e), NULL);
 
     ecs_staging_end(world);
 
@@ -1105,6 +1245,87 @@ void Entity_set_scope_w_entity_init_from_stage() {
     ecs_fini(world);
 }
 
+void Entity_entity_init_w_scope_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+    
+    test_assert(ecs_set_scope(world, parent) == 0);
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child"
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child"
+    });
+    test_assert(ecs_set_scope(world, 0) == parent);
+
+    test_assert( ecs_has_pair(world, e1, EcsChildOf, parent) );
+    test_str(ecs_get_name(world, e1), "Child");
+
+    char *path = ecs_get_fullpath(world, e1);
+    test_str(path, "Parent.Child");
+    ecs_os_free(path);
+
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_init_w_childof_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child",
+        .add = { ecs_childof(parent) }
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Child",
+        .add = { ecs_childof(parent) }
+    });
+
+    test_assert( ecs_has_pair(world, e1, EcsChildOf, parent) );
+    test_str(ecs_get_name(world, e1), "Child");
+
+    char *path = ecs_get_fullpath(world, e1);
+    test_str(path, "Parent.Child");
+    ecs_os_free(path);
+
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_init_w_childof_nested_name_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+
+    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Child",
+        .add = { ecs_childof(parent) }
+    });
+    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Child",
+        .add = { ecs_childof(parent) }
+    });
+
+    ecs_entity_t foo = ecs_lookup_child(world, parent, "Foo");
+    test_assert(foo != 0);
+
+    test_assert( ecs_has_pair(world, e1, EcsChildOf, foo) );
+    test_str(ecs_get_name(world, e1), "Child");
+
+    char *path = ecs_get_fullpath(world, e1);
+    test_str(path, "Parent.Foo.Child");
+    ecs_os_free(path);
+
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
 void Entity_entity_init_w_childof_and_scope() {
     ecs_world_t *world = ecs_init();
 
@@ -1215,23 +1436,4 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
     ecs_os_free(path);
 
     ecs_fini(world);
-}
-
-
-void Entity_deferred_entity_init_w_name_twice() {
-    // ecs_world_t *world = ecs_init();
-
-    // ecs_defer_begin(world);
-    // ecs_entity_t child_1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
-    //     .name = "Child"
-    // });
-    // ecs_entity_t child_2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
-    //     .name = "Child"
-    // });
-    // ecs_defer_end(world);
-
-    // test_str(ecs_get_name(world, child_1), "Child");
-    // test_assert(child_1 == child_2);
-
-    // ecs_fini(world);
 }

@@ -182,7 +182,7 @@ ecs_stage_t *flecs_stage_from_world(
 }
 
 ecs_world_t* flecs_suspend_readonly(
-    ecs_world_t *stage_world,
+    const ecs_world_t *stage_world,
     ecs_suspend_readonly_state_t *state)
 {
     ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -215,8 +215,15 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
     state->defer_queue = stage->defer_queue;
+    state->scope = world->stage.scope;
+    state->with = world->stage.with;
     stage->defer = 0;
     stage->defer_queue = NULL;
+
+    if (&world->stage != (ecs_stage_t*)stage_world) {
+        world->stage.scope = stage->scope;
+        world->stage.with = stage->with;
+    }
     
     return world;
 }
@@ -238,6 +245,8 @@ void flecs_resume_readonly(
         world->is_readonly = state->is_readonly;
         stage->defer = state->defer_count;
         stage->defer_queue = state->defer_queue;
+        world->stage.scope = state->scope;
+        world->stage.with = state->with;
     }
 }
 
