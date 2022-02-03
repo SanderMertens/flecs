@@ -227,7 +227,7 @@ void MetaUtils_struct_w_4_bitmask() {
     Struct_3_bitmask v = {0, Tomato, Bacon | Tomato, Blt};
     char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_3_bitmask), &v);
     test_assert(expr != NULL);
-    test_str(expr, "{one: 0, two: Tomato, three: Bacon|Tomato, four: Bacon|Lettuce|Tomato}");
+    test_str(expr, "{one: 0, two: Tomato, three: Tomato|Bacon, four: Lettuce|Tomato|Bacon}");
     ecs_os_free(expr);
 
     ecs_fini(world);

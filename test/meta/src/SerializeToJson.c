@@ -657,7 +657,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Lettuce | Bacon};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":\"Lettuce|Bacon\"}");
+    test_str(expr, "{\"x\":\"Bacon|Lettuce\"}");
     ecs_os_free(expr);
     }
 
@@ -665,7 +665,7 @@ void SerializeToJson_struct_bitmask() {
     T value = {Lettuce | Bacon | Tomato | Cheese};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":\"Cheese|Lettuce|Bacon|Tomato\"}");
+    test_str(expr, "{\"x\":\"Bacon|Tomato|Lettuce|Cheese\"}");
     ecs_os_free(expr);
     }
 
