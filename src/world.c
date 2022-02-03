@@ -1739,13 +1739,6 @@ void flecs_unregister_table(
     ecs_table_t *table)
 {
     for_each_id(world, table, unregister_table, false);
-
-    ecs_ids_t key = {
-        .array = ecs_vector_first(table->type, ecs_id_t),
-        .count = ecs_vector_count(table->type)
-    };
-
-    flecs_hashmap_remove(world->store.table_map, &key, ecs_table_t*);
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */
