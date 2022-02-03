@@ -127,7 +127,7 @@ const char* parse_c_identifier(
         goto error;
     }
 
-    while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && ch != '>') {
+    while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && ch != '>' && ch != '}') {
         /* Type definitions can contain macro's or templates */
         if (ch == '(' || ch == '<') {
             if (!params) {
@@ -215,7 +215,14 @@ const char* meta_parse_constant(
 
     /* Parse token, constant identifier */
     ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
+    if (!ptr) {
+        return NULL;
+    }
+
     ptr = ecs_parse_eol_and_whitespace(ptr);
+    if (!ptr) {
+        return NULL;
+    }
 
     /* Explicit value assignment */
     if (*ptr == '=') {

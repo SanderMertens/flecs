@@ -498,6 +498,8 @@ void MetaUtils_struct_w_4_bitmask(void);
 void MetaUtils_struct_w_3_entities(void);
 void MetaUtils_struct_w_2_array_3_i32(void);
 void MetaUtils_struct_w_nested(void);
+void MetaUtils_enum_nospace(void);
+void MetaUtils_struct_nospace(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -2385,6 +2387,14 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_nested",
         MetaUtils_struct_w_nested
+    },
+    {
+        "enum_nospace",
+        MetaUtils_enum_nospace
+    },
+    {
+        "struct_nospace",
+        MetaUtils_struct_nospace
     }
 };
 
@@ -2491,7 +2501,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        13,
+        15,
         MetaUtils_testcases
     }
 };

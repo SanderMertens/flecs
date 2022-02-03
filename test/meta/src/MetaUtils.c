@@ -48,6 +48,9 @@ ECS_BITMASK(Bitmask, {
     Bacon = 1, Lettuce = 2, Tomato = 4, Blt = 7
 });
 
+ECS_ENUM(Enum_Nospace, {Enum_Nospace_A,Enum_Nospace_B,Enum_Nospace_C});
+ECS_STRUCT(Struct_Nospace, {float x;float y;});
+
 ECS_STRUCT(Struct_3_enum, {
     Enum_Default one;
     Enum_Default two;
@@ -276,3 +279,43 @@ void MetaUtils_struct_w_nested() {
     ecs_fini(world);
 }
 
+void MetaUtils_enum_nospace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Enum_Nospace);
+
+    ecs_entity_t e = ecs_id(Enum_Nospace);
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Enum_Nospace");
+    test_assert(ecs_has(world, e, EcsEnum));
+
+    ecs_entity_t c_a = ecs_lookup_child(world, e, "Enum_Nospace_A");
+    test_assert(c_a != 0);
+
+    ecs_entity_t c_b = ecs_lookup_child(world, e, "Enum_Nospace_B");
+    test_assert(c_b != 0);
+
+    ecs_entity_t c_c = ecs_lookup_child(world, e, "Enum_Nospace_C");
+    test_assert(c_c != 0);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_nospace() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_Nospace);
+
+    ecs_entity_t e = ecs_id(Struct_Nospace);
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Struct_Nospace");
+    test_assert(ecs_has(world, e, EcsStruct));
+
+    ecs_entity_t c_a = ecs_lookup_child(world, e, "x");
+    test_assert(c_a != 0);
+
+    ecs_entity_t c_b = ecs_lookup_child(world, e, "y");
+    test_assert(c_b != 0);
+
+    ecs_fini(world);
+}

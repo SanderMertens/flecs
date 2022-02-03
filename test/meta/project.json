@@ -530,7 +530,9 @@
                 "struct_w_4_bitmask",
                 "struct_w_3_entities",
                 "struct_w_2_array_3_i32",
-                "struct_w_nested"
+                "struct_w_nested",
+                "enum_nospace",
+                "struct_nospace"
             ]
         }]
     }
