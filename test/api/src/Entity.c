@@ -1216,3 +1216,22 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
 
     ecs_fini(world);
 }
+
+
+void Entity_deferred_entity_init_w_name_twice() {
+    // ecs_world_t *world = ecs_init();
+
+    // ecs_defer_begin(world);
+    // ecs_entity_t child_1 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    //     .name = "Child"
+    // });
+    // ecs_entity_t child_2 = ecs_entity_init(world, &(ecs_entity_desc_t) {
+    //     .name = "Child"
+    // });
+    // ecs_defer_end(world);
+
+    // test_str(ecs_get_name(world, child_1), "Child");
+    // test_assert(child_1 == child_2);
+
+    // ecs_fini(world);
+}

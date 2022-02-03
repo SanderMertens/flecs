@@ -1880,7 +1880,7 @@ void deferred_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);   
+        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);
     }
 
     /* Currently it's not supported to set the symbol from a deferred context */

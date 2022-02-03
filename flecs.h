@@ -15379,6 +15379,17 @@ struct entity_view : public id {
      * index can be used to iterate through objects, in case the entity has
      * multiple instances for the same relation.
      *
+     * @tparam R The relation for which to retrieve the object.
+     * @param index The index (0 for the first instance of the relation).
+     */
+    template<typename R>
+    flecs::entity get_object(int32_t index = 0) const;
+
+    /** Get object for a given relation.
+     * This operation returns the object for a given relation. The optional
+     * index can be used to iterate through objects, in case the entity has
+     * multiple instances for the same relation.
+     *
      * @param relation The relation for which to retrieve the object.
      * @param index The index (0 for the first instance of the relation).
      */
@@ -18166,6 +18177,13 @@ const T* entity_view::get() const {
         // If there is no matching pair for (r, *), try just r
         return static_cast<const T*>(ecs_get_id(m_world, m_id, r));
     }
+}
+
+template<typename R>
+inline flecs::entity entity_view::get_object(int32_t index) const 
+{
+    return flecs::entity(m_world, 
+        ecs_get_object(m_world, m_id, _::cpp_type<R>::id(m_world), index));
 }
 
 inline flecs::entity entity_view::get_object(

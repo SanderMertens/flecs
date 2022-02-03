@@ -460,11 +460,10 @@ struct ecs_table_t {
                                       *  - 0..count(T):         type -> storage_type
                                       *  - count(T)..count(S):  storage_type -> type
                                       */
-
+                                     
+    ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t **c_info;        /* Cached pointers to component info */
-
-    ecs_graph_node_t node;           /* Graph node */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
@@ -6229,7 +6228,7 @@ void deferred_add_remove(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);   
+        ecs_add_path_w_sep(world, entity, scope, name, sep, NULL);
     }
 
     /* Currently it's not supported to set the symbol from a deferred context */
@@ -11778,6 +11777,7 @@ int32_t ecs_strbuf_written(
     return b->size + b->current->pos;
 }
 
+#include <math.h>
 
 /* The ratio used to determine whether the map should rehash. If
  * (element_count * LOAD_FACTOR) > bucket_count, bucket count is increased. */
@@ -11794,7 +11794,8 @@ typedef struct ecs_bucket_t {
 
 struct ecs_map_t {
     ecs_bucket_t *buckets;
-    int32_t elem_size;
+    int16_t elem_size;
+    uint16_t bucket_shift;
     int32_t bucket_count;
     int32_t count;
 };
@@ -11807,35 +11808,25 @@ int32_t get_bucket_count(
     return flecs_next_pow_of_2((int32_t)((float)element_count * LOAD_FACTOR));
 }
 
+/* Get bucket shift amount for a given bucket count */
 static
-uint32_t get_key_hash(ecs_map_key_t key) {
-    return (uint32_t)key ^ (uint32_t)(key >> 32);
+uint16_t get_bucket_shift (
+    int32_t bucket_count)
+{
+    return (uint16_t)(64u - (uint16_t)log2(bucket_count));
 }
 
 /* Get bucket index for provided map key */
 static
 int32_t get_bucket_index(
-    int32_t bucket_count,
-    uint32_t hash) 
-{
-    ecs_assert(bucket_count > 0, ECS_INTERNAL_ERROR, NULL);
-    return (int32_t)(hash & ((uint32_t)bucket_count - 1));
-}
-
-/* Get bucket for hash */
-static
-ecs_bucket_t* get_bucket_for_hash(
     const ecs_map_t *map,
-    uint32_t hash)
+    uint16_t bucket_shift,
+    ecs_map_key_t key) 
 {
-    int32_t bucket_count = map->bucket_count;
-    if (!bucket_count) {
-        return NULL;
-    }
-
-    int32_t bucket_id = get_bucket_index(bucket_count, hash);
-    ecs_assert(bucket_id < bucket_count, ECS_INTERNAL_ERROR, NULL);
-    return &map->buckets[bucket_id];
+    ecs_assert(bucket_shift != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(map->bucket_shift == bucket_shift, ECS_INTERNAL_ERROR, NULL);
+    (void)map;
+    return (int32_t)((11400714819323198485ull * key) >> bucket_shift);
 }
 
 /* Get bucket for key */
@@ -11844,8 +11835,11 @@ ecs_bucket_t* get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
-    uint32_t hash = get_key_hash(key);
-    return get_bucket_for_hash(map, hash);
+    ecs_assert(map->bucket_shift == get_bucket_shift(map->bucket_count), 
+        ECS_INTERNAL_ERROR, NULL);
+    int32_t bucket_id = get_bucket_index(map, map->bucket_shift, key);
+    ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+    return &map->buckets[bucket_id];
 }
 
 /* Ensure that map has at least new_count buckets */
@@ -11856,9 +11850,14 @@ void ensure_buckets(
 {
     int32_t bucket_count = map->bucket_count;
     new_count = flecs_next_pow_of_2(new_count);
+    if (new_count < 2) {
+        new_count = 2;
+    }
+
     if (new_count && new_count > bucket_count) {
         map->buckets = ecs_os_realloc(map->buckets, new_count * ECS_SIZEOF(ecs_bucket_t));
         map->bucket_count = new_count;
+        map->bucket_shift = get_bucket_shift(new_count);
 
         ecs_os_memset(
             ECS_OFFSET(map->buckets, bucket_count * ECS_SIZEOF(ecs_bucket_t)), 
@@ -11897,13 +11896,13 @@ void clear_buckets(
 static
 ecs_bucket_t* ensure_bucket(
     ecs_map_t *map,
-    uint32_t hash)
+    ecs_map_key_t key)
 {
     if (!map->bucket_count) {
         ensure_buckets(map, 2);
     }
 
-    int32_t bucket_id = get_bucket_index(map->bucket_count, hash);
+    int32_t bucket_id = get_bucket_index(map, map->bucket_shift, key);
     ecs_assert(bucket_id >= 0, ECS_INTERNAL_ERROR, NULL);
     return &map->buckets[bucket_id];
 }
@@ -11984,13 +11983,12 @@ void rehash(
     ecs_assert(bucket_count != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(bucket_count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_size_t elem_size = map->elem_size;
-
     ensure_buckets(map, bucket_count);
 
     ecs_bucket_t *buckets = map->buckets;
     ecs_assert(buckets != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+    ecs_size_t elem_size = map->elem_size;
+    uint16_t bucket_shift = map->bucket_shift;
     int32_t bucket_id;
 
     /* Iterate backwards as elements could otherwise be moved to existing
@@ -12006,8 +12004,7 @@ void rehash(
         for (i = 0; i < count; i ++) {
             ecs_map_key_t key = key_array[i];
             void *elem = GET_ELEM(payload_array, elem_size, i);
-            uint32_t hash = get_key_hash(key);
-            int32_t new_bucket_id = get_bucket_index(bucket_count, hash);
+            int32_t new_bucket_id = get_bucket_index(map, bucket_shift, key);
 
             if (new_bucket_id != bucket_id) {
                 ecs_bucket_t *new_bucket = &buckets[new_bucket_id];
@@ -12032,11 +12029,13 @@ ecs_map_t* _ecs_map_new(
 {
     ecs_map_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_map_t) * 1);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+    ecs_assert(elem_size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
 
     int32_t bucket_count = get_bucket_count(element_count);
 
+
     result->count = 0;
-    result->elem_size = elem_size;
+    result->elem_size = (int16_t)elem_size;
 
     ensure_buckets(result, bucket_count);
 
@@ -12099,6 +12098,8 @@ bool ecs_map_has(
         return false;
     }
 
+    ecs_assert(bucket->count < 10, ECS_INTERNAL_ERROR, NULL);
+
     return get_from_bucket(bucket, key, 0) != NULL;
 }
 
@@ -12126,8 +12127,7 @@ void* _ecs_map_set(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
 
-    uint32_t hash = get_key_hash(key);
-    ecs_bucket_t *bucket = ensure_bucket(map, hash);
+    ecs_bucket_t *bucket = ensure_bucket(map, key);
     ecs_assert(bucket != NULL, ECS_INTERNAL_ERROR, NULL);
 
     void *elem = get_from_bucket(bucket, key, elem_size);
@@ -12139,7 +12139,7 @@ void* _ecs_map_set(
 
         if (target_bucket_count > map_bucket_count) {
             rehash(map, target_bucket_count);
-            bucket = ensure_bucket(map, hash);
+            bucket = ensure_bucket(map, key);
             return get_from_bucket(bucket, key, elem_size);
         } else {
             return GET_ELEM(bucket->payload, elem_size, index);
