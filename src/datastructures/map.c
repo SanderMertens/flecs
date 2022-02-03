@@ -133,10 +133,7 @@ ecs_bucket_t* ensure_bucket(
     ecs_map_t *map,
     ecs_map_key_t key)
 {
-    if (!map->bucket_count) {
-        ensure_buckets(map, 2);
-    }
-
+    ecs_assert(map->bucket_count >= 2, ECS_INTERNAL_ERROR, NULL);
     int32_t bucket_id = get_bucket_index(map, map->bucket_shift, key);
     ecs_assert(bucket_id >= 0, ECS_INTERNAL_ERROR, NULL);
     return &map->buckets[bucket_id];
@@ -266,13 +263,10 @@ ecs_map_t* _ecs_map_new(
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_assert(elem_size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t bucket_count = get_bucket_count(element_count);
-
-
     result->count = 0;
     result->elem_size = (int16_t)elem_size;
 
-    ensure_buckets(result, bucket_count);
+    ensure_buckets(result, get_bucket_count(element_count));
 
     return result;
 }
@@ -332,8 +326,6 @@ bool ecs_map_has(
     if (!bucket) {
         return false;
     }
-
-    ecs_assert(bucket->count < 10, ECS_INTERNAL_ERROR, NULL);
 
     return get_from_bucket(bucket, key, 0) != NULL;
 }
