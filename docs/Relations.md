@@ -364,7 +364,7 @@ auto GrannySmith = world.entity();
 GrannySmith.add(flecs::IsA, Apple);
 ```
 
-This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relation. See the [section on Transitivity](#transitive-relations) for more details.
+This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note here is that because `Apple` is a subset of `Fruit`, `GrannySmith` is a subset of `Fruit` as well. This means that if an application were to query for `(IsA, Fruit)` it would both match `Apple` and `GrannySmith`. This property of the `IsA` relationhip is called "transitivity" and it is a feature that can be applied to any relation. See the [section on Transitivity](#transitive-property) for more details.
 
 #### Component sharing
 An entity with an `IsA` relation to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relation will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the supserset contains (its components, tags, relations) must also be found on the subsets. Consider:
