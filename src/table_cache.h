@@ -33,7 +33,7 @@ void* _ecs_table_cache_insert(
 #define ecs_table_cache_insert(cache, T, table)\
     ECS_CAST(T*, _ecs_table_cache_insert(cache, ECS_SIZEOF(T), table))
 
-void _ecs_table_cache_remove(
+bool _ecs_table_cache_remove(
     ecs_table_cache_t *cache,
     ecs_size_t size,
     const ecs_table_t *table);
@@ -72,9 +72,6 @@ int32_t ecs_table_cache_count(
     const ecs_table_cache_t *cache);
 
 int32_t ecs_table_cache_empty_count(
-    const ecs_table_cache_t *cache);
-
-bool ecs_table_cache_is_empty(
     const ecs_table_cache_t *cache);
 
 void _ecs_table_cache_fini_delete_all(

@@ -2420,7 +2420,8 @@ void on_delete_object_action(
     ecs_entity_t action)
 {
     ecs_table_iter_t it;
-    if (flecs_table_iter(world, id, &it)) {
+    ecs_id_record_t *idr;
+    if ((idr = flecs_table_iter(world, id, &it))) {
         for (; it.cur < it.end; ++ it.cur) {
             const ecs_table_record_t *tr = it.cur;
             ecs_table_t *table = tr->table;
@@ -2450,7 +2451,7 @@ void on_delete_object_action(
             }
         }
 
-        flecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id, idr);
     }
 }
 
@@ -2482,7 +2483,7 @@ void on_delete_id_action(
             }
         }
 
-        flecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id, idr);
     }
 }
 

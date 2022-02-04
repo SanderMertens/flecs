@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ctype.h>
-#include <stdio.h>
 
 namespace flecs {
 
