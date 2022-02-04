@@ -22351,7 +22351,7 @@ void set_member(ecs_iter_t *it) {
             continue;
         }
 
-        add_member_to_struct(world, parent, e, member);
+        add_member_to_struct(world, parent, e, &member[i]);
     }
 }
 
