@@ -1399,7 +1399,8 @@ void flecs_register_remove_ref(
 
 void flecs_clear_id_record(
     ecs_world_t *world,
-    ecs_id_t id);
+    ecs_id_t id,
+    ecs_id_record_t *idr);
 
 void flecs_triggers_notify(
     ecs_iter_t *it,
@@ -6768,7 +6769,8 @@ void on_delete_object_action(
     ecs_entity_t action)
 {
     ecs_table_iter_t it;
-    if (flecs_table_iter(world, id, &it)) {
+    ecs_id_record_t *idr;
+    if ((idr = flecs_table_iter(world, id, &it))) {
         for (; it.cur < it.end; ++ it.cur) {
             const ecs_table_record_t *tr = it.cur;
             ecs_table_t *table = tr->table;
@@ -6798,7 +6800,7 @@ void on_delete_object_action(
             }
         }
 
-        flecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id, idr);
     }
 }
 
@@ -6830,7 +6832,7 @@ void on_delete_id_action(
             }
         }
 
-        flecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id, idr);
     }
 }
 
@@ -32542,7 +32544,7 @@ bool unregister_table(
     }
 
     if (ecs_table_cache_remove(&idr->cache, ecs_table_record_t, table)) {
-        flecs_clear_id_record(world, id);
+        flecs_clear_id_record(world, id, idr);
     }
 
     return true;
@@ -32819,14 +32821,10 @@ void flecs_register_remove_ref(
 
 void flecs_clear_id_record(
     ecs_world_t *world,
-    ecs_id_t id)    
+    ecs_id_t id,
+    ecs_id_record_t *idr_ptr)
 {
     if (world->is_fini) {
-        return;
-    }
-    
-    ecs_id_record_t *idr_ptr = flecs_get_id_record(world, id);
-    if (!idr_ptr) {
         return;
     }
 
@@ -36034,6 +36032,8 @@ void* table_cache_get_w_index(
     const ecs_table_t *table,
     int32_t index)
 {
+    (void)table;
+    
     ecs_table_cache_hdr_t *result;
     if (index >= 0) {
         result = ecs_vector_get_t(cache->tables, size, 8, index);

@@ -203,6 +203,8 @@ void* table_cache_get_w_index(
     const ecs_table_t *table,
     int32_t index)
 {
+    (void)table;
+    
     ecs_table_cache_hdr_t *result;
     if (index >= 0) {
         result = ecs_vector_get_t(cache->tables, size, 8, index);

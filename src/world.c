@@ -1922,7 +1922,7 @@ void flecs_clear_id_record(
     if (world->is_fini) {
         return;
     }
-    
+
     ecs_id_record_t idr = *idr_ptr;
     
     flecs_sparse_remove(world->id_records, idr.id);
