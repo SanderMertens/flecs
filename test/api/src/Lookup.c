@@ -370,4 +370,25 @@ void Lookup_resolve_builtin_symbols() {
     ecs_fini(world);
 }
 
+void Lookup_lookup_from_scope_staged() {
+    ecs_world_t *world = ecs_init();
 
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+    ecs_entity_t child = ecs_set_name(world, 0, "Child");
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_staging_begin(world);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(ecs_set_scope(stage, parent) == 0);
+
+    test_assert(ecs_lookup_path(stage, 0, "Child") == child);
+    test_assert(ecs_lookup_fullpath(stage, "Child") == child);
+
+    test_assert(ecs_lookup_path(stage, parent, "Child") == child);
+    test_assert(ecs_lookup_fullpath(stage, "Child") == child);
+
+    test_assert(ecs_set_scope(stage, 0) == parent);
+    ecs_staging_end(world);
+
+    ecs_fini(world);
+}

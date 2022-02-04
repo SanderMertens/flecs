@@ -832,6 +832,7 @@ void Lookup_lookup_path_wildcard(void);
 void Lookup_lookup_path_this_from_scope(void);
 void Lookup_lookup_path_wildcard_from_scope(void);
 void Lookup_resolve_builtin_symbols(void);
+void Lookup_lookup_from_scope_staged(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5610,6 +5611,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "resolve_builtin_symbols",
         Lookup_resolve_builtin_symbols
+    },
+    {
+        "lookup_from_scope_staged",
+        Lookup_lookup_from_scope_staged
     }
 };
 
@@ -11906,7 +11911,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        29,
+        30,
         Lookup_testcases
     },
     {

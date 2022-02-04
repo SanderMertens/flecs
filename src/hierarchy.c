@@ -466,6 +466,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_world_t *stage = world;
     world = ecs_get_world(world);
 
     ecs_entity_t e = get_builtin(path);
@@ -489,7 +490,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         sep = ".";
     }
 
-    parent = get_parent_from_path(world, parent, &path, prefix, true);
+    parent = get_parent_from_path(stage, parent, &path, prefix, true);
 
 retry:
     cur = parent;
