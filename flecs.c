@@ -28812,6 +28812,16 @@ static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
+void ecs_doc_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    ecs_set_pair(world, entity, EcsDocDescription, EcsName, {
+        .value = name
+    });
+}
+
 void ecs_doc_set_brief(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -28840,6 +28850,19 @@ void ecs_doc_set_link(
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocLink, {
         .value = link
     });
+}
+
+const char* ecs_doc_get_name(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsName);
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return ecs_get_name(world, entity);
+    }
 }
 
 const char* ecs_doc_get_brief(

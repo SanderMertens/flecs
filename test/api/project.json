@@ -565,6 +565,8 @@
         }, {
             "id": "Doc",
             "testcases": [
+                "get_set_name",
+                "get_entity_name",
                 "get_set_brief",
                 "get_set_detail",
                 "get_set_link"

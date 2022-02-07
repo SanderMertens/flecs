@@ -537,6 +537,8 @@ void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_reuse_300_component_ids(void);
 
 // Testsuite 'Doc'
+void Doc_get_set_name(void);
+void Doc_get_entity_name(void);
 void Doc_get_set_brief(void);
 void Doc_get_set_detail(void);
 void Doc_get_set_link(void);
@@ -4497,6 +4499,14 @@ bake_test_case GlobalComponentIds_testcases[] = {
 };
 
 bake_test_case Doc_testcases[] = {
+    {
+        "get_set_name",
+        Doc_get_set_name
+    },
+    {
+        "get_entity_name",
+        Doc_get_entity_name
+    },
     {
         "get_set_brief",
         Doc_get_set_brief
@@ -11848,7 +11858,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        3,
+        5,
         Doc_testcases
     },
     {

@@ -8339,6 +8339,20 @@ typedef struct EcsDocDescription {
     const char *value;
 } EcsDocDescription;
 
+/** Add human-readable name to entity.
+ * Contrary to entity names, human readable names do not have to be unique and
+ * can contain special characters used in the query language like '*'.
+ * 
+ * @param world The world.
+ * @param entity The entity to which to add the name.
+ * @param name The name to add.
+ */
+FLECS_API
+void ecs_doc_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
+
 /** Add brief description to entity.
  * 
  * @param world The world.
@@ -8374,6 +8388,24 @@ void ecs_doc_set_link(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *link);
+
+/** Get human readable name from entity.
+ * If entity does not have an explicit human readable name, this operation will
+ * return the entity name.
+ * 
+ * To test if an entity has a human readable name, use:
+ *   ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ * Or in C++:
+ *   e.has<flecs::Description>(flecs::Name);
+ * 
+ * @param world The world.
+ * @param entity The entity from which to get the name.
+ * @return The name.
+ */
+FLECS_API
+const char* ecs_doc_get_name(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
 
 /** Get brief description from entity.
  * 
@@ -20684,6 +20716,10 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 namespace flecs {
 namespace doc {
 
+inline const char* get_name(const flecs::entity_view& e) {
+    return ecs_doc_get_name(e.world(), e);
+}
+
 inline const char* get_brief(const flecs::entity_view& e) {
     return ecs_doc_get_brief(e.world(), e);
 }
@@ -20694,6 +20730,10 @@ inline const char* get_detail(const flecs::entity_view& e) {
 
 inline const char* get_link(const flecs::entity_view& e) {
     return ecs_doc_get_link(e.world(), e);
+}
+
+inline void set_name(flecs::entity& e, const char *name) {
+    ecs_doc_set_name(e.world(), e, name);
 }
 
 inline void set_brief(flecs::entity& e, const char *description) {
