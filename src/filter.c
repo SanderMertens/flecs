@@ -1472,6 +1472,7 @@ bool flecs_filter_match_table(
         }
 
         int32_t match_index = 0;
+
         bool result = flecs_term_match_table(world, term, match_table, 
             match_type,
             ids ? &ids[t_i] : NULL, 

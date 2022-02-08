@@ -2731,3 +2731,49 @@ void Observer_mixed_un_set_w_tag() {
 
     ecs_fini(world);
 }
+
+void Observer_match_base_w_id_at_offset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx_1 = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx_1
+    });
+    test_assert(t1 != 0);
+
+    Probe ctx_2 = {0};
+    ecs_entity_t t2 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ ecs_id(Velocity) }},
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx_2
+    });
+    test_assert(t2 != 0);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, base, Velocity, {1, 2});
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx_1.invoked, 1);
+    test_int(ctx_1.count, 1);
+    test_int(ctx_1.e[0], inst);
+    test_int(ctx_1.event, EcsOnSet);
+    test_int(ctx_1.event_id, ecs_id(Position));
+
+    test_int(ctx_2.invoked, 1);
+    test_int(ctx_2.count, 1);
+    test_int(ctx_2.e[0], inst);
+    test_int(ctx_2.event, EcsOnSet);
+    test_int(ctx_2.event_id, ecs_id(Velocity));
+
+    ecs_fini(world);
+}

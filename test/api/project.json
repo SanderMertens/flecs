@@ -1777,7 +1777,8 @@
                 "observer_superset_wildcard_add_isa_at_offset",
                 "on_set_w_tag",
                 "mixed_on_set_w_tag",
-                "mixed_un_set_w_tag"
+                "mixed_un_set_w_tag",
+                "match_base_w_id_at_offset"
             ]                
         }, {
             "id": "TriggerOnAdd",

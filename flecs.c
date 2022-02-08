@@ -34651,6 +34651,7 @@ bool flecs_filter_match_table(
         }
 
         int32_t match_index = 0;
+
         bool result = flecs_term_match_table(world, term, match_table, 
             match_type,
             ids ? &ids[t_i] : NULL, 
@@ -35386,6 +35387,7 @@ static
 int32_t type_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,
+    int32_t offset,
     ecs_id_t id,
     ecs_id_record_t *idr,
     ecs_id_t rel,
@@ -35401,9 +35403,16 @@ int32_t type_search_relation(
     int32_t count = ecs_vector_count(type);
 
     if (min_depth <= 0) {
-        int32_t r = type_search(table, idr, ids, id_out, tr_out);
-        if (r != -1) {
-            return r;
+        if (offset) {
+            int32_t r = type_offset_search(offset, id, ids, count, id_out);
+            if (r != -1) {
+                return r;
+            }
+        } else {
+            int32_t r = type_search(table, idr, ids, id_out, tr_out);
+            if (r != -1) {
+                return r;
+            }
         }
     }
 
@@ -35439,7 +35448,7 @@ int32_t type_search_relation(
 
             ecs_table_t *obj_table = rec->table;
             if (obj_table) {
-                r = type_search_relation(world, obj_table, id, idr, 
+                r = type_search_relation(world, obj_table, offset, id, idr, 
                     rel, idr_r, min_depth - 1, max_depth - 1, subject_out, 
                     id_out, tr_out);
                 if (r != -1) {
@@ -35450,7 +35459,7 @@ int32_t type_search_relation(
                 }
 
                 if (!is_a) {
-                    r = type_search_relation(world, obj_table, id, idr, 
+                    r = type_search_relation(world, obj_table, offset, id, idr, 
                         ecs_pair(EcsIsA, EcsWildcard), world->idr_isa_wildcard, 
                             1, INT_MAX, subject_out, id_out, tr_out);
                     if (r != -1) {
@@ -35488,13 +35497,6 @@ int32_t ecs_search_relation(
 
     bool is_case = ECS_HAS_ROLE(id, CASE);
     id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
-    
-    if (offset && !min_depth) {
-        ecs_type_t type = table->type;
-        ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-        int32_t count = ecs_vector_count(type);
-        return type_offset_search(offset, id, ids, count, id_out);
-    }
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
@@ -35503,14 +35505,10 @@ int32_t ecs_search_relation(
 
     max_depth = INT_MAX * !max_depth + max_depth * !!max_depth;
 
-    int32_t result = type_search_relation(world, table, id, idr, 
+    int32_t result = type_search_relation(world, table, offset, id, idr, 
         ecs_pair(rel, EcsWildcard), NULL, min_depth, max_depth, subject_out, 
             id_out, tr_out);
 
-    /* Searching for a relation at an offset for a relation isn't suppported at
-     * the moment, if an offset is provided make sure it matches the returned
-     * column index */
-    ecs_assert(!offset || result == offset, ECS_INVALID_PARAMETER, NULL);
     return result;
 }
 

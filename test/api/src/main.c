@@ -1704,6 +1704,7 @@ void Observer_observer_superset_wildcard_add_isa_at_offset(void);
 void Observer_on_set_w_tag(void);
 void Observer_mixed_on_set_w_tag(void);
 void Observer_mixed_un_set_w_tag(void);
+void Observer_match_base_w_id_at_offset(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -9022,6 +9023,10 @@ bake_test_case Observer_testcases[] = {
     {
         "mixed_un_set_w_tag",
         Observer_mixed_un_set_w_tag
+    },
+    {
+        "match_base_w_id_at_offset",
+        Observer_match_base_w_id_at_offset
     }
 };
 
@@ -12034,7 +12039,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        61,
+        62,
         Observer_testcases
     },
     {
