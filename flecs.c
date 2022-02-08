@@ -7895,12 +7895,24 @@ ecs_type_t ecs_get_type(
     return NULL;
 }
 
-ecs_id_t ecs_get_typeid(
+ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    /* Hardcode components used in bootstrap */
+    if (id == ecs_id(EcsComponent)) {
+        return id;
+    } else if (id == ecs_id(EcsIdentifier)) {
+        return id;
+    } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+        return ecs_id(EcsIdentifier);
+    } else if (ECS_PAIR_RELATION(id) == EcsChildOf) {
+        return 0;
+    } else if (ECS_PAIR_RELATION(id) == EcsOnDelete) {
+        return 0;
+    }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
         /* Make sure we're not working with a stage */
@@ -7942,6 +7954,43 @@ ecs_id_t ecs_get_typeid(
     return id;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_id_is_tag(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ecs_id_is_wildcard(id)) {
+        /* If id is a wildcard, we can't tell if it's a tag or not, except
+         * when the relation part of a pair has the Tag property */
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            if (ECS_PAIR_RELATION(id) != EcsWildcard) {
+                ecs_entity_t rel = ecs_pair_relation(world, id);
+                if (ecs_is_valid(world, rel)) {
+                    if (ecs_has_id(world, rel, EcsTag)) {
+                        return true;
+                    }
+                } else {
+                    /* During bootstrap it's possible that not all ids are valid
+                    * yet. Using ecs_get_typeid will ensure correct values are
+                    * returned for only those components initialized during
+                    * bootstrap, while still asserting if another invalid id
+                    * is provided. */
+                    if (ecs_get_typeid(world, id) == 0) {
+                        return true;
+                    }
+                }
+            } else {
+                /* If relation is * id is not guaranteed to be a tag */
+            }
+        }
+    } else {
+        if (ecs_get_typeid(world, id) == 0) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int32_t ecs_count_id(
@@ -13601,9 +13650,18 @@ uint64_t group_by_phase(
     /* Find tag in system that belongs to pipeline */
     ecs_entity_t *sys_comps = ecs_vector_first(type, ecs_entity_t);
     int32_t c, t, count = ecs_vector_count(type);
+    
+    ecs_type_t pipeline_type = NULL;
+    if (pt->normalized) {
+        pipeline_type = pt->normalized->type;
+    }
 
-    ecs_entity_t *tags = ecs_vector_first(pt->normalized->type, ecs_entity_t);
-    int32_t tag_count = ecs_vector_count(pt->normalized->type);
+    if (!pipeline_type) {
+        return 0;
+    }
+
+    ecs_entity_t *tags = ecs_vector_first(pipeline_type, ecs_entity_t);
+    int32_t tag_count = ecs_vector_count(pipeline_type);
 
     ecs_entity_t result = 0;
 
@@ -14169,8 +14227,13 @@ ecs_query_t* build_pipeline_query(
 {
     const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    ecs_type_t type = NULL;
+    if (type_ptr->normalized) {
+        type = type_ptr->normalized->type;
+    }
 
-    int32_t type_count = ecs_vector_count(type_ptr->normalized->type);
+    int32_t type_count = ecs_vector_count(type);
     int32_t term_count = 1;
 
     if (not_inactive) {
@@ -14202,8 +14265,7 @@ ecs_query_t* build_pipeline_query(
         };
     }
 
-    add_pipeline_tags_to_sig(
-        world, &terms[term_count], type_ptr->normalized->type);    
+    add_pipeline_tags_to_sig(world, &terms[term_count], type);
 
     ecs_query_t *result = ecs_query_init(world, &(ecs_query_desc_t){
         .filter = {
@@ -35676,7 +35738,7 @@ ecs_entity_t ecs_observer_init(
         ecs_assert(observer->filter.term_count != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        int i;
+        int i, e;
         for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
             ecs_entity_t event = desc->events[i];
             if (!event) {
@@ -35725,13 +35787,32 @@ ecs_entity_t ecs_observer_init(
             .match_disabled = observer->filter.match_disabled,
             .last_event_id = &observer->last_event_id
         };
-        ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
-            observer->event_count);
 
         for (i = 0; i < filter->term_count; i ++) {
             tdesc.term = filter->terms[i];
             ecs_oper_kind_t oper = tdesc.term.oper;
             ecs_id_t id = tdesc.term.id;
+
+            bool is_tag = ecs_id_is_tag(world, id);
+
+            if (is_tag) {
+                /* If id is a tag, convert OnSet/UnSet to OnAdd/OnRemove. This
+                 * allows for creating OnSet observers with both components and
+                 * tags that only fire when the entity has all ids */
+                for (e = 0; e < observer->event_count; e ++) {
+                    if (observer->events[e] == EcsOnSet) {
+                        tdesc.events[e] = EcsOnAdd;
+                    } else
+                    if (observer->events[e] == EcsUnSet) {
+                        tdesc.events[e] = EcsOnRemove;
+                    } else {
+                        tdesc.events[e] = observer->events[e];
+                    }
+                }
+            } else {
+                ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
+                    observer->event_count);
+            }
 
             /* AndFrom & OrFrom terms insert multiple triggers */
             if (oper == EcsAndFrom || oper == EcsOrFrom) {

@@ -1774,7 +1774,10 @@
                 "on_add_yield_existing_2_terms",
                 "observer_superset_wildcard",
                 "observer_superset_wildcard_add_isa",
-                "observer_superset_wildcard_add_isa_at_offset"
+                "observer_superset_wildcard_add_isa_at_offset",
+                "on_set_w_tag",
+                "mixed_on_set_w_tag",
+                "mixed_un_set_w_tag"
             ]                
         }, {
             "id": "TriggerOnAdd",

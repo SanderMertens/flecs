@@ -2609,3 +2609,125 @@ void Observer_observer_superset_wildcard_add_isa_at_offset() {
 
     ecs_fini(world);
 }
+
+void Observer_on_set_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }},
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_add(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_mixed_on_set_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }, { ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    test_assert(e1 != 0);
+
+    ecs_add(world, e1, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e1, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+
+    ctx = (Probe){0};
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    test_assert(e2 != 0);
+
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_mixed_un_set_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }, { ecs_id(Position) }},
+        .events = {EcsUnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, TagA);
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e1, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, TagA);
+
+    ctx = (Probe){0};
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_set(world, e2, Position, {10, 20});
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e2, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event_id, ecs_id(Position));
+
+    ecs_fini(world);
+}

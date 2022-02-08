@@ -5257,16 +5257,34 @@ ecs_table_t* ecs_get_storage_table(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Get the typeid of an entity.
+/** Get the type for an id.
+ * This operation returns the component id for an id, if the id is associated
+ * with a type. For a regular component with a non-zero size (an entity with the
+ * EcsComponent component) the operation will return the entity itself.
+ * 
+ * For an entity that does not have the EcsComponent component, or with an
+ * EcsComponent value with size 0, the operation will return 0.
+ * 
+ * For a pair id the operation will return the type associated with the pair, by
+ * applying the following rules in order:
+ * - The relation entity is returned if it is a component
+ * - 0 is returned if the relation entity has the Tag property
+ * - The object entity is returned if it is a component
+ * - 0 is returned.
  *
  * @param world The world.
- * @param entity The entity.
+ * @param id The id.
  * @return The typeid of the entity.
  */
 FLECS_API
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
-    ecs_id_t entity);
+    ecs_id_t id);
+
+FLECS_API
+ecs_entity_t ecs_id_is_tag(
+    const ecs_world_t *world,
+    ecs_id_t id);
 
 /** Get the name of an entity.
  * This will return the name stored in (EcsIdentifier, EcsName).

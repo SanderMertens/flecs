@@ -4025,3 +4025,30 @@ void Trigger_remove_wildcard_2_ids() {
 
     ecs_fini(world);
 }
+
+void Trigger_on_set_w_tag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnSet},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_add(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+
+    ecs_fini(world);
+}

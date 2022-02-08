@@ -3546,12 +3546,24 @@ ecs_type_t ecs_get_type(
     return NULL;
 }
 
-ecs_id_t ecs_get_typeid(
+ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    /* Hardcode components used in bootstrap */
+    if (id == ecs_id(EcsComponent)) {
+        return id;
+    } else if (id == ecs_id(EcsIdentifier)) {
+        return id;
+    } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+        return ecs_id(EcsIdentifier);
+    } else if (ECS_PAIR_RELATION(id) == EcsChildOf) {
+        return 0;
+    } else if (ECS_PAIR_RELATION(id) == EcsOnDelete) {
+        return 0;
+    }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
         /* Make sure we're not working with a stage */
@@ -3593,6 +3605,43 @@ ecs_id_t ecs_get_typeid(
     return id;
 error:
     return 0;
+}
+
+ecs_entity_t ecs_id_is_tag(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ecs_id_is_wildcard(id)) {
+        /* If id is a wildcard, we can't tell if it's a tag or not, except
+         * when the relation part of a pair has the Tag property */
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            if (ECS_PAIR_RELATION(id) != EcsWildcard) {
+                ecs_entity_t rel = ecs_pair_relation(world, id);
+                if (ecs_is_valid(world, rel)) {
+                    if (ecs_has_id(world, rel, EcsTag)) {
+                        return true;
+                    }
+                } else {
+                    /* During bootstrap it's possible that not all ids are valid
+                    * yet. Using ecs_get_typeid will ensure correct values are
+                    * returned for only those components initialized during
+                    * bootstrap, while still asserting if another invalid id
+                    * is provided. */
+                    if (ecs_get_typeid(world, id) == 0) {
+                        return true;
+                    }
+                }
+            } else {
+                /* If relation is * id is not guaranteed to be a tag */
+            }
+        }
+    } else {
+        if (ecs_get_typeid(world, id) == 0) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 int32_t ecs_count_id(

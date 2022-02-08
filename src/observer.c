@@ -181,7 +181,7 @@ ecs_entity_t ecs_observer_init(
         ecs_assert(observer->filter.term_count != 0, 
             ECS_INVALID_PARAMETER, NULL);
 
-        int i;
+        int i, e;
         for (i = 0; i < ECS_TRIGGER_DESC_EVENT_COUNT_MAX; i ++) {
             ecs_entity_t event = desc->events[i];
             if (!event) {
@@ -230,13 +230,32 @@ ecs_entity_t ecs_observer_init(
             .match_disabled = observer->filter.match_disabled,
             .last_event_id = &observer->last_event_id
         };
-        ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
-            observer->event_count);
 
         for (i = 0; i < filter->term_count; i ++) {
             tdesc.term = filter->terms[i];
             ecs_oper_kind_t oper = tdesc.term.oper;
             ecs_id_t id = tdesc.term.id;
+
+            bool is_tag = ecs_id_is_tag(world, id);
+
+            if (is_tag) {
+                /* If id is a tag, convert OnSet/UnSet to OnAdd/OnRemove. This
+                 * allows for creating OnSet observers with both components and
+                 * tags that only fire when the entity has all ids */
+                for (e = 0; e < observer->event_count; e ++) {
+                    if (observer->events[e] == EcsOnSet) {
+                        tdesc.events[e] = EcsOnAdd;
+                    } else
+                    if (observer->events[e] == EcsUnSet) {
+                        tdesc.events[e] = EcsOnRemove;
+                    } else {
+                        tdesc.events[e] = observer->events[e];
+                    }
+                }
+            } else {
+                ecs_os_memcpy_n(tdesc.events, observer->events, ecs_entity_t,
+                    observer->event_count);
+            }
 
             /* AndFrom & OrFrom terms insert multiple triggers */
             if (oper == EcsAndFrom || oper == EcsOrFrom) {
