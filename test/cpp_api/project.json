@@ -251,6 +251,7 @@
                 "sparse_enum_reflection",
                 "enum_class_reflection",
                 "prefixed_enum_reflection",
+                "constant_with_num_reflection",
                 "get_constant_id",
                 "add_enum_constant",
                 "add_enum_class_constant",

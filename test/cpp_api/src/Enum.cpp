@@ -16,6 +16,12 @@ enum PrefixEnum {
     PrefixEnumFoo, PrefixEnumBar
 };
 
+enum ConstantsWithNum {
+    Num1,
+    Num2,
+    Num3,
+};
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -163,6 +169,43 @@ void Enum_prefixed_enum_reflection() {
     test_assert(e_bar.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumBar);
 
     test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar + 1), false);
+}
+
+void Enum_constant_with_num_reflection() {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<ConstantsWithNum>(ecs);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<ConstantsWithNum>());
+    test_str(e.path().c_str(), "::ConstantsWithNum");
+    test_int(enum_type.first(), ConstantsWithNum::Num1);
+    test_int(enum_type.last(), ConstantsWithNum::Num3);
+
+    auto num_1 = enum_type.entity(ConstantsWithNum::Num1);
+    auto num_2 = enum_type.entity(ConstantsWithNum::Num2);
+    auto num_3 = enum_type.entity(ConstantsWithNum::Num3);
+
+    test_assert(num_1 != 0);
+    test_str(num_1.path().c_str(), "::ConstantsWithNum::Num1");
+    test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
+    test_assert(num_1.get<ConstantsWithNum>() != nullptr);
+    test_assert(num_1.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num1);
+
+    test_assert(num_2 != 0);
+    test_str(num_2.path().c_str(), "::ConstantsWithNum::Num2");
+    test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
+    test_assert(num_2.get<ConstantsWithNum>() != nullptr);
+    test_assert(num_2.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num2);
+
+    test_assert(num_3 != 0);
+    test_str(num_3.path().c_str(), "::ConstantsWithNum::Num3");
+    test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
+    test_assert(num_3.get<ConstantsWithNum>() != nullptr);
+    test_assert(num_3.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num3);
+
+    test_bool(enum_type.is_valid(ConstantsWithNum::Num3 + 1), false);
 }
 
 void Enum_get_constant_id() {

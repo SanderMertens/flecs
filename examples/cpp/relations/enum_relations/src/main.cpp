@@ -17,7 +17,9 @@
 
 // Regular enumerations are supported
 enum Tile {
-    Grass, Sand, Stone
+    Grass, 
+    Sand, 
+    Stone
 };
 
 // Enum classes are supported
@@ -29,7 +31,7 @@ enum class TileStatus {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Create an entity with a Tile and TileStatus relation
+    // Create an entity with (Tile, Stone) and (TileStatus, Free) relations
     auto tile = ecs.entity()
         .add(Tile::Stone)
         .add(TileStatus::Free);
@@ -37,7 +39,7 @@ int main(int, char *[]) {
     // (Tile, Tile.Stone), (TileStatus, TileStatus.Free)
     printf("%s\n", tile.type().str().c_str());
 
-    // Replace Free with Occupied
+    // Replace (TileStatus, Free) with (TileStatus, Occupied)
     tile.add(TileStatus::Occupied);
 
     // (Tile, Tile.Stone), (TileStatus, TileStatus.Occupied)

@@ -39,6 +39,18 @@ struct enum_last {
 
 namespace _ {
 
+#ifdef ECS_TARGET_MSVC
+#define ECS_SIZE_T_STR "unsigned __int64"
+#else
+#define ECS_SIZE_T_STR "size_t"
+#endif
+
+template <typename E>
+constexpr size_t enum_type_len() {
+    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME) 
+        - (sizeof(ECS_SIZE_T_STR) - 1u);
+}
+
 /** Test if value is valid for enumeration.
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
@@ -47,20 +59,15 @@ namespace _ {
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] >= '0') &&
-        (ECS_FUNC_NAME[string::length(ECS_FUNC_NAME) - (ECS_FUNC_NAME_BACK + 1)] <= '9')
-    );
+        (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+            enum_type_len<E>() + 6 /* ', C = ' */] >= '0') &&
+        (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+            enum_type_len<E>() + 6 /* ', C = ' */] <= '9'));
 }
 #else
 /* Use different trick on MSVC, since it uses hexadecimal representation for
  * invalid enum constants. We can leverage that msvc inserts a C-style cast
  * into the name, and the location of its first character ('(') is known. */
-template <typename E>
-constexpr size_t enum_type_len() {
-    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME) 
-        - (sizeof("unsigned __int64") - 1u);
-}
-
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
