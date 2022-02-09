@@ -1,5 +1,37 @@
 #include <api.h>
 
+void Singleton_add_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    test_assert(!ecs_has(world, TagA, TagA));
+
+    ecs_singleton_add(world, TagA);
+
+    test_assert(ecs_has(world, TagA, TagA));
+
+    ecs_fini(world);
+}
+
+void Singleton_remove_singleton() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    test_assert(!ecs_has(world, TagA, TagA));
+
+    ecs_singleton_add(world, TagA);
+
+    test_assert(ecs_has(world, TagA, TagA));
+
+    ecs_singleton_remove(world, TagA);
+
+    test_assert(!ecs_has(world, TagA, TagA));
+
+    ecs_fini(world);
+}
+
 void Singleton_set_get_singleton() {
     ecs_world_t *world = ecs_init();
 
@@ -57,4 +89,3 @@ void Singleton_singleton_system() {
 
     ecs_fini(world);    
 }
-

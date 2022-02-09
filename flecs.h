@@ -10922,7 +10922,7 @@ ecs_entity_t ecs_module_init(
     ecs_add(world, ecs_id(comp), comp)
 
 #define ecs_singleton_remove(world, comp)\
-    ecs_add(world, ecs_id(comp), comp)
+    ecs_remove(world, ecs_id(comp), comp)
 
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)

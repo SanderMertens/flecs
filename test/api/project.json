@@ -885,6 +885,8 @@
         }, {
             "id": "Singleton",
             "testcases": [
+                "add_singleton",
+                "remove_singleton",
                 "set_get_singleton",
                 "get_mut_singleton",
                 "singleton_system"
@@ -1328,7 +1330,8 @@
                 "no_instancing_w_singleton",
                 "no_instancing_w_shared",
                 "query_iter_frame_offset",
-                "add_singleton_after_query"
+                "add_singleton_after_query",
+                "query_w_component_from_parent_from_non_this"
             ]
         }, {
             "id": "Iter",

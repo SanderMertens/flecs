@@ -2219,24 +2219,23 @@ bool satisfy_constraints(
             continue;
         }
 
-        if (subj->entity != EcsThis && subj->set.mask & EcsSelf) {
+        if (subj->entity != EcsThis && subj->entity) {
             ecs_table_t *table = ecs_get_table(world, subj->entity);
+            if (!table) {
+                goto no_match;
+            }
 
-            if (ecs_search_relation(world, table, 0, term->id, EcsIsA, 
-                0, 0, 0, 0, 0) != -1) 
+            if (!flecs_term_match_table(world, term, table, table->type, NULL, 
+                NULL, NULL, NULL, true)) 
             {
-                if (oper == EcsNot) {
-                    return false;
-                }
-            } else {
-                if (oper != EcsNot) {
-                    return false;
-                }
+                goto no_match;
             }
         }
     }
 
     return true;
+no_match:
+    return false;
 }
 
 /* Rematch system with tables after a change happened to a watched entity */

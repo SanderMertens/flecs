@@ -837,6 +837,8 @@ void Lookup_resolve_builtin_symbols(void);
 void Lookup_lookup_from_scope_staged(void);
 
 // Testsuite 'Singleton'
+void Singleton_add_singleton(void);
+void Singleton_remove_singleton(void);
 void Singleton_set_get_singleton(void);
 void Singleton_get_mut_singleton(void);
 void Singleton_singleton_system(void);
@@ -1267,6 +1269,7 @@ void Query_no_instancing_w_singleton(void);
 void Query_no_instancing_w_shared(void);
 void Query_query_iter_frame_offset(void);
 void Query_add_singleton_after_query(void);
+void Query_query_w_component_from_parent_from_non_this(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -5635,6 +5638,14 @@ bake_test_case Lookup_testcases[] = {
 
 bake_test_case Singleton_testcases[] = {
     {
+        "add_singleton",
+        Singleton_add_singleton
+    },
+    {
+        "remove_singleton",
+        Singleton_remove_singleton
+    },
+    {
         "set_get_singleton",
         Singleton_set_get_singleton
     },
@@ -7306,6 +7317,10 @@ bake_test_case Query_testcases[] = {
     {
         "add_singleton_after_query",
         Query_add_singleton_after_query
+    },
+    {
+        "query_w_component_from_parent_from_non_this",
+        Query_query_w_component_from_parent_from_non_this
     }
 };
 
@@ -11953,7 +11968,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        3,
+        5,
         Singleton_testcases
     },
     {
@@ -12002,7 +12017,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        62,
+        63,
         Query_testcases
     },
     {
