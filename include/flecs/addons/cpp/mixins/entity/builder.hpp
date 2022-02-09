@@ -328,7 +328,7 @@ struct entity_builder : entity_view {
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& add(E value) {
         flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
-        const auto& et = _::enum_type<E>::get(this->m_world, r);
+        const auto& et = enum_type<E>(this->m_world);
         flecs::entity_t o = et.entity(value);
         return this->add(r, o);
     }

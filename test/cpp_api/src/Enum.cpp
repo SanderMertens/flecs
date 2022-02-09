@@ -443,3 +443,78 @@ void Enum_add_enum_from_stage() {
 
     test_assert(e.has(StandardEnum::Red));
 }
+
+void Enum_enum_w_2_worlds() {
+    {
+        flecs::world ecs;
+
+        auto enum_type = flecs::enum_type<StandardEnum>(ecs);
+
+        auto e = enum_type.entity();
+        test_assert(e != 0);
+        test_assert(e == ecs.component<StandardEnum>());
+        test_str(e.path().c_str(), "::StandardEnum");
+        test_int(enum_type.first(), Red);
+        test_int(enum_type.last(), Blue);
+
+        auto e_red = enum_type.entity(Red);
+        auto e_green = enum_type.entity(Green);
+        auto e_blue = enum_type.entity(Blue);
+
+        test_assert(e_red != 0);
+        test_str(e_red.path().c_str(), "::StandardEnum::Red");
+        test_bool(enum_type.is_valid(Red), true);
+        test_assert(e_red.get<StandardEnum>() != nullptr);
+        test_assert(e_red.get<StandardEnum>()[0] == Red);
+
+        test_assert(e_green != 0);
+        test_str(e_green.path().c_str(), "::StandardEnum::Green");
+        test_bool(enum_type.is_valid(Green), true);
+        test_assert(e_green.get<StandardEnum>() != nullptr);
+        test_assert(e_green.get<StandardEnum>()[0] == Green);
+
+        test_assert(e_blue != 0);
+        test_str(e_blue.path().c_str(), "::StandardEnum::Blue");
+        test_bool(enum_type.is_valid(Blue), true);
+        test_assert(e_blue.get<StandardEnum>() != nullptr);
+        test_assert(e_blue.get<StandardEnum>()[0] == Blue);
+
+        test_bool(enum_type.is_valid(Blue + 1), false);
+    }
+    {
+        flecs::world ecs;
+
+        auto enum_type = flecs::enum_type<StandardEnum>(ecs);
+
+        auto e = enum_type.entity();
+        test_assert(e != 0);
+        test_assert(e == ecs.component<StandardEnum>());
+        test_str(e.path().c_str(), "::StandardEnum");
+        test_int(enum_type.first(), Red);
+        test_int(enum_type.last(), Blue);
+
+        auto e_red = enum_type.entity(Red);
+        auto e_green = enum_type.entity(Green);
+        auto e_blue = enum_type.entity(Blue);
+
+        test_assert(e_red != 0);
+        test_str(e_red.path().c_str(), "::StandardEnum::Red");
+        test_bool(enum_type.is_valid(Red), true);
+        test_assert(e_red.get<StandardEnum>() != nullptr);
+        test_assert(e_red.get<StandardEnum>()[0] == Red);
+
+        test_assert(e_green != 0);
+        test_str(e_green.path().c_str(), "::StandardEnum::Green");
+        test_bool(enum_type.is_valid(Green), true);
+        test_assert(e_green.get<StandardEnum>() != nullptr);
+        test_assert(e_green.get<StandardEnum>()[0] == Green);
+
+        test_assert(e_blue != 0);
+        test_str(e_blue.path().c_str(), "::StandardEnum::Blue");
+        test_bool(enum_type.is_valid(Blue), true);
+        test_assert(e_blue.get<StandardEnum>() != nullptr);
+        test_assert(e_blue.get<StandardEnum>()[0] == Blue);
+
+        test_bool(enum_type.is_valid(Blue + 1), false);
+    }
+}

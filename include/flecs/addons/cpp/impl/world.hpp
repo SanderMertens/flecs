@@ -153,17 +153,17 @@ inline flecs::entity world::ensure(flecs::entity_t e) const {
 #endif
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity() {
+inline flecs::entity enum_data<E>::entity() const {
     return flecs::entity(world_, impl_.id);
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) {
+inline flecs::entity enum_data<E>::entity(int value) const {
     return flecs::entity(world_, impl_.constants[value].id);
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(E value) {
+inline flecs::entity enum_data<E>::entity(E value) const {
     return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
 }
 

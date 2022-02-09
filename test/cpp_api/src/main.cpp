@@ -256,6 +256,7 @@ void Enum_query_enum_wildcard(void);
 void Enum_query_enum_constant(void);
 void Enum_enum_type_from_stage(void);
 void Enum_add_enum_from_stage(void);
+void Enum_enum_w_2_worlds(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1826,6 +1827,10 @@ bake_test_case Enum_testcases[] = {
     {
         "add_enum_from_stage",
         Enum_add_enum_from_stage
+    },
+    {
+        "enum_w_2_worlds",
+        Enum_enum_w_2_worlds
     }
 };
 
@@ -4093,7 +4098,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        19,
+        20,
         Enum_testcases
     },
     {

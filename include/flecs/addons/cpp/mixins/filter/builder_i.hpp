@@ -89,7 +89,7 @@ struct filter_builder_i : term_builder_i<Base> {
     template <typename E, if_t< is_enum<E>::value > = 0>
     Base& term(E value) {
         flecs::entity_t r = _::cpp_type<E>::id(this->world_v());
-        auto o = _::enum_type<E>::get(this->world_v()).entity(value);
+        auto o = enum_type<E>(this->world_v()).entity(value);
         return term(r, o);
     }
 

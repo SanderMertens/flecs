@@ -374,7 +374,7 @@ struct entity_view : public id {
     template <typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
         auto r = _::cpp_type<E>::id(m_world);
-        auto o = _::enum_type<E>::get(m_world).entity(value);
+        auto o = enum_type<E>(m_world).entity(value);
         return ecs_has_pair(m_world, m_id, r, o);
     }
 

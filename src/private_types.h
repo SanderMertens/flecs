@@ -605,6 +605,7 @@ struct ecs_world_t {
      * monitors are evaluated during a merge. */
     ecs_relation_monitor_t monitors;
 
+
     /* -- Systems -- */
 
     ecs_entity_t pipeline;             /* Current pipeline */
@@ -622,9 +623,10 @@ struct ecs_world_t {
     ecs_hashmap_t symbols;
     const char *name_prefix;     /* Remove prefix from C names in modules */
 
+
     /* -- Staging -- */
 
-    ecs_stage_t stage;           /* Main storage */
+    ecs_stage_t stage;           /* Main stage */
     ecs_vector_t *worker_stages; /* Stages for threads */
 
 

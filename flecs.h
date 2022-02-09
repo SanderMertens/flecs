@@ -11891,18 +11891,21 @@ template <typename E>
 struct enum_type {
     static enum_data_impl data;
 
-    static enum_type<E>& get(flecs::world_t *world) {
-        flecs::entity_t enum_id = _::cpp_type<E>::id(world);
-        return get(world, enum_id);
-    }
-
-    static enum_type<E>& get(flecs::world_t *world, flecs::entity_t enum_id) {
-        static _::enum_type<E> instance(world, enum_id);
+    static enum_type<E>& get() {
+        static _::enum_type<E> instance;
         return instance;
     }
 
     flecs::entity_t entity(E value) const {
         return data.constants[static_cast<int>(value)].id;
+    }
+
+    void init(flecs::world_t *world, flecs::entity_t id) {
+        ecs_add_id(world, id, flecs::Exclusive);
+        ecs_add_id(world, id, flecs::Tag);
+        data.id = id;
+        data.min = FLECS_ENUM_MAX(int);
+        init< enum_last<E>::value >(world);
     }
 
 private:
@@ -11945,14 +11948,6 @@ private:
             init<from_int<to_int<Value>() - is_not_0<Value>()>()>(world);
         }
     }
-
-    enum_type(flecs::world_t *world, flecs::entity_t id) {
-        ecs_add_id(world, id, flecs::Exclusive);
-        ecs_add_id(world, id, flecs::Tag);
-        data.id = id;
-        data.min = FLECS_ENUM_MAX(int);
-        init< enum_last<E>::value >(world);
-    }
 };
 
 template <typename E>
@@ -11960,7 +11955,7 @@ enum_data_impl enum_type<E>::data;
 
 template <typename E, if_t< is_enum<E>::value > = 0>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
-    _::enum_type<E>::get(world, id);
+    _::enum_type<E>::get().init(world, id);
 }
 
 template <typename E, if_not_t< is_enum<E>::value > = 0>
@@ -11991,9 +11986,9 @@ struct enum_data {
         return impl_.constants[cur].next;
     }
 
-    flecs::entity entity();
-    flecs::entity entity(int value);
-    flecs::entity entity(E value);
+    flecs::entity entity() const;
+    flecs::entity entity(int value) const;
+    flecs::entity entity(E value) const;
 
     flecs::world_t *world_;
     _::enum_data_impl& impl_;
@@ -12002,7 +11997,8 @@ struct enum_data {
 /** Convenience function for getting enum reflection data */
 template <typename E>
 enum_data<E> enum_type(flecs::world_t *world) {
-    auto& ref = _::enum_type<E>::get(world, _::cpp_type<E>::id(world));
+    _::cpp_type<E>::id(world); // Ensure enum is registered
+    auto& ref = _::enum_type<E>::get();
     return enum_data<E>(world, ref.data);
 }
 
@@ -15544,7 +15540,7 @@ struct entity_view : public id {
     template <typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
         auto r = _::cpp_type<E>::id(m_world);
-        auto o = _::enum_type<E>::get(m_world).entity(value);
+        auto o = enum_type<E>(m_world).entity(value);
         return ecs_has_pair(m_world, m_id, r, o);
     }
 
@@ -16102,7 +16098,7 @@ struct entity_builder : entity_view {
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& add(E value) {
         flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
-        const auto& et = _::enum_type<E>::get(this->m_world, r);
+        const auto& et = enum_type<E>(this->m_world);
         flecs::entity_t o = et.entity(value);
         return this->add(r, o);
     }
@@ -18388,7 +18384,7 @@ inline flecs::entity world::entity(Args &&... args) const {
 
 template <typename E, if_t< is_enum<E>::value >>
 inline flecs::entity world::id(E value) const {
-    flecs::entity_t constant = _::enum_type<E>::get(m_world).entity(value);
+    flecs::entity_t constant = enum_type<E>(m_world).entity(value);
     return flecs::entity(m_world, constant);
 }
 
@@ -19166,7 +19162,7 @@ struct filter_builder_i : term_builder_i<Base> {
     template <typename E, if_t< is_enum<E>::value > = 0>
     Base& term(E value) {
         flecs::entity_t r = _::cpp_type<E>::id(this->world_v());
-        auto o = _::enum_type<E>::get(this->world_v()).entity(value);
+        auto o = enum_type<E>(this->world_v()).entity(value);
         return term(r, o);
     }
 
@@ -21241,17 +21237,17 @@ inline flecs::entity world::ensure(flecs::entity_t e) const {
 #endif
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity() {
+inline flecs::entity enum_data<E>::entity() const {
     return flecs::entity(world_, impl_.id);
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) {
+inline flecs::entity enum_data<E>::entity(int value) const {
     return flecs::entity(world_, impl_.constants[value].id);
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(E value) {
+inline flecs::entity enum_data<E>::entity(E value) const {
     return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
 }
 
