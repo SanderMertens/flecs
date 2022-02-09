@@ -1327,7 +1327,8 @@
                 "3_terms_2_filter",
                 "no_instancing_w_singleton",
                 "no_instancing_w_shared",
-                "query_iter_frame_offset"
+                "query_iter_frame_offset",
+                "add_singleton_after_query"
             ]
         }, {
             "id": "Iter",

@@ -38061,6 +38061,12 @@ bool flecs_query_match(
         ecs_term_t *term = &terms[i];
         ecs_oper_kind_t oper = term->oper;
 
+        if (term->subj.var != EcsVarIsVariable || term->subj.entity != EcsThis){
+            /* If term is matched on entity instead of This variable, it does
+             * not affect whether the table is matched */
+            continue;
+        }
+
         if (oper == EcsAnd) {
             if (!match_term(world, table, term)) {
                 return false;
@@ -39385,6 +39391,8 @@ ecs_iter_t ecs_query_iter(
     ecs_poly_assert(query, ecs_query_t);
     ecs_check(!(query->flags & EcsQueryIsOrphaned),
         ECS_INVALID_PARAMETER, NULL);
+
+    query->constraints_satisfied = satisfy_constraints(query->world, &query->filter);
 
     ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
 

@@ -1266,6 +1266,7 @@ void Query_3_terms_2_filter(void);
 void Query_no_instancing_w_singleton(void);
 void Query_no_instancing_w_shared(void);
 void Query_query_iter_frame_offset(void);
+void Query_add_singleton_after_query(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -7301,6 +7302,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_iter_frame_offset",
         Query_query_iter_frame_offset
+    },
+    {
+        "add_singleton_after_query",
+        Query_add_singleton_after_query
     }
 };
 
@@ -11997,7 +12002,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        61,
+        62,
         Query_testcases
     },
     {

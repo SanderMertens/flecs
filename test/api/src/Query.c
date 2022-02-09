@@ -2749,3 +2749,31 @@ void Query_query_iter_frame_offset() {
 
     ecs_fini(world);
 }
+
+void Query_add_singleton_after_query() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+			{ TagA },
+			{ TagB, .subj.entity = TagB }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    
+    ecs_singleton_add(world, TagB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool (ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_bool (ecs_query_next(&it), false);
+
+    ecs_fini(world);
+}
