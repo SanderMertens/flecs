@@ -11816,8 +11816,10 @@ namespace _ {
 
 #ifdef ECS_TARGET_MSVC
 #define ECS_SIZE_T_STR "unsigned __int64"
-#else
+#elif defined(__clang__)
 #define ECS_SIZE_T_STR "size_t"
+#else
+#define ECS_SIZE_T_STR "size_t; size_t = long unsigned int"
 #endif
 
 template <typename E>
@@ -11830,7 +11832,7 @@ constexpr size_t enum_type_len() {
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number. */
-#ifndef ECS_TARGET_MSVC
+#if defined(__clang__)
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
     return !(
@@ -11838,6 +11840,12 @@ constexpr bool enum_constant_is_valid() {
             enum_type_len<E>() + 6 /* ', C = ' */] >= '0') &&
         (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
             enum_type_len<E>() + 6 /* ', C = ' */] <= '9'));
+}
+#elif defined(__GNUC__)
+template <typename E, E C>
+constexpr bool enum_constant_is_valid() {
+    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+        enum_type_len<E>() + 8 /* ', E C = ' */] != '(');
 }
 #else
 /* Use different trick on MSVC, since it uses hexadecimal representation for
