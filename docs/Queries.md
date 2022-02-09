@@ -2,7 +2,7 @@ Queries are the mechanism that allow applications to get the entities that match
 
 **NOTE**: this manual describes queries as they are intended to work. The actual implementation may not have support for certain combinations of features. When an application attempts to use a feature that is not yet supported, an `UNSUPPORTED` error will be thrown.
 
-**NOTE**: the description of filters in this manual refers to the new rule parser which has not yet merged with master.
+**NOTE**: features that rely on query variables or automatic substitution of components or objects (like when relying on component inheritance or transitive queries) require the rule query engine, included in the FLECS_RULES addon.
 
 ## Query kinds
 Flecs has two different kinds of queriers: cached and uncached. The differences are described here. Note that when "query" is mentioned in the other parts of the manual it always refers to all query kinds, unless explicitly mentioned otherwise.
