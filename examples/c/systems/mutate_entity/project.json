@@ -1,0 +1,10 @@
+{
+    "id": "mutate_entity",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
