@@ -6097,6 +6097,7 @@ int traverse_add(
     bool name_assigned)
 {
     const char *sep = desc->sep;
+    const char *root_sep = desc->root_sep;
 
     /* Find existing table */
     ecs_entity_info_t info = {0};
@@ -6172,7 +6173,7 @@ int traverse_add(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
         ecs_assert(ecs_get_name(world, result) != NULL,
             ECS_INTERNAL_ERROR, NULL);
     }
@@ -6206,6 +6207,7 @@ void deferred_add_remove(
     bool name_assigned)
 {
     const char *sep = desc->sep;
+    const char *root_sep = desc->root_sep;
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
@@ -6253,7 +6255,7 @@ void deferred_add_remove(
          * out of readonly mode if it's safe to do so. */
         ecs_suspend_readonly_state_t state;
         ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
-        ecs_add_path_w_sep(real_world, entity, scope, name, sep, NULL);
+        ecs_add_path_w_sep(real_world, entity, scope, name, sep, root_sep);
         flecs_resume_readonly(real_world, &state);
     }
 
@@ -15054,8 +15056,8 @@ ecs_entity_t ecs_cpp_component_register(
     (void)alignment;
 
     /* If the component is not yet registered, ensure no other component
-    * or entity has been registered with this name. Ensure component is 
-    * looked up from root. */
+     * or entity has been registered with this name. Ensure component is 
+     * looked up from root. */
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t ent;
     if (id) {
@@ -15063,11 +15065,10 @@ ecs_entity_t ecs_cpp_component_register(
     } else {
         ent = ecs_lookup_path_w_sep(world, 0, name, "::", "::", false);
     }
-
     ecs_set_scope(world, prev_scope);
 
     /* If entity exists, compare symbol name to ensure that the component
-    * we are trying to register under this name is the same */
+     * we are trying to register under this name is the same */
     if (ent) {
         if (!id && ecs_has(world, ent, EcsComponent)) {
             const char *sym = ecs_get_symbol(world, ent);
@@ -44228,13 +44229,13 @@ ecs_entity_t ecs_add_path_w_sep(
         return entity;
     }
 
+    parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
+
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
     const char *ptr_start = path;
     char *elem = buff;
     int32_t len, size = ECS_NAME_BUFFER_LENGTH;
-
-    parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
 
     ecs_entity_t cur = parent;
 

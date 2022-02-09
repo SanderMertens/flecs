@@ -17410,7 +17410,7 @@ worker_iterable<Components...> iterable<Components...>::worker(
 }
 
 #pragma once
-
+#include <stdio.h>
 #include <ctype.h>
 
 namespace flecs {

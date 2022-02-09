@@ -1746,6 +1746,7 @@ int traverse_add(
     bool name_assigned)
 {
     const char *sep = desc->sep;
+    const char *root_sep = desc->root_sep;
 
     /* Find existing table */
     ecs_entity_info_t info = {0};
@@ -1821,7 +1822,7 @@ int traverse_add(
 
     /* Set name */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, NULL);
+        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
         ecs_assert(ecs_get_name(world, result) != NULL,
             ECS_INTERNAL_ERROR, NULL);
     }
@@ -1855,6 +1856,7 @@ void deferred_add_remove(
     bool name_assigned)
 {
     const char *sep = desc->sep;
+    const char *root_sep = desc->root_sep;
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
@@ -1902,7 +1904,7 @@ void deferred_add_remove(
          * out of readonly mode if it's safe to do so. */
         ecs_suspend_readonly_state_t state;
         ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
-        ecs_add_path_w_sep(real_world, entity, scope, name, sep, NULL);
+        ecs_add_path_w_sep(real_world, entity, scope, name, sep, root_sep);
         flecs_resume_readonly(real_world, &state);
     }
 

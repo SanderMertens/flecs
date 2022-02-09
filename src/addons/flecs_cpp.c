@@ -252,8 +252,8 @@ ecs_entity_t ecs_cpp_component_register(
     (void)alignment;
 
     /* If the component is not yet registered, ensure no other component
-    * or entity has been registered with this name. Ensure component is 
-    * looked up from root. */
+     * or entity has been registered with this name. Ensure component is 
+     * looked up from root. */
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t ent;
     if (id) {
@@ -261,11 +261,10 @@ ecs_entity_t ecs_cpp_component_register(
     } else {
         ent = ecs_lookup_path_w_sep(world, 0, name, "::", "::", false);
     }
-
     ecs_set_scope(world, prev_scope);
 
     /* If entity exists, compare symbol name to ensure that the component
-    * we are trying to register under this name is the same */
+     * we are trying to register under this name is the same */
     if (ent) {
         if (!id && ecs_has(world, ent, EcsComponent)) {
             const char *sym = ecs_get_symbol(world, ent);

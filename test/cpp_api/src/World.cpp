@@ -1382,3 +1382,21 @@ void World_register_nested_from_scope() {
 
     test_assert(c.has(flecs::ChildOf, ecs.id<Scope>()));
 }
+
+void World_register_w_root_name() {
+    flecs::world ecs;
+
+    auto c = ecs.component<Scope>("::Root");
+
+    test_assert(!c.has(flecs::ChildOf, flecs::Wildcard));
+    test_str(c.path().c_str(), "::Root");
+}
+
+void World_register_nested_w_root_name() {
+    flecs::world ecs;
+
+    auto c = ecs.component<Nested::FromScope>("::Root");
+
+    test_assert(!c.has(flecs::ChildOf, flecs::Wildcard));
+    test_str(c.path().c_str(), "::Root");
+}

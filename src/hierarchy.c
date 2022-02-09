@@ -601,13 +601,13 @@ ecs_entity_t ecs_add_path_w_sep(
         return entity;
     }
 
+    parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
+
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
     const char *ptr_start = path;
     char *elem = buff;
     int32_t len, size = ECS_NAME_BUFFER_LENGTH;
-
-    parent = get_parent_from_path(world, parent, &path, prefix, entity == 0);
 
     ecs_entity_t cur = parent;
 

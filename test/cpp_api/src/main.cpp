@@ -822,6 +822,8 @@ void World_reset_all(void);
 void World_get_tick(void);
 void World_register_from_scope(void);
 void World_register_nested_from_scope(void);
+void World_register_w_root_name(void);
+void World_register_nested_w_root_name(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3986,6 +3988,14 @@ bake_test_case World_testcases[] = {
     {
         "register_nested_from_scope",
         World_register_nested_from_scope
+    },
+    {
+        "register_w_root_name",
+        World_register_w_root_name
+    },
+    {
+        "register_nested_w_root_name",
+        World_register_nested_w_root_name
     }
 };
 
@@ -4245,7 +4255,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        73,
+        75,
         World_testcases
     },
     {
