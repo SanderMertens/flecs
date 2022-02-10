@@ -86,6 +86,27 @@ void json_path(
     ecs_strbuf_appendch(buf, '"');
 }
 
+void json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *lbl = NULL;
+#ifdef FLECS_DOC
+    lbl = ecs_doc_get_name(world, e);
+#else
+    lbl = ecs_get_name(world, e);
+#endif
+
+    if (lbl) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstr(buf, lbl);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        ecs_strbuf_appendstr(buf, "0");
+    }
+}
+
 void json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,

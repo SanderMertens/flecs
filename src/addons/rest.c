@@ -108,6 +108,8 @@ void rest_parse_json_ser_iter_params(
     rest_bool_param(req, "is_set", &desc->serialize_is_set);
     rest_bool_param(req, "values", &desc->serialize_values);
     rest_bool_param(req, "entities", &desc->serialize_entities);
+    rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
+    rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
     rest_bool_param(req, "duration", &desc->measure_eval_duration);
     rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }

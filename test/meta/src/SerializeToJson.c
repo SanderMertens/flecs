@@ -2164,3 +2164,114 @@ void SerializeToJson_serialize_iterator_type_info_2_structs() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_iterator_w_entity_label() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "foo_bar");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "hello_world");
+    ecs_doc_set_name(world, e2, "Hello World");
+
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_entity_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Tag\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Tag\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"foo_bar\""
+            "], "
+            "\"entity_labels\":["
+                "\"foo_bar\""
+            "], "
+            "\"values\":[0]"
+        "}, {"
+            "\"ids\":[\"Tag\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"hello_world\""
+            "], "
+            "\"entity_labels\":["
+                "\"Hello World\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_w_var_labels() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_add_pair(world, e1, Rel, ObjA);
+    ecs_add_pair(world, e2, Rel, ObjB);
+
+    ecs_doc_set_name(world, ObjA, "Object A");
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, _X)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_variable_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"(Rel,*)\"], "
+        "\"vars\":[\"X\"], "
+        "\"results\":[{"
+            "\"ids\":[\"(Rel,ObjA)\"], "
+            "\"subjects\":[0], "
+            "\"vars\":[\"ObjA\"], "
+            "\"var_labels\":[\"Object A\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\""
+            "], "
+            "\"values\":[0]"
+        "}, {"
+            "\"ids\":[\"(Rel,ObjB)\"], "
+            "\"subjects\":[0], "
+            "\"vars\":[\"ObjB\"], "
+            "\"var_labels\":[\"ObjB\"], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Bar\""
+            "], "
+            "\"values\":[0]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

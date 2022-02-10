@@ -25916,6 +25916,11 @@ void json_path(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+void json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 void json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -26011,6 +26016,27 @@ void json_path(
     ecs_strbuf_appendch(buf, '"');
     ecs_get_fullpath_buf(world, e, buf);
     ecs_strbuf_appendch(buf, '"');
+}
+
+void json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *lbl = NULL;
+#ifdef FLECS_DOC
+    lbl = ecs_doc_get_name(world, e);
+#else
+    lbl = ecs_get_name(world, e);
+#endif
+
+    if (lbl) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstr(buf, lbl);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        ecs_strbuf_appendstr(buf, "0");
+    }
 }
 
 void json_id(
@@ -26857,6 +26883,36 @@ void serialize_iter_result_variables(
 }
 
 static
+void serialize_iter_result_variable_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    char **variable_names = it->variable_names;
+    ecs_entity_t *variables = it->variables;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 0; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (skip_variable(var_name)) continue;
+
+        if (!actual_count) {
+            json_member(buf, "var_labels");
+            json_array_push(buf);
+            actual_count ++;
+        }
+
+        ecs_strbuf_list_next(buf);
+        json_label(buf, world, variables[i]);
+    }
+
+    if (actual_count) {
+        json_array_pop(buf);
+    }
+}
+
+static
 void serialize_iter_result_entities(
     const ecs_world_t *world,
     const ecs_iter_t *it,
@@ -26875,6 +26931,30 @@ void serialize_iter_result_entities(
     for (int i = 0; i < count; i ++) {
         json_next(buf);
         json_path(buf, world, entities[i]);
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_entity_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    json_member(buf, "entity_labels");
+    json_array_push(buf);
+
+    ecs_entity_t *entities = it->entities;
+
+    for (int i = 0; i < count; i ++) {
+        json_next(buf);
+        json_label(buf, world, entities[i]);
     }
 
     json_array_pop(buf);
@@ -26965,6 +27045,11 @@ void serialize_iter_result(
         serialize_iter_result_variables(world, it, buf);
     }
 
+    /* Write labels for variables */
+    if (desc && desc->serialize_variable_labels) {
+        serialize_iter_result_variable_labels(world, it, buf);
+    }
+
     /* Include information on which terms are set, to support optional terms */
     if (!desc || desc->serialize_is_set) {
         serialize_iter_result_is_set(it, buf);
@@ -26973,6 +27058,11 @@ void serialize_iter_result(
     /* Write entity ids for current result (for queries with This terms) */
     if (!desc || desc->serialize_entities) {
         serialize_iter_result_entities(world, it, buf);
+    }
+
+    /* Write labels for entities */
+    if (desc && desc->serialize_entity_labels) {
+        serialize_iter_result_entity_labels(world, it, buf);
     }
 
     /* Serialize component values */
@@ -27590,6 +27680,8 @@ void rest_parse_json_ser_iter_params(
     rest_bool_param(req, "is_set", &desc->serialize_is_set);
     rest_bool_param(req, "values", &desc->serialize_values);
     rest_bool_param(req, "entities", &desc->serialize_entities);
+    rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
+    rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
     rest_bool_param(req, "duration", &desc->measure_eval_duration);
     rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }

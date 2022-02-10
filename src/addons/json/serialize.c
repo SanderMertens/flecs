@@ -825,6 +825,36 @@ void serialize_iter_result_variables(
 }
 
 static
+void serialize_iter_result_variable_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    char **variable_names = it->variable_names;
+    ecs_entity_t *variables = it->variables;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 0; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (skip_variable(var_name)) continue;
+
+        if (!actual_count) {
+            json_member(buf, "var_labels");
+            json_array_push(buf);
+            actual_count ++;
+        }
+
+        ecs_strbuf_list_next(buf);
+        json_label(buf, world, variables[i]);
+    }
+
+    if (actual_count) {
+        json_array_pop(buf);
+    }
+}
+
+static
 void serialize_iter_result_entities(
     const ecs_world_t *world,
     const ecs_iter_t *it,
@@ -843,6 +873,30 @@ void serialize_iter_result_entities(
     for (int i = 0; i < count; i ++) {
         json_next(buf);
         json_path(buf, world, entities[i]);
+    }
+
+    json_array_pop(buf);
+}
+
+static
+void serialize_iter_result_entity_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf) 
+{
+    int32_t count = it->count;
+    if (!it->count) {
+        return;
+    }
+
+    json_member(buf, "entity_labels");
+    json_array_push(buf);
+
+    ecs_entity_t *entities = it->entities;
+
+    for (int i = 0; i < count; i ++) {
+        json_next(buf);
+        json_label(buf, world, entities[i]);
     }
 
     json_array_pop(buf);
@@ -933,6 +987,11 @@ void serialize_iter_result(
         serialize_iter_result_variables(world, it, buf);
     }
 
+    /* Write labels for variables */
+    if (desc && desc->serialize_variable_labels) {
+        serialize_iter_result_variable_labels(world, it, buf);
+    }
+
     /* Include information on which terms are set, to support optional terms */
     if (!desc || desc->serialize_is_set) {
         serialize_iter_result_is_set(it, buf);
@@ -941,6 +1000,11 @@ void serialize_iter_result(
     /* Write entity ids for current result (for queries with This terms) */
     if (!desc || desc->serialize_entities) {
         serialize_iter_result_entities(world, it, buf);
+    }
+
+    /* Write labels for entities */
+    if (desc && desc->serialize_entity_labels) {
+        serialize_iter_result_entity_labels(world, it, buf);
     }
 
     /* Serialize component values */

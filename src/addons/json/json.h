@@ -44,6 +44,11 @@ void json_path(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+void json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 void json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
