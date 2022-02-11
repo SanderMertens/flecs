@@ -1411,7 +1411,7 @@ void World_set_lookup_path() {
     test_assert(ecs.lookup("Child") == 0);
     test_assert(ecs.lookup("Parent::Child") == child);
 
-    flecs::entity_t lookup_path[] = { parent };
+    flecs::entity_t lookup_path[] = { parent, 0 };
     flecs::entity_t *old_path = ecs.set_lookup_path(lookup_path);
 
     test_assert(ecs.lookup("Parent") == parent);
