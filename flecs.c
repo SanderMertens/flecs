@@ -28769,9 +28769,10 @@ int accept_connections(
 static
 void* http_server_thread(void* arg) {
     ecs_http_server_t *srv = arg;
-    struct sockaddr_in addr = {
-        .sin_family = AF_INET,
-        .sin_port = htons(srv->port) };
+    struct sockaddr_in addr;
+    ecs_os_zeromem(&addr);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(srv->port);
 
     if (!srv->ipaddr) {
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
