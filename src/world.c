@@ -138,6 +138,11 @@ const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
 /* REST module components */
 const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
 
+/* Default lookup path */
+static const ecs_entity_t ecs_default_lookup_path[2] = {
+    EcsFlecsCore, 0
+};
+
 /* -- Private functions -- */
 
 const ecs_stage_t* flecs_stage_from_readonly_world(
@@ -612,6 +617,8 @@ ecs_world_t *ecs_mini(void) {
 
     flecs_stage_init(world, &world->stage);
     ecs_set_stages(world, 1);
+
+    ecs_set_lookup_path(world, ecs_default_lookup_path);
 
     init_store(world);
     ecs_trace("table store initialized");

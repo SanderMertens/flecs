@@ -2600,6 +2600,45 @@ const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix);    
 
+/** Set search path for lookup operations.
+ * This operation accepts an array of entity ids that will be used as search
+ * scopes by lookup operations. The operation returns the current search path.
+ * It is good practice to restore the old search path.
+ * 
+ * The search path will be evaluated starting from the last element.
+ * 
+ * The default search path includes flecs.core. When a custom search path is
+ * provided it overwrites the existing search path. Operations that rely on
+ * looking up names from flecs.core without providing the namespace may fail if
+ * the custom search path does not include flecs.core (EcsFlecsCore).
+ * 
+ * The search path array is not copied into managed memory. The application must
+ * ensure that the provided array is valid for as long as it is used as the
+ * search path.
+ * 
+ * The provided array must be terminated with a 0 element. This enables an
+ * application to push/pop elements to an existing array without invoking the
+ * ecs_set_lookup_path operation again.
+ * 
+ * @param world The world.
+ * @param lookup_path 0-terminated array with entity ids for the lookup path.
+ * @return Current lookup path array.
+ */
+FLECS_API
+ecs_entity_t* ecs_set_lookup_path(
+    ecs_world_t *world,
+    const ecs_entity_t *lookup_path);
+
+/** Get current lookup path.
+ * Returns value set by ecs_set_lookup_path.
+ * 
+ * @param world The world.
+ * @return The current lookup path.
+ */
+FLECS_API
+ecs_entity_t* ecs_get_lookup_path(
+    const ecs_world_t *world);
+
 /** @} */
 
 

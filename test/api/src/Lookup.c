@@ -392,3 +392,121 @@ void Lookup_lookup_from_scope_staged() {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_core() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_lookup_fullpath(world, "Component");
+    test_assert(c != 0);
+    test_assert(c == ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_core_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_lookup_fullpath(world, "Component");
+    test_assert(c != 0);
+    test_assert(c == ecs_id(EcsComponent));
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_staging_begin(world);
+    ecs_entity_t d = ecs_lookup_fullpath(stage, "Component");
+    test_assert(d != 0);
+    test_assert(d == ecs_id(EcsComponent));
+    ecs_staging_end(world);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "Component");
+    test_assert(e != 0);
+    test_assert(e == ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_custom_search_path() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, child, "Child");
+    
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+
+    ecs_entity_t lookup_path[] = { parent, 0 };
+    ecs_entity_t *old_path = ecs_set_lookup_path(world, lookup_path);
+
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+
+    ecs_set_lookup_path(world, old_path);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_custom_search_path_from_stage() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, child, "Child");
+    
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+
+    ecs_entity_t lookup_path[] = { parent, 0 };
+    ecs_entity_t *old_path = ecs_set_lookup_path(world, lookup_path);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_staging_begin(world);
+    test_assert(ecs_lookup_fullpath(stage, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(stage, "Child") == child);
+    test_assert(ecs_lookup_fullpath(stage, "Parent.Child") == child);
+    ecs_staging_end(world);
+
+    ecs_set_lookup_path(world, old_path);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_custom_search_path_n_elems() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, child, "Child");
+    ecs_entity_t grand_child = ecs_new_w_pair(world, EcsChildOf, child);
+    ecs_set_name(world, grand_child, "Child");
+    
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Child.Child") == 0);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child.Child") == grand_child);
+
+    ecs_entity_t lookup_path[] = { child, parent, 0 };
+    ecs_entity_t *old_path = ecs_set_lookup_path(world, lookup_path);
+
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == child);
+    test_assert(ecs_lookup_fullpath(world, "Child.Child") == grand_child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child.Child") == grand_child);
+
+    lookup_path[0] = parent;
+    lookup_path[1] = child;
+
+    test_assert(ecs_lookup_fullpath(world, "Parent") == parent);
+    test_assert(ecs_lookup_fullpath(world, "Child") == grand_child);
+    test_assert(ecs_lookup_fullpath(world, "Child.Child") == grand_child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child") == child);
+    test_assert(ecs_lookup_fullpath(world, "Parent.Child.Child") == grand_child);
+
+    ecs_set_lookup_path(world, old_path);
+
+    ecs_fini(world);
+}

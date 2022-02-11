@@ -835,6 +835,11 @@ void Lookup_lookup_path_this_from_scope(void);
 void Lookup_lookup_path_wildcard_from_scope(void);
 void Lookup_resolve_builtin_symbols(void);
 void Lookup_lookup_from_scope_staged(void);
+void Lookup_lookup_core(void);
+void Lookup_lookup_core_from_stage(void);
+void Lookup_lookup_custom_search_path(void);
+void Lookup_lookup_custom_search_path_from_stage(void);
+void Lookup_lookup_custom_search_path_n_elems(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -5635,6 +5640,26 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_from_scope_staged",
         Lookup_lookup_from_scope_staged
+    },
+    {
+        "lookup_core",
+        Lookup_lookup_core
+    },
+    {
+        "lookup_core_from_stage",
+        Lookup_lookup_core_from_stage
+    },
+    {
+        "lookup_custom_search_path",
+        Lookup_lookup_custom_search_path
+    },
+    {
+        "lookup_custom_search_path_from_stage",
+        Lookup_lookup_custom_search_path_from_stage
+    },
+    {
+        "lookup_custom_search_path_n_elems",
+        Lookup_lookup_custom_search_path_n_elems
     }
 };
 
@@ -11971,7 +11996,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        30,
+        35,
         Lookup_testcases
     },
     {

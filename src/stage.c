@@ -506,7 +506,9 @@ bool ecs_staging_begin(
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
-        ecs_defer_begin(ecs_get_stage(world, i));
+        ecs_world_t *stage = ecs_get_stage(world, i);
+        ((ecs_stage_t*)stage)->lookup_path = world->stage.lookup_path;
+        ecs_defer_begin(stage);
     }
 
     bool is_readonly = world->is_readonly;

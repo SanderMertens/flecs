@@ -716,6 +716,7 @@ struct ecs_stage_t {
     ecs_entity_t scope;          /* Entity of current scope */
     ecs_entity_t with;           /* Id to add by default to new entities */
     ecs_entity_t base;           /* Currently instantiated top-level base */
+    ecs_entity_t *lookup_path;   /* Search path used by lookup operations */
 
     /* Properties */
     bool auto_merge;             /* Should this stage automatically merge? */
@@ -8945,7 +8946,9 @@ bool ecs_staging_begin(
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
-        ecs_defer_begin(ecs_get_stage(world, i));
+        ecs_world_t *stage = ecs_get_stage(world, i);
+        ((ecs_stage_t*)stage)->lookup_path = world->stage.lookup_path;
+        ecs_defer_begin(stage);
     }
 
     bool is_readonly = world->is_readonly;
@@ -31251,6 +31254,11 @@ const ecs_entity_t EcsDocLink =               ECS_HI_COMPONENT_ID + 103;
 /* REST module components */
 const ecs_entity_t ecs_id(EcsRest) =          ECS_HI_COMPONENT_ID + 105;
 
+/* Default lookup path */
+static const ecs_entity_t ecs_default_lookup_path[2] = {
+    EcsFlecsCore, 0
+};
+
 /* -- Private functions -- */
 
 const ecs_stage_t* flecs_stage_from_readonly_world(
@@ -31725,6 +31733,8 @@ ecs_world_t *ecs_mini(void) {
 
     flecs_stage_init(world, &world->stage);
     ecs_set_stages(world, 1);
+
+    ecs_set_lookup_path(world, ecs_default_lookup_path);
 
     init_store(world);
     ecs_trace("table store initialized");
@@ -44225,14 +44235,20 @@ ecs_entity_t ecs_lookup_path_w_sep(
     e = find_by_name(&world->aliases, path, 0, 0);
     if (e) {
         return e;
-    }      
+    }
 
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr, *ptr_start;
     char *elem = buff;
     int32_t len, size = ECS_NAME_BUFFER_LENGTH;
     ecs_entity_t cur;
-    bool core_searched = false;
+    bool lookup_path_search = false;
+
+    ecs_entity_t *lookup_path = ecs_get_lookup_path(stage);
+    ecs_entity_t *lookup_path_cur = lookup_path;
+    while (lookup_path_cur && *lookup_path_cur) {
+        lookup_path_cur ++;
+    }
 
     if (!sep) {
         sep = ".";
@@ -44268,14 +44284,21 @@ retry:
 
 tail:
     if (!cur && recursive) {
-        if (!core_searched) {
+        if (!lookup_path_search) {
             if (parent) {
                 parent = ecs_get_object(world, parent, EcsChildOf, 0);
+                goto retry;
             } else {
-                parent = EcsFlecsCore;
-                core_searched = true;
+                lookup_path_search = true;
             }
-            goto retry;
+        }
+
+        if (lookup_path_search) {
+            if (lookup_path_cur != lookup_path) {
+                lookup_path_cur --;
+                parent = lookup_path_cur[0];
+                goto retry;
+            }
         }
     }
 
@@ -44311,6 +44334,31 @@ ecs_entity_t ecs_get_scope(
     return stage->scope;
 error:
     return 0;
+}
+
+ecs_entity_t* ecs_set_lookup_path(
+    ecs_world_t *world,
+    const ecs_entity_t *lookup_path)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    ecs_entity_t *cur = stage->lookup_path;
+    stage->lookup_path = (ecs_entity_t*)lookup_path;
+
+    return cur;
+error:
+    return NULL;
+}
+
+ecs_entity_t* ecs_get_lookup_path(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->lookup_path;
+error:
+    return NULL;
 }
 
 const char* ecs_set_name_prefix(
