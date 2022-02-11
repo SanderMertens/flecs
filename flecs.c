@@ -15192,6 +15192,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     flecs_resume_readonly(world, &readonly_state);
 
+    ecs_trace("#[green]constant#[reset] %s.%s created with value %d", 
+        ecs_get_name(world, parent), name, value);
+
     return id;
 }
 

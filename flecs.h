@@ -11942,11 +11942,13 @@ struct enum_type {
     }
 
     void init(flecs::world_t *world, flecs::entity_t id) {
+        ecs_log_push();
         ecs_add_id(world, id, flecs::Exclusive);
         ecs_add_id(world, id, flecs::Tag);
         data.id = id;
         data.min = FLECS_ENUM_MAX(int);
         init< enum_last<E>::value >(world);
+        ecs_log_pop();
     }
 
 private:
@@ -12849,6 +12851,13 @@ inline void enable_colors(bool enabled) {
     ecs_log_enable_colors(enabled);
 }
 
+inline void dbg(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    ecs_logv(1, fmt, args);
+    va_end(args);
+}
+
 inline void trace(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -12868,6 +12877,14 @@ inline void err(const char *fmt, ...) {
     va_start(args, fmt);
     ecs_logv(-3, fmt, args);
     va_end(args);
+}
+
+inline void push() {
+    ecs_log_push();
+}
+
+inline void pop() {
+    ecs_log_pop();
 }
 
 }
