@@ -824,6 +824,7 @@ void World_register_from_scope(void);
 void World_register_nested_from_scope(void);
 void World_register_w_root_name(void);
 void World_register_nested_w_root_name(void);
+void World_set_lookup_path(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3996,6 +3997,10 @@ bake_test_case World_testcases[] = {
     {
         "register_nested_w_root_name",
         World_register_nested_w_root_name
+    },
+    {
+        "set_lookup_path",
+        World_set_lookup_path
     }
 };
 
@@ -4255,7 +4260,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        75,
+        76,
         World_testcases
     },
     {

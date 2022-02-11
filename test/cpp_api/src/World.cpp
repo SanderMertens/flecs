@@ -1400,3 +1400,23 @@ void World_register_nested_w_root_name() {
     test_assert(!c.has(flecs::ChildOf, flecs::Wildcard));
     test_str(c.path().c_str(), "::Root");
 }
+
+void World_set_lookup_path() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("Parent");
+    auto child = ecs.scope(parent).entity("Child");
+
+    test_assert(ecs.lookup("Parent") == parent);
+    test_assert(ecs.lookup("Child") == 0);
+    test_assert(ecs.lookup("Parent::Child") == child);
+
+    flecs::entity_t lookup_path[] = { parent };
+    flecs::entity_t *old_path = ecs.set_lookup_path(lookup_path);
+
+    test_assert(ecs.lookup("Parent") == parent);
+    test_assert(ecs.lookup("Child") == child);
+    test_assert(ecs.lookup("Parent::Child") == child);
+
+    ecs.set_lookup_path(old_path);
+}
