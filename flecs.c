@@ -19413,12 +19413,25 @@ ecs_rule_t* ecs_rule_init(
         ecs_term_t *term = &terms[i];
         if (term_id_is_variable(&term->subj)) {
             const char *subj_name = term_id_var_name(&term->subj);
+
             ecs_rule_var_t *subj = find_variable(
                 result, EcsRuleVarKindEntity, subj_name);
             if (subj) {
                 result->subject_variables[i] = subj->id;
                 continue;
-            }          
+            } else {
+                /* If this is Any look for table variable. Since Any is only
+                 * required to return a single result, there is no need to 
+                 * insert an each instruction for a matching table. */
+                if (term->subj.entity == EcsAny) {
+                    subj = find_variable(
+                        result, EcsRuleVarKindTable, subj_name);
+                    if (subj) {
+                        result->subject_variables[i] = subj->id;
+                        continue;
+                    }
+                }
+            }
         }
 
         result->subject_variables[i] = -1;
@@ -20932,8 +20945,23 @@ void populate_iterator(
         int32_t v = rule->subject_variables[i];
         if (v != -1) {
             ecs_rule_var_t *var = &rule->variables[v];
-            if (var->kind == EcsRuleVarKindEntity && var->name[0] != '.') {
-                iter->subjects[i] = regs[var->id].entity;
+            if (var->name[0] != '.') {
+                if (var->kind == EcsRuleVarKindEntity) {
+                    iter->subjects[i] = regs[var->id].entity;
+                } else {
+                    /* This can happen for Any variables, where the actual
+                     * content of the variable is not of interest to the query.
+                     * Just pick the first entity from the table, so that the 
+                     * column can be correctly resolved */
+                    ecs_table_t *t = regs[var->id].table;
+                    if (t) {
+                        iter->subjects[i] = ecs_vector_first(
+                            t->storage.entities, ecs_entity_t)[0];
+                    } else {
+                        /* Can happen if term is optional */
+                        iter->subjects[i] = 0;
+                    }
+                }
             }
         }
     }
@@ -20943,9 +20971,9 @@ void populate_iterator(
     for (i = 0; i < term_count; i ++) {
         ecs_entity_t subj = iter->subjects[i];
         int32_t c = ++ iter->columns[i];
-
         if (!subj) {
-            if (iter->terms[i].subj.entity != EcsThis) {
+            subj = iter->terms[i].subj.entity;
+            if (subj != EcsThis && subj != EcsAny) {
                 iter->columns[i] = 0;
             }
         } else if (c) {

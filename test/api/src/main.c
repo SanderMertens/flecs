@@ -1520,6 +1520,8 @@ void Rules_rule_iter_set_pred_var(void);
 void Rules_rule_iter_set_var_for_2_terms(void);
 void Rules_rule_iter_set_cyclic_variable(void);
 void Rules_rule_iter_set_cyclic_variable_w_this(void);
+void Rules_optional_any_object(void);
+void Rules_optional_any_subject(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -8306,6 +8308,14 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_iter_set_cyclic_variable_w_this",
         Rules_rule_iter_set_cyclic_variable_w_this
+    },
+    {
+        "optional_any_object",
+        Rules_optional_any_object
+    },
+    {
+        "optional_any_subject",
+        Rules_optional_any_subject
     }
 };
 
@@ -12038,7 +12048,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        130,
+        132,
         Rules_testcases
     },
     {

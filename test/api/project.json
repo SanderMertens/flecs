@@ -1587,7 +1587,9 @@
                 "rule_iter_set_pred_var",
                 "rule_iter_set_var_for_2_terms",
                 "rule_iter_set_cyclic_variable",
-                "rule_iter_set_cyclic_variable_w_this"
+                "rule_iter_set_cyclic_variable_w_this",
+                "optional_any_object",
+                "optional_any_subject"
             ]
         }, {
             "id": "TransitiveRules",
