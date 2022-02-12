@@ -12317,6 +12317,14 @@ ecs_world_t *ecs_mini(void) {
     ecs_trace("#[green]release#[reset] build");
 #endif
 
+#ifdef __clang__
+    ecs_trace("compiled with clang %s", __clang_version__);
+#elif defined(__GNUC__)
+    ecs_trace("compiled with gcc %d.%d", __GNUC__, __GNUC_MINOR__);
+#elif defined (_MSC_VER)
+    ecs_trace("compiled with msvc %d", _MSC_VER);
+#endif
+
     ecs_world_t *world = ecs_os_calloc_t(ecs_world_t);
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_poly_init(world, ecs_world_t);

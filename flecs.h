@@ -11942,6 +11942,11 @@ struct enum_type {
     }
 
     void init(flecs::world_t *world, flecs::entity_t id) {
+#if !defined(__clang__) && defined(__GNUC__)
+        ecs_assert(__GNUC__ > 7 || (__GNUC__ == 7 && __GNUC_MINOR__ >= 5), 
+            ECS_UNSUPPORTED, "enum component types require gcc 7.5 or higher");
+#endif
+
         ecs_log_push();
         ecs_add_id(world, id, flecs::Exclusive);
         ecs_add_id(world, id, flecs::Tag);
