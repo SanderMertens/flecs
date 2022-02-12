@@ -76,5 +76,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Cleanup filter. Filters can allocate memory if the number of terms 
+    // exceeds their internal buffer, or when terms have names. In this case the
+    // filter didn't allocate, so while fini isn't strictly necessary here, it's
+    // still good practice to add it.
+    ecs_filter_fini(&f);
+
     return ecs_fini(ecs);
 }

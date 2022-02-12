@@ -237,8 +237,8 @@ while (ecs_query_next(&it)) {
   ecs_id_t id = ecs_term_id(&it, 1); // Obtain pair id
 
   // Get relation & object
-  ecs_entity_t rel = ecs_pair_relation(world, id);
-  ecs_entity_t obj = ecs_pair_object(world, id);
+  ecs_entity_t rel = ecs_pair_first(world, id);
+  ecs_entity_t obj = ecs_pair_second(world, id);
 
   for (int i = 0; i < it.count; it++) {
     printf("entity %d has relation %s, %s\n", 
@@ -303,7 +303,7 @@ ecs_id_t *ids = ecs_vector_first(bob_type);
 int32_t cur = -1;
 
 while (-1 != (cur = ecs_search_offset(world, bob_table, cur + 1, wildcard, 0))){
-  ecs_entity_t obj = ecs_pair_object(ids[cur]);
+  ecs_entity_t obj = ecs_pair_second(ids[cur]);
   printf("Bob eats %s\n", ecs_get_name(world, obj));
 }
 ```

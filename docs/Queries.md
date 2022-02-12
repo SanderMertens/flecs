@@ -286,7 +286,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
   ecs_id_t id = ecs_term_id(&it, 1);
-  ecs_entity_t obj = ecs_pair_object(it->world, id);
+  ecs_entity_t obj = ecs_pair_second(it->world, id);
   printf("Entities like %s\n", ecs_get_name(world, object));
 }
 ```

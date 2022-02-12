@@ -239,8 +239,8 @@ The following examples show how to get back the elements from a pair:
 
 ```c
 if (ecs_id_is_pair(id)) {
-    ecs_entity_t relation = ecs_pair_relation(world, id);
-    ecs_entity_t target = ecs_pair_object(world, id);
+    ecs_entity_t relation = ecs_pair_first(world, id);
+    ecs_entity_t target = ecs_pair_second(world, id);
 }
 ```
 ```cpp

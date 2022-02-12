@@ -1,5 +1,5 @@
 #include <change_tracking.h>
-#include <iostream>
+#include <stdio.h>
 
 // Queries have a builtin mechanism for tracking changes per matched table. This
 // is a cheap way of eliminating redundant work, as many entities can be skipped
@@ -9,98 +9,133 @@
 // techniques, like using prefabs to store a single dirty state for multiple
 // entities and instanced queries.
 
-struct Dirty {
+typedef struct {
     bool value;
-};
+} Dirty;
 
-struct Position {
+typedef struct {
     double x, y;
-};
+} Position;
 
-int main(int, char *[]) {
-    flecs::world ecs;
+int main(int argc, char *argv[]) {
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
+
+    ECS_COMPONENT(world, Dirty);
+    ECS_COMPONENT(world, Position);
 
     // Create a query that just reads a component. We'll use this query for
     // change tracking. Change tracking for a query is automatically enabled
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    auto q_read = ecs.query<const Position>();
+    ecs_query_t *q_read = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+    });
 
     // Create a query that writes the component based on a Dirty state.
-    auto q_write = ecs.query_builder<const Dirty, Position>()
-        .arg(1).owned(false) // Only match if Dirty is shared from prefab
-        .instanced()         // Instanced iteration is faster (see example)
-        .build();
+    ecs_query_t *q_write = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter = {
+            .terms = {
+                // Only match if Dirty is shared from prefab
+                { 
+                    .id = ecs_id(Dirty), 
+                    .inout = EcsIn,
+                    .subj.set.mask = EcsSuperSet 
+                },
+                { .id = ecs_id(Position) }
+            },
+            .instanced = true // Instanced iteration is faster (see example)
+        }
+    });
 
     // Create two prefabs with a Dirty component. We can use this to share a
     // single Dirty value for all entities in a table.
-    auto p1 = ecs.prefab("p1").set<Dirty>({false});
-    auto p2 = ecs.prefab("p2").set<Dirty>({true});
+    ecs_entity_t p1 = ecs_new_prefab(world, "p1");
+    ecs_set(world, p1, Dirty, {false});
+
+    ecs_entity_t p2 = ecs_new_prefab(world, "p2");
+    ecs_set(world, p2, Dirty, {true});
 
     // Create instances of p1 and p2. Because the entities have different
     // prefabs, they end up in different tables.
-    ecs.entity("e1").is_a(p1)
-        .set<Position>({10, 20});
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add_pair(world, e1, EcsIsA, p1);
+    ecs_set(world, e1, Position, {10, 20});
 
-    ecs.entity("e2").is_a(p1)
-        .set<Position>({30, 40});
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_add_pair(world, e2, EcsIsA, p1);
+    ecs_set(world, e2, Position, {30, 40});
 
-    ecs.entity("e3").is_a(p2)
-        .set<Position>({40, 50});
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_add_pair(world, e3, EcsIsA, p2);
+    ecs_set(world, e3, Position, {50, 60});
 
-    ecs.entity("e4").is_a(p2)
-        .set<Position>({60, 70});
+    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_add_pair(world, e4, EcsIsA, p2);
+    ecs_set(world, e4, Position, {70, 80});
 
     // We can use the changed() function on the query to check if any of the
     // tables it is matched with has changed. Since this is the first time that
     // we check this and the query is matched with the tables we just created,
     // the function will return true.
-    std::cout << "q_read.changed(): " << q_read.changed() << "\n";
+    printf("q_read changed: %d\n", ecs_query_changed(q_read, NULL));
 
     // The changed state will remain true until we have iterated each table.
-    q_read.iter([](flecs::iter& it) {
+    ecs_iter_t it = ecs_query_iter(world, q_read);
+    while (ecs_query_next(&it)) {
         // With the it.changed() function we can check if the table we're
         // currently iterating has changed since last iteration.
         // Because this is the first time the query is iterated, all tables
         // will show up as changed.
-        std::cout << "it.changed() for table [" << it.type().str() << "]: "
-            << it.changed() << "\n";
-    });
+        char *type_str = ecs_type_str(world, it.type);
+        printf("it.changed for table [%s]: %d\n", type_str,
+            ecs_query_changed(q_read, &it));
+        ecs_os_free(type_str);
+    }
 
     // Now that we have iterated all tables, the dirty state is reset.
-    std::cout << "q_read.changed(): " << q_read.changed() << "\n\n";
+    printf("q_read changed: %d\n\n", ecs_query_changed(q_read, NULL));
 
     // Iterate the write query. Because the Position term is InOut (default)
     // iterating the query will write to the dirty state of iterated tables.
-    q_write.iter([](flecs::iter& it, const Dirty *dirty, Position *p) {
-        std::cout << "iterate table [" << it.type().str() << "]\n";
+    it = ecs_query_iter(world, q_write);
+    while (ecs_query_next(&it)) {
+        Dirty *dirty = ecs_term(&it, Dirty, 1);
+
+        char *type_str = ecs_type_str(world, it.type);
+        printf("iterate table [%s]\n", type_str);
+        ecs_os_free(type_str);
 
         // Because we enforced that Dirty is a shared component, we can check
         // a single value for the entire table.
         if (!dirty->value) {
-            // If the dirty flag is false, skip the table. This way the table's
-            // dirty state is not updated by the query.
-            it.skip();
-            std::cout << "it.skip() for table [" << it.type().str() << "]\n";
-            return;
+            ecs_query_skip(&it);
+            type_str = ecs_type_str(world, it.type);
+            printf("it.skip for table [%s]\n", type_str);
+            ecs_os_free(type_str);
+            continue;
         }
 
+        Position *p = ecs_term(&it, Position, 2);
+
         // For all other tables the dirty state will be set.
-        for (auto i : it) {
+        for (int i = 0; i < it.count; i ++) {
             p[i].x ++;
             p[i].y ++;
         }
-    });
+    }
 
     // One of the tables has changed, so q_read.changed() will return true
-    std::cout << "\nq_read.changed(): " << q_read.changed() << "\n";
+    printf("\nq_read changed: %d\n", ecs_query_changed(q_read, NULL));
 
     // When we iterate the read query, we'll see that one table has changed.
-    q_read.iter([](flecs::iter& it) {
-        std::cout << "it.changed() for table [" << it.type().str() << "]: "
-            << it.changed() << "\n";
-    }); 
+    it = ecs_query_iter(world, q_read);
+    while (ecs_query_next(&it)) {
+        char *type_str = ecs_type_str(world, it.type);
+        printf("it.changed for table [%s]: %d\n", type_str,
+            ecs_query_changed(q_read, &it));
+        ecs_os_free(type_str);
+    }
 
     // Output:
     //  q_read.changed(): 1
@@ -115,4 +150,6 @@ int main(int, char *[]) {
     //  q_read.changed(): 1
     //  it.changed() for table [Position, (Identifier,Name), (IsA,p1)]: 0
     //  it.changed() for table [Position, (Identifier,Name), (IsA,p2)]: 1
+
+    return ecs_fini(world);
 }

@@ -642,7 +642,7 @@ uint64_t group_by_cascade(
         /* Find relation & relation object in entity type */
         if (ECS_HAS_RELATION(array[i], relation)) {
             ecs_type_t obj_type = ecs_get_type(world,     
-                ecs_pair_object(world, array[i]));
+                ecs_pair_second(world, array[i]));
             int32_t j, c_count = ecs_vector_count(obj_type);
             ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
 
@@ -3174,9 +3174,9 @@ bool ecs_query_changed(
     const ecs_iter_t *it)
 {
     if (it) {
-        ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
 
         ecs_query_table_match_t *qt = 
             (ecs_query_table_match_t*)it->priv.iter.query.prev;
@@ -3184,9 +3184,12 @@ bool ecs_query_changed(
 
         if (!query) {
             query = it->priv.iter.query.query;
+        } else {
+            ecs_check(query == it->priv.iter.query.query, 
+                ECS_INVALID_PARAMETER, NULL);
         }
 
-        ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_poly_assert(query, ecs_query_t);
 
         flecs_process_pending_tables(it->real_world);

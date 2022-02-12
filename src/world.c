@@ -1720,8 +1720,8 @@ bool for_each_id(
             result |= action(world, table, all_wildcard, i);
 
             if (set_watch) {
-                ecs_entity_t rel = ecs_pair_relation(world, id);
-                ecs_entity_t obj = ecs_pair_object(world, id);
+                ecs_entity_t rel = ecs_pair_first(world, id);
+                ecs_entity_t obj = ecs_pair_second(world, id);
                 flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
                 flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
                 if (ecs_has_id(world, rel, EcsAcyclic)) {

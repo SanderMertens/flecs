@@ -4462,7 +4462,7 @@ void* get_base_component(
 
     do {
         ecs_id_t pair = ids[i ++];
-        ecs_entity_t base = ecs_pair_object(world, pair);
+        ecs_entity_t base = ecs_pair_second(world, pair);
 
         ecs_record_t *r = ecs_eis_get(world, base);
         if (!r) {
@@ -4935,7 +4935,7 @@ bool override_component(
         }
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            if (override_from_base(world, ecs_pair_object(world, e), component,
+            if (override_from_base(world, ecs_pair_second(world, e), component,
                 table, other_table, data, column, row, count, notify_on_set))
             {
                 return true;
@@ -5219,7 +5219,7 @@ void update_component_monitor_w_array(
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_object(world, id);
+            ecs_entity_t base = ecs_pair_second(world, id);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_ids_t base_entities = flecs_type_to_ids(type);
 
@@ -7567,7 +7567,7 @@ ecs_entity_t ecs_get_object(
     }
 
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-    return ecs_pair_object(world, ids[tr->column + index]);
+    return ecs_pair_second(world, ids[tr->column + index]);
 error:
     return 0;
 }
@@ -7971,7 +7971,7 @@ ecs_entity_t ecs_id_is_tag(
          * when the relation part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
             if (ECS_PAIR_RELATION(id) != EcsWildcard) {
-                ecs_entity_t rel = ecs_pair_relation(world, id);
+                ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsTag)) {
                         return true;
@@ -8249,14 +8249,14 @@ bool remove_invalid(
     ecs_id_t id = *id_out;
 
     if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t rel = ecs_pair_relation(world, id);
+        ecs_entity_t rel = ecs_pair_first(world, id);
         if (!rel || !is_entity_valid(world, rel)) {
             /* After relation is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
-            ecs_entity_t obj = ecs_pair_object(world, id);
+            ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_get_id_record(world, rel);
@@ -22223,7 +22223,7 @@ int add_constant_to_enum(
     int32_t value = 0;
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
-        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_i32_t)) {
+        if (ecs_pair_second(world, constant_id) != ecs_id(ecs_i32_t)) {
             char *path = ecs_get_fullpath(world, e);
             ecs_err("expected i32 type for enum constant '%s'", path);
             ecs_os_free(path);
@@ -22295,7 +22295,7 @@ int add_constant_to_bitmask(
     /* Check if constant sets explicit value */
     uint32_t value = 1;
     if (ecs_id_is_pair(constant_id)) {
-        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_u32_t)) {
+        if (ecs_pair_second(world, constant_id) != ecs_id(ecs_u32_t)) {
             char *path = ecs_get_fullpath(world, e);
             ecs_err("expected u32 type for bitmask constant '%s'", path);
             ecs_os_free(path);
@@ -26555,8 +26555,8 @@ int append_type(
         }
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            pred = ecs_pair_relation(world, id);
-            obj = ecs_pair_object(world, id);
+            pred = ecs_pair_first(world, id);
+            obj = ecs_pair_second(world, id);
         } else {
             pred = id & ECS_COMPONENT_MASK;
             if (id & ECS_ROLE_MASK) {
@@ -26643,7 +26643,7 @@ int append_base(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            if (append_base(world, buf, ecs_pair_object(world, id), inst, desc)) 
+            if (append_base(world, buf, ecs_pair_second(world, id), inst, desc)) 
             {
                 return -1;
             }
@@ -26697,7 +26697,7 @@ int ecs_entity_to_json_buf(
                 ecs_id_t id = ids[i];
                 if (ECS_HAS_RELATION(id, EcsIsA)) {
                     if (append_base(
-                        world, buf, ecs_pair_object(world, id), entity, desc)) 
+                        world, buf, ecs_pair_second(world, id), entity, desc)) 
                     {
                         return -1;
                     }
@@ -32845,8 +32845,8 @@ bool for_each_id(
             result |= action(world, table, all_wildcard, i);
 
             if (set_watch) {
-                ecs_entity_t rel = ecs_pair_relation(world, id);
-                ecs_entity_t obj = ecs_pair_object(world, id);
+                ecs_entity_t rel = ecs_pair_first(world, id);
+                ecs_entity_t obj = ecs_pair_second(world, id);
                 flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
                 flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
                 if (ecs_has_id(world, rel, EcsAcyclic)) {
@@ -37573,7 +37573,7 @@ uint64_t group_by_cascade(
         /* Find relation & relation object in entity type */
         if (ECS_HAS_RELATION(array[i], relation)) {
             ecs_type_t obj_type = ecs_get_type(world,     
-                ecs_pair_object(world, array[i]));
+                ecs_pair_second(world, array[i]));
             int32_t j, c_count = ecs_vector_count(obj_type);
             ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
 
@@ -40105,9 +40105,9 @@ bool ecs_query_changed(
     const ecs_iter_t *it)
 {
     if (it) {
-        ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
 
         ecs_query_table_match_t *qt = 
             (ecs_query_table_match_t*)it->priv.iter.query.prev;
@@ -40115,9 +40115,12 @@ bool ecs_query_changed(
 
         if (!query) {
             query = it->priv.iter.query.query;
+        } else {
+            ecs_check(query == it->priv.iter.query.query, 
+                ECS_INVALID_PARAMETER, NULL);
         }
 
-        ecs_assert(query != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_poly_assert(query, ecs_query_t);
 
         flecs_process_pending_tables(it->real_world);
@@ -40393,7 +40396,7 @@ void init_flags(
         /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             ecs_poly_assert(world, ecs_world_t);
-            ecs_entity_t obj = ecs_pair_object(world, id);
+            ecs_entity_t obj = ecs_pair_second(world, id);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
@@ -40646,7 +40649,7 @@ void diff_insert_isa(
     ecs_ids_t *append_from,
     ecs_id_t add)
 {
-    ecs_entity_t base = ecs_pair_object(world, add);
+    ecs_entity_t base = ecs_pair_second(world, add);
     ecs_table_t *base_table = ecs_get_table(world, base);
     if (!base_table) {
         return;
@@ -40997,7 +41000,7 @@ ecs_table_t* find_or_create_table_with_isa(
         }
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            ecs_entity_t base_of_base = ecs_pair_object(world, id);
+            ecs_entity_t base_of_base = ecs_pair_second(world, id);
             node = find_or_create_table_with_isa(world, node, base_of_base);
         }
 
@@ -41041,7 +41044,7 @@ ecs_table_t* find_or_create_table_with(
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
 
     if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
-        ecs_entity_t base = ecs_pair_object(world, id);
+        ecs_entity_t base = ecs_pair_second(world, id);
         next = find_or_create_table_with_isa(world, next, base);
     }
 
@@ -42522,7 +42525,7 @@ void notify_set_base_triggers(
 
     ecs_entity_t event_id = it->event_id;
     ecs_entity_t rel = ECS_PAIR_RELATION(event_id);
-    ecs_entity_t obj = ecs_pair_object(world, event_id);
+    ecs_entity_t obj = ecs_pair_second(world, event_id);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *obj_table = ecs_get_table(world, obj);
     if (!obj_table) {

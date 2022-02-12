@@ -3097,14 +3097,16 @@ void Entity_create_named_twice_deferred() {
 }
 
 struct PositionInitialized { 
-    float x;
-    float y;
+    PositionInitialized() { }
+    PositionInitialized(float x_, float y_) : x(x_), y(y_) { }
+    float x = -1.0;
+    float y = -1.0;
 };
 
 void Entity_clone() {
     flecs::world ecs;
 
-    PositionInitialized v = {10, 20};
+    PositionInitialized v(10, 20);
 
     auto src = ecs.entity().add<Tag>().set<PositionInitialized>(v);
     auto dst = src.clone(false);
@@ -3113,8 +3115,8 @@ void Entity_clone() {
 
     const PositionInitialized *ptr = dst.get<PositionInitialized>();
     test_assert(ptr != NULL);
-    test_int(ptr->x, 0);
-    test_int(ptr->y, 0);
+    test_int(ptr->x, -1);
+    test_int(ptr->y, -1);
 }
 
 void Entity_clone_w_value() {

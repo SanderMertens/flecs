@@ -458,7 +458,7 @@ void notify_set_base_triggers(
 
     ecs_entity_t event_id = it->event_id;
     ecs_entity_t rel = ECS_PAIR_RELATION(event_id);
-    ecs_entity_t obj = ecs_pair_object(world, event_id);
+    ecs_entity_t obj = ecs_pair_second(world, event_id);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *obj_table = ecs_get_table(world, obj);
     if (!obj_table) {

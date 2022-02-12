@@ -231,7 +231,7 @@ void init_flags(
         /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             ecs_poly_assert(world, ecs_world_t);
-            ecs_entity_t obj = ecs_pair_object(world, id);
+            ecs_entity_t obj = ecs_pair_second(world, id);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
             if (obj == EcsFlecs || obj == EcsFlecsCore || 
@@ -484,7 +484,7 @@ void diff_insert_isa(
     ecs_ids_t *append_from,
     ecs_id_t add)
 {
-    ecs_entity_t base = ecs_pair_object(world, add);
+    ecs_entity_t base = ecs_pair_second(world, add);
     ecs_table_t *base_table = ecs_get_table(world, base);
     if (!base_table) {
         return;
@@ -835,7 +835,7 @@ ecs_table_t* find_or_create_table_with_isa(
         }
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            ecs_entity_t base_of_base = ecs_pair_object(world, id);
+            ecs_entity_t base_of_base = ecs_pair_second(world, id);
             node = find_or_create_table_with_isa(world, node, base_of_base);
         }
 
@@ -879,7 +879,7 @@ ecs_table_t* find_or_create_table_with(
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
 
     if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
-        ecs_entity_t base = ecs_pair_object(world, id);
+        ecs_entity_t base = ecs_pair_second(world, id);
         next = find_or_create_table_with_isa(world, next, base);
     }
 

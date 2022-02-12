@@ -458,8 +458,8 @@ int append_type(
         }
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            pred = ecs_pair_relation(world, id);
-            obj = ecs_pair_object(world, id);
+            pred = ecs_pair_first(world, id);
+            obj = ecs_pair_second(world, id);
         } else {
             pred = id & ECS_COMPONENT_MASK;
             if (id & ECS_ROLE_MASK) {
@@ -546,7 +546,7 @@ int append_base(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            if (append_base(world, buf, ecs_pair_object(world, id), inst, desc)) 
+            if (append_base(world, buf, ecs_pair_second(world, id), inst, desc)) 
             {
                 return -1;
             }
@@ -600,7 +600,7 @@ int ecs_entity_to_json_buf(
                 ecs_id_t id = ids[i];
                 if (ECS_HAS_RELATION(id, EcsIsA)) {
                     if (append_base(
-                        world, buf, ecs_pair_object(world, id), entity, desc)) 
+                        world, buf, ecs_pair_second(world, id), entity, desc)) 
                     {
                         return -1;
                     }

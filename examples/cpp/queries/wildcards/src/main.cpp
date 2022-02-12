@@ -1,11 +1,11 @@
 #include <wildcards.h>
 #include <iostream>
 
-/* Queries can have wildcard terms that can match multiple instances of a
- * relationship or relationship target. */
+// Queries can have wildcard terms that can match multiple instances of a
+// relationship or relationship target.
 
 struct Eats {
-    double amount;
+    int amount;
 };
 
 struct Apples { };

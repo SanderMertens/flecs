@@ -47,20 +47,42 @@ int main(int argc, char *argv[]) {
         .build();
 
     // Iterate query, print values of Position
-    std::cout << "-- First iteration" << std::endl;
+    std::cout << "-- First iteration\n";
     print_query(q);
 
     // Change the value of one entity, invalidating the order
     e.set<Position>({7, 0});
 
     // Iterate query again, printed values are still ordered
-    std::cout << "-- Second iteration" << std::endl;
+    std::cout << "\n-- Second iteration";
     print_query(q);
 
     // Create new entity to show that data is also sorted for system
     ecs.entity().set<Position>({3, 0});
     
     // Run system, output will be sorted
-    std::cout << "-- System iteration" << std::endl;
+    std::cout << "\n-- System iteration";
     sys.run();
+
+    // Output
+    //  -- First iteration
+    //  {1,0}
+    //  {2,0}
+    //  {4,0}
+    //  {5,0}
+    //  {6,0}
+    //  
+    //  -- Second iteration{2,0}
+    //  {4,0}
+    //  {5,0}
+    //  {6,0}
+    //  {7,0}
+    //  
+    //  -- System iteration{2,0}
+    //  {3,0}
+    //  {4,0}
+    //  {5,0}
+    //  {6,0}
+    //  {7,0}
+
 }

@@ -342,9 +342,10 @@ typedef int32_t ecs_size_t;
 #define ecs_case(pred, obj) (ECS_CASE | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
-#define ecs_pair_relation(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
-#define ecs_pair_object(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
-
+#define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_RELATION(pair))
+#define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_OBJECT(pair))
+#define ecs_pair_relation ecs_pair_first
+#define ecs_pair_object ecs_pair_second
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Debug macro's
@@ -18468,7 +18469,7 @@ inline flecs::entity entity_view::clone(bool copy_value, flecs::entity_t dst_id)
     flecs::entity dst = flecs::entity(m_world, dst_id);
     ecs_clone(m_world, dst_id, m_id, copy_value);
     return dst;
-};
+}
 
 // Entity mixin implementation
 template <typename... Args>

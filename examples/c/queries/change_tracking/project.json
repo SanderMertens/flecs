@@ -1,0 +1,10 @@
+{
+    "id": "change_tracking",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

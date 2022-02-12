@@ -110,7 +110,7 @@ void* get_base_component(
 
     do {
         ecs_id_t pair = ids[i ++];
-        ecs_entity_t base = ecs_pair_object(world, pair);
+        ecs_entity_t base = ecs_pair_second(world, pair);
 
         ecs_record_t *r = ecs_eis_get(world, base);
         if (!r) {
@@ -583,7 +583,7 @@ bool override_component(
         }
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
-            if (override_from_base(world, ecs_pair_object(world, e), component,
+            if (override_from_base(world, ecs_pair_second(world, e), component,
                 table, other_table, data, column, row, count, notify_on_set))
             {
                 return true;
@@ -867,7 +867,7 @@ void update_component_monitor_w_array(
             /* If an IsA relationship is added to a monitored entity (can
              * be either a parent or a base) component monitors need to be
              * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_object(world, id);
+            ecs_entity_t base = ecs_pair_second(world, id);
             ecs_type_t type = ecs_get_type(world, base);
             ecs_ids_t base_entities = flecs_type_to_ids(type);
 
@@ -3215,7 +3215,7 @@ ecs_entity_t ecs_get_object(
     }
 
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-    return ecs_pair_object(world, ids[tr->column + index]);
+    return ecs_pair_second(world, ids[tr->column + index]);
 error:
     return 0;
 }
@@ -3619,7 +3619,7 @@ ecs_entity_t ecs_id_is_tag(
          * when the relation part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
             if (ECS_PAIR_RELATION(id) != EcsWildcard) {
-                ecs_entity_t rel = ecs_pair_relation(world, id);
+                ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsTag)) {
                         return true;
@@ -3897,14 +3897,14 @@ bool remove_invalid(
     ecs_id_t id = *id_out;
 
     if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t rel = ecs_pair_relation(world, id);
+        ecs_entity_t rel = ecs_pair_first(world, id);
         if (!rel || !is_entity_valid(world, rel)) {
             /* After relation is deleted we can no longer see what its
              * delete action was, so pretend this never happened */
             *id_out = 0;
             return true;
         } else {
-            ecs_entity_t obj = ecs_pair_object(world, id);
+            ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
                 ecs_id_record_t *idr = flecs_get_id_record(world, rel);

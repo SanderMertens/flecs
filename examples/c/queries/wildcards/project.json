@@ -1,0 +1,10 @@
+{
+    "id": "wildcards",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

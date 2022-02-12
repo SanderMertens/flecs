@@ -398,7 +398,7 @@ int add_constant_to_enum(
     int32_t value = 0;
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
-        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_i32_t)) {
+        if (ecs_pair_second(world, constant_id) != ecs_id(ecs_i32_t)) {
             char *path = ecs_get_fullpath(world, e);
             ecs_err("expected i32 type for enum constant '%s'", path);
             ecs_os_free(path);
@@ -470,7 +470,7 @@ int add_constant_to_bitmask(
     /* Check if constant sets explicit value */
     uint32_t value = 1;
     if (ecs_id_is_pair(constant_id)) {
-        if (ecs_pair_object(world, constant_id) != ecs_id(ecs_u32_t)) {
+        if (ecs_pair_second(world, constant_id) != ecs_id(ecs_u32_t)) {
             char *path = ecs_get_fullpath(world, e);
             ecs_err("expected u32 type for bitmask constant '%s'", path);
             ecs_os_free(path);
