@@ -1794,6 +1794,7 @@ void Monitor_monitor_w_optional(void);
 void Monitor_monitor_w_superset(void);
 void Monitor_monitor_w_self_superset(void);
 void Monitor_monitor_w_wildcard(void);
+void Monitor_monitor_at_fini(void);
 
 // Testsuite 'SystemOnSet'
 void SystemOnSet_set_1_of_1(void);
@@ -9370,6 +9371,10 @@ bake_test_case Monitor_testcases[] = {
     {
         "monitor_w_wildcard",
         Monitor_monitor_w_wildcard
+    },
+    {
+        "monitor_at_fini",
+        Monitor_monitor_at_fini
     }
 };
 
@@ -12122,7 +12127,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        14,
+        15,
         Monitor_testcases
     },
     {

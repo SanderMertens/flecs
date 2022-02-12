@@ -572,3 +572,37 @@ void Monitor_monitor_w_wildcard() {
 
     ecs_fini(world);
 }
+
+static void Monitor(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+}
+
+void Monitor_monitor_at_fini() {
+	ecs_world_t *world = ecs_mini();
+
+	ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ TagA }},
+        .events = {EcsMonitor},
+        .callback = Monitor,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+	ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_os_zeromem(&ctx);
+	
+	ecs_fini(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.event, EcsOnRemove);
+}

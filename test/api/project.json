@@ -1875,7 +1875,8 @@
                 "monitor_w_optional",
                 "monitor_w_superset",
                 "monitor_w_self_superset",
-                "monitor_w_wildcard"
+                "monitor_w_wildcard",
+                "monitor_at_fini"
             ]
         }, {
             "id": "SystemOnSet",

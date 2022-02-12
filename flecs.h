@@ -4329,6 +4329,15 @@ FLECS_API
 int ecs_fini(
     ecs_world_t *world);
 
+/** Returns whether the world is being deleted.
+ *
+ * @param world The world.
+ * @return True if being deleted, false if not.
+ */
+FLECS_API
+bool ecs_is_fini(
+    const ecs_world_t *world);
+
 /** Register action to be executed when world is destroyed.
  * Fini actions are typically used when a module needs to clean up before a
  * world shuts down.

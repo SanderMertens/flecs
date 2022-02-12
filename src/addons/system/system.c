@@ -362,6 +362,10 @@ static
 void EnableMonitor(
     ecs_iter_t *it)
 {
+    if (ecs_is_fini(it->world)) {
+        return;
+    }
+
     EcsSystem *sys = ecs_term(it, EcsSystem, 1);
 
     int32_t i;

@@ -1214,6 +1214,14 @@ int ecs_fini(
     return 0;
 }
 
+bool ecs_is_fini(
+    const ecs_world_t *world)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return world->is_fini;
+}
+
 void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count)
