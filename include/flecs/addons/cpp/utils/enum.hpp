@@ -44,7 +44,7 @@ namespace _ {
 #elif defined(__clang__)
 #define ECS_SIZE_T_STR "size_t"
 #else
-#define ECS_SIZE_T_STR "size_t; size_t = long unsigned int"
+#define ECS_SIZE_T_STR "constexpr size_t; size_t = long unsigned int"
 #endif
 
 template <typename E>
@@ -69,7 +69,7 @@ constexpr bool enum_constant_is_valid() {
 #elif defined(__GNUC__)
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
-    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
+    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(constepxr bool, enum_constant_is_valid) +
         enum_type_len<E>() + 8 /* ', E C = ' */] != '(');
 }
 #else
