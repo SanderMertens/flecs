@@ -15795,6 +15795,8 @@ struct entity_view : public id {
         return stats->delta_time;
     }
 
+    flecs::entity clone(bool clone_value = true, flecs::entity_t dst_id = 0) const;
+
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is
      * in staged mode, it will only allow for readonly operations since 
@@ -18457,6 +18459,16 @@ inline flecs::entity entity_view::lookup(const char *path) const {
     auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
     return flecs::entity(m_world, id);
 }
+
+inline flecs::entity entity_view::clone(bool copy_value, flecs::entity_t dst_id) const {
+    if (!dst_id) {
+        dst_id = ecs_new_id(m_world);
+    }
+
+    flecs::entity dst = flecs::entity(m_world, dst_id);
+    ecs_clone(m_world, dst_id, m_id, copy_value);
+    return dst;
+};
 
 // Entity mixin implementation
 template <typename... Args>

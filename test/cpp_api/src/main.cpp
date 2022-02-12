@@ -174,6 +174,10 @@ void Entity_get_lambda_from_stage(void);
 void Entity_default_ctor(void);
 void Entity_get_obj_by_template(void);
 void Entity_create_named_twice_deferred(void);
+void Entity_clone(void);
+void Entity_clone_w_value(void);
+void Entity_clone_to_existing(void);
+void Entity_clone_to_existing_overlap(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1512,6 +1516,22 @@ bake_test_case Entity_testcases[] = {
     {
         "create_named_twice_deferred",
         Entity_create_named_twice_deferred
+    },
+    {
+        "clone",
+        Entity_clone
+    },
+    {
+        "clone_w_value",
+        Entity_clone_w_value
+    },
+    {
+        "clone_to_existing",
+        Entity_clone_to_existing
+    },
+    {
+        "clone_to_existing_overlap",
+        Entity_clone_to_existing_overlap
     }
 };
 
@@ -4099,7 +4119,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        165,
+        169,
         Entity_testcases
     },
     {

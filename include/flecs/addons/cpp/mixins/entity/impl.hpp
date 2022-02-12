@@ -195,6 +195,16 @@ inline flecs::entity entity_view::lookup(const char *path) const {
     return flecs::entity(m_world, id);
 }
 
+inline flecs::entity entity_view::clone(bool copy_value, flecs::entity_t dst_id) const {
+    if (!dst_id) {
+        dst_id = ecs_new_id(m_world);
+    }
+
+    flecs::entity dst = flecs::entity(m_world, dst_id);
+    ecs_clone(m_world, dst_id, m_id, copy_value);
+    return dst;
+}
+
 // Entity mixin implementation
 template <typename... Args>
 inline flecs::entity world::entity(Args &&... args) const {

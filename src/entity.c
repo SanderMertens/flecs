@@ -2665,6 +2665,7 @@ ecs_entity_t ecs_clone(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(src != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, src), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!dst || !ecs_get_table(world, dst), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (!dst) {

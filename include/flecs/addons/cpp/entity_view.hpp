@@ -547,6 +547,8 @@ struct entity_view : public id {
         return stats->delta_time;
     }
 
+    flecs::entity clone(bool clone_value = true, flecs::entity_t dst_id = 0) const;
+
     /** Return mutable entity handle for current stage 
      * When an entity handle created from the world is used while the world is
      * in staged mode, it will only allow for readonly operations since 

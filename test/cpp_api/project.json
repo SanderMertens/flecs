@@ -179,7 +179,11 @@
                 "get_lambda_from_stage",
                 "default_ctor",
                 "get_obj_by_template",
-                "create_named_twice_deferred"
+                "create_named_twice_deferred",
+                "clone",
+                "clone_w_value",
+                "clone_to_existing",
+                "clone_to_existing_overlap"
             ]
         }, {
             "id": "Pairs",

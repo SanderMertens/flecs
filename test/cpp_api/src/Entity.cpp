@@ -3095,3 +3095,72 @@ void Entity_create_named_twice_deferred() {
     test_assert(f1 == f2);
     test_assert(g1 == g2);
 }
+
+struct PositionInitialized { 
+    float x;
+    float y;
+};
+
+void Entity_clone() {
+    flecs::world ecs;
+
+    PositionInitialized v = {10, 20};
+
+    auto src = ecs.entity().add<Tag>().set<PositionInitialized>(v);
+    auto dst = src.clone(false);
+    test_assert(dst.has<Tag>());
+    test_assert(dst.has<PositionInitialized>());
+
+    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+}
+
+void Entity_clone_w_value() {
+    flecs::world ecs;
+
+    PositionInitialized v = {10, 20};
+
+    auto src = ecs.entity().add<Tag>().set<PositionInitialized>(v);
+    auto dst = src.clone();
+    test_assert(dst.has<Tag>());
+    test_assert(dst.has<PositionInitialized>());
+
+    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_clone_to_existing() {
+    flecs::world ecs;
+
+    PositionInitialized v = {10, 20};
+
+    auto src = ecs.entity().add<Tag>().set<PositionInitialized>(v);
+    auto dst = ecs.entity();
+    auto result = src.clone(true, dst);
+    test_assert(result == dst);
+
+    test_assert(dst.has<Tag>());
+    test_assert(dst.has<PositionInitialized>());
+
+    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+}
+
+void Entity_clone_to_existing_overlap() {
+    install_test_abort();
+    flecs::world ecs;
+
+    PositionInitialized v = {10, 20};
+
+    auto src = ecs.entity().add<Tag>().set<PositionInitialized>(v);
+    auto dst = ecs.entity().add<PositionInitialized>();
+
+    test_expect_abort();
+    src.clone(true, dst);
+}
