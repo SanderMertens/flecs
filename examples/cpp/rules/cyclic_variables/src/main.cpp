@@ -62,4 +62,6 @@ int main(int, char *[]) {
     // within the given constraints. Since we did not give it any constraints
     // that would favor a person being matched by X or Y, the rule engine
     // returns both.
+
+    r.destruct();
 }

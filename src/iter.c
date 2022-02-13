@@ -550,6 +550,19 @@ error:
     return 0;
 }
 
+bool ecs_iter_is_true(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    bool result = ecs_iter_next(it);
+    if (result) {
+        ecs_iter_fini(it);
+    }
+    return result;
+error:
+    return false;
+}
+
 ecs_iter_t ecs_page_iter(
     const ecs_iter_t *it,
     int32_t offset,

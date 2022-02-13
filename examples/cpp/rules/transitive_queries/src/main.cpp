@@ -118,7 +118,7 @@ int main(int, char *[]) {
     r.destruct();
 
     // Output:
-    //  Bob eats Apples
-    //  Alice eats Apples
-    //  Alice eats Salad
+    //   Bob lives in UnitedStates
+    //   Alice lives in UnitedStates
+    //   Job lives in Netherlands
 }

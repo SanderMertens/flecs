@@ -19842,6 +19842,8 @@ int32_t find_next_column(
     int32_t column,
     ecs_rule_filter_t *filter)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_entity_t pattern = filter->mask;
     ecs_type_t type = table->type;
 
@@ -41812,6 +41814,19 @@ bool ecs_iter_count(
     return count;
 error:
     return 0;
+}
+
+bool ecs_iter_is_true(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    bool result = ecs_iter_next(it);
+    if (result) {
+        ecs_iter_fini(it);
+    }
+    return result;
+error:
+    return false;
 }
 
 ecs_iter_t ecs_page_iter(

@@ -1,0 +1,9 @@
+{
+    "id": "cyclic_variables",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

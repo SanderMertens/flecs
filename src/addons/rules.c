@@ -3116,6 +3116,8 @@ int32_t find_next_column(
     int32_t column,
     ecs_rule_filter_t *filter)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_entity_t pattern = filter->mask;
     ecs_type_t type = table->type;
 

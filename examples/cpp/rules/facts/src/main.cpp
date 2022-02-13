@@ -16,7 +16,7 @@
 //   IsA(Cat, Animal)
 //
 // This is a fact: the query has no elements that are unknown before evaluating
-// the query. A rule that checks a fact does not not return entities, but will
+// the query. A rule that checks a fact does not return entities, but will
 // instead return the reasons why a fact is true (if it is true).
 
 struct Likes { };
@@ -40,9 +40,8 @@ int main(int, char *[]) {
     // rule is not a fact, but we can use it to check facts by populating both
     // of its variables.
     // Instead of using variables we could have created a rule that referred the
-    // entities directly, but that way we would have to create a rule for each
-    // fact we want to check, whereas this rule can be reused for different
-    // facts.
+    // entities directly, but then we would have to create a rule for each
+    // fact, vs reusing a single rule for multiple facts.
     auto friends = ecs.rule_builder()
         .term<Likes>().subj("_X").obj("_Y")
         .term<Likes>().subj("_Y").obj("_X")

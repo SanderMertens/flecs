@@ -27,7 +27,7 @@ static const int PlatoonsPerPlayer = 3;
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Setup inheritance hierarchy between unit tags
+    // See component_inheritance example
     ecs.component<CombatUnit>().is_a<Unit>();
     ecs.component<MeleeUnit>().is_a<CombatUnit>();
     ecs.component<RangedUnit>().is_a<CombatUnit>();
@@ -54,7 +54,7 @@ int main(int, char *[]) {
             auto platoon = ecs.entity().add<Player>(player);
 
             // Add platoon tag so we can query for all platoons if we want to
-            player.add<Player>();
+            platoon.add<Platoon>();
 
             // Add warriors, wizards and marksmen to the platoon
             ecs.entity().add<Warrior>().add<Platoon>(platoon);
@@ -65,7 +65,7 @@ int main(int, char *[]) {
 
     // Create a rule to find all RangedUnits for a platoon/player. The 
     // equivalent query in the query DSL would look like this:
-    //   Platoon(_Platoon), Player(_Platoon, _Player)
+    //   (Platoon, _Platoon), Player(_Platoon, _Player)
     //
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon

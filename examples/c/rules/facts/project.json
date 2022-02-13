@@ -1,0 +1,10 @@
+{
+    "id": "facts",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

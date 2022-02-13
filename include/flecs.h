@@ -3434,6 +3434,22 @@ FLECS_API
 bool ecs_iter_count(
     ecs_iter_t *it);
 
+/** Test if iterator is true.
+ * This operation will return true if the iterator returns at least one result.
+ * This is especially useful in combination with fact-checking rules (see the
+ * rules addon).
+ * 
+ * The operation requires a valid iterator. After the operation is invoked, the
+ * application should no longer invoke next on the iterator and should treat it
+ * as if the iterator is iterated until completion.
+ * 
+ * @param it The iterator.
+ * @return true if the iterator returns at least one result.
+ */
+FLECS_API
+bool ecs_iter_is_true(
+    ecs_iter_t *it);
+
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
  * return at most 'limit' results.
