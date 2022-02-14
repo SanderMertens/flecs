@@ -46,7 +46,7 @@ struct iterable {
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.
      */
-    iter_iterable<Components...> iter();
+    iter_iterable<Components...> iter() const;
 
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
@@ -143,7 +143,7 @@ private:
 };
 
 template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter() 
+iter_iterable<Components...> iterable<Components...>::iter() const
 {
     return iter_iterable<Components...>(this);
 }

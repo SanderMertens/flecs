@@ -12311,6 +12311,11 @@ struct id {
         return (m_id & ECS_ROLE_MASK) == flecs::Case;
     }
 
+    /* Test if id is entity */
+    bool is_entity() const {
+        return !(m_id & ECS_ROLE_MASK);
+    }
+
     /* Return id as entity (only allowed when id is valid entity) */
     flecs::entity entity() const;
 
@@ -17312,7 +17317,7 @@ struct iterable {
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.
      */
-    iter_iterable<Components...> iter();
+    iter_iterable<Components...> iter() const;
 
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
@@ -17430,7 +17435,7 @@ private:
 };
 
 template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter() 
+iter_iterable<Components...> iterable<Components...>::iter() const
 {
     return iter_iterable<Components...>(this);
 }

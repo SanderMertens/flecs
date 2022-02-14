@@ -54,6 +54,11 @@ struct id {
         return (m_id & ECS_ROLE_MASK) == flecs::Case;
     }
 
+    /* Test if id is entity */
+    bool is_entity() const {
+        return !(m_id & ECS_ROLE_MASK);
+    }
+
     /* Return id as entity (only allowed when id is valid entity) */
     flecs::entity entity() const;
 
