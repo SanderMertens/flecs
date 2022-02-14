@@ -187,6 +187,9 @@ bool rest_reply(
             return true;
         }
     }
+    if (req->method == EcsHttpOptions) {
+        return true;
+    }
 
     return false;
 }

@@ -60,6 +60,7 @@ typedef enum {
     EcsHttpPost,
     EcsHttpPut,
     EcsHttpDelete,
+    EcsHttpOptions,
     EcsHttpMethodUnsupported
 } ecs_http_method_t;
 
