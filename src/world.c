@@ -1705,7 +1705,6 @@ bool for_each_id(
         } 
 
         result |= action(world, table, ecs_strip_generation(id), i);
-        result |= action(world, table, EcsWildcard, i);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
@@ -1729,6 +1728,8 @@ bool for_each_id(
                 }
             }
         } else {
+            result |= action(world, table, EcsWildcard, i);
+            
             if (id & ECS_ROLE_MASK) {
                 id &= ECS_COMPONENT_MASK;
                 result |= action(world, table, ecs_pair(id, EcsWildcard), i);

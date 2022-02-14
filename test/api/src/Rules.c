@@ -5255,3 +5255,388 @@ void Rules_optional_any_subject() {
 
     ecs_fini(world);
 }
+
+void Rules_test_subj_w_wildcard_w_pairs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_wildcard_wildcard_w_pairs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e, *)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_w_pairs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*, MyTag");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), MyTag);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_wildcard_w_pairs() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "(*, *), MyTag");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_wildcard_w_pairs_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, RelA, TagA);
+    ecs_add_pair(world, e, RelA, TagB);
+    ecs_add_pair(world, e, RelB, TagA);
+    ecs_add_pair(world, e, RelB, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "_C(e)");
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "C");
+    test_assert(c_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_rule_get_var(&it, c_var), TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_rule_get_var(&it, c_var), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_wildcard_wildcard_w_pairs_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "_R(e, _O)");
+    test_assert(r != NULL);
+
+    int r_var = ecs_rule_find_var(r, "R");
+    test_assert(r_var != -1);
+    int o_var = ecs_rule_find_var(r, "O");
+    test_assert(o_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+    test_int(ecs_rule_get_var(&it, r_var), ecs_id(EcsIdentifier));
+    test_int(ecs_rule_get_var(&it, o_var), EcsName);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_rule_get_var(&it, r_var), Rel);
+    test_int(ecs_rule_get_var(&it, o_var), TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_rule_get_var(&it, r_var), Rel);
+    test_int(ecs_rule_get_var(&it, o_var), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_w_pairs_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "_C, MyTag");
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "C");
+    test_assert(c_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), MyTag);
+    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_rule_get_var(&it, c_var), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_rule_get_var(&it, c_var), TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_rule_get_var(&it, c_var), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_wildcard_w_pairs_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "(_R, _O), MyTag");
+    test_assert(r != NULL);
+
+    int r_var = ecs_rule_find_var(r, "R");
+    test_assert(r_var != -1);
+    int o_var = ecs_rule_find_var(r, "O");
+    test_assert(o_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_rule_get_var(&it, r_var), Rel);
+    test_int(ecs_rule_get_var(&it, o_var), TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+    test_int(ecs_term_id(&it, 2), MyTag);
+    test_int(ecs_rule_get_var(&it, r_var), Rel);
+    test_int(ecs_rule_get_var(&it, o_var), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_no_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, MyTag);
+    ecs_add_pair(world, e, Rel, TagA);
+    ecs_add_pair(world, e, Rel, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*, (Rel, MyTag)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_pair_wildcard_no_match() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag); // So we don't match everything
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "(*, *), MyTag");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

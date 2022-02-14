@@ -1458,7 +1458,9 @@
                 "remove_relation_wildcard",
                 "remove_wildcard_all",
                 "inherit_exclusive",
-                "dont_inherit"
+                "dont_inherit",
+                "has_wildcard_w_pair",
+                "has_pair_wildcard_w_tag"
             ]
         }, {
             "id": "Rules",
@@ -1594,7 +1596,17 @@
                 "rule_iter_set_cyclic_variable",
                 "rule_iter_set_cyclic_variable_w_this",
                 "optional_any_object",
-                "optional_any_subject"
+                "optional_any_subject",
+                "test_subj_w_wildcard_w_pairs",
+                "test_subj_w_wildcard_wildcard_w_pairs",
+                "test_this_w_wildcard_w_pairs",
+                "test_this_w_wildcard_wildcard_w_pairs",
+                "test_subj_w_wildcard_w_pairs_var",
+                "test_subj_w_wildcard_wildcard_w_pairs_var",
+                "test_this_w_wildcard_w_pairs_var",
+                "test_this_w_wildcard_wildcard_w_pairs_var",
+                "test_this_w_wildcard_no_match",
+                "test_this_w_pair_wildcard_no_match"
             ]
         }, {
             "id": "TransitiveRules",

@@ -2642,3 +2642,34 @@ void Pairs_dont_inherit() {
 
     ecs_fini(world);
 }
+
+void Pairs_has_wildcard_w_pair() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, Obj);
+
+    test_bool(ecs_has_pair(world, e, EcsWildcard, EcsWildcard), true);
+    test_bool(ecs_has_pair(world, e, Rel, EcsWildcard), true);
+    test_bool(ecs_has_pair(world, e, EcsWildcard, Obj), true);
+    test_bool(ecs_has_pair(world, e, Rel, Obj), true);
+    test_bool(ecs_has_id(world, e, EcsWildcard), false);
+
+    ecs_fini(world);
+}
+
+void Pairs_has_pair_wildcard_w_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    test_bool(ecs_has_pair(world, e, EcsWildcard, EcsWildcard), false);
+    test_bool(ecs_has_id(world, e, Tag), true);
+    test_bool(ecs_has_id(world, e, EcsWildcard), true);
+
+    ecs_fini(world);
+}

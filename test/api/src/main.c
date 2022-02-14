@@ -1393,6 +1393,8 @@ void Pairs_remove_relation_wildcard(void);
 void Pairs_remove_wildcard_all(void);
 void Pairs_inherit_exclusive(void);
 void Pairs_dont_inherit(void);
+void Pairs_has_wildcard_w_pair(void);
+void Pairs_has_pair_wildcard_w_tag(void);
 
 // Testsuite 'Rules'
 void Rules_empty_rule(void);
@@ -1527,6 +1529,16 @@ void Rules_rule_iter_set_cyclic_variable(void);
 void Rules_rule_iter_set_cyclic_variable_w_this(void);
 void Rules_optional_any_object(void);
 void Rules_optional_any_subject(void);
+void Rules_test_subj_w_wildcard_w_pairs(void);
+void Rules_test_subj_w_wildcard_wildcard_w_pairs(void);
+void Rules_test_this_w_wildcard_w_pairs(void);
+void Rules_test_this_w_wildcard_wildcard_w_pairs(void);
+void Rules_test_subj_w_wildcard_w_pairs_var(void);
+void Rules_test_subj_w_wildcard_wildcard_w_pairs_var(void);
+void Rules_test_this_w_wildcard_w_pairs_var(void);
+void Rules_test_this_w_wildcard_wildcard_w_pairs_var(void);
+void Rules_test_this_w_wildcard_no_match(void);
+void Rules_test_this_w_pair_wildcard_no_match(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7811,6 +7823,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "dont_inherit",
         Pairs_dont_inherit
+    },
+    {
+        "has_wildcard_w_pair",
+        Pairs_has_wildcard_w_pair
+    },
+    {
+        "has_pair_wildcard_w_tag",
+        Pairs_has_pair_wildcard_w_tag
     }
 };
 
@@ -8342,6 +8362,46 @@ bake_test_case Rules_testcases[] = {
     {
         "optional_any_subject",
         Rules_optional_any_subject
+    },
+    {
+        "test_subj_w_wildcard_w_pairs",
+        Rules_test_subj_w_wildcard_w_pairs
+    },
+    {
+        "test_subj_w_wildcard_wildcard_w_pairs",
+        Rules_test_subj_w_wildcard_wildcard_w_pairs
+    },
+    {
+        "test_this_w_wildcard_w_pairs",
+        Rules_test_this_w_wildcard_w_pairs
+    },
+    {
+        "test_this_w_wildcard_wildcard_w_pairs",
+        Rules_test_this_w_wildcard_wildcard_w_pairs
+    },
+    {
+        "test_subj_w_wildcard_w_pairs_var",
+        Rules_test_subj_w_wildcard_w_pairs_var
+    },
+    {
+        "test_subj_w_wildcard_wildcard_w_pairs_var",
+        Rules_test_subj_w_wildcard_wildcard_w_pairs_var
+    },
+    {
+        "test_this_w_wildcard_w_pairs_var",
+        Rules_test_this_w_wildcard_w_pairs_var
+    },
+    {
+        "test_this_w_wildcard_wildcard_w_pairs_var",
+        Rules_test_this_w_wildcard_wildcard_w_pairs_var
+    },
+    {
+        "test_this_w_wildcard_no_match",
+        Rules_test_this_w_wildcard_no_match
+    },
+    {
+        "test_this_w_pair_wildcard_no_match",
+        Rules_test_this_w_pair_wildcard_no_match
     }
 };
 
@@ -12071,14 +12131,14 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        91,
+        93,
         Pairs_testcases
     },
     {
         "Rules",
         NULL,
         NULL,
-        132,
+        142,
         Rules_testcases
     },
     {

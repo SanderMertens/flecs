@@ -224,7 +224,7 @@ void attack(flecs::entity player, flecs::entity weapon) {
         weapon.destruct();
     } else {
         std::cout << " - " << item_name(weapon) << " has " 
-            << weapon_health->value << " health left";
+            << weapon_health->value << " uses left";
     }
 
     // If armor didn't counter the whole attack, subtract from the player health

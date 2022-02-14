@@ -18198,10 +18198,13 @@ int scan_variables(
     ecs_rule_var_t *root = &rule->variables[root_var];
     root->depth = get_variable_depth(rule, root, root, 0);
 
+    /* Verify that there are no unconstrained variables. Unconstrained variables
+     * are variables that are unreachable from the root. */
     for (i = 0; i < rule->subject_variable_count; i ++) {
         if (rule->variables[i].depth == UINT8_MAX) {
-            /* Variable is marked as unconstrainted, which means it must be
-             * set before iterating. */
+            rule_error(rule, "unconstrained variable '%s'", 
+                rule->variables[i].name);
+            goto error;
         } 
     }
 
@@ -27797,6 +27800,9 @@ bool rest_reply(
             return true;
         }
     }
+    if (req->method == EcsHttpOptions) {
+        return true;
+    }
 
     return false;
 }
@@ -28306,6 +28312,7 @@ void parse_method(
     else if (!ecs_os_strcmp(method, "POST")) frag->method = EcsHttpPost;
     else if (!ecs_os_strcmp(method, "PUT")) frag->method = EcsHttpPut;
     else if (!ecs_os_strcmp(method, "DELETE")) frag->method = EcsHttpDelete;
+    else if (!ecs_os_strcmp(method, "OPTIONS")) frag->method = EcsHttpOptions;
     else {
         frag->method = EcsHttpMethodUnsupported;
         frag->invalid = true;
@@ -28606,7 +28613,7 @@ void send_reply(
     ecs_size_t written = http_send(conn->sock, hdrs, hdrs_len, 0);
 
     if (written != hdrs_len) {
-        ecs_err("failed to write HTTP response headers to '%s:%d': %s",
+        ecs_err("failed to write HTTP response headers to '%s:%s': %s",
             conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         return;
     }
@@ -28615,7 +28622,7 @@ void send_reply(
     if (content_length > 0) {
         written = http_send(conn->sock, content, content_length, 0);
         if (written != content_length) {
-            ecs_err("failed to write HTTP response body to '%s:%d': %s",
+            ecs_err("failed to write HTTP response body to '%s:%s': %s",
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
     }
@@ -32829,7 +32836,6 @@ bool for_each_id(
         } 
 
         result |= action(world, table, ecs_strip_generation(id), i);
-        result |= action(world, table, EcsWildcard, i);
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
@@ -32853,6 +32859,8 @@ bool for_each_id(
                 }
             }
         } else {
+            result |= action(world, table, EcsWildcard, i);
+            
             if (id & ECS_ROLE_MASK) {
                 id &= ECS_COMPONENT_MASK;
                 result |= action(world, table, ecs_pair(id, EcsWildcard), i);
