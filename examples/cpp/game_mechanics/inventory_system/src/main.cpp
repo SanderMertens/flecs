@@ -43,8 +43,8 @@ flecs::entity item_kind(flecs::entity item) {
 
     item.each([&](flecs::id id) {
         if (id.is_entity()) { 
-            // If id is a plain entity (component), check if the component has
-            // the Item tag.
+            // If id is a plain entity (component), check if component inherits
+            // from Item
             if (id.entity().has(flecs::IsA, world.id<Item>())) {
                 result = id.entity();
             }
@@ -63,7 +63,8 @@ flecs::entity item_kind(flecs::entity item) {
     return result;
 }
 
-// Almost the same as item_kind, but return name of prefab vs item kind
+// Almost the same as item_kind, but return name of prefab vs item kind. This
+// returns a more user-friendly name, like "WoodenSword" vs. just "Sword"
 const char* item_name(flecs::entity item) {
     flecs::world world = item.world();
     const char *result = NULL;
@@ -367,5 +368,4 @@ int main(int, char *[]) {
     //  - Player defends with WoodenArmor
     //  - WoodenArmor has 8 health left after taking 2 damage
     //  - IronSword has 9 health left
-
 }
