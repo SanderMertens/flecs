@@ -289,6 +289,7 @@ void parse_method(
     else if (!ecs_os_strcmp(method, "POST")) frag->method = EcsHttpPost;
     else if (!ecs_os_strcmp(method, "PUT")) frag->method = EcsHttpPut;
     else if (!ecs_os_strcmp(method, "DELETE")) frag->method = EcsHttpDelete;
+    else if (!ecs_os_strcmp(method, "OPTIONS")) frag->method = EcsHttpOptions;
     else {
         frag->method = EcsHttpMethodUnsupported;
         frag->invalid = true;
@@ -589,7 +590,7 @@ void send_reply(
     ecs_size_t written = http_send(conn->sock, hdrs, hdrs_len, 0);
 
     if (written != hdrs_len) {
-        ecs_err("failed to write HTTP response headers to '%s:%d': %s",
+        ecs_err("failed to write HTTP response headers to '%s:%s': %s",
             conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         return;
     }
@@ -598,7 +599,7 @@ void send_reply(
     if (content_length > 0) {
         written = http_send(conn->sock, content, content_length, 0);
         if (written != content_length) {
-            ecs_err("failed to write HTTP response body to '%s:%d': %s",
+            ecs_err("failed to write HTTP response body to '%s:%s': %s",
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
     }
