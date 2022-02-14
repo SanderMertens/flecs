@@ -18198,13 +18198,10 @@ int scan_variables(
     ecs_rule_var_t *root = &rule->variables[root_var];
     root->depth = get_variable_depth(rule, root, root, 0);
 
-    /* Verify that there are no unconstrained variables. Unconstrained variables
-     * are variables that are unreachable from the root. */
     for (i = 0; i < rule->subject_variable_count; i ++) {
         if (rule->variables[i].depth == UINT8_MAX) {
-            rule_error(rule, "unconstrained variable '%s'", 
-                rule->variables[i].name);
-            goto error;
+            /* Variable is marked as unconstrainted, which means it must be
+             * set before iterating. */
         } 
     }
 

@@ -1,0 +1,11 @@
+{
+    "id": "inventory_system",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "language": "c++"
+    }
+}
