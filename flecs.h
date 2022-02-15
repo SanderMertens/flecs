@@ -9207,6 +9207,18 @@ int ecs_meta_set_null(
 
 /** API functions for creating meta types */
 
+/** Used with ecs_primitive_init. */
+typedef struct ecs_primitive_desc_t {
+    ecs_entity_desc_t entity;
+    ecs_primitive_kind_t kind;
+} ecs_primitive_desc_t;
+
+/** Create a new primitive type */
+FLECS_API
+ecs_entity_t ecs_primitive_init(
+    ecs_world_t *world,
+    const ecs_primitive_desc_t *desc);
+
 /** Used with ecs_enum_init. */
 typedef struct ecs_enum_desc_t {
     ecs_entity_desc_t entity;

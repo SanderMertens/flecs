@@ -60,6 +60,7 @@ void PrimitiveTypes_struct_w_float(void);
 void PrimitiveTypes_struct_w_double(void);
 void PrimitiveTypes_struct_w_string(void);
 void PrimitiveTypes_struct_w_entity(void);
+void PrimitiveTypes_primitive_init(void);
 
 // Testsuite 'EnumTypes'
 void EnumTypes_enum_1_constant(void);
@@ -707,6 +708,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
     {
         "struct_w_entity",
         PrimitiveTypes_struct_w_entity
+    },
+    {
+        "primitive_init",
+        PrimitiveTypes_primitive_init
     }
 };
 
@@ -2413,7 +2418,7 @@ static bake_test_suite suites[] = {
         "PrimitiveTypes",
         NULL,
         NULL,
-        51,
+        52,
         PrimitiveTypes_testcases
     },
     {

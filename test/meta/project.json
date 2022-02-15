@@ -64,7 +64,8 @@
                 "struct_w_float",
                 "struct_w_double",
                 "struct_w_string",
-                "struct_w_entity"
+                "struct_w_entity",
+                "primitive_init"
             ]
         }, {
             "id": "EnumTypes",
