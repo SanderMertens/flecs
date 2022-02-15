@@ -79,7 +79,9 @@
                     "entity_init_w_childof_and_scope",
                     "entity_init_w_childof_and_scope_and_scoped_name",
                     "deferred_entity_init_w_childof_and_scope",
-                    "deferred_entity_init_w_childof_and_scope_and_scoped_name"
+                    "deferred_entity_init_w_childof_and_scope_and_scoped_name",
+                    "entity_init_w_empty_string_name",
+                    "entity_init_w_empty_string_symbol"
                 ]
             }, {
                 "id": "Event",

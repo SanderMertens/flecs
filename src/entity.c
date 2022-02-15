@@ -1827,7 +1827,7 @@ int traverse_add(
             ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (desc->symbol) {
+    if (desc->symbol && desc->symbol[0]) {
         const char *sym = ecs_get_symbol(world, result);
         if (sym) {
             ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
@@ -1932,6 +1932,10 @@ ecs_entity_t ecs_entity_init(
     const char *sep = desc->sep;
     if (!sep) {
         sep = ".";
+    }
+
+    if (name && !name[0]) {
+        name = NULL;
     }
 
     const char *root_sep = desc->root_sep;

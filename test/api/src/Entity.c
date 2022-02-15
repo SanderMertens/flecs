@@ -1437,3 +1437,29 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
 
     ecs_fini(world);
 }
+
+void Entity_entity_init_w_empty_string_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = ""
+    });
+    
+    test_assert(e != 0);
+    test_assert(!ecs_has_pair(world, e, ecs_id(EcsIdentifier), EcsName));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_init_w_empty_string_symbol() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .symbol = ""
+    });
+    
+    test_assert(e != 0);
+    test_assert(!ecs_has_pair(world, e, ecs_id(EcsIdentifier), EcsSymbol));
+
+    ecs_fini(world);
+}

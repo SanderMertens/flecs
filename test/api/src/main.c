@@ -74,6 +74,8 @@ void Entity_entity_init_w_childof_and_scope(void);
 void Entity_entity_init_w_childof_and_scope_and_scoped_name(void);
 void Entity_deferred_entity_init_w_childof_and_scope(void);
 void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void);
+void Entity_entity_init_w_empty_string_name(void);
+void Entity_entity_init_w_empty_string_symbol(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2733,6 +2735,14 @@ bake_test_case Entity_testcases[] = {
     {
         "deferred_entity_init_w_childof_and_scope_and_scoped_name",
         Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name
+    },
+    {
+        "entity_init_w_empty_string_name",
+        Entity_entity_init_w_empty_string_name
+    },
+    {
+        "entity_init_w_empty_string_symbol",
+        Entity_entity_init_w_empty_string_symbol
     }
 };
 
@@ -11921,7 +11931,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        65,
+        67,
         Entity_testcases
     },
     {
