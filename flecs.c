@@ -31334,6 +31334,8 @@ ecs_world_t* flecs_suspend_readonly(
         return world;
     }
 
+    ecs_dbg_3("suspending readonly mode");
+
     /* Cannot suspend when running with multiple threads */
     ecs_assert(ecs_get_stage_count(world) <= 1, 
         ECS_INVALID_WHILE_ITERATING, NULL);
@@ -31368,6 +31370,8 @@ void flecs_resume_readonly(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_dbg_3("resuming readonly mode");
     
     ecs_world_t *temp_world = world;
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
