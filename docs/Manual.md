@@ -80,7 +80,7 @@ A stage is a temporary storage where structural changes to entities (new, add, r
 ## Diagrams
 
 ### High level architecture
-This diagram provides an overview of how entiies, components, tables, queries, filters and systems are wired together.
+This diagram provides an overview of how entities, components, tables, queries, filters and systems are wired together.
 ![Architecture diagram](flecs-architecture-overview.png)
 
 ### Component add flow
