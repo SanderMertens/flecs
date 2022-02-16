@@ -2777,3 +2777,37 @@ void Observer_match_base_w_id_at_offset() {
 
     ecs_fini(world);
 }
+
+
+static int run_invoked = 0;
+
+static void Run(ecs_iter_t *it) {
+    ecs_observer_default_run_action(it);
+    run_invoked ++;
+}
+
+void Observer_custom_run_action() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }},
+        .events = {EcsOnAdd},
+        .run = Run,
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    test_int(run_invoked, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+    
+    ecs_fini(world);
+}

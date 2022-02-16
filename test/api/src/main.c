@@ -1739,6 +1739,7 @@ void Observer_on_set_w_tag(void);
 void Observer_mixed_on_set_w_tag(void);
 void Observer_mixed_un_set_w_tag(void);
 void Observer_match_base_w_id_at_offset(void);
+void Observer_custom_run_action(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -9202,6 +9203,10 @@ bake_test_case Observer_testcases[] = {
     {
         "match_base_w_id_at_offset",
         Observer_match_base_w_id_at_offset
+    },
+    {
+        "custom_run_action",
+        Observer_custom_run_action
     }
 };
 
@@ -12218,7 +12223,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        62,
+        63,
         Observer_testcases
     },
     {

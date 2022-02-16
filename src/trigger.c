@@ -392,7 +392,7 @@ void notify_self_triggers(
         it->term_index = t->term.index;
         it->terms = &t->term;
 
-        t->action(it);
+        t->callback(it);
     }
 }
 
@@ -438,7 +438,7 @@ void notify_entity_triggers(
             it->count = 1;
             it->subjects[0] = entities[i];
 
-            t->action(it);
+            t->callback(it);
         }
     }
 
@@ -512,7 +512,7 @@ void notify_set_base_triggers(
         it->term_index = t->term.index;
         it->terms = &t->term;
         
-        t->action(it);
+        t->callback(it);
     }
 }
 
@@ -581,14 +581,14 @@ void notify_set_triggers(
             /* Triggers for supersets can be instanced */
             if (it->count == 1 || t->instanced || it->is_filter || !it->sizes[0]) {
                 it->is_instanced = t->instanced;
-                t->action(it);
+                t->callback(it);
                 it->is_instanced = false;
             } else {
                 ecs_entity_t *entities = it->entities;
                 it->count = 1;
                 for (i = 0; i < count; i ++) {
                     it->entities = &entities[i];
-                    t->action(it);
+                    t->callback(it);
                 }
                 it->entities = entities;
             }
@@ -647,7 +647,7 @@ void trigger_yield_existing(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
-    ecs_iter_action_t callback = trigger->action;
+    ecs_iter_action_t callback = trigger->callback;
 
     /* If yield existing is enabled, trigger for each thing that matches
      * the event, if the event is iterable. */
@@ -829,7 +829,7 @@ ecs_entity_t ecs_trigger_init(
         trigger->id = flecs_sparse_last_id(world->triggers);
 
         trigger->term = ecs_term_move(&term);
-        trigger->action = desc->callback;
+        trigger->callback = desc->callback;
         trigger->ctx = desc->ctx;
         trigger->binding_ctx = desc->binding_ctx;
         trigger->ctx_free = desc->ctx_free;
@@ -875,7 +875,7 @@ ecs_entity_t ecs_trigger_init(
         /* If existing entity handle was provided, override existing params */
         if (existing) {
             if (desc->callback) {
-                ((ecs_trigger_t*)comp->trigger)->action = desc->callback;
+                ((ecs_trigger_t*)comp->trigger)->callback = desc->callback;
             }
             if (desc->ctx) {
                 ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;

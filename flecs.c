@@ -35752,13 +35752,15 @@ int32_t ecs_search_offset(
 
 
 static
-void observer_callback(ecs_iter_t *it) {
+bool observer_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->world;
 
+    ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+
     if (o->last_event_id == world->event_id) {
         /* Already handled this event */
-        return;
+        return false;
     }
 
     o->last_event_id = world->event_id;
@@ -35807,10 +35809,6 @@ void observer_callback(ecs_iter_t *it) {
         /* Monitor observers only trigger when the filter matches for the first
          * time with an entity */
         if (o->is_monitor) {
-            // if (world->is_fini) {
-            //     goto done;
-            // }
-
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
                 NULL, NULL, NULL, NULL, NULL, true, -1)) 
             {
@@ -35839,11 +35837,15 @@ void observer_callback(ecs_iter_t *it) {
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
 
-        o->action(&user_it);
+        o->callback(&user_it);
+
+        ecs_iter_fini(&user_it);
+        return true;
     }
 
 done:
     ecs_iter_fini(&user_it);
+    return false;
 }
 
 static
@@ -35852,6 +35854,7 @@ void observer_yield_existing(
     ecs_observer_t *observer)
 {
     ecs_run_action_t callback = observer->run;
+    ecs_assert(callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
@@ -35885,6 +35888,15 @@ void observer_yield_existing(
             world->event_id ++;
         }
     }
+}
+
+static
+void observer_run_callback(ecs_iter_t *it) {
+    observer_run(it);
+}
+
+bool ecs_observer_default_run_action(ecs_iter_t *it) {
+    return observer_run(it);
 }
 
 ecs_entity_t ecs_observer_init(
@@ -35959,10 +35971,10 @@ ecs_entity_t ecs_observer_init(
 
         ecs_run_action_t run = desc->run;
         if (!run) {
-            run = observer_callback;
+            run = observer_run_callback;
         }
 
-        observer->action = desc->callback;
+        observer->callback = desc->callback;
         observer->run = run;
         observer->self = desc->self;
         observer->ctx = desc->ctx;
@@ -36052,7 +36064,7 @@ ecs_entity_t ecs_observer_init(
         /* If existing entity handle was provided, override existing params */
         if (existing) {
             if (desc->callback) {
-                ((ecs_observer_t*)comp->observer)->action = desc->callback;
+                ((ecs_observer_t*)comp->observer)->callback = desc->callback;
             }
             if (desc->ctx) {
                 ((ecs_observer_t*)comp->observer)->ctx = desc->ctx;
@@ -42511,7 +42523,7 @@ void notify_self_triggers(
         it->term_index = t->term.index;
         it->terms = &t->term;
 
-        t->action(it);
+        t->callback(it);
     }
 }
 
@@ -42557,7 +42569,7 @@ void notify_entity_triggers(
             it->count = 1;
             it->subjects[0] = entities[i];
 
-            t->action(it);
+            t->callback(it);
         }
     }
 
@@ -42631,7 +42643,7 @@ void notify_set_base_triggers(
         it->term_index = t->term.index;
         it->terms = &t->term;
         
-        t->action(it);
+        t->callback(it);
     }
 }
 
@@ -42700,14 +42712,14 @@ void notify_set_triggers(
             /* Triggers for supersets can be instanced */
             if (it->count == 1 || t->instanced || it->is_filter || !it->sizes[0]) {
                 it->is_instanced = t->instanced;
-                t->action(it);
+                t->callback(it);
                 it->is_instanced = false;
             } else {
                 ecs_entity_t *entities = it->entities;
                 it->count = 1;
                 for (i = 0; i < count; i ++) {
                     it->entities = &entities[i];
-                    t->action(it);
+                    t->callback(it);
                 }
                 it->entities = entities;
             }
@@ -42766,7 +42778,7 @@ void trigger_yield_existing(
     ecs_world_t *world,
     ecs_trigger_t *trigger)
 {
-    ecs_iter_action_t callback = trigger->action;
+    ecs_iter_action_t callback = trigger->callback;
 
     /* If yield existing is enabled, trigger for each thing that matches
      * the event, if the event is iterable. */
@@ -42948,7 +42960,7 @@ ecs_entity_t ecs_trigger_init(
         trigger->id = flecs_sparse_last_id(world->triggers);
 
         trigger->term = ecs_term_move(&term);
-        trigger->action = desc->callback;
+        trigger->callback = desc->callback;
         trigger->ctx = desc->ctx;
         trigger->binding_ctx = desc->binding_ctx;
         trigger->ctx_free = desc->ctx_free;
@@ -42994,7 +43006,7 @@ ecs_entity_t ecs_trigger_init(
         /* If existing entity handle was provided, override existing params */
         if (existing) {
             if (desc->callback) {
-                ((ecs_trigger_t*)comp->trigger)->action = desc->callback;
+                ((ecs_trigger_t*)comp->trigger)->callback = desc->callback;
             }
             if (desc->ctx) {
                 ((ecs_trigger_t*)comp->trigger)->ctx = desc->ctx;
