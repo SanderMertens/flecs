@@ -170,16 +170,20 @@ ecs_entity_t ecs_run_intern(
     qit.param = param;
     qit.ctx = system_data->ctx;
     qit.binding_ctx = system_data->binding_ctx;
-
-    ecs_iter_action_t action = system_data->action;
-
-    if (it == &qit) {
-        while (ecs_query_next(&qit)) {
-            action(&qit);
-        }
+    
+    ecs_iter_action_t run = system_data->run;
+    if (run) {
+        run(it);
     } else {
-        while (ecs_iter_next(it)) {
-            action(it);
+        ecs_iter_action_t action = system_data->action;
+        if (it == &qit) {
+            while (ecs_query_next(&qit)) {
+                action(&qit);
+            }
+        } else {
+            while (ecs_iter_next(it)) {
+                action(it);
+            }
         }
     }
 
@@ -420,6 +424,7 @@ ecs_entity_t ecs_system_init(
         system->entity = result;
         system->query = query;
 
+        system->run = desc->run;
         system->action = desc->callback;
         system->status_action = desc->status_callback;
 
@@ -516,6 +521,9 @@ ecs_entity_t ecs_system_init(
             }
         }
 
+        if (desc->run) {
+            system->run = desc->run;
+        }
         if (desc->callback) {
             system->action = desc->callback;
         }

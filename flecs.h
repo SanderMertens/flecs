@@ -8140,13 +8140,29 @@ typedef struct ecs_system_desc_t {
     /* System query parameters */
     ecs_query_desc_t query;
 
-    /* System callback, invoked when system is ran */
+    /* Callback that is invoked when a system is ran. When left to NULL, the
+     * default system runner is used, which calls the "callback" action for each
+     * result returned from the system's query. 
+     * 
+     * It should not be assumed that the input iterator can always be iterated
+     * with ecs_query_next. When a system is multithreaded and/or paged, the
+     * iterator can be either a worker or paged iterator. Future use cases may
+     * introduce additional inputs for a system, such as rules and filters. The
+     * correct function to use for iteration is ecs_iter_next.
+     * 
+     * An implementation can test whether the iterator is a query iterator by
+     * testing whether the it->next value is equal to ecs_query_next. */
+    ecs_run_action_t run;
+
+    /* Callback that is ran for each result returned by the system's query. This
+     * means that this callback can be invoked multiple times per system per
+     * frame, typically once for each matching table. */
     ecs_iter_action_t callback;
 
     /* System status callback, invoked when system status changes */
     ecs_system_status_action_t status_callback;
 
-    /* Associate with entity */
+    /* Associate with entity. */
     ecs_entity_t self;    
 
     /* Context to be passed to callback (as ecs_iter_t::param) */

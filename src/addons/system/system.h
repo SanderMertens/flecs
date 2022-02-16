@@ -6,7 +6,8 @@
 #include "../../private_api.h"
 
 typedef struct EcsSystem {
-    ecs_iter_action_t action;       /* Callback to be invoked for matching it */
+    ecs_run_action_t run;           /* See ecs_system_desc_t */
+    ecs_iter_action_t action;       /* See ecs_system_desc_t */
 
     ecs_entity_t entity;            /* Entity id of system, used for ordering */
     ecs_query_t *query;             /* System query */

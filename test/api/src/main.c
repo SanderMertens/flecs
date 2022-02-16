@@ -961,7 +961,6 @@ void Pipeline_multi_threaded_pipeline_change(void);
 void Pipeline_activate_after_add(void);
 
 // Testsuite 'SystemMisc'
-void SystemMisc_setup(void);
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
 void SystemMisc_invalid_entity_without_id(void);
@@ -1036,6 +1035,10 @@ void SystemMisc_system_w_self(void);
 void SystemMisc_delete_system(void);
 void SystemMisc_delete_pipeline_system(void);
 void SystemMisc_delete_system_w_ctx(void);
+void SystemMisc_run_custom_run_action(void);
+void SystemMisc_run_w_offset_limit_custom_run_action(void);
+void SystemMisc_pipeline_custom_run_action(void);
+void SystemMisc_change_custom_run_action(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -6428,6 +6431,22 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "delete_system_w_ctx",
         SystemMisc_delete_system_w_ctx
+    },
+    {
+        "run_custom_run_action",
+        SystemMisc_run_custom_run_action
+    },
+    {
+        "run_w_offset_limit_custom_run_action",
+        SystemMisc_run_w_offset_limit_custom_run_action
+    },
+    {
+        "pipeline_custom_run_action",
+        SystemMisc_pipeline_custom_run_action
+    },
+    {
+        "change_custom_run_action",
+        SystemMisc_change_custom_run_action
     }
 };
 
@@ -12134,9 +12153,9 @@ static bake_test_suite suites[] = {
     },
     {
         "SystemMisc",
-        SystemMisc_setup,
         NULL,
-        74,
+        NULL,
+        78,
         SystemMisc_testcases
     },
     {

@@ -1,9 +1,5 @@
 #include <api.h>
 
-void SystemMisc_setup() {
-    // ecs_log_set_level(-3);
-}
-
 static
 bool dummy_invoked = false;
 
@@ -1896,6 +1892,158 @@ void SystemMisc_delete_system_w_ctx() {
 
     ecs_delete(world, system);
     test_assert(!ecs_is_alive(world, system));
+
+    ecs_fini(world);
+}
+
+static int run_invoked = 0;
+
+static void Run(ecs_iter_t *it) {
+    while (ecs_iter_next(it)) {
+        probe_iter(it);
+    }
+
+    run_invoked ++;
+}
+
+static int run_2_invoked = 0;
+
+static void Run2(ecs_iter_t *it) {
+    run_2_invoked ++;
+}
+
+void SystemMisc_run_custom_run_action() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ .id = TagA }},
+        .run = Run,
+        .callback = Dummy,
+        .ctx = &ctx,
+    });
+    test_assert(system != 0);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add(world, e3, TagB); // 2 tables
+
+    ecs_run(world, system, 0, NULL);
+
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_run_w_offset_limit_custom_run_action() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ .id = TagA }},
+        .run = Run,
+        .callback = Dummy,
+        .ctx = &ctx,
+    });
+    test_assert(system != 0);
+
+    ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add(world, e3, TagB); // 2 tables
+
+    ecs_run_w_filter(world, system, 0, 1, 1, NULL);
+
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_pipeline_custom_run_action() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ .id = TagA }},
+        .run = Run,
+        .callback = Dummy,
+        .ctx = &ctx,
+        .entity.add = {EcsOnUpdate}
+    });
+    test_assert(system != 0);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add(world, e3, TagB); // 2 tables
+
+    ecs_progress(world, 0);
+
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_change_custom_run_action() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ .id = TagA }},
+        .run = Run,
+        .callback = Dummy,
+        .ctx = &ctx,
+    });
+    test_assert(system != 0);
+
+    ecs_new(world, TagA);
+
+    ecs_run(world, system, 0, NULL);
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+    test_int(run_2_invoked, 0);
+
+    ecs_system_init(world, &(ecs_system_desc_t) {
+        .entity.entity = system,
+        .run = Run2
+    });
+
+    ecs_run(world, system, 0, NULL);
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+    test_int(run_2_invoked, 1);
 
     ecs_fini(world);
 }
