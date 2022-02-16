@@ -5640,3 +5640,328 @@ void Rules_test_this_w_pair_wildcard_no_match() {
 
     ecs_fini(world);
 }
+
+void Rules_test_subj_w_wildcard_w_isa() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagC);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagD);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagA);
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_wildcard_w_isa_2_lvls() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+
+    ecs_entity_t base_of_base = ecs_new_id(world);
+    ecs_add(world, base_of_base, TagA);
+    ecs_add(world, base_of_base, TagB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_pair(world, base, EcsIsA, base_of_base);
+    ecs_add(world, base, TagC);
+    ecs_add(world, base, TagD);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagE);
+    ecs_add(world, e, TagF);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e)");
+    test_assert(r != NULL);
+
+    printf("%s\n", ecs_rule_str(r));
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagE);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), TagF);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagC);
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagD);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base_of_base);
+    test_int(ecs_term_id(&it, 1), TagA);
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base_of_base);
+    test_int(ecs_term_id(&it, 1), TagB);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_pair_wildcard_w_isa() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_pair(world, base, Rel, TagA);
+    ecs_add_pair(world, base, Rel, TagB);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add_pair(world, e, Rel, TagC);
+    ecs_add_pair(world, e, Rel, TagD);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e, *)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagC));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagD));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls() {
+    ecs_world_t *world = ecs_init();
+    
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+
+    ecs_entity_t base_of_base = ecs_new_id(world);
+    ecs_add_pair(world, base_of_base, Rel, TagA);
+    ecs_add_pair(world, base_of_base, Rel, TagB);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add_pair(world, base, EcsIsA, base_of_base);
+    ecs_add_pair(world, base, Rel, TagC);
+    ecs_add_pair(world, base, Rel, TagD);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add_pair(world, e, Rel, TagE);
+    ecs_add_pair(world, e, Rel, TagF);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*(e, *)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagE));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagF));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(EcsIsA, base_of_base));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagC));
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagD));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base_of_base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 0);
+    test_int(it.subjects[0], base_of_base);
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_w_isa() {
+    test_quarantine("Feb 15 2022");
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, MyTag, Final);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_add(world, base, TagB);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*, MyTag");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), MyTag);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagC);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagD);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), MyTag);
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], base);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_w_isa_2_lvls() {
+    // Implement testcase
+}

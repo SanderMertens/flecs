@@ -1608,7 +1608,13 @@
                 "test_this_w_wildcard_w_pairs_var",
                 "test_this_w_wildcard_wildcard_w_pairs_var",
                 "test_this_w_wildcard_no_match",
-                "test_this_w_pair_wildcard_no_match"
+                "test_this_w_pair_wildcard_no_match",
+                "test_subj_w_wildcard_w_isa",
+                "test_subj_w_wildcard_w_isa_2_lvls",
+                "test_subj_w_pair_wildcard_w_isa",
+                "test_subj_w_pair_wildcard_w_isa_2_lvls",
+                "test_this_w_wildcard_w_isa",
+                "test_this_w_wildcard_w_isa_2_lvls"
             ]
         }, {
             "id": "TransitiveRules",

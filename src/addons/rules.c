@@ -2035,13 +2035,14 @@ void insert_select_or_with(
         filter = term_to_pair(rule, term);
     }
 
-    if (!var && filter.pred.ent != EcsWildcard) {
-        /* Only insert implicit IsA if filter isn't already an IsA */
-        if (!filter.transitive || filter.pred.ent != EcsIsA) {
+    /* Only insert implicit IsA if filter isn't already an IsA */
+    if (!filter.transitive || filter.pred.ent != EcsIsA) {
+        if (!var) {
             ecs_rule_pair_t isa_pair = {
                 .pred.ent = EcsIsA,
                 .obj.ent = term->subj.entity
             };
+
             evar = subj = store_reflexive_set(
                 rule, EcsRuleSuperSet, &isa_pair, written, true);
             tvar = NULL;
