@@ -2780,9 +2780,12 @@ void Observer_match_base_w_id_at_offset() {
 
 
 static int run_invoked = 0;
+static int run_invoked_matched = 0;
 
 static void Run(ecs_iter_t *it) {
-    ecs_observer_default_run_action(it);
+    if (ecs_observer_default_run_action(it)) {
+        run_invoked_matched ++;
+    }
     run_invoked ++;
 }
 
@@ -2804,6 +2807,7 @@ void Observer_custom_run_action() {
     ecs_entity_t e = ecs_new(world, TagA);
 
     test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e);

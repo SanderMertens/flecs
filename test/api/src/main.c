@@ -1430,6 +1430,7 @@ void Rules_2_fact_pairs_false(void);
 void Rules_wildcard_pred(void);
 void Rules_wildcard_subj(void);
 void Rules_wildcard_obj(void);
+void Rules_wildcard_pred_pair(void);
 void Rules_any_pred(void);
 void Rules_any_subj(void);
 void Rules_any_obj(void);
@@ -1515,6 +1516,7 @@ void Rules_optional_term_on_variable(void);
 void Rules_optional_term_on_wildcard(void);
 void Rules_optional_term_on_relation_this_obj(void);
 void Rules_optional_w_subj_var(void);
+void Rules_optional_w_obj_var(void);
 void Rules_terms_set(void);
 void Rules_value_set(void);
 void Rules_term_w_this_this_this(void);
@@ -7984,6 +7986,10 @@ bake_test_case Rules_testcases[] = {
         Rules_wildcard_obj
     },
     {
+        "wildcard_pred_pair",
+        Rules_wildcard_pred_pair
+    },
+    {
         "any_pred",
         Rules_any_pred
     },
@@ -8322,6 +8328,10 @@ bake_test_case Rules_testcases[] = {
     {
         "optional_w_subj_var",
         Rules_optional_w_subj_var
+    },
+    {
+        "optional_w_obj_var",
+        Rules_optional_w_obj_var
     },
     {
         "terms_set",
@@ -12202,7 +12212,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        148,
+        150,
         Rules_testcases
     },
     {
