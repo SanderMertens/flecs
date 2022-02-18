@@ -50,7 +50,7 @@ const EcsComponent* flecs_component_from_id(
     /* If this is a pair, get the pair component from the identifier */
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
-        e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
+        e = ecs_get_alive(world, ECS_PAIR_FIRST(e));
 
         if (ecs_has_id(world, e, EcsTag)) {
             return NULL;
@@ -65,7 +65,7 @@ const EcsComponent* flecs_component_from_id(
     if ((!component || !component->size) && pair) {
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
-        e = ECS_PAIR_OBJECT(pair);
+        e = ECS_PAIR_SECOND(pair);
 
         /* Because generations are not stored in the pair, get the currently
          * alive id */
@@ -228,7 +228,6 @@ void init_flags(
             table->flags |= EcsTableHasDisabled;
         }
 
-        /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             ecs_poly_assert(world, ecs_world_t);
             ecs_entity_t obj = ecs_pair_second(world, id);
@@ -370,7 +369,7 @@ void add_id_to_ids(
         }
 
         if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
-            if (ECS_PAIR_RELATION(e) == r_exclusive) {
+            if (ECS_PAIR_FIRST(e) == r_exclusive) {
                 array[i] = add; /* Replace */
                 return;
             }
@@ -731,9 +730,9 @@ void add_with_ids_to_ids(
         ecs_id_t *id_ids = ecs_vector_first(id_table->type, ecs_id_t);
 
         for (i = start; i < end; i ++) {
-            ecs_assert(ECS_PAIR_RELATION(id_ids[i]) == EcsWith, 
+            ecs_assert(ECS_PAIR_FIRST(id_ids[i]) == EcsWith, 
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_id_t id_r = ECS_PAIR_OBJECT(id_ids[i]);
+            ecs_id_t id_r = ECS_PAIR_SECOND(id_ids[i]);
             ecs_id_t id = id_r;
             if (o) {
                 id = ecs_pair(id_r, o);
@@ -765,8 +764,8 @@ ecs_table_t* find_or_create_table_with_id(
         ecs_entity_t r = 0, o = 0, re = 0;
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            r = ECS_PAIR_RELATION(id);
-            o = ECS_PAIR_OBJECT(id);
+            r = ECS_PAIR_FIRST(id);
+            o = ECS_PAIR_SECOND(id);
             re = ecs_get_alive(world, r);
             if (re && ecs_has_id(world, re, EcsExclusive)) {
                 r_exclusive = (uint32_t)re;
@@ -878,7 +877,7 @@ ecs_table_t* find_or_create_table_with(
 {
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
 
-    if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
+    if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsIsA) {
         ecs_entity_t base = ecs_pair_second(world, id);
         next = find_or_create_table_with_isa(world, next, base);
     }

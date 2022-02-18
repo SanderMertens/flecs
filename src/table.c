@@ -109,7 +109,7 @@ void init_storage_table(
         ecs_id_t id = ids[i];
 
         if ((id == ecs_id(EcsComponent)) || 
-            (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier))) 
+            (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier))) 
         {
             storage_ids.array[storage_ids.count ++] = id;
             continue;
@@ -170,7 +170,7 @@ void flecs_table_init_data(
                 storage->columns[i].size = ECS_SIZEOF(EcsComponent);
                 storage->columns[i].alignment = ECS_ALIGNOF(EcsComponent);
                 continue;
-            } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
                 storage->columns[i].size = ECS_SIZEOF(EcsIdentifier);
                 storage->columns[i].alignment = ECS_ALIGNOF(EcsIdentifier);
                 continue;
@@ -294,7 +294,7 @@ void notify_component_info(
             /* Hardcode components used in bootstrap */
             if (id == ecs_id(EcsComponent)) {
                 c = id;
-            } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
                 c = ecs_id(EcsIdentifier);
             } else {
                 c = ecs_get_typeid(world, array[i]);

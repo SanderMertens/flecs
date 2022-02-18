@@ -509,6 +509,29 @@ void Rules_2_comp_explicit_subject() {
     test_2_comp("Position(.), Velocity(.)");
 }
 
+void Rules_1_empty_comp() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Tag = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {{ Tag }}
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+    test_int(ecs_term_id(&it, 1), Tag);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 const char *rules =
 "Final(Parent)\n"
 "IsA(CelestialBody, Thing)\n"
@@ -964,7 +987,8 @@ void Rules_any_pred() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), MatchWith);
+    test_int(ecs_term_id(&it, 1), EcsAny);
+    test_int(ecs_term_id(&it, 2), MatchWith);
     test_int(ecs_term_source(&it, 1), 0);
     test_bool(true, ecs_term_is_set(&it, 1));
 
@@ -1024,7 +1048,7 @@ void Rules_any_obj() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, ObjA));
+    test_int(ecs_term_id(&it, 1), ecs_pair(Rel, EcsAny));
     test_int(ecs_term_source(&it, 1), 0);
     test_bool(true, ecs_term_is_set(&it, 1));
 
@@ -4300,7 +4324,7 @@ void Rules_optional_term_on_relation_this_obj() {
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(ecs_term_id(&it, 1), Tag);
-    test_int(ecs_term_id(&it, 2), ecs_childof(e2));
+    test_int(ecs_term_id(&it, 2), ecs_childof(EcsThis));
     test_bool(true, ecs_term_is_set(&it, 1));
     test_bool(false, ecs_term_is_set(&it, 2));
 
@@ -4329,23 +4353,19 @@ void Rules_optional_w_subj_var() {
 
     test_assert(r != NULL);
 
-    printf("%s\n", ecs_rule_str(r));
-
     ecs_iter_t it = ecs_rule_iter(world, r);
     char *result, *expect;
 
-    while (ecs_rule_next(&it)) {
-        printf("%s\n", ecs_iter_str(&it));
-    }
-
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (Likes,Bob),(Likes,Alice)"
-    LINE "subj: Alice,*"
-    LINE "vars: Y=Bob,Z=*,X=Alice"
+    HEAD "term: (Likes,Bob),(Likes,*)"
+    LINE "subj: Alice,John"
+    LINE "vars: Y=Bob,Z=John,X=Alice"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_bool(ecs_term_is_set(&it, 2), false);
 
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
@@ -4355,15 +4375,19 @@ void Rules_optional_w_subj_var() {
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_bool(ecs_term_is_set(&it, 2), true);
 
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (Likes,Jane),(Likes,John)"
-    LINE "subj: John,*"
-    LINE "vars: Y=Jane,Z=*,X=John"
+    HEAD "term: (Likes,Jane),(Likes,*)"
+    LINE "subj: John,John"
+    LINE "vars: Y=Jane,Z=John,X=John"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_bool(ecs_term_is_set(&it, 2), false);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -6088,6 +6112,72 @@ void Rules_test_this_w_wildcard_w_isa_2_lvls() {
 
     ecs_entity_t e = ecs_new(world, MyTag);
     ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add(world, e, TagC);
+    ecs_add(world, e, TagD);
+
+    ecs_rule_t *r = ecs_rule_new(world, "*, MyTag");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), MyTag);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagC);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagD);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagA);
+    test_int(ecs_term_id(&it, 2), MyTag);
+    
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], 0);
+    test_int(ecs_term_id(&it, 1), TagB);
+    test_int(ecs_term_id(&it, 2), MyTag);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_test_this_w_wildcard_w_2_isa() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, MyTag, Final);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+
+    ecs_entity_t base_1 = ecs_new_id(world);
+    ecs_add(world, base_1, TagA);
+    ecs_entity_t base_2 = ecs_new_id(world);
+    ecs_add(world, base_2, TagB);
+
+    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_add_pair(world, e, EcsIsA, base_1);
+    ecs_add_pair(world, e, EcsIsA, base_2);
     ecs_add(world, e, TagC);
     ecs_add(world, e, TagD);
 

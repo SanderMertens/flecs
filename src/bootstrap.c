@@ -149,7 +149,7 @@ void register_on_delete(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
+        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
@@ -167,7 +167,7 @@ void register_on_delete_object(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_OBJECT(id));
+        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
@@ -210,8 +210,8 @@ void on_symmetric_add_remove(ecs_iter_t *it) {
         return;
     }
 
-    ecs_entity_t rel = ECS_PAIR_RELATION(pair);
-    ecs_entity_t obj = ECS_PAIR_OBJECT(pair);
+    ecs_entity_t rel = ECS_PAIR_FIRST(pair);
+    ecs_entity_t obj = ECS_PAIR_SECOND(pair);
     ecs_entity_t event = it->event;
     
     int i, count = it->count;

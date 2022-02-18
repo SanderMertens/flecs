@@ -2160,7 +2160,7 @@ void init_storage_table(
         ecs_id_t id = ids[i];
 
         if ((id == ecs_id(EcsComponent)) || 
-            (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier))) 
+            (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier))) 
         {
             storage_ids.array[storage_ids.count ++] = id;
             continue;
@@ -2221,7 +2221,7 @@ void flecs_table_init_data(
                 storage->columns[i].size = ECS_SIZEOF(EcsComponent);
                 storage->columns[i].alignment = ECS_ALIGNOF(EcsComponent);
                 continue;
-            } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
                 storage->columns[i].size = ECS_SIZEOF(EcsIdentifier);
                 storage->columns[i].alignment = ECS_ALIGNOF(EcsIdentifier);
                 continue;
@@ -2345,7 +2345,7 @@ void notify_component_info(
             /* Hardcode components used in bootstrap */
             if (id == ecs_id(EcsComponent)) {
                 c = id;
-            } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
                 c = ecs_id(EcsIdentifier);
             } else {
                 c = ecs_get_typeid(world, array[i]);
@@ -4699,7 +4699,7 @@ void instantiate_children(
         /* Keep track of the element that creates the ChildOf relationship with
          * the prefab parent. We need to replace this element to make sure the
          * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_OBJECT(id) == base)) {
+        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_SECOND(id) == base)) {
             childof_base_index = pos;
         }
 
@@ -4968,7 +4968,7 @@ void components_override(
         ecs_entity_t id = added->array[i];
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            ecs_entity_t base = ECS_PAIR_OBJECT(id);
+            ecs_entity_t base = ECS_PAIR_SECOND(id);
 
             /* Cannot inherit from base if base is final */
             ecs_check(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
@@ -5203,7 +5203,7 @@ void update_component_monitor_w_array(
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t id = entities->array[i];
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            ecs_entity_t rel = ECS_PAIR_FIRST(id);
             
             /* If a relationship has changed, check if it could have impacted
              * the shape of the graph for that relationship. If so, mark the
@@ -5982,8 +5982,8 @@ ecs_table_t *traverse_from_expr(
 
             if (term.role == ECS_CASE) {
                 table = table_append(world, table, 
-                    ECS_SWITCH | ECS_PAIR_RELATION(term.id), diff);
-                term.id = ECS_CASE | ECS_PAIR_OBJECT(term.id);
+                    ECS_SWITCH | ECS_PAIR_FIRST(term.id), diff);
+                term.id = ECS_CASE | ECS_PAIR_SECOND(term.id);
             }
 
             if (term.oper == EcsAnd || !replace_and) {
@@ -6136,8 +6136,8 @@ int traverse_add(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         bool should_add = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
-            scope = ECS_PAIR_OBJECT(id);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+            scope = ECS_PAIR_SECOND(id);
             if (!desc->entity || (name && !name_assigned)) {
                 /* If name is added to entity, pass scope to add_path instead
                  * of adding it to the table. The provided name may have nested
@@ -6228,8 +6228,8 @@ void deferred_add_remove(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         bool defer = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
-            scope = ECS_PAIR_OBJECT(id);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+            scope = ECS_PAIR_SECOND(id);
             if (!desc->entity || (name && !name_assigned)) {
                 /* New named entities are created by temporarily going out of
                  * readonly mode to ensure no duplicates are created. */
@@ -6325,9 +6325,9 @@ ecs_entity_t ecs_entity_init(
             int32_t i = 0;
             while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
                 if (ECS_HAS_ROLE(id, PAIR) && 
-                    (ECS_PAIR_RELATION(id) == EcsChildOf))
+                    (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {
-                    scope = ECS_PAIR_OBJECT(id);
+                    scope = ECS_PAIR_SECOND(id);
                 }
             }
 
@@ -6693,7 +6693,7 @@ void remove_from_table(
     bool is_wildcard = ecs_id_is_wildcard(id);
 
     int32_t i, count = ecs_vector_count(src_table->type), removed_count = 0;
-    ecs_entity_t entity = ECS_PAIR_RELATION(id);
+    ecs_entity_t entity = ECS_PAIR_FIRST(id);
 
     for (i = column; i < count; i ++) {
         ecs_id_t e = ids[i];
@@ -6788,7 +6788,7 @@ void on_delete_object_action(
             ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
             ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_entity_t rel = ECS_PAIR_RELATION(*rel_id);
+            ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
             /* delete_object_action should be invoked for relations */
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
@@ -6856,7 +6856,7 @@ void on_delete_action(
          * Relation wildcard ids are implemented differently as relations
          * with the same object aren't guaranteed to occupy neighboring
          * elements in the type, other wildcards with the same relation. */
-        if (ECS_PAIR_RELATION(id) == EcsWildcard) {
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
             on_delete_object_action(world, id, action);
         } else {
             on_delete_id_action(world, id, action);
@@ -7710,7 +7710,7 @@ bool ecs_is_valid(
     /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
     if (ECS_HAS_ROLE(entity, PAIR)) {
-        return ECS_PAIR_RELATION(entity) != 0;
+        return ECS_PAIR_FIRST(entity) != 0;
     }
 
     /* Entities should not contain data in dead zone bits */
@@ -7830,8 +7830,8 @@ void ecs_ensure_id(
     ecs_id_t id)
 {
     if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
-        ecs_entity_t r = ECS_PAIR_RELATION(id);
-        ecs_entity_t o = ECS_PAIR_OBJECT(id);
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
 
         ecs_check(r != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(o != 0, ECS_INVALID_PARAMETER, NULL);
@@ -7916,11 +7916,11 @@ ecs_entity_t ecs_get_typeid(
         return id;
     } else if (id == ecs_id(EcsIdentifier)) {
         return id;
-    } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+    } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
         return ecs_id(EcsIdentifier);
-    } else if (ECS_PAIR_RELATION(id) == EcsChildOf) {
+    } else if (ECS_PAIR_FIRST(id) == EcsChildOf) {
         return 0;
-    } else if (ECS_PAIR_RELATION(id) == EcsOnDelete) {
+    } else if (ECS_PAIR_FIRST(id) == EcsOnDelete) {
         return 0;
     }
 
@@ -7928,7 +7928,7 @@ ecs_entity_t ecs_get_typeid(
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
+        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_FIRST(id));
 
         /* If relation is marked as a tag, it never has data. Return relation */
         if (ecs_has_id(world, rel, EcsTag)) {
@@ -7940,7 +7940,7 @@ ecs_entity_t ecs_get_typeid(
             return rel;
         }
         
-        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
         if (obj) {
             obj = ecs_get_alive(world, obj);
             ptr = ecs_get(world, obj, EcsComponent);
@@ -7974,7 +7974,7 @@ ecs_entity_t ecs_id_is_tag(
         /* If id is a wildcard, we can't tell if it's a tag or not, except
          * when the relation part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
-            if (ECS_PAIR_RELATION(id) != EcsWildcard) {
+            if (ECS_PAIR_FIRST(id) != EcsWildcard) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsTag)) {
@@ -8113,8 +8113,8 @@ void ecs_id_str_buf(
     }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
         ecs_entity_t e;
         if ((e = ecs_get_alive(world, rel))) {
@@ -16901,7 +16901,7 @@ error:
  * strategy from the LocatedIn(Bob, X) example will be used.
  */
 
-#define ECS_RULE_MAX_VARIABLE_COUNT (256)
+#define ECS_RULE_MAX_VAR_COUNT (32)
 
 #define RULE_PAIR_PREDICATE (1)
 #define RULE_PAIR_OBJECT (2)
@@ -17065,20 +17065,32 @@ typedef struct ecs_rule_var_t {
     bool marked;      /* Used for cycle detection */
 } ecs_rule_var_t;
 
+/* Variable ids per term */
+typedef struct ecs_rule_term_vars_t {
+    int32_t pred;
+    int32_t subj;
+    int32_t obj;
+} ecs_rule_term_vars_t;
+
 /* Top-level rule datastructure */
 struct ecs_rule_t {
     ecs_header_t hdr;
     
     ecs_world_t *world;         /* Ref to world so rule can be used by itself */
     ecs_rule_op_t *operations;  /* Operations array */
-    ecs_rule_var_t *variables;  /* Variable array */
     ecs_filter_t filter;        /* Filter of rule */
 
-    char **variable_names;      /* Array with var names, used by iterators */
-    int32_t *subject_variables; /* Variable id for term subject (if any) */
+    /* Passed to iterator */
+    char *var_names[ECS_RULE_MAX_VAR_COUNT]; 
 
-    int32_t variable_count;     /* Number of variables in signature */
-    int32_t subject_variable_count;
+    /* Variable ids used in terms */
+    ecs_rule_term_vars_t term_vars[ECS_RULE_MAX_VAR_COUNT];
+
+    /* Variable array */
+    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+
+    int32_t var_count;          /* Number of variables in signature */
+    int32_t subj_var_count;
     int32_t frame_count;        /* Number of register frames */
     int32_t operation_count;    /* Number of operations in rule */
 
@@ -17150,18 +17162,15 @@ ecs_rule_var_t* create_variable(
     ecs_rule_var_kind_t kind,
     const char *name)
 {
-    int32_t cur = ++ rule->variable_count;
-    rule->variables = ecs_os_realloc(
-        rule->variables, cur * ECS_SIZEOF(ecs_rule_var_t));
-
+    int32_t cur = ++ rule->var_count;
+    
     name = get_var_name(name);
-
     if (name && !ecs_os_strcmp(name, "*")) {
         /* Wildcards are treated as anonymous variables */
         name = NULL;
     }
 
-    ecs_rule_var_t *var = &rule->variables[cur - 1];
+    ecs_rule_var_t *var = &rule->vars[cur - 1];
     if (name) {
         var->name = ecs_os_strdup(name);
     } else {
@@ -17211,14 +17220,14 @@ ecs_rule_var_t* find_variable(
 
     name = get_var_name(name);
 
-    ecs_rule_var_t *variables = rule->variables;
-    int32_t i, count = rule->variable_count;
+    const ecs_rule_var_t *variables = rule->vars;
+    int32_t i, count = rule->var_count;
     
     for (i = 0; i < count; i ++) {
-        ecs_rule_var_t *variable = &variables[i];
+        const ecs_rule_var_t *variable = &variables[i];
         if (!ecs_os_strcmp(name, variable->name)) {
             if (kind == EcsRuleVarKindUnknown || kind == variable->kind) {
-                return variable;
+                return (ecs_rule_var_t*)variable;
             }
         }
     }
@@ -17348,7 +17357,7 @@ ecs_rule_var_t* pair_pred(
     const ecs_rule_pair_t *pair)
 {
     if (pair->reg_mask & RULE_PAIR_PREDICATE) {
-        return &rule->variables[pair->pred.reg];
+        return &rule->vars[pair->pred.reg];
     } else {
         return NULL;
     }
@@ -17361,7 +17370,7 @@ ecs_rule_var_t* pair_obj(
     const ecs_rule_pair_t *pair)
 {
     if (pair->reg_mask & RULE_PAIR_OBJECT) {
-        return &rule->variables[pair->obj.reg];
+        return &rule->vars[pair->obj.reg];
     } else {
         return NULL;
     }
@@ -17389,7 +17398,7 @@ ecs_rule_reg_t* get_register_frame(
     int32_t frame)    
 {
     if (it->registers) {
-        return &it->registers[frame * it->rule->variable_count];
+        return &it->registers[frame * it->rule->var_count];
     } else {
         return NULL;
     }
@@ -17434,7 +17443,7 @@ void entity_reg_set(
     ecs_entity_t entity)
 {
     (void)rule;
-    ecs_assert(rule->variables[r].kind == EcsRuleVarKindEntity, 
+    ecs_assert(rule->vars[r].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
     ecs_check(ecs_is_valid(rule->world, entity), ECS_INVALID_PARAMETER, NULL);
     regs[r].entity = entity;
@@ -17468,7 +17477,7 @@ void table_reg_set(
     ecs_table_t *table)
 {
     (void)rule;
-    ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
+    ecs_assert(rule->vars[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
     regs[r].table.table = table;
@@ -17484,7 +17493,7 @@ ecs_table_slice_t table_reg_get(
     int32_t r)
 {
     (void)rule;
-    ecs_assert(rule->variables[r].kind == EcsRuleVarKindTable, 
+    ecs_assert(rule->vars[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
     return regs[r].table;       
@@ -17508,7 +17517,7 @@ ecs_entity_t reg_get_entity(
 
         return op->subject;
     }
-    if (rule->variables[r].kind == EcsRuleVarKindTable) {
+    if (rule->vars[r].kind == EcsRuleVarKindTable) {
         int32_t offset = regs[r].table.offset;
 
         ecs_assert(regs[r].table.count == 1, ECS_INTERNAL_ERROR, NULL);
@@ -17523,7 +17532,7 @@ ecs_entity_t reg_get_entity(
         
         return entities[offset];
     }
-    if (rule->variables[r].kind == EcsRuleVarKindEntity) {
+    if (rule->vars[r].kind == EcsRuleVarKindEntity) {
         return entity_reg_get(rule, regs, r);
     }
 
@@ -17564,10 +17573,10 @@ ecs_table_slice_t reg_get_table(
             ECS_INVALID_PARAMETER, NULL);
         return table_from_entity(rule->world, op->subject);
     }
-    if (rule->variables[r].kind == EcsRuleVarKindTable) {
+    if (rule->vars[r].kind == EcsRuleVarKindTable) {
         return table_reg_get(rule, regs, r);
     }
-    if (rule->variables[r].kind == EcsRuleVarKindEntity) {
+    if (rule->vars[r].kind == EcsRuleVarKindEntity) {
         return table_from_entity(rule->world, entity_reg_get(rule, regs, r));
     } 
 error:
@@ -17581,7 +17590,7 @@ void reg_set_entity(
     int32_t r,
     ecs_entity_t entity)
 {
-    if (rule->variables[r].kind == EcsRuleVarKindTable) {
+    if (rule->vars[r].kind == EcsRuleVarKindTable) {
         ecs_world_t *world = rule->world;
         ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
         regs[r].table = table_from_entity(world, entity);
@@ -17600,7 +17609,7 @@ void reg_set_table(
     int32_t r,
     ecs_table_slice_t table)
 {
-    if (rule->variables[r].kind == EcsRuleVarKindEntity) {
+    if (rule->vars[r].kind == EcsRuleVarKindEntity) {
         ecs_check(table.count == 1, ECS_INTERNAL_ERROR, NULL);
         regs[r].table = table;
         regs[r].entity = ecs_vector_get(table.table->storage.entities, 
@@ -17789,7 +17798,7 @@ void reify_variables(
     int32_t column)
 {
     const ecs_rule_t *rule = it->rule;
-    const ecs_rule_var_t *vars = rule->variables;
+    const ecs_rule_var_t *vars = rule->vars;
     (void)vars;
 
     ecs_rule_reg_t *regs = get_registers(it, op);
@@ -17804,7 +17813,7 @@ void reify_variables(
             ECS_INTERNAL_ERROR, NULL);
 
         entity_reg_set(rule, regs, obj_var, 
-            ecs_get_alive(rule->world, ECS_PAIR_OBJECT(*elem)));
+            ecs_get_alive(rule->world, ECS_PAIR_SECOND(*elem)));
     }
 
     if (pred_var != -1) {
@@ -17813,7 +17822,7 @@ void reify_variables(
 
         entity_reg_set(rule, regs, pred_var, 
             ecs_get_alive(rule->world, 
-                ECS_PAIR_RELATION(*elem)));
+                ECS_PAIR_FIRST(*elem)));
     }
 }
 
@@ -17829,7 +17838,7 @@ bool is_subject(
         return false;
     }
 
-    if (var->id < rule->subject_variable_count) {
+    if (var->id < rule->subj_var_count) {
         return true;
     }
 
@@ -18165,7 +18174,7 @@ int scan_variables(
                 rule, EcsRuleVarKindTable, subj_name);
             if (!subj) {
                 subj = create_variable(rule, EcsRuleVarKindTable, subj_name);
-                if (subject_count >= ECS_RULE_MAX_VARIABLE_COUNT) {
+                if (subject_count >= ECS_RULE_MAX_VAR_COUNT) {
                     rule_error(rule, "too many variables in rule");
                     goto error;
                 }
@@ -18182,7 +18191,7 @@ int scan_variables(
         }
     }
 
-    rule->subject_variable_count = rule->variable_count;
+    rule->subj_var_count = rule->var_count;
 
     ensure_all_variables(rule);
 
@@ -18217,15 +18226,15 @@ int scan_variables(
         }
     }
 
-    ecs_rule_var_t *root = &rule->variables[root_var];
+    ecs_rule_var_t *root = &rule->vars[root_var];
     root->depth = get_variable_depth(rule, root, root, 0);
 
     /* Verify that there are no unconstrained variables. Unconstrained variables
      * are variables that are unreachable from the root. */
-    for (i = 0; i < rule->subject_variable_count; i ++) {
-        if (rule->variables[i].depth == UINT8_MAX) {
+    for (i = 0; i < rule->subj_var_count; i ++) {
+        if (rule->vars[i].depth == UINT8_MAX) {
             rule_error(rule, "unconstrained variable '%s'", 
-                rule->variables[i].name);
+                rule->vars[i].name);
             goto error;
         } 
     }
@@ -18256,12 +18265,12 @@ int scan_variables(
     /* Order variables by depth, followed by occurrence. The variable
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
-    int32_t var_count = rule->variable_count;
-    ecs_qsort_t(rule->variables, var_count, ecs_rule_var_t, compare_variable);
+    int32_t var_count = rule->var_count;
+    ecs_qsort_t(rule->vars, var_count, ecs_rule_var_t, compare_variable);
 
     /* Iterate variables to correct ids after sort */
-    for (i = 0; i < rule->variable_count; i ++) {
-        rule->variables[i].id = i;
+    for (i = 0; i < rule->var_count; i ++) {
+        rule->vars[i].id = i;
     }
     
 done:
@@ -18428,13 +18437,13 @@ ecs_rule_op_t* insert_operation(
          * but an operation should never overwrite an entity variable if the 
          * corresponding table variable has already been resolved. */
         if (pair.reg_mask & RULE_PAIR_PREDICATE) {
-            ecs_rule_var_t *pred = &rule->variables[pair.pred.reg];
+            ecs_rule_var_t *pred = &rule->vars[pair.pred.reg];
             pred = get_most_specific_var(rule, pred, written);
             pair.pred.reg = pred->id;
         }
 
         if (pair.reg_mask & RULE_PAIR_OBJECT) {
-            ecs_rule_var_t *obj = &rule->variables[pair.obj.reg];
+            ecs_rule_var_t *obj = &rule->vars[pair.obj.reg];
             obj = get_most_specific_var(rule, obj, written);
             pair.obj.reg = obj->id;
         }
@@ -18658,13 +18667,12 @@ ecs_rule_var_t* store_reflexive_set(
     /* Create anonymous variable for storing the set */
     ecs_rule_var_t *av = create_anonymous_variable(rule, var_kind);
     int32_t ave_id = 0, av_id = av->id;
-    ecs_rule_var_t *ave = NULL;
 
     /* If the variable kind is a table, also create an entity variable as the
      * result of the set operation should be returned as an entity */
     if (var_kind == EcsRuleVarKindTable && as_entity) {
-        ave = create_variable(rule, EcsRuleVarKindEntity, av->name);
-        av = &rule->variables[av_id];
+        create_variable(rule, EcsRuleVarKindEntity, av->name);
+        av = &rule->vars[av_id];
         ave_id = av_id + 1;
     }
 
@@ -18673,9 +18681,9 @@ ecs_rule_var_t* store_reflexive_set(
 
     /* Make sure to return entity variable, and that it is populated */
     if (as_entity) {
-        return ensure_entity_written(rule, &rule->variables[ave_id], written);
+        return ensure_entity_written(rule, &rule->vars[ave_id], written);
     } else {
-        return &rule->variables[av_id];
+        return &rule->vars[av_id];
     }
 }
 
@@ -18899,6 +18907,7 @@ static
 void prepare_predicate(
     ecs_rule_t *rule,
     ecs_rule_pair_t *pair,
+    int32_t term,
     bool *written)  
 {
     /* If pair is not final, resolve term for all IsA relationships of the
@@ -18915,6 +18924,10 @@ void prepare_predicate(
 
         pair->pred.reg = pred->id;
         pair->reg_mask |= RULE_PAIR_PREDICATE;
+
+        if (term != -1) {
+            rule->term_vars[term].pred = pred->id;
+        }
     }
 }
 
@@ -18945,8 +18958,8 @@ void insert_term_2(
 
     if (!filter->transitive) {
         insert_select_or_with(rule, c, term, subj, filter, written);
-        if (subj) subj = &rule->variables[subj_id];
-        if (obj) obj = &rule->variables[obj_id];
+        if (subj) subj = &rule->vars[subj_id];
+        if (obj) obj = &rule->vars[obj_id];
 
     } else if (filter->transitive) {
         if (subj_known) {
@@ -18956,8 +18969,10 @@ void insert_term_2(
                         rule, EcsRuleSubSet, filter, written, true, true);
 
                     if (subj) {
-                        subj = &rule->variables[subj_id];
+                        subj = &rule->vars[subj_id];
                     }
+
+                    rule->term_vars[c].obj = obj_subsets->id;
 
                     ecs_rule_pair_t pair = *filter;
                     pair.obj.reg = obj_subsets->id;
@@ -18993,8 +19008,8 @@ void insert_term_2(
                     ecs_rule_var_t *av = create_anonymous_variable(
                         rule, EcsRuleVarKindEntity);
 
-                    subj = &rule->variables[subj_id];
-                    obj = &rule->variables[obj_id];
+                    subj = &rule->vars[subj_id];
+                    obj = &rule->vars[obj_id];
                     obj = to_entity(rule, obj);
 
                     ecs_rule_pair_t set_pair = *filter;
@@ -19030,6 +19045,15 @@ void insert_term_2(
                     set_pair.obj.ent = term->obj.entity;
                 }
 
+                if (obj) {
+                    rule->term_vars[c].obj = obj->id;
+                } else {
+                    ecs_rule_var_t *av = create_anonymous_variable(rule,
+                        EcsRuleVarKindEntity);
+                    rule->term_vars[c].obj = av->id;
+                    written[av->id] = true;
+                }
+
                 insert_reflexive_set(rule, EcsRuleSubSet, subj, set_pair, c, 
                     written, filter->reflexive);
             } else if (subj == obj) {
@@ -19042,8 +19066,8 @@ void insert_term_2(
                     av = create_anonymous_variable(rule, EcsRuleVarKindEntity);
                 }
 
-                subj = &rule->variables[subj_id];
-                obj = &rule->variables[obj_id];
+                subj = &rule->vars[subj_id];
+                obj = &rule->vars[obj_id];
                 obj = to_entity(rule, obj);
 
                 /* Insert instruction to find all subjects and objects */
@@ -19160,7 +19184,7 @@ void insert_term(
     }
 
     ecs_rule_pair_t filter = term_to_pair(rule, term);
-    prepare_predicate(rule, &filter, written);
+    prepare_predicate(rule, &filter, c, written);
 
     if (subj_is_set(term) && !obj_set) {
         insert_term_1(rule, term, &filter, c, written);
@@ -19182,7 +19206,7 @@ void insert_term(
     }
 
     if (term->oper == EcsOptional) {
-        /* Insert jump instruction that ensures that the optional term is only
+        /* Insert Not instruction that ensures that the optional term is only
          * executed once */
         ecs_rule_op_t *jump = insert_operation(rule, -1, written);
         jump->kind = EcsRuleNot;
@@ -19218,7 +19242,7 @@ void compile_program(
 {
     /* Trace which variables have been written while inserting instructions.
      * This determines which instruction needs to be inserted */
-    bool written[ECS_RULE_MAX_VARIABLE_COUNT] = { false };
+    bool written[ECS_RULE_MAX_VAR_COUNT] = { false };
 
     ecs_term_t *terms = rule->filter.terms;
     int32_t v, c, term_count = rule->filter.term_count;
@@ -19249,8 +19273,8 @@ void compile_program(
     }
 
     /* Insert variables based on dependency order */
-    for (v = 0; v < rule->subject_variable_count; v ++) {
-        ecs_rule_var_t *var = &rule->variables[v];
+    for (v = 0; v < rule->subj_var_count; v ++) {
+        ecs_rule_var_t *var = &rule->vars[v];
 
         ecs_assert(var->kind == EcsRuleVarKindTable, ECS_INTERNAL_ERROR, NULL);
 
@@ -19272,7 +19296,7 @@ void compile_program(
 
             insert_term(rule, term, c, written);
 
-            var = &rule->variables[v];
+            var = &rule->vars[v];
         }
     }
 
@@ -19300,7 +19324,7 @@ void compile_program(
 
     /* Verify all subject variables have been written. Subject variables are of
      * the table type, and a select/subset should have been inserted for each */
-    for (v = 0; v < rule->subject_variable_count; v ++) {
+    for (v = 0; v < rule->subj_var_count; v ++) {
         if (!written[v]) {
             /* If the table variable hasn't been written, this can only happen
              * if an instruction wrote the variable before a select/subset could
@@ -19308,7 +19332,7 @@ void compile_program(
              * testing if an entity variable exists and whether it has been
              * written. */
             ecs_rule_var_t *var = find_variable(
-                rule, EcsRuleVarKindEntity, rule->variables[v].name);
+                rule, EcsRuleVarKindEntity, rule->vars[v].name);
             ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(written[var->id], ECS_INTERNAL_ERROR, var->name);
             (void)var;
@@ -19321,9 +19345,9 @@ void compile_program(
      * variables are correctly returned by the iterator. When an entity variable
      * hasn't been written yet at this point, it is because it only constrained
      * through a common predicate or object. */
-    for (; v < rule->variable_count; v ++) {
+    for (; v < rule->var_count; v ++) {
         if (!written[v]) {
-            ecs_rule_var_t *var = &rule->variables[v];
+            ecs_rule_var_t *var = &rule->vars[v];
             ecs_assert(var->kind == EcsRuleVarKindEntity, 
                 ECS_INTERNAL_ERROR, NULL);
 
@@ -19358,17 +19382,16 @@ static
 void create_variable_name_array(
     ecs_rule_t *rule)
 {
-    if (rule->variable_count) {
-        rule->variable_names = ecs_os_malloc_n(char*, rule->variable_count);
+    if (rule->var_count) {
         int i;
-        for (i = 0; i < rule->variable_count; i ++) {
-            ecs_rule_var_t *var = &rule->variables[i];
+        for (i = 0; i < rule->var_count; i ++) {
+            ecs_rule_var_t *var = &rule->vars[i];
 
             if (var->kind != EcsRuleVarKindEntity) {
                 /* Table variables are hidden for applications. */
-                rule->variable_names[var->id] = NULL;
+                rule->var_names[var->id] = NULL;
             } else {
-                rule->variable_names[var->id] = var->name;
+                rule->var_names[var->id] = var->name;
             }
         }
     }
@@ -19378,10 +19401,10 @@ static
 void create_variable_cross_references(
     ecs_rule_t *rule)
 {
-    if (rule->variable_count) {
+    if (rule->var_count) {
         int i;
-        for (i = 0; i < rule->variable_count; i ++) {
-            ecs_rule_var_t *var = &rule->variables[i];
+        for (i = 0; i < rule->var_count; i ++) {
+            ecs_rule_var_t *var = &rule->vars[i];
             if (var->kind == EcsRuleVarKindEntity) {
                 ecs_rule_var_t *tvar = find_variable(
                     rule, EcsRuleVarKindTable, var->name);
@@ -19419,6 +19442,34 @@ void rule_iter_init(
     } else {
         iter[0] = ecs_rule_iter(world, (ecs_rule_t*)poly);
     }
+}
+
+static
+int32_t find_term_var_id(
+    ecs_rule_t *rule,
+    ecs_term_id_t *term_id)
+{
+    if (term_id_is_variable(term_id)) {
+        const char *var_name = term_id_var_name(term_id);
+        ecs_rule_var_t *var = find_variable(
+            rule, EcsRuleVarKindEntity, var_name);
+        if (var) {
+            return var->id;
+        } else {
+            /* If this is Any look for table variable. Since Any is only
+             * required to return a single result, there is no need to 
+             * insert an each instruction for a matching table. */
+            if (term_id->entity == EcsAny) {
+                var = find_variable(
+                    rule, EcsRuleVarKindTable, var_name);
+                if (var) {
+                    return var->id;
+                }
+            }
+        }
+    }
+    
+    return -1;
 }
 
 ecs_rule_t* ecs_rule_init(
@@ -19461,6 +19512,15 @@ ecs_rule_t* ecs_rule_init(
         goto error;
     }
 
+    /* Create lookup array for subject variables */
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_rule_term_vars_t *vars = &result->term_vars[i];
+        vars->pred = find_term_var_id(result, &term->pred);
+        vars->subj = find_term_var_id(result, &term->subj);
+        vars->obj = find_term_var_id(result, &term->obj);
+    }
+
     /* Generate the opcode array */
     compile_program(result);
 
@@ -19471,37 +19531,6 @@ ecs_rule_t* ecs_rule_init(
     /* Create cross-references between variables so it's easy to go from entity
      * to table variable and vice versa */
     create_variable_cross_references(result);
-
-    /* Create lookup array for subject variables */
-    result->subject_variables = ecs_os_malloc_n(int32_t, term_count);
-
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &terms[i];
-        if (term_id_is_variable(&term->subj)) {
-            const char *subj_name = term_id_var_name(&term->subj);
-
-            ecs_rule_var_t *subj = find_variable(
-                result, EcsRuleVarKindEntity, subj_name);
-            if (subj) {
-                result->subject_variables[i] = subj->id;
-                continue;
-            } else {
-                /* If this is Any look for table variable. Since Any is only
-                 * required to return a single result, there is no need to 
-                 * insert an each instruction for a matching table. */
-                if (term->subj.entity == EcsAny) {
-                    subj = find_variable(
-                        result, EcsRuleVarKindTable, subj_name);
-                    if (subj) {
-                        result->subject_variables[i] = subj->id;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        result->subject_variables[i] = -1;
-    }
 
     result->iterable.init = rule_iter_init;
 
@@ -19515,17 +19544,13 @@ void ecs_rule_fini(
     ecs_rule_t *rule)
 {
     int32_t i;
-    for (i = 0; i < rule->variable_count; i ++) {
-        ecs_os_free(rule->variables[i].name);
+    for (i = 0; i < rule->var_count; i ++) {
+        ecs_os_free(rule->vars[i].name);
     }
-
-    ecs_os_free(rule->variables);
-    ecs_os_free(rule->operations);
-    ecs_os_free(rule->variable_names);
-    ecs_os_free(rule->subject_variables);
 
     ecs_filter_fini(&rule->filter);
 
+    ecs_os_free(rule->operations);
     ecs_os_free(rule);
 }
 
@@ -19545,7 +19570,7 @@ ecs_rule_var_t* get_variable(
         return NULL;
     }
 
-    return &rule->variables[var_id];
+    return (ecs_rule_var_t*)&rule->vars[var_id];
 }
 
 /* Convert the program to a string. This can be useful to analyze how a rule is
@@ -19569,8 +19594,8 @@ char* ecs_rule_str(
         char *pred_name_alloc = NULL, *obj_name_alloc = NULL;
 
         if (pair.reg_mask & RULE_PAIR_PREDICATE) {
-            ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_rule_var_t *type_var = &rule->variables[pair.pred.reg];
+            ecs_assert(rule->vars != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_rule_var_t *type_var = &rule->vars[pair.pred.reg];
             pred_name = type_var->name;
         } else if (pred) {
             pred_name_alloc = ecs_get_fullpath(world, ecs_get_alive(world, pred));
@@ -19578,8 +19603,8 @@ char* ecs_rule_str(
         }
 
         if (pair.reg_mask & RULE_PAIR_OBJECT) {
-            ecs_assert(rule->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_rule_var_t *obj_var = &rule->variables[pair.obj.reg];
+            ecs_assert(rule->vars != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_rule_var_t *obj_var = &rule->vars[pair.obj.reg];
             obj_name = obj_var->name;
         } else if (obj) {
             obj_name_alloc = ecs_get_fullpath(world, ecs_get_alive(world, obj));
@@ -19696,7 +19721,7 @@ int32_t ecs_rule_var_count(
     const ecs_rule_t *rule)
 {
     ecs_assert(rule != NULL, ECS_INTERNAL_ERROR, NULL);
-    return rule->variable_count;
+    return rule->var_count;
 }
 
 /* Public function to find a variable by name */
@@ -19717,7 +19742,7 @@ const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id)
 {
-    return rule->variables[var_id].name;
+    return rule->vars[var_id].name;
 }
 
 /* Public function to get the type of a variable. */
@@ -19725,7 +19750,7 @@ bool ecs_rule_var_is_entity(
     const ecs_rule_t *rule,
     int32_t var_id)
 {
-    return rule->variables[var_id].kind == EcsRuleVarKindEntity;
+    return rule->vars[var_id].kind == EcsRuleVarKindEntity;
 }
 
 /* Public function to get the value of a variable. */
@@ -19737,7 +19762,7 @@ ecs_entity_t ecs_rule_get_var(
     const ecs_rule_t *rule = it->rule;
 
     /* We can only return entity variables */
-    if (rule->variables[var_id].kind == EcsRuleVarKindEntity) {
+    if (rule->vars[var_id].kind == EcsRuleVarKindEntity) {
         ecs_rule_reg_t *regs = get_register_frame(it, rule->frame_count - 1);
         return entity_reg_get(rule, regs, var_id);
     } else {
@@ -19762,14 +19787,14 @@ void ecs_rule_set_var(
     ecs_check(iter->registers != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_rule_t *r = iter->rule;
-    ecs_check(var_id < r->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < r->var_count, ECS_INVALID_PARAMETER, NULL);
 
     entity_reg_set(r, iter->registers, var_id, value);
 
     /* Also set table variable if it exists */
-    ecs_rule_var_t *var = &r->variables[var_id];
+    const ecs_rule_var_t *var = &r->vars[var_id];
     if (var->other != -1) {
-        ecs_rule_var_t *tvar = &r->variables[var->other];
+        const ecs_rule_var_t *tvar = &r->vars[var->other];
         ecs_assert(tvar->kind == EcsRuleVarKindTable, 
             ECS_INTERNAL_ERROR, NULL);
         (void)tvar;
@@ -19814,11 +19839,11 @@ ecs_iter_t ecs_rule_iter(
     it->rule = rule;
 
     if (rule->operation_count) {
-        if (rule->variable_count) {
+        if (rule->var_count) {
             it->registers = ecs_os_malloc_n(ecs_rule_reg_t, 
-                rule->operation_count * rule->variable_count);
+                rule->operation_count * rule->var_count);
 
-            it->variables = ecs_os_malloc_n(ecs_entity_t, rule->variable_count);
+            it->variables = ecs_os_malloc_n(ecs_entity_t, rule->var_count);
         }
         
         it->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, rule->operation_count);
@@ -19835,16 +19860,16 @@ ecs_iter_t ecs_rule_iter(
 
     it->op = 0;
 
-    for (i = 0; i < rule->variable_count; i ++) {
-        if (rule->variables[i].kind == EcsRuleVarKindEntity) {
+    for (i = 0; i < rule->var_count; i ++) {
+        if (rule->vars[i].kind == EcsRuleVarKindEntity) {
             entity_reg_set(rule, it->registers, i, EcsWildcard);
         } else {
             table_reg_set(rule, it->registers, i, NULL);
         }
     }
 
-    result.variable_names = rule->variable_names;
-    result.variable_count = rule->variable_count;
+    result.variable_names = (char**)rule->var_names;
+    result.variable_count = rule->var_count;
     result.term_count = rule->filter.term_count;
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
@@ -19884,7 +19909,7 @@ int32_t find_next_same_var(
             return -1;
         }
 
-        if (ECS_PAIR_RELATION(id) == ECS_PAIR_OBJECT(id)) {
+        if (ECS_PAIR_FIRST(id) == ECS_PAIR_SECOND(id)) {
             /* Found a match! */
             return i;
         }
@@ -19988,27 +20013,6 @@ ecs_id_t rule_get_column(
 }
 
 static
-void set_id(
-    ecs_iter_t *it,
-    ecs_rule_op_t *op,
-    ecs_type_t type,
-    int32_t column)
-{
-    if (op->term == -1) {
-        /* If operation is not associated with a term, don't set anything */
-        return;
-    }
-
-    ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    if (type) {
-        it->ids[op->term] = rule_get_column(type, column);
-    } else {
-        it->ids[op->term] = 0;
-    }
-}
-
-static
 void set_source(
     ecs_iter_t *it,
     ecs_rule_op_t *op,
@@ -20023,10 +20027,28 @@ void set_source(
     ecs_assert(op->term >= 0, ECS_INTERNAL_ERROR, NULL);
 
     const ecs_rule_t *rule = it->priv.iter.rule.rule;
-    if ((r != UINT8_MAX) && rule->variables[r].kind == EcsRuleVarKindEntity) {
+    if ((r != UINT8_MAX) && rule->vars[r].kind == EcsRuleVarKindEntity) {
         it->subjects[op->term] = reg_get_entity(rule, op, regs, r);
     } else {
         it->subjects[op->term] = 0;
+    }
+}
+
+static
+void set_term_vars(
+    const ecs_rule_t *rule,
+    ecs_rule_reg_t *regs,
+    int32_t term,
+    ecs_id_t id)
+{
+    if (term != -1) {
+        const ecs_rule_term_vars_t *vars = &rule->term_vars[term];
+        if (vars->pred != -1) {
+            regs[vars->pred].entity = ECS_PAIR_FIRST(id);
+        }
+        if (vars->obj != -1) {
+            regs[vars->obj].entity = ECS_PAIR_SECOND(id);
+        }
     }
 }
 
@@ -20080,7 +20102,7 @@ bool eval_superset(
     ecs_rule_pair_t pair = op->filter;
 
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
-    ecs_entity_t rel = ECS_PAIR_RELATION(filter.mask);
+    ecs_entity_t rel = ECS_PAIR_FIRST(filter.mask);
     ecs_rule_filter_t super_filter = { 
         .mask = ecs_pair(rel, EcsWildcard) 
     };
@@ -20102,7 +20124,7 @@ bool eval_superset(
         frame = &op_ctx->stack[sp];
 
         /* Get table of object for which to get supersets */
-        ecs_entity_t obj = ECS_PAIR_OBJECT(filter.mask);
+        ecs_entity_t obj = ECS_PAIR_SECOND(filter.mask);
         if (obj == EcsWildcard) {
             ecs_assert(pair.reg_mask & RULE_PAIR_OBJECT, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -20137,7 +20159,6 @@ bool eval_superset(
         ecs_entity_t col_obj = ecs_entity_t_lo(col_entity);
 
         reg_set_entity(rule, regs, r, col_obj);
-        set_id(it, op, table->type, column);
 
         frame->table = table;
         frame->column = column;
@@ -20175,7 +20196,6 @@ bool eval_superset(
             col_entity = rule_get_column(table->type, column);
             col_obj = ecs_entity_t_lo(col_entity);
             reg_set_entity(rule, regs, r, col_obj);
-            set_id(it, op, table->type, column);
             return true;        
         }
 
@@ -20231,8 +20251,7 @@ bool eval_subset(
         frame->row = 0;
         frame->column = table_record.column;
         table_reg_set(rule, regs, r, (frame->table = table_record.table));
-        set_id(it, op, table_record.table->type, table_record.column);
-        return true;
+        goto yield;
     }
 
     do {
@@ -20251,9 +20270,8 @@ bool eval_subset(
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
                 frame->row = 0;
                 frame->column = table_record.column;
-                set_id(it, op, table_record.table->type, table_record.column);
                 table_reg_set(rule, regs, r, table);
-                return true;
+                goto yield;
             } else {
                 sp = -- op_ctx->sp;
                 if (sp < 0) {
@@ -20318,7 +20336,10 @@ bool eval_subset(
     } while (!table);
 
     table_reg_set(rule, regs, r, table);
-    set_id(it, op, table->type, frame->column);
+
+yield:
+    set_term_vars(rule, regs, op->term, ecs_vector_get(frame->table->type,
+        ecs_id_t, frame->column)[0]);
 
     return true;
 }
@@ -20354,7 +20375,6 @@ bool eval_select(
     ecs_id_record_t *idr;
 
     if (!redo && op->term != -1) {
-        it->ids[op->term] = pattern;
         columns[op->term] = -1;
     }
 
@@ -20470,10 +20490,6 @@ bool eval_select(
     if (filter.wildcard) {
         reify_variables(iter, op, &filter, table->type, column);
     }
-    
-    if (!pair.obj_0) {
-        set_id(it, op, table->type, column);
-    }
 
     return true;
 }
@@ -20507,15 +20523,11 @@ bool eval_with(
         return false;
     }
 
-    printf("%d: eval_with: columns = {%d, %d}, ids = {%u, %u}\n",
-        op_index, columns[0], columns[1]);
-
     int32_t column = -1;
     ecs_table_t *table = NULL;
     ecs_id_record_t *idr;
 
     if (op->term != -1) {
-        it->ids[op->term] = filter.mask;
         columns[op->term] = -1;
     }
 
@@ -20543,7 +20555,8 @@ bool eval_with(
             if (r == UINT8_MAX) {
                 subj = op->subject;
             } else {
-                ecs_rule_var_t *v_subj = &rule->variables[r];
+                const ecs_rule_var_t *v_subj = &rule->vars[r];
+
                 if (v_subj->kind == EcsRuleVarKindEntity) {
                     subj = entity_reg_get(rule, regs, r);
 
@@ -20560,7 +20573,6 @@ bool eval_with(
                 if (!filter.obj_wildcard) {
                     obj = ecs_entity_t_lo(filter.mask);
                     if (subj == obj) {
-                        it->ids[op->term] = filter.mask;
                         return true;
                     }
                 }
@@ -20623,10 +20635,6 @@ bool eval_with(
         reify_variables(iter, op, &filter, table->type, column);
     }
 
-    if (!pair.obj_0) {
-        set_id(it, op, table->type, column);
-    }
-
     set_source(it, op, regs, r);
 
     return true;
@@ -20653,9 +20661,9 @@ bool eval_each(
     ecs_entity_t e;
 
     /* Make sure in/out registers are of the correct kind */
-    ecs_assert(iter->rule->variables[r_in].kind == EcsRuleVarKindTable, 
+    ecs_assert(iter->rule->vars[r_in].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(iter->rule->variables[r_out].kind == EcsRuleVarKindEntity, 
+    ecs_assert(iter->rule->vars[r_out].kind == EcsRuleVarKindEntity, 
         ECS_INTERNAL_ERROR, NULL);
 
     /* Get table, make sure that it contains data. The select operation should
@@ -20737,7 +20745,7 @@ bool eval_store(
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
 
-    ecs_rule_var_t *var_out = &rule->variables[r_out];
+    const ecs_rule_var_t *var_out = &rule->vars[r_out];
     if (var_out->kind == EcsRuleVarKindEntity) {
         ecs_entity_t out, in = reg_get_entity(rule, op, regs, r_in);
 
@@ -20772,12 +20780,16 @@ bool eval_store(
         }
 
         reg_set_table(rule, regs, r_out, in);
+
+        /* Ensure that if the input was an empty entity, information is not
+         * lost */
+        if (!regs[r_out].table.table) {
+            regs[r_out].entity = reg_get_entity(rule, op, regs, r_in);
+        }
     }
 
-    if (op->term >= 0) {
-        ecs_rule_filter_t filter = pair_to_filter(iter, op, op->filter);
-        it->ids[op->term] = filter.mask;
-    }
+    ecs_rule_filter_t filter = pair_to_filter(iter, op, op->filter);
+    set_term_vars(rule, regs, op->term, filter.mask);
 
     return true;
 }
@@ -20862,7 +20874,7 @@ bool eval_intable(
 
     ecs_rule_pair_t pair = op->filter;
     ecs_rule_filter_t filter = pair_to_filter(iter, op, pair);
-    ecs_entity_t obj = ECS_PAIR_OBJECT(filter.mask);
+    ecs_entity_t obj = ECS_PAIR_SECOND(filter.mask);
     ecs_assert(obj != 0 && obj != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
     obj = ecs_get_alive(world, obj);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
@@ -20939,7 +20951,7 @@ void push_registers(
     int32_t cur,
     int32_t next)
 {
-    if (!it->rule->variable_count) {
+    if (!it->rule->var_count) {
         return;
     }
 
@@ -20947,7 +20959,7 @@ void push_registers(
     ecs_rule_reg_t *dst_regs = get_register_frame(it, next);
 
     ecs_os_memcpy_n(dst_regs, src_regs, 
-        ecs_rule_reg_t, it->rule->variable_count);
+        ecs_rule_reg_t, it->rule->var_count);
 }
 
 /* Utility to copy all columns to the next frame. Columns keep track of which
@@ -20991,7 +21003,7 @@ void populate_iterator(
      * return true or false. An application will still be able to obtain
      * the variables that were resolved. */
     if (r != UINT8_MAX) {
-        ecs_rule_var_t *var = &rule->variables[r];
+        const ecs_rule_var_t *var = &rule->vars[r];
         ecs_rule_reg_t *reg = &regs[r];
 
         if (var->kind == EcsRuleVarKindTable) {
@@ -21017,12 +21029,12 @@ void populate_iterator(
         }
     }
 
-    int32_t i, variable_count = rule->variable_count;
+    int32_t i, var_count = rule->var_count;
     int32_t term_count = rule->filter.term_count;
     iter->variables = it->variables;
 
-    for (i = 0; i < variable_count; i ++) {
-        if (rule->variables[i].kind == EcsRuleVarKindEntity) {
+    for (i = 0; i < var_count; i ++) {
+        if (rule->vars[i].kind == EcsRuleVarKindEntity) {
             it->variables[i] = regs[i].entity;
         } else {
             it->variables[i] = 0;
@@ -21030,9 +21042,9 @@ void populate_iterator(
     }
 
     for (i = 0; i < term_count; i ++) {
-        int32_t v = rule->subject_variables[i];
+        int32_t v = rule->term_vars[i].subj;
         if (v != -1) {
-            ecs_rule_var_t *var = &rule->variables[v];
+            const ecs_rule_var_t *var = &rule->vars[v];
             if (var->name[0] != '.') {
                 if (var->kind == EcsRuleVarKindEntity) {
                     iter->subjects[i] = regs[var->id].entity;
@@ -21067,6 +21079,46 @@ void populate_iterator(
         } else if (c) {
             iter->columns[i] = -1;
         }
+    }
+
+    /* Set iterator ids */
+    for (i = 0; i < term_count; i ++) {
+        const ecs_rule_term_vars_t *vars = &rule->term_vars[i];
+        ecs_term_t *term = &rule->filter.terms[i];
+        if (term->oper == EcsOptional || term->oper == EcsNot) {
+            if (iter->columns[i] == 0) {
+                iter->ids[i] = term->id;
+                continue;
+            }
+        }
+
+        ecs_id_t id = term->id;
+        ecs_entity_t pred = 0;
+        ecs_entity_t obj = 0;
+        bool is_pair = ECS_HAS_ROLE(id, PAIR);
+
+        if (!is_pair) {
+            pred = id;
+        } else {
+            pred = ECS_PAIR_FIRST(id);
+            obj = ECS_PAIR_SECOND(id);
+        }
+
+        if (vars->pred != -1) {
+            pred = regs[vars->pred].entity;
+        }
+        if (vars->obj != -1) {
+            ecs_assert(is_pair, ECS_INTERNAL_ERROR, NULL);
+            obj = regs[vars->obj].entity;
+        }
+
+        if (!is_pair) {
+            id = pred;
+        } else {
+            id = ecs_pair(pred, obj);
+        }
+
+        iter->ids[i] = id;
     }
 
     flecs_iter_populate_data(world, iter, table, offset, count, 
@@ -21136,17 +21188,6 @@ bool ecs_rule_next_instanced(
                 it->subjects[i] = subj->entity;
             }
         }
-
-        for (i = 0; i < rule->filter.term_count; i ++) {
-            ecs_term_t *term = &rule->filter.terms[i];
-            if (term->subj.set.mask & EcsNothing || 
-                term->oper == EcsNot ||
-                term->oper == EcsOptional ||
-                term->id == ecs_pair(EcsChildOf, 0)) 
-            {
-                it->ids[i] = term->id;
-            }
-        }
     }
 
     do {
@@ -21175,20 +21216,16 @@ bool ecs_rule_next_instanced(
             int32_t prev = cur - 1;
             push_registers(iter, prev, cur);
             push_columns(iter, prev, cur);
-            printf("[push registers %d => %d]\n", prev, cur);
         }
 
         /* Dispatch the operation */
         bool result = eval_op(it, op, op_index, redo);
         iter->op = result ? op->on_pass : op->on_fail;
 
-        printf("%d: %d\n", op_index, result);
-
         /* If the current operation is yield, return results */
         if (op->kind == EcsRuleYield) {
             populate_iterator(rule, it, iter, op);
             iter->redo = true;
-            printf("Yield [%s]\n\n", ecs_type_str(it->world, it->type));
             return true;
         }
 
@@ -21209,7 +21246,6 @@ bool ecs_rule_next_instanced(
     ecs_iter_fini(it);
 
 error:
-    printf("Done\n\n");
     return false;
 }
 
@@ -26656,7 +26692,7 @@ int append_type(
             /* If not serializing the top level entity, skip components that are
              * never inherited from a base entity */
             if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName) ||
-                ECS_PAIR_RELATION(id) == EcsChildOf ||
+                ECS_PAIR_FIRST(id) == EcsChildOf ||
                 id == EcsPrefab)
             {
                 continue;
@@ -32950,11 +32986,11 @@ bool for_each_id(
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
-                ECS_PAIR_RELATION(id), EcsWildcard);       
+                ECS_PAIR_FIRST(id), EcsWildcard);       
             result |= action(world, table, pred_w_wildcard, i);
 
             ecs_entity_t obj_w_wildcard = ecs_pair(
-                EcsWildcard, ECS_PAIR_OBJECT(id));
+                EcsWildcard, ECS_PAIR_SECOND(id));
             result |= action(world, table, obj_w_wildcard, i);
 
             ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
@@ -33112,7 +33148,7 @@ ecs_id_record_t* flecs_ensure_id_record(
         /* If id is a pair, inherit flags from relation id record */
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_id_record_t *idr_r = flecs_get_id_record(
-                world, ECS_PAIR_RELATION(id));
+                world, ECS_PAIR_FIRST(id));
             if (idr_r) {
                 idr->flags = idr_r->flags;
             }
@@ -33342,7 +33378,7 @@ void notify_subset(
         const ecs_table_record_t *tr = idt.cur;
         ecs_table_t *table = tr->table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
         if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
             /* Only notify for acyclic relations */
@@ -33775,8 +33811,8 @@ int finalize_term_id(
             return -1;
         }
 
-        obj = ECS_PAIR_OBJECT(pred);
-        pred = ECS_PAIR_RELATION(pred);
+        obj = ECS_PAIR_SECOND(pred);
+        pred = ECS_PAIR_FIRST(pred);
 
         term->pred.entity = pred;
         term->obj.entity = obj;
@@ -33829,8 +33865,8 @@ int populate_from_term_id(
     term->role = role;
 
     if (ECS_HAS_ROLE(term->id, PAIR) || ECS_HAS_ROLE(term->id, CASE)) {
-        pred = ECS_PAIR_RELATION(term->id);
-        obj = ECS_PAIR_OBJECT(term->id);
+        pred = ECS_PAIR_FIRST(term->id);
+        obj = ECS_PAIR_SECOND(term->id);
 
         if (!pred) {
             term_error(world, term, name, "missing predicate in term.id pair");
@@ -34024,10 +34060,10 @@ bool ecs_id_match(
             return false;
         }
 
-        ecs_entity_t id_rel = ECS_PAIR_RELATION(id);
-        ecs_entity_t id_obj = ECS_PAIR_OBJECT(id);
-        ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
-        ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
+        ecs_entity_t id_rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t id_obj = ECS_PAIR_SECOND(id);
+        ecs_entity_t pattern_rel = ECS_PAIR_FIRST(pattern);
+        ecs_entity_t pattern_obj = ECS_PAIR_SECOND(pattern);
 
         ecs_check(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
@@ -34069,8 +34105,8 @@ bool ecs_id_is_wildcard(
 {
     return
         (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
-            (ECS_PAIR_RELATION(id) == EcsWildcard) ||
-            (ECS_PAIR_OBJECT(id) == EcsWildcard)
+            (ECS_PAIR_FIRST(id) == EcsWildcard) ||
+            (ECS_PAIR_SECOND(id) == EcsWildcard)
         ));
 }
 
@@ -34681,7 +34717,7 @@ ecs_id_t actual_match_id(
 {
     /* Table types don't store CASE, so replace it with corresponding SWITCH */
     if (ECS_HAS_ROLE(id, CASE)) {
-        return ECS_SWITCH | ECS_PAIR_RELATION(id);
+        return ECS_SWITCH | ECS_PAIR_FIRST(id);
     }
 
     return id;
@@ -35647,7 +35683,7 @@ bool type_can_inherit_id(
     }
     if (idr->flags & ECS_ID_EXCLUSIVE) {
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t er = ECS_PAIR_RELATION(id);
+            ecs_entity_t er = ECS_PAIR_FIRST(id);
             if (flecs_get_table_record(
                 world, table, ecs_pair(er, EcsWildcard))) 
             {
@@ -35715,7 +35751,7 @@ int32_t type_search_relation(
         ecs_table_record_t *tr_r;
         int32_t r, r_column = type_search(table, idr_r, ids, &id_r, &tr_r);
         while (r_column != -1) {
-            ecs_entity_t obj = ECS_PAIR_OBJECT(id_r);
+            ecs_entity_t obj = ECS_PAIR_SECOND(id_r);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_record_t *rec = ecs_eis_get_any(world, obj);
@@ -35771,7 +35807,7 @@ int32_t ecs_search_relation(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_case = ECS_HAS_ROLE(id, CASE);
-    id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
+    id = is_case * (ECS_SWITCH | ECS_PAIR_FIRST(id)) + !is_case * id;
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
@@ -37899,13 +37935,13 @@ int32_t get_component_index(
         /* If requested component is a case, find the corresponding switch to
          * lookup in the table */
         if (ECS_HAS_ROLE(component, CASE)) {
-            ecs_entity_t sw = ECS_PAIR_RELATION(component);
+            ecs_entity_t sw = ECS_PAIR_FIRST(component);
             result = ecs_search(world, table, ECS_SWITCH | sw, 0);
             ecs_assert(result != -1, ECS_INTERNAL_ERROR, NULL);
         } else
         if (ECS_HAS_ROLE(component, PAIR)) { 
-            ecs_entity_t rel = ECS_PAIR_RELATION(component);
-            ecs_entity_t obj = ECS_PAIR_OBJECT(component);
+            ecs_entity_t rel = ECS_PAIR_FIRST(component);
+            ecs_entity_t obj = ECS_PAIR_SECOND(component);
 
             /* Both the relationship and the object of the pair must be set */
             ecs_assert(rel != 0, ECS_INVALID_PARAMETER, NULL);
@@ -37931,7 +37967,7 @@ int32_t get_component_index(
                     if (ecs_get(world, rel, EcsComponent) == NULL) {
                         /* If pair has no data associated with it, use the
                          * component to which the pair has been added */
-                        component = ECS_PAIR_OBJECT(*pair);
+                        component = ECS_PAIR_SECOND(*pair);
                     } else {
                         component = rel;
                     }
@@ -38185,7 +38221,7 @@ add_pair:
                 flecs_sparse_column_t *sc = ecs_vector_add(
                     &table_data->sparse_columns, flecs_sparse_column_t);
                 sc->signature_column_index = t;
-                sc->sw_case = ECS_PAIR_OBJECT(component);
+                sc->sw_case = ECS_PAIR_SECOND(component);
                 sc->sw_column = NULL;
             }
 
@@ -40345,7 +40381,7 @@ const EcsComponent* flecs_component_from_id(
     /* If this is a pair, get the pair component from the identifier */
     if (ECS_HAS_ROLE(e, PAIR)) {
         pair = e;
-        e = ecs_get_alive(world, ECS_PAIR_RELATION(e));
+        e = ecs_get_alive(world, ECS_PAIR_FIRST(e));
 
         if (ecs_has_id(world, e, EcsTag)) {
             return NULL;
@@ -40360,7 +40396,7 @@ const EcsComponent* flecs_component_from_id(
     if ((!component || !component->size) && pair) {
         /* If this is a pair column and the pair is not a component, use
          * the component type of the component the pair is applied to. */
-        e = ECS_PAIR_OBJECT(pair);
+        e = ECS_PAIR_SECOND(pair);
 
         /* Because generations are not stored in the pair, get the currently
          * alive id */
@@ -40523,7 +40559,6 @@ void init_flags(
             table->flags |= EcsTableHasDisabled;
         }
 
-        /* Does table have ChildOf relations */
         if (ECS_HAS_RELATION(id, EcsChildOf)) {
             ecs_poly_assert(world, ecs_world_t);
             ecs_entity_t obj = ecs_pair_second(world, id);
@@ -40665,7 +40700,7 @@ void add_id_to_ids(
         }
 
         if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
-            if (ECS_PAIR_RELATION(e) == r_exclusive) {
+            if (ECS_PAIR_FIRST(e) == r_exclusive) {
                 array[i] = add; /* Replace */
                 return;
             }
@@ -41026,9 +41061,9 @@ void add_with_ids_to_ids(
         ecs_id_t *id_ids = ecs_vector_first(id_table->type, ecs_id_t);
 
         for (i = start; i < end; i ++) {
-            ecs_assert(ECS_PAIR_RELATION(id_ids[i]) == EcsWith, 
+            ecs_assert(ECS_PAIR_FIRST(id_ids[i]) == EcsWith, 
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_id_t id_r = ECS_PAIR_OBJECT(id_ids[i]);
+            ecs_id_t id_r = ECS_PAIR_SECOND(id_ids[i]);
             ecs_id_t id = id_r;
             if (o) {
                 id = ecs_pair(id_r, o);
@@ -41060,8 +41095,8 @@ ecs_table_t* find_or_create_table_with_id(
         ecs_entity_t r = 0, o = 0, re = 0;
 
         if (ECS_HAS_ROLE(id, PAIR)) {
-            r = ECS_PAIR_RELATION(id);
-            o = ECS_PAIR_OBJECT(id);
+            r = ECS_PAIR_FIRST(id);
+            o = ECS_PAIR_SECOND(id);
             re = ecs_get_alive(world, r);
             if (re && ecs_has_id(world, re, EcsExclusive)) {
                 r_exclusive = (uint32_t)re;
@@ -41173,7 +41208,7 @@ ecs_table_t* find_or_create_table_with(
 {
     ecs_table_t *next = find_or_create_table_with_id(world, node, id);
 
-    if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsIsA) {
+    if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsIsA) {
         ecs_entity_t base = ecs_pair_second(world, id);
         next = find_or_create_table_with_isa(world, next, base);
     }
@@ -42364,7 +42399,7 @@ void register_trigger(
     }
 
     if (ECS_HAS_ROLE(term->id, CASE)) {
-        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        ecs_entity_t sw = ECS_PAIR_FIRST(term->id);
         register_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
             offsetof(ecs_event_id_record_t, triggers));
     }
@@ -42449,7 +42484,7 @@ void unregister_trigger(
     }
 
     if (ECS_HAS_ROLE(term->id, CASE)) {
-        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        ecs_entity_t sw = ECS_PAIR_FIRST(term->id);
         unregister_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
             offsetof(ecs_event_id_record_t, triggers));
     }
@@ -42667,7 +42702,7 @@ void notify_set_base_triggers(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t event_id = it->event_id;
-    ecs_entity_t rel = ECS_PAIR_RELATION(event_id);
+    ecs_entity_t rel = ECS_PAIR_FIRST(event_id);
     ecs_entity_t obj = ecs_pair_second(world, event_id);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *obj_table = ecs_get_table(world, obj);
@@ -42916,8 +42951,8 @@ void flecs_triggers_notify(
             notify_triggers_for_id(world, evt, id, it, &iter_set);
 
             if (role == ECS_PAIR || role == ECS_CASE) {
-                ecs_entity_t pred = ECS_PAIR_RELATION(id);
-                ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+                ecs_entity_t pred = ECS_PAIR_FIRST(id);
+                ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
                 ecs_id_t tid = role | ecs_entity_t_comb(EcsWildcard, pred);
                 notify_triggers_for_id(world, evt, tid, it, &iter_set);
@@ -43456,7 +43491,7 @@ void register_on_delete(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_OBJECT(id));
+        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
@@ -43474,7 +43509,7 @@ void register_on_delete_object(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_OBJECT(id));
+        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
@@ -43517,8 +43552,8 @@ void on_symmetric_add_remove(ecs_iter_t *it) {
         return;
     }
 
-    ecs_entity_t rel = ECS_PAIR_RELATION(pair);
-    ecs_entity_t obj = ECS_PAIR_OBJECT(pair);
+    ecs_entity_t rel = ECS_PAIR_FIRST(pair);
+    ecs_entity_t obj = ECS_PAIR_SECOND(pair);
     ecs_entity_t event = it->event;
     
     int i, count = it->count;

@@ -49,7 +49,7 @@ void notify_subset(
         const ecs_table_record_t *tr = idt.cur;
         ecs_table_t *table = tr->table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
         if (ecs_is_valid(world, rel) && !ecs_has_id(world, rel, EcsAcyclic)) {
             /* Only notify for acyclic relations */

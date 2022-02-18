@@ -347,7 +347,7 @@ void instantiate_children(
         /* Keep track of the element that creates the ChildOf relationship with
          * the prefab parent. We need to replace this element to make sure the
          * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_OBJECT(id) == base)) {
+        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_SECOND(id) == base)) {
             childof_base_index = pos;
         }
 
@@ -616,7 +616,7 @@ void components_override(
         ecs_entity_t id = added->array[i];
 
         if (ECS_HAS_RELATION(id, EcsIsA)) {
-            ecs_entity_t base = ECS_PAIR_OBJECT(id);
+            ecs_entity_t base = ECS_PAIR_SECOND(id);
 
             /* Cannot inherit from base if base is final */
             ecs_check(!ecs_has_id(world, ecs_get_alive(world, base), EcsFinal),
@@ -851,7 +851,7 @@ void update_component_monitor_w_array(
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t id = entities->array[i];
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t rel = ECS_PAIR_RELATION(id);
+            ecs_entity_t rel = ECS_PAIR_FIRST(id);
             
             /* If a relationship has changed, check if it could have impacted
              * the shape of the graph for that relationship. If so, mark the
@@ -1630,8 +1630,8 @@ ecs_table_t *traverse_from_expr(
 
             if (term.role == ECS_CASE) {
                 table = table_append(world, table, 
-                    ECS_SWITCH | ECS_PAIR_RELATION(term.id), diff);
-                term.id = ECS_CASE | ECS_PAIR_OBJECT(term.id);
+                    ECS_SWITCH | ECS_PAIR_FIRST(term.id), diff);
+                term.id = ECS_CASE | ECS_PAIR_SECOND(term.id);
             }
 
             if (term.oper == EcsAnd || !replace_and) {
@@ -1784,8 +1784,8 @@ int traverse_add(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         bool should_add = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
-            scope = ECS_PAIR_OBJECT(id);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+            scope = ECS_PAIR_SECOND(id);
             if (!desc->entity || (name && !name_assigned)) {
                 /* If name is added to entity, pass scope to add_path instead
                  * of adding it to the table. The provided name may have nested
@@ -1876,8 +1876,8 @@ void deferred_add_remove(
     const ecs_id_t *ids = desc->add;
     while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
         bool defer = true;
-        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_RELATION(id) == EcsChildOf) {
-            scope = ECS_PAIR_OBJECT(id);
+        if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+            scope = ECS_PAIR_SECOND(id);
             if (!desc->entity || (name && !name_assigned)) {
                 /* New named entities are created by temporarily going out of
                  * readonly mode to ensure no duplicates are created. */
@@ -1973,9 +1973,9 @@ ecs_entity_t ecs_entity_init(
             int32_t i = 0;
             while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
                 if (ECS_HAS_ROLE(id, PAIR) && 
-                    (ECS_PAIR_RELATION(id) == EcsChildOf))
+                    (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {
-                    scope = ECS_PAIR_OBJECT(id);
+                    scope = ECS_PAIR_SECOND(id);
                 }
             }
 
@@ -2341,7 +2341,7 @@ void remove_from_table(
     bool is_wildcard = ecs_id_is_wildcard(id);
 
     int32_t i, count = ecs_vector_count(src_table->type), removed_count = 0;
-    ecs_entity_t entity = ECS_PAIR_RELATION(id);
+    ecs_entity_t entity = ECS_PAIR_FIRST(id);
 
     for (i = column; i < count; i ++) {
         ecs_id_t e = ids[i];
@@ -2436,7 +2436,7 @@ void on_delete_object_action(
             ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
             ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_entity_t rel = ECS_PAIR_RELATION(*rel_id);
+            ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
             /* delete_object_action should be invoked for relations */
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
@@ -2504,7 +2504,7 @@ void on_delete_action(
          * Relation wildcard ids are implemented differently as relations
          * with the same object aren't guaranteed to occupy neighboring
          * elements in the type, other wildcards with the same relation. */
-        if (ECS_PAIR_RELATION(id) == EcsWildcard) {
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
             on_delete_object_action(world, id, action);
         } else {
             on_delete_id_action(world, id, action);
@@ -3358,7 +3358,7 @@ bool ecs_is_valid(
     /* When checking roles and/or pairs, the generation count may have been
      * stripped away. Just test if the entity is 0 or not. */
     if (ECS_HAS_ROLE(entity, PAIR)) {
-        return ECS_PAIR_RELATION(entity) != 0;
+        return ECS_PAIR_FIRST(entity) != 0;
     }
 
     /* Entities should not contain data in dead zone bits */
@@ -3478,8 +3478,8 @@ void ecs_ensure_id(
     ecs_id_t id)
 {
     if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
-        ecs_entity_t r = ECS_PAIR_RELATION(id);
-        ecs_entity_t o = ECS_PAIR_OBJECT(id);
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
 
         ecs_check(r != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(o != 0, ECS_INVALID_PARAMETER, NULL);
@@ -3564,11 +3564,11 @@ ecs_entity_t ecs_get_typeid(
         return id;
     } else if (id == ecs_id(EcsIdentifier)) {
         return id;
-    } else if (ECS_PAIR_RELATION(id) == ecs_id(EcsIdentifier)) {
+    } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
         return ecs_id(EcsIdentifier);
-    } else if (ECS_PAIR_RELATION(id) == EcsChildOf) {
+    } else if (ECS_PAIR_FIRST(id) == EcsChildOf) {
         return 0;
-    } else if (ECS_PAIR_RELATION(id) == EcsOnDelete) {
+    } else if (ECS_PAIR_FIRST(id) == EcsOnDelete) {
         return 0;
     }
 
@@ -3576,7 +3576,7 @@ ecs_entity_t ecs_get_typeid(
         /* Make sure we're not working with a stage */
         world = ecs_get_world(world);
 
-        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_RELATION(id));
+        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_FIRST(id));
 
         /* If relation is marked as a tag, it never has data. Return relation */
         if (ecs_has_id(world, rel, EcsTag)) {
@@ -3588,7 +3588,7 @@ ecs_entity_t ecs_get_typeid(
             return rel;
         }
         
-        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
         if (obj) {
             obj = ecs_get_alive(world, obj);
             ptr = ecs_get(world, obj, EcsComponent);
@@ -3622,7 +3622,7 @@ ecs_entity_t ecs_id_is_tag(
         /* If id is a wildcard, we can't tell if it's a tag or not, except
          * when the relation part of a pair has the Tag property */
         if (ECS_HAS_ROLE(id, PAIR)) {
-            if (ECS_PAIR_RELATION(id) != EcsWildcard) {
+            if (ECS_PAIR_FIRST(id) != EcsWildcard) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsTag)) {
@@ -3761,8 +3761,8 @@ void ecs_id_str_buf(
     }
 
     if (ECS_HAS_ROLE(id, PAIR)) {
-        ecs_entity_t rel = ECS_PAIR_RELATION(id);
-        ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
         ecs_entity_t e;
         if ((e = ecs_get_alive(world, rel))) {

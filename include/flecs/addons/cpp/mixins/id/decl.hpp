@@ -91,7 +91,7 @@ struct id {
         if (!is_pair()) {
             return false;
         }
-        return ECS_PAIR_RELATION(m_id) == relation;
+        return ECS_PAIR_FIRST(m_id) == relation;
     }
 
     /** Get first element from a pair.

@@ -450,7 +450,7 @@ int append_type(
             /* If not serializing the top level entity, skip components that are
              * never inherited from a base entity */
             if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName) ||
-                ECS_PAIR_RELATION(id) == EcsChildOf ||
+                ECS_PAIR_FIRST(id) == EcsChildOf ||
                 id == EcsPrefab)
             {
                 continue;

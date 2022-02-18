@@ -1712,11 +1712,11 @@ bool for_each_id(
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t pred_w_wildcard = ecs_pair(
-                ECS_PAIR_RELATION(id), EcsWildcard);       
+                ECS_PAIR_FIRST(id), EcsWildcard);       
             result |= action(world, table, pred_w_wildcard, i);
 
             ecs_entity_t obj_w_wildcard = ecs_pair(
-                EcsWildcard, ECS_PAIR_OBJECT(id));
+                EcsWildcard, ECS_PAIR_SECOND(id));
             result |= action(world, table, obj_w_wildcard, i);
 
             ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
@@ -1874,7 +1874,7 @@ ecs_id_record_t* flecs_ensure_id_record(
         /* If id is a pair, inherit flags from relation id record */
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_id_record_t *idr_r = flecs_get_id_record(
-                world, ECS_PAIR_RELATION(id));
+                world, ECS_PAIR_FIRST(id));
             if (idr_r) {
                 idr->flags = idr_r->flags;
             }

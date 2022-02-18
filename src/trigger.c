@@ -154,7 +154,7 @@ void register_trigger(
     }
 
     if (ECS_HAS_ROLE(term->id, CASE)) {
-        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        ecs_entity_t sw = ECS_PAIR_FIRST(term->id);
         register_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
             offsetof(ecs_event_id_record_t, triggers));
     }
@@ -239,7 +239,7 @@ void unregister_trigger(
     }
 
     if (ECS_HAS_ROLE(term->id, CASE)) {
-        ecs_entity_t sw = ECS_PAIR_RELATION(term->id);
+        ecs_entity_t sw = ECS_PAIR_FIRST(term->id);
         unregister_trigger_for_id(world, observable, trigger, ECS_SWITCH | sw, 
             offsetof(ecs_event_id_record_t, triggers));
     }
@@ -457,7 +457,7 @@ void notify_set_base_triggers(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t event_id = it->event_id;
-    ecs_entity_t rel = ECS_PAIR_RELATION(event_id);
+    ecs_entity_t rel = ECS_PAIR_FIRST(event_id);
     ecs_entity_t obj = ecs_pair_second(world, event_id);
     ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *obj_table = ecs_get_table(world, obj);
@@ -706,8 +706,8 @@ void flecs_triggers_notify(
             notify_triggers_for_id(world, evt, id, it, &iter_set);
 
             if (role == ECS_PAIR || role == ECS_CASE) {
-                ecs_entity_t pred = ECS_PAIR_RELATION(id);
-                ecs_entity_t obj = ECS_PAIR_OBJECT(id);
+                ecs_entity_t pred = ECS_PAIR_FIRST(id);
+                ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
                 ecs_id_t tid = role | ecs_entity_t_comb(EcsWildcard, pred);
                 notify_triggers_for_id(world, evt, tid, it, &iter_set);

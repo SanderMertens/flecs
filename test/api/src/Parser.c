@@ -50,9 +50,9 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
                     test_assert(ECS_HAS_ROLE(term->id, PAIR));\
                 }\
                 if (term->pred.entity != EcsThis) {\
-                    test_int(ECS_PAIR_RELATION(term->id), ecs_entity_t_lo(term->pred.entity));\
+                    test_int(ECS_PAIR_FIRST(term->id), ecs_entity_t_lo(term->pred.entity));\
                 }\
-                test_int(ECS_PAIR_OBJECT(term->id), ecs_entity_t_lo(term->obj.entity));\
+                test_int(ECS_PAIR_SECOND(term->id), ecs_entity_t_lo(term->obj.entity));\
             } else {\
                 if (term->pred.entity != EcsThis && term->obj.entity != EcsThis) {\
                     test_int(ECS_COMPONENT_MASK & term->id, term->pred.entity);\

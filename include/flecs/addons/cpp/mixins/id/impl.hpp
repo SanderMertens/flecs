@@ -14,7 +14,7 @@ inline flecs::entity id::role() const {
 inline flecs::entity id::first() const {
     ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
 
-    flecs::entity_t e = ECS_PAIR_RELATION(m_id);
+    flecs::entity_t e = ECS_PAIR_FIRST(m_id);
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {
@@ -23,7 +23,7 @@ inline flecs::entity id::first() const {
 }
 
 inline flecs::entity id::second() const {
-    flecs::entity_t e = ECS_PAIR_OBJECT(m_id);
+    flecs::entity_t e = ECS_PAIR_SECOND(m_id);
     if (m_world) {
         return flecs::entity(m_world, ecs_get_alive(m_world, e));
     } else {

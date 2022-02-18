@@ -321,8 +321,8 @@ int finalize_term_id(
             return -1;
         }
 
-        obj = ECS_PAIR_OBJECT(pred);
-        pred = ECS_PAIR_RELATION(pred);
+        obj = ECS_PAIR_SECOND(pred);
+        pred = ECS_PAIR_FIRST(pred);
 
         term->pred.entity = pred;
         term->obj.entity = obj;
@@ -375,8 +375,8 @@ int populate_from_term_id(
     term->role = role;
 
     if (ECS_HAS_ROLE(term->id, PAIR) || ECS_HAS_ROLE(term->id, CASE)) {
-        pred = ECS_PAIR_RELATION(term->id);
-        obj = ECS_PAIR_OBJECT(term->id);
+        pred = ECS_PAIR_FIRST(term->id);
+        obj = ECS_PAIR_SECOND(term->id);
 
         if (!pred) {
             term_error(world, term, name, "missing predicate in term.id pair");
@@ -570,10 +570,10 @@ bool ecs_id_match(
             return false;
         }
 
-        ecs_entity_t id_rel = ECS_PAIR_RELATION(id);
-        ecs_entity_t id_obj = ECS_PAIR_OBJECT(id);
-        ecs_entity_t pattern_rel = ECS_PAIR_RELATION(pattern);
-        ecs_entity_t pattern_obj = ECS_PAIR_OBJECT(pattern);
+        ecs_entity_t id_rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t id_obj = ECS_PAIR_SECOND(id);
+        ecs_entity_t pattern_rel = ECS_PAIR_FIRST(pattern);
+        ecs_entity_t pattern_obj = ECS_PAIR_SECOND(pattern);
 
         ecs_check(id_rel != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(id_obj != 0, ECS_INVALID_PARAMETER, NULL);
@@ -615,8 +615,8 @@ bool ecs_id_is_wildcard(
 {
     return
         (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
-            (ECS_PAIR_RELATION(id) == EcsWildcard) ||
-            (ECS_PAIR_OBJECT(id) == EcsWildcard)
+            (ECS_PAIR_FIRST(id) == EcsWildcard) ||
+            (ECS_PAIR_SECOND(id) == EcsWildcard)
         ));
 }
 
@@ -1227,7 +1227,7 @@ ecs_id_t actual_match_id(
 {
     /* Table types don't store CASE, so replace it with corresponding SWITCH */
     if (ECS_HAS_ROLE(id, CASE)) {
-        return ECS_SWITCH | ECS_PAIR_RELATION(id);
+        return ECS_SWITCH | ECS_PAIR_FIRST(id);
     }
 
     return id;

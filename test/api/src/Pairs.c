@@ -75,14 +75,14 @@ void Pairs_type_w_one_pair() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Velocity));
 
@@ -157,14 +157,14 @@ void Pairs_type_w_two_pairs() {
     test_int(ctx.e[3], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Velocity));
 
@@ -255,14 +255,14 @@ void Pairs_add_tag_pair_for_tag() {
 
     ecs_entity_t c = ctx.c[0][0];
 
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, Tag1);
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, Tag2);
 
@@ -334,14 +334,14 @@ void Pairs_add_tag_pair_for_component() {
     test_int(ctx.e[1], e2);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Position));
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Velocity));
 
@@ -414,14 +414,14 @@ void Pairs_query_2_pairs() {
     test_int(ctx.e[0], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelA));
     test_int(lo, ecs_id(Position));
 
     c = ctx.c[0][1];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelB));
     test_int(lo, ecs_id(Position));    
 
@@ -487,26 +487,26 @@ void Pairs_query_2_pairs_2_instances_per_type() {
     test_int(ctx.e[1], e1);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelA));
     test_int(lo, ecs_id(Position));
 
     c = ctx.c[0][1];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelB));
     test_int(lo, ecs_id(Position));    
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelA));
     test_int(lo, ecs_id(Velocity));
 
     c = ctx.c[1][1];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(RelB));
     test_int(lo, ecs_id(Velocity));  
 
@@ -601,8 +601,8 @@ void Pairs_on_add_pair() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));  
 
@@ -617,8 +617,8 @@ void Pairs_on_add_pair() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Velocity));
 
@@ -647,8 +647,8 @@ void Pairs_on_add_pair_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Position));  
 
@@ -681,8 +681,8 @@ void Pairs_on_remove_pair() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));  
 
@@ -696,8 +696,8 @@ void Pairs_on_remove_pair() {
     test_int(ctx.e[0], e);
 
     c = ctx.c[0][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Velocity));
 
@@ -728,8 +728,8 @@ void Pairs_on_remove_pair_tag() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Position));  
 
@@ -762,16 +762,16 @@ void Pairs_on_remove_pair_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Position));  
 
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, ecs_id(Rel));
     test_int(lo, ecs_id(Velocity));
 
@@ -815,16 +815,16 @@ void Pairs_on_remove_pair_tag_on_delete() {
     test_int(ctx.e[0], e);
 
     ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_RELATION(c);
-    ecs_entity_t lo = ECS_PAIR_OBJECT(c);
+    ecs_entity_t hi = ECS_PAIR_FIRST(c);
+    ecs_entity_t lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Position));  
 
     test_int(ctx.e[1], e);
 
     c = ctx.c[1][0];
-    hi = ECS_PAIR_RELATION(c);
-    lo = ECS_PAIR_OBJECT(c);
+    hi = ECS_PAIR_FIRST(c);
+    lo = ECS_PAIR_SECOND(c);
     test_int(hi, Rel);
     test_int(lo, ecs_id(Velocity));
 

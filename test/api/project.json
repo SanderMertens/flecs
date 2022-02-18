@@ -1485,6 +1485,7 @@
                 "2_comp",
                 "1_comp_explicit_subject",
                 "2_comp_explicit_subject",
+                "1_empty_comp",
                 "1_fact_true",
                 "1_fact_false",
                 "2_facts_true",
@@ -1619,7 +1620,8 @@
                 "test_subj_w_pair_wildcard_w_isa",
                 "test_subj_w_pair_wildcard_w_isa_2_lvls",
                 "test_this_w_wildcard_w_isa",
-                "test_this_w_wildcard_w_isa_2_lvls"
+                "test_this_w_wildcard_w_isa_2_lvls",
+                "test_this_w_wildcard_w_2_isa"
             ]
         }, {
             "id": "TransitiveRules",

@@ -1417,6 +1417,7 @@ void Rules_1_comp(void);
 void Rules_2_comp(void);
 void Rules_1_comp_explicit_subject(void);
 void Rules_2_comp_explicit_subject(void);
+void Rules_1_empty_comp(void);
 void Rules_1_fact_true(void);
 void Rules_1_fact_false(void);
 void Rules_2_facts_true(void);
@@ -1552,6 +1553,7 @@ void Rules_test_subj_w_pair_wildcard_w_isa(void);
 void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_isa(void);
 void Rules_test_this_w_wildcard_w_isa_2_lvls(void);
+void Rules_test_this_w_wildcard_w_2_isa(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -7934,6 +7936,10 @@ bake_test_case Rules_testcases[] = {
         Rules_2_comp_explicit_subject
     },
     {
+        "1_empty_comp",
+        Rules_1_empty_comp
+    },
+    {
         "1_fact_true",
         Rules_1_fact_true
     },
@@ -8472,6 +8478,10 @@ bake_test_case Rules_testcases[] = {
     {
         "test_this_w_wildcard_w_isa_2_lvls",
         Rules_test_this_w_wildcard_w_isa_2_lvls
+    },
+    {
+        "test_this_w_wildcard_w_2_isa",
+        Rules_test_this_w_wildcard_w_2_isa
     }
 };
 
@@ -12212,7 +12222,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        150,
+        152,
         Rules_testcases
     },
     {

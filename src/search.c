@@ -58,7 +58,7 @@ bool type_can_inherit_id(
     }
     if (idr->flags & ECS_ID_EXCLUSIVE) {
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t er = ECS_PAIR_RELATION(id);
+            ecs_entity_t er = ECS_PAIR_FIRST(id);
             if (flecs_get_table_record(
                 world, table, ecs_pair(er, EcsWildcard))) 
             {
@@ -126,7 +126,7 @@ int32_t type_search_relation(
         ecs_table_record_t *tr_r;
         int32_t r, r_column = type_search(table, idr_r, ids, &id_r, &tr_r);
         while (r_column != -1) {
-            ecs_entity_t obj = ECS_PAIR_OBJECT(id_r);
+            ecs_entity_t obj = ECS_PAIR_SECOND(id_r);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_record_t *rec = ecs_eis_get_any(world, obj);
@@ -182,7 +182,7 @@ int32_t ecs_search_relation(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     bool is_case = ECS_HAS_ROLE(id, CASE);
-    id = is_case * (ECS_SWITCH | ECS_PAIR_RELATION(id)) + !is_case * id;
+    id = is_case * (ECS_SWITCH | ECS_PAIR_FIRST(id)) + !is_case * id;
 
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
