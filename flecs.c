@@ -18805,6 +18805,8 @@ void insert_select_or_with(
             eval_subject_supersets = true;
 
         } else if (ecs_id_is_wildcard(term->id)) {
+            ecs_assert(subj != NULL, ECS_INTERNAL_ERROR, NULL);
+
             op = insert_operation(rule, -1, written);
 
             if (!is_known(subj, written)) {
@@ -20154,6 +20156,8 @@ bool eval_superset(
         if (column == -1) {
             return false;
         }
+
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_entity_t col_entity = rule_get_column(table->type, column);
         ecs_entity_t col_obj = ecs_entity_t_lo(col_entity);

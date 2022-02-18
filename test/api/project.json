@@ -1621,7 +1621,8 @@
                 "test_subj_w_pair_wildcard_w_isa_2_lvls",
                 "test_this_w_wildcard_w_isa",
                 "test_this_w_wildcard_w_isa_2_lvls",
-                "test_this_w_wildcard_w_2_isa"
+                "test_this_w_wildcard_w_2_isa",
+                "test_this_w_wildcard_w_isa_no_owned"
             ]
         }, {
             "id": "TransitiveRules",

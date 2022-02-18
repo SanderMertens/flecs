@@ -1554,6 +1554,7 @@ void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_isa(void);
 void Rules_test_this_w_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_2_isa(void);
+void Rules_test_this_w_wildcard_w_isa_no_owned(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -8482,6 +8483,10 @@ bake_test_case Rules_testcases[] = {
     {
         "test_this_w_wildcard_w_2_isa",
         Rules_test_this_w_wildcard_w_2_isa
+    },
+    {
+        "test_this_w_wildcard_w_isa_no_owned",
+        Rules_test_this_w_wildcard_w_isa_no_owned
     }
 };
 
@@ -12222,7 +12227,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        152,
+        153,
         Rules_testcases
     },
     {

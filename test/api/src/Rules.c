@@ -6226,3 +6226,7 @@ void Rules_test_this_w_wildcard_w_2_isa() {
 
     ecs_fini(world);
 }
+
+void Rules_test_this_w_wildcard_w_isa_no_owned() {
+    // Implement testcase
+}
