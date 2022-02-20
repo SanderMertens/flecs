@@ -76,6 +76,9 @@ void Entity_deferred_entity_init_w_childof_and_scope(void);
 void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void);
 void Entity_entity_init_w_empty_string_name(void);
 void Entity_entity_init_w_empty_string_symbol(void);
+void Entity_set_name_w_0_twice(void);
+void Entity_new_entity_twice(void);
+void Entity_new_entity_scoped_twice(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -2758,6 +2761,18 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_w_empty_string_symbol",
         Entity_entity_init_w_empty_string_symbol
+    },
+    {
+        "set_name_w_0_twice",
+        Entity_set_name_w_0_twice
+    },
+    {
+        "new_entity_twice",
+        Entity_new_entity_twice
+    },
+    {
+        "new_entity_scoped_twice",
+        Entity_new_entity_scoped_twice
     }
 };
 
@@ -12010,7 +12025,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        67,
+        70,
         Entity_testcases
     },
     {

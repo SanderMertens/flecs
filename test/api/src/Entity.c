@@ -1463,3 +1463,43 @@ void Entity_entity_init_w_empty_string_symbol() {
 
     ecs_fini(world);
 }
+
+void Entity_set_name_w_0_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Foo");
+
+    test_str(ecs_get_name(world, e1), "Foo");
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void Entity_new_entity_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
+    ecs_entity_t e2 = ecs_new_entity(world, "Foo");
+
+    test_str(ecs_get_name(world, e1), "Foo");
+    test_assert(e1 == e2);
+
+    ecs_fini(world);
+}
+
+void Entity_new_entity_scoped_twice() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_new_entity(world, "Foo.Bar");
+    ecs_entity_t e2 = ecs_new_entity(world, "Foo.Bar");
+
+    test_str(ecs_get_name(world, e1), "Bar");
+    test_assert(e1 == e2);
+
+    ecs_entity_t parent = ecs_lookup(world, "Foo");
+    test_assert(parent != 0);
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
+
+    ecs_fini(world);
+}

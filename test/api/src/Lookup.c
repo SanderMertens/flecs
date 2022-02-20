@@ -59,8 +59,10 @@ void Lookup_lookup_child() {
     ECS_ENTITY(world, Parent1, 0);
     ECS_ENTITY(world, Parent2, 0);
 
-    ecs_entity_t e1 = ecs_set_name(world, 0, "Child");
-    ecs_entity_t e2 = ecs_set_name(world, 0, "Child");
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, Parent1);
+    ecs_set_name(world, e1, "Child");
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, Parent2);
+    ecs_set_name(world, e2, "Child");
 
     ecs_add_pair(world, e1, EcsChildOf, Parent1);
     ecs_add_pair(world, e2, EcsChildOf, Parent2);

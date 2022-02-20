@@ -3323,6 +3323,11 @@ ecs_entity_t ecs_set_name(
     ecs_entity_t entity,
     const char *name)
 {
+    if (!entity) {
+        return ecs_entity_init(world, &(ecs_entity_desc_t) {
+            .name = name
+        });
+    }
     return set_identifier(world, entity, EcsName, name);
 }
 
