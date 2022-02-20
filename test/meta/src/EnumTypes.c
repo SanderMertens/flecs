@@ -191,3 +191,47 @@ void EnumTypes_zero_initialized() {
 
     ecs_fini(world);
 }
+
+void EnumTypes_enum_relation() {
+    ecs_world_t *world = ecs_init();
+
+    enum Color {
+        Red, Blue, Green
+    };
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t) {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        }
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, EcsComponent));
+    test_assert(ecs_has_id(world, e, EcsExclusive));
+    test_assert(ecs_has_id(world, e, EcsTag));
+
+    ecs_entity_t red = ecs_lookup_child(world, e, "Red");
+    ecs_entity_t green = ecs_lookup_child(world, e, "Green");
+    ecs_entity_t blue = ecs_lookup_child(world, e, "Blue");
+
+    test_assert(red != 0);
+    test_assert(green != 0);
+    test_assert(blue != 0);
+
+    test_assert(ecs_get_typeid(world, ecs_pair(e, red)) == 0);
+
+    ecs_entity_t ent = ecs_new_id(world);
+    ecs_add_pair(world, ent, e, red);
+    test_assert( ecs_has_pair(world, ent, e, red));
+
+    ecs_add_pair(world, ent, e, green);
+    test_assert( ecs_has_pair(world, ent, e, green));
+    test_assert( !ecs_has_pair(world, ent, e, red));
+
+    ecs_add_pair(world, ent, e, blue);
+    test_assert( ecs_has_pair(world, ent, e, blue));
+    test_assert( !ecs_has_pair(world, ent, e, green));
+    test_assert( !ecs_has_pair(world, ent, e, red));
+
+    ecs_fini(world);
+}

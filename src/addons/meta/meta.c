@@ -647,6 +647,9 @@ void add_enum(ecs_iter_t *it) {
         if (init_type(world, e, EcsEnumType)) {
             continue;
         }
+
+        ecs_add_id(world, e, EcsExclusive);
+        ecs_add_id(world, e, EcsTag);
     }
 }
 

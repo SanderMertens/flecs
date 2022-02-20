@@ -75,7 +75,8 @@
                 "enum_3_constants",
                 "enum_3_constants_manual_values",
                 "struct_w_enum",
-                "zero_initialized"
+                "zero_initialized",
+                "enum_relation"
             ]
         }, {
             "id": "BitmaskTypes",

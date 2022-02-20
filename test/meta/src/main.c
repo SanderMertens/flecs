@@ -69,6 +69,7 @@ void EnumTypes_enum_3_constants(void);
 void EnumTypes_enum_3_constants_manual_values(void);
 void EnumTypes_struct_w_enum(void);
 void EnumTypes_zero_initialized(void);
+void EnumTypes_enum_relation(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -739,6 +740,10 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "zero_initialized",
         EnumTypes_zero_initialized
+    },
+    {
+        "enum_relation",
+        EnumTypes_enum_relation
     }
 };
 
@@ -2425,7 +2430,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        6,
+        7,
         EnumTypes_testcases
     },
     {
