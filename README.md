@@ -44,7 +44,7 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [C++ examples](examples/cpp)
 - [Manual](docs/Manual.md) ([docsforge](https://flecs.docsforge.com/master/manual/))
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
-- [Relations Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
+- [Relations Manual](docs/Relations.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
 
 Here is some awesome content provided by the community :heart: :
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
