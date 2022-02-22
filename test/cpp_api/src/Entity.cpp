@@ -3166,3 +3166,44 @@ void Entity_clone_to_existing_overlap() {
     test_expect_abort();
     src.clone(true, dst);
 }
+
+void Entity_set_doc_name() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_name("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_name(), "Foo Bar");
+}
+
+void Entity_set_doc_brief() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_brief("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_brief(), "Foo Bar");
+}
+
+void Entity_set_doc_detail() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_detail("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_detail(), "Foo Bar");
+}
+
+void Entity_set_doc_link() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_link("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_link(), "Foo Bar");
+}
+

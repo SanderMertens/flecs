@@ -183,7 +183,11 @@
                 "clone",
                 "clone_w_value",
                 "clone_to_existing",
-                "clone_to_existing_overlap"
+                "clone_to_existing_overlap",
+                "set_doc_name",
+                "set_doc_brief",
+                "set_doc_detail",
+                "set_doc_link"
             ]
         }, {
             "id": "Pairs",
