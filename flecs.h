@@ -15911,6 +15911,25 @@ flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
 }
 
 #   endif
+#   ifdef FLECS_DOC
+
+const char* doc_name() {
+    return ecs_doc_get_name(m_world, m_id);
+}
+
+const char* doc_brief() {
+    return ecs_doc_get_brief(m_world, m_id);
+}
+
+const char* doc_detail() {
+    return ecs_doc_get_detail(m_world, m_id);
+}
+
+const char* doc_link() {
+    return ecs_doc_get_link(m_world, m_id);
+}
+
+#   endif
 
 private:
     flecs::entity set_stage(world_t *stage);
@@ -16518,6 +16537,30 @@ struct entity_builder : entity_view {
         ecs_set_name(this->m_world, this->m_id, name);
         return to_base();
     }
+
+#   ifdef FLECS_DOC
+
+Self& set_doc_name(const char *name) {
+    ecs_doc_set_name(m_world, m_id, name);
+    return to_base();
+}
+
+Self& set_doc_brief(const char *brief) {
+    ecs_doc_set_brief(m_world, m_id, brief);
+    return to_base();
+}
+
+Self& set_doc_detail(const char *detail) {
+    ecs_doc_set_detail(m_world, m_id, detail);
+    return to_base();
+}
+
+Self& set_doc_link(const char *link) {
+    ecs_doc_set_link(m_world, m_id, link);
+    return to_base();
+}
+
+#   endif
 
 protected:
     Self& to_base() {
