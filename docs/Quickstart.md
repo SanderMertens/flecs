@@ -673,18 +673,17 @@ EcsOnUpdate
 EcsOnValidate
 EcsPostUpdate
 EcsPreStore
-EcsPostStore
+EcsOnStore
 ```
 ```cpp
 flecs::OnLoad
 flecs::PostLoad
 flecs::PreUpdate
 flecs::OnUpdate
-flecs::PostUpdate
 flecs::OnValidate
-flecs::PostValidate
+flecs::PostUpdate
 flecs::PreStore
-flecs::PostStore
+flecs::OnStore
 ```
 
 When a pipeline is executed, systems are ran in the order of the phases. This makes pipelines and phases the primary mechanism for defining ordering between systems. The following code shows how to assign systems to a pipeline, and how to run the pipeline with the `progress()` function:
