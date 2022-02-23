@@ -398,6 +398,9 @@ void Parser_switch_id(void);
 void Parser_case_pair(void);
 void Parser_pair_w_invalid_role(void);
 void Parser_case_w_missing_obj(void);
+void Parser_not_alive_pred(void);
+void Parser_not_alive_subj(void);
+void Parser_not_alive_obj(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -4006,6 +4009,18 @@ bake_test_case Parser_testcases[] = {
     {
         "case_w_missing_obj",
         Parser_case_w_missing_obj
+    },
+    {
+        "not_alive_pred",
+        Parser_not_alive_pred
+    },
+    {
+        "not_alive_subj",
+        Parser_not_alive_subj
+    },
+    {
+        "not_alive_obj",
+        Parser_not_alive_obj
     }
 };
 
@@ -12086,7 +12101,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        154,
+        157,
         Parser_testcases
     },
     {

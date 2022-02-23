@@ -419,7 +419,10 @@
                 "switch_id",
                 "case_pair",
                 "pair_w_invalid_role",
-                "case_w_missing_obj"
+                "case_w_missing_obj",
+                "not_alive_pred",
+                "not_alive_subj",
+                "not_alive_obj"
             ]
         }, {
             "id": "Plecs",

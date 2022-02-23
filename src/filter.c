@@ -115,6 +115,15 @@ int finalize_term_var(
         return -1;
     }
 
+    if (identifier->var == EcsVarIsEntity) {
+        if (identifier->entity && !ecs_is_alive(world, identifier->entity)) {
+            term_error(world, term, name, 
+                "cannot use not alive entity %u in query",
+                (uint32_t)identifier->entity);
+            return -1;
+        }
+    }
+
     return 0;
 }
 

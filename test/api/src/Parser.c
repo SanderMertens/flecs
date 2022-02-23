@@ -2366,6 +2366,8 @@ void Parser_2_or_pred_inout() {
 void Parser_1_digit_pred_implicit_subj() {
     ecs_world_t *world = ecs_init();
 
+    ecs_ensure(world, 100);
+
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
         .expr = "100"
@@ -2388,6 +2390,8 @@ void Parser_1_digit_pred_implicit_subj() {
 void Parser_1_digit_pred_no_subj() {
     ecs_world_t *world = ecs_init();
 
+    ecs_ensure(world, 100);
+
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
         .expr = "100()"
@@ -2409,6 +2413,9 @@ void Parser_1_digit_pred_no_subj() {
 
 void Parser_1_digit_pred_explicit_subj() {
     ecs_world_t *world = ecs_init();
+
+    ecs_ensure(world, 100);
+    ecs_ensure(world, 200);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
@@ -2435,6 +2442,9 @@ void Parser_1_digit_pair_implicit_subj() {
     ECS_TAG(world, Pred_1);
     ECS_TAG(world, Pred_2);
 
+    ecs_ensure(world, 100);
+    ecs_ensure(world, 300);
+
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
         .expr = "(100, 300)"
@@ -2460,6 +2470,10 @@ void Parser_1_digit_pair_explicit_subj() {
 
     ECS_TAG(world, Pred_1);
     ECS_TAG(world, Pred_2);
+
+    ecs_ensure(world, 100);
+    ecs_ensure(world, 200);
+    ecs_ensure(world, 300);
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
@@ -3956,6 +3970,56 @@ void Parser_case_w_missing_obj() {
     ecs_filter_t f;
     test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
         .expr = "CASE | Sw"
+    }) != 0);
+
+    ecs_fini(world);
+}
+
+void Parser_not_alive_pred() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    test_assert(!ecs_is_alive(world, 5000));
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "5000"
+    }) != 0);
+
+    ecs_fini(world);
+}
+
+void Parser_not_alive_subj() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+
+    test_assert(!ecs_is_alive(world, 5000));
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(5000)"
+    }) != 0);
+
+    ecs_fini(world);
+}
+
+void Parser_not_alive_obj() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    test_assert(!ecs_is_alive(world, 5000));
+
+    ecs_filter_t f;
+    test_assert(ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "Pred(Subj, 5000)"
     }) != 0);
 
     ecs_fini(world);
