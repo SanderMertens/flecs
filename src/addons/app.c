@@ -13,7 +13,12 @@ int default_run_action(
 
     int result;
     while ((result = ecs_app_run_frame(world, desc)) == 0) { }
-    return result;
+
+    if (result == 1) {
+        return 0; /* Normal exit */
+    } else {
+        return result; /* Error code */
+    }
 }
 
 static

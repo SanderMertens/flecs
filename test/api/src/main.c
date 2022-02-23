@@ -2492,6 +2492,7 @@ void Error_last_error(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
+void App_app_w_default_frame_action(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -12017,6 +12018,10 @@ bake_test_case App_testcases[] = {
     {
         "app_w_frame_action",
         App_app_w_frame_action
+    },
+    {
+        "app_w_default_frame_action",
+        App_app_w_default_frame_action
     }
 };
 
@@ -12473,7 +12478,7 @@ static bake_test_suite suites[] = {
         "App",
         NULL,
         NULL,
-        1,
+        2,
         App_testcases
     }
 };

@@ -189,3 +189,16 @@ void Misc_c_macros() {
 
     test_int(sys_invoked_count, 1);
 }
+
+void Misc_app_run() {
+    flecs::world ecs;
+
+    bool system_ran = false;
+    ecs.system().iter([&](flecs::iter& it) {
+        system_ran = true;
+        it.world().quit();
+    });
+
+    test_int(ecs.app().run(), 0);
+    test_bool(system_ran, true);
+}

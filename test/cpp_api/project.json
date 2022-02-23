@@ -916,7 +916,8 @@
                 "string_compare_nullptr",
                 "nullptr_string_compare",
                 "nullptr_string_compare_nullptr",
-                "c_macros"
+                "c_macros",
+                "app_run"
             ]
         }]
     }

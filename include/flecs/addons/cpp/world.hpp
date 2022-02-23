@@ -817,6 +817,9 @@ struct world {
 #   ifdef FLECS_JSON
 #   include "mixins/json/world.inl"
 #   endif
+#   ifdef FLECS_APP
+#   include "mixins/app/mixin.inl"
+#   endif
 
 public:
     void init_builtin_components();

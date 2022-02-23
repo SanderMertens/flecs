@@ -77,6 +77,9 @@ struct each_invoker;
 #ifdef FLECS_JSON
 #include "mixins/json/decl.hpp"
 #endif
+#ifdef FLECS_APP
+#include "mixins/app/decl.hpp"
+#endif
 
 #include "log.hpp"
 #include "pair.hpp"

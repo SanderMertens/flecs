@@ -28415,17 +28415,20 @@ ecs_http_socket_t http_accept(
 
 static 
 void reply_free(ecs_http_reply_t* response) {
+    ecs_assert(response != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(response->body.content);
 }
 
 static
 void request_free(ecs_http_request_impl_t *req) {
+    ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(req->res);
     flecs_sparse_remove(req->pub.conn->server->requests, req->pub.id);
 }
 
 static
 void connection_free(ecs_http_connection_impl_t *conn) {
+    ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
     if (conn->sock) {
         http_close(conn->sock);
     }
@@ -28920,8 +28923,10 @@ int accept_connections(
             &remote_addr_len);
 
         if (sock_conn == -1) {
-            ecs_dbg("http: connection attempt failed: %s", 
-                ecs_os_strerror(errno));
+            if (srv->should_run) {
+                ecs_dbg("http: connection attempt failed: %s", 
+                    ecs_os_strerror(errno));
+            }
             continue;
         }
 
@@ -28931,6 +28936,9 @@ int accept_connections(
     if (srv->sock && errno != EBADF) {
         http_close(srv->sock);
     }
+
+    ecs_trace("http: no longer accepting connections on '%s:%s'",
+        addr_host, addr_port);
 
     return 0;
 }
@@ -29107,18 +29115,18 @@ void ecs_http_server_stop(
 
     ecs_os_thread_join(srv->thread);
 
-    /* Close all connections */
-    int i, count = flecs_sparse_count(srv->connections);
-    for (i = count - 1; i >= 0; i --) {
-        connection_free(flecs_sparse_get_dense(
-            srv->connections, ecs_http_connection_impl_t, i));
-    }
-
     /* Cleanup all outstanding requests */
-    count = flecs_sparse_count(srv->requests);
+    int i, count = flecs_sparse_count(srv->requests);
     for (i = count - 1; i >= 0; i --) {
         request_free(flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i));
+    }
+
+    /* Close all connections */
+    count = flecs_sparse_count(srv->connections);
+    for (i = count - 1; i >= 0; i --) {
+        connection_free(flecs_sparse_get_dense(
+            srv->connections, ecs_http_connection_impl_t, i));
     }
 
     ecs_assert(flecs_sparse_count(srv->connections) == 0, 
@@ -31210,7 +31218,12 @@ int default_run_action(
 
     int result;
     while ((result = ecs_app_run_frame(world, desc)) == 0) { }
-    return result;
+
+    if (result == 1) {
+        return 0; /* Normal exit */
+    } else {
+        return result; /* Error code */
+    }
 }
 
 static
