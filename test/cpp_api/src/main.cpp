@@ -178,6 +178,12 @@ void Entity_clone(void);
 void Entity_clone_w_value(void);
 void Entity_clone_to_existing(void);
 void Entity_clone_to_existing_overlap(void);
+void Entity_set_doc_name(void);
+void Entity_set_doc_brief(void);
+void Entity_set_doc_detail(void);
+void Entity_set_doc_link(void);
+void Entity_entity_w_root_name(void);
+void Entity_entity_w_root_name_from_scope(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1532,6 +1538,30 @@ bake_test_case Entity_testcases[] = {
     {
         "clone_to_existing_overlap",
         Entity_clone_to_existing_overlap
+    },
+    {
+        "set_doc_name",
+        Entity_set_doc_name
+    },
+    {
+        "set_doc_brief",
+        Entity_set_doc_brief
+    },
+    {
+        "set_doc_detail",
+        Entity_set_doc_detail
+    },
+    {
+        "set_doc_link",
+        Entity_set_doc_link
+    },
+    {
+        "entity_w_root_name",
+        Entity_entity_w_root_name
+    },
+    {
+        "entity_w_root_name_from_scope",
+        Entity_entity_w_root_name_from_scope
     }
 };
 
@@ -4119,7 +4149,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        169,
+        175,
         Entity_testcases
     },
     {

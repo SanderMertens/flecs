@@ -599,6 +599,10 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+#   ifdef FLECS_DOC
+#   include "../doc/entity_builder_mixin.inl"
+#   endif
+
 protected:
     Self& to_base() {
         return *static_cast<Self*>(this);

@@ -50,6 +50,7 @@ struct entity : entity_builder<entity>
         ecs_entity_desc_t desc = {};
         desc.name = name;
         desc.sep = "::";
+        desc.root_sep = "::";
         m_id = ecs_entity_init(world, &desc);
     }
 

@@ -3166,3 +3166,63 @@ void Entity_clone_to_existing_overlap() {
     test_expect_abort();
     src.clone(true, dst);
 }
+
+void Entity_set_doc_name() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_name("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_name(), "Foo Bar");
+}
+
+void Entity_set_doc_brief() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_brief("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_brief(), "Foo Bar");
+}
+
+void Entity_set_doc_detail() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_detail("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_detail(), "Foo Bar");
+}
+
+void Entity_set_doc_link() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("foo_bar")
+        .set_doc_link("Foo Bar");
+
+    test_str(e.name(), "foo_bar");
+    test_str(e.doc_link(), "Foo Bar");
+}
+
+void Entity_entity_w_root_name() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("::foo");
+    test_str(e.name(), "foo");
+    test_str(e.path(), "::foo");
+}
+
+void Entity_entity_w_root_name_from_scope() {
+    flecs::world ecs;
+
+    auto p = ecs.entity("parent");
+    ecs.set_scope(p);
+    auto e = ecs.entity("::foo");
+    ecs.set_scope(0);
+    
+    test_str(e.name(), "foo");
+    test_str(e.path(), "::foo");
+}
