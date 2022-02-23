@@ -3207,3 +3207,22 @@ void Entity_set_doc_link() {
     test_str(e.doc_link(), "Foo Bar");
 }
 
+void Entity_entity_w_root_name() {
+    flecs::world ecs;
+
+    auto e = ecs.entity("::foo");
+    test_str(e.name(), "foo");
+    test_str(e.path(), "::foo");
+}
+
+void Entity_entity_w_root_name_from_scope() {
+    flecs::world ecs;
+
+    auto p = ecs.entity("parent");
+    ecs.set_scope(p);
+    auto e = ecs.entity("::foo");
+    ecs.set_scope(0);
+    
+    test_str(e.name(), "foo");
+    test_str(e.path(), "::foo");
+}

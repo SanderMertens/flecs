@@ -182,6 +182,8 @@ void Entity_set_doc_name(void);
 void Entity_set_doc_brief(void);
 void Entity_set_doc_detail(void);
 void Entity_set_doc_link(void);
+void Entity_entity_w_root_name(void);
+void Entity_entity_w_root_name_from_scope(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1552,6 +1554,14 @@ bake_test_case Entity_testcases[] = {
     {
         "set_doc_link",
         Entity_set_doc_link
+    },
+    {
+        "entity_w_root_name",
+        Entity_entity_w_root_name
+    },
+    {
+        "entity_w_root_name_from_scope",
+        Entity_entity_w_root_name_from_scope
     }
 };
 
@@ -4139,7 +4149,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        173,
+        175,
         Entity_testcases
     },
     {

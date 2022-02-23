@@ -187,7 +187,9 @@
                 "set_doc_name",
                 "set_doc_brief",
                 "set_doc_detail",
-                "set_doc_link"
+                "set_doc_link",
+                "entity_w_root_name",
+                "entity_w_root_name_from_scope"
             ]
         }, {
             "id": "Pairs",
