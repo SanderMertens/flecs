@@ -124,6 +124,13 @@ bool rest_reply(
     ecs_rest_ctx_t *impl = ctx;
     ecs_world_t *world = impl->world;
 
+    if (req->path == NULL) {
+        ecs_dbg("rest: bad request received (no URL)");
+        reply_error(reply, "bad request");
+        reply->code = 400;
+        return false;
+    }
+
     ecs_strbuf_appendstr(&reply->headers, "Access-Control-Allow-Origin: *\r\n");
 
     if (req->method == EcsHttpGet) {
