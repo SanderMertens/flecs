@@ -148,7 +148,8 @@ struct cpp_type_impl {
 
     // Obtain a component identifier for explicit component registration.
     static entity_t id_explicit(world_t *world = nullptr, 
-        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0)
+        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
+        bool is_component = true)
     {
         if (!s_id) {
             // If no world was provided the component cannot be registered
@@ -172,8 +173,8 @@ struct cpp_type_impl {
             init(world, s_id, allow_tag);
 
             entity_t entity = ecs_cpp_component_register_explicit(
-                world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
-                    s_size, s_alignment);
+                    world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
+                        s_size, s_alignment, is_component);
 
             s_id = entity;
 
@@ -195,7 +196,7 @@ struct cpp_type_impl {
     // state of the world, so that the component is not implicitly created with
     // the scope/with of the code it happens to be first used by.
     static id_t id(world_t *world = nullptr, const char *name = nullptr, 
-        bool allow_tag = true) 
+        bool allow_tag = true)
     {
         // If no id has been registered yet, do it now.
         if (!registered() || (world && !ecs_exists(world, s_id))) {

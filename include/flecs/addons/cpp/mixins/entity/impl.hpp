@@ -219,7 +219,8 @@ inline flecs::entity world::id(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::component<T>(m_world, name, true);
+    return flecs::entity(m_world, 
+        _::cpp_type<T>::id_explicit(m_world, name, true, 0, false) );
 }
 
 template <typename... Args>

@@ -7524,6 +7524,10 @@ int ecs_app_set_frame_action(
  *      Add component values.
  *        Default: true
  * 
+ *    - private : bool
+ *      Add private components.
+ *        Default: false
+ * 
  *    - type_info : bool
  *      Add reflection data for component types. Requires values=true.
  *        Default: false
@@ -11325,7 +11329,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     const char *type_name,
     const char *symbol,
     size_t size,
-    size_t alignment);
+    size_t alignment,
+    bool is_component);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -17825,7 +17830,8 @@ struct cpp_type_impl {
 
     // Obtain a component identifier for explicit component registration.
     static entity_t id_explicit(world_t *world = nullptr, 
-        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0)
+        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
+        bool is_component = true)
     {
         if (!s_id) {
             // If no world was provided the component cannot be registered
@@ -17849,8 +17855,8 @@ struct cpp_type_impl {
             init(world, s_id, allow_tag);
 
             entity_t entity = ecs_cpp_component_register_explicit(
-                world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
-                    s_size, s_alignment);
+                    world, s_id, id, name, type_name<T>(), symbol_name<T>(), 
+                        s_size, s_alignment, is_component);
 
             s_id = entity;
 
@@ -17872,7 +17878,7 @@ struct cpp_type_impl {
     // state of the world, so that the component is not implicitly created with
     // the scope/with of the code it happens to be first used by.
     static id_t id(world_t *world = nullptr, const char *name = nullptr, 
-        bool allow_tag = true) 
+        bool allow_tag = true)
     {
         // If no id has been registered yet, do it now.
         if (!registered() || (world && !ecs_exists(world, s_id))) {
@@ -18666,7 +18672,8 @@ inline flecs::entity world::id(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::component<T>(m_world, name, true);
+    return flecs::entity(m_world, 
+        _::cpp_type<T>::id_explicit(m_world, name, true, 0, false) );
 }
 
 template <typename... Args>

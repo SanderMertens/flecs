@@ -319,7 +319,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     const char *type_name,
     const char *symbol,
     size_t size,
-    size_t alignment)
+    size_t alignment,
+    bool is_component)
 {
     // If an explicit id is provided, it is possible that the symbol and
     // name differ from the actual type, as the application may alias
@@ -338,15 +339,26 @@ ecs_entity_t ecs_cpp_component_register_explicit(
         }
     }
 
-    ecs_entity_t entity = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity.entity = s_id,
-        .entity.name = name,
-        .entity.sep = "::",
-        .entity.root_sep = "::",
-        .entity.symbol = symbol,
-        .size = size,
-        .alignment = alignment
-    });
+    ecs_entity_t entity;
+    if (is_component || size != 0) {
+        entity = ecs_component_init(world, &(ecs_component_desc_t){
+            .entity.entity = s_id,
+            .entity.name = name,
+            .entity.sep = "::",
+            .entity.root_sep = "::",
+            .entity.symbol = symbol,
+            .size = size,
+            .alignment = alignment
+        });
+    } else {
+        entity = ecs_entity_init(world, &(ecs_entity_desc_t){
+            .entity = s_id,
+            .name = name,
+            .sep = "::",
+            .root_sep = "::",
+            .symbol = symbol
+        });
+    }
 
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);

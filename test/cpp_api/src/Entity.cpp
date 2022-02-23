@@ -3226,3 +3226,37 @@ void Entity_entity_w_root_name_from_scope() {
     test_str(e.name(), "foo");
     test_str(e.path(), "::foo");
 }
+
+struct EntityType { };
+
+void Entity_entity_w_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity<EntityType>();
+
+    test_str(e.name().c_str(), "EntityType");
+    test_str(e.path().c_str(), "::EntityType");
+    test_assert(!e.has<flecs::Component>());
+
+    auto e_2 = ecs.entity<EntityType>();
+    test_assert(e == e_2);
+}
+
+struct Parent {
+    struct EntityType { };
+};
+
+void Entity_entity_w_nested_type() {
+    flecs::world ecs;
+
+    auto e = ecs.entity<Parent::EntityType>();
+    auto p = ecs.entity<Parent>();
+
+    test_str(e.name().c_str(), "EntityType");
+    test_str(e.path().c_str(), "::Parent::EntityType");
+    test_assert(e.has(flecs::ChildOf, p));
+    test_assert(!e.has<flecs::Component>());
+
+    auto e_2 = ecs.entity<Parent::EntityType>();
+    test_assert(e == e_2);
+}
