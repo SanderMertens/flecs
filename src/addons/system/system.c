@@ -171,7 +171,7 @@ ecs_entity_t ecs_run_intern(
     qit.ctx = system_data->ctx;
     qit.binding_ctx = system_data->binding_ctx;
     
-    ecs_iter_action_t run = system_data->run;
+    ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);
     } else {
