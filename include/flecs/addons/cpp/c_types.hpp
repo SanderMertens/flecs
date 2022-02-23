@@ -67,6 +67,7 @@ static const uint8_t Nothing = EcsNothing;
 static const uint8_t Parent = EcsParent;
 
 /* Builtin tag ids */
+static const flecs::entity_t Private = EcsPrivate;
 static const flecs::entity_t Module = EcsModule;
 static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;

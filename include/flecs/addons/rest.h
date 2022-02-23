@@ -32,6 +32,10 @@
  *      Add component values.
  *        Default: true
  * 
+ *    - private : bool
+ *      Add private components.
+ *        Default: false
+ * 
  *    - type_info : bool
  *      Add reflection data for component types. Requires values=true.
  *        Default: false

@@ -93,6 +93,7 @@ void rest_parse_json_ser_entity_params(
     rest_bool_param(req, "path", &desc->serialize_path);
     rest_bool_param(req, "base", &desc->serialize_base);
     rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "private", &desc->serialize_private);
     rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }
 

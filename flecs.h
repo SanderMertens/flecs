@@ -4176,6 +4176,9 @@ FLECS_API extern const ecs_entity_t EcsIsA;
 /* Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
+/* Tag to indicate an entity/component/system is private to a module */
+FLECS_API extern const ecs_entity_t EcsPrivate;
+
 /* Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by filters/queries, unless EcsPrefab is explicitly added. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
@@ -8717,12 +8720,13 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_path;       /* Serialize full pathname */
     bool serialize_base;       /* Serialize base components */
+    bool serialize_private;    /* Serialize private components */
     bool serialize_values;     /* Serialize component values */
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, true, true, false }
+    true, true, false, true, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -11458,6 +11462,7 @@ static const uint8_t Nothing = EcsNothing;
 static const uint8_t Parent = EcsParent;
 
 /* Builtin tag ids */
+static const flecs::entity_t Private = EcsPrivate;
 static const flecs::entity_t Module = EcsModule;
 static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;

@@ -442,6 +442,8 @@ void SerializeToJson_serialize_entity_w_enum_component(void);
 void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
 void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 void SerializeToJson_serialize_entity_w_type_info(void);
+void SerializeToJson_serialize_entity_wo_private(void);
+void SerializeToJson_serialize_entity_w_private(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
 void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
 void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table(void);
@@ -2179,6 +2181,14 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_type_info
     },
     {
+        "serialize_entity_wo_private",
+        SerializeToJson_serialize_entity_wo_private
+    },
+    {
+        "serialize_entity_w_private",
+        SerializeToJson_serialize_entity_w_private
+    },
+    {
         "serialize_iterator_1_comps_empty",
         SerializeToJson_serialize_iterator_1_comps_empty
     },
@@ -2507,7 +2517,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        66,
+        68,
         SerializeToJson_testcases
     },
     {

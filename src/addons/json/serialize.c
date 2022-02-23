@@ -467,6 +467,13 @@ int append_type(
             }
         }
 
+        if (!desc || !desc->serialize_private) {
+            if (ecs_has_id(world, pred, EcsPrivate)) {
+                /* Skip private components */
+                continue;
+            }
+        }
+
         ecs_strbuf_list_next(buf);
         json_object_push(buf);
 

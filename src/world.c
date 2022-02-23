@@ -45,8 +45,9 @@ const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
 const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
 const ecs_entity_t EcsFlecsHidden =           ECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
-const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;

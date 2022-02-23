@@ -1330,6 +1330,55 @@ void SerializeToJson_serialize_entity_w_type_info() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_wo_private() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, Tag, EcsPrivate);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add(world, e, Tag);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_private() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, Tag, EcsPrivate);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_add(world, e, Tag);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_private = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{\"pred\":\"Tag\"}, "
+            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 

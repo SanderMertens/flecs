@@ -146,12 +146,13 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_path;       /* Serialize full pathname */
     bool serialize_base;       /* Serialize base components */
+    bool serialize_private;    /* Serialize private components */
     bool serialize_values;     /* Serialize component values */
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, true, true, false }
+    true, true, false, true, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components

@@ -26721,6 +26721,13 @@ int append_type(
             }
         }
 
+        if (!desc || !desc->serialize_private) {
+            if (ecs_has_id(world, pred, EcsPrivate)) {
+                /* Skip private components */
+                continue;
+            }
+        }
+
         ecs_strbuf_list_next(buf);
         json_object_push(buf);
 
@@ -27861,6 +27868,7 @@ void rest_parse_json_ser_entity_params(
     rest_bool_param(req, "path", &desc->serialize_path);
     rest_bool_param(req, "base", &desc->serialize_base);
     rest_bool_param(req, "values", &desc->serialize_values);
+    rest_bool_param(req, "private", &desc->serialize_private);
     rest_bool_param(req, "type_info", &desc->serialize_type_info);
 }
 
@@ -31344,8 +31352,9 @@ const ecs_entity_t EcsFlecs =                 ECS_HI_COMPONENT_ID + 1;
 const ecs_entity_t EcsFlecsCore =             ECS_HI_COMPONENT_ID + 2;
 const ecs_entity_t EcsFlecsHidden =           ECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsModule =                ECS_HI_COMPONENT_ID + 4;
-const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsPrivate =               ECS_HI_COMPONENT_ID + 5;
+const ecs_entity_t EcsPrefab =                ECS_HI_COMPONENT_ID + 6;
+const ecs_entity_t EcsDisabled =              ECS_HI_COMPONENT_ID + 7;
 
 /* Relation properties */
 const ecs_entity_t EcsWildcard =              ECS_HI_COMPONENT_ID + 10;
@@ -43829,6 +43838,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsSymbol);
 
     flecs_bootstrap_tag(world, EcsModule);
+    flecs_bootstrap_tag(world, EcsPrivate);
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsDisabled);
 
