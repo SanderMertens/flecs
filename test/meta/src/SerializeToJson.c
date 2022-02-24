@@ -2324,3 +2324,55 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_iterator_w_var_component() {
+    typedef struct {
+        ecs_i32_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add_pair(world, e, Rel, Obj);
+    ecs_set(world, Obj, T, {10});
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, _X), T(_X)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"(Rel,*)\", \"T\"], "
+        "\"vars\":[\"X\"], "
+        "\"results\":[{"
+            "\"ids\":[\"(Rel,Obj)\", \"T\"], "
+            "\"subjects\":[0, \"Obj\"], "
+            "\"vars\":[\"Obj\"], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"Foo\""
+            "], "
+            "\"values\":[0, {\"x\":10}]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
