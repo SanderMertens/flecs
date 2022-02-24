@@ -592,11 +592,50 @@ struct world {
 
     /** Count entities matching a component.
      *
-     * @tparam T The component to use for matching.
+     * @param component_id The component id.
+     */
+    int count(flecs::id_t component_id) const {
+        return ecs_count_id(m_world, component_id);
+    }
+
+    /** Count entities matching a pair.
+     *
+     * @param rel The relation id.
+     * @param obj The object id.
+     */
+    int count(flecs::entity_t rel, flecs::entity_t obj) const {
+        return ecs_count_id(m_world, ecs_pair(rel, obj));
+    }
+
+    /** Count entities matching a component.
+     *
+     * @tparam T The component type.
      */
     template <typename T>
     int count() const {
-        return ecs_count_id(m_world, _::cpp_type<T>::id(m_world));
+        return count(_::cpp_type<T>::id(m_world));
+    }
+
+    /** Count entities matching a pair.
+     *
+     * @tparam Rel The relation type.
+     * @param obj The object id.
+     */
+    template <typename Rel>
+    int count(flecs::entity_t obj) const {
+        return count(_::cpp_type<Rel>::id(m_world), obj);
+    }
+
+    /** Count entities matching a pair.
+     *
+     * @tparam Rel The relation type.
+     * @tparam Obj The object type.
+     */
+    template <typename Rel, typename Obj>
+    int count() const {
+        return count( 
+            _::cpp_type<Rel>::id(m_world),
+            _::cpp_type<Obj>::id(m_world));
     }
 
     /** Enable locking.

@@ -3260,3 +3260,19 @@ void Entity_entity_w_nested_type() {
     auto e_2 = ecs.entity<Parent::EntityType>();
     test_assert(e == e_2);
 }
+
+void Entity_entity_array() {
+    struct TagA {};
+    struct TagB {};
+
+    flecs::world ecs;
+
+    flecs::to_array({
+        ecs.entity(),
+        ecs.entity(),
+        ecs.entity()
+    }).each([](flecs::entity e) { e.add<TagA>().add<TagB>(); });
+
+    test_int( ecs.count<TagA>(), 3 );
+    test_int( ecs.count<TagB>(), 3 );
+}

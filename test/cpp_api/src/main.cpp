@@ -186,6 +186,7 @@ void Entity_entity_w_root_name(void);
 void Entity_entity_w_root_name_from_scope(void);
 void Entity_entity_w_type(void);
 void Entity_entity_w_nested_type(void);
+void Entity_entity_array(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -783,6 +784,10 @@ void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
 void World_implicit_register_w_new_world(void);
 void World_count(void);
+void World_count_id(void);
+void World_count_pair(void);
+void World_count_pair_type_id(void);
+void World_count_pair_id(void);
 void World_staged_count(void);
 void World_async_stage_add(void);
 void World_with_tag(void);
@@ -1573,6 +1578,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_nested_type",
         Entity_entity_w_nested_type
+    },
+    {
+        "entity_array",
+        Entity_entity_array
     }
 };
 
@@ -3848,6 +3857,22 @@ bake_test_case World_testcases[] = {
         World_count
     },
     {
+        "count_id",
+        World_count_id
+    },
+    {
+        "count_pair",
+        World_count_pair
+    },
+    {
+        "count_pair_type_id",
+        World_count_pair_type_id
+    },
+    {
+        "count_pair_id",
+        World_count_pair_id
+    },
+    {
         "staged_count",
         World_staged_count
     },
@@ -4164,7 +4189,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        177,
+        178,
         Entity_testcases
     },
     {
@@ -4325,7 +4350,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        76,
+        80,
         World_testcases
     },
     {

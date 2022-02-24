@@ -407,6 +407,79 @@ void World_count() {
     test_int(ecs.count<Position>(), 6);
 }
 
+void World_count_id() {
+    flecs::world ecs;
+
+    auto ent = ecs.entity();
+
+    test_int(ecs.count(ent), 0);
+
+    ecs.entity().add(ent);
+    ecs.entity().add(ent);
+    ecs.entity().add(ent);
+    ecs.entity().add(ent).add<Mass>();
+    ecs.entity().add(ent).add<Mass>();
+    ecs.entity().add(ent).add<Velocity>();
+
+    test_int(ecs.count(ent), 6);
+}
+
+void World_count_pair() {
+    flecs::world ecs;
+
+    auto parent = ecs.entity();
+
+    test_int(ecs.count(flecs::ChildOf, parent), 0);
+
+    ecs.entity().add(flecs::ChildOf, parent);
+    ecs.entity().add(flecs::ChildOf, parent);
+    ecs.entity().add(flecs::ChildOf, parent);
+    ecs.entity().add(flecs::ChildOf, parent).add<Mass>();
+    ecs.entity().add(flecs::ChildOf, parent).add<Mass>();
+    ecs.entity().add(flecs::ChildOf, parent).add<Velocity>();
+
+    test_int(ecs.count(flecs::ChildOf, parent), 6);
+}
+
+void World_count_pair_type_id() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    auto parent = ecs.entity();
+
+    test_int(ecs.count<Rel>(parent), 0);
+
+    ecs.entity().add<Rel>(parent);
+    ecs.entity().add<Rel>(parent);
+    ecs.entity().add<Rel>(parent);
+    ecs.entity().add<Rel>(parent).add<Mass>();
+    ecs.entity().add<Rel>(parent).add<Mass>();
+    ecs.entity().add<Rel>(parent).add<Velocity>();
+
+    test_int(ecs.count<Rel>(parent), 6);
+}
+
+void World_count_pair_id() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    auto rel = ecs.entity();
+    auto parent = ecs.entity();
+
+    test_int(ecs.count(rel, parent), 0);
+
+    ecs.entity().add(rel, parent);
+    ecs.entity().add(rel, parent);
+    ecs.entity().add(rel, parent);
+    ecs.entity().add(rel, parent).add<Mass>();
+    ecs.entity().add(rel, parent).add<Mass>();
+    ecs.entity().add(rel, parent).add<Velocity>();
+
+    test_int(ecs.count(rel, parent), 6);
+}
+
 void World_staged_count() {
     flecs::world ecs;
 

@@ -69,9 +69,22 @@ struct array<T, Size, enable_if_t<Size != 0> > final {
     T* ptr() {
         return m_array;
     }
+
+    template <typename Func>
+    void each(const Func& func) {
+        for (auto& elem : *this) {
+            func(elem);
+        }
+    }
+
 private:
     T m_array[Size];
 };
+
+template<typename T, size_t Size>
+array<T, Size> to_array(const T (&elems)[Size]) {
+    return array<T, Size>(elems);
+}
 
 // Specialized class for zero-sized array
 template <typename T, size_t Size>

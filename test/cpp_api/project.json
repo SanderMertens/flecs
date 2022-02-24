@@ -191,7 +191,8 @@
                 "entity_w_root_name",
                 "entity_w_root_name_from_scope",
                 "entity_w_type",
-                "entity_w_nested_type"
+                "entity_w_nested_type",
+                "entity_array"
             ]
         }, {
             "id": "Pairs",
@@ -835,6 +836,10 @@
                 "c_interop_after_reset",
                 "implicit_register_w_new_world",
                 "count",
+                "count_id",
+                "count_pair",
+                "count_pair_type_id",
+                "count_pair_id",
                 "staged_count",
                 "async_stage_add",
                 "with_tag",
