@@ -567,6 +567,9 @@ void Hierarchies_tree_iter_2_tables(void);
 void Hierarchies_path_depth_0(void);
 void Hierarchies_path_depth_1(void);
 void Hierarchies_path_depth_2(void);
+void Hierarchies_path_core(void);
+void Hierarchies_path_core_w_prefix(void);
+void Hierarchies_path_core_w_empty_prefix(void);
 void Hierarchies_rel_path_from_root(void);
 void Hierarchies_rel_path_from_self(void);
 void Hierarchies_rel_path_depth_1(void);
@@ -4664,6 +4667,18 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "path_depth_2",
         Hierarchies_path_depth_2
+    },
+    {
+        "path_core",
+        Hierarchies_path_core
+    },
+    {
+        "path_core_w_prefix",
+        Hierarchies_path_core_w_prefix
+    },
+    {
+        "path_core_w_empty_prefix",
+        Hierarchies_path_core_w_empty_prefix
     },
     {
         "rel_path_from_root",
@@ -12144,7 +12159,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        83,
+        86,
         Hierarchies_testcases
     },
     {

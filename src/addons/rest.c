@@ -62,11 +62,26 @@ char* rest_get_captured_log(void) {
 }
 
 static
+void reply_verror(
+    ecs_http_reply_t *reply,
+    const char *fmt,
+    va_list args)
+{
+    ecs_strbuf_appendstr(&reply->body, "{\"error\":\"");
+    ecs_strbuf_vappend(&reply->body, fmt, args);
+    ecs_strbuf_appendstr(&reply->body, "\"}");
+}
+
+static
 void reply_error(
     ecs_http_reply_t *reply,
-    const char *msg)
+    const char *fmt,
+    ...)
 {
-    ecs_strbuf_append(&reply->body, "{\"error\":\"%s\"}", msg);
+    va_list args;
+    va_start(args, fmt);
+    reply_verror(reply, fmt, args);
+    va_end(args);
 }
 
 static
@@ -125,8 +140,8 @@ bool rest_reply(
     ecs_world_t *world = impl->world;
 
     if (req->path == NULL) {
-        ecs_dbg("rest: bad request received (no URL)");
-        reply_error(reply, "bad request");
+        ecs_dbg("rest: bad request (missing path)");
+        reply_error(reply, "bad request (missing path)");
         reply->code = 400;
         return false;
     }
@@ -142,13 +157,9 @@ bool rest_reply(
             ecs_entity_t e = ecs_lookup_path_w_sep(
                 world, 0, path, "/", NULL, false);
             if (!e) {
-                e = ecs_lookup_path_w_sep(
-                    world, EcsFlecsCore, path, "/", NULL, false);
-                if (!e) {
-                    ecs_dbg("rest: requested entity '%s' does not exist", path);
-                    reply_error(reply, "entity not found");
-                    return true;
-                }
+                ecs_dbg("rest: entity '%s' not found", path);
+                reply_error(reply, "entity '%s' not found", path);
+                return true;
             }
 
             ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;

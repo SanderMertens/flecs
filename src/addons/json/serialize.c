@@ -240,10 +240,7 @@ int json_ser_type_op(
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
-            char *path = ecs_get_fullpath(world, e);
-            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_append(str, "\"%s\"", path);
-            ecs_os_free(path);
+            json_path(str, world, e);
         }
         break;
     }
@@ -478,15 +475,10 @@ int append_type(
         json_object_push(buf);
 
         if (pred) {
-            char *str = ecs_get_fullpath(world, pred);
-            json_member(buf, "pred"); json_string(buf, str);
-            ecs_os_free(str);
+            json_member(buf, "pred"); json_path(buf, world, pred);
         }
         if (obj) {
-            char *str = ecs_get_fullpath(world, obj);
-            json_member(buf, "obj"); 
-            json_string(buf, str);
-            ecs_os_free(str);
+            json_member(buf, "obj"); json_path(buf, world, obj);
         }
         if (role) {
             json_member(buf, "obj"); 
@@ -560,9 +552,8 @@ int append_base(
         }
     }
 
-    char *path = ecs_get_fullpath(world, ent);
-    json_member(buf, path);
-    ecs_os_free(path);
+    json_path(buf, world, ent);
+    ecs_strbuf_appendch(buf, ':');
 
     json_object_push(buf);
 

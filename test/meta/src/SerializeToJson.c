@@ -993,7 +993,7 @@ void SerializeToJson_serialize_entity_w_name() {
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
-    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1009,7 +1009,7 @@ void SerializeToJson_serialize_entity_w_name_1_tag() {
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
-    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Tag\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+    test_str(json, "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Tag\"}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1028,7 +1028,7 @@ void SerializeToJson_serialize_entity_w_name_2_tags() {
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
     test_str(json, 
-        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}]}");
+        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1046,7 +1046,7 @@ void SerializeToJson_serialize_entity_w_name_1_pair() {
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
     test_str(json, 
-        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"Identifier\", \"obj\":\"Name\"}, {\"pred\":\"Rel\", \"obj\":\"Obj\"}]}");
+        "{\"path\":\"Foo\", \"type\":[{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}, {\"pred\":\"Rel\", \"obj\":\"Obj\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1073,7 +1073,7 @@ void SerializeToJson_serialize_entity_w_base() {
             "{\"pred\":\"TagA\"}"
         "]}}, "
         "\"type\":["
-            "{\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"TagB\"}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1103,7 +1103,7 @@ void SerializeToJson_serialize_entity_w_base_override() {
             "{\"pred\":\"TagA\", \"hidden\":true}"
         "]}}, "
         "\"type\":["
-            "{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"TagA\"}, {\"pred\":\"TagB\"}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1130,7 +1130,7 @@ void SerializeToJson_serialize_entity_w_1_component() {
     test_str(json, "{"
         "\"path\":\"Foo\", "
         "\"type\":["
-            "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1167,7 +1167,7 @@ void SerializeToJson_serialize_entity_w_2_components() {
         "\"type\":["
             "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, "
             "{\"pred\":\"Mass\", \"value\":{\"value\":1234}}, "
-            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1186,7 +1186,7 @@ void SerializeToJson_serialize_entity_w_primitive_component() {
     test_str(json, "{"
         "\"path\":\"Foo\", "
         "\"type\":["
-            "{\"pred\":\"flecs.meta.i32\", \"value\":10}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.meta.i32\", \"value\":10}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1218,7 +1218,7 @@ void SerializeToJson_serialize_entity_w_enum_component() {
     test_str(json, "{"
         "\"path\":\"Foo\", "
         "\"type\":["
-            "{\"pred\":\"Color\", \"value\":\"Blue\"}, {\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"Color\", \"value\":\"Blue\"}, {\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1263,7 +1263,7 @@ void SerializeToJson_serialize_entity_w_struct_and_enum_component() {
         "\"type\":["
             "{\"pred\":\"Position\", \"value\":{\"x\":10, \"y\":20}}, "
             "{\"pred\":\"Color\", \"value\":\"Blue\"}, "
-            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1322,7 +1322,7 @@ void SerializeToJson_serialize_entity_w_type_info() {
                 "\"value\":{\"x\":10, \"y\":20}, "
                 "\"type_info\":{\"x\":[\"int\"], \"y\":[\"int\"]}"
             "}, "
-            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1345,7 +1345,7 @@ void SerializeToJson_serialize_entity_wo_private() {
     test_str(json, "{"
         "\"path\":\"Foo\", "
         "\"type\":["
-            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);
@@ -1371,7 +1371,7 @@ void SerializeToJson_serialize_entity_w_private() {
         "\"path\":\"Foo\", "
         "\"type\":["
             "{\"pred\":\"Tag\"}, "
-            "{\"pred\":\"Identifier\", \"obj\":\"Name\"}"
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
         "]}");
 
     ecs_os_free(json);

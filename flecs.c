@@ -26206,9 +26206,9 @@ void json_string(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_strbuf_appendstr(buf, "\"");
+    ecs_strbuf_appendch(buf, '"');
     ecs_strbuf_appendstr(buf, value);
-    ecs_strbuf_appendstr(buf, "\"");
+    ecs_strbuf_appendch(buf, '"');
 }
 
 void json_member(
@@ -26226,7 +26226,7 @@ void json_path(
     ecs_entity_t e)
 {
     ecs_strbuf_appendch(buf, '"');
-    ecs_get_fullpath_buf(world, e, buf);
+    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf);
     ecs_strbuf_appendch(buf, '"');
 }
 
@@ -26510,10 +26510,7 @@ int json_ser_type_op(
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
-            char *path = ecs_get_fullpath(world, e);
-            ecs_assert(path != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_append(str, "\"%s\"", path);
-            ecs_os_free(path);
+            json_path(str, world, e);
         }
         break;
     }
@@ -26748,15 +26745,10 @@ int append_type(
         json_object_push(buf);
 
         if (pred) {
-            char *str = ecs_get_fullpath(world, pred);
-            json_member(buf, "pred"); json_string(buf, str);
-            ecs_os_free(str);
+            json_member(buf, "pred"); json_path(buf, world, pred);
         }
         if (obj) {
-            char *str = ecs_get_fullpath(world, obj);
-            json_member(buf, "obj"); 
-            json_string(buf, str);
-            ecs_os_free(str);
+            json_member(buf, "obj"); json_path(buf, world, obj);
         }
         if (role) {
             json_member(buf, "obj"); 
@@ -26830,9 +26822,8 @@ int append_base(
         }
     }
 
-    char *path = ecs_get_fullpath(world, ent);
-    json_member(buf, path);
-    ecs_os_free(path);
+    json_path(buf, world, ent);
+    ecs_strbuf_appendch(buf, ':');
 
     json_object_push(buf);
 
@@ -27853,11 +27844,26 @@ char* rest_get_captured_log(void) {
 }
 
 static
+void reply_verror(
+    ecs_http_reply_t *reply,
+    const char *fmt,
+    va_list args)
+{
+    ecs_strbuf_appendstr(&reply->body, "{\"error\":\"");
+    ecs_strbuf_vappend(&reply->body, fmt, args);
+    ecs_strbuf_appendstr(&reply->body, "\"}");
+}
+
+static
 void reply_error(
     ecs_http_reply_t *reply,
-    const char *msg)
+    const char *fmt,
+    ...)
 {
-    ecs_strbuf_append(&reply->body, "{\"error\":\"%s\"}", msg);
+    va_list args;
+    va_start(args, fmt);
+    reply_verror(reply, fmt, args);
+    va_end(args);
 }
 
 static
@@ -27916,8 +27922,8 @@ bool rest_reply(
     ecs_world_t *world = impl->world;
 
     if (req->path == NULL) {
-        ecs_dbg("rest: bad request received (no URL)");
-        reply_error(reply, "bad request");
+        ecs_dbg("rest: bad request (missing path)");
+        reply_error(reply, "bad request (missing path)");
         reply->code = 400;
         return false;
     }
@@ -27933,13 +27939,9 @@ bool rest_reply(
             ecs_entity_t e = ecs_lookup_path_w_sep(
                 world, 0, path, "/", NULL, false);
             if (!e) {
-                e = ecs_lookup_path_w_sep(
-                    world, EcsFlecsCore, path, "/", NULL, false);
-                if (!e) {
-                    ecs_dbg("rest: requested entity '%s' does not exist", path);
-                    reply_error(reply, "entity not found");
-                    return true;
-                }
+                ecs_dbg("rest: entity '%s' not found", path);
+                reply_error(reply, "entity '%s' not found", path);
+                return true;
             }
 
             ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
@@ -44096,7 +44098,7 @@ bool path_append(
     if (ecs_is_valid(world, child)) {
         cur = ecs_get_object(world, child, EcsChildOf, 0);
         if (cur) {
-            if (cur != parent && cur != EcsFlecsCore) {
+            if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
                 path_append(world, parent, cur, sep, prefix, buf);
                 ecs_strbuf_appendstr(buf, sep);
             }

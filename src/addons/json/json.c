@@ -62,9 +62,9 @@ void json_string(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_strbuf_appendstr(buf, "\"");
+    ecs_strbuf_appendch(buf, '"');
     ecs_strbuf_appendstr(buf, value);
-    ecs_strbuf_appendstr(buf, "\"");
+    ecs_strbuf_appendch(buf, '"');
 }
 
 void json_member(
@@ -82,7 +82,7 @@ void json_path(
     ecs_entity_t e)
 {
     ecs_strbuf_appendch(buf, '"');
-    ecs_get_fullpath_buf(world, e, buf);
+    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf);
     ecs_strbuf_appendch(buf, '"');
 }
 

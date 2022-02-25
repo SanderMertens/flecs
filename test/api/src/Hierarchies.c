@@ -128,7 +128,7 @@ void Hierarchies_tree_iter_2_tables() {
     test_assert( ecs_term_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child3);
-    test_int(it.entities[1], Child4);       
+    test_int(it.entities[1], Child4);
 
     test_assert( !ecs_term_next(&it));
 
@@ -169,6 +169,36 @@ void Hierarchies_path_depth_2() {
 
     char *path = ecs_get_fullpath(world, GrandChild);
     test_str(path, "Parent.Child.GrandChild");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_core() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, ecs_id(EcsComponent), ".", 0);
+    test_str(path, "Component");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_core_w_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, ecs_id(EcsComponent), ".", "::");
+    test_str(path, "::flecs.core.Component");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_core_w_empty_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, ecs_id(EcsComponent), ".", "");
+    test_str(path, "flecs.core.Component");
     ecs_os_free(path);
 
     ecs_fini(world);
