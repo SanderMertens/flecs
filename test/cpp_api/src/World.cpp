@@ -1434,7 +1434,7 @@ struct FromScope { };
 
 namespace Nested { 
     struct FromScope { };
-};
+}
 
 void World_register_from_scope() {
     flecs::world ecs;

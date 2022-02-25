@@ -3280,8 +3280,6 @@ void Entity_entity_array() {
 void Entity_entity_w_type_defer() {
     flecs::world ecs;
 
-    struct Tag { };
-
     ecs.defer_begin();
     auto e = ecs.entity<Tag>();
     ecs.defer_end();

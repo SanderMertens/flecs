@@ -263,7 +263,7 @@ static int position_ctor_invoked = 0;
 
 ECS_CTOR(Position, ptr, {
     position_ctor_invoked ++;
-});
+})
 
 void ImplicitComponents_reinit_w_lifecycle() {
     flecs::world world;
