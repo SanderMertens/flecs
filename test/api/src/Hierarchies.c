@@ -204,6 +204,36 @@ void Hierarchies_path_core_w_empty_prefix() {
     ecs_fini(world);
 }
 
+void Hierarchies_path_this_w_empty_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, EcsThis, ".", "");
+    test_str(path, ".");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_wildcard_w_empty_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, EcsWildcard, ".", "");
+    test_str(path, "*");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_any_w_empty_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    char *path = ecs_get_path_w_sep(world, 0, EcsAny, ".", "");
+    test_str(path, "_");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_rel_path_from_root() {
     ecs_world_t *world = ecs_init();
 
