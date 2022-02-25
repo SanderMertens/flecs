@@ -59,6 +59,9 @@ typedef int ecs_http_socket_t;
 /* Timeout (s) before connection purge */
 #define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
 
+/* Number of dequeues before purging */
+#define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
+
 /* Minimum interval between dequeueing requests (ms) */
 #define ECS_HTTP_MIN_DEQUEUE_INTERVAL (100)
 
@@ -136,11 +139,17 @@ typedef struct {
     ecs_http_connection_t pub;
     ecs_http_fragment_t frag;
     ecs_http_socket_t sock;
-    FLECS_FLOAT dequeue_timeout; /* used to purge inactive connections */
+
+    /* Connection is purged after both timeout expires and connection has
+     * exceeded retry count. This ensures that a connection does not immediately
+     * timeout when a frame takes longer than usual */
+    FLECS_FLOAT dequeue_timeout;
+    int32_t dequeue_retries;    
 } ecs_http_connection_impl_t;
 
 typedef struct {
     ecs_http_request_t pub;
+    uint64_t conn_id; /* for sanity check */
     void *res;
 } ecs_http_request_impl_t;
 
@@ -244,6 +253,10 @@ void reply_free(ecs_http_reply_t* response) {
 static
 void request_free(ecs_http_request_impl_t *req) {
     ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn->server->requests != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(req->res);
     flecs_sparse_remove(req->pub.conn->server->requests, req->pub.id);
 }
@@ -251,10 +264,14 @@ void request_free(ecs_http_request_impl_t *req) {
 static
 void connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
+    uint64_t conn_id = conn->pub.id;
+
     if (conn->sock) {
         http_close(conn->sock);
     }
-    flecs_sparse_remove(conn->pub.server->connections, conn->pub.id);
+
+    flecs_sparse_remove(conn->pub.server->connections, conn_id);
 }
 
 // https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
@@ -346,6 +363,7 @@ void enqueue_request(
             ecs_http_request_impl_t *req = flecs_sparse_add(
                 srv->requests, ecs_http_request_impl_t);
             req->pub.id = flecs_sparse_last_id(srv->requests);
+            req->conn_id = conn->pub.id;
             ecs_os_mutex_unlock(srv->lock);
 
             req->pub.conn = (ecs_http_connection_t*)conn;
@@ -376,6 +394,7 @@ void enqueue_request(
 static
 bool parse_request(
     ecs_http_connection_impl_t *conn,
+    uint64_t conn_id,
     const char* req_frag, 
     ecs_size_t req_frag_len) 
 {
@@ -534,7 +553,9 @@ bool parse_request(
 
     if (frag->state == HttpFragStateDone) {
         frag->state = HttpFragStateBegin;
-        enqueue_request(conn);
+        if (conn->pub.id == conn_id) {
+            enqueue_request(conn);
+        }
         return true;
     } else {
         return false;
@@ -610,15 +631,30 @@ void send_reply(
 
 static
 void recv_request(
-    ecs_http_connection_impl_t *conn)
+    ecs_http_server_t *srv,
+    ecs_http_connection_impl_t *conn, 
+    uint64_t conn_id,
+    ecs_http_socket_t sock)
 {
     ecs_size_t bytes_read;
     char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
 
     while ((bytes_read = http_recv(
-        conn->sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
+        sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
     {
-        if (parse_request(conn, recv_buf, bytes_read)) {
+        ecs_os_mutex_lock(srv->lock);
+        bool is_alive = conn->pub.id == conn_id;
+        if (is_alive) {
+            conn->dequeue_timeout = 0;
+            conn->dequeue_retries = 0;
+        }
+        ecs_os_mutex_unlock(srv->lock);
+
+        if (is_alive) {
+            if (parse_request(conn, conn_id, recv_buf, bytes_read)) {
+                return;
+            }
+        } else {
             return;
         }
     }
@@ -635,7 +671,9 @@ void init_connection(
     ecs_os_mutex_lock(srv->lock);
     ecs_http_connection_impl_t *conn = flecs_sparse_add(
         srv->connections, ecs_http_connection_impl_t);
-    conn->pub.id = flecs_sparse_last_id(srv->connections);
+    uint64_t conn_id = conn->pub.id = flecs_sparse_last_id(srv->connections);
+    conn->pub.server = srv;
+    conn->sock = sock_conn;
     ecs_os_mutex_unlock(srv->lock);
 
     char *remote_host = conn->pub.host;
@@ -654,9 +692,7 @@ void init_connection(
     ecs_dbg("http: connection established from '%s:%s'", 
         remote_host, remote_port);
 
-    conn->pub.server = srv;
-    conn->sock = sock_conn;
-    recv_request(conn);
+    recv_request(srv, conn, conn_id, sock_conn);
 
     ecs_dbg("http: request received from '%s:%s'", 
         remote_host, remote_port);
@@ -813,19 +849,23 @@ void dequeue_requests(
     ecs_os_mutex_lock(srv->lock);
 
     int32_t i, count = flecs_sparse_count(srv->requests);
-    for (i = count - 1; i >= 0; i --) {
+    for (i = count - 1; i >= 1; i --) {
         ecs_http_request_impl_t *req = flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i);
         handle_request(srv, req);
     }
 
     count = flecs_sparse_count(srv->connections);
-    for (i = count - 1; i >= 0; i --) {
+    for (i = count - 1; i >= 1; i --) {
         ecs_http_connection_impl_t *conn = flecs_sparse_get_dense(
             srv->connections, ecs_http_connection_impl_t, i);
+
         conn->dequeue_timeout += delta_time;
-        if (conn->dequeue_timeout > 
-            (FLECS_FLOAT)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) 
+        conn->dequeue_retries ++;
+        
+        if ((conn->dequeue_timeout > 
+            (FLECS_FLOAT)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) &&
+             (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
         {
             ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
                 conn->pub.host, conn->pub.port, conn->sock);
@@ -879,6 +919,10 @@ ecs_http_server_t* ecs_http_server_init(
 
     srv->connections = flecs_sparse_new(ecs_http_connection_impl_t);
     srv->requests = flecs_sparse_new(ecs_http_request_impl_t);
+
+    /* Start at id 1 */
+    flecs_sparse_new_id(srv->connections);
+    flecs_sparse_new_id(srv->requests);
 
 #ifndef ECS_TARGET_WINDOWS
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
