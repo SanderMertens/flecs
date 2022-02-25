@@ -3276,3 +3276,17 @@ void Entity_entity_array() {
     test_int( ecs.count<TagA>(), 3 );
     test_int( ecs.count<TagB>(), 3 );
 }
+
+void Entity_entity_w_type_defer() {
+    flecs::world ecs;
+
+    struct Tag { };
+
+    ecs.defer_begin();
+    auto e = ecs.entity<Tag>();
+    ecs.defer_end();
+
+    test_str(e.name(), "Tag");
+    test_str(e.symbol(), "Tag");
+    test_assert(ecs.id<Tag>() == e);
+}

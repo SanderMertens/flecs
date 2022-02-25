@@ -192,6 +192,7 @@
                 "entity_w_root_name_from_scope",
                 "entity_w_type",
                 "entity_w_nested_type",
+                "entity_w_type_defer",
                 "entity_array"
             ]
         }, {

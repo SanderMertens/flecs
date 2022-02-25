@@ -6263,8 +6263,12 @@ void deferred_add_remove(
     /* Currently it's not supported to set the symbol from a deferred context */
     if (desc->symbol) {
         const char *sym = ecs_get_symbol(world, entity);
-        ecs_assert(!ecs_os_strcmp(sym, desc->symbol), ECS_UNSUPPORTED, NULL);
-        (void)sym;
+        if (!sym || ecs_os_strcmp(sym, desc->symbol)) {
+            ecs_suspend_readonly_state_t state;
+            ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
+            ecs_set_symbol(world, entity, desc->symbol);
+            flecs_resume_readonly(real_world, &state);
+        }
     }
 }
 

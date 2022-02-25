@@ -15502,16 +15502,23 @@ struct entity_view : public id {
 
     /** Return the entity name.
      *
-     * @return The entity name, or an empty string if the entity has no name.
+     * @return The entity name.
      */
     flecs::string_view name() const {
         return flecs::string_view(ecs_get_name(m_world, m_id));
     }
 
+    /** Return the entity symbol.
+     *
+     * @return The entity symbol.
+     */
+    flecs::string_view symbol() const {
+        return flecs::string_view(ecs_get_symbol(m_world, m_id));
+    }
+
     /** Return the entity path.
      *
-     * @return The hierarchical entity path, or an empty string if the entity 
-     *         has no name.
+     * @return The hierarchical entity path.
      */
     flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
         char *path = ecs_get_path_w_sep(m_world, 0, m_id, sep, init_sep);

@@ -84,7 +84,10 @@
                     "entity_init_w_empty_string_symbol",
                     "set_name_w_0_twice",
                     "new_entity_twice",
-                    "new_entity_scoped_twice"
+                    "new_entity_scoped_twice",
+                    "defer_component_init",
+                    "defer_component_init_w_symbol",
+                    "defer_entity_init_w_symbol"
                 ]
             }, {
                 "id": "Event",

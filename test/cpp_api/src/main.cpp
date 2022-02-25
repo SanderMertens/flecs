@@ -186,6 +186,7 @@ void Entity_entity_w_root_name(void);
 void Entity_entity_w_root_name_from_scope(void);
 void Entity_entity_w_type(void);
 void Entity_entity_w_nested_type(void);
+void Entity_entity_w_type_defer(void);
 void Entity_entity_array(void);
 
 // Testsuite 'Pairs'
@@ -1578,6 +1579,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_nested_type",
         Entity_entity_w_nested_type
+    },
+    {
+        "entity_w_type_defer",
+        Entity_entity_w_type_defer
     },
     {
         "entity_array",
@@ -4189,7 +4194,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        178,
+        179,
         Entity_testcases
     },
     {

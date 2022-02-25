@@ -1503,3 +1503,74 @@ void Entity_new_entity_scoped_twice() {
 
     ecs_fini(world);
 }
+
+void Entity_defer_component_init() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
+        .entity.name = "Position",
+        .size = ECS_SIZEOF(Position),
+        .alignment = ECS_ALIGNOF(Position)
+    });
+
+    ecs_defer_end(world);
+
+    test_assert(c != 0);
+    test_str(ecs_get_name(world, c), "Position");
+    test_assert(ecs_has(world, c, EcsComponent));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->alignment, ECS_ALIGNOF(Position));
+
+    ecs_fini(world);
+}
+
+void Entity_defer_component_init_w_symbol() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t) {
+        .entity.name = "Position",
+        .entity.symbol = "Position",
+        .size = ECS_SIZEOF(Position),
+        .alignment = ECS_ALIGNOF(Position)
+    });
+
+    ecs_defer_end(world);
+
+    test_assert(c != 0);
+    test_str(ecs_get_name(world, c), "Position");
+    test_str(ecs_get_symbol(world, c), "Position");
+    test_assert(ecs_has(world, c, EcsComponent));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->alignment, ECS_ALIGNOF(Position));
+
+    ecs_fini(world);
+}
+
+void Entity_defer_entity_init_w_symbol() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t c = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Position",
+        .symbol = "Position",
+    });
+
+    ecs_defer_end(world);
+
+    test_assert(c != 0);
+    test_str(ecs_get_name(world, c), "Position");
+    test_str(ecs_get_symbol(world, c), "Position");
+
+    ecs_fini(world);
+}
