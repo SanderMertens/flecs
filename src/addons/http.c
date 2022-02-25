@@ -713,7 +713,7 @@ void accept_connections(
         if (result) {
             ecs_warn("WSAStartup failed with GetLastError = %d\n", 
                 GetLastError());
-            return -1;
+            return;
         }
     } else {
         http_close(testsocket);
