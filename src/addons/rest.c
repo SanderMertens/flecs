@@ -159,6 +159,7 @@ bool rest_reply(
             if (!e) {
                 ecs_dbg("rest: entity '%s' not found", path);
                 reply_error(reply, "entity '%s' not found", path);
+                reply->code = 404;
                 return true;
             }
 
@@ -189,6 +190,7 @@ bool rest_reply(
                 char *err = rest_get_captured_log();
                 char *escaped_err = ecs_astresc('"', err);
                 reply_error(reply, escaped_err);
+                reply->code = 400; /* bad request */
                 ecs_os_free(escaped_err);
                 ecs_os_free(err);
             } else {

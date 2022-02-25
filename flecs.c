@@ -27187,12 +27187,14 @@ void serialize_iter_result_values(
     int32_t i, term_count = it->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_strbuf_list_next(buf);
-        
+
         const void *ptr = it->ptrs[i];
         if (!ptr) {
-            /* No data in column */
-            json_literal(buf, "0");
-            continue;
+            /* No data in column. Append 0 if this is not an optional term */
+            if (ecs_term_is_set(it, i + 1)) {
+                json_literal(buf, "0");
+                continue;
+            }
         }
 
         /* Get component id (can be different in case of pairs) */
@@ -27216,6 +27218,15 @@ void serialize_iter_result_values(
         if (!ser) {
             /* Not odd, component just has no reflection data */
             json_literal(buf, "0");
+            continue;
+        }
+
+        /* If term is not set, append empty array. This indicates that the term
+         * could have had data but doesn't */
+        if (!ecs_term_is_set(it, i + 1)) {
+            ecs_assert(ptr == NULL, ECS_INTERNAL_ERROR, NULL);
+            json_array_push(buf);
+            json_array_pop(buf);
             continue;
         }
 
@@ -27941,6 +27952,7 @@ bool rest_reply(
             if (!e) {
                 ecs_dbg("rest: entity '%s' not found", path);
                 reply_error(reply, "entity '%s' not found", path);
+                reply->code = 404;
                 return true;
             }
 
@@ -27971,6 +27983,7 @@ bool rest_reply(
                 char *err = rest_get_captured_log();
                 char *escaped_err = ecs_astresc('"', err);
                 reply_error(reply, escaped_err);
+                reply->code = 400; /* bad request */
                 ecs_os_free(escaped_err);
                 ecs_os_free(err);
             } else {

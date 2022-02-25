@@ -464,6 +464,9 @@ void SerializeToJson_serialize_iterator_type_info_2_structs(void);
 void SerializeToJson_serialize_iterator_w_entity_label(void);
 void SerializeToJson_serialize_iterator_w_var_labels(void);
 void SerializeToJson_serialize_iterator_w_var_component(void);
+void SerializeToJson_serialize_iterator_w_optional_tag(void);
+void SerializeToJson_serialize_iterator_w_optional_component(void);
+void SerializeToJson_serialize_iterator_w_optional_reflected_component(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -2268,6 +2271,18 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_w_var_component",
         SerializeToJson_serialize_iterator_w_var_component
+    },
+    {
+        "serialize_iterator_w_optional_tag",
+        SerializeToJson_serialize_iterator_w_optional_tag
+    },
+    {
+        "serialize_iterator_w_optional_component",
+        SerializeToJson_serialize_iterator_w_optional_component
+    },
+    {
+        "serialize_iterator_w_optional_reflected_component",
+        SerializeToJson_serialize_iterator_w_optional_reflected_component
     }
 };
 
@@ -2522,7 +2537,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        69,
+        72,
         SerializeToJson_testcases
     },
     {
