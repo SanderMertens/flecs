@@ -2506,6 +2506,20 @@ void Error_last_error(void);
 void App_app_w_frame_action(void);
 void App_app_w_default_frame_action(void);
 
+// Testsuite 'Http'
+void Http_teardown(void);
+void Http_teardown_started(void);
+void Http_teardown_stopped(void);
+void Http_stop_start(void);
+void Http_stop_start_stresstest(void);
+void Http_stop_start_stresstest_w_0_sleep(void);
+void Http_stop_start_stresstest_w_100ns_sleep(void);
+void Http_stop_start_stresstest_w_100us_sleep(void);
+void Http_stop_start_stresstest_w_10ms_sleep(void);
+
+// Testsuite 'Rest'
+void Rest_teardown(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "init_id",
@@ -12085,6 +12099,52 @@ bake_test_case App_testcases[] = {
     }
 };
 
+bake_test_case Http_testcases[] = {
+    {
+        "teardown",
+        Http_teardown
+    },
+    {
+        "teardown_started",
+        Http_teardown_started
+    },
+    {
+        "teardown_stopped",
+        Http_teardown_stopped
+    },
+    {
+        "stop_start",
+        Http_stop_start
+    },
+    {
+        "stop_start_stresstest",
+        Http_stop_start_stresstest
+    },
+    {
+        "stop_start_stresstest_w_0_sleep",
+        Http_stop_start_stresstest_w_0_sleep
+    },
+    {
+        "stop_start_stresstest_w_100ns_sleep",
+        Http_stop_start_stresstest_w_100ns_sleep
+    },
+    {
+        "stop_start_stresstest_w_100us_sleep",
+        Http_stop_start_stresstest_w_100us_sleep
+    },
+    {
+        "stop_start_stresstest_w_10ms_sleep",
+        Http_stop_start_stresstest_w_10ms_sleep
+    }
+};
+
+bake_test_case Rest_testcases[] = {
+    {
+        "teardown",
+        Rest_teardown
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -12540,9 +12600,23 @@ static bake_test_suite suites[] = {
         NULL,
         2,
         App_testcases
+    },
+    {
+        "Http",
+        NULL,
+        NULL,
+        9,
+        Http_testcases
+    },
+    {
+        "Rest",
+        NULL,
+        NULL,
+        1,
+        Rest_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 65);
+    return bake_test_run("api", argc, argv, suites, 67);
 }

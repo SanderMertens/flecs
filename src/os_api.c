@@ -103,7 +103,11 @@ void log_msg(
     }
 
     if (level >= 0) {
-        if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        if (level == 0) {
+            if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        } else {
+            if (ecs_os_api.log_with_color_) fputs(ECS_GREY, stream);
+        }
         fputs("info", stream);
     } else if (level == -2) {
         if (ecs_os_api.log_with_color_) fputs(ECS_YELLOW, stream);

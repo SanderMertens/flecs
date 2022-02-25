@@ -28923,7 +28923,7 @@ void init_connection(
 }
 
 static
-int accept_connections(
+void accept_connections(
     ecs_http_server_t* srv, 
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
@@ -28956,44 +28956,52 @@ int accept_connections(
         ecs_os_strcpy(addr_port, "unknown");
     }
 
-    srv->sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
-    if (srv->sock <= 0) {
-        ecs_err("unable to create new connection socket: %s", 
-            ecs_os_strerror(errno));
-        return -1;
-    }
+    ecs_os_mutex_lock(srv->lock);
+    if (srv->should_run) {
+        ecs_dbg("http: initializing connection socket");
+        
+        srv->sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+        if (srv->sock < 0) {
+            ecs_err("unable to create new connection socket: %s", 
+                ecs_os_strerror(errno));
+            ecs_os_mutex_unlock(srv->lock);
+            goto done;
+        }
 
-    int reuse = 1;
-    int result = setsockopt(srv->sock, SOL_SOCKET, SO_REUSEADDR, 
-        (char*)&reuse, ECS_SIZEOF(reuse)); 
-    if (result) {
-        ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
-    }
-
-    if (addr->sa_family == AF_INET6) {
-        int ipv6only = 0;
-        if (setsockopt(srv->sock, IPPROTO_IPV6, IPV6_V6ONLY, 
-            (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
-        {
+        int reuse = 1;
+        int result = setsockopt(srv->sock, SOL_SOCKET, SO_REUSEADDR, 
+            (char*)&reuse, ECS_SIZEOF(reuse)); 
+        if (result) {
             ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
         }
-    }
-    
-    result = http_bind(srv->sock, addr, addr_len);
-    if (result) {
-        ecs_err("http: failed to bind to '%s:%s': %s", 
-            addr_host, addr_port, ecs_os_strerror(errno));
-        return -1;
-    }
 
-    result = listen(srv->sock, SOMAXCONN);
-    if (result) {
-        ecs_warn("http: could not listen for SOMAXCONN (%d) connections: %s", 
-            SOMAXCONN, ecs_os_strerror(errno));
-    }
+        if (addr->sa_family == AF_INET6) {
+            int ipv6only = 0;
+            if (setsockopt(srv->sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+                (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
+            {
+                ecs_warn("failed to setsockopt: %s", ecs_os_strerror(errno));
+            }
+        }
+        
+        result = http_bind(srv->sock, addr, addr_len);
+        if (result) {
+            ecs_err("http: failed to bind to '%s:%s': %s", 
+                addr_host, addr_port, ecs_os_strerror(errno));
+            ecs_os_mutex_lock(srv->lock);
+            goto done;
+        }
 
-    ecs_trace("http: listening for incoming connections on '%s:%s'",
-        addr_host, addr_port);
+        result = listen(srv->sock, SOMAXCONN);
+        if (result) {
+            ecs_warn("http: could not listen for SOMAXCONN (%d) connections: %s", 
+                SOMAXCONN, ecs_os_strerror(errno));
+        }
+
+        ecs_trace("http: listening for incoming connections on '%s:%s'",
+            addr_host, addr_port);
+    }
+    ecs_os_mutex_unlock(srv->lock);
 
     ecs_http_socket_t sock_conn;
     struct sockaddr_storage remote_addr;
@@ -29015,14 +29023,13 @@ int accept_connections(
         init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
     }
 
+done:
     if (srv->sock && errno != EBADF) {
         http_close(srv->sock);
     }
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",
         addr_host, addr_port);
-
-    return 0;
 }
 
 static
@@ -29162,7 +29169,9 @@ error:
 void ecs_http_server_fini(
     ecs_http_server_t* srv) 
 {
-    ecs_http_server_stop(srv);
+    if (srv->should_run) {
+        ecs_http_server_stop(srv);
+    }
     ecs_os_mutex_free(srv->lock);
     flecs_sparse_free(srv->connections);
     flecs_sparse_free(srv->requests);
@@ -29178,6 +29187,8 @@ int ecs_http_server_start(
     ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
 
     srv->should_run = true;
+
+    ecs_dbg("http: starting server thread");
 
     srv->thread = ecs_os_thread_new(http_server_thread, srv);
     if (!srv->thread) {
@@ -29197,31 +29208,36 @@ void ecs_http_server_stop(
     ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
 
     /* Stop server thread */
-    ecs_trace("http: shutting down server thread");
+    ecs_dbg("http: shutting down server thread");
+
+    ecs_os_mutex_lock(srv->lock);
     srv->should_run = false;
     if (srv->sock >= 0) {
         http_close(srv->sock);
     }
+    ecs_os_mutex_unlock(srv->lock);
 
     ecs_os_thread_join(srv->thread);
 
+    ecs_trace("http: server thread shut down");
+
     /* Cleanup all outstanding requests */
     int i, count = flecs_sparse_count(srv->requests);
-    for (i = count - 1; i >= 0; i --) {
+    for (i = count - 1; i >= 1; i --) {
         request_free(flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i));
     }
 
     /* Close all connections */
     count = flecs_sparse_count(srv->connections);
-    for (i = count - 1; i >= 0; i --) {
+    for (i = count - 1; i >= 1; i --) {
         connection_free(flecs_sparse_get_dense(
             srv->connections, ecs_http_connection_impl_t, i));
     }
 
-    ecs_assert(flecs_sparse_count(srv->connections) == 0, 
+    ecs_assert(flecs_sparse_count(srv->connections) == 1, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_sparse_count(srv->requests) == 0, 
+    ecs_assert(flecs_sparse_count(srv->requests) == 1,
         ECS_INTERNAL_ERROR, NULL);
 
     srv->thread = 0;
@@ -36871,7 +36887,11 @@ void log_msg(
     }
 
     if (level >= 0) {
-        if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        if (level == 0) {
+            if (ecs_os_api.log_with_color_) fputs(ECS_MAGENTA, stream);
+        } else {
+            if (ecs_os_api.log_with_color_) fputs(ECS_GREY, stream);
+        }
         fputs("info", stream);
     } else if (level == -2) {
         if (ecs_os_api.log_with_color_) fputs(ECS_YELLOW, stream);
