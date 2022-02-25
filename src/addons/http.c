@@ -764,7 +764,7 @@ void accept_connections(
         if (result) {
             ecs_err("http: failed to bind to '%s:%s': %s", 
                 addr_host, addr_port, ecs_os_strerror(errno));
-            ecs_os_mutex_lock(srv->lock);
+            ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
 
