@@ -290,7 +290,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] created with id %d", expr, result->id);
+    ecs_dbg_2("#[green]table#[normal] [%s] #[green]created#[normal] with id %d", expr, result->id);
     ecs_os_free(expr);
 #endif
     ecs_log_push();

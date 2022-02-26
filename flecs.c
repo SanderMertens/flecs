@@ -2703,7 +2703,7 @@ void flecs_table_free(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] deleted with id %d", expr, table->id);
+    ecs_dbg_2("#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", expr, table->id);
     ecs_os_free(expr);
 #endif    
 
@@ -6771,7 +6771,7 @@ void delete_objects(
         }
 
         /* Clear components from table (invokes destructors, OnRemove) */
-        flecs_table_delete_entities(world, table);            
+        flecs_table_delete_entities(world, table);
     } 
 }
 
@@ -6855,6 +6855,11 @@ void on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
+#ifndef NDEBUG
+    char *id_str = ecs_id_str(world, id);
+    ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
+    ecs_os_free(id_str);
+#endif
     if (ecs_id_is_wildcard(id)) {
         /* If id is wildcard, check if the relation or object is a wildcard.
          * Relation wildcard ids are implemented differently as relations
@@ -40766,7 +40771,7 @@ ecs_table_t *create_table(
 
 #ifndef NDEBUG
     char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] created with id %d", expr, result->id);
+    ecs_dbg_2("#[green]table#[normal] [%s] #[green]created#[normal] with id %d", expr, result->id);
     ecs_os_free(expr);
 #endif
     ecs_log_push();

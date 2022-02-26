@@ -2419,7 +2419,7 @@ void delete_objects(
         }
 
         /* Clear components from table (invokes destructors, OnRemove) */
-        flecs_table_delete_entities(world, table);            
+        flecs_table_delete_entities(world, table);
     } 
 }
 
@@ -2503,6 +2503,11 @@ void on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
+#ifndef NDEBUG
+    char *id_str = ecs_id_str(world, id);
+    ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
+    ecs_os_free(id_str);
+#endif
     if (ecs_id_is_wildcard(id)) {
         /* If id is wildcard, check if the relation or object is a wildcard.
          * Relation wildcard ids are implemented differently as relations
