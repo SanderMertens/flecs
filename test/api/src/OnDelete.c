@@ -210,6 +210,44 @@ void OnDelete_on_delete_object_delete() {
     ecs_fini(world);
 }
 
+void OnDelete_on_delete_object_mixed() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t_1 = ecs_new_id(world);
+    ecs_entity_t t_2 = ecs_new_id(world);
+
+    ecs_entity_t r_1 = ecs_new_id(world);
+    ecs_entity_t r_2 = ecs_new_id(world);
+
+    ecs_entity_t o = ecs_new_id(world);
+    ecs_add_pair(world, r_1, EcsOnDeleteObject, EcsDelete);
+
+    ecs_entity_t e_1 = ecs_new_w_pair(world, r_1, o);
+    ecs_add_id(world, e_1, t_1);
+
+    ecs_entity_t e_2 = ecs_new_w_pair(world, r_2, o);
+    ecs_add_id(world, e_2, t_1);
+
+    ecs_entity_t e_3 = ecs_new_w_pair(world, r_1, o);
+    ecs_add_id(world, e_3, t_2);
+
+    ecs_entity_t e_4 = ecs_new_w_pair(world, r_2, o);
+    ecs_add_id(world, e_4, t_2);
+
+    ecs_delete(world, o);
+
+    test_assert(ecs_is_alive(world, r_1));
+    test_assert(ecs_is_alive(world, r_2));
+    test_assert(!ecs_is_alive(world, o));
+
+    test_assert(!ecs_is_alive(world, e_1));
+    test_assert(ecs_is_alive(world, e_2));
+    test_assert(!ecs_is_alive(world, e_3));
+    test_assert(ecs_is_alive(world, e_4));
+
+    ecs_fini(world);
+}
+
 void OnDelete_on_delete_id_throw() {
     install_test_abort();
 
@@ -568,6 +606,57 @@ void OnDelete_on_delete_cyclic_object_delete() {
     ecs_delete(world, a);
     test_assert(!ecs_is_alive(world, a));
     test_assert(!ecs_is_alive(world, b));
+
+    ecs_fini(world);
+}
+
+void OnDelete_on_delete_cyclic_overlapping_table() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+    ecs_entity_t obj_c = ecs_new_id(world);
+
+    ecs_add_pair(world, obj_a, rel, obj_b);
+    ecs_add_pair(world, obj_b, rel, obj_a);
+    ecs_add_pair(world, obj_c, rel, obj_a);
+    ecs_add_pair(world, obj_c, rel, obj_b);
+
+    ecs_delete(world, obj_a);
+
+    test_bool(false, ecs_is_alive(world, obj_a));
+    test_bool(false, ecs_is_alive(world, obj_b));
+    test_bool(false, ecs_is_alive(world, obj_c));
+
+    ecs_fini(world);
+}
+
+void OnDelete_on_delete_cyclic_overlapping_new_tables() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_new_id(world);
+
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_2 = ecs_new_id(world);
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+
+    ecs_add_pair(world, obj_a, rel_1, obj_b);
+    ecs_add_pair(world, obj_b, rel_1, obj_a);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, rel_2, obj_a);
+    ecs_add_pair(world, e, rel_2, obj_b);
+    ecs_add_id(world, e, tag);
+
+    ecs_log_set_level(2);
+    ecs_delete(world, obj_a);
+    ecs_log_set_level(0);
+
+    test_bool(false, ecs_is_alive(world, obj_a));
+    test_bool(false, ecs_is_alive(world, obj_b));
+    test_bool(true, ecs_is_alive(world, e));
 
     ecs_fini(world);
 }

@@ -2382,7 +2382,6 @@ void remove_from_table(
                 flecs_notify_on_remove(world, src_table, NULL, 
                     0, src_count, &diff);
             }
-
             flecs_table_merge(world, dst_table, src_table, 
                 &dst_table->storage, src_data);
         }
@@ -2431,10 +2430,23 @@ void on_delete_object_action(
 {
     ecs_table_iter_t it;
     ecs_id_record_t *idr;
+
     if ((idr = flecs_table_iter(world, id, &it))) {
+
+        /* First move entities to tables without the id (action = Remove) or
+         * delete entities with id (action = Delete) */
         for (; it.cur < it.end; ++ it.cur) {
             const ecs_table_record_t *tr = it.cur;
             ecs_table_t *table = tr->table;
+
+            ecs_dbg("- cleanup table %u", table->id);
+
+            if (!ecs_table_count(table)) {
+                /* If store contains a cyclic relationship it's possible that
+                 * a table we were about to cleanup already got emptied */
+                continue;
+            }
+
             ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
 
             ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
@@ -2444,23 +2456,29 @@ void on_delete_object_action(
             /* delete_object_action should be invoked for relations */
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
 
+            /* Initialize with original value in case action = 0 */
+            ecs_entity_t cur_action = action;
+
             /* Find delete action for relation */
-            if (!action) {
+            if (!cur_action) {
                 ecs_id_record_t *idrr = flecs_get_id_record(world, rel);
                 if (idrr) {
-                    action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
+                    cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
                 }
             }
 
-            if (!action || action == EcsRemove) {
+            if (!cur_action || cur_action == EcsRemove) {
+                ecs_dbg("- move entities from table %u", table->id);
                 remove_from_table(world, table, id, tr->column, tr->count);
-            } else if (action == EcsDelete) {
+            } else if (cur_action == EcsDelete) {
+                ecs_dbg("- delete entities from table %u", table->id);
                 delete_objects(world, table);
-            } else if (action == EcsThrow) {
+            } else if (cur_action == EcsThrow) {
                 throw_invalid_delete(world, id);
             }
         }
 
+        /* Delete all tables with id */
         flecs_clear_id_record(world, id, idr);
     }
 }
@@ -2506,8 +2524,10 @@ void on_delete_action(
 #ifndef NDEBUG
     char *id_str = ecs_id_str(world, id);
     ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
+    ecs_log_push();
     ecs_os_free(id_str);
 #endif
+
     if (ecs_id_is_wildcard(id)) {
         /* If id is wildcard, check if the relation or object is a wildcard.
          * Relation wildcard ids are implemented differently as relations
@@ -2523,6 +2543,10 @@ void on_delete_action(
          * at most one instance of the id */
         on_delete_id_action(world, id, action);
     }
+
+#ifndef NDEBUG    
+    ecs_log_pop();
+#endif
 }
 
 static
