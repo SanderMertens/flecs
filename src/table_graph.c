@@ -662,9 +662,9 @@ void compute_table_diff(
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it.
-         * Encode in the id whether the id is a tag or not, so that wen can
+         * Encode in the id whether the id is a tag or not, so that we can
          * still tell whether an UnSet handler should be called or not. */
-        edge->diff_index = -1 * (ecs_get_typeid(world, id) == 0);
+        edge->diff_index = -1 * (node->storage_table == next->storage_table);
         return;
     }
 

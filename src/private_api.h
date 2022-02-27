@@ -142,20 +142,26 @@ void flecs_process_pending_tables(
 ecs_id_record_t* flecs_table_iter(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_table_iter_t *out);
+    ecs_table_cache_iter_t *out);
 
 ecs_id_record_t* flecs_empty_table_iter(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_table_iter_t *out);
+    ecs_table_cache_iter_t *out);
 
-bool flecs_idr_iter(
-    ecs_id_record_t *idr,
-    ecs_table_iter_t *out);
+bool flecs_table_cache_iter(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
 
-bool flecs_idr_empty_iter(
-    ecs_id_record_t *idr,
-    ecs_table_iter_t *out);
+bool flecs_table_cache_empty_iter(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+ecs_table_cache_hdr_t* _flecs_table_cache_next(
+    ecs_table_cache_iter_t *it);
+
+#define flecs_table_cache_next(it, T)\
+    (ECS_CAST(T*, _flecs_table_cache_next(it)))
 
 void flecs_register_add_ref(
     ecs_world_t *world,
@@ -418,6 +424,16 @@ void flecs_table_delete(
     ecs_data_t *data,
     int32_t index,
     bool destruct);
+
+/* Increase refcount of table (prevents deletion) */
+void flecs_table_claim(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+/* Decrease refcount of table (may delete) */
+void flecs_table_release(
+    ecs_world_t *world,
+    ecs_table_t *table);
 
 /* Move a row from one table to another */
 void flecs_table_move(

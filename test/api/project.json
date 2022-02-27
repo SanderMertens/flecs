@@ -802,6 +802,8 @@
                 "on_delete_cyclic_object_delete",
                 "on_delete_cyclic_overlapping_table",
                 "on_delete_cyclic_overlapping_new_tables",
+                "on_delete_cyclic_object_mixed",
+                "on_delete_cyclic_storage_table",
                 "on_delete_remove_2_comps",
                 "on_delete_remove_2_comps_to_existing_table",
                 "on_delete_delete_recursive",

@@ -99,6 +99,10 @@ void init_storage_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    if (table->storage_table) {
+        return;
+    }
+    
     int32_t i, count = ecs_vector_count(table->type);
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     ecs_ids_t storage_ids = {
@@ -637,10 +641,7 @@ void flecs_table_free(
         ECS_INTERNAL_ERROR, NULL);
     (void)world;
 
-    if (--table->refcount != 0) {
-        ecs_assert(table->refcount >= 0, ECS_INTERNAL_ERROR, NULL);
-        return;
-    }
+    ecs_assert(table->refcount == 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!is_root) {
         flecs_notify_queries(
@@ -680,13 +681,37 @@ void flecs_table_free(
     }
 
     if (table->storage_table && table->storage_table != table) {
-        flecs_table_free(world, table->storage_table);
+        flecs_table_release(world, table->storage_table);
     }
 
     if (!world->is_fini) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(table);
         flecs_sparse_remove(world->store.tables, table->id);
+    }
+}
+
+void flecs_table_claim(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    table->refcount ++;
+    (void)world;
+}
+
+void flecs_table_release(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (--table->refcount == 0) {
+        flecs_table_free(world, table);
     }
 }
 

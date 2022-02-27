@@ -216,21 +216,29 @@ struct ecs_table_t {
     int32_t refcount;
 };
 
+/** Must appear as first member in payload of table cache */
+typedef struct ecs_table_cache_hdr_t {
+    ecs_table_t *table;
+    struct ecs_table_cache_hdr_t *prev, *next;
+    bool empty;
+} ecs_table_cache_hdr_t;
+
+/** Linked list of tables in table cache */
+typedef struct ecs_table_cache_list_t {
+    ecs_table_cache_hdr_t *first;
+    ecs_table_cache_hdr_t *last;
+    int32_t count;
+} ecs_table_cache_list_t;
+
 /** Table cache */
 typedef struct ecs_table_cache_t {
-    ecs_map_t *index; /* <table_id, index> */
-    ecs_vector_t *tables;
-    ecs_vector_t *empty_tables;
+    ecs_map_t *index; /* <table_id, T*> */
+    ecs_table_cache_list_t tables;
+    ecs_table_cache_list_t empty_tables;
     ecs_size_t size;
     ecs_poly_t *parent;
     void(*free_payload)(ecs_poly_t*, void*);
 } ecs_table_cache_t;
-
-/** Must appear as first member in payload of table cache */
-typedef struct ecs_table_cache_hdr_t {
-    ecs_table_t *table;
-    bool empty;
-} ecs_table_cache_hdr_t;
 
 /* Sparse query column */
 typedef struct flecs_sparse_column_t {
@@ -505,13 +513,6 @@ struct ecs_id_record_t {
 
     uint64_t id; /* Id to element in storage */
 };
-
-/* Convenience struct to iterate table array for id */
-typedef struct ecs_table_iter_t {
-    const ecs_table_record_t *begin;
-    const ecs_table_record_t *end;
-    const ecs_table_record_t *cur;
-} ecs_table_iter_t;
 
 typedef struct ecs_store_t {
     /* Entity lookup */

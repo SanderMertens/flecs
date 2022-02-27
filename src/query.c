@@ -584,14 +584,13 @@ static
 bool check_query_monitor(
     ecs_query_t *query)
 {
-    ecs_vector_t *vec = query->cache.tables;
-    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
-    int32_t i, count = ecs_vector_count(vec);
-
-    for (i = 0; i < count; i ++) {
-        ecs_query_table_t *qt = &tables[i];
-        if (check_table_monitor(query, qt, -1)) {
-            return true;
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_iter(&query->cache, &it)) {
+        ecs_query_table_t *qt;
+        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+            if (check_table_monitor(query, qt, -1)) {
+                return true;
+            }
         }
     }
 
@@ -1710,12 +1709,12 @@ void sort_tables(
      * have nothing to sort */
 
     bool tables_sorted = false;
-    ecs_vector_t *vec = query->cache.tables;
-    ecs_query_table_t *tables = ecs_vector_first(vec, ecs_query_table_t);
-    int32_t count = ecs_vector_count(vec);
 
-    for (i = 0; i < count; i ++) {
-        ecs_query_table_t *qt = &tables[i];
+    ecs_table_cache_iter_t it;
+    ecs_query_table_t *qt;
+    flecs_table_cache_iter(&query->cache, &it);
+
+    while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
         ecs_table_t *table = qt->hdr.table;
         bool dirty = false;
 
@@ -2004,18 +2003,16 @@ void add_subquery(
     *elem = subquery;
 
     ecs_table_cache_t *cache = &parent->cache;
-    ecs_vector_t *tables = cache->tables, *empty = cache->empty_tables;
-
-    ecs_query_table_t *elems = ecs_vector_first(tables, ecs_query_table_t);
-    int32_t i, count = ecs_vector_count(tables);
-    for (i = 0; i < count; i ++) {
-        match_table(world, subquery, elems[i].hdr.table);
+    ecs_table_cache_iter_t it;
+    ecs_query_table_t *qt;
+    flecs_table_cache_iter(cache, &it);
+    while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+        match_table(world, subquery, qt->hdr.table);
     }
-
-    elems = ecs_vector_first(empty, ecs_query_table_t);
-    count = ecs_vector_count(empty);
-    for (i = 0; i < count; i ++) {
-        match_table(world, subquery, elems[i].hdr.table);
+    
+    flecs_table_cache_empty_iter(cache, &it);
+    while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+        match_table(world, subquery, qt->hdr.table);
     }
 }
 
@@ -2246,19 +2243,20 @@ void rematch_tables(
     ecs_query_t *parent_query)
 {    
     if (parent_query) {
-        ecs_query_table_t *tables = ecs_vector_first(
-            parent_query->cache.tables, ecs_query_table_t);
-        int32_t i, count = ecs_vector_count(parent_query->cache.tables);
-        for (i = 0; i < count; i ++) {
-            rematch_table(world, query, tables[i].hdr.table);
+        ecs_table_cache_iter_t it;
+        if (flecs_table_cache_iter(&parent_query->cache, &it)) {
+            ecs_query_table_t *qt;
+            while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+                rematch_table(world, query, qt->hdr.table);
+            }
         }
 
-        tables = ecs_vector_first(
-            parent_query->cache.empty_tables, ecs_query_table_t);
-        count = ecs_vector_count(parent_query->cache.empty_tables);
-        for (i = 0; i < count; i ++) {
-            rematch_table(world, query, tables[i].hdr.table);
-        }        
+        if (flecs_table_cache_empty_iter(&parent_query->cache, &it)) {
+            ecs_query_table_t *qt;
+            while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+                rematch_table(world, query, qt->hdr.table);
+            }
+        }       
     } else {
         ecs_sparse_t *tables = world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
@@ -2635,7 +2633,7 @@ ecs_iter_t ecs_query_iter(
     if (query->table_slices) {
         table_count = ecs_vector_count(query->table_slices);
     } else {
-        table_count = ecs_vector_count(query->cache.tables);
+        table_count = ecs_query_table_count(query);
     }
 
     ecs_query_iter_t it = {

@@ -96,6 +96,11 @@ typedef struct ecs_worker_iter_t {
     int32_t count;
 } ecs_worker_iter_t;
 
+/* Convenience struct to iterate table array for id */
+typedef struct ecs_table_cache_iter_t {
+    struct ecs_table_cache_hdr_t *cur, *next;
+} ecs_table_cache_iter_t;
+
 /** Term-iterator specific data */
 typedef struct ecs_term_iter_t {
     ecs_term_t term;
@@ -103,6 +108,7 @@ typedef struct ecs_term_iter_t {
     ecs_id_record_t *set_index;
 
     ecs_id_record_t *cur;
+    ecs_table_cache_iter_t it;
     int32_t index;
     
     ecs_table_t *table;
