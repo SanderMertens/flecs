@@ -335,7 +335,7 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 
 ```c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
-    .terms = {
+    .filter.terms = {
         { ecs_id(Position) },
         { ecs_id(Position), .subj.set = {
             .mask = EcsCascade,    // Force breadth-first order
@@ -581,7 +581,7 @@ The API for queries looks very similar to filters:
 ```c
 // Create a query with 2 terms
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
-    .terms = {
+    .filter.terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, EcsWildcard) }
     }
@@ -613,7 +613,7 @@ ecs_run(world, Move, delta_time, NULL); // Run system
 
 // Option 2, use the ecs_system_init function
 ecs_entity_t move_sys = ecs_system_init(world, &(ecs_system_desc_t) {
-    .filter.terms = {
+    .query.filter.terms = {
         {ecs_id(Position)},
         {ecs_id(Velocity)},
     },
