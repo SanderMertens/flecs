@@ -1523,28 +1523,6 @@ void Rules_join_by_predicate() {
 
     test_bool(true, ecs_rule_next(&it));
     result = ecs_iter_str(&it); expect =
-    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
-    LINE "subj: 0,Leia"
-    LINE "vars: X=Parent,Y=Leia"
-    LINE "this:"
-    LINE "    - Luke"
-    LINE;
-    test_str(result, expect);
-    ecs_os_free(result);
-
-    test_bool(true, ecs_rule_next(&it));
-    result = ecs_iter_str(&it); expect =
-    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
-    LINE "subj: 0,Leia"
-    LINE "vars: X=Parent,Y=Leia"
-    LINE "this:"
-    LINE "    - Leia"
-    LINE;
-    test_str(result, expect);
-    ecs_os_free(result);
-
-    test_bool(true, ecs_rule_next(&it));
-    result = ecs_iter_str(&it); expect =
     HEAD "term: (Enemy,DarthVader),(Enemy,DarthVader)"
     LINE "subj: 0,Yoda"
     LINE "vars: X=Enemy,Y=Yoda"
@@ -1561,6 +1539,28 @@ void Rules_join_by_predicate() {
     LINE "vars: X=Enemy,Y=Yoda"
     LINE "this:"
     LINE "    - Yoda"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Leia"
+    LINE "vars: X=Parent,Y=Leia"
+    LINE "this:"
+    LINE "    - Luke"
+    LINE;
+    test_str(result, expect);
+    ecs_os_free(result);
+
+    test_bool(true, ecs_rule_next(&it));
+    result = ecs_iter_str(&it); expect =
+    HEAD "term: (Parent,DarthVader),(Parent,DarthVader)"
+    LINE "subj: 0,Leia"
+    LINE "vars: X=Parent,Y=Leia"
+    LINE "this:"
+    LINE "    - Leia"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -1736,12 +1736,12 @@ void Rules_find_transitive_2_branches() {
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SentientMachine)");
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Droid");
+    test_str(ecs_get_name(world, it.entities[0]), "Cyborg");
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,SentientMachine)");
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Cyborg");
+    test_str(ecs_get_name(world, it.entities[0]), "Droid");
 
     test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "(IsA,Vehicle)");
@@ -2191,10 +2191,17 @@ void Rules_transitive_instances() {
 
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "HanSolo");
+    test_str(ecs_get_name(world, it.entities[0]), "BenSolo");
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
-    test_var(&it, x_var, "Human");
+    test_var(&it, x_var, "Human"); 
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "Luke");
+    test_term_id(&it, 1, "Human");
+    test_term_id(&it, 2, "(IsA,Character)");
+    test_var(&it, x_var, "Human");  
 
     test_assert(ecs_rule_next(&it));
     test_int(it.count, 1);
@@ -2204,22 +2211,15 @@ void Rules_transitive_instances() {
     test_var(&it, x_var, "Human");
 
     test_assert(ecs_rule_next(&it));
-    test_int(it.count, 1);    
-    test_str(ecs_get_name(world, it.entities[0]), "Rey");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "HanSolo");
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
     test_var(&it, x_var, "Human");
 
     test_assert(ecs_rule_next(&it));
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Luke");
-    test_term_id(&it, 1, "Human");
-    test_term_id(&it, 2, "(IsA,Character)");
-    test_var(&it, x_var, "Human");   
-
-    test_assert(ecs_rule_next(&it));
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "BenSolo");
+    test_int(it.count, 1);    
+    test_str(ecs_get_name(world, it.entities[0]), "Rey");
     test_term_id(&it, 1, "Human");
     test_term_id(&it, 2, "(IsA,Character)");
     test_var(&it, x_var, "Human"); 
@@ -2300,6 +2300,11 @@ void Rules_transitive_implicit_isa_instances() {
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     test_assert(ecs_rule_next(&it));
+    test_term_id(&it, 1, "Cyborg");
+    test_int(it.count, 1);
+    test_str(ecs_get_name(world, it.entities[0]), "Grievous");
+
+    test_assert(ecs_rule_next(&it));
     test_term_id(&it, 1, "Droid");
     test_int(it.count, 2);
     test_str(ecs_get_name(world, it.entities[0]), "R2D2");
@@ -2309,11 +2314,6 @@ void Rules_transitive_implicit_isa_instances() {
     test_term_id(&it, 1, "Droid");
     test_int(it.count, 1);
     test_str(ecs_get_name(world, it.entities[0]), "BB8");
-
-    test_assert(ecs_rule_next(&it));
-    test_term_id(&it, 1, "Cyborg");
-    test_int(it.count, 1);
-    test_str(ecs_get_name(world, it.entities[0]), "Grievous");
 
     test_assert(!ecs_rule_next(&it));
 
@@ -5289,15 +5289,17 @@ void Rules_term_w_same_subj_obj_var() {
 
     test_bool( ecs_rule_next(&it), false);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
 void Rules_optional_any_object() {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, Final);
 
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, Final);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
     ECS_TAG(world, ObjC);
@@ -5314,6 +5316,7 @@ void Rules_optional_any_object() {
     test_assert(r != NULL);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
+
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);

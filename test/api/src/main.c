@@ -760,6 +760,8 @@ void OnDelete_on_delete_cyclic_object_remove(void);
 void OnDelete_on_delete_cyclic_object_delete(void);
 void OnDelete_on_delete_cyclic_overlapping_table(void);
 void OnDelete_on_delete_cyclic_overlapping_new_tables(void);
+void OnDelete_on_delete_cyclic_object_mixed(void);
+void OnDelete_on_delete_cyclic_storage_table(void);
 void OnDelete_on_delete_remove_2_comps(void);
 void OnDelete_on_delete_remove_2_comps_to_existing_table(void);
 void OnDelete_on_delete_delete_recursive(void);
@@ -5417,6 +5419,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_cyclic_overlapping_new_tables",
         OnDelete_on_delete_cyclic_overlapping_new_tables
+    },
+    {
+        "on_delete_cyclic_object_mixed",
+        OnDelete_on_delete_cyclic_object_mixed
+    },
+    {
+        "on_delete_cyclic_storage_table",
+        OnDelete_on_delete_cyclic_storage_table
     },
     {
         "on_delete_remove_2_comps",
@@ -12291,7 +12301,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        63,
+        65,
         OnDelete_testcases
     },
     {

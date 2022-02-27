@@ -93,7 +93,7 @@ void snapshot_table(
     if (table->flags & EcsTableHasBuiltins) {
         return;
     }
-
+    
     ecs_table_leaf_t *l = ecs_vector_get(
         snapshot->tables, ecs_table_leaf_t, (int32_t)table->id);
     ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -112,6 +112,8 @@ ecs_snapshot_t* snapshot_create(
 {
     ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    ecs_force_aperiodic((ecs_world_t*)world);
 
     result->world = (ecs_world_t*)world;
 
@@ -237,6 +239,9 @@ void restore_unfiltered(
         
         /* If the world table still exists, replace its data */
         } else if (world_table && snapshot_table) {
+            ecs_assert(snapshot_table->table == world_table, 
+                ECS_INTERNAL_ERROR, NULL);
+
             if (snapshot_table->data) {
                 flecs_table_replace_data(
                     world, world_table, snapshot_table->data);
@@ -349,6 +354,8 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
+    ecs_force_aperiodic(world);
+    
     if (snapshot->entity_index) {
         /* Unfiltered snapshots have a copy of the entity index which is
          * copied back entirely when the snapshot is restored */

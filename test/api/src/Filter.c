@@ -5783,22 +5783,22 @@ void Filter_match_empty_tables() {
     ecs_iter_t it = ecs_filter_iter(world, &f);
     
     test_bool( ecs_filter_next(&it), true);
-    test_int(it.count, 0);
     test_assert(it.table == t1);
-
-    test_bool( ecs_filter_next(&it), true);
     test_int(it.count, 0);
-    test_assert(it.table == t2);
 
     test_bool( ecs_filter_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+
+    test_bool( ecs_filter_next(&it), true);
+    test_assert(it.table == t3);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_assert(it.table == t3);
 
     test_bool( ecs_filter_next(&it), true);
+    test_assert(it.table == t4);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
-    test_assert(it.table == t4);
 
     test_bool( ecs_filter_next(&it), false);
 

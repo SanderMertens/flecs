@@ -446,11 +446,12 @@ void instantiate(
         return;
     }
 
-    ecs_table_iter_t it;
+    ecs_table_cache_iter_t it;
     if (flecs_table_iter(world, ecs_pair(EcsChildOf, base), &it) != NULL) {
-        for (; it.cur < it.end; ++ it.cur) {
+        const ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             instantiate_children(
-                world, base, table, data, row, count, it.cur->table);
+                world, base, table, data, row, count, tr->table);
         }
     }
 }
@@ -2428,57 +2429,95 @@ void on_delete_object_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-    ecs_table_iter_t it;
+    ecs_table_cache_iter_t it;
     ecs_id_record_t *idr;
 
     if ((idr = flecs_table_iter(world, id, &it))) {
+        bool deleted;
 
-        /* First move entities to tables without the id (action = Remove) or
-         * delete entities with id (action = Delete) */
-        for (; it.cur < it.end; ++ it.cur) {
-            const ecs_table_record_t *tr = it.cur;
-            ecs_table_t *table = tr->table;
+        do {
+            deleted = false;
 
-            ecs_dbg("- cleanup table %u", table->id);
+            /* Make sure records are in the right list (empty/non-empty) */
+            ecs_force_aperiodic(world);
 
-            if (!ecs_table_count(table)) {
-                /* If store contains a cyclic relationship it's possible that
-                 * a table we were about to cleanup already got emptied */
-                continue;
+            /* First move entities to tables without the id (action = Remove) or
+            * delete entities with id (action = Delete) */
+            const ecs_table_record_t *tr;
+            if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                do {
+                    ecs_table_t *table = tr->table;
+
+                    /* Prevent table from getting deleted in next step, which 
+                     * could happen if store contains cyclic relationships */
+                    flecs_table_claim(world, table);
+
+                    /* If store contains cyclic relationships it's possible that
+                    * a table we were about to cleanup already got emptied */
+                    if (ecs_table_count(table)) {
+                        ecs_id_t *rel_id = ecs_vector_get(
+                            table->type, ecs_id_t, tr->column);
+                        ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                        ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
+                        /* delete_object_action should be invoked for pairs */
+                        ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
+
+                        /* Initialize with original value in case action = 0 */
+                        ecs_entity_t cur_action = action;
+
+                        /* Find delete action for relation */
+                        if (!cur_action) {
+                            ecs_id_record_t *idrr = flecs_get_id_record(
+                                world, rel);
+                            if (idrr) {
+                                cur_action = 
+                                    ECS_ID_ON_DELETE_OBJECT(idrr->flags);
+                            }
+                        }
+
+                        if (!cur_action || cur_action == EcsRemove) {
+                            remove_from_table(
+                                world, table, id, tr->column, tr->count);
+                        } else if (cur_action == EcsDelete) {
+                            delete_objects(world, table);
+                        } else if (cur_action == EcsThrow) {
+                            throw_invalid_delete(world, id);
+                        }
+
+                        deleted = true;
+                    }
+
+                    /* Manually set next in case the next element has been
+                     * deleted by the previous cleanup operations */
+                    it.next = tr->hdr.next;
+
+                    /* It is possible that a cyclic relationship has emptied a
+                     * table that was already in this list. There is one edge
+                     * case where releasing the current table could invalidate
+                     * the next (empty) record, which is if the (emptied) record
+                     * belongs to the table's storage table.
+                     * To make sure the next record is valid, first move to a
+                     * non-empty record before releasing the table. */
+                    while (it.next && !ecs_table_count(it.next->table)) {
+                        it.next = it.next->next;
+                    }
+                    
+                    /* Release table. This may remove the table record from the
+                     * current list */
+                    flecs_table_release(world, table);
+
+                } while ((tr = flecs_table_cache_next(
+                    &it, ecs_table_record_t)));
             }
 
-            ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
+        /* Keep repeating while cleanup actions were performed. This ensures 
+         * that even when tables are moved between empty/non-empty lists as
+         * cleanup actions are performed, eventually all tables with the id
+         * are correctly cleaned up. */
+        } while (deleted);
 
-            ecs_id_t *rel_id = ecs_vector_get(table->type, ecs_id_t, tr->column);
-            ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
-            /* delete_object_action should be invoked for relations */
-            ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
-
-            /* Initialize with original value in case action = 0 */
-            ecs_entity_t cur_action = action;
-
-            /* Find delete action for relation */
-            if (!cur_action) {
-                ecs_id_record_t *idrr = flecs_get_id_record(world, rel);
-                if (idrr) {
-                    cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
-                }
-            }
-
-            if (!cur_action || cur_action == EcsRemove) {
-                ecs_dbg("- move entities from table %u", table->id);
-                remove_from_table(world, table, id, tr->column, tr->count);
-            } else if (cur_action == EcsDelete) {
-                ecs_dbg("- delete entities from table %u", table->id);
-                delete_objects(world, table);
-            } else if (cur_action == EcsThrow) {
-                throw_invalid_delete(world, id);
-            }
-        }
-
-        /* Delete all tables with id */
+        /* Delete all remaining (empty) tables with id */
         flecs_clear_id_record(world, id, idr);
     }
 }
@@ -2489,7 +2528,7 @@ void on_delete_id_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-    ecs_table_iter_t it;
+    ecs_table_cache_iter_t it;
     ecs_id_record_t *idr = flecs_table_iter(world, id, &it);
     if (idr) {
         if (!action) {
@@ -2500,8 +2539,8 @@ void on_delete_id_action(
             throw_invalid_delete(world, id);
         }
 
-        for (; it.cur < it.end; ++ it.cur) {
-            const ecs_table_record_t *tr = it.cur;
+        const ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->table;
 
             if (!action || action == EcsRemove) {

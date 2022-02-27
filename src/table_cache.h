@@ -41,7 +41,7 @@ bool _ecs_table_cache_remove(
 #define ecs_table_cache_remove(cache, T, table)\
     _ecs_table_cache_remove(cache, ECS_SIZEOF(T), table)
 
-void* _ecs_table_cache_get(
+ecs_table_cache_hdr_t* _ecs_table_cache_get(
     const ecs_table_cache_t *cache,
     ecs_size_t size,
     const ecs_table_t *table);
@@ -68,11 +68,8 @@ void* _ecs_table_cache_empty_tables(
 #define ecs_table_cache_empty_tables(cache, T)\
     ECS_CAST(T*, _ecs_table_cache_empty_tables(cache, ECS_SIZEOF(T)))
 
-int32_t ecs_table_cache_count(
-    const ecs_table_cache_t *cache);
-
-int32_t ecs_table_cache_empty_count(
-    const ecs_table_cache_t *cache);
+#define ecs_table_cache_count(cache) (cache)->tables.count
+#define ecs_table_cache_empty_count(cache) (cache)->empty_tables.count
 
 void _ecs_table_cache_fini_delete_all(
     ecs_world_t *world,
