@@ -96,8 +96,8 @@ int main(int argc, char *argv[]) {
             printf("Velocity is shared\n");
             for (int i = 0; i < it.count; i ++) {
                 // If Velocity is shared, access the field as a pointer.
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+                p[i].x += v->x;
+                p[i].y += v->y;
                 printf("%s: {%f, %f}\n", ecs_get_name(it.world, it.entities[i]),
                     p[i].x, p[i].y);
             }
