@@ -713,6 +713,32 @@ void OnDelete_on_delete_cyclic_storage_table() {
     ecs_fini(world);
 }
 
+void OnDelete_on_delete_cyclic_set_empty() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_entity_t rel_2 = ecs_new_id(world);
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+
+    ecs_add_pair(world, obj_a, rel_1, obj_b);
+    ecs_add_pair(world, obj_b, rel_1, obj_a);
+    ecs_add_pair(world, obj_b, rel_2, obj_b);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_add_pair(world, e, rel_2, obj_a);
+
+    ecs_delete(world, obj_a);
+
+    test_bool(false, ecs_is_alive(world, obj_a));
+    test_bool(false, ecs_is_alive(world, obj_b));
+    test_bool(true, ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
 void OnDelete_on_delete_remove_2_comps() {
     ecs_world_t *world = ecs_init();
 

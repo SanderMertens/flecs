@@ -1922,8 +1922,11 @@ void flecs_table_merge(
 
     new_table->alloc_count ++;
 
-    if (!new_count && old_count) {
-        flecs_table_set_empty(world, new_table);
+    if (old_count) {
+        if (!new_count) {
+            flecs_table_set_empty(world, new_table);
+        }
+        flecs_table_set_empty(world, old_table);
     }
 }
 
