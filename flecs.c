@@ -2716,11 +2716,13 @@ void flecs_table_free(
             });
     }
 
-#ifndef NDEBUG
-    char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", expr, table->id);
-    ecs_os_free(expr);
-#endif    
+    if (ecs_should_log_2()) {
+        char *expr = ecs_type_str(world, table->type);
+        ecs_dbg_2(
+            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
+            expr, table->id);
+        ecs_os_free(expr);
+    }
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     fini_data(world, table, &table->storage, false, true, true, false);
@@ -6766,11 +6768,13 @@ void remove_from_table(
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!dst_table->type) {
-        ecs_dbg("- clear entities from table %u", (uint32_t)src_table->id);
+        ecs_dbg_3("clear entities from table %u", (uint32_t)src_table->id);
         /* If this removes all components, clear table */
         flecs_table_clear_entities(world, src_table);
     } else {
-        ecs_dbg("- move entities to table %u", (uint32_t)dst_table->id);
+        ecs_dbg_3("move entities from table %u to %u", 
+            (uint32_t)src_table->id,
+            (uint32_t)dst_table->id);
         /* Otherwise, merge table into dst_table */
         if (dst_table != src_table) {
             ecs_data_t *src_data = &src_table->storage;
@@ -6852,7 +6856,8 @@ void on_delete_object_action(
                         continue;
                     }
 
-                    ecs_dbg_2("- cleanup table %u", (uint32_t)table->id);
+                    ecs_dbg_3("cleanup table %u", (uint32_t)table->id);
+                    ecs_log_push_3();
 
                     /* Prevent table from getting deleted in next step, which 
                      * could happen if store contains cyclic relationships */
@@ -6893,6 +6898,8 @@ void on_delete_object_action(
                     } else if (cur_action == EcsThrow) {
                         throw_invalid_delete(world, id);
                     }
+
+                    ecs_log_pop_3();
 
                     /* It is possible that the current record has been moved to
                      * the empty list, as result of a cyclic cleanup action. In
@@ -6976,12 +6983,13 @@ void on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-#ifndef NDEBUG
-    char *id_str = ecs_id_str(world, id);
-    ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
-    ecs_log_push();
-    ecs_os_free(id_str);
-#endif
+    if (ecs_should_log_1()) {
+        char *id_str = ecs_id_str(world, id);
+        ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
+        ecs_os_free(id_str);
+    }
+
+    ecs_log_push_1();
 
     if (ecs_id_is_wildcard(id)) {
         /* If id is wildcard, check if the relation or object is a wildcard.
@@ -6998,10 +7006,8 @@ void on_delete_action(
          * at most one instance of the id */
         on_delete_id_action(world, id, action);
     }
-
-#ifndef NDEBUG    
-    ecs_log_pop();
-#endif
+    
+    ecs_log_pop_1();
 }
 
 static
@@ -12997,12 +13003,20 @@ void _ecs_log(
     va_end(args);    
 }
 
-void ecs_log_push(void) {
-    ecs_os_api.log_indent_ ++;
+void _ecs_log_push(
+    int32_t level) 
+{
+    if (level <= ecs_os_api.log_level_) {
+        ecs_os_api.log_indent_ ++;
+    }
 }
 
-void ecs_log_pop(void) {
-    ecs_os_api.log_indent_ --;
+void _ecs_log_pop(
+    int32_t level)
+{
+    if (level <= ecs_os_api.log_level_) {
+        ecs_os_api.log_indent_ --;
+    }
 }
 
 void _ecs_parser_errorv(
@@ -13130,6 +13144,26 @@ void _ecs_deprecated(
     const char *msg)
 {
     _ecs_err(file, line, "%s", msg);
+}
+
+bool ecs_should_log(int32_t level) {
+#   if !defined(ECS_TRACE_3)
+    if (level == 3) {
+        return false;
+    }
+#   endif
+#   if !defined(ECS_TRACE_2)
+    if (level == 2) {
+        return false;
+    }
+#   endif
+#   if !defined(ECS_TRACE_1)
+    if (level == 1) {
+        return false;
+    }
+#   endif
+
+    return level <= ecs_os_api.log_level_;
 }
 
 #define ECS_ERR_STR(code) case code: return &(#code[4])
@@ -14139,32 +14173,33 @@ bool build_pipeline(
 
     /* Add schedule to debug tracing */
     ecs_dbg("#[green]pipeline#[reset] rebuild:");
-    ecs_log_push();
+    ecs_log_push_1();
 
     ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
         op->multi_threaded, !op->no_staging);
-    ecs_log_push();
+    ecs_log_push_1();
     
     it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
         for (i = 0; i < it.count; i ++) {
-#ifndef NDEBUG
-            char *path = ecs_get_fullpath(world, it.entities[i]);
-            ecs_dbg("#[green]system#[reset] %s", path);
-            ecs_os_free(path);
-#endif
+            if (ecs_should_log_1()) {
+                char *path = ecs_get_fullpath(world, it.entities[i]);
+                ecs_dbg("#[green]system#[reset] %s", path);
+                ecs_os_free(path);
+            }
+
             ran_since_merge ++;
             if (ran_since_merge == op[op_index].count) {
                 ecs_dbg("#[magenta]merge#[reset]");
-                ecs_log_pop();
+                ecs_log_pop_1();
                 ran_since_merge = 0;
                 op_index ++;
                 if (op_index < ecs_vector_count(ops)) {
                     ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:",
                         op[op_index].multi_threaded, !op[op_index].no_staging);
                 }
-                ecs_log_push();
+                ecs_log_push_1();
             }
 
             if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
@@ -14177,8 +14212,8 @@ bool build_pipeline(
         }
     }
 
-    ecs_log_pop();
-    ecs_log_pop();
+    ecs_log_pop_1();
+    ecs_log_pop_1();
 
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;
@@ -31779,13 +31814,13 @@ void flecs_resume_readonly(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_dbg_3("resuming readonly mode");
     
     ecs_world_t *temp_world = world;
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
 
     if (state->is_readonly || state->is_deferred) {
+        ecs_dbg_3("resuming readonly mode");
+        
         ecs_force_aperiodic(world);
 
         /* Restore readonly state / defer count */
@@ -36991,15 +37026,9 @@ void ecs_os_dbg(
     int32_t line, 
     const char *msg)
 {
-#ifndef NDEBUG
     if (ecs_os_api.log_) {
         ecs_os_api.log_(1, file, line, msg);
     }
-#else
-    (void)file;
-    (void)line;
-    (void)msg;
-#endif
 }
 
 void ecs_os_trace(
@@ -39793,13 +39822,13 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-#ifndef NDEBUG
-    char *filter_expr = ecs_filter_str(world, &result->filter);
-    ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
-    ecs_os_free(filter_expr);
-#endif
+    if (ecs_should_log_1()) {
+        char *filter_expr = ecs_filter_str(world, &result->filter);
+        ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
+        ecs_os_free(filter_expr);
+    }
 
-    ecs_log_push();
+    ecs_log_push_1();
 
     if (!desc->parent) {
         if (result->flags & EcsQueryNeedsTables) {
@@ -39821,7 +39850,7 @@ ecs_query_t* ecs_query_init(
 
     result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
-    ecs_log_pop();
+    ecs_log_pop_1();
 
     return result;
 error:
@@ -40798,12 +40827,15 @@ ecs_table_t *create_table(
 
     init_table(world, result);
 
-#ifndef NDEBUG
-    char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] #[green]created#[normal] with id %d", expr, result->id);
-    ecs_os_free(expr);
-#endif
-    ecs_log_push();
+    if (ecs_should_log_2()) {
+        char *expr = ecs_type_str(world, result->type);
+        ecs_dbg_2(
+            "#[green]table#[normal] [%s] #[green]created#[normal] with id %d", 
+            expr, result->id);
+        ecs_os_free(expr);
+    }
+
+    ecs_log_push_2();
 
     /* Store table in table hashmap */
     *(ecs_table_t**)table_elem.value = result;
@@ -40820,7 +40852,7 @@ ecs_table_t *create_table(
         .table = result
     });
 
-    ecs_log_pop();
+    ecs_log_pop_2();
 
     return result;
 }

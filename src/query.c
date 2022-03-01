@@ -2515,13 +2515,13 @@ ecs_query_t* ecs_query_init(
         }        
     }
 
-#ifndef NDEBUG
-    char *filter_expr = ecs_filter_str(world, &result->filter);
-    ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
-    ecs_os_free(filter_expr);
-#endif
+    if (ecs_should_log_1()) {
+        char *filter_expr = ecs_filter_str(world, &result->filter);
+        ecs_dbg_1("#[green]query#[normal] [%s] created", filter_expr);
+        ecs_os_free(filter_expr);
+    }
 
-    ecs_log_push();
+    ecs_log_push_1();
 
     if (!desc->parent) {
         if (result->flags & EcsQueryNeedsTables) {
@@ -2543,7 +2543,7 @@ ecs_query_t* ecs_query_init(
 
     result->constraints_satisfied = satisfy_constraints(world, &result->filter);
 
-    ecs_log_pop();
+    ecs_log_pop_1();
 
     return result;
 error:

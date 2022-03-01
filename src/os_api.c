@@ -178,15 +178,9 @@ void ecs_os_dbg(
     int32_t line, 
     const char *msg)
 {
-#ifndef NDEBUG
     if (ecs_os_api.log_) {
         ecs_os_api.log_(1, file, line, msg);
     }
-#else
-    (void)file;
-    (void)line;
-    (void)msg;
-#endif
 }
 
 void ecs_os_trace(

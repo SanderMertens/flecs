@@ -288,12 +288,15 @@ ecs_table_t *create_table(
 
     init_table(world, result);
 
-#ifndef NDEBUG
-    char *expr = ecs_type_str(world, result->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] #[green]created#[normal] with id %d", expr, result->id);
-    ecs_os_free(expr);
-#endif
-    ecs_log_push();
+    if (ecs_should_log_2()) {
+        char *expr = ecs_type_str(world, result->type);
+        ecs_dbg_2(
+            "#[green]table#[normal] [%s] #[green]created#[normal] with id %d", 
+            expr, result->id);
+        ecs_os_free(expr);
+    }
+
+    ecs_log_push_2();
 
     /* Store table in table hashmap */
     *(ecs_table_t**)table_elem.value = result;
@@ -310,7 +313,7 @@ ecs_table_t *create_table(
         .table = result
     });
 
-    ecs_log_pop();
+    ecs_log_pop_2();
 
     return result;
 }

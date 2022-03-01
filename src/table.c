@@ -651,11 +651,13 @@ void flecs_table_free(
             });
     }
 
-#ifndef NDEBUG
-    char *expr = ecs_type_str(world, table->type);
-    ecs_dbg_2("#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", expr, table->id);
-    ecs_os_free(expr);
-#endif    
+    if (ecs_should_log_2()) {
+        char *expr = ecs_type_str(world, table->type);
+        ecs_dbg_2(
+            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
+            expr, table->id);
+        ecs_os_free(expr);
+    }
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     fini_data(world, table, &table->storage, false, true, true, false);

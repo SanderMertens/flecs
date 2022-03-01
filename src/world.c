@@ -240,13 +240,13 @@ void flecs_resume_readonly(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_dbg_3("resuming readonly mode");
     
     ecs_world_t *temp_world = world;
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
 
     if (state->is_readonly || state->is_deferred) {
+        ecs_dbg_3("resuming readonly mode");
+        
         ecs_force_aperiodic(world);
 
         /* Restore readonly state / defer count */

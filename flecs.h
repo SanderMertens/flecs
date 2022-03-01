@@ -538,19 +538,39 @@ extern "C" {
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
 
-
 FLECS_API
 void _ecs_deprecated(
     const char *file, 
     int32_t line, 
     const char *msg);
 
+/** Increase log stack.
+ * This operation increases the indent_ value of the OS API and can be useful to
+ * make nested behavior more visible.
+ * 
+ * @param level The log level.
+ */
 FLECS_API
-void ecs_log_push(void);
+void _ecs_log_push(int32_t level);
 
+/** Decrease log stack.
+ * This operation decreases the indent_ value of the OS API and can be useful to
+ * make nested behavior more visible.
+ * 
+ * @param level The log level.
+ */
 FLECS_API
-void ecs_log_pop(void);
+void _ecs_log_pop(int32_t level);
 
+/** Should current level be logged.
+ * This operation returns true when the specified log level should be logged 
+ * with the current log level.
+ *
+ * @param level The log level to check for.
+ * @return Whether logging is enabled for the current level.
+ */
+FLECS_API
+bool ecs_should_log(int32_t level);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error reporting
@@ -691,20 +711,77 @@ void _ecs_parser_errorv(
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...) ecs_log(3, __VA_ARGS__);
 
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2() _ecs_log_push(2);
+#define ecs_log_push_3() _ecs_log_push(3);
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2() _ecs_log_pop(2);
+#define ecs_log_pop_3() _ecs_log_pop(3);
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() ecs_should_log(2)
+#define ecs_should_log_3() ecs_should_log(3)
+
+#define ECS_TRACE_2
+#define ECS_TRACE_1
+#define ECS_TRACE_0
+
 #elif defined(ECS_TRACE_2) /* Level 2 and below debug tracing enabled */
 #define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...)
+
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2() _ecs_log_push(2);
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2() _ecs_log_pop(2);
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() ecs_should_log(2)
+#define ecs_should_log_3() false
+
+#define ECS_TRACE_1
+#define ECS_TRACE_0
 
 #elif defined(ECS_TRACE_1) /* Level 1 debug tracing enabled */
 #define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
 
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() false
+#define ecs_should_log_3() false
+
+#define ECS_TRACE_0
+
 #elif defined(ECS_TRACE_0) /* No debug tracing enabled */
 #define ecs_dbg_1(...)
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
+
+#define ecs_log_push_1()
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1()
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() false
+#define ecs_should_log_2() false
+#define ecs_should_log_3() false
 
 #else /* No tracing enabled */
 #undef ecs_trace
@@ -713,9 +790,22 @@ void _ecs_parser_errorv(
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
 
+#define ecs_log_push_1()
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1()
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
 #endif // defined(ECS_TRACE_3)
 
-#define ecs_dbg ecs_dbg_1 /* Default debug tracing is at level 1 */
+/* Default debug tracing is at level 1 */
+#define ecs_dbg ecs_dbg_1
+
+/* Default level for push/pop is 0 */
+#define ecs_log_push() _ecs_log_push(0)
+#define ecs_log_pop() _ecs_log_pop(0)
 
 /** Abort 
  * Unconditionally aborts process. */

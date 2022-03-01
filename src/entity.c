@@ -2372,11 +2372,13 @@ void remove_from_table(
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!dst_table->type) {
-        ecs_dbg("- clear entities from table %u", (uint32_t)src_table->id);
+        ecs_dbg_3("clear entities from table %u", (uint32_t)src_table->id);
         /* If this removes all components, clear table */
         flecs_table_clear_entities(world, src_table);
     } else {
-        ecs_dbg("- move entities to table %u", (uint32_t)dst_table->id);
+        ecs_dbg_3("move entities from table %u to %u", 
+            (uint32_t)src_table->id,
+            (uint32_t)dst_table->id);
         /* Otherwise, merge table into dst_table */
         if (dst_table != src_table) {
             ecs_data_t *src_data = &src_table->storage;
@@ -2458,7 +2460,8 @@ void on_delete_object_action(
                         continue;
                     }
 
-                    ecs_dbg_2("- cleanup table %u", (uint32_t)table->id);
+                    ecs_dbg_3("cleanup table %u", (uint32_t)table->id);
+                    ecs_log_push_3();
 
                     /* Prevent table from getting deleted in next step, which 
                      * could happen if store contains cyclic relationships */
@@ -2499,6 +2502,8 @@ void on_delete_object_action(
                     } else if (cur_action == EcsThrow) {
                         throw_invalid_delete(world, id);
                     }
+
+                    ecs_log_pop_3();
 
                     /* It is possible that the current record has been moved to
                      * the empty list, as result of a cyclic cleanup action. In
@@ -2582,12 +2587,13 @@ void on_delete_action(
     ecs_id_t id,
     ecs_entity_t action)
 {
-#ifndef NDEBUG
-    char *id_str = ecs_id_str(world, id);
-    ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
-    ecs_log_push();
-    ecs_os_free(id_str);
-#endif
+    if (ecs_should_log_1()) {
+        char *id_str = ecs_id_str(world, id);
+        ecs_dbg("#[red]delete#[reset] tables with id %s", id_str);
+        ecs_os_free(id_str);
+    }
+
+    ecs_log_push_1();
 
     if (ecs_id_is_wildcard(id)) {
         /* If id is wildcard, check if the relation or object is a wildcard.
@@ -2604,10 +2610,8 @@ void on_delete_action(
          * at most one instance of the id */
         on_delete_id_action(world, id, action);
     }
-
-#ifndef NDEBUG    
-    ecs_log_pop();
-#endif
+    
+    ecs_log_pop_1();
 }
 
 static

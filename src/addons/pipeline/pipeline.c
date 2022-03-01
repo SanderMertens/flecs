@@ -370,32 +370,33 @@ bool build_pipeline(
 
     /* Add schedule to debug tracing */
     ecs_dbg("#[green]pipeline#[reset] rebuild:");
-    ecs_log_push();
+    ecs_log_push_1();
 
     ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
         op->multi_threaded, !op->no_staging);
-    ecs_log_push();
+    ecs_log_push_1();
     
     it = ecs_query_iter(world, pq->query);
     while (ecs_query_next(&it)) {
         EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
         for (i = 0; i < it.count; i ++) {
-#ifndef NDEBUG
-            char *path = ecs_get_fullpath(world, it.entities[i]);
-            ecs_dbg("#[green]system#[reset] %s", path);
-            ecs_os_free(path);
-#endif
+            if (ecs_should_log_1()) {
+                char *path = ecs_get_fullpath(world, it.entities[i]);
+                ecs_dbg("#[green]system#[reset] %s", path);
+                ecs_os_free(path);
+            }
+
             ran_since_merge ++;
             if (ran_since_merge == op[op_index].count) {
                 ecs_dbg("#[magenta]merge#[reset]");
-                ecs_log_pop();
+                ecs_log_pop_1();
                 ran_since_merge = 0;
                 op_index ++;
                 if (op_index < ecs_vector_count(ops)) {
                     ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:",
                         op[op_index].multi_threaded, !op[op_index].no_staging);
                 }
-                ecs_log_push();
+                ecs_log_push_1();
             }
 
             if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
@@ -408,8 +409,8 @@ bool build_pipeline(
         }
     }
 
-    ecs_log_pop();
-    ecs_log_pop();
+    ecs_log_pop_1();
+    ecs_log_pop_1();
 
     /* Force sort of query as this could increase the match_count */
     pq->match_count = pq->query->match_count;

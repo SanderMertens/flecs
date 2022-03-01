@@ -199,12 +199,20 @@ void _ecs_log(
     va_end(args);    
 }
 
-void ecs_log_push(void) {
-    ecs_os_api.log_indent_ ++;
+void _ecs_log_push(
+    int32_t level) 
+{
+    if (level <= ecs_os_api.log_level_) {
+        ecs_os_api.log_indent_ ++;
+    }
 }
 
-void ecs_log_pop(void) {
-    ecs_os_api.log_indent_ --;
+void _ecs_log_pop(
+    int32_t level)
+{
+    if (level <= ecs_os_api.log_level_) {
+        ecs_os_api.log_indent_ --;
+    }
 }
 
 void _ecs_parser_errorv(
@@ -332,6 +340,26 @@ void _ecs_deprecated(
     const char *msg)
 {
     _ecs_err(file, line, "%s", msg);
+}
+
+bool ecs_should_log(int32_t level) {
+#   if !defined(ECS_TRACE_3)
+    if (level == 3) {
+        return false;
+    }
+#   endif
+#   if !defined(ECS_TRACE_2)
+    if (level == 2) {
+        return false;
+    }
+#   endif
+#   if !defined(ECS_TRACE_1)
+    if (level == 1) {
+        return false;
+    }
+#   endif
+
+    return level <= ecs_os_api.log_level_;
 }
 
 #define ECS_ERR_STR(code) case code: return &(#code[4])
