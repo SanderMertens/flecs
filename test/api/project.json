@@ -835,7 +835,9 @@
                 "delete_all_with_entity",
                 "remove_childof_entity",
                 "remove_childof_wildcard",
-                "delete_child_of_delete_with"
+                "delete_child_of_delete_with",
+                "deep_clean_64",
+                "deep_clean_256"
             ]
         }, {
             "id": "Set",

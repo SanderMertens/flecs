@@ -126,11 +126,18 @@ void log_msg(
     if (level >= 0) {
         if (ecs_os_api.log_indent_) {
             char indent[32];
-            int i;
-            for (i = 0; i < ecs_os_api.log_indent_; i ++) {
+            int i, indent_count = ecs_os_api.log_indent_;
+            if (indent_count > 15) indent_count = 15;
+
+            for (i = 0; i < indent_count; i ++) {
                 indent[i * 2] = '|';
                 indent[i * 2 + 1] = ' ';
             }
+
+            if (ecs_os_api.log_indent_ != indent_count) {
+                indent[i * 2 - 2] = '+';
+            }
+
             indent[i * 2] = '\0';
 
             fputs(indent, stream);

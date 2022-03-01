@@ -2442,7 +2442,7 @@ void on_delete_object_action(
             ecs_force_aperiodic(world);
 
             /* First move entities to tables without the id (action = Remove) or
-            * delete entities with id (action = Delete) */
+             * delete entities with id (action = Delete) */
             const ecs_table_record_t *tr;
             if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                 do {

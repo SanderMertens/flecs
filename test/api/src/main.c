@@ -794,6 +794,8 @@ void OnDelete_delete_all_with_entity(void);
 void OnDelete_remove_childof_entity(void);
 void OnDelete_remove_childof_wildcard(void);
 void OnDelete_delete_child_of_delete_with(void);
+void OnDelete_deep_clean_64(void);
+void OnDelete_deep_clean_256(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5555,6 +5557,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_child_of_delete_with",
         OnDelete_delete_child_of_delete_with
+    },
+    {
+        "deep_clean_64",
+        OnDelete_deep_clean_64
+    },
+    {
+        "deep_clean_256",
+        OnDelete_deep_clean_256
     }
 };
 
@@ -12301,7 +12311,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        65,
+        67,
         OnDelete_testcases
     },
     {
