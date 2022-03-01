@@ -92,8 +92,9 @@ const char* ecs_strerror(
     (void)line;\
     (void)msg
 
-#define ecs_log_push()
-#define ecs_log_pop()
+#define _ecs_log_push(level)
+#define _ecs_log_pop(level)
+#define ecs_should_log(level) false
 
 #define ecs_strerror(error_code)\
     (void)error_code
