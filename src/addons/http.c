@@ -689,12 +689,12 @@ void init_connection(
         ecs_os_strcpy(remote_port, "unknown");
     }
 
-    ecs_dbg("http: connection established from '%s:%s'", 
+    ecs_dbg_2("http: connection established from '%s:%s'", 
         remote_host, remote_port);
 
     recv_request(srv, conn, conn_id, sock_conn);
 
-    ecs_dbg("http: request received from '%s:%s'", 
+    ecs_dbg_2("http: request received from '%s:%s'", 
         remote_host, remote_port);
 }
 
@@ -734,7 +734,7 @@ void accept_connections(
 
     ecs_os_mutex_lock(srv->lock);
     if (srv->should_run) {
-        ecs_dbg("http: initializing connection socket");
+        ecs_dbg_2("http: initializing connection socket");
         
         srv->sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
         if (srv->sock < 0) {
@@ -841,7 +841,7 @@ void handle_request(
     }
 
     send_reply(conn, &reply);
-    ecs_dbg("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
+    ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
 
     reply_free(&reply);
     request_free(req);
