@@ -1,0 +1,10 @@
+{
+    "id": "sync_point_delete",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

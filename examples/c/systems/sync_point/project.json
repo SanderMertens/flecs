@@ -1,0 +1,10 @@
+{
+    "id": "sync_point",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
