@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT_DEFINE(ecs, Position);
     ECS_COMPONENT_DEFINE(ecs, Velocity);
 
-    // System that sets velocity using ecs_set for entities with Position.
-    // While systems are progressing, operations like ecs_set are deferred until
+    // System that sets velocity using set<T> for entities with Position.
+    // While systems are progressing, operations like set<T> are deferred until
     // it is safe to merge. By default this merge happens at the end of the
     // frame, but we can annotate systems to give the scheduler more information
     // about what it's doing, which allows it to insert sync points earlier.

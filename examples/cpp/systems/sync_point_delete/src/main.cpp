@@ -1,4 +1,4 @@
-#include <sync_point.h>
+#include <sync_point_delete.h>
 #include <iostream>
 
 struct Position { 
