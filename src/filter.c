@@ -1204,6 +1204,10 @@ char* ecs_filter_str(
             }
         }
 
+        if (term->oper != EcsOr) {
+            or_count = 0;
+        }
+
         if (or_count < 1) {
             if (term->inout == EcsIn) {
                 ecs_strbuf_appendstr(&buf, "[in] ");
@@ -1218,8 +1222,6 @@ char* ecs_filter_str(
 
         if (term->oper == EcsOr) {
             or_count ++;
-        } else {
-            or_count = 0;
         }
 
         term_str_w_strbuf(world, term, &buf);

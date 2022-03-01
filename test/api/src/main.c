@@ -1238,6 +1238,15 @@ void Filter_and_term(void);
 void Filter_or_term(void);
 void Filter_iter_while_creating_components(void);
 
+// Testsuite 'FilterStr'
+void FilterStr_one_term(void);
+void FilterStr_one_term_w_inout(void);
+void FilterStr_two_terms(void);
+void FilterStr_two_terms_w_inout(void);
+void FilterStr_three_terms_w_or(void);
+void FilterStr_three_terms_w_or_inout(void);
+void FilterStr_four_terms_three_w_or_inout(void);
+
 // Testsuite 'Query'
 void Query_query_changed_after_new(void);
 void Query_query_changed_after_delete(void);
@@ -7275,6 +7284,37 @@ bake_test_case Filter_testcases[] = {
     }
 };
 
+bake_test_case FilterStr_testcases[] = {
+    {
+        "one_term",
+        FilterStr_one_term
+    },
+    {
+        "one_term_w_inout",
+        FilterStr_one_term_w_inout
+    },
+    {
+        "two_terms",
+        FilterStr_two_terms
+    },
+    {
+        "two_terms_w_inout",
+        FilterStr_two_terms_w_inout
+    },
+    {
+        "three_terms_w_or",
+        FilterStr_three_terms_w_or
+    },
+    {
+        "three_terms_w_or_inout",
+        FilterStr_three_terms_w_or_inout
+    },
+    {
+        "four_terms_three_w_or_inout",
+        FilterStr_four_terms_three_w_or_inout
+    }
+};
+
 bake_test_case Query_testcases[] = {
     {
         "query_changed_after_new",
@@ -12378,6 +12418,13 @@ static bake_test_suite suites[] = {
         Filter_testcases
     },
     {
+        "FilterStr",
+        NULL,
+        NULL,
+        7,
+        FilterStr_testcases
+    },
+    {
         "Query",
         NULL,
         NULL,
@@ -12653,5 +12700,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 67);
+    return bake_test_run("api", argc, argv, suites, 68);
 }
