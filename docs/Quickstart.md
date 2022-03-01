@@ -713,7 +713,31 @@ move_sys.add(flecs::OnUpdate);
 move_sys.remove(flecs::PostUpdate);
 ```
 
-Inside a phase systems are guaranteed to be ran in their declaration order.
+Inside a phase, systems are guaranteed to be ran in their declaration order.
+
+### Custom Pipeline
+When building your own pipeline for the world to use, make sure to set both `PreFrame` and `PostFrame` as the first and last phase systems of your pipeline, respectively. These two builtin tags are used to run internal systems.
+
+```c
+    ecs_entity_t pipeline = ecs_type_init(world, &(ecs_type_desc_t){
+        .entity = {
+            .name = "CustomPipeline",
+            .add = {EcsPipeline}
+        },
+        .ids = {
+            EcsPreFrame,
+            // Add all your custom system phases
+            EcsPostFrame
+         }
+    });
+```
+
+```cpp
+	auto pipeline = world.pipeline("CustomPipeline");
+	pipeline.add(flecs::PreFrame)
+		// Add all your custom system phases
+		.add(flecs::PostFrame);
+```
 
 ## Trigger
 A trigger is a callback for an event for a single term. Triggers can be defined for `OnAdd`, `OnRemove`, `OnSet` and `UnSet` events. The API is similar to that of a system, but for a single term and an additional event.
