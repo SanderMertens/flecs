@@ -1760,3 +1760,65 @@ void OnDelete_delete_child_of_delete_with() {
 
     ecs_fini(world);
 }
+
+void OnDelete_deep_clean_64() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    test_assert(r != 0);
+
+    ecs_entity_t first = ecs_new_id(world);
+    ecs_entity_t prev = first;
+    ecs_entity_t entities[64];
+
+    for (int i = 0; i < 64; i ++) {
+        entities[i] = ecs_new_id(world);
+        ecs_add_pair(world, entities[i], r, prev);
+        prev = entities[i];
+    }
+
+    for (int i = 0; i < 64; i ++) {
+        test_assert(ecs_is_alive(world, entities[i]));
+    }
+
+    ecs_delete(world, first);
+
+    for (int i = 0; i < 64; i ++) {
+        test_assert(!ecs_is_alive(world, entities[i]));
+    }
+
+    test_assert(!ecs_is_alive(world, first));
+
+    ecs_fini(world);
+}
+
+void OnDelete_deep_clean_256() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t r = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    test_assert(r != 0);
+
+    ecs_entity_t first = ecs_new_id(world);
+    ecs_entity_t prev = first;
+    ecs_entity_t entities[256];
+
+    for (int i = 0; i < 256; i ++) {
+        entities[i] = ecs_new_id(world);
+        ecs_add_pair(world, entities[i], r, prev);
+        prev = entities[i];
+    }
+
+    for (int i = 0; i < 256; i ++) {
+        test_assert(ecs_is_alive(world, entities[i]));
+    }
+
+    ecs_delete(world, first);
+
+    for (int i = 0; i < 256; i ++) {
+        test_assert(!ecs_is_alive(world, entities[i]));
+    }
+
+    test_assert(!ecs_is_alive(world, first));
+
+    ecs_fini(world);
+}
