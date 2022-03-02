@@ -87,7 +87,9 @@
                     "new_entity_scoped_twice",
                     "defer_component_init",
                     "defer_component_init_w_symbol",
-                    "defer_entity_init_w_symbol"
+                    "defer_entity_init_w_symbol",
+                    "staged_set_name_n_stages",
+                    "staged_set_symbol_n_stages"
                 ]
             }, {
                 "id": "Event",

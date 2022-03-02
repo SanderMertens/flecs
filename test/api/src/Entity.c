@@ -1574,3 +1574,47 @@ void Entity_defer_entity_init_w_symbol() {
 
     ecs_fini(world);
 }
+
+void Entity_staged_set_name_n_stages() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_stages(world, 2);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *s = ecs_get_stage(world, 1);
+
+    ecs_entity_t e = ecs_entity_init(s, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+
+    ecs_staging_end(world);
+
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Entity_staged_set_symbol_n_stages() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_stages(world, 2);
+
+    ecs_staging_begin(world);
+
+    ecs_world_t *s = ecs_get_stage(world, 1);
+
+    ecs_entity_t e = ecs_entity_init(s, &(ecs_entity_desc_t) {
+        .name = "Foo",
+        .symbol = "Bar"
+    });
+
+    ecs_staging_end(world);
+
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Foo");
+    test_str(ecs_get_symbol(world, e), "Bar");
+
+    ecs_fini(world);
+}

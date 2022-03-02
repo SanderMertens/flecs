@@ -6303,24 +6303,40 @@ void deferred_add_remove(
 #endif
     }
 
+    int32_t thread_count = ecs_get_stage_count(world);
+
     /* Set name */
     if (name && !name_assigned) {
         /* To prevent creating two entities with the same name, temporarily go
          * out of readonly mode if it's safe to do so. */
         ecs_suspend_readonly_state_t state;
-        ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
-        ecs_add_path_w_sep(real_world, entity, scope, name, sep, root_sep);
-        flecs_resume_readonly(real_world, &state);
+        if (thread_count <= 1) {
+            /* When not running on multiple threads we can temporarily leave
+             * readonly mode which ensures that we don't accidentally create
+             * two entities with the same name. */
+            ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
+            ecs_add_path_w_sep(real_world, entity, scope, name, sep, root_sep);
+            flecs_resume_readonly(real_world, &state);
+        } else {
+            /* In multithreaded mode we can't leave readonly mode, which means
+             * there is a risk of creating two entities with the same name. 
+             * Future improvements will be able to detect this. */
+            ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
+        }
     }
 
-    /* Currently it's not supported to set the symbol from a deferred context */
+    /* Set symbol */
     if (desc->symbol) {
         const char *sym = ecs_get_symbol(world, entity);
         if (!sym || ecs_os_strcmp(sym, desc->symbol)) {
-            ecs_suspend_readonly_state_t state;
-            ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
-            ecs_set_symbol(world, entity, desc->symbol);
-            flecs_resume_readonly(real_world, &state);
+            if (thread_count <= 1) { /* See above */
+                ecs_suspend_readonly_state_t state;
+                ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
+                ecs_set_symbol(world, entity, desc->symbol);
+                flecs_resume_readonly(real_world, &state);
+            } else {
+                ecs_set_symbol(world, entity, desc->symbol);
+            }
         }
     }
 }
