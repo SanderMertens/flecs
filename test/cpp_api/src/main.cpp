@@ -874,6 +874,7 @@ void Misc_nullptr_string_compare(void);
 void Misc_nullptr_string_compare_nullptr(void);
 void Misc_c_macros(void);
 void Misc_app_run(void);
+void Misc_app_run_target_fps(void);
 
 bake_test_case Entity_testcases[] = {
     {
@@ -4206,6 +4207,10 @@ bake_test_case Misc_testcases[] = {
     {
         "app_run",
         Misc_app_run
+    },
+    {
+        "app_run_target_fps",
+        Misc_app_run_target_fps
     }
 };
 
@@ -4389,7 +4394,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        10,
+        11,
         Misc_testcases
     }
 };

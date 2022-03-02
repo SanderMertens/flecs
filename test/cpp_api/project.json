@@ -929,7 +929,8 @@
                 "nullptr_string_compare",
                 "nullptr_string_compare_nullptr",
                 "c_macros",
-                "app_run"
+                "app_run",
+                "app_run_target_fps"
             ]
         }]
     }

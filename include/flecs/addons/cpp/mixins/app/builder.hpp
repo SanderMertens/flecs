@@ -8,7 +8,11 @@ struct app_builder {
         : m_world(world)
         , m_desc{}
     {
-        m_desc.target_fps = 60;
+        const ecs_world_info_t *stats = ecs_get_world_info(world);
+        m_desc.target_fps = stats->target_fps;
+        if (m_desc.target_fps == static_cast<FLECS_FLOAT>(0.0)) {
+            m_desc.target_fps = 60;
+        }
     }
 
     app_builder& target_fps(FLECS_FLOAT value) {
