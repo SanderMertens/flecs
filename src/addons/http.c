@@ -66,7 +66,7 @@ typedef int ecs_http_socket_t;
 #define ECS_HTTP_MIN_DEQUEUE_INTERVAL (100)
 
 /* Minimum interval between printing statistics (ms) */
-#define ECS_HTTP_MIN_STATS_INTERVAL (5000)
+#define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
 
 /* Max length of headers in reply */
 #define ECS_HTTP_REPLY_HEADER_SIZE (1024)

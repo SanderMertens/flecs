@@ -1062,6 +1062,7 @@ void SystemMisc_run_custom_run_action(void);
 void SystemMisc_run_w_offset_limit_custom_run_action(void);
 void SystemMisc_pipeline_custom_run_action(void);
 void SystemMisc_change_custom_run_action(void);
+void SystemMisc_custom_run_action_call_next(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1777,6 +1778,7 @@ void Observer_mixed_on_set_w_tag(void);
 void Observer_mixed_un_set_w_tag(void);
 void Observer_match_base_w_id_at_offset(void);
 void Observer_custom_run_action(void);
+void Observer_custom_run_action_w_iter_next(void);
 
 // Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
@@ -6592,6 +6594,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "change_custom_run_action",
         SystemMisc_change_custom_run_action
+    },
+    {
+        "custom_run_action_call_next",
+        SystemMisc_custom_run_action_call_next
     }
 };
 
@@ -9402,6 +9408,10 @@ bake_test_case Observer_testcases[] = {
     {
         "custom_run_action",
         Observer_custom_run_action
+    },
+    {
+        "custom_run_action_w_iter_next",
+        Observer_custom_run_action_w_iter_next
     }
 };
 
@@ -12405,7 +12415,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        78,
+        79,
         SystemMisc_testcases
     },
     {
@@ -12475,7 +12485,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        63,
+        64,
         Observer_testcases
     },
     {

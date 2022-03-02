@@ -1,7 +1,7 @@
 #include <api.h>
 
 static
-bool dummy_invoked = false;
+int32_t dummy_invoked = false;
 
 static
 void Dummy(ecs_iter_t *it) {
@@ -1912,6 +1912,18 @@ static void Run2(ecs_iter_t *it) {
     run_2_invoked ++;
 }
 
+static void Run_call_callback(ecs_iter_t *it) {
+    run_invoked ++;
+    
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+    test_assert(it->callback != NULL);
+
+    while (ecs_iter_next(it)) {
+        it->callback(it);
+    }
+}
+
 void SystemMisc_run_custom_run_action() {
     ecs_world_t *world = ecs_init();
 
@@ -2044,6 +2056,41 @@ void SystemMisc_change_custom_run_action() {
     test_bool(dummy_invoked, false);
     test_int(run_invoked, 1);
     test_int(run_2_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_custom_run_action_call_next() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t) {
+        .query.filter.terms = {{ .id = TagA }},
+        .run = Run_call_callback,
+        .callback = Dummy,
+        .ctx = &ctx,
+        .entity.add = {EcsOnUpdate}
+    });
+    test_assert(system != 0);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add(world, e3, TagB); // 2 tables
+
+    ecs_progress(world, 0);
+
+    test_bool(dummy_invoked, true);
+    test_int(run_invoked, 1);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
 
     ecs_fini(world);
 }

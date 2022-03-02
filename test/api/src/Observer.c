@@ -2778,7 +2778,6 @@ void Observer_match_base_w_id_at_offset() {
     ecs_fini(world);
 }
 
-
 static int run_invoked = 0;
 static int run_invoked_matched = 0;
 
@@ -2788,6 +2787,19 @@ static void Run(ecs_iter_t *it) {
     }
     run_invoked ++;
 }
+
+static void Run_w_iter_next(ecs_iter_t *it) {
+    run_invoked ++;
+    
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+    test_assert(it->callback != NULL);
+
+    while (ecs_iter_next(it)) {
+        it->callback(it);
+    }
+}
+
 
 void Observer_custom_run_action() {
     ecs_world_t *world = ecs_mini();
@@ -2808,6 +2820,32 @@ void Observer_custom_run_action() {
 
     test_int(run_invoked, 1);
     test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+    
+    ecs_fini(world);
+}
+
+void Observer_custom_run_action_w_iter_next() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms = {{ TagA }},
+        .events = {EcsOnAdd},
+        .run = Run_w_iter_next,
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    test_int(run_invoked, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e);

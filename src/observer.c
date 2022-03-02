@@ -97,13 +97,51 @@ done:
     return false;
 }
 
+bool ecs_observer_default_run_action(ecs_iter_t *it) {
+    return observer_run(it);
+}
+
+static 
+void default_observer_run_callback(ecs_iter_t *it) {
+    observer_run(it);
+}
+
+/* For convenience, so applications can (in theory) use a single run callback 
+ * that uses ecs_iter_next to iterate results */
+static 
+bool default_observer_next_callback(ecs_iter_t *it) {
+    if (it->interrupted_by) {
+        return false;
+    } else {
+        it->interrupted_by = it->system;
+        return true;
+    }
+}
+
+static
+void observer_run_callback(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    ecs_run_action_t run = o->run;
+
+    if (run) {
+        it->next = default_observer_next_callback;
+        it->callback = default_observer_run_callback;
+        it->interrupted_by = 0;
+        run(it);
+    } else {
+        observer_run(it);
+    }
+}
+
 static
 void observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
-    ecs_run_action_t callback = observer->run;
-    ecs_assert(callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_run_action_t run = observer->run;
+    if (!run) {
+        run = default_observer_run_callback;
+    }
 
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
@@ -133,19 +171,10 @@ void observer_yield_existing(
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
-            callback(&it);
+            run(&it);
             world->event_id ++;
         }
     }
-}
-
-static
-void observer_run_callback(ecs_iter_t *it) {
-    observer_run(it);
-}
-
-bool ecs_observer_default_run_action(ecs_iter_t *it) {
-    return observer_run(it);
 }
 
 ecs_entity_t ecs_observer_init(
@@ -218,13 +247,8 @@ ecs_entity_t ecs_observer_init(
         /* Observer must have at least one event */
         ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        ecs_run_action_t run = desc->run;
-        if (!run) {
-            run = observer_run_callback;
-        }
-
         observer->callback = desc->callback;
-        observer->run = run;
+        observer->run = desc->run;
         observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
@@ -235,7 +259,7 @@ ecs_entity_t ecs_observer_init(
 
         /* Create a trigger for each term in the filter */
         ecs_trigger_desc_t tdesc = {
-            .callback = run,
+            .callback = observer_run_callback,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
             .match_prefab = observer->filter.match_prefab,
