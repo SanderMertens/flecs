@@ -1716,6 +1716,7 @@ void Trigger_notify_propagated_twice(void);
 void Trigger_trigger_superset_wildcard(void);
 void Trigger_remove_wildcard_1_id(void);
 void Trigger_remove_wildcard_2_ids(void);
+void Trigger_create_triggers_in_trigger(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -9168,6 +9169,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "remove_wildcard_2_ids",
         Trigger_remove_wildcard_2_ids
+    },
+    {
+        "create_triggers_in_trigger",
+        Trigger_create_triggers_in_trigger
     }
 };
 
@@ -12493,7 +12498,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        97,
+        98,
         Trigger_testcases
     },
     {

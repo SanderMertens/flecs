@@ -4052,3 +4052,7 @@ void Trigger_on_set_w_tag() {
 
     ecs_fini(world);
 }
+
+void Trigger_create_triggers_in_trigger() {
+    // Implement testcase
+}
