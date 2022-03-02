@@ -156,6 +156,27 @@ static ECS_MOVE(EcsBitmask, dst, src, {
 static ECS_DTOR(EcsBitmask, ptr, { dtor_bitmask(ptr); })
 
 
+/* EcsUnit lifecycle */
+
+static void dtor_unit(
+    EcsUnit *ptr) 
+{
+    ecs_os_free(ptr->symbol);
+}
+
+static ECS_COPY(EcsUnit, dst, src, {
+    dtor_unit(dst);
+    dst->symbol = ecs_os_strdup(src->symbol);
+})
+
+static ECS_MOVE(EcsUnit, dst, src, {
+    dtor_unit(dst);
+    dst->symbol = src->symbol;
+    src->symbol = NULL;
+})
+
+static ECS_DTOR(EcsUnit, ptr, { dtor_unit(ptr); })
+
 /* Type initialization */
 
 static
@@ -218,11 +239,13 @@ void set_struct_member(
     ecs_entity_t entity,
     const char *name,
     ecs_entity_t type,
-    int32_t count)
+    int32_t count,
+    ecs_entity_t unit)
 {
     member->member = entity;
     member->type = type;
     member->count = count;
+    member->unit = unit;
 
     if (!count) {
         member->count = 1;
@@ -267,6 +290,27 @@ int add_member_to_struct(
         return -1;
     }
 
+    ecs_entity_t unit = m->unit;
+
+    if (unit) {
+        if (!ecs_has(world, unit, EcsUnit)) {
+            ecs_err("entity '%s' for member '%s' is not a unit",
+                ecs_get_name(world, unit), name);
+            return -1;
+        }
+
+        if (ecs_has(world, m->type, EcsUnit) && m->type != unit) {
+            ecs_err("unit mismatch for type '%s' and unit '%s' for member '%s'",
+                ecs_get_name(world, m->type), ecs_get_name(world, unit), name);
+            return -1;
+        }
+    } else {
+        if (ecs_has(world, m->type, EcsUnit)) {
+            unit = m->type;
+            m->unit = unit;
+        }
+    }
+
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct, NULL);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -275,7 +319,8 @@ int add_member_to_struct(
     int32_t i, count = ecs_vector_count(s->members);
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
-            set_struct_member(&members[i], member, name, m->type, m->count);
+            set_struct_member(
+                &members[i], member, name, m->type, m->count, unit);
             break;
         }
     }
@@ -284,7 +329,7 @@ int add_member_to_struct(
     if (i == count) {
         ecs_member_t *elem = ecs_vector_add(&s->members, ecs_member_t);
         elem->name = NULL;
-        set_struct_member(elem, member, name, m->type, m->count);
+        set_struct_member(elem, member, name, m->type, m->count, unit);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vector_first(s->members, ecs_member_t);
@@ -756,6 +801,19 @@ void set_vector(ecs_iter_t *it) {
 }
 
 static
+void set_unit(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (ecs_has_id(world, e, EcsQuantity)) {
+            ecs_add_pair(world, e, EcsQuantity, e);
+        }
+    }
+}
+
+static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
@@ -800,8 +858,10 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsStruct);
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
+    flecs_bootstrap_component(world, EcsUnit);
 
     flecs_bootstrap_tag(world, EcsConstant);
+    flecs_bootstrap_tag(world, EcsQuantity);
 
     ecs_set_component_actions(world, EcsMetaType, { .ctor = ecs_default_ctor });
 
@@ -836,6 +896,13 @@ void FlecsMetaImport(
         .move = ecs_move(EcsBitmask),
         .copy = ecs_copy(EcsBitmask),
         .dtor = ecs_dtor(EcsBitmask)
+    });
+
+    ecs_set_component_actions(world, EcsUnit, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsUnit),
+        .copy = ecs_copy(EcsUnit),
+        .dtor = ecs_dtor(EcsUnit)
     });
 
     /* Register triggers to finalize type information from component data */
@@ -896,6 +963,13 @@ void FlecsMetaImport(
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(EcsUnit),
+        .term.subj.set.mask = EcsSelf,
+        .events = {EcsOnSet},
+        .callback = set_unit
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
         .term.id = ecs_id(EcsMetaType),
         .term.subj.set.mask = EcsSelf,
         .events = {EcsOnSet},
@@ -952,6 +1026,9 @@ void FlecsMetaImport(
     ecs_add_pair(world, ecs_id(EcsBitmask), 
         EcsDefaultChildComponent, EcsConstant);
 
+    /* Relationship properties */
+    ecs_add_id(world, EcsQuantity, EcsExclusive);
+
     /* Initialize reflection data for meta components */
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
         .entity.name = "TypeKind",
@@ -1006,7 +1083,8 @@ void FlecsMetaImport(
         .entity.entity = ecs_id(EcsMember),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)}
+            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
+            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)}
         }
     });
 
@@ -1022,6 +1100,13 @@ void FlecsMetaImport(
         .entity.entity = ecs_id(EcsVector),
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsUnit),
+        .members = {
+            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)}
         }
     });
 }

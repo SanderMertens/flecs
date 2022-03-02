@@ -166,7 +166,8 @@ ecs_entity_t ecs_struct_init(
 
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 
-            .count = m_desc->count
+            .count = m_desc->count,
+            .unit = m_desc->unit
         });
     }
 
@@ -177,6 +178,56 @@ ecs_entity_t ecs_struct_init(
         ecs_delete(world, t);
         return 0;
     }
+
+    if (!ecs_has(world, t, EcsStruct)) {
+        /* Invalid members */
+        ecs_delete(world, t);
+        return 0;
+    }
+
+    return t;
+}
+
+ecs_entity_t ecs_unit_init(
+    ecs_world_t *world,
+    const ecs_unit_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_entity_t quantity = desc->quantity;
+    if (quantity) {
+        if (!ecs_has_id(world, quantity, EcsQuantity)) {
+            ecs_err("entity '%s' for unit '%s' is not a quantity",
+                ecs_get_name(world, quantity), ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+
+        ecs_add_pair(world, t, EcsQuantity, desc->quantity);
+    } else {
+        ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
+    }
+
+    ecs_set(world, t, EcsUnit, {
+        .symbol = (char*)desc->symbol,
+    });
+
+    return t;
+}
+
+ecs_entity_t ecs_quantity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, desc);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_add_id(world, t, EcsQuantity);
 
     return t;
 }
