@@ -4053,6 +4053,73 @@ void Trigger_on_set_w_tag() {
     ecs_fini(world);
 }
 
+static int nested_trigger_invoked = 0;
+
+static void NestedTrigger(ecs_iter_t *it) {
+    nested_trigger_invoked ++;
+}
+
+static int create_trigger_invoked = 0;
+
+typedef struct {
+    int32_t count;
+    ecs_entity_t first;
+} CreateTriggers_ctx;
+
+static void CreateTriggers(ecs_iter_t *it) {
+    CreateTriggers_ctx *ctx = it->ctx;
+
+    create_trigger_invoked ++;
+
+    ctx->first = ecs_new_id(it->world);
+
+    int i;
+    for (i = 0; i < ctx->count - 1; i ++) {
+        ecs_new_id(it->world);
+    }
+
+    for (i = 0; i < ctx->count; i ++) {
+        ecs_trigger_init(it->world, &(ecs_trigger_desc_t) {
+            .term.id = ctx->first + i,
+            .events = {EcsOnAdd},
+            .callback = NestedTrigger
+        });
+    }
+}
+
 void Trigger_create_triggers_in_trigger() {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    int CreateCount = 10;
+
+    CreateTriggers_ctx ctx = { .count = CreateCount };
+    ecs_entity_t t1 = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = TagA,
+        .events = {EcsOnAdd},
+        .callback = CreateTriggers,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    ecs_add(world, e, TagA);
+    test_int(create_trigger_invoked, 1);
+    test_int(nested_trigger_invoked, 0);
+
+    int i;
+    for (i = 0; i < CreateCount; i ++) {
+        ecs_entity_t t = ecs_new_id(world);
+        ecs_add_id(world, t, ctx.first + i);
+        test_int(nested_trigger_invoked, i + 1);
+    }
+
+    test_int(create_trigger_invoked, 1);
+    test_int(nested_trigger_invoked, i);
+
+    ecs_fini(world);
 }

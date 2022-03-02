@@ -9386,9 +9386,6 @@ extern "C" {
 
 extern ECS_DECLARE(EcsDuration);
 extern     ECS_DECLARE(EcsSeconds);
-extern     ECS_DECLARE(EcsMinutes);
-extern     ECS_DECLARE(EcsHours);
-extern     ECS_DECLARE(EcsDays);
 
 extern ECS_DECLARE(EcsTime);
 extern     ECS_DECLARE(EcsDate);
@@ -9399,6 +9396,8 @@ extern ECS_DECLARE(EcsDistance);
 extern     ECS_DECLARE(EcsMeters);
 extern     ECS_DECLARE(EcsMiles);
 
+extern ECS_DECLARE(EcsData);
+extern     ECS_DECLARE(EcsDataByte);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
