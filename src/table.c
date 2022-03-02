@@ -886,10 +886,11 @@ void grow_column(
 
     /* If the array could possibly realloc and the component has a move action 
      * defined, move old elements manually */
-    ecs_move_t move;
-    if (c_info && count && can_realloc && (move = c_info->lifecycle.move)) {
+    ecs_move_ctor_t move_ctor;
+    if (c_info && count && can_realloc && 
+        (move_ctor = c_info->lifecycle.move_ctor)) 
+    {
         ecs_xtor_t ctor = c_info->lifecycle.ctor;
-        ecs_move_ctor_t move_ctor = c_info->lifecycle.move_ctor;
         ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
