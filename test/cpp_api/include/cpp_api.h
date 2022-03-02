@@ -46,12 +46,12 @@ public:
 
     Pod(const Pod& obj) {
         copy_ctor_invoked ++;
-        *this = obj;
+        this->value = obj.value;
     }
 
     Pod(Pod&& obj) {
         move_ctor_invoked ++;
-        *this = FLECS_MOV(obj);
+        this->value = obj.value;
     }
 
     Pod& operator=(const Pod& obj) {

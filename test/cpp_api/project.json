@@ -736,7 +736,11 @@
                 "emplace_existing",
                 "emplace_singleton",
                 "dtor_w_non_trivial_implicit_move",
-                "dtor_w_non_trivial_explicit_move"
+                "dtor_w_non_trivial_explicit_move",
+                "grow_no_default_ctor",
+                "grow_no_default_ctor_move",
+                "grow_no_default_ctor_move_w_component",
+                "delete_no_default_ctor"
             ]
         }, {
             "id": "Refs",

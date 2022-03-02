@@ -2954,7 +2954,9 @@ void grow_column(
     ecs_move_t move;
     if (c_info && count && can_realloc && (move = c_info->lifecycle.move)) {
         ecs_xtor_t ctor = c_info->lifecycle.ctor;
+        ecs_move_ctor_t move_ctor = c_info->lifecycle.move_ctor;
         ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Create new vector */
         ecs_vector_t *new_vec = ecs_vector_new_t(size, alignment, new_size);
@@ -2966,18 +2968,23 @@ void grow_column(
         void *new_buffer = ecs_vector_first_t(
             new_vec, size, alignment);
 
-        /* First construct elements (old and new) in new buffer */
-        ctor(world, c_info->component, entities, new_buffer, 
-            flecs_itosize(size), construct ? new_count : count, 
+        size_t size_u = flecs_itosize(size);
+
+        /* Move (and construct) existing elements to new vector */
+        move_ctor(world, c_info->component, &c_info->lifecycle, entities,
+            entities, new_buffer, old_buffer, size_u, count, 
             c_info->lifecycle.ctx);
-        
-        /* Move old elements */
-        move(world, c_info->component, entities, entities, 
-            new_buffer, old_buffer, flecs_itosize(size), count, 
-            c_info->lifecycle.ctx);
+
+        if (construct) {
+            /* Construct new element(s) */
+            void *elem = ECS_OFFSET(new_buffer, size * count);
+            ctor(world, c_info->component, &entities[count], elem, 
+                size_u, to_add, c_info->lifecycle.ctx);
+        }
 
         /* Free old vector */
         ecs_vector_free(vec);
+
         column->data = new_vec;
     } else {
         /* If array won't realloc or has no move, simply add new elements */
@@ -3176,6 +3183,8 @@ int32_t flecs_table_append(
         if (c_info_array) {
             c_info = c_info_array[i];
         }
+
+        ecs_dbg("%d: construct = %d", i, construct);
 
         grow_column(world, entities, column, c_info, 1, size, construct);
         

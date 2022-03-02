@@ -697,6 +697,10 @@ void ComponentLifecycle_emplace_existing(void);
 void ComponentLifecycle_emplace_singleton(void);
 void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void);
 void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void);
+void ComponentLifecycle_grow_no_default_ctor(void);
+void ComponentLifecycle_grow_no_default_ctor_move(void);
+void ComponentLifecycle_grow_no_default_ctor_move_w_component(void);
+void ComponentLifecycle_delete_no_default_ctor(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -3538,6 +3542,22 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "dtor_w_non_trivial_explicit_move",
         ComponentLifecycle_dtor_w_non_trivial_explicit_move
+    },
+    {
+        "grow_no_default_ctor",
+        ComponentLifecycle_grow_no_default_ctor
+    },
+    {
+        "grow_no_default_ctor_move",
+        ComponentLifecycle_grow_no_default_ctor_move
+    },
+    {
+        "grow_no_default_ctor_move_w_component",
+        ComponentLifecycle_grow_no_default_ctor_move_w_component
+    },
+    {
+        "delete_no_default_ctor",
+        ComponentLifecycle_delete_no_default_ctor
     }
 };
 
@@ -4313,7 +4333,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        39,
+        43,
         ComponentLifecycle_testcases
     },
     {
