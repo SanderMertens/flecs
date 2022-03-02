@@ -21899,8 +21899,36 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
+    ecs_entity_t unit = desc->unit;
+    if (unit) {
+        if (!ecs_has(world, unit, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as unit is not a unit",
+                ecs_get_name(world, unit), ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+    }
+
+    ecs_entity_t over = desc->over;
+    if (over) {
+        if (!unit) {
+            ecs_err("invalid unit '%s': cannot specify over without unit",
+                ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+        if (!ecs_has(world, over, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as over is not a unit",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+    }
+
     ecs_set(world, t, EcsUnit, {
         .symbol = (char*)desc->symbol,
+        .unit = unit,
+        .over = over
     });
 
     return t;
@@ -22393,12 +22421,19 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
+    dst->unit = src->unit;
+    dst->over = src->over;
 })
 
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
+    dst->unit = src->unit;
+    dst->over = src->over;
+
     src->symbol = NULL;
+    src->unit = 0;
+    src->over = 0;
 })
 
 static ECS_DTOR(EcsUnit, ptr, { dtor_unit(ptr); })
@@ -23332,7 +23367,9 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsUnit),
         .members = {
-            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)}
+            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
+            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)}
         }
     });
 }
@@ -27859,6 +27896,45 @@ error:
     return -1;
 }
 
+/* Serialize unit information */
+static
+int json_typeinfo_ser_unit(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    ecs_strbuf_t *str,
+    ecs_entity_t unit) 
+{
+    json_member(str, "unit");
+    json_path(str, world, unit);
+
+    const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
+    if (uptr) {
+        if (uptr->symbol) {
+            json_member(str, "symbol");
+            json_string(str, uptr->symbol);
+        }
+        ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
+        if (quantity) {
+            json_member(str, "quantity");
+            json_path(str, world, quantity);
+        }
+        if (uptr->unit) {
+            json_member(str, "sub");
+            json_object_push(str);
+            json_typeinfo_ser_unit(world, op, str, uptr->unit);
+            json_object_pop(str);
+        }
+        if (uptr->over) {
+            json_member(str, "over");
+            json_object_push(str);
+            json_typeinfo_ser_unit(world, op, str, uptr->over);
+            json_object_pop(str);
+        }
+    }
+
+    return 0;
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_typeinfo_ser_type_op(
@@ -27903,22 +27979,7 @@ int json_typeinfo_ser_type_op(
         json_next(str);
 
         json_object_push(str);
-        json_member(str, "unit");
-        json_path(str, world, unit);
-
-        const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
-        if (uptr) {
-            if (uptr->symbol) {
-                json_member(str, "symbol");
-                json_string(str, uptr->symbol);
-            }
-            ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
-            if (quantity) {
-                json_member(str, "quantity");
-                json_path(str, world, quantity);
-            }
-        }
-
+        json_typeinfo_ser_unit(world, op, str, unit);
         json_object_pop(str);
     }
 

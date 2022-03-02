@@ -1428,6 +1428,68 @@ void SerializeToJson_serialize_entity_w_type_info_unit_quantity() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_type_info_unit_over() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "seconds",
+        .symbol = "s"
+    });
+    test_assert(u_1 != 0);
+
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters",
+        .symbol = "m"
+    });
+    test_assert(u_2 != 0);
+
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters_per_second",
+        .symbol = "mps",
+        .unit = u_2,
+        .over = u_1
+    });
+    test_assert(u_3 != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u_3}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, T, {24});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{"
+                "\"pred\":\"T\", "
+                "\"value\":{\"value\":24}, "
+                "\"type_info\":{\"value\":[\"int\", {"
+                  "\"unit\":\"meters_per_second\", \"symbol\":\"mps\", "
+                  "\"sub\":{\"unit\":\"meters\", \"symbol\":\"m\"}, "
+                  "\"over\":{\"unit\":\"seconds\", \"symbol\":\"s\"}}]"
+                "}"
+            "}, "
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_wo_private() {
     ecs_world_t *world = ecs_init();
 
@@ -2419,6 +2481,83 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_quantity() {
         "\"type_info\":{"
             "\"T\":{\"value\":[\"int\", {"
                 "\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]"
+            "}"
+        "}, "
+        "\"results\":[{"
+            "\"ids\":[\"T\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"value\":24}, "
+                "{\"value\":16}"
+            "]]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "seconds",
+        .symbol = "s"
+    });
+    test_assert(u_1 != 0);
+
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters",
+        .symbol = "m"
+    });
+    test_assert(u_2 != 0);
+
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters_per_second",
+        .symbol = "mps",
+        .unit = u_2,
+        .over = u_1
+    });
+    test_assert(u_3 != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u_3}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, T, {24});
+    ecs_set(world, e2, T, {16});
+
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"T\"], "
+        "\"type_info\":{"
+            "\"T\":{\"value\":[\"int\", {"
+                "\"unit\":\"meters_per_second\", \"symbol\":\"mps\", "
+                "\"sub\":{\"unit\":\"meters\", \"symbol\":\"m\"}, "
+                "\"over\":{\"unit\":\"seconds\", \"symbol\":\"s\"}}]"
             "}"
         "}, "
         "\"results\":[{"
