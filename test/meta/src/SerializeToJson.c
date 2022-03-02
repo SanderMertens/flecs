@@ -1330,6 +1330,104 @@ void SerializeToJson_serialize_entity_w_type_info() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_type_info_unit() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "celsius",
+        .symbol = "°"
+    });
+    test_assert(u != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, T, {24});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{"
+                "\"pred\":\"T\", "
+                "\"value\":{\"value\":24}, "
+                "\"type_info\":{\"value\":[\"int\", {"
+                  "\"unit\":\"celsius\", \"symbol\":\"°\"}]"
+                "}"
+            "}, "
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_w_type_info_unit_quantity() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+        .name = "temperature"
+    });
+    test_assert(q != 0);
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "celsius",
+        .symbol = "°",
+        .quantity = q
+    });
+    test_assert(u != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "Foo");
+    ecs_set(world, e, T, {24});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{"
+        "\"path\":\"Foo\", "
+        "\"type\":["
+            "{"
+                "\"pred\":\"T\", "
+                "\"value\":{\"value\":24}, "
+                "\"type_info\":{\"value\":[\"int\", {"
+                  "\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]"
+                "}"
+            "}, "
+            "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
+        "]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_wo_private() {
     ecs_world_t *world = ecs_init();
 
@@ -2205,6 +2303,134 @@ void SerializeToJson_serialize_iterator_type_info_2_structs() {
             "], ["
                 "{\"x\":0, \"y\":0}, "
                 "{\"x\":0, \"y\":0}"
+            "]]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_type_info_w_unit() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "celsius",
+        .symbol = "°"
+    });
+    test_assert(u != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, T, {24});
+    ecs_set(world, e2, T, {16});
+
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"T\"], "
+        "\"type_info\":{"
+            "\"T\":{\"value\":[\"int\", {"
+                "\"unit\":\"celsius\", \"symbol\":\"°\"}]"
+            "}"
+        "}, "
+        "\"results\":[{"
+            "\"ids\":[\"T\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"value\":24}, "
+                "{\"value\":16}"
+            "]]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_iterator_type_info_w_unit_quantity() {
+    typedef struct {
+        ecs_i32_t value;    
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t qt = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+        .name = "temperature"
+    });
+    test_assert(qt != 0);
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "celsius",
+        .symbol = "°",
+        .quantity = qt
+    });
+    test_assert(u != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "Bar");
+
+    ecs_set(world, e1, T, {24});
+    ecs_set(world, e2, T, {16});
+
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"T\"], "
+        "\"type_info\":{"
+            "\"T\":{\"value\":[\"int\", {"
+                "\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]"
+            "}"
+        "}, "
+        "\"results\":[{"
+            "\"ids\":[\"T\"], "
+            "\"subjects\":[0], "
+            "\"is_set\":[true], "
+            "\"entities\":["
+                "\"Foo\", \"Bar\""
+            "], "
+            "\"values\":[["
+                "{\"value\":24}, "
+                "{\"value\":16}"
             "]]"
         "}]"
     "}");

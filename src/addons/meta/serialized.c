@@ -32,6 +32,7 @@ ecs_meta_type_op_t* ops_add(ecs_vector_t **ops, ecs_meta_type_op_kind_t kind) {
     op->name = NULL;
     op->members = NULL;
     op->type = 0;
+    op->unit = 0;
     return op;
 }
 
