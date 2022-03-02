@@ -45,6 +45,20 @@ void unregister_event_trigger(
 }
 
 static
+ecs_event_id_record_t* ensure_event_id_record(
+    ecs_map_t *map,
+    ecs_id_t id)
+{
+    ecs_event_id_record_t **idt = ecs_map_ensure(
+        map, ecs_event_id_record_t*, id);
+    if (!idt[0]) {
+        idt[0] = ecs_os_calloc_t(ecs_event_id_record_t);
+    }
+
+    return idt[0];
+}
+
+static
 void inc_trigger_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -52,8 +66,7 @@ void inc_trigger_count(
     ecs_id_t id,
     int32_t value)
 {
-    ecs_event_id_record_t *idt = ecs_map_ensure(
-        evt->event_ids, ecs_event_id_record_t, id);
+    ecs_event_id_record_t *idt = ensure_event_id_record(evt->event_ids, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
     
     int32_t result = idt->trigger_count += value;
@@ -74,6 +87,7 @@ void inc_trigger_count(
         /* Remove admin for id for event */
         if (!idt->triggers && !idt->set_triggers) {
             unregister_event_trigger(evt, id);
+            ecs_os_free(idt);
         }
     }
 }
@@ -100,12 +114,12 @@ void register_trigger_for_id(
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (!evt->event_ids) {
-            evt->event_ids = ecs_map_new(ecs_event_id_record_t, 1);
+            evt->event_ids = ecs_map_new(ecs_event_id_record_t*, 1);
         }
 
         /* Get triggers for (component) id for event */
-        ecs_event_id_record_t *idt = ecs_map_ensure(
-            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_event_id_record_t *idt = ensure_event_id_record(
+            evt->event_ids, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t **triggers = ECS_OFFSET(idt, triggers_offset);
@@ -182,8 +196,8 @@ void unregister_trigger_for_id(
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Get triggers for (component) id */
-        ecs_event_id_record_t *idt = ecs_map_get(
-            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_event_id_record_t *idt = ecs_map_get_ptr(
+            evt->event_ids, ecs_event_id_record_t*, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t **id_triggers = ECS_OFFSET(idt, triggers_offset);
@@ -272,7 +286,7 @@ ecs_event_id_record_t* get_triggers_for_id(
     const ecs_map_t *evt,
     ecs_id_t id)
 {
-    return ecs_map_get(evt, ecs_event_id_record_t, id);
+    return ecs_map_get_ptr(evt, ecs_event_id_record_t*, id);
 }
 
 bool flecs_check_triggers_for_event(

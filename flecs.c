@@ -25438,9 +25438,6 @@ error:
 
 ECS_DECLARE(EcsDuration);
     ECS_DECLARE(EcsSeconds);
-    ECS_DECLARE(EcsMinutes);
-    ECS_DECLARE(EcsHours);
-    ECS_DECLARE(EcsDays);
 
 ECS_DECLARE(EcsTime);
     ECS_DECLARE(EcsDate);
@@ -25451,6 +25448,9 @@ ECS_DECLARE(EcsDistance);
     ECS_DECLARE(EcsMeters);
     ECS_DECLARE(EcsMiles);
 
+ECS_DECLARE(EcsData);
+    ECS_DECLARE(EcsDataByte);
+
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -25459,13 +25459,41 @@ void FlecsUnitsImport(
     ecs_set_name_prefix(world, "Ecs");
 
     EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
-        .name = "Duration" 
-    });
+        .name = "Duration" });
+
+        EcsSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
+            .entity.name = "Seconds",
+            .quantity = EcsDuration,
+            .symbol = "s" });
 
     EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
-        .name = "Time" 
-    });
+        .name = "Time" });
 
+        EcsDate = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Date",
+            .quantity = EcsTime });
+
+    EcsDistance = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Distance" });
+
+        EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Meters",
+            .quantity = EcsDistance,
+            .symbol = "m" });
+
+        EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Miles",
+            .quantity = EcsDistance,
+            .symbol = "mi"
+        });
+
+    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Data" });
+
+        EcsDataByte = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Byte",
+            .quantity = EcsData,
+            .symbol = "B" });
 }
 
 #endif
@@ -32574,9 +32602,6 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
-#ifdef FLECS_UNITS
-    ECS_IMPORT(world, FlecsUnits);
-#endif
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
 #endif
@@ -32585,6 +32610,9 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);
+#endif
+#ifdef FLECS_UNITS
+    ECS_IMPORT(world, FlecsUnits);
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();
@@ -42876,6 +42904,20 @@ void unregister_event_trigger(
 }
 
 static
+ecs_event_id_record_t* ensure_event_id_record(
+    ecs_map_t *map,
+    ecs_id_t id)
+{
+    ecs_event_id_record_t **idt = ecs_map_ensure(
+        map, ecs_event_id_record_t*, id);
+    if (!idt[0]) {
+        idt[0] = ecs_os_calloc_t(ecs_event_id_record_t);
+    }
+
+    return idt[0];
+}
+
+static
 void inc_trigger_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -42883,8 +42925,7 @@ void inc_trigger_count(
     ecs_id_t id,
     int32_t value)
 {
-    ecs_event_id_record_t *idt = ecs_map_ensure(
-        evt->event_ids, ecs_event_id_record_t, id);
+    ecs_event_id_record_t *idt = ensure_event_id_record(evt->event_ids, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
     
     int32_t result = idt->trigger_count += value;
@@ -42905,6 +42946,7 @@ void inc_trigger_count(
         /* Remove admin for id for event */
         if (!idt->triggers && !idt->set_triggers) {
             unregister_event_trigger(evt, id);
+            ecs_os_free(idt);
         }
     }
 }
@@ -42931,12 +42973,12 @@ void register_trigger_for_id(
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (!evt->event_ids) {
-            evt->event_ids = ecs_map_new(ecs_event_id_record_t, 1);
+            evt->event_ids = ecs_map_new(ecs_event_id_record_t*, 1);
         }
 
         /* Get triggers for (component) id for event */
-        ecs_event_id_record_t *idt = ecs_map_ensure(
-            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_event_id_record_t *idt = ensure_event_id_record(
+            evt->event_ids, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t **triggers = ECS_OFFSET(idt, triggers_offset);
@@ -43013,8 +43055,8 @@ void unregister_trigger_for_id(
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Get triggers for (component) id */
-        ecs_event_id_record_t *idt = ecs_map_get(
-            evt->event_ids, ecs_event_id_record_t, id);
+        ecs_event_id_record_t *idt = ecs_map_get_ptr(
+            evt->event_ids, ecs_event_id_record_t*, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t **id_triggers = ECS_OFFSET(idt, triggers_offset);
@@ -43103,7 +43145,7 @@ ecs_event_id_record_t* get_triggers_for_id(
     const ecs_map_t *evt,
     ecs_id_t id)
 {
-    return ecs_map_get(evt, ecs_event_id_record_t, id);
+    return ecs_map_get_ptr(evt, ecs_event_id_record_t*, id);
 }
 
 bool flecs_check_triggers_for_event(
