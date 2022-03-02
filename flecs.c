@@ -25836,12 +25836,14 @@ ecs_entity_t ecs_run_intern(
     qit.param = param;
     qit.ctx = system_data->ctx;
     qit.binding_ctx = system_data->binding_ctx;
+
+    ecs_iter_action_t action = system_data->action;
+    it->callback = action;
     
     ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);
     } else {
-        ecs_iter_action_t action = system_data->action;
         if (it == &qit) {
             while (ecs_query_next(&qit)) {
                 action(&qit);
@@ -36298,13 +36300,51 @@ done:
     return false;
 }
 
+bool ecs_observer_default_run_action(ecs_iter_t *it) {
+    return observer_run(it);
+}
+
+static 
+void default_observer_run_callback(ecs_iter_t *it) {
+    observer_run(it);
+}
+
+/* For convenience, so applications can (in theory) use a single run callback 
+ * that uses ecs_iter_next to iterate results */
+static 
+bool default_observer_next_callback(ecs_iter_t *it) {
+    if (it->interrupted_by) {
+        return false;
+    } else {
+        it->interrupted_by = it->system;
+        return true;
+    }
+}
+
+static
+void observer_run_callback(ecs_iter_t *it) {
+    ecs_observer_t *o = it->ctx;
+    ecs_run_action_t run = o->run;
+
+    if (run) {
+        it->next = default_observer_next_callback;
+        it->callback = default_observer_run_callback;
+        it->interrupted_by = 0;
+        run(it);
+    } else {
+        observer_run(it);
+    }
+}
+
 static
 void observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
-    ecs_run_action_t callback = observer->run;
-    ecs_assert(callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_run_action_t run = observer->run;
+    if (!run) {
+        run = default_observer_run_callback;
+    }
 
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
@@ -36334,19 +36374,10 @@ void observer_yield_existing(
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
-            callback(&it);
+            run(&it);
             world->event_id ++;
         }
     }
-}
-
-static
-void observer_run_callback(ecs_iter_t *it) {
-    observer_run(it);
-}
-
-bool ecs_observer_default_run_action(ecs_iter_t *it) {
-    return observer_run(it);
 }
 
 ecs_entity_t ecs_observer_init(
@@ -36419,13 +36450,8 @@ ecs_entity_t ecs_observer_init(
         /* Observer must have at least one event */
         ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
 
-        ecs_run_action_t run = desc->run;
-        if (!run) {
-            run = observer_run_callback;
-        }
-
         observer->callback = desc->callback;
-        observer->run = run;
+        observer->run = desc->run;
         observer->self = desc->self;
         observer->ctx = desc->ctx;
         observer->binding_ctx = desc->binding_ctx;
@@ -36436,7 +36462,7 @@ ecs_entity_t ecs_observer_init(
 
         /* Create a trigger for each term in the filter */
         ecs_trigger_desc_t tdesc = {
-            .callback = run,
+            .callback = observer_run_callback,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
             .match_prefab = observer->filter.match_prefab,
@@ -40417,6 +40443,8 @@ bool ecs_query_next_instanced(
         }
     }
 
+    iter->skip_count = 0;
+
     for (node = iter->node; node != NULL; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
@@ -40518,7 +40546,6 @@ bool ecs_query_changed(
     if (it) {
         ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
         ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-        ecs_check(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
 
         ecs_query_table_match_t *qt = 
             (ecs_query_table_match_t*)it->priv.iter.query.prev;
@@ -40565,7 +40592,16 @@ void ecs_query_skip(
 {
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    it->priv.iter.query.prev = NULL;
+
+    if (it->instance_count > it->count) {
+        it->priv.iter.query.skip_count ++;
+        if (it->priv.iter.query.skip_count == it->instance_count) {
+            /* For non-instanced queries, make sure all entities are skipped */
+            it->priv.iter.query.prev = NULL;
+        }
+    } else {
+        it->priv.iter.query.prev = NULL;
+    }
 }
 
 bool ecs_query_orphaned(

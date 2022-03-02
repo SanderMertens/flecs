@@ -148,6 +148,7 @@ typedef struct ecs_query_iter_t {
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
+    int32_t skip_count;
 } ecs_query_iter_t;
 
 /** Snapshot-iterator specific data */

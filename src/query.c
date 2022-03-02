@@ -3073,6 +3073,8 @@ bool ecs_query_next_instanced(
         }
     }
 
+    iter->skip_count = 0;
+
     for (node = iter->node; node != NULL; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
@@ -3174,7 +3176,6 @@ bool ecs_query_changed(
     if (it) {
         ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
         ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-        ecs_check(it->count >= it->instance_count, ECS_INVALID_PARAMETER, NULL);
 
         ecs_query_table_match_t *qt = 
             (ecs_query_table_match_t*)it->priv.iter.query.prev;
@@ -3221,7 +3222,16 @@ void ecs_query_skip(
 {
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
-    it->priv.iter.query.prev = NULL;
+
+    if (it->instance_count > it->count) {
+        it->priv.iter.query.skip_count ++;
+        if (it->priv.iter.query.skip_count == it->instance_count) {
+            /* For non-instanced queries, make sure all entities are skipped */
+            it->priv.iter.query.prev = NULL;
+        }
+    } else {
+        it->priv.iter.query.prev = NULL;
+    }
 }
 
 bool ecs_query_orphaned(

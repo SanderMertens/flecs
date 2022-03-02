@@ -2972,6 +2972,7 @@ typedef struct ecs_query_iter_t {
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
+    int32_t skip_count;
 } ecs_query_iter_t;
 
 /** Snapshot-iterator specific data */
@@ -3105,6 +3106,7 @@ struct ecs_iter_t {
 
     /* Chained iterators */
     ecs_iter_next_action_t next;  /* Function to progress iterator */
+    ecs_iter_action_t callback;   /* Callback of system, trigger, observer */
     ecs_iter_fini_action_t fini;  /* Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 };

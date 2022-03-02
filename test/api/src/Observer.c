@@ -2800,7 +2800,6 @@ static void Run_w_iter_next(ecs_iter_t *it) {
     }
 }
 
-
 void Observer_custom_run_action() {
     ecs_world_t *world = ecs_mini();
 

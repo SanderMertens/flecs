@@ -488,6 +488,83 @@ void Query_query_change_prefab_term() {
     ecs_fini(world);
 }
 
+void Query_query_change_skip_non_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+    
+    ecs_entity_t base = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e3, Velocity);
+    ecs_add(world, e4, Velocity);
+
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e4, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(super), [out] Velocity");
+    test_assert(q != NULL);
+
+    ecs_query_t *q_r = ecs_query_new(world, "Position(super), [in] Velocity");
+    test_assert(q_r != NULL);
+
+    test_assert(ecs_query_changed(q_r, 0) == true);
+    ecs_iter_t it = ecs_query_iter(world, q_r);
+    while (ecs_query_next(&it)) { }
+    test_assert(ecs_query_changed(q_r, 0) == false);
+
+    it = ecs_query_iter(world, q);
+    int32_t count = 0;
+
+    while (ecs_query_next(&it)) {
+        test_int(it.count, 1);
+
+        if (it.entities[0] == e1) {
+            ecs_query_skip(&it); /* Skip one entity in table 1 */
+        }
+        if (it.entities[0] == e3 || it.entities[0] == e4) {
+            ecs_query_skip(&it); /* Skip both entities in table 1 */
+        }
+
+        count ++;
+    }
+
+    test_int(count, 4);
+
+    test_bool(ecs_query_changed(q_r, NULL), true);
+    
+    it = ecs_query_iter(world, q_r);
+    count = 0;
+
+    while (ecs_query_next(&it)) {
+        test_int(it.count, 1);
+
+        if (it.entities[0] == e1 || it.entities[0] == e2) {
+            /* Table changed, not all entities were skipped */
+            test_bool( ecs_query_changed(0, &it), true );
+        }
+        if (it.entities[0] == e3 || it.entities[0] == e4) {
+            /* Table did not change, all entities were skipped */
+            test_bool( ecs_query_changed(0, &it), false );
+        }
+
+        count ++;
+    }
+
+    test_int(count, 4);
+
+    test_bool(ecs_query_changed(q_r, NULL), false);
+
+    ecs_fini(world);
+}
+
 void Query_subquery_match_existing() {
     ecs_world_t *world = ecs_init();
 
