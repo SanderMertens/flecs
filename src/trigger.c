@@ -338,8 +338,8 @@ void init_iter(
         .id = it->event_id
     };
 
-    it->terms = &term;
     it->term_count = 1;
+    it->terms = &term;
     flecs_iter_populate_data(it->world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
 }

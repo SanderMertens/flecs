@@ -161,7 +161,7 @@ void observer_yield_existing(
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
         it.terms = observer->filter.terms;
-        it.term_count = observer->filter.term_count;
+        it.term_count = 1;
         it.term_index = pivot_term;
         it.system = observer->entity;
         it.ctx = observer;

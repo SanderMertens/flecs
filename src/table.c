@@ -1120,8 +1120,6 @@ int32_t flecs_table_append(
             c_info = c_info_array[i];
         }
 
-        ecs_dbg("%d: construct = %d", i, construct);
-
         grow_column(world, entities, column, c_info, 1, size, construct);
         
         ecs_assert(
@@ -2093,7 +2091,7 @@ int32_t ecs_table_type_to_storage_index(
     int32_t index)
 {
     ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < ecs_vector_count(table->type), 
+    ecs_check((index < ecs_vector_count(table->type)), 
         ECS_INVALID_PARAMETER, NULL);
     int32_t *storage_map = table->storage_map;
     if (storage_map) {
