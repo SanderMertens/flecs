@@ -455,6 +455,8 @@ void SerializeToJson_serialize_entity_w_enum_component(void);
 void SerializeToJson_serialize_entity_w_struct_and_enum_component(void);
 void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 void SerializeToJson_serialize_entity_w_type_info(void);
+void SerializeToJson_serialize_entity_w_type_info_unit(void);
+void SerializeToJson_serialize_entity_w_type_info_unit_quantity(void);
 void SerializeToJson_serialize_entity_wo_private(void);
 void SerializeToJson_serialize_entity_w_private(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
@@ -474,6 +476,8 @@ void SerializeToJson_serialize_iterator_type_info_2_components(void);
 void SerializeToJson_serialize_iterator_type_info_1_struct(void);
 void SerializeToJson_serialize_iterator_type_info_1_component_1_struct(void);
 void SerializeToJson_serialize_iterator_type_info_2_structs(void);
+void SerializeToJson_serialize_iterator_type_info_w_unit(void);
+void SerializeToJson_serialize_iterator_type_info_w_unit_quantity(void);
 void SerializeToJson_serialize_iterator_w_entity_label(void);
 void SerializeToJson_serialize_iterator_w_var_labels(void);
 void SerializeToJson_serialize_iterator_w_var_component(void);
@@ -2245,6 +2249,14 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_type_info
     },
     {
+        "serialize_entity_w_type_info_unit",
+        SerializeToJson_serialize_entity_w_type_info_unit
+    },
+    {
+        "serialize_entity_w_type_info_unit_quantity",
+        SerializeToJson_serialize_entity_w_type_info_unit_quantity
+    },
+    {
         "serialize_entity_wo_private",
         SerializeToJson_serialize_entity_wo_private
     },
@@ -2319,6 +2331,14 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_type_info_2_structs",
         SerializeToJson_serialize_iterator_type_info_2_structs
+    },
+    {
+        "serialize_iterator_type_info_w_unit",
+        SerializeToJson_serialize_iterator_type_info_w_unit
+    },
+    {
+        "serialize_iterator_type_info_w_unit_quantity",
+        SerializeToJson_serialize_iterator_type_info_w_unit_quantity
     },
     {
         "serialize_iterator_w_entity_label",
@@ -2604,7 +2624,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        72,
+        76,
         SerializeToJson_testcases
     },
     {

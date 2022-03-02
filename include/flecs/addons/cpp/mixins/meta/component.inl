@@ -8,7 +8,11 @@ untyped_component& member(const char *name, flecs::entity_t type_id, int32_t cou
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     flecs::entity e(m_world, eid);
-    e.set(flecs::Member{type_id, count});
+
+    Member m = {};
+    m.type = type_id;
+    m.count = count;
+    e.set<Member>(m);
 
     return *this;
 }

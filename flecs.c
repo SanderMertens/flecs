@@ -21955,6 +21955,7 @@ ecs_meta_type_op_t* ops_add(ecs_vector_t **ops, ecs_meta_type_op_kind_t kind) {
     op->name = NULL;
     op->members = NULL;
     op->type = 0;
+    op->unit = 0;
     return op;
 }
 
@@ -27724,8 +27725,6 @@ int json_typeinfo_ser_primitive(
     ecs_primitive_kind_t kind,
     ecs_strbuf_t *str) 
 {
-    json_array_push(str);
-
     switch(kind) {
     case EcsBool:
         json_string(str, "bool");
@@ -27759,7 +27758,6 @@ int json_typeinfo_ser_primitive(
     default:
         return -1;
     }
-    json_array_pop(str);
 
     return 0;
 }
@@ -27789,10 +27787,8 @@ void json_typeinfo_ser_enum(
     ecs_entity_t type,
     ecs_strbuf_t *str)
 {
-    json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"enum\"");
     json_typeinfo_ser_constants(world, type, str);
-    json_array_pop(str);
 }
 
 static
@@ -27801,10 +27797,8 @@ void json_typeinfo_ser_bitmask(
     ecs_entity_t type,
     ecs_strbuf_t *str)
 {
-    json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"bitmask\"");
     json_typeinfo_ser_constants(world, type, str);
-    json_array_pop(str);
 }
 
 static
@@ -27814,7 +27808,6 @@ int json_typeinfo_ser_array(
     int32_t count,
     ecs_strbuf_t *str)
 {
-    json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"array\"");
 
     json_next(str);
@@ -27823,8 +27816,6 @@ int json_typeinfo_ser_array(
     }
 
     ecs_strbuf_list_append(str, "%u", count);
-
-    json_array_pop(str);
     return 0;
 error:
     return -1;
@@ -27841,6 +27832,7 @@ int json_typeinfo_ser_array_type(
     if (json_typeinfo_ser_array(world, arr->type, arr->count, str)) {
         goto error;
     }
+
     return 0;
 error:
     return -1;
@@ -27855,7 +27847,6 @@ int json_typeinfo_ser_vector(
     const EcsVector *arr = ecs_get(world, type, EcsVector);
     ecs_assert(arr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    json_array_push(str);
     ecs_strbuf_list_appendstr(str, "\"vector\"");
 
     json_next(str);
@@ -27863,7 +27854,6 @@ int json_typeinfo_ser_vector(
         goto error;
     }
 
-    json_array_pop(str);
     return 0;
 error:
     return -1;
@@ -27876,6 +27866,8 @@ int json_typeinfo_ser_type_op(
     ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str) 
 {
+    json_array_push(str);
+
     switch(op->kind) {
     case EcsOpPush:
     case EcsOpPop:
@@ -27905,6 +27897,33 @@ int json_typeinfo_ser_type_op(
         break;
     }
 
+    ecs_entity_t unit = op->unit;
+    if (unit) {
+        json_next(str);
+        json_next(str);
+
+        json_object_push(str);
+        json_member(str, "unit");
+        json_path(str, world, unit);
+
+        const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
+        if (uptr) {
+            if (uptr->symbol) {
+                json_member(str, "symbol");
+                json_string(str, uptr->symbol);
+            }
+            ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
+            if (quantity) {
+                json_member(str, "quantity");
+                json_path(str, world, quantity);
+            }
+        }
+
+        json_object_pop(str);
+    }
+
+    json_array_pop(str);
+
     return 0;
 error:
     return -1;
@@ -27928,7 +27947,9 @@ int json_typeinfo_ser_type_ops(
 
             int32_t elem_count = op->count;
             if (elem_count > 1 && op != ops) {
+                json_array_push(str);
                 json_typeinfo_ser_array(world, op->type, op->count, str);
+                json_array_pop(str);
                 i += op->op_count - 1;
                 continue;
             }
