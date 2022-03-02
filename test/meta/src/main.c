@@ -152,8 +152,13 @@ void Units_cursor_get_unit(void);
 void Units_cursor_get_unit_type(void);
 void Units_unit_w_quantity(void);
 void Units_unit_w_self_quantity(void);
+void Units_unit_w_sub(void);
+void Units_unit_w_over(void);
 void Units_member_w_invalid_unit(void);
 void Units_unit_w_invalid_quantity(void);
+void Units_unit_w_invalid_sub(void);
+void Units_unit_w_invalid_over(void);
+void Units_unit_w_over_no_sub(void);
 void Units_define_twice(void);
 void Units_define_twice_different_quantity(void);
 void Units_define_twice_remove_quantity(void);
@@ -457,6 +462,7 @@ void SerializeToJson_serialize_entity_w_invalid_enum_component(void);
 void SerializeToJson_serialize_entity_w_type_info(void);
 void SerializeToJson_serialize_entity_w_type_info_unit(void);
 void SerializeToJson_serialize_entity_w_type_info_unit_quantity(void);
+void SerializeToJson_serialize_entity_w_type_info_unit_over(void);
 void SerializeToJson_serialize_entity_wo_private(void);
 void SerializeToJson_serialize_entity_w_private(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
@@ -478,6 +484,7 @@ void SerializeToJson_serialize_iterator_type_info_1_component_1_struct(void);
 void SerializeToJson_serialize_iterator_type_info_2_structs(void);
 void SerializeToJson_serialize_iterator_type_info_w_unit(void);
 void SerializeToJson_serialize_iterator_type_info_w_unit_quantity(void);
+void SerializeToJson_serialize_iterator_type_info_w_unit_over(void);
 void SerializeToJson_serialize_iterator_w_entity_label(void);
 void SerializeToJson_serialize_iterator_w_var_labels(void);
 void SerializeToJson_serialize_iterator_w_var_component(void);
@@ -1067,12 +1074,32 @@ bake_test_case Units_testcases[] = {
         Units_unit_w_self_quantity
     },
     {
+        "unit_w_sub",
+        Units_unit_w_sub
+    },
+    {
+        "unit_w_over",
+        Units_unit_w_over
+    },
+    {
         "member_w_invalid_unit",
         Units_member_w_invalid_unit
     },
     {
         "unit_w_invalid_quantity",
         Units_unit_w_invalid_quantity
+    },
+    {
+        "unit_w_invalid_sub",
+        Units_unit_w_invalid_sub
+    },
+    {
+        "unit_w_invalid_over",
+        Units_unit_w_invalid_over
+    },
+    {
+        "unit_w_over_no_sub",
+        Units_unit_w_over_no_sub
     },
     {
         "define_twice",
@@ -2257,6 +2284,10 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_type_info_unit_quantity
     },
     {
+        "serialize_entity_w_type_info_unit_over",
+        SerializeToJson_serialize_entity_w_type_info_unit_over
+    },
+    {
         "serialize_entity_wo_private",
         SerializeToJson_serialize_entity_wo_private
     },
@@ -2339,6 +2370,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_type_info_w_unit_quantity",
         SerializeToJson_serialize_iterator_type_info_w_unit_quantity
+    },
+    {
+        "serialize_iterator_type_info_w_unit_over",
+        SerializeToJson_serialize_iterator_type_info_w_unit_over
     },
     {
         "serialize_iterator_w_entity_label",
@@ -2582,7 +2617,7 @@ static bake_test_suite suites[] = {
         "Units",
         NULL,
         NULL,
-        11,
+        16,
         Units_testcases
     },
     {
@@ -2624,7 +2659,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        76,
+        78,
         SerializeToJson_testcases
     },
     {

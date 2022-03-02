@@ -829,11 +829,11 @@ void Entity_is_0_valid() {
 void Entity_is_junk_valid() {
     ecs_world_t *world = ecs_init();
 
-    test_bool(ecs_is_valid(world, 500), true);
+    test_bool(ecs_is_valid(world, 1000), true);
     test_bool(ecs_is_valid(world, 0xFFFFFFFF), true);
     test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCD), false);
     
-    test_bool(ecs_is_alive(world, 500), false);
+    test_bool(ecs_is_alive(world, 1000), false);
     test_bool(ecs_is_alive(world, 0xFFFFFFFF), false);
     test_bool(ecs_is_alive(world, 0x4DCDCDCDCDCD), false);
 

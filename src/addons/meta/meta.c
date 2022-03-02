@@ -167,12 +167,19 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
+    dst->unit = src->unit;
+    dst->over = src->over;
 })
 
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
+    dst->unit = src->unit;
+    dst->over = src->over;
+
     src->symbol = NULL;
+    src->unit = 0;
+    src->over = 0;
 })
 
 static ECS_DTOR(EcsUnit, ptr, { dtor_unit(ptr); })
@@ -1106,7 +1113,9 @@ void FlecsMetaImport(
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsUnit),
         .members = {
-            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)}
+            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
+            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)}
         }
     });
 }

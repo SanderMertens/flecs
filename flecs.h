@@ -9167,6 +9167,8 @@ typedef struct EcsVector {
 
 typedef struct EcsUnit {
     char *symbol;
+    ecs_entity_t unit; /* Derived from unit (e.g. "meters") */
+    ecs_entity_t over; /* Over unit (e.g. "per second") */
 } EcsUnit;
 
 /** Serializer utilities */
@@ -9455,6 +9457,12 @@ typedef struct ecs_unit_desc_t {
 
     /* Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
+
+    /* Derived unit, e.g. "meters" (optional) */
+    ecs_entity_t unit;
+
+    /* Over unit, e.g. "per second" (optional) */
+    ecs_entity_t over;
 } ecs_unit_desc_t;
 
 /** Create a new unit */

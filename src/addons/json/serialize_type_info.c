@@ -147,6 +147,45 @@ error:
     return -1;
 }
 
+/* Serialize unit information */
+static
+int json_typeinfo_ser_unit(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    ecs_strbuf_t *str,
+    ecs_entity_t unit) 
+{
+    json_member(str, "unit");
+    json_path(str, world, unit);
+
+    const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
+    if (uptr) {
+        if (uptr->symbol) {
+            json_member(str, "symbol");
+            json_string(str, uptr->symbol);
+        }
+        ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
+        if (quantity) {
+            json_member(str, "quantity");
+            json_path(str, world, quantity);
+        }
+        if (uptr->unit) {
+            json_member(str, "sub");
+            json_object_push(str);
+            json_typeinfo_ser_unit(world, op, str, uptr->unit);
+            json_object_pop(str);
+        }
+        if (uptr->over) {
+            json_member(str, "over");
+            json_object_push(str);
+            json_typeinfo_ser_unit(world, op, str, uptr->over);
+            json_object_pop(str);
+        }
+    }
+
+    return 0;
+}
+
 /* Forward serialization to the different type kinds */
 static
 int json_typeinfo_ser_type_op(
@@ -191,22 +230,7 @@ int json_typeinfo_ser_type_op(
         json_next(str);
 
         json_object_push(str);
-        json_member(str, "unit");
-        json_path(str, world, unit);
-
-        const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
-        if (uptr) {
-            if (uptr->symbol) {
-                json_member(str, "symbol");
-                json_string(str, uptr->symbol);
-            }
-            ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
-            if (quantity) {
-                json_member(str, "quantity");
-                json_path(str, world, quantity);
-            }
-        }
-
+        json_typeinfo_ser_unit(world, op, str, unit);
         json_object_pop(str);
     }
 

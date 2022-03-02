@@ -211,8 +211,36 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
+    ecs_entity_t unit = desc->unit;
+    if (unit) {
+        if (!ecs_has(world, unit, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as unit is not a unit",
+                ecs_get_name(world, unit), ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+    }
+
+    ecs_entity_t over = desc->over;
+    if (over) {
+        if (!unit) {
+            ecs_err("invalid unit '%s': cannot specify over without unit",
+                ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+        if (!ecs_has(world, over, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as over is not a unit",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            ecs_delete(world, t);
+            return 0;
+        }
+    }
+
     ecs_set(world, t, EcsUnit, {
         .symbol = (char*)desc->symbol,
+        .unit = unit,
+        .over = over
     });
 
     return t;
