@@ -28114,12 +28114,12 @@ bool rest_reply(
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             char *path = &req->path[7];
-            ecs_dbg("rest: request entity '%s'", path);
+            ecs_dbg_2("rest: request entity '%s'", path);
 
             ecs_entity_t e = ecs_lookup_path_w_sep(
                 world, 0, path, "/", NULL, false);
             if (!e) {
-                ecs_dbg("rest: entity '%s' not found", path);
+                ecs_dbg_2("rest: entity '%s' not found", path);
                 reply_error(reply, "entity '%s' not found", path);
                 reply->code = 404;
                 return true;
@@ -28140,7 +28140,7 @@ bool rest_reply(
                 return true;
             }
 
-            ecs_dbg("rest: request query '%s'", q);
+            ecs_dbg_2("rest: request query '%s'", q);
             bool prev_color = ecs_log_enable_colors(false);
             ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
             ecs_os_api.log_ = rest_capture_log;
@@ -28458,6 +28458,9 @@ typedef int ecs_http_socket_t;
 /* Minimum interval between dequeueing requests (ms) */
 #define ECS_HTTP_MIN_DEQUEUE_INTERVAL (100)
 
+/* Minimum interval between printing statistics (ms) */
+#define ECS_HTTP_MIN_STATS_INTERVAL (5000)
+
 /* Max length of headers in reply */
 #define ECS_HTTP_REPLY_HEADER_SIZE (1024)
 
@@ -28487,7 +28490,14 @@ struct ecs_http_server_t {
     uint16_t port;
     const char *ipaddr;
 
-    FLECS_FLOAT delta_time; /* used to not lock request queue too often */
+    FLECS_FLOAT dequeue_timeout; /* used to not lock request queue too often */
+    FLECS_FLOAT stats_timeout; /* used for periodic reporting of statistics */
+
+    FLECS_FLOAT request_time; /* time spent on requests in last stats interval */
+    FLECS_FLOAT request_time_total; /* total time spent on requests */
+    int32_t requests_processed; /* requests processed in last stats interval */
+    int32_t requests_processed_total; /* total requests processed */
+    int32_t dequeue_count; /* number of dequeues in last stats interval */
 };
 
 /** Fragment state, used by HTTP request parser */
@@ -29242,21 +29252,21 @@ void handle_request(
 }
 
 static
-void dequeue_requests(
+int32_t dequeue_requests(
     ecs_http_server_t *srv,
     float delta_time)
 {
     ecs_os_mutex_lock(srv->lock);
 
-    int32_t i, count = flecs_sparse_count(srv->requests);
-    for (i = count - 1; i >= 1; i --) {
+    int32_t i, request_count = flecs_sparse_count(srv->requests);
+    for (i = request_count - 1; i >= 1; i --) {
         ecs_http_request_impl_t *req = flecs_sparse_get_dense(
             srv->requests, ecs_http_request_impl_t, i);
         handle_request(srv, req);
     }
 
-    count = flecs_sparse_count(srv->connections);
-    for (i = count - 1; i >= 1; i --) {
+    int32_t connections_count = flecs_sparse_count(srv->connections);
+    for (i = connections_count - 1; i >= 1; i --) {
         ecs_http_connection_impl_t *conn = flecs_sparse_get_dense(
             srv->connections, ecs_http_connection_impl_t, i);
 
@@ -29274,6 +29284,8 @@ void dequeue_requests(
     }
 
     ecs_os_mutex_unlock(srv->lock);
+
+    return request_count;
 }
 
 const char* ecs_http_get_header(
@@ -29422,10 +29434,35 @@ void ecs_http_server_dequeue(
     ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
     
-    srv->delta_time += delta_time;
-    if ((1000 * srv->delta_time) > (FLECS_FLOAT)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
-        dequeue_requests(srv, srv->delta_time);
-        srv->delta_time = 0;
+    srv->dequeue_timeout += delta_time;
+    srv->stats_timeout += delta_time;
+
+    if ((1000 * srv->dequeue_timeout) > 
+        (FLECS_FLOAT)ECS_HTTP_MIN_DEQUEUE_INTERVAL) 
+    {
+        srv->dequeue_timeout = 0;
+
+        ecs_time_t t = {0};
+        ecs_time_measure(&t);
+        int32_t request_count = dequeue_requests(srv, srv->dequeue_timeout);
+        srv->requests_processed += request_count;
+        srv->requests_processed_total += request_count;
+        FLECS_FLOAT time_spent = (FLECS_FLOAT)ecs_time_measure(&t);
+        srv->request_time += time_spent;
+        srv->request_time_total += time_spent;
+        srv->dequeue_count ++;
+    }
+
+    if ((1000 * srv->stats_timeout) > 
+        (FLECS_FLOAT)ECS_HTTP_MIN_STATS_INTERVAL) 
+    {
+        srv->stats_timeout = 0;
+        ecs_dbg("http: processed %d requests in %.3fs (avg %.3fs / dequeue)",
+            srv->requests_processed, (double)srv->request_time, 
+            (double)(srv->request_time / (FLECS_FLOAT)srv->dequeue_count));
+        srv->requests_processed = 0;
+        srv->request_time = 0;
+        srv->dequeue_count = 0;
     }
 
 error:

@@ -152,12 +152,12 @@ bool rest_reply(
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             char *path = &req->path[7];
-            ecs_dbg("rest: request entity '%s'", path);
+            ecs_dbg_2("rest: request entity '%s'", path);
 
             ecs_entity_t e = ecs_lookup_path_w_sep(
                 world, 0, path, "/", NULL, false);
             if (!e) {
-                ecs_dbg("rest: entity '%s' not found", path);
+                ecs_dbg_2("rest: entity '%s' not found", path);
                 reply_error(reply, "entity '%s' not found", path);
                 reply->code = 404;
                 return true;
@@ -178,7 +178,7 @@ bool rest_reply(
                 return true;
             }
 
-            ecs_dbg("rest: request query '%s'", q);
+            ecs_dbg_2("rest: request query '%s'", q);
             bool prev_color = ecs_log_enable_colors(false);
             ecs_os_api_log_t prev_log_ = ecs_os_api.log_;
             ecs_os_api.log_ = rest_capture_log;
