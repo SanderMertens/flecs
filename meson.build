@@ -40,6 +40,7 @@ flecs_src = files(
     'src/addons/stats.c',
     'src/addons/system/system.c',
     'src/addons/timer.c',    
+    'src/addons/units.c',
     'src/datastructures/bitset.c',
     'src/datastructures/hash.c',
     'src/datastructures/hashmap.c',
