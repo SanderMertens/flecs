@@ -190,6 +190,7 @@ ecs_vector_t* serialize_struct(
         
         const char *member_name = member->name;
         op->name = member_name;
+        op->unit = member->unit;
         op->op_count = ecs_vector_count(ops) - cur;
 
         ecs_size_t len = ecs_os_strlen(member_name);

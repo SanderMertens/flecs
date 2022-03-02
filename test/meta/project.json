@@ -162,6 +162,21 @@
                 "vector_i32",
                 "vector_struct"
             ]
+        },  {
+            "id": "Units",
+            "testcases": [
+                "member_w_unit",
+                "member_w_unit_type",
+                "cursor_get_unit",
+                "cursor_get_unit_type",
+                "unit_w_quantity",
+                "unit_w_self_quantity",
+                "member_w_invalid_unit",
+                "unit_w_invalid_quantity",
+                "define_twice",
+                "define_twice_different_quantity",
+                "define_twice_remove_quantity"
+            ]
         }, {
             "id": "Serialized",
             "testcases": [

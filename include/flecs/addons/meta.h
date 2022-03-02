@@ -103,7 +103,9 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMember);
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
+FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);
 FLECS_API extern const ecs_entity_t EcsConstant;
+FLECS_API extern const ecs_entity_t EcsQuantity;
 
 /** Primitive type component ids */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_bool_t);
@@ -168,6 +170,7 @@ typedef struct EcsPrimitive {
 typedef struct EcsMember {
     ecs_entity_t type;
     int32_t count;
+    ecs_entity_t unit;
 } EcsMember;
 
 /* Element type of members vector in EcsStruct */
@@ -179,6 +182,10 @@ typedef struct ecs_member_t {
     /* May be set when used with ecs_struct_desc_t */
     int32_t count;
     int32_t offset;
+
+    /* May be set when used with ecs_struct_desc_t, will be auto-populated if
+     * type entity is also a unit */
+    ecs_entity_t unit;
 
     /* Should not be set by ecs_struct_desc_t */
     ecs_size_t size;
@@ -231,6 +238,9 @@ typedef struct EcsVector {
     ecs_entity_t type;
 } EcsVector;
 
+typedef struct EcsUnit {
+    char *symbol;
+} EcsUnit;
 
 /** Serializer utilities */
 
@@ -274,6 +284,7 @@ typedef struct ecs_meta_type_op_t {
     int32_t op_count;       /* Number of operations until next field or end */
     ecs_size_t size;        /* Size of type of operation */
     ecs_entity_t type;
+    ecs_entity_t unit;
     ecs_hashmap_t *members; /* string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
@@ -359,6 +370,16 @@ bool ecs_meta_is_collection(
 /** Get type of current element. */
 FLECS_API
 ecs_entity_t ecs_meta_get_type(
+    ecs_meta_cursor_t *cursor);
+
+/** Get unit of current element. */
+FLECS_API
+ecs_entity_t ecs_meta_get_unit(
+    ecs_meta_cursor_t *cursor);
+
+/** Get member name of current member */
+FLECS_API
+const char* ecs_meta_get_member(
     ecs_meta_cursor_t *cursor);
 
 /** The set functions assign the field with the specified value. If the value
@@ -497,6 +518,29 @@ FLECS_API
 ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
+
+/** Used with ecs_unit_init. */
+typedef struct ecs_unit_desc_t {
+    ecs_entity_desc_t entity;
+    
+    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+    const char *symbol;
+
+    /* Unit quantity, e.g. distance, percentage, weight. (optional) */
+    ecs_entity_t quantity;
+} ecs_unit_desc_t;
+
+/** Create a new unit */
+FLECS_API
+ecs_entity_t ecs_unit_init(
+    ecs_world_t *world,
+    const ecs_unit_desc_t *desc);
+
+/** Create a new quantity */
+FLECS_API
+ecs_entity_t ecs_quantity_init(
+    ecs_world_t *world,
+    const ecs_entity_desc_t *desc);
 
 /* Module import */
 FLECS_API

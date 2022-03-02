@@ -145,6 +145,19 @@ void VectorTypes_vector_bool(void);
 void VectorTypes_vector_i32(void);
 void VectorTypes_vector_struct(void);
 
+// Testsuite 'Units'
+void Units_member_w_unit(void);
+void Units_member_w_unit_type(void);
+void Units_cursor_get_unit(void);
+void Units_cursor_get_unit_type(void);
+void Units_unit_w_quantity(void);
+void Units_unit_w_self_quantity(void);
+void Units_member_w_invalid_unit(void);
+void Units_unit_w_invalid_quantity(void);
+void Units_define_twice(void);
+void Units_define_twice_different_quantity(void);
+void Units_define_twice_remove_quantity(void);
+
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
 void Serialized_ops_bool(void);
@@ -1021,6 +1034,53 @@ bake_test_case VectorTypes_testcases[] = {
     {
         "vector_struct",
         VectorTypes_vector_struct
+    }
+};
+
+bake_test_case Units_testcases[] = {
+    {
+        "member_w_unit",
+        Units_member_w_unit
+    },
+    {
+        "member_w_unit_type",
+        Units_member_w_unit_type
+    },
+    {
+        "cursor_get_unit",
+        Units_cursor_get_unit
+    },
+    {
+        "cursor_get_unit_type",
+        Units_cursor_get_unit_type
+    },
+    {
+        "unit_w_quantity",
+        Units_unit_w_quantity
+    },
+    {
+        "unit_w_self_quantity",
+        Units_unit_w_self_quantity
+    },
+    {
+        "member_w_invalid_unit",
+        Units_member_w_invalid_unit
+    },
+    {
+        "unit_w_invalid_quantity",
+        Units_unit_w_invalid_quantity
+    },
+    {
+        "define_twice",
+        Units_define_twice
+    },
+    {
+        "define_twice_different_quantity",
+        Units_define_twice_different_quantity
+    },
+    {
+        "define_twice_remove_quantity",
+        Units_define_twice_remove_quantity
     }
 };
 
@@ -2499,6 +2559,13 @@ static bake_test_suite suites[] = {
         VectorTypes_testcases
     },
     {
+        "Units",
+        NULL,
+        NULL,
+        11,
+        Units_testcases
+    },
+    {
         "Serialized",
         NULL,
         NULL,
@@ -2557,5 +2624,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 15);
+    return bake_test_run("meta", argc, argv, suites, 16);
 }

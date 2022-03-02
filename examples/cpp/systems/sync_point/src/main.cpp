@@ -78,6 +78,6 @@ int main(int, char *[]) {
     //
     // The "merge" lines indicate sync points.
     //
-    // Removing the '.term<Velocity>().inout(flecs::Out).set(flecs::Nothing)'
+    // Removing '.term<Velocity>().inout(flecs::Out).set(flecs::Nothing)'
     // from the system will remove the first sync point from the schedule.
 }

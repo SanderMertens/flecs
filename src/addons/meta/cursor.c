@@ -396,6 +396,22 @@ ecs_entity_t ecs_meta_get_type(
     return op->type;
 }
 
+ecs_entity_t ecs_meta_get_unit(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    return op->unit;
+}
+
+const char* ecs_meta_get_member(
+    ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = get_scope(cursor);
+    ecs_meta_type_op_t *op = get_op(scope);
+    return op->name;
+}
+
 /* Utility macro's to let the compiler do the conversion work for us */
 #define set_T(T, ptr, value)\
     ((T*)ptr)[0] = ((T)value)
