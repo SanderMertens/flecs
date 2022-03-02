@@ -3185,8 +3185,6 @@ int32_t flecs_table_append(
             c_info = c_info_array[i];
         }
 
-        ecs_dbg("%d: construct = %d", i, construct);
-
         grow_column(world, entities, column, c_info, 1, size, construct);
         
         ecs_assert(
@@ -36374,7 +36372,7 @@ void observer_yield_existing(
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
         it.terms = observer->filter.terms;
-        it.term_count = observer->filter.term_count;
+        it.term_count = 1;
         it.term_index = pivot_term;
         it.system = observer->entity;
         it.ctx = observer;
@@ -42877,8 +42875,8 @@ void init_iter(
         .id = it->event_id
     };
 
-    it->terms = &term;
     it->term_count = 1;
+    it->terms = &term;
     flecs_iter_populate_data(it->world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
 }
