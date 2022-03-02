@@ -53,6 +53,7 @@
 #define FLECS_TIMER         /* Timer support */
 #define FLECS_META          /* Reflection support */
 #define FLECS_META_C        /* Utilities for populating reflection data */
+#define FLECS_UNITS         /* Builtin standard units */
 #define FLECS_EXPR          /* Parsing strings to/from component values */
 #define FLECS_JSON          /* Parsing JSON to/from component values */
 #define FLECS_DOC           /* Document entities & components */
@@ -4246,6 +4247,8 @@ void* ecs_record_get_column(
 
 /** @} */
 
+#include "flecs/addons/flecs_c.h"
+
 #ifdef FLECS_APP
 #include "flecs/addons/app.h"
 #endif
@@ -4272,6 +4275,9 @@ void* ecs_record_get_column(
 #endif
 #if defined(FLECS_EXPR) || defined(FLECS_META_C)
 #define FLECS_META
+#endif
+#ifdef FLECS_UNITS
+#include "flecs/addons/units.h"
 #endif
 #ifdef FLECS_META
 #include "flecs/addons/meta.h"
@@ -4306,8 +4312,6 @@ void* ecs_record_get_column(
 #ifdef FLECS_MODULE
 #include "flecs/addons/module.h"
 #endif
-
-#include "flecs/addons/flecs_c.h"
 
 #ifdef FLECS_CPP
 #include "flecs/addons/flecs_cpp.h"

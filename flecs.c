@@ -25433,6 +25433,44 @@ error:
 #endif
 
 
+
+#ifdef FLECS_UNITS
+
+ECS_DECLARE(EcsDuration);
+    ECS_DECLARE(EcsSeconds);
+    ECS_DECLARE(EcsMinutes);
+    ECS_DECLARE(EcsHours);
+    ECS_DECLARE(EcsDays);
+
+ECS_DECLARE(EcsTime);
+    ECS_DECLARE(EcsDate);
+
+ECS_DECLARE(EcsPercent);
+
+ECS_DECLARE(EcsDistance);
+    ECS_DECLARE(EcsMeters);
+    ECS_DECLARE(EcsMiles);
+
+void FlecsUnitsImport(
+    ecs_world_t *world)
+{
+    ECS_MODULE(world, FlecsUnits);
+
+    ecs_set_name_prefix(world, "Ecs");
+
+    EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Duration" 
+    });
+
+    EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Time" 
+    });
+
+}
+
+#endif
+
+
 #ifdef FLECS_SNAPSHOT
 
 
@@ -32535,6 +32573,9 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
+#endif
+#ifdef FLECS_UNITS
+    ECS_IMPORT(world, FlecsUnits);
 #endif
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);

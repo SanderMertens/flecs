@@ -673,6 +673,9 @@ ecs_world_t *ecs_init(void) {
 #ifdef FLECS_REST
     ECS_IMPORT(world, FlecsRest);
 #endif
+#ifdef FLECS_UNITS
+    ECS_IMPORT(world, FlecsUnits);
+#endif
     ecs_trace("addons imported!");
     ecs_log_pop();
 #endif

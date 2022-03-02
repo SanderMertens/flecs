@@ -1789,7 +1789,8 @@
                "notify_propagated_twice",
                "trigger_superset_wildcard",
                "remove_wildcard_1_id",
-               "remove_wildcard_2_ids"
+               "remove_wildcard_2_ids",
+               "create_triggers_in_trigger"
            ]
         }, {
             "id": "Observer",
