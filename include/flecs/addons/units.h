@@ -33,7 +33,7 @@ extern     ECS_DECLARE(EcsSeconds);
 extern ECS_DECLARE(EcsTime);
 extern     ECS_DECLARE(EcsDate);
 
-extern ECS_DECLARE(EcsPercent);
+extern ECS_DECLARE(EcsPercentage);
 
 extern ECS_DECLARE(EcsDistance);
 extern     ECS_DECLARE(EcsMeters);
