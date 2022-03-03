@@ -521,7 +521,13 @@
                 "serialize_iterator_w_var_component",
                 "serialize_iterator_w_optional_tag",
                 "serialize_iterator_w_optional_component",
-                "serialize_iterator_w_optional_reflected_component"
+                "serialize_iterator_w_optional_reflected_component",
+                "serialize_iterator_w_inout_filter_tag",
+                "serialize_iterator_w_inout_filter_component",
+                "serialize_iterator_w_inout_filter_reflected_component",
+                "serialize_iterator_w_inout_out_tag",
+                "serialize_iterator_w_inout_out_component",
+                "serialize_iterator_w_inout_out_reflected_component"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

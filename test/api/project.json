@@ -1660,7 +1660,7 @@
                 "test_this_w_wildcard_w_isa",
                 "test_this_w_wildcard_w_isa_2_lvls",
                 "test_this_w_wildcard_w_2_isa",
-                "test_this_w_wildcard_w_isa_no_owned"
+                "rule_w_inout_filter"
             ]
         }, {
             "id": "TransitiveRules",

@@ -361,6 +361,24 @@ error:
     return false;
 }
 
+bool ecs_term_is_writeonly(
+    const ecs_iter_t *it,
+    int32_t term_index)
+{
+    ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(term_index > 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_term_t *term = &it->terms[term_index - 1];
+    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    if (term->inout == EcsOut) {
+        return true;
+    }
+
+error:
+    return false;
+}
+
 int32_t ecs_iter_find_column(
     const ecs_iter_t *it,
     ecs_entity_t component)

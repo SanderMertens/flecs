@@ -3562,7 +3562,7 @@ void* ecs_term_w_size(
     size_t size,
     int32_t index);
 
-/** Test whether the term is readonly
+/** Test whether the term is readonly.
  * This operation returns whether this is a readonly term. Readonly terms are
  * annotated with [in], or are added as a const type in the C++ API.
  *
@@ -3574,6 +3574,21 @@ FLECS_API
 bool ecs_term_is_readonly(
     const ecs_iter_t *it,
     int32_t index);    
+
+/** Test whether the term is writeonly.
+ * This operation returns whether this is a writeonly term. Writeonly terms are
+ * annotated with [out].
+ * 
+ * Serializers are not required to serialize the values of a writeonly term.
+ *
+ * @param it The iterator.
+ * @param index The index of the term in the query.
+ * @return Whether the term is writeonly.
+ */
+FLECS_API
+bool ecs_term_is_writeonly(
+    const ecs_iter_t *it,
+    int32_t index);
 
 /** Test whether term is set.
  * 

@@ -918,13 +918,21 @@ void serialize_iter_result_values(
     for (i = 0; i < term_count; i ++) {
         ecs_strbuf_list_next(buf);
 
-        const void *ptr = it->ptrs[i];
+        const void *ptr = NULL;
+        if (it->ptrs) {
+            ptr = it->ptrs[i];
+        }
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
             if (ecs_term_is_set(it, i + 1)) {
                 json_literal(buf, "0");
                 continue;
             }
+        }
+
+        if (ecs_term_is_writeonly(it, i + 1)) {
+            json_literal(buf, "0");
+            continue;
         }
 
         /* Get component id (can be different in case of pairs) */
