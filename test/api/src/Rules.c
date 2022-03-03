@@ -6230,6 +6230,27 @@ void Rules_test_this_w_wildcard_w_2_isa() {
     ecs_fini(world);
 }
 
-void Rules_test_this_w_wildcard_w_isa_no_owned() {
-    // Implement testcase
+void Rules_rule_w_inout_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_rule_t *r = ecs_rule_new(world, "[filter] Position");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 2);
+    test_uint(ecs_id(Position), ecs_term_id(&it, 1));
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
 }

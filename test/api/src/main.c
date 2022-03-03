@@ -1590,7 +1590,7 @@ void Rules_test_subj_w_pair_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_isa(void);
 void Rules_test_this_w_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_2_isa(void);
-void Rules_test_this_w_wildcard_w_isa_no_owned(void);
+void Rules_rule_w_inout_filter(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -8677,8 +8677,8 @@ bake_test_case Rules_testcases[] = {
         Rules_test_this_w_wildcard_w_2_isa
     },
     {
-        "test_this_w_wildcard_w_isa_no_owned",
-        Rules_test_this_w_wildcard_w_isa_no_owned
+        "rule_w_inout_filter",
+        Rules_rule_w_inout_filter
     }
 };
 

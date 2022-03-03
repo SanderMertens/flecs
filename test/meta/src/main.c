@@ -491,6 +491,12 @@ void SerializeToJson_serialize_iterator_w_var_component(void);
 void SerializeToJson_serialize_iterator_w_optional_tag(void);
 void SerializeToJson_serialize_iterator_w_optional_component(void);
 void SerializeToJson_serialize_iterator_w_optional_reflected_component(void);
+void SerializeToJson_serialize_iterator_w_inout_filter_tag(void);
+void SerializeToJson_serialize_iterator_w_inout_filter_component(void);
+void SerializeToJson_serialize_iterator_w_inout_filter_reflected_component(void);
+void SerializeToJson_serialize_iterator_w_inout_out_tag(void);
+void SerializeToJson_serialize_iterator_w_inout_out_component(void);
+void SerializeToJson_serialize_iterator_w_inout_out_reflected_component(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -2398,6 +2404,30 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_w_optional_reflected_component",
         SerializeToJson_serialize_iterator_w_optional_reflected_component
+    },
+    {
+        "serialize_iterator_w_inout_filter_tag",
+        SerializeToJson_serialize_iterator_w_inout_filter_tag
+    },
+    {
+        "serialize_iterator_w_inout_filter_component",
+        SerializeToJson_serialize_iterator_w_inout_filter_component
+    },
+    {
+        "serialize_iterator_w_inout_filter_reflected_component",
+        SerializeToJson_serialize_iterator_w_inout_filter_reflected_component
+    },
+    {
+        "serialize_iterator_w_inout_out_tag",
+        SerializeToJson_serialize_iterator_w_inout_out_tag
+    },
+    {
+        "serialize_iterator_w_inout_out_component",
+        SerializeToJson_serialize_iterator_w_inout_out_component
+    },
+    {
+        "serialize_iterator_w_inout_out_reflected_component",
+        SerializeToJson_serialize_iterator_w_inout_out_reflected_component
     }
 };
 
@@ -2659,7 +2689,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        78,
+        84,
         SerializeToJson_testcases
     },
     {
