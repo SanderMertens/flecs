@@ -1035,6 +1035,7 @@ void FlecsMetaImport(
 
     /* Relationship properties */
     ecs_add_id(world, EcsQuantity, EcsExclusive);
+    ecs_add_id(world, EcsQuantity, EcsTag);
 
     /* Initialize reflection data for meta components */
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t) {
