@@ -9394,6 +9394,35 @@ int ecs_iter_to_json_buf(
 extern "C" {
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+//// Unit prefixes
+////////////////////////////////////////////////////////////////////////////////
+
+extern ECS_DECLARE(EcsPico);
+extern ECS_DECLARE(EcsNano);
+extern ECS_DECLARE(EcsMicro);
+extern ECS_DECLARE(EcsMilli);
+extern ECS_DECLARE(EcsCenti);
+extern ECS_DECLARE(EcsDeci);
+extern ECS_DECLARE(EcsDeca);
+extern ECS_DECLARE(EcsHecto);
+extern ECS_DECLARE(EcsKilo);
+extern ECS_DECLARE(EcsMega);
+extern ECS_DECLARE(EcsGiga);
+extern ECS_DECLARE(EcsTera);
+extern ECS_DECLARE(EcsPeta);
+extern ECS_DECLARE(EcsZetta);
+extern ECS_DECLARE(EcsYotta);
+
+extern ECS_DECLARE(EcsKibi);
+extern ECS_DECLARE(EcsMebi);
+extern ECS_DECLARE(EcsGibi);
+extern ECS_DECLARE(EcsTebi);
+extern ECS_DECLARE(EcsPebi);
+extern ECS_DECLARE(EcsExbi);
+extern ECS_DECLARE(EcsZebi);
+extern ECS_DECLARE(EcsYobi);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Units & quantities
@@ -9681,7 +9710,10 @@ typedef struct EcsVector {
 /* Helper type to describe translation between two units. Note that this
  * is not intended as a generic approach to unit conversions (e.g. from celsius
  * to fahrenheit) but to translate between units that derive from the same base 
- * (e.g. meters to kilometers). */
+ * (e.g. meters to kilometers). 
+ * 
+ * Note that power is applied to the factor. When describing a translation of
+ * 1000, either use {factor = 1000, power = 1} or {factor = 1, power = 3}. */
 typedef struct ecs_unit_translation_t {
     int32_t factor; /* Factor to apply (e.g. "1000", "1000000", "1024") */
     int32_t power; /* Power to apply to factor (e.g. "1", "3", "-9") */
