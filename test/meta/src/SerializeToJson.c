@@ -1449,8 +1449,8 @@ void SerializeToJson_serialize_entity_w_type_info_unit_over() {
 
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
-        .symbol = "mps",
-        .unit = u_2,
+        .symbol = "m/s",
+        .derived = u_2,
         .over = u_1
     });
     test_assert(u_3 != 0);
@@ -1477,9 +1477,7 @@ void SerializeToJson_serialize_entity_w_type_info_unit_over() {
                 "\"pred\":\"T\", "
                 "\"value\":{\"value\":24}, "
                 "\"type_info\":{\"value\":[\"int\", {"
-                  "\"unit\":\"meters_per_second\", \"symbol\":\"mps\", "
-                  "\"sub\":{\"unit\":\"meters\", \"symbol\":\"m\"}, "
-                  "\"over\":{\"unit\":\"seconds\", \"symbol\":\"s\"}}]"
+                  "\"unit\":\"meters_per_second\", \"symbol\":\"m/s\"}]"
                 "}"
             "}, "
             "{\"pred\":\"flecs.core.Identifier\", \"obj\":\"flecs.core.Name\"}"
@@ -2523,8 +2521,7 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
 
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
-        .symbol = "mps",
-        .unit = u_2,
+        .derived = u_2,
         .over = u_1
     });
     test_assert(u_3 != 0);
@@ -2555,9 +2552,7 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
         "\"ids\":[\"T\"], "
         "\"type_info\":{"
             "\"T\":{\"value\":[\"int\", {"
-                "\"unit\":\"meters_per_second\", \"symbol\":\"mps\", "
-                "\"sub\":{\"unit\":\"meters\", \"symbol\":\"m\"}, "
-                "\"over\":{\"unit\":\"seconds\", \"symbol\":\"s\"}}]"
+                "\"unit\":\"meters_per_second\", \"symbol\":\"m/s\"}]"
             "}"
         "}, "
         "\"results\":[{"

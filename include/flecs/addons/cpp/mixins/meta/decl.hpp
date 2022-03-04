@@ -30,6 +30,7 @@ using Member = EcsMember;
 using Struct = EcsStruct;
 using Array = EcsArray;
 using Vector = EcsVector;
+using Unit = EcsUnit;
 
 static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
 static const flecs::entity_t Char = ecs_id(ecs_char_t);
@@ -50,6 +51,7 @@ static const flecs::entity_t String = ecs_id(ecs_string_t);
 static const flecs::entity_t Entity = ecs_id(ecs_entity_t);
 
 static const flecs::entity_t Constant = EcsConstant;
+static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
@@ -78,8 +80,16 @@ struct cursor {
         return ecs_meta_is_collection(&m_cursor);
     }
 
+    flecs::string_view get_member() {
+        return flecs::string_view(ecs_meta_get_member(&m_cursor));
+    }
+
     flecs::entity_t get_type() {
         return ecs_meta_get_type(&m_cursor);
+    }
+
+    flecs::entity_t get_unit() {
+        return ecs_meta_get_unit(&m_cursor);
     }
 
     void* get_ptr() {

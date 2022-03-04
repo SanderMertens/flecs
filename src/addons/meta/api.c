@@ -192,18 +192,20 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
+    char *derived_symbol = NULL;
     ecs_entity_t t = ecs_entity_init(world, &desc->entity);
     if (!t) {
-        return 0;
+        goto error;
     }
+
+    const char *symbol = desc->symbol;
 
     ecs_entity_t quantity = desc->quantity;
     if (quantity) {
         if (!ecs_has_id(world, quantity, EcsQuantity)) {
             ecs_err("entity '%s' for unit '%s' is not a quantity",
                 ecs_get_name(world, quantity), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
 
         ecs_add_pair(world, t, EcsQuantity, desc->quantity);
@@ -211,36 +213,128 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    ecs_entity_t unit = desc->unit;
-    if (unit) {
-        if (!ecs_has(world, unit, EcsUnit)) {
-            ecs_err("entity '%s' for unit '%s' used as unit is not a unit",
-                ecs_get_name(world, unit), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+    ecs_entity_t derived = desc->derived;
+    if (derived) {
+        if (!ecs_has(world, derived, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as derived is not a unit",
+                ecs_get_name(world, derived), ecs_get_name(world, t));
+            goto error;
         }
     }
 
     ecs_entity_t over = desc->over;
     if (over) {
-        if (!unit) {
-            ecs_err("invalid unit '%s': cannot specify over without unit",
+        if (!derived) {
+            ecs_err("invalid unit '%s': cannot specify over without derived",
                 ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
         if (!ecs_has(world, over, EcsUnit)) {
             ecs_err("entity '%s' for unit '%s' used as over is not a unit",
                 ecs_get_name(world, over), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
+        }
+    }
+
+    ecs_unit_translation_t translation = desc->translation;
+
+    ecs_entity_t prefix = desc->prefix;
+    if (prefix) {
+        if (!derived) {
+            ecs_err("invalid unit '%s': cannot specify prefix without derived",
+                ecs_get_name(world, t));
+            goto error;
+        }
+        const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
+        if (!prefix_ptr) {
+            ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            goto error;
+        }
+
+        if (translation.factor || translation.power) {
+            if (prefix_ptr->translation.factor != translation.factor ||
+                prefix_ptr->translation.power != translation.power)
+            {
+                ecs_err(
+                    "factor for unit '%s' is inconsistent with prefix '%s'",
+                    ecs_get_name(world, t), ecs_get_name(world, prefix));
+                goto error;
+            }
+        } else {
+            translation = prefix_ptr->translation;
+        }
+    }
+
+    if (derived) {
+        bool must_match = false; /* Must derived symbol match symbol? */
+        ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
+        if (prefix) {
+            const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(&sbuf, ptr->symbol);
+            must_match = true;
+        }
+
+        const EcsUnit *uptr = ecs_get(world, derived, EcsUnit);
+        ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+
+        if (over) {
+            uptr = ecs_get(world, over, EcsUnit);
+            ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(&sbuf, "/");
+            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+            must_match = true;
+        }
+
+        derived_symbol = ecs_strbuf_get(&sbuf);
+        ecs_assert(derived_symbol != NULL && ecs_os_strlen(derived_symbol) != 0, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        if (symbol && ecs_os_strcmp(symbol, derived_symbol)) {
+            if (must_match) {
+                ecs_err("symbol '%s' for unit '%s' does not match derived"
+                    " symbol '%s'", symbol, 
+                        ecs_get_name(world, t), derived_symbol);
+                goto error;
+            }
+        } else if (!symbol) {
+            symbol = derived_symbol;
         }
     }
 
     ecs_set(world, t, EcsUnit, {
+        .symbol = (char*)symbol,
+        .derived = derived,
+        .over = over,
+        .prefix = prefix,
+        .translation = translation
+    });
+
+    ecs_os_free(derived_symbol);
+
+    return t;
+error:
+    if (t) {
+        ecs_delete(world, t);
+    }
+    ecs_os_free(derived_symbol);
+    return 0;
+}
+
+ecs_entity_t ecs_unit_prefix_init(
+    ecs_world_t *world,
+    const ecs_unit_prefix_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsUnitPrefix, {
         .symbol = (char*)desc->symbol,
-        .unit = unit,
-        .over = over
+        .translation = desc->translation
     });
 
     return t;

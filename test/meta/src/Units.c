@@ -205,7 +205,7 @@ void Units_unit_w_self_quantity() {
     ecs_fini(world);
 }
 
-void Units_unit_w_sub() {
+void Units_unit_w_derived() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
@@ -218,7 +218,7 @@ void Units_unit_w_sub() {
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "minutes",
         .symbol = "m",
-        .unit = u_1
+        .derived = u_1
     });
     test_assert(u_2 != 0);
     test_assert(ecs_has(world, u_2, EcsUnit));
@@ -230,7 +230,51 @@ void Units_unit_w_sub() {
     uptr = ecs_get(world, u_2, EcsUnit);
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "m");
-    test_uint(uptr->unit, u_1);
+    test_uint(uptr->derived, u_1);
+
+    ecs_fini(world);
+}
+
+void Units_unit_w_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters",
+        .symbol = "m"
+    });
+    test_assert(u_1 != 0);
+    test_assert(ecs_has(world, u_1, EcsUnit));
+
+    ecs_entity_t kilo = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+        .entity.name = "kilo",
+        .symbol = "k",
+        .translation = {
+            .factor = 1000,
+            .power = 1
+        }
+    });
+    test_assert(kilo != 0);
+    test_assert(ecs_has(world, kilo, EcsUnitPrefix));
+
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "kilometers",
+        .derived = u_1,
+        .prefix = kilo
+    });
+    test_assert(u_2 != 0);
+    test_assert(ecs_has(world, u_2, EcsUnit));
+
+    const EcsUnit *uptr = ecs_get(world, u_1, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "m");
+
+    uptr = ecs_get(world, u_2, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "km");
+    test_uint(uptr->derived, u_1);
+    test_uint(uptr->prefix, kilo);
+    test_int(uptr->translation.factor, 1000);
+    test_int(uptr->translation.power, 1);
 
     ecs_fini(world);
 }
@@ -254,9 +298,8 @@ void Units_unit_w_over() {
 
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
-        .symbol = "mps",
-        .unit = u_1,
-        .over = u_2
+        .derived = u_2,
+        .over = u_1
     });
     test_assert(u_3 != 0);
     test_assert(ecs_has(world, u_3, EcsUnit));
@@ -271,9 +314,9 @@ void Units_unit_w_over() {
 
     uptr = ecs_get(world, u_3, EcsUnit);
     test_assert(uptr != NULL);
-    test_str(uptr->symbol, "mps");
-    test_uint(uptr->unit, u_1);
-    test_uint(uptr->over, u_2);
+    test_str(uptr->symbol, "m/s");
+    test_uint(uptr->derived, u_2);
+    test_uint(uptr->over, u_1);
 
     ecs_fini(world);
 }
@@ -314,7 +357,7 @@ void Units_unit_w_invalid_quantity() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_sub() {
+void Units_unit_w_invalid_derived() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
@@ -325,7 +368,7 @@ void Units_unit_w_invalid_sub() {
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters",
         .symbol = "m",
-        .unit = u_1
+        .derived = u_1
     });
     test_assert(u_2 == 0);
 
@@ -349,7 +392,7 @@ void Units_unit_w_invalid_over() {
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
         .symbol = "mps",
-        .unit = u_2,
+        .derived = u_2,
         .over = u_1
     });
     test_assert(u_3 == 0);
@@ -357,7 +400,63 @@ void Units_unit_w_invalid_over() {
     ecs_fini(world);
 }
 
-void Units_unit_w_over_no_sub() {
+void Units_unit_w_invalid_symbol_w_over() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "seconds",
+        .symbol = "s"
+    });
+    test_assert(u_1 != 0);
+
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters",
+        .symbol = "m"
+    });
+    test_assert(u_2 != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters_per_second",
+        .symbol = "mps",
+        .derived = u_2,
+        .over = u_1
+    });
+    test_assert(u_3 == 0);
+
+    ecs_fini(world);
+}
+
+void Units_unit_w_invalid_symbol_w_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u_1 = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t) {
+        .entity.name = "kilo",
+        .symbol = "k"
+    });
+    test_assert(u_1 != 0);
+
+    ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "meters",
+        .symbol = "m"
+    });
+    test_assert(u_2 != 0);
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "kilometers",
+        .symbol = "Km",
+        .derived = u_2,
+        .prefix = u_1
+    });
+    test_assert(u_3 == 0);
+
+    ecs_fini(world);
+}
+
+void Units_unit_w_over_no_derived() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
@@ -500,4 +599,3 @@ void Units_define_twice_remove_quantity() {
 
     ecs_fini(world);
 }
-

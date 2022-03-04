@@ -21880,18 +21880,20 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
+    char *derived_symbol = NULL;
     ecs_entity_t t = ecs_entity_init(world, &desc->entity);
     if (!t) {
-        return 0;
+        goto error;
     }
+
+    const char *symbol = desc->symbol;
 
     ecs_entity_t quantity = desc->quantity;
     if (quantity) {
         if (!ecs_has_id(world, quantity, EcsQuantity)) {
             ecs_err("entity '%s' for unit '%s' is not a quantity",
                 ecs_get_name(world, quantity), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
 
         ecs_add_pair(world, t, EcsQuantity, desc->quantity);
@@ -21899,36 +21901,128 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    ecs_entity_t unit = desc->unit;
-    if (unit) {
-        if (!ecs_has(world, unit, EcsUnit)) {
-            ecs_err("entity '%s' for unit '%s' used as unit is not a unit",
-                ecs_get_name(world, unit), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+    ecs_entity_t derived = desc->derived;
+    if (derived) {
+        if (!ecs_has(world, derived, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as derived is not a unit",
+                ecs_get_name(world, derived), ecs_get_name(world, t));
+            goto error;
         }
     }
 
     ecs_entity_t over = desc->over;
     if (over) {
-        if (!unit) {
-            ecs_err("invalid unit '%s': cannot specify over without unit",
+        if (!derived) {
+            ecs_err("invalid unit '%s': cannot specify over without derived",
                 ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
         if (!ecs_has(world, over, EcsUnit)) {
             ecs_err("entity '%s' for unit '%s' used as over is not a unit",
                 ecs_get_name(world, over), ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
+        }
+    }
+
+    ecs_unit_translation_t translation = desc->translation;
+
+    ecs_entity_t prefix = desc->prefix;
+    if (prefix) {
+        if (!derived) {
+            ecs_err("invalid unit '%s': cannot specify prefix without derived",
+                ecs_get_name(world, t));
+            goto error;
+        }
+        const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
+        if (!prefix_ptr) {
+            ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            goto error;
+        }
+
+        if (translation.factor || translation.power) {
+            if (prefix_ptr->translation.factor != translation.factor ||
+                prefix_ptr->translation.power != translation.power)
+            {
+                ecs_err(
+                    "factor for unit '%s' is inconsistent with prefix '%s'",
+                    ecs_get_name(world, t), ecs_get_name(world, prefix));
+                goto error;
+            }
+        } else {
+            translation = prefix_ptr->translation;
+        }
+    }
+
+    if (derived) {
+        bool must_match = false; /* Must derived symbol match symbol? */
+        ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
+        if (prefix) {
+            const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(&sbuf, ptr->symbol);
+            must_match = true;
+        }
+
+        const EcsUnit *uptr = ecs_get(world, derived, EcsUnit);
+        ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+
+        if (over) {
+            uptr = ecs_get(world, over, EcsUnit);
+            ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_strbuf_appendstr(&sbuf, "/");
+            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+            must_match = true;
+        }
+
+        derived_symbol = ecs_strbuf_get(&sbuf);
+        ecs_assert(derived_symbol != NULL && ecs_os_strlen(derived_symbol) != 0, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        if (symbol && ecs_os_strcmp(symbol, derived_symbol)) {
+            if (must_match) {
+                ecs_err("symbol '%s' for unit '%s' does not match derived"
+                    " symbol '%s'", symbol, 
+                        ecs_get_name(world, t), derived_symbol);
+                goto error;
+            }
+        } else if (!symbol) {
+            symbol = derived_symbol;
         }
     }
 
     ecs_set(world, t, EcsUnit, {
+        .symbol = (char*)symbol,
+        .derived = derived,
+        .over = over,
+        .prefix = prefix,
+        .translation = translation
+    });
+
+    ecs_os_free(derived_symbol);
+
+    return t;
+error:
+    if (t) {
+        ecs_delete(world, t);
+    }
+    ecs_os_free(derived_symbol);
+    return 0;
+}
+
+ecs_entity_t ecs_unit_prefix_init(
+    ecs_world_t *world,
+    const ecs_unit_prefix_desc_t *desc)
+{
+    ecs_entity_t t = ecs_entity_init(world, &desc->entity);
+    if (!t) {
+        return 0;
+    }
+
+    ecs_set(world, t, EcsUnitPrefix, {
         .symbol = (char*)desc->symbol,
-        .unit = unit,
-        .over = over
+        .translation = desc->translation
     });
 
     return t;
@@ -22421,22 +22515,55 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
-    dst->unit = src->unit;
+    dst->derived = src->derived;
     dst->over = src->over;
+    dst->prefix = src->prefix;
+    dst->translation = src->translation;
 })
 
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
-    dst->unit = src->unit;
+    dst->derived = src->derived;
     dst->over = src->over;
+    dst->prefix = src->prefix;
+    dst->translation = src->translation;
 
     src->symbol = NULL;
-    src->unit = 0;
+    src->derived = 0;
     src->over = 0;
+    src->prefix = 0;
+    src->translation = (ecs_unit_translation_t){0};
 })
 
 static ECS_DTOR(EcsUnit, ptr, { dtor_unit(ptr); })
+
+
+/* EcsUnitPrefix lifecycle */
+
+static void dtor_unit_prefix(
+    EcsUnitPrefix *ptr) 
+{
+    ecs_os_free(ptr->symbol);
+}
+
+static ECS_COPY(EcsUnitPrefix, dst, src, {
+    dtor_unit_prefix(dst);
+    dst->symbol = ecs_os_strdup(src->symbol);
+    dst->translation = src->translation;
+})
+
+static ECS_MOVE(EcsUnitPrefix, dst, src, {
+    dtor_unit_prefix(dst);
+    dst->symbol = src->symbol;
+    dst->translation = src->translation;
+
+    src->symbol = NULL;
+    src->translation = (ecs_unit_translation_t){0};
+})
+
+static ECS_DTOR(EcsUnitPrefix, ptr, { dtor_unit_prefix(ptr); })
+
 
 /* Type initialization */
 
@@ -23120,6 +23247,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
     flecs_bootstrap_component(world, EcsUnit);
+    flecs_bootstrap_component(world, EcsUnitPrefix);
 
     flecs_bootstrap_tag(world, EcsConstant);
     flecs_bootstrap_tag(world, EcsQuantity);
@@ -23164,6 +23292,13 @@ void FlecsMetaImport(
         .move = ecs_move(EcsUnit),
         .copy = ecs_copy(EcsUnit),
         .dtor = ecs_dtor(EcsUnit)
+    });
+
+    ecs_set_component_actions(world, EcsUnitPrefix, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsUnitPrefix),
+        .copy = ecs_copy(EcsUnitPrefix),
+        .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
     /* Register triggers to finalize type information from component data */
@@ -23365,12 +23500,30 @@ void FlecsMetaImport(
         }
     });
 
+    ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "unit_translation",
+        .members = {
+            {.name = (char*)"factor", .type = ecs_id(ecs_i32_t)},
+            {.name = (char*)"power", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)}
+            {.name = (char*)"derived", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"translation", .type = ut}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsUnitPrefix),
+        .members = {
+            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
+            {.name = (char*)"translation", .type = ut}
         }
     });
 }
@@ -25445,12 +25598,13 @@ ECS_DECLARE(EcsTime);
 
 ECS_DECLARE(EcsPercentage);
 
-ECS_DECLARE(EcsDistance);
+ECS_DECLARE(EcsLength);
     ECS_DECLARE(EcsMeters);
     ECS_DECLARE(EcsMiles);
 
-ECS_DECLARE(EcsData);
-    ECS_DECLARE(EcsDataByte);
+ECS_DECLARE(EcsInformation);
+    ECS_DECLARE(EcsBits);
+    ECS_DECLARE(EcsBytes);
 
 void FlecsUnitsImport(
     ecs_world_t *world)
@@ -25484,12 +25638,12 @@ void FlecsUnitsImport(
             .kind = EcsU32
         });
 
-    EcsDistance = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
-        .name = "Distance" });
+    EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Length" });
 
         EcsMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "Meters",
-            .quantity = EcsDistance,
+            .quantity = EcsLength,
             .symbol = "m" });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
             .entity.entity = EcsMeters,
@@ -25498,7 +25652,7 @@ void FlecsUnitsImport(
 
         EcsMiles = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "Miles",
-            .quantity = EcsDistance,
+            .quantity = EcsLength,
             .symbol = "mi"
         });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -25506,15 +25660,22 @@ void FlecsUnitsImport(
             .kind = EcsF32
         });
 
-    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
-        .name = "Data" });
-
-        EcsDataByte = ecs_unit_init(world, &(ecs_unit_desc_t) { 
-            .entity.name = "Byte",
-            .quantity = EcsData,
+    EcsInformation = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Information" });
+        EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Bits",
+            .quantity = EcsInformation,
+            .symbol = "bit" });
+        EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Bytes",
+            .quantity = EcsInformation,
             .symbol = "B" });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
-            .entity.entity = EcsDataByte,
+            .entity.entity = EcsBits,
+            .kind = EcsI32
+        });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBytes,
             .kind = EcsI32
         });
 
@@ -25528,6 +25689,28 @@ void FlecsUnitsImport(
         .entity.entity = EcsPercentage,
         .kind = EcsF32
     });
+
+    /* Documentation */
+#ifdef FLECS_DOC
+    ecs_doc_set_brief(world, EcsDuration, 
+        "Time amount (e.g. \"20 seconds\", \"2 hours\")");
+    ecs_doc_set_brief(world, EcsSeconds, "Time amount in seconds");
+
+    ecs_doc_set_brief(world, EcsTime,
+        "Seconds passed since epoch (e.g. \"5pm\", \"March 3rd 2022\")");
+    ecs_doc_set_brief(world, EcsDate,
+        "Seconds passed since January 1st 1970");
+
+    ecs_doc_set_brief(world, EcsLength,
+        "Unit of length (e.g. \"5 meters\", \"20 miles\")");
+    ecs_doc_set_brief(world, EcsMeters, "Length in meters");
+    ecs_doc_set_brief(world, EcsMiles, "Length in miles");
+
+    ecs_doc_set_brief(world, EcsInformation,
+        "Unit of information (e.g. \"8 bits\", \"100 megabytes\")");
+    ecs_doc_set_brief(world, EcsBits, "Basic unit of information (0 or 1)");
+    ecs_doc_set_brief(world, EcsBytes, "8 bits");
+#endif
 }
 
 #endif
@@ -28008,7 +28191,6 @@ error:
 static
 int json_typeinfo_ser_unit(
     const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
 {
@@ -28025,18 +28207,6 @@ int json_typeinfo_ser_unit(
         if (quantity) {
             json_member(str, "quantity");
             json_path(str, world, quantity);
-        }
-        if (uptr->unit) {
-            json_member(str, "sub");
-            json_object_push(str);
-            json_typeinfo_ser_unit(world, op, str, uptr->unit);
-            json_object_pop(str);
-        }
-        if (uptr->over) {
-            json_member(str, "over");
-            json_object_push(str);
-            json_typeinfo_ser_unit(world, op, str, uptr->over);
-            json_object_pop(str);
         }
     }
 
@@ -28087,7 +28257,7 @@ int json_typeinfo_ser_type_op(
         json_next(str);
 
         json_object_push(str);
-        json_typeinfo_ser_unit(world, op, str, unit);
+        json_typeinfo_ser_unit(world, str, unit);
         json_object_pop(str);
     }
 
@@ -32019,6 +32189,7 @@ const ecs_entity_t ecs_id(EcsStruct) =             21;
 const ecs_entity_t ecs_id(EcsArray) =              22;
 const ecs_entity_t ecs_id(EcsVector) =             23;
 const ecs_entity_t ecs_id(EcsUnit) =               24;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =         25;
 
 /* Core scopes & entities */
 const ecs_entity_t EcsWorld =                 ECS_HI_COMPONENT_ID + 0;

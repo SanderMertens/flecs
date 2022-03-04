@@ -167,22 +167,55 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
-    dst->unit = src->unit;
+    dst->derived = src->derived;
     dst->over = src->over;
+    dst->prefix = src->prefix;
+    dst->translation = src->translation;
 })
 
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
-    dst->unit = src->unit;
+    dst->derived = src->derived;
     dst->over = src->over;
+    dst->prefix = src->prefix;
+    dst->translation = src->translation;
 
     src->symbol = NULL;
-    src->unit = 0;
+    src->derived = 0;
     src->over = 0;
+    src->prefix = 0;
+    src->translation = (ecs_unit_translation_t){0};
 })
 
 static ECS_DTOR(EcsUnit, ptr, { dtor_unit(ptr); })
+
+
+/* EcsUnitPrefix lifecycle */
+
+static void dtor_unit_prefix(
+    EcsUnitPrefix *ptr) 
+{
+    ecs_os_free(ptr->symbol);
+}
+
+static ECS_COPY(EcsUnitPrefix, dst, src, {
+    dtor_unit_prefix(dst);
+    dst->symbol = ecs_os_strdup(src->symbol);
+    dst->translation = src->translation;
+})
+
+static ECS_MOVE(EcsUnitPrefix, dst, src, {
+    dtor_unit_prefix(dst);
+    dst->symbol = src->symbol;
+    dst->translation = src->translation;
+
+    src->symbol = NULL;
+    src->translation = (ecs_unit_translation_t){0};
+})
+
+static ECS_DTOR(EcsUnitPrefix, ptr, { dtor_unit_prefix(ptr); })
+
 
 /* Type initialization */
 
@@ -866,6 +899,7 @@ void FlecsMetaImport(
     flecs_bootstrap_component(world, EcsArray);
     flecs_bootstrap_component(world, EcsVector);
     flecs_bootstrap_component(world, EcsUnit);
+    flecs_bootstrap_component(world, EcsUnitPrefix);
 
     flecs_bootstrap_tag(world, EcsConstant);
     flecs_bootstrap_tag(world, EcsQuantity);
@@ -910,6 +944,13 @@ void FlecsMetaImport(
         .move = ecs_move(EcsUnit),
         .copy = ecs_copy(EcsUnit),
         .dtor = ecs_dtor(EcsUnit)
+    });
+
+    ecs_set_component_actions(world, EcsUnitPrefix, { 
+        .ctor = ecs_default_ctor,
+        .move = ecs_move(EcsUnitPrefix),
+        .copy = ecs_copy(EcsUnitPrefix),
+        .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
     /* Register triggers to finalize type information from component data */
@@ -1111,12 +1152,30 @@ void FlecsMetaImport(
         }
     });
 
+    ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "unit_translation",
+        .members = {
+            {.name = (char*)"factor", .type = ecs_id(ecs_i32_t)},
+            {.name = (char*)"power", .type = ecs_id(ecs_i32_t)}
+        }
+    });
+
     ecs_struct_init(world, &(ecs_struct_desc_t) {
         .entity.entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)}
+            {.name = (char*)"derived", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"translation", .type = ut}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(EcsUnitPrefix),
+        .members = {
+            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
+            {.name = (char*)"translation", .type = ut}
         }
     });
 }
