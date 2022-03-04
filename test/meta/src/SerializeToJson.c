@@ -1450,7 +1450,7 @@ void SerializeToJson_serialize_entity_w_type_info_unit_over() {
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
         .symbol = "m/s",
-        .derived = u_2,
+        .base = u_2,
         .over = u_1
     });
     test_assert(u_3 != 0);
@@ -2521,7 +2521,7 @@ void SerializeToJson_serialize_iterator_type_info_w_unit_over() {
 
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
-        .derived = u_2,
+        .base = u_2,
         .over = u_1
     });
     test_assert(u_3 != 0);

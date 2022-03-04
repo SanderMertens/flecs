@@ -600,7 +600,7 @@ struct entity_view : public id {
 #   include "mixins/json/entity.inl"
 #   endif
 #   ifdef FLECS_DOC
-#   include "mixins/doc/entity_view_mixin.inl"
+#   include "mixins/doc/entity_view.inl"
 #   endif
 
 private:

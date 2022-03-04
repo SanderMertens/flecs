@@ -15,8 +15,8 @@ int main(int, char *[]) {
     // the platform, which can cause unexpected issues when type information is
     // shared between platforms.
     ecs.component<PortableType>()
-        .member("i32", flecs::I32) // Use platform-independent type ids
-        .member("intptr", flecs::Uptr);
+        .member(flecs::I32, "i32") // Use platform-independent type ids
+        .member(flecs::Uptr, "intptr");
 
     // Create entity with PortableType
     auto e = ecs.entity()

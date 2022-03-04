@@ -4,7 +4,6 @@ FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
 FLECS_ENUM_LAST(flecs::primitive_kind_t, EcsPrimitiveKindLast)
 
 namespace flecs {
-
 namespace meta {
 namespace _ {
 
@@ -37,6 +36,24 @@ inline void init(flecs::world& world) {
     world.component<Struct>("flecs::meta::Struct");
     world.component<Array>("flecs::meta::Array");
     world.component<Vector>("flecs::meta::Vector");
+
+    world.component<Unit>("flecs::meta::Unit");
+
+    // To support member<uintptr_t> and member<intptr_t> register components
+    // (that do not have conflicting symbols with builtin ones) for platform
+    // specific types.
+
+    if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
+        flecs::_::cpp_type<iptr_t>::init(world, flecs::Iptr, true);
+        ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
+        flecs::_::cpp_type<uptr_t>::init(world, flecs::Uptr, true);
+        ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 } // namespace _

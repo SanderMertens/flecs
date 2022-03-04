@@ -74,6 +74,9 @@ struct each_invoker;
 #ifdef FLECS_META
 #include "mixins/meta/decl.hpp"
 #endif
+#ifdef FLECS_UNITS
+#include "mixins/units/decl.hpp"
+#endif
 #ifdef FLECS_JSON
 #include "mixins/json/decl.hpp"
 #endif
@@ -133,6 +136,9 @@ struct each_invoker;
 #endif
 #ifdef FLECS_META
 #include "mixins/meta/impl.hpp"
+#endif
+#ifdef FLECS_UNITS
+#include "mixins/units/impl.hpp"
 #endif
 
 #include "impl.hpp"

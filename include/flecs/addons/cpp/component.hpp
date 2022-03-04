@@ -118,6 +118,10 @@ struct cpp_type_impl {
         entity_t entity, 
         bool allow_tag = true) 
     {
+        if (s_reset_count != ecs_cpp_reset_count_get()) {
+            reset();
+        }
+
         // If an identifier was already set, check for consistency
         if (s_id) {
             ecs_assert(s_name.c_str() != nullptr, ECS_INTERNAL_ERROR, NULL);

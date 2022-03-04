@@ -8,10 +8,12 @@ using u8_t = ecs_u8_t;
 using u16_t = ecs_u16_t;
 using u32_t = ecs_u32_t;
 using u64_t = ecs_u64_t;
+using uptr_t = ecs_uptr_t;
 using i8_t = ecs_i8_t;
 using i16_t = ecs_i16_t;
 using i32_t = ecs_i32_t;
 using i64_t = ecs_i64_t;
+using iptr_t = ecs_iptr_t;
 using f32_t = ecs_f32_t;
 using f64_t = ecs_f64_t;
 

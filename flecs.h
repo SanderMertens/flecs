@@ -9460,7 +9460,7 @@ extern         ECS_DECLARE(EcsCentiMeters);
 extern         ECS_DECLARE(EcsKiloMeters);
 extern     ECS_DECLARE(EcsMiles);
 
-extern ECS_DECLARE(EcsInformation);
+extern ECS_DECLARE(EcsData);
 extern     ECS_DECLARE(EcsBits);
 extern         ECS_DECLARE(EcsKiloBits);
 extern         ECS_DECLARE(EcsMegaBits);
@@ -9470,7 +9470,7 @@ extern         ECS_DECLARE(EcsKiloBytes);
 extern         ECS_DECLARE(EcsMegaBytes);
 extern         ECS_DECLARE(EcsGigaBytes);
 extern         ECS_DECLARE(EcsKibiBytes);
-extern         ECS_DECLARE(EcsMibiBytes);
+extern         ECS_DECLARE(EcsMebiBytes);
 extern         ECS_DECLARE(EcsGibiBytes);
 
 ////////////////////////////////////////////////////////////////////////////////

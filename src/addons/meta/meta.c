@@ -167,7 +167,7 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
-    dst->derived = src->derived;
+    dst->base = src->base;
     dst->over = src->over;
     dst->prefix = src->prefix;
     dst->translation = src->translation;
@@ -176,13 +176,13 @@ static ECS_COPY(EcsUnit, dst, src, {
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
-    dst->derived = src->derived;
+    dst->base = src->base;
     dst->over = src->over;
     dst->prefix = src->prefix;
     dst->translation = src->translation;
 
     src->symbol = NULL;
-    src->derived = 0;
+    src->base = 0;
     src->over = 0;
     src->prefix = 0;
     src->translation = (ecs_unit_translation_t){0};
@@ -1164,9 +1164,9 @@ void FlecsMetaImport(
         .entity.entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"derived", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"base", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"translation", .type = ut}
         }
     });
