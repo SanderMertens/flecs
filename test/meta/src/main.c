@@ -152,13 +152,16 @@ void Units_cursor_get_unit(void);
 void Units_cursor_get_unit_type(void);
 void Units_unit_w_quantity(void);
 void Units_unit_w_self_quantity(void);
-void Units_unit_w_sub(void);
+void Units_unit_w_derived(void);
 void Units_unit_w_over(void);
+void Units_unit_w_prefix(void);
 void Units_member_w_invalid_unit(void);
 void Units_unit_w_invalid_quantity(void);
-void Units_unit_w_invalid_sub(void);
+void Units_unit_w_invalid_derived(void);
+void Units_unit_w_invalid_symbol_w_over(void);
+void Units_unit_w_invalid_symbol_w_prefix(void);
 void Units_unit_w_invalid_over(void);
-void Units_unit_w_over_no_sub(void);
+void Units_unit_w_over_no_derived(void);
 void Units_define_twice(void);
 void Units_define_twice_different_quantity(void);
 void Units_define_twice_remove_quantity(void);
@@ -1080,12 +1083,16 @@ bake_test_case Units_testcases[] = {
         Units_unit_w_self_quantity
     },
     {
-        "unit_w_sub",
-        Units_unit_w_sub
+        "unit_w_derived",
+        Units_unit_w_derived
     },
     {
         "unit_w_over",
         Units_unit_w_over
+    },
+    {
+        "unit_w_prefix",
+        Units_unit_w_prefix
     },
     {
         "member_w_invalid_unit",
@@ -1096,16 +1103,24 @@ bake_test_case Units_testcases[] = {
         Units_unit_w_invalid_quantity
     },
     {
-        "unit_w_invalid_sub",
-        Units_unit_w_invalid_sub
+        "unit_w_invalid_derived",
+        Units_unit_w_invalid_derived
+    },
+    {
+        "unit_w_invalid_symbol_w_over",
+        Units_unit_w_invalid_symbol_w_over
+    },
+    {
+        "unit_w_invalid_symbol_w_prefix",
+        Units_unit_w_invalid_symbol_w_prefix
     },
     {
         "unit_w_invalid_over",
         Units_unit_w_invalid_over
     },
     {
-        "unit_w_over_no_sub",
-        Units_unit_w_over_no_sub
+        "unit_w_over_no_derived",
+        Units_unit_w_over_no_derived
     },
     {
         "define_twice",
@@ -2647,7 +2662,7 @@ static bake_test_suite suites[] = {
         "Units",
         NULL,
         NULL,
-        16,
+        19,
         Units_testcases
     },
     {

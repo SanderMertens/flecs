@@ -151,7 +151,6 @@ error:
 static
 int json_typeinfo_ser_unit(
     const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
 {
@@ -168,18 +167,6 @@ int json_typeinfo_ser_unit(
         if (quantity) {
             json_member(str, "quantity");
             json_path(str, world, quantity);
-        }
-        if (uptr->unit) {
-            json_member(str, "sub");
-            json_object_push(str);
-            json_typeinfo_ser_unit(world, op, str, uptr->unit);
-            json_object_pop(str);
-        }
-        if (uptr->over) {
-            json_member(str, "over");
-            json_object_push(str);
-            json_typeinfo_ser_unit(world, op, str, uptr->over);
-            json_object_pop(str);
         }
     }
 
@@ -230,7 +217,7 @@ int json_typeinfo_ser_type_op(
         json_next(str);
 
         json_object_push(str);
-        json_typeinfo_ser_unit(world, op, str, unit);
+        json_typeinfo_ser_unit(world, str, unit);
         json_object_pop(str);
     }
 

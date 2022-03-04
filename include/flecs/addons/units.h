@@ -35,12 +35,14 @@ extern     ECS_DECLARE(EcsDate);
 
 extern ECS_DECLARE(EcsPercentage);
 
-extern ECS_DECLARE(EcsDistance);
+extern ECS_DECLARE(EcsLength);
 extern     ECS_DECLARE(EcsMeters);
 extern     ECS_DECLARE(EcsMiles);
 
-extern ECS_DECLARE(EcsData);
-extern     ECS_DECLARE(EcsDataByte);
+extern ECS_DECLARE(EcsInformation);
+extern     ECS_DECLARE(EcsBits);
+extern     ECS_DECLARE(EcsBytes);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module

@@ -104,6 +104,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);
+FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);
 FLECS_API extern const ecs_entity_t EcsConstant;
 FLECS_API extern const ecs_entity_t EcsQuantity;
 
@@ -238,11 +239,31 @@ typedef struct EcsVector {
     ecs_entity_t type;
 } EcsVector;
 
+
+/** Units */
+
+/* Helper type to describe translation between two units. Note that this
+ * is not intended as a generic approach to unit conversions (e.g. from celsius
+ * to fahrenheit) but to translate between units that derive from the same base 
+ * (e.g. meters to kilometers). */
+typedef struct ecs_unit_translation_t {
+    int32_t factor; /* Factor to apply (e.g. "1000", "1000000", "1024") */
+    int32_t power; /* Power to apply to factor (e.g. "1", "3", "-9") */
+} ecs_unit_translation_t;
+
 typedef struct EcsUnit {
     char *symbol;
-    ecs_entity_t unit; /* Derived from unit (e.g. "meters") */
+    ecs_entity_t derived; /* Derived from unit (e.g. "meters") */
     ecs_entity_t over; /* Over unit (e.g. "per second") */
+    ecs_entity_t prefix; /* Order of magnitude prefix relative to derived */
+    ecs_unit_translation_t translation; /* Translation for derived unit */
 } EcsUnit;
+
+typedef struct EcsUnitPrefix {
+    char *symbol;   /* Symbol of prefix (e.g. "K", "M", "Ki") */
+    ecs_unit_translation_t translation; /* Translation of prefix */
+} EcsUnitPrefix;
+
 
 /** Serializer utilities */
 
@@ -531,11 +552,22 @@ typedef struct ecs_unit_desc_t {
     /* Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
 
-    /* Derived unit, e.g. "meters" (optional) */
-    ecs_entity_t unit;
+    /* Derived from unit, e.g. "meters" (optional) */
+    ecs_entity_t derived;
 
     /* Over unit, e.g. "per second" (optional) */
     ecs_entity_t over;
+
+    /* Translation to apply to derived unit (optional) */
+    ecs_unit_translation_t translation;
+
+    /* Prefix indicating order of magnitude relative to the derived unit. If set
+     * together with "translation", the values must match. If translation is not 
+     * set, setting prefix will autopopulate it. 
+     * Additionally, setting the prefix will enforce that the symbol (if set)
+     * is consistent with the prefix symbol + symbol of the derived unit. If the
+     * symbol is not set, it will be auto populated. */
+    ecs_entity_t prefix;
 } ecs_unit_desc_t;
 
 /** Create a new unit */
@@ -543,6 +575,23 @@ FLECS_API
 ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc);
+
+/** Used with ecs_unit_prefix_init. */
+typedef struct ecs_unit_prefix_desc_t {
+    ecs_entity_desc_t entity;
+    
+    /* Unit symbol, e.g. "m", "%", "g". (optional) */
+    const char *symbol;
+
+    /* Translation to apply to derived unit (optional) */
+    ecs_unit_translation_t translation;
+} ecs_unit_prefix_desc_t;
+
+/** Create a new unit prefix */
+FLECS_API
+ecs_entity_t ecs_unit_prefix_init(
+    ecs_world_t *world,
+    const ecs_unit_prefix_desc_t *desc);
 
 /** Create a new quantity */
 FLECS_API
