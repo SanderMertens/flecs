@@ -527,6 +527,9 @@ void log_addons(void) {
     #ifdef FLECS_META_C
         ecs_trace("FLECS_META_C");
     #endif
+    #ifdef FLECS_UNITS
+        ecs_trace("FLECS_UNITS");
+    #endif
     #ifdef FLECS_EXPR
         ecs_trace("FLECS_EXPR");
     #endif
