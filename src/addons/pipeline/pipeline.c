@@ -802,7 +802,7 @@ void ecs_set_pipeline(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check( ecs_get(world, pipeline, EcsPipelineQuery) != NULL, 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, "not a pipeline");
 
     world->pipeline = pipeline;
 error:

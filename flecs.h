@@ -12214,15 +12214,15 @@ struct enum_data {
         return impl_.constants[value].id != 0;
     }
 
-    int first() {
+    int first() const {
         return impl_.min;
     }
 
-    int last() {
+    int last() const {
         return impl_.max;
     }
 
-    int next(int cur) {
+    int next(int cur) const {
         return impl_.constants[cur].next;
     }
 
@@ -14757,15 +14757,29 @@ flecs::entity import();
 /** Create a new pipeline.
  *
  * @tparam Args Arguments to pass into the constructor of flecs::system.
- * @return System builder.
+ * @return The pipeline.
  */
 template <typename... Args>
 flecs::pipeline pipeline(Args &&... args) const;
+
+/** Create a new pipeline.
+ *
+ * @tparam Pipeline Type associated with pipeline.
+ * @return The pipeline.
+ */
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
+flecs::pipeline pipeline() const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
  */
 void set_pipeline(const flecs::pipeline& pip) const;
+
+/** Set pipeline.
+ * @see ecs_set_pipeline
+ */
+template <typename Pipeline>
+void set_pipeline() const;
 
 /** Get pipeline.
  * @see ecs_get_pipeline
@@ -20676,12 +20690,22 @@ public:
         : BaseClass(&desc->query)
         , m_desc(desc) { }
 
-    /** Specify when the system should be ran.
+    /** Specify in which phase the system should run.
      *
-     * @param kind The kind that specifies when the system should be ran.
+     * @param phase The phase.
      */
-    Base& kind(entity_t kind) {
-        m_desc->entity.add[0] = kind;
+    Base& kind(entity_t phase) {
+        m_desc->entity.add[0] = phase;
+        return *this;
+    }
+
+    /** Specify in which phase the system should run.
+     *
+     * @tparam Phase The phase.
+     */
+    template <typename Phase>
+    Base& kind() {
+        m_desc->entity.add[0] = _::cpp_type<Phase>::id(world_v());
         return *this;
     }
 
@@ -20984,8 +21008,18 @@ inline flecs::pipeline world::pipeline(Args &&... args) const {
     return flecs::pipeline(m_world, FLECS_FWD(args)...);
 }
 
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
+inline flecs::pipeline world::pipeline() const {
+    return flecs::pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
+}
+
 inline void world::set_pipeline(const flecs::pipeline& pip) const {
     return ecs_set_pipeline(m_world, pip.id());
+}
+
+template <typename Pipeline>
+inline void world::set_pipeline() const {
+    return ecs_set_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
 inline flecs::pipeline world::get_pipeline() const {

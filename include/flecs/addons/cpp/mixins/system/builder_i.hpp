@@ -16,12 +16,22 @@ public:
         : BaseClass(&desc->query)
         , m_desc(desc) { }
 
-    /** Specify when the system should be ran.
+    /** Specify in which phase the system should run.
      *
-     * @param kind The kind that specifies when the system should be ran.
+     * @param phase The phase.
      */
-    Base& kind(entity_t kind) {
-        m_desc->entity.add[0] = kind;
+    Base& kind(entity_t phase) {
+        m_desc->entity.add[0] = phase;
+        return *this;
+    }
+
+    /** Specify in which phase the system should run.
+     *
+     * @tparam Phase The phase.
+     */
+    template <typename Phase>
+    Base& kind() {
+        m_desc->entity.add[0] = _::cpp_type<Phase>::id(world_v());
         return *this;
     }
 

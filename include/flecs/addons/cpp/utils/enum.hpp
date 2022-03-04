@@ -206,15 +206,15 @@ struct enum_data {
         return impl_.constants[value].id != 0;
     }
 
-    int first() {
+    int first() const {
         return impl_.min;
     }
 
-    int last() {
+    int last() const {
         return impl_.max;
     }
 
-    int next(int cur) {
+    int next(int cur) const {
         return impl_.constants[cur].next;
     }
 

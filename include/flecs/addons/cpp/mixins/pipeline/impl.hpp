@@ -19,8 +19,18 @@ inline flecs::pipeline world::pipeline(Args &&... args) const {
     return flecs::pipeline(m_world, FLECS_FWD(args)...);
 }
 
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
+inline flecs::pipeline world::pipeline() const {
+    return flecs::pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
+}
+
 inline void world::set_pipeline(const flecs::pipeline& pip) const {
     return ecs_set_pipeline(m_world, pip.id());
+}
+
+template <typename Pipeline>
+inline void world::set_pipeline() const {
+    return ecs_set_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
 }
 
 inline flecs::pipeline world::get_pipeline() const {

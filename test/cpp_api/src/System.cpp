@@ -1711,3 +1711,82 @@ void System_create_w_no_template_args() {
 
     test_int(count, 1);
 }
+
+struct PipelineType {
+    struct PreUpdate { };
+    struct OnUpdate { };
+};
+
+void System_system_w_type_kind() {
+    flecs::world world;
+
+    auto pipeline = world.pipeline("MyPipeline")
+        .add<PipelineType::PreUpdate>()
+        .add<PipelineType::OnUpdate>();
+
+    world.set_pipeline(pipeline);
+
+    auto entity = world.entity().add<Tag>();
+
+    int32_t s1_count = 0;
+    int32_t s2_count = 0;
+
+    world.system<Tag>()
+        .kind<PipelineType::OnUpdate>()
+        .each([&](flecs::entity e, Tag) {
+            test_assert(e == entity);
+            test_int(s1_count, 0);
+            test_int(s2_count, 1);
+            s1_count ++;
+        });
+
+    world.system<Tag>()
+        .kind<PipelineType::PreUpdate>()
+        .each([&](flecs::entity e, Tag) {
+            test_assert(e == entity);
+            test_int(s1_count, 0);
+            s2_count ++;
+        });
+
+    world.progress();
+    
+    test_int(s1_count, 1);
+    test_int(s2_count, 1);
+}
+
+void System_system_w_type_kind_type_pipeline() {
+    flecs::world world;
+
+    world.pipeline<PipelineType>()
+        .add<PipelineType::PreUpdate>()
+        .add<PipelineType::OnUpdate>();
+
+    world.set_pipeline<PipelineType>();
+
+    auto entity = world.entity().add<Tag>();
+
+    int32_t s1_count = 0;
+    int32_t s2_count = 0;
+
+    world.system<Tag>()
+        .kind<PipelineType::OnUpdate>()
+        .each([&](flecs::entity e, Tag) {
+            test_assert(e == entity);
+            test_int(s1_count, 0);
+            test_int(s2_count, 1);
+            s1_count ++;
+        });
+
+    world.system<Tag>()
+        .kind<PipelineType::PreUpdate>()
+        .each([&](flecs::entity e, Tag) {
+            test_assert(e == entity);
+            test_int(s1_count, 0);
+            s2_count ++;
+        });
+
+    world.progress();
+    
+    test_int(s1_count, 1);
+    test_int(s2_count, 1);
+}

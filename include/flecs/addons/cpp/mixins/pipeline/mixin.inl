@@ -2,15 +2,29 @@
 /** Create a new pipeline.
  *
  * @tparam Args Arguments to pass into the constructor of flecs::system.
- * @return System builder.
+ * @return The pipeline.
  */
 template <typename... Args>
 flecs::pipeline pipeline(Args &&... args) const;
+
+/** Create a new pipeline.
+ *
+ * @tparam Pipeline Type associated with pipeline.
+ * @return The pipeline.
+ */
+template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
+flecs::pipeline pipeline() const;
 
 /** Set pipeline.
  * @see ecs_set_pipeline
  */
 void set_pipeline(const flecs::pipeline& pip) const;
+
+/** Set pipeline.
+ * @see ecs_set_pipeline
+ */
+template <typename Pipeline>
+void set_pipeline() const;
 
 /** Get pipeline.
  * @see ecs_get_pipeline
