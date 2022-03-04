@@ -9374,7 +9374,18 @@ int ecs_iter_to_json_buf(
  * @file units.h
  * @brief Units module.
  *
- * Builtin standard units.
+ * Builtin standard units. The units addon is not imported by default, even if
+ * the addon is included in the build. To import the module, do:
+ *
+ * In C:
+ *   ECS_IMPORT(world, FlecsUnits);
+ * 
+ * In C++:
+ *   world.import<flecs::units>();
+ *
+ * As a result this module behaves just like an application-defined module, 
+ * which means that the ids generated for the entities inside the module are not
+ * fixed, and depend on the order in which the module is imported.
  */
 
 #ifdef FLECS_UNITS
@@ -9398,80 +9409,90 @@ extern "C" {
 //// Unit prefixes
 ////////////////////////////////////////////////////////////////////////////////
 
-extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
+FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
 
-extern ECS_DECLARE(EcsYocto);
-extern ECS_DECLARE(EcsZepto);
-extern ECS_DECLARE(EcsAtto);
-extern ECS_DECLARE(EcsFemto);
-extern ECS_DECLARE(EcsPico);
-extern ECS_DECLARE(EcsNano);
-extern ECS_DECLARE(EcsMicro);
-extern ECS_DECLARE(EcsMilli);
-extern ECS_DECLARE(EcsCenti);
-extern ECS_DECLARE(EcsDeci);
-extern ECS_DECLARE(EcsDeca);
-extern ECS_DECLARE(EcsHecto);
-extern ECS_DECLARE(EcsKilo);
-extern ECS_DECLARE(EcsMega);
-extern ECS_DECLARE(EcsGiga);
-extern ECS_DECLARE(EcsTera);
-extern ECS_DECLARE(EcsPeta);
-extern ECS_DECLARE(EcsExa);
-extern ECS_DECLARE(EcsZetta);
-extern ECS_DECLARE(EcsYotta);
+FLECS_API extern ECS_DECLARE(EcsYocto);
+FLECS_API extern ECS_DECLARE(EcsZepto);
+FLECS_API extern ECS_DECLARE(EcsAtto);
+FLECS_API extern ECS_DECLARE(EcsFemto);
+FLECS_API extern ECS_DECLARE(EcsPico);
+FLECS_API extern ECS_DECLARE(EcsNano);
+FLECS_API extern ECS_DECLARE(EcsMicro);
+FLECS_API extern ECS_DECLARE(EcsMilli);
+FLECS_API extern ECS_DECLARE(EcsCenti);
+FLECS_API extern ECS_DECLARE(EcsDeci);
+FLECS_API extern ECS_DECLARE(EcsDeca);
+FLECS_API extern ECS_DECLARE(EcsHecto);
+FLECS_API extern ECS_DECLARE(EcsKilo);
+FLECS_API extern ECS_DECLARE(EcsMega);
+FLECS_API extern ECS_DECLARE(EcsGiga);
+FLECS_API extern ECS_DECLARE(EcsTera);
+FLECS_API extern ECS_DECLARE(EcsPeta);
+FLECS_API extern ECS_DECLARE(EcsExa);
+FLECS_API extern ECS_DECLARE(EcsZetta);
+FLECS_API extern ECS_DECLARE(EcsYotta);
 
-extern ECS_DECLARE(EcsKibi);
-extern ECS_DECLARE(EcsMebi);
-extern ECS_DECLARE(EcsGibi);
-extern ECS_DECLARE(EcsTebi);
-extern ECS_DECLARE(EcsPebi);
-extern ECS_DECLARE(EcsExbi);
-extern ECS_DECLARE(EcsZebi);
-extern ECS_DECLARE(EcsYobi);
+FLECS_API extern ECS_DECLARE(EcsKibi);
+FLECS_API extern ECS_DECLARE(EcsMebi);
+FLECS_API extern ECS_DECLARE(EcsGibi);
+FLECS_API extern ECS_DECLARE(EcsTebi);
+FLECS_API extern ECS_DECLARE(EcsPebi);
+FLECS_API extern ECS_DECLARE(EcsExbi);
+FLECS_API extern ECS_DECLARE(EcsZebi);
+FLECS_API extern ECS_DECLARE(EcsYobi);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Units & quantities
 ////////////////////////////////////////////////////////////////////////////////
 
-extern ECS_DECLARE(EcsDuration);
-extern     ECS_DECLARE(EcsPicoSeconds);
-extern     ECS_DECLARE(EcsNanoSeconds);
-extern     ECS_DECLARE(EcsMicroSeconds);
-extern     ECS_DECLARE(EcsMilliSeconds);
-extern     ECS_DECLARE(EcsSeconds);
-extern     ECS_DECLARE(EcsMinutes);
-extern     ECS_DECLARE(EcsHours);
-extern     ECS_DECLARE(EcsDays);
+FLECS_API extern ECS_DECLARE(EcsDuration);
+FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);
+FLECS_API extern     ECS_DECLARE(EcsNanoSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMicroSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMilliSeconds);
+FLECS_API extern     ECS_DECLARE(EcsSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMinutes);
+FLECS_API extern     ECS_DECLARE(EcsHours);
+FLECS_API extern     ECS_DECLARE(EcsDays);
 
-extern ECS_DECLARE(EcsTime);
-extern     ECS_DECLARE(EcsDate);
+FLECS_API extern ECS_DECLARE(EcsTime);
+FLECS_API extern     ECS_DECLARE(EcsDate);
 
-extern ECS_DECLARE(EcsPercentage);
+FLECS_API extern ECS_DECLARE(EcsPercentage);
 
-extern ECS_DECLARE(EcsLength);
-extern     ECS_DECLARE(EcsMeters);
-extern         ECS_DECLARE(EcsPicoMeters);
-extern         ECS_DECLARE(EcsNanoMeters);
-extern         ECS_DECLARE(EcsMicroMeters);
-extern         ECS_DECLARE(EcsMilliMeters);
-extern         ECS_DECLARE(EcsCentiMeters);
-extern         ECS_DECLARE(EcsKiloMeters);
-extern     ECS_DECLARE(EcsMiles);
+FLECS_API extern ECS_DECLARE(EcsLength);
+FLECS_API extern     ECS_DECLARE(EcsMeters);
+FLECS_API extern         ECS_DECLARE(EcsPicoMeters);
+FLECS_API extern         ECS_DECLARE(EcsNanoMeters);
+FLECS_API extern         ECS_DECLARE(EcsMicroMeters);
+FLECS_API extern         ECS_DECLARE(EcsMilliMeters);
+FLECS_API extern         ECS_DECLARE(EcsCentiMeters);
+FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
+FLECS_API extern     ECS_DECLARE(EcsMiles);
 
-extern ECS_DECLARE(EcsData);
-extern     ECS_DECLARE(EcsBits);
-extern         ECS_DECLARE(EcsKiloBits);
-extern         ECS_DECLARE(EcsMegaBits);
-extern         ECS_DECLARE(EcsGigaBits);
-extern     ECS_DECLARE(EcsBytes);
-extern         ECS_DECLARE(EcsKiloBytes);
-extern         ECS_DECLARE(EcsMegaBytes);
-extern         ECS_DECLARE(EcsGigaBytes);
-extern         ECS_DECLARE(EcsKibiBytes);
-extern         ECS_DECLARE(EcsMebiBytes);
-extern         ECS_DECLARE(EcsGibiBytes);
+FLECS_API extern ECS_DECLARE(EcsData);
+FLECS_API extern     ECS_DECLARE(EcsBits);
+FLECS_API extern         ECS_DECLARE(EcsKiloBits);
+FLECS_API extern         ECS_DECLARE(EcsMegaBits);
+FLECS_API extern         ECS_DECLARE(EcsGigaBits);
+FLECS_API extern     ECS_DECLARE(EcsBytes);
+FLECS_API extern         ECS_DECLARE(EcsKiloBytes);
+FLECS_API extern         ECS_DECLARE(EcsMegaBytes);
+FLECS_API extern         ECS_DECLARE(EcsGigaBytes);
+FLECS_API extern         ECS_DECLARE(EcsKibiBytes);
+FLECS_API extern         ECS_DECLARE(EcsMebiBytes);
+FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
+
+FLECS_API extern ECS_DECLARE(EcsDataRate);
+FLECS_API extern     ECS_DECLARE(EcsBitsPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsKiloBitsPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsMegaBitsPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsGigaBitsPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsBytesPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -9749,9 +9770,9 @@ typedef struct ecs_unit_translation_t {
 
 typedef struct EcsUnit {
     char *symbol;
-    ecs_entity_t derived; /* Derived from unit (e.g. "meters") */
-    ecs_entity_t over; /* Over unit (e.g. "per second") */
     ecs_entity_t prefix; /* Order of magnitude prefix relative to derived */
+    ecs_entity_t base; /* Base unit (e.g. "meters") */
+    ecs_entity_t over; /* Over unit (e.g. "per second") */
     ecs_unit_translation_t translation; /* Translation for derived unit */
 } EcsUnit;
 
@@ -10048,8 +10069,8 @@ typedef struct ecs_unit_desc_t {
     /* Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
 
-    /* Derived from unit, e.g. "meters" (optional) */
-    ecs_entity_t derived;
+    /* Base unit, e.g. "meters" (optional) */
+    ecs_entity_t base;
 
     /* Over unit, e.g. "per second" (optional) */
     ecs_entity_t over;
@@ -13144,10 +13165,12 @@ using u8_t = ecs_u8_t;
 using u16_t = ecs_u16_t;
 using u32_t = ecs_u32_t;
 using u64_t = ecs_u64_t;
+using uptr_t = ecs_uptr_t;
 using i8_t = ecs_i8_t;
 using i16_t = ecs_i16_t;
 using i32_t = ecs_i32_t;
 using i64_t = ecs_i64_t;
+using iptr_t = ecs_iptr_t;
 using f32_t = ecs_f32_t;
 using f64_t = ecs_f64_t;
 
@@ -13278,6 +13301,122 @@ void init(flecs::world& world);
 } // namespace _
 } // namespace meta
 } // namespace flecs
+
+#endif
+#ifdef FLECS_UNITS
+#pragma once
+
+namespace flecs {
+struct units {
+
+////////////////////////////////////////////////////////////////////////////////
+//// Unit prefixes
+////////////////////////////////////////////////////////////////////////////////
+
+struct Prefixes { };
+
+struct Yocto { };
+struct Zepto { };
+struct Atto { };
+struct Femto { };
+struct Pico { };
+struct Nano { };
+struct Micro { };
+struct Milli { };
+struct Centi { };
+struct Deci { };
+struct Deca { };
+struct Hecto { };
+struct Kilo { };
+struct Mega { };
+struct Giga { };
+struct Tera { };
+struct Peta { };
+struct Exa { };
+struct Zetta { };
+struct Yotta { };
+struct Kibi { };
+struct Mebi { };
+struct Gibi { };
+struct Tebi { };
+struct Pebi { };
+struct Exbi { };
+struct Zebi { };
+struct Yobi { };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Quantities
+////////////////////////////////////////////////////////////////////////////////
+
+struct Duration { };
+struct Time { };
+struct Length { };
+struct Data { };
+struct DataRate { };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Units
+////////////////////////////////////////////////////////////////////////////////
+
+struct duration {
+struct PicoSeconds { };
+struct NanoSeconds { };
+struct MicroSeconds { };
+struct MilliSeconds { };
+struct Seconds { };
+struct Minutes { };
+struct Hours { };
+struct Days { };
+};
+
+struct time {
+struct Date { };
+};
+
+struct length {
+struct Meters { };
+struct PicoMeters { };
+struct NanoMeters { };
+struct MicroMeters { };
+struct MilliMeters { };
+struct CentiMeters { };
+struct KiloMeters { };
+struct Miles { };
+};
+
+struct data {
+struct Bits { };
+struct KiloBits { };
+struct MegaBits { };
+struct GigaBits { };
+struct Bytes { };
+struct KiloBytes { };
+struct MegaBytes { };
+struct GigaBytes { };
+struct KibiBytes { };
+struct MebiBytes { };
+struct GibiBytes { };
+};
+
+struct datarate {
+struct BitsPerSecond { };
+struct KiloBitsPerSecond { };
+struct MegaBitsPerSecond { };
+struct GigaBitsPerSecond { };
+struct BytesPerSecond { };
+struct KiloBytesPerSecond { };
+struct MegaBytesPerSecond { };
+struct GigaBytesPerSecond { };
+};
+
+struct Percentage { };
+
+units(flecs::world& world);
+
+};
+}
 
 #endif
 #ifdef FLECS_JSON
@@ -17066,6 +17205,86 @@ Self& set_doc_link(const char *link) {
 
 #   endif
 
+#   ifdef FLECS_META
+
+/** Make entity a unit */
+Self& unit(
+    const char *symbol, 
+    flecs::entity_t prefix = 0,
+    flecs::entity_t base = 0,
+    flecs::entity_t over = 0,
+    int32_t factor = 0,
+    int32_t power = 0) 
+{
+    ecs_unit_desc_t desc = {};
+    desc.entity.entity = this->m_id;
+    desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
+    desc.base = base;
+    desc.over = over;
+    desc.prefix = prefix;
+    desc.translation.factor = factor;
+    desc.translation.power = power;
+    ecs_unit_init(this->world(), &desc);
+
+    return to_base();
+}
+
+/** Make entity a derived unit */
+Self& unit( 
+    flecs::entity_t prefix = 0,
+    flecs::entity_t base = 0,
+    flecs::entity_t over = 0,
+    int32_t factor = 0,
+    int32_t power = 0) 
+{
+    ecs_unit_desc_t desc = {};
+    desc.entity.entity = this->m_id;
+    desc.base = base;
+    desc.over = over;
+    desc.prefix = prefix;
+    desc.translation.factor = factor;
+    desc.translation.power = power;
+    ecs_unit_init(this->world(), &desc);
+
+    return to_base();
+}
+
+/** Make entity a derived unit */
+Self& unit_prefix( 
+    const char *symbol,
+    int32_t factor = 0,
+    int32_t power = 0) 
+{
+    ecs_unit_prefix_desc_t desc = {};
+    desc.entity.entity = this->m_id;
+    desc.symbol = const_cast<char*>(symbol); /* safe, will be copied in */
+    desc.translation.factor = factor;
+    desc.translation.power = power;
+    ecs_unit_prefix_init(this->world(), &desc);
+
+    return to_base();
+}
+
+/** Add quantity to unit */
+Self& quantity(flecs::entity_t quantity) {
+    ecs_add_pair(this->world(), this->id(), flecs::Quantity, quantity);
+    return to_base();
+}
+
+/** Make entity a unity prefix */
+template <typename Quantity>
+Self& quantity() {
+    return this->quantity(_::cpp_type<Quantity>::id(this->world()));
+}
+
+/** Make entity a quantity */
+Self& quantity() {
+    ecs_add_id(this->world(), this->id(), flecs::Quantity);
+    return to_base();
+}
+
+#   endif
+
 protected:
     Self& to_base() {
         return *static_cast<Self*>(this);
@@ -18227,6 +18446,10 @@ struct cpp_type_impl {
         entity_t entity, 
         bool allow_tag = true) 
     {
+        if (s_reset_count != ecs_cpp_reset_count_get()) {
+            reset();
+        }
+
         // If an identifier was already set, check for consistency
         if (s_id) {
             ecs_assert(s_name.c_str() != nullptr, ECS_INTERNAL_ERROR, NULL);
@@ -18430,7 +18653,7 @@ struct untyped_component : entity {
 #   ifdef FLECS_META
 
 /** Add member. */
-untyped_component& member(const char *name, flecs::entity_t type_id, int32_t count = 0) {
+untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0) {
     ecs_entity_desc_t desc = {};
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
@@ -18447,11 +18670,45 @@ untyped_component& member(const char *name, flecs::entity_t type_id, int32_t cou
     return *this;
 }
 
+/** Add member with unit. */
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0) {
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    ecs_entity_t eid = ecs_entity_init(m_world, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    flecs::entity e(m_world, eid);
+
+    Member m = {};
+    m.type = type_id;
+    m.unit = unit;
+    m.count = count;
+    e.set<Member>(m);
+
+    return *this;
+}
+
 /** Add member. */
 template <typename MemberType>
 untyped_component& member(const char *name, int32_t count = 0) {
     flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
-    return member(name, type_id, count);
+    return member(type_id, name, count);
+}
+
+/** Add member with unit. */
+template <typename MemberType>
+untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
+    return member(type_id, unit, name, count);
+}
+
+/** Add member with unit. */
+template <typename MemberType, typename UnitType>
+untyped_component& member(const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
+    flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
+    return member(type_id, unit_id, name, count);
 }
 
 /** Add constant. */
@@ -21672,7 +21929,6 @@ FLECS_ENUM_LAST(flecs::type_kind_t, EcsTypeKindLast)
 FLECS_ENUM_LAST(flecs::primitive_kind_t, EcsPrimitiveKindLast)
 
 namespace flecs {
-
 namespace meta {
 namespace _ {
 
@@ -21705,11 +21961,160 @@ inline void init(flecs::world& world) {
     world.component<Struct>("flecs::meta::Struct");
     world.component<Array>("flecs::meta::Array");
     world.component<Vector>("flecs::meta::Vector");
+
+    world.component<Unit>("flecs::meta::Unit");
+
+    // To support member<uintptr_t> and member<intptr_t> register components
+    // (that do not have conflicting symbols with builtin ones) for platform
+    // specific types.
+
+    if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
+        flecs::_::cpp_type<iptr_t>::init(world, flecs::Iptr, true);
+        ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
+        flecs::_::cpp_type<uptr_t>::init(world, flecs::Uptr, true);
+        ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
+            ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 } // namespace _
 } // namespace meta
 } // namespace flecs
+
+#endif
+#ifdef FLECS_UNITS
+#pragma once
+
+namespace flecs {
+
+inline units::units(flecs::world& world) {
+    FlecsUnitsImport(world);
+    
+    world.module<units>();
+
+
+    // Initialize world.entity(prefixes) scope
+    world.entity<Prefixes>("::flecs::units::prefixes");
+
+    // Initialize prefixes
+    world.entity<Yocto>("::flecs::units::prefixes::Yocto");
+    world.entity<Zepto>("::flecs::units::prefixes::Zepto");
+    world.entity<Atto>("::flecs::units::prefixes::Atto");
+    world.entity<Femto>("::flecs::units::prefixes::Femto");
+    world.entity<Pico>("::flecs::units::prefixes::Pico");
+    world.entity<Nano>("::flecs::units::prefixes::Nano");
+    world.entity<Micro>("::flecs::units::prefixes::Micro");
+    world.entity<Milli>("::flecs::units::prefixes::Milli");
+    world.entity<Centi>("::flecs::units::prefixes::Centi");
+    world.entity<Deci>("::flecs::units::prefixes::Deci");
+    world.entity<Deca>("::flecs::units::prefixes::Deca");
+    world.entity<Hecto>("::flecs::units::prefixes::Hecto");
+    world.entity<Kilo>("::flecs::units::prefixes::Kilo");
+    world.entity<Mega>("::flecs::units::prefixes::Mega");
+    world.entity<Giga>("::flecs::units::prefixes::Giga");
+    world.entity<Tera>("::flecs::units::prefixes::Tera");
+    world.entity<Peta>("::flecs::units::prefixes::Peta");
+    world.entity<Exa>("::flecs::units::prefixes::Exa");
+    world.entity<Zetta>("::flecs::units::prefixes::Zetta");
+    world.entity<Yotta>("::flecs::units::prefixes::Yotta");
+    world.entity<Kibi>("::flecs::units::prefixes::Kibi");
+    world.entity<Mebi>("::flecs::units::prefixes::Mebi");
+    world.entity<Gibi>("::flecs::units::prefixes::Gibi");
+    world.entity<Tebi>("::flecs::units::prefixes::Tebi");
+    world.entity<Pebi>("::flecs::units::prefixes::Pebi");
+    world.entity<Exbi>("::flecs::units::prefixes::Exbi");
+    world.entity<Zebi>("::flecs::units::prefixes::Zebi");
+    world.entity<Yobi>("::flecs::units::prefixes::Yobi");
+
+    // Initialize quantities
+    world.entity<Duration>("::flecs::units::Duration");
+    world.entity<Time>("::flecs::units::Time");
+    world.entity<Length>("::flecs::units::Length");
+    world.entity<Data>("::flecs::units::Data");
+    world.entity<DataRate>("::flecs::units::DataRate");
+
+    // Initialize duration units
+    world.entity<duration::PicoSeconds>(
+        "::flecs::units::Duration::PicoSeconds");
+    world.entity<duration::NanoSeconds>(
+        "::flecs::units::Duration::NanoSeconds");
+    world.entity<duration::MicroSeconds>(
+        "::flecs::units::Duration::MicroSeconds");
+    world.entity<duration::MilliSeconds>(
+        "::flecs::units::Duration::MilliSeconds");
+    world.entity<duration::Seconds>(
+        "::flecs::units::Duration::Seconds");
+    world.entity<duration::Minutes>(
+        "::flecs::units::Duration::Minutes");
+    world.entity<duration::Hours>(
+        "::flecs::units::Duration::Hours");
+    world.entity<duration::Days>(
+        "::flecs::units::Duration::Days");
+
+    // Initialize time units
+    world.entity<time::Date>("::flecs::units::Time::Date");
+
+    // Initialize length units
+    world.entity<length::Meters>("::flecs::units::Length::Meters");
+    world.entity<length::PicoMeters>("::flecs::units::Length::PicoMeters");
+    world.entity<length::NanoMeters>("::flecs::units::Length::NanoMeters");
+    world.entity<length::MicroMeters>("::flecs::units::Length::MicroMeters");
+    world.entity<length::MilliMeters>("::flecs::units::Length::MilliMeters");
+    world.entity<length::CentiMeters>("::flecs::units::Length::CentiMeters");
+    world.entity<length::KiloMeters>("::flecs::units::Length::KiloMeters");
+    world.entity<length::Miles>("::flecs::units::Length::Miles");
+
+    // Initialize data units
+    world.entity<data::Bits>(
+        "::flecs::units::Data::Bits");
+    world.entity<data::KiloBits>(
+        "::flecs::units::Data::KiloBits");
+    world.entity<data::MegaBits>(
+        "::flecs::units::Data::MegaBits");
+    world.entity<data::GigaBits>(
+        "::flecs::units::Data::GigaBits");
+    world.entity<data::Bytes>(
+        "::flecs::units::Data::Bytes");
+    world.entity<data::KiloBytes>(
+        "::flecs::units::Data::KiloBytes");
+    world.entity<data::MegaBytes>(
+        "::flecs::units::Data::MegaBytes");
+    world.entity<data::GigaBytes>(
+        "::flecs::units::Data::GigaBytes");
+    world.entity<data::KibiBytes>(
+        "::flecs::units::Data::KibiBytes");
+    world.entity<data::MebiBytes>(
+        "::flecs::units::Data::MebiBytes");
+    world.entity<data::GibiBytes>(
+        "::flecs::units::Data::GibiBytes");
+
+    // Initialize datarate units
+    world.entity<datarate::BitsPerSecond>(
+        "::flecs::units::DataRate::BitsPerSecond");
+    world.entity<datarate::KiloBitsPerSecond>(
+        "::flecs::units::DataRate::KiloBitsPerSecond");
+    world.entity<datarate::MegaBitsPerSecond>(
+        "::flecs::units::DataRate::MegaBitsPerSecond");
+    world.entity<datarate::GigaBitsPerSecond>(
+        "::flecs::units::DataRate::GigaBitsPerSecond");
+    world.entity<datarate::BytesPerSecond>(
+        "::flecs::units::DataRate::BytesPerSecond");
+    world.entity<datarate::KiloBytesPerSecond>(
+        "::flecs::units::DataRate::KiloBytesPerSecond");
+    world.entity<datarate::MegaBytesPerSecond>(
+        "::flecs::units::DataRate::MegaBytesPerSecond");
+    world.entity<datarate::GigaBytesPerSecond>(
+        "::flecs::units::DataRate::GigaBytesPerSecond");
+
+    // Initialize percentage units
+    world.entity<Percentage>("::flecs::units::Percentage");
+}
+
+}
 
 #endif
 

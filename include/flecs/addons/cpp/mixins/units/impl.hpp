@@ -46,6 +46,7 @@ inline units::units(flecs::world& world) {
     world.entity<Time>("::flecs::units::Time");
     world.entity<Length>("::flecs::units::Length");
     world.entity<Data>("::flecs::units::Data");
+    world.entity<DataRate>("::flecs::units::DataRate");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -78,7 +79,7 @@ inline units::units(flecs::world& world) {
     world.entity<length::KiloMeters>("::flecs::units::Length::KiloMeters");
     world.entity<length::Miles>("::flecs::units::Length::Miles");
 
-    // Initialize information units
+    // Initialize data units
     world.entity<data::Bits>(
         "::flecs::units::Data::Bits");
     world.entity<data::KiloBits>(
@@ -102,8 +103,26 @@ inline units::units(flecs::world& world) {
     world.entity<data::GibiBytes>(
         "::flecs::units::Data::GibiBytes");
 
+    // Initialize datarate units
+    world.entity<datarate::BitsPerSecond>(
+        "::flecs::units::DataRate::BitsPerSecond");
+    world.entity<datarate::KiloBitsPerSecond>(
+        "::flecs::units::DataRate::KiloBitsPerSecond");
+    world.entity<datarate::MegaBitsPerSecond>(
+        "::flecs::units::DataRate::MegaBitsPerSecond");
+    world.entity<datarate::GigaBitsPerSecond>(
+        "::flecs::units::DataRate::GigaBitsPerSecond");
+    world.entity<datarate::BytesPerSecond>(
+        "::flecs::units::DataRate::BytesPerSecond");
+    world.entity<datarate::KiloBytesPerSecond>(
+        "::flecs::units::DataRate::KiloBytesPerSecond");
+    world.entity<datarate::MegaBytesPerSecond>(
+        "::flecs::units::DataRate::MegaBytesPerSecond");
+    world.entity<datarate::GigaBytesPerSecond>(
+        "::flecs::units::DataRate::GigaBytesPerSecond");
+
     // Initialize percentage units
-    // world.entity<Percentage>();
+    world.entity<Percentage>("::flecs::units::Percentage");
 }
 
 }

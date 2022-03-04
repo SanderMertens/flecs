@@ -73,6 +73,17 @@ ECS_DECLARE(EcsData);
         ECS_DECLARE(EcsGibiBytes);
         ECS_DECLARE(EcsMebiBytes);
 
+ECS_DECLARE(EcsDataRate);
+    ECS_DECLARE(EcsBitsPerSecond);
+    ECS_DECLARE(EcsKiloBitsPerSecond);
+    ECS_DECLARE(EcsMegaBitsPerSecond);
+    ECS_DECLARE(EcsGigaBitsPerSecond);
+    ECS_DECLARE(EcsBytesPerSecond);
+    ECS_DECLARE(EcsKiloBytesPerSecond);
+    ECS_DECLARE(EcsMegaBytesPerSecond);
+    ECS_DECLARE(EcsGigaBytesPerSecond);
+
+
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -537,6 +548,101 @@ void FlecsUnitsImport(
             });
 
     ecs_set_scope(world, prev_scope);
+
+    /* DataRate units */
+
+    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "DataRate" });
+    prev_scope = ecs_set_scope(world, EcsDataRate);
+
+        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "BitsPerSecond",
+            .quantity = EcsDataRate,
+            .base = EcsBits,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBitsPerSecond,
+            .kind = EcsU64
+        });
+
+            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "KiloBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsKiloBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsKiloBitsPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "MegaBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsMegaBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsMegaBitsPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "GigaBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsGigaBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsGigaBitsPerSecond,
+                .kind = EcsU64
+            });
+
+        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "BytesPerSecond",
+            .quantity = EcsDataRate,
+            .base = EcsBytes,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBytesPerSecond,
+            .kind = EcsU64
+        });
+
+            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "KiloBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsKiloBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsKiloBytesPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "MegaBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsMegaBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsMegaBytesPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "GigaBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsGigaBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsGigaBytesPerSecond,
+                .kind = EcsU64
+            });
+
+        ecs_set_scope(world, prev_scope);
+
 
     EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
         .name = "Percentage" });
