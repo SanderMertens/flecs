@@ -245,7 +245,10 @@ typedef struct EcsVector {
 /* Helper type to describe translation between two units. Note that this
  * is not intended as a generic approach to unit conversions (e.g. from celsius
  * to fahrenheit) but to translate between units that derive from the same base 
- * (e.g. meters to kilometers). */
+ * (e.g. meters to kilometers). 
+ * 
+ * Note that power is applied to the factor. When describing a translation of
+ * 1000, either use {factor = 1000, power = 1} or {factor = 1, power = 3}. */
 typedef struct ecs_unit_translation_t {
     int32_t factor; /* Factor to apply (e.g. "1000", "1000000", "1024") */
     int32_t power; /* Power to apply to factor (e.g. "1", "3", "-9") */
