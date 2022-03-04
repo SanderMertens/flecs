@@ -21880,7 +21880,7 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
-    char *derived_symbol = NULL;
+    char *base_symbol = NULL;
     ecs_entity_t t = ecs_entity_init(world, &desc->entity);
     if (!t) {
         goto error;
@@ -21901,19 +21901,19 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    ecs_entity_t derived = desc->derived;
-    if (derived) {
-        if (!ecs_has(world, derived, EcsUnit)) {
-            ecs_err("entity '%s' for unit '%s' used as derived is not a unit",
-                ecs_get_name(world, derived), ecs_get_name(world, t));
+    ecs_entity_t base = desc->base;
+    if (base) {
+        if (!ecs_has(world, base, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as base is not a unit",
+                ecs_get_name(world, base), ecs_get_name(world, t));
             goto error;
         }
     }
 
     ecs_entity_t over = desc->over;
     if (over) {
-        if (!derived) {
-            ecs_err("invalid unit '%s': cannot specify over without derived",
+        if (!base) {
+            ecs_err("invalid unit '%s': cannot specify over without base",
                 ecs_get_name(world, t));
             goto error;
         }
@@ -21928,8 +21928,8 @@ ecs_entity_t ecs_unit_init(
 
     ecs_entity_t prefix = desc->prefix;
     if (prefix) {
-        if (!derived) {
-            ecs_err("invalid unit '%s': cannot specify prefix without derived",
+        if (!base) {
+            ecs_err("invalid unit '%s': cannot specify prefix without base",
                 ecs_get_name(world, t));
             goto error;
         }
@@ -21954,8 +21954,8 @@ ecs_entity_t ecs_unit_init(
         }
     }
 
-    if (derived) {
-        bool must_match = false; /* Must derived symbol match symbol? */
+    if (base) {
+        bool must_match = false; /* Must base symbol match symbol? */
         ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
         if (prefix) {
             const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
@@ -21966,7 +21966,7 @@ ecs_entity_t ecs_unit_init(
             }
         }
 
-        const EcsUnit *uptr = ecs_get(world, derived, EcsUnit);
+        const EcsUnit *uptr = ecs_get(world, base, EcsUnit);
         ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
         if (uptr->symbol) {
             ecs_strbuf_appendstr(&sbuf, uptr->symbol);
@@ -21982,41 +21982,41 @@ ecs_entity_t ecs_unit_init(
             }
         }
 
-        derived_symbol = ecs_strbuf_get(&sbuf);
-        if (derived_symbol && !ecs_os_strlen(derived_symbol)) {
-            ecs_os_free(derived_symbol);
-            derived_symbol = NULL;
+        base_symbol = ecs_strbuf_get(&sbuf);
+        if (base_symbol && !ecs_os_strlen(base_symbol)) {
+            ecs_os_free(base_symbol);
+            base_symbol = NULL;
         }
 
-        if (derived_symbol && symbol && ecs_os_strcmp(symbol, derived_symbol)) {
+        if (base_symbol && symbol && ecs_os_strcmp(symbol, base_symbol)) {
             if (must_match) {
-                ecs_err("symbol '%s' for unit '%s' does not match derived"
+                ecs_err("symbol '%s' for unit '%s' does not match base"
                     " symbol '%s'", symbol, 
-                        ecs_get_name(world, t), derived_symbol);
+                        ecs_get_name(world, t), base_symbol);
                 goto error;
             }
         }
-        if (!symbol && derived_symbol && (prefix || over)) {
-            symbol = derived_symbol;
+        if (!symbol && base_symbol && (prefix || over)) {
+            symbol = base_symbol;
         }
     }
 
     ecs_set(world, t, EcsUnit, {
         .symbol = (char*)symbol,
-        .derived = derived,
+        .base = base,
         .over = over,
         .prefix = prefix,
         .translation = translation
     });
 
-    ecs_os_free(derived_symbol);
+    ecs_os_free(base_symbol);
 
     return t;
 error:
     if (t) {
         ecs_delete(world, t);
     }
-    ecs_os_free(derived_symbol);
+    ecs_os_free(base_symbol);
     return 0;
 }
 
@@ -22524,7 +22524,7 @@ static void dtor_unit(
 static ECS_COPY(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = ecs_os_strdup(src->symbol);
-    dst->derived = src->derived;
+    dst->base = src->base;
     dst->over = src->over;
     dst->prefix = src->prefix;
     dst->translation = src->translation;
@@ -22533,13 +22533,13 @@ static ECS_COPY(EcsUnit, dst, src, {
 static ECS_MOVE(EcsUnit, dst, src, {
     dtor_unit(dst);
     dst->symbol = src->symbol;
-    dst->derived = src->derived;
+    dst->base = src->base;
     dst->over = src->over;
     dst->prefix = src->prefix;
     dst->translation = src->translation;
 
     src->symbol = NULL;
-    src->derived = 0;
+    src->base = 0;
     src->over = 0;
     src->prefix = 0;
     src->translation = (ecs_unit_translation_t){0};
@@ -23521,9 +23521,9 @@ void FlecsMetaImport(
         .entity.entity = ecs_id(EcsUnit),
         .members = {
             {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"derived", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"base", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"translation", .type = ut}
         }
     });
@@ -25669,6 +25669,17 @@ ECS_DECLARE(EcsData);
         ECS_DECLARE(EcsGibiBytes);
         ECS_DECLARE(EcsMebiBytes);
 
+ECS_DECLARE(EcsDataRate);
+    ECS_DECLARE(EcsBitsPerSecond);
+    ECS_DECLARE(EcsKiloBitsPerSecond);
+    ECS_DECLARE(EcsMegaBitsPerSecond);
+    ECS_DECLARE(EcsGigaBitsPerSecond);
+    ECS_DECLARE(EcsBytesPerSecond);
+    ECS_DECLARE(EcsKiloBytesPerSecond);
+    ECS_DECLARE(EcsMegaBytesPerSecond);
+    ECS_DECLARE(EcsGigaBytesPerSecond);
+
+
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -25846,7 +25857,7 @@ void FlecsUnitsImport(
             EcsPicoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
                 .entity.name = "PicoSeconds",
                 .quantity = EcsDuration,
-                .derived = EcsSeconds,
+                .base = EcsSeconds,
                 .prefix = EcsPico });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsPicoSeconds,
@@ -25857,7 +25868,7 @@ void FlecsUnitsImport(
             EcsNanoSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
                 .entity.name = "NanoSeconds",
                 .quantity = EcsDuration,
-                .derived = EcsSeconds,
+                .base = EcsSeconds,
                 .prefix = EcsNano });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsNanoSeconds,
@@ -25867,7 +25878,7 @@ void FlecsUnitsImport(
             EcsMicroSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
                 .entity.name = "MicroSeconds",
                 .quantity = EcsDuration,
-                .derived = EcsSeconds,
+                .base = EcsSeconds,
                 .prefix = EcsMicro });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMicroSeconds,
@@ -25877,7 +25888,7 @@ void FlecsUnitsImport(
             EcsMilliSeconds = ecs_unit_init(world, &(ecs_unit_desc_t) {
                 .entity.name = "MilliSeconds",
                 .quantity = EcsDuration,
-                .derived = EcsSeconds,
+                .base = EcsSeconds,
                 .prefix = EcsMilli });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMilliSeconds,
@@ -25887,7 +25898,7 @@ void FlecsUnitsImport(
         EcsMinutes = ecs_unit_init(world, &(ecs_unit_desc_t) {
             .entity.name = "Minutes",
             .quantity = EcsDuration,
-            .derived = EcsSeconds,
+            .base = EcsSeconds,
             .symbol = "min",
             .translation = { .factor = 60, .power = 1 } });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -25898,7 +25909,7 @@ void FlecsUnitsImport(
         EcsHours = ecs_unit_init(world, &(ecs_unit_desc_t) {
             .entity.name = "Hours",
             .quantity = EcsDuration,
-            .derived = EcsMinutes,
+            .base = EcsMinutes,
             .symbol = "h",
             .translation = { .factor = 60, .power = 1 } });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -25909,7 +25920,7 @@ void FlecsUnitsImport(
         EcsDays = ecs_unit_init(world, &(ecs_unit_desc_t) {
             .entity.name = "Days",
             .quantity = EcsDuration,
-            .derived = EcsHours,
+            .base = EcsHours,
             .symbol = "d",
             .translation = { .factor = 24, .power = 1 } });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -25948,7 +25959,7 @@ void FlecsUnitsImport(
             EcsPicoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "PicoMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsPico });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsPicoMeters,
@@ -25958,7 +25969,7 @@ void FlecsUnitsImport(
             EcsNanoMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "NanoMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsNano });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsNanoMeters,
@@ -25968,7 +25979,7 @@ void FlecsUnitsImport(
             EcsMicroMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MicroMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsMicro });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMicroMeters,
@@ -25978,7 +25989,7 @@ void FlecsUnitsImport(
             EcsMilliMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MilliMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsMilli });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMilliMeters,
@@ -25988,7 +25999,7 @@ void FlecsUnitsImport(
             EcsCentiMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "CentiMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsCenti });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsCentiMeters,
@@ -25998,7 +26009,7 @@ void FlecsUnitsImport(
             EcsKiloMeters = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KiloMeters",
                 .quantity = EcsLength,
-                .derived = EcsMeters,
+                .base = EcsMeters,
                 .prefix = EcsKilo });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsKiloMeters,
@@ -26034,7 +26045,7 @@ void FlecsUnitsImport(
             EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KiloBits",
                 .quantity = EcsData,
-                .derived = EcsBits,
+                .base = EcsBits,
                 .prefix = EcsKilo });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsKiloBits,
@@ -26044,7 +26055,7 @@ void FlecsUnitsImport(
             EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MegaBits",
                 .quantity = EcsData,
-                .derived = EcsBits,
+                .base = EcsBits,
                 .prefix = EcsMega });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMegaBits,
@@ -26054,7 +26065,7 @@ void FlecsUnitsImport(
             EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GigaBits",
                 .quantity = EcsData,
-                .derived = EcsBits,
+                .base = EcsBits,
                 .prefix = EcsGiga });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsGigaBits,
@@ -26065,7 +26076,7 @@ void FlecsUnitsImport(
             .entity.name = "Bytes",
             .quantity = EcsData,
             .symbol = "B",
-            .derived = EcsBits,
+            .base = EcsBits,
             .translation = { .factor = 8, .power = 1 } });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
             .entity.entity = EcsBytes,
@@ -26075,7 +26086,7 @@ void FlecsUnitsImport(
             EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KiloBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsKilo });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsKiloBytes,
@@ -26085,7 +26096,7 @@ void FlecsUnitsImport(
             EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MegaBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsMega });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMegaBytes,
@@ -26095,7 +26106,7 @@ void FlecsUnitsImport(
             EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GigaBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsGiga });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsGigaBytes,
@@ -26105,7 +26116,7 @@ void FlecsUnitsImport(
             EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KibiBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsKibi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsKibiBytes,
@@ -26115,7 +26126,7 @@ void FlecsUnitsImport(
             EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MebiBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsMebi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsMebiBytes,
@@ -26125,7 +26136,7 @@ void FlecsUnitsImport(
             EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GibiBytes",
                 .quantity = EcsData,
-                .derived = EcsBytes,
+                .base = EcsBytes,
                 .prefix = EcsGibi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
                 .entity.entity = EcsGibiBytes,
@@ -26133,6 +26144,101 @@ void FlecsUnitsImport(
             });
 
     ecs_set_scope(world, prev_scope);
+
+    /* DataRate units */
+
+    EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "DataRate" });
+    prev_scope = ecs_set_scope(world, EcsDataRate);
+
+        EcsBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "BitsPerSecond",
+            .quantity = EcsDataRate,
+            .base = EcsBits,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBitsPerSecond,
+            .kind = EcsU64
+        });
+
+            EcsKiloBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "KiloBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsKiloBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsKiloBitsPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsMegaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "MegaBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsMegaBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsMegaBitsPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsGigaBitsPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "GigaBitsPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsGigaBits,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsGigaBitsPerSecond,
+                .kind = EcsU64
+            });
+
+        EcsBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "BytesPerSecond",
+            .quantity = EcsDataRate,
+            .base = EcsBytes,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBytesPerSecond,
+            .kind = EcsU64
+        });
+
+            EcsKiloBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "KiloBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsKiloBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsKiloBytesPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsMegaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "MegaBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsMegaBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsMegaBytesPerSecond,
+                .kind = EcsU64
+            });
+
+            EcsGigaBytesPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+                .entity.name = "GigaBytesPerSecond",
+                .quantity = EcsDataRate,
+                .base = EcsGigaBytes,
+                .over = EcsSeconds
+            });
+            ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+                .entity.entity = EcsGigaBytesPerSecond,
+                .kind = EcsU64
+            });
+
+        ecs_set_scope(world, prev_scope);
+
 
     EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
         .name = "Percentage" });
@@ -26155,7 +26261,7 @@ void FlecsUnitsImport(
     ecs_doc_set_brief(world, EcsDays, "24 hours");
 
     ecs_doc_set_brief(world, EcsTime,
-        "Seconds passed since epoch (e.g. \"5pm\", \"March 3rd 2022\")");
+        "Time passed since an epoch (e.g. \"5pm\", \"March 3rd 2022\")");
     ecs_doc_set_brief(world, EcsDate,
         "Seconds passed since January 1st 1970");
 
@@ -33286,7 +33392,7 @@ ecs_world_t *ecs_init(void) {
     ECS_IMPORT(world, FlecsRest);
 #endif
 #ifdef FLECS_UNITS
-    ECS_IMPORT(world, FlecsUnits);
+    ecs_trace("#[green]module#[reset] flecs.units is not automatically imported");
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();

@@ -47,6 +47,7 @@ struct Duration { };
 struct Time { };
 struct Length { };
 struct Data { };
+struct DataRate { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +92,17 @@ struct GigaBytes { };
 struct KibiBytes { };
 struct MebiBytes { };
 struct GibiBytes { };
+};
+
+struct datarate {
+struct BitsPerSecond { };
+struct KiloBitsPerSecond { };
+struct MegaBitsPerSecond { };
+struct GigaBitsPerSecond { };
+struct BytesPerSecond { };
+struct KiloBytesPerSecond { };
+struct MegaBytesPerSecond { };
+struct GigaBytesPerSecond { };
 };
 
 struct Percentage { };
