@@ -272,34 +272,43 @@ ecs_entity_t ecs_unit_init(
         if (prefix) {
             const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
             ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_appendstr(&sbuf, ptr->symbol);
-            must_match = true;
+            if (ptr->symbol) {
+                ecs_strbuf_appendstr(&sbuf, ptr->symbol);
+                must_match = true;
+            }
         }
 
         const EcsUnit *uptr = ecs_get(world, derived, EcsUnit);
         ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+        if (uptr->symbol) {
+            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+        }
 
         if (over) {
             uptr = ecs_get(world, over, EcsUnit);
             ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_strbuf_appendstr(&sbuf, "/");
-            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
-            must_match = true;
+            if (uptr->symbol) {
+                ecs_strbuf_appendstr(&sbuf, "/");
+                ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+                must_match = true;
+            }
         }
 
         derived_symbol = ecs_strbuf_get(&sbuf);
-        ecs_assert(derived_symbol != NULL && ecs_os_strlen(derived_symbol) != 0, 
-            ECS_INTERNAL_ERROR, NULL);
+        if (derived_symbol && !ecs_os_strlen(derived_symbol)) {
+            ecs_os_free(derived_symbol);
+            derived_symbol = NULL;
+        }
 
-        if (symbol && ecs_os_strcmp(symbol, derived_symbol)) {
+        if (derived_symbol && symbol && ecs_os_strcmp(symbol, derived_symbol)) {
             if (must_match) {
                 ecs_err("symbol '%s' for unit '%s' does not match derived"
                     " symbol '%s'", symbol, 
                         ecs_get_name(world, t), derived_symbol);
                 goto error;
             }
-        } else if (!symbol) {
+        }
+        if (!symbol && derived_symbol && (prefix || over)) {
             symbol = derived_symbol;
         }
     }
