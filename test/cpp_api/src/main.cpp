@@ -878,6 +878,15 @@ void Misc_c_macros(void);
 void Misc_app_run(void);
 void Misc_app_run_target_fps(void);
 
+// Testsuite 'Meta'
+void Meta_struct(void);
+void Meta_nested_struct(void);
+void Meta_struct_w_portable_type(void);
+void Meta_units(void);
+void Meta_unit_w_quantity(void);
+void Meta_unit_w_prefix(void);
+void Meta_unit_w_over(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -4224,6 +4233,37 @@ bake_test_case Misc_testcases[] = {
     }
 };
 
+bake_test_case Meta_testcases[] = {
+    {
+        "struct",
+        Meta_struct
+    },
+    {
+        "nested_struct",
+        Meta_nested_struct
+    },
+    {
+        "struct_w_portable_type",
+        Meta_struct_w_portable_type
+    },
+    {
+        "units",
+        Meta_units
+    },
+    {
+        "unit_w_quantity",
+        Meta_unit_w_quantity
+    },
+    {
+        "unit_w_prefix",
+        Meta_unit_w_prefix
+    },
+    {
+        "unit_w_over",
+        Meta_unit_w_over
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -4406,9 +4446,16 @@ static bake_test_suite suites[] = {
         NULL,
         11,
         Misc_testcases
+    },
+    {
+        "Meta",
+        NULL,
+        NULL,
+        7,
+        Meta_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 26);
+    return bake_test_run("cpp_api", argc, argv, suites, 27);
 }

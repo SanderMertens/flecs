@@ -25656,7 +25656,7 @@ ECS_DECLARE(EcsLength);
         ECS_DECLARE(EcsKiloMeters);
     ECS_DECLARE(EcsMiles);
 
-ECS_DECLARE(EcsInformation);
+ECS_DECLARE(EcsData);
     ECS_DECLARE(EcsBits);
         ECS_DECLARE(EcsKiloBits);
         ECS_DECLARE(EcsMegaBits);
@@ -25667,7 +25667,7 @@ ECS_DECLARE(EcsInformation);
         ECS_DECLARE(EcsGigaBytes);
         ECS_DECLARE(EcsKibiBytes);
         ECS_DECLARE(EcsGibiBytes);
-        ECS_DECLARE(EcsMibiBytes);
+        ECS_DECLARE(EcsMebiBytes);
 
 void FlecsUnitsImport(
     ecs_world_t *world)
@@ -26016,15 +26016,15 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Information units */
+    /* Data units */
 
-    EcsInformation = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
-        .name = "Information" });
-    prev_scope = ecs_set_scope(world, EcsInformation);
+    EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Data" });
+    prev_scope = ecs_set_scope(world, EcsData);
 
         EcsBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "Bits",
-            .quantity = EcsInformation,
+            .quantity = EcsData,
             .symbol = "bit" });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
             .entity.entity = EcsBits,
@@ -26033,7 +26033,7 @@ void FlecsUnitsImport(
 
             EcsKiloBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KiloBits",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBits,
                 .prefix = EcsKilo });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26043,7 +26043,7 @@ void FlecsUnitsImport(
 
             EcsMegaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MegaBits",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBits,
                 .prefix = EcsMega });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26053,7 +26053,7 @@ void FlecsUnitsImport(
 
             EcsGigaBits = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GigaBits",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBits,
                 .prefix = EcsGiga });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26063,7 +26063,7 @@ void FlecsUnitsImport(
 
         EcsBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "Bytes",
-            .quantity = EcsInformation,
+            .quantity = EcsData,
             .symbol = "B",
             .derived = EcsBits,
             .translation = { .factor = 8, .power = 1 } });
@@ -26074,7 +26074,7 @@ void FlecsUnitsImport(
 
             EcsKiloBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KiloBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsKilo });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26084,7 +26084,7 @@ void FlecsUnitsImport(
 
             EcsMegaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MegaBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsMega });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26094,7 +26094,7 @@ void FlecsUnitsImport(
 
             EcsGigaBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GigaBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsGiga });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26104,7 +26104,7 @@ void FlecsUnitsImport(
 
             EcsKibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "KibiBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsKibi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26112,19 +26112,19 @@ void FlecsUnitsImport(
                 .kind = EcsU64
             });
 
-            EcsMibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            EcsMebiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "MebiBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsMebi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
-                .entity.entity = EcsMibiBytes,
+                .entity.entity = EcsMebiBytes,
                 .kind = EcsU64
             });
 
             EcsGibiBytes = ecs_unit_init(world, &(ecs_unit_desc_t) { 
                 .entity.name = "GibiBytes",
-                .quantity = EcsInformation,
+                .quantity = EcsData,
                 .derived = EcsBytes,
                 .prefix = EcsGibi });
             ecs_primitive_init(world, &(ecs_primitive_desc_t) {
@@ -26164,7 +26164,7 @@ void FlecsUnitsImport(
     ecs_doc_set_brief(world, EcsMeters, "Length in meters");
     ecs_doc_set_brief(world, EcsMiles, "Length in miles");
 
-    ecs_doc_set_brief(world, EcsInformation,
+    ecs_doc_set_brief(world, EcsData,
         "Unit of information (e.g. \"8 bits\", \"100 megabytes\")");
     ecs_doc_set_brief(world, EcsBits, "Basic unit of information (0 or 1)");
     ecs_doc_set_brief(world, EcsBytes, "8 bits");

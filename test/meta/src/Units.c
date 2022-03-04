@@ -218,7 +218,7 @@ void Units_unit_w_derived() {
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "minutes",
         .symbol = "m",
-        .derived = u_1
+        .base = u_1
     });
     test_assert(u_2 != 0);
     test_assert(ecs_has(world, u_2, EcsUnit));
@@ -230,7 +230,7 @@ void Units_unit_w_derived() {
     uptr = ecs_get(world, u_2, EcsUnit);
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "m");
-    test_uint(uptr->derived, u_1);
+    test_uint(uptr->base, u_1);
 
     ecs_fini(world);
 }
@@ -258,7 +258,7 @@ void Units_unit_w_prefix() {
 
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "kilometers",
-        .derived = u_1,
+        .base = u_1,
         .prefix = kilo
     });
     test_assert(u_2 != 0);
@@ -271,7 +271,7 @@ void Units_unit_w_prefix() {
     uptr = ecs_get(world, u_2, EcsUnit);
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "km");
-    test_uint(uptr->derived, u_1);
+    test_uint(uptr->base, u_1);
     test_uint(uptr->prefix, kilo);
     test_int(uptr->translation.factor, 1000);
     test_int(uptr->translation.power, 1);
@@ -298,7 +298,7 @@ void Units_unit_w_over() {
 
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
-        .derived = u_2,
+        .base = u_2,
         .over = u_1
     });
     test_assert(u_3 != 0);
@@ -315,7 +315,7 @@ void Units_unit_w_over() {
     uptr = ecs_get(world, u_3, EcsUnit);
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "m/s");
-    test_uint(uptr->derived, u_2);
+    test_uint(uptr->base, u_2);
     test_uint(uptr->over, u_1);
 
     ecs_fini(world);
@@ -368,7 +368,7 @@ void Units_unit_w_invalid_derived() {
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters",
         .symbol = "m",
-        .derived = u_1
+        .base = u_1
     });
     test_assert(u_2 == 0);
 
@@ -392,7 +392,7 @@ void Units_unit_w_invalid_over() {
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
         .symbol = "mps",
-        .derived = u_2,
+        .base = u_2,
         .over = u_1
     });
     test_assert(u_3 == 0);
@@ -420,7 +420,7 @@ void Units_unit_w_invalid_symbol_w_over() {
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "meters_per_second",
         .symbol = "mps",
-        .derived = u_2,
+        .base = u_2,
         .over = u_1
     });
     test_assert(u_3 == 0);
@@ -448,7 +448,7 @@ void Units_unit_w_invalid_symbol_w_prefix() {
     ecs_entity_t u_3 = ecs_unit_init(world, &(ecs_unit_desc_t) {
         .entity.name = "kilometers",
         .symbol = "Km",
-        .derived = u_2,
+        .base = u_2,
         .prefix = u_1
     });
     test_assert(u_3 == 0);

@@ -256,9 +256,9 @@ typedef struct ecs_unit_translation_t {
 
 typedef struct EcsUnit {
     char *symbol;
-    ecs_entity_t derived; /* Derived from unit (e.g. "meters") */
-    ecs_entity_t over; /* Over unit (e.g. "per second") */
     ecs_entity_t prefix; /* Order of magnitude prefix relative to derived */
+    ecs_entity_t base; /* Base unit (e.g. "meters") */
+    ecs_entity_t over; /* Over unit (e.g. "per second") */
     ecs_unit_translation_t translation; /* Translation for derived unit */
 } EcsUnit;
 
@@ -555,8 +555,8 @@ typedef struct ecs_unit_desc_t {
     /* Unit quantity, e.g. distance, percentage, weight. (optional) */
     ecs_entity_t quantity;
 
-    /* Derived from unit, e.g. "meters" (optional) */
-    ecs_entity_t derived;
+    /* Base unit, e.g. "meters" (optional) */
+    ecs_entity_t base;
 
     /* Over unit, e.g. "per second" (optional) */
     ecs_entity_t over;

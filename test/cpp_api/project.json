@@ -934,6 +934,17 @@
                 "app_run",
                 "app_run_target_fps"
             ]
+        }, {
+            "id": "Meta",
+            "testcases": [
+                "struct",
+                "nested_struct",
+                "struct_w_portable_type",
+                "units",
+                "unit_w_quantity",
+                "unit_w_prefix",
+                "unit_w_over"
+            ]
         }]
     }
 }

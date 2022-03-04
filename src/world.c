@@ -678,7 +678,7 @@ ecs_world_t *ecs_init(void) {
     ECS_IMPORT(world, FlecsRest);
 #endif
 #ifdef FLECS_UNITS
-    ECS_IMPORT(world, FlecsUnits);
+    ecs_trace("#[green]module#[reset] flecs.units is not automatically imported");
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();

@@ -1,22 +1,101 @@
 #pragma once
 
 namespace flecs {
-namespace units {
+struct units {
 
-static const flecs::entity_t Duration = EcsDuration;
-static const flecs::entity_t Seconds = EcsSeconds;
+////////////////////////////////////////////////////////////////////////////////
+//// Unit prefixes
+////////////////////////////////////////////////////////////////////////////////
 
-static const flecs::entity_t Time = EcsTime;
-static const flecs::entity_t Date = EcsDate;
+struct Prefixes { };
 
-static const flecs::entity_t Percentage = EcsPercentage;
+struct Yocto { };
+struct Zepto { };
+struct Atto { };
+struct Femto { };
+struct Pico { };
+struct Nano { };
+struct Micro { };
+struct Milli { };
+struct Centi { };
+struct Deci { };
+struct Deca { };
+struct Hecto { };
+struct Kilo { };
+struct Mega { };
+struct Giga { };
+struct Tera { };
+struct Peta { };
+struct Exa { };
+struct Zetta { };
+struct Yotta { };
+struct Kibi { };
+struct Mebi { };
+struct Gibi { };
+struct Tebi { };
+struct Pebi { };
+struct Exbi { };
+struct Zebi { };
+struct Yobi { };
 
-static const flecs::entity_t Distance = EcsDistance;
-static const flecs::entity_t Meters = EcsMeters;
-static const flecs::entity_t Miles = EcsMiles;
 
-static const flecs::entity_t Data = EcsData;
-static const flecs::entity_t Bytes = EcsBytes;
+////////////////////////////////////////////////////////////////////////////////
+//// Quantities
+////////////////////////////////////////////////////////////////////////////////
 
-}
+struct Duration { };
+struct Time { };
+struct Length { };
+struct Data { };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Units
+////////////////////////////////////////////////////////////////////////////////
+
+struct duration {
+struct PicoSeconds { };
+struct NanoSeconds { };
+struct MicroSeconds { };
+struct MilliSeconds { };
+struct Seconds { };
+struct Minutes { };
+struct Hours { };
+struct Days { };
+};
+
+struct time {
+struct Date { };
+};
+
+struct length {
+struct Meters { };
+struct PicoMeters { };
+struct NanoMeters { };
+struct MicroMeters { };
+struct MilliMeters { };
+struct CentiMeters { };
+struct KiloMeters { };
+struct Miles { };
+};
+
+struct data {
+struct Bits { };
+struct KiloBits { };
+struct MegaBits { };
+struct GigaBits { };
+struct Bytes { };
+struct KiloBytes { };
+struct MegaBytes { };
+struct GigaBytes { };
+struct KibiBytes { };
+struct MebiBytes { };
+struct GibiBytes { };
+};
+
+struct Percentage { };
+
+units(flecs::world& world);
+
+};
 }

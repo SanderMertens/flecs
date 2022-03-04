@@ -10,8 +10,8 @@ int main(int, char *[]) {
         .member<float>("y");
 
     auto line = ecs.component("Line")
-        .member("start", point)
-        .member("stop", point);
+        .member(point, "start")
+        .member(point, "stop");
 
     // Create entity, set value of position using reflection API
     auto e = ecs.entity();

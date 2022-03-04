@@ -26,80 +26,80 @@ extern "C" {
 //// Unit prefixes
 ////////////////////////////////////////////////////////////////////////////////
 
-extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
+FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
 
-extern ECS_DECLARE(EcsYocto);
-extern ECS_DECLARE(EcsZepto);
-extern ECS_DECLARE(EcsAtto);
-extern ECS_DECLARE(EcsFemto);
-extern ECS_DECLARE(EcsPico);
-extern ECS_DECLARE(EcsNano);
-extern ECS_DECLARE(EcsMicro);
-extern ECS_DECLARE(EcsMilli);
-extern ECS_DECLARE(EcsCenti);
-extern ECS_DECLARE(EcsDeci);
-extern ECS_DECLARE(EcsDeca);
-extern ECS_DECLARE(EcsHecto);
-extern ECS_DECLARE(EcsKilo);
-extern ECS_DECLARE(EcsMega);
-extern ECS_DECLARE(EcsGiga);
-extern ECS_DECLARE(EcsTera);
-extern ECS_DECLARE(EcsPeta);
-extern ECS_DECLARE(EcsExa);
-extern ECS_DECLARE(EcsZetta);
-extern ECS_DECLARE(EcsYotta);
+FLECS_API extern ECS_DECLARE(EcsYocto);
+FLECS_API extern ECS_DECLARE(EcsZepto);
+FLECS_API extern ECS_DECLARE(EcsAtto);
+FLECS_API extern ECS_DECLARE(EcsFemto);
+FLECS_API extern ECS_DECLARE(EcsPico);
+FLECS_API extern ECS_DECLARE(EcsNano);
+FLECS_API extern ECS_DECLARE(EcsMicro);
+FLECS_API extern ECS_DECLARE(EcsMilli);
+FLECS_API extern ECS_DECLARE(EcsCenti);
+FLECS_API extern ECS_DECLARE(EcsDeci);
+FLECS_API extern ECS_DECLARE(EcsDeca);
+FLECS_API extern ECS_DECLARE(EcsHecto);
+FLECS_API extern ECS_DECLARE(EcsKilo);
+FLECS_API extern ECS_DECLARE(EcsMega);
+FLECS_API extern ECS_DECLARE(EcsGiga);
+FLECS_API extern ECS_DECLARE(EcsTera);
+FLECS_API extern ECS_DECLARE(EcsPeta);
+FLECS_API extern ECS_DECLARE(EcsExa);
+FLECS_API extern ECS_DECLARE(EcsZetta);
+FLECS_API extern ECS_DECLARE(EcsYotta);
 
-extern ECS_DECLARE(EcsKibi);
-extern ECS_DECLARE(EcsMebi);
-extern ECS_DECLARE(EcsGibi);
-extern ECS_DECLARE(EcsTebi);
-extern ECS_DECLARE(EcsPebi);
-extern ECS_DECLARE(EcsExbi);
-extern ECS_DECLARE(EcsZebi);
-extern ECS_DECLARE(EcsYobi);
+FLECS_API extern ECS_DECLARE(EcsKibi);
+FLECS_API extern ECS_DECLARE(EcsMebi);
+FLECS_API extern ECS_DECLARE(EcsGibi);
+FLECS_API extern ECS_DECLARE(EcsTebi);
+FLECS_API extern ECS_DECLARE(EcsPebi);
+FLECS_API extern ECS_DECLARE(EcsExbi);
+FLECS_API extern ECS_DECLARE(EcsZebi);
+FLECS_API extern ECS_DECLARE(EcsYobi);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Units & quantities
 ////////////////////////////////////////////////////////////////////////////////
 
-extern ECS_DECLARE(EcsDuration);
-extern     ECS_DECLARE(EcsPicoSeconds);
-extern     ECS_DECLARE(EcsNanoSeconds);
-extern     ECS_DECLARE(EcsMicroSeconds);
-extern     ECS_DECLARE(EcsMilliSeconds);
-extern     ECS_DECLARE(EcsSeconds);
-extern     ECS_DECLARE(EcsMinutes);
-extern     ECS_DECLARE(EcsHours);
-extern     ECS_DECLARE(EcsDays);
+FLECS_API extern ECS_DECLARE(EcsDuration);
+FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);
+FLECS_API extern     ECS_DECLARE(EcsNanoSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMicroSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMilliSeconds);
+FLECS_API extern     ECS_DECLARE(EcsSeconds);
+FLECS_API extern     ECS_DECLARE(EcsMinutes);
+FLECS_API extern     ECS_DECLARE(EcsHours);
+FLECS_API extern     ECS_DECLARE(EcsDays);
 
-extern ECS_DECLARE(EcsTime);
-extern     ECS_DECLARE(EcsDate);
+FLECS_API extern ECS_DECLARE(EcsTime);
+FLECS_API extern     ECS_DECLARE(EcsDate);
 
-extern ECS_DECLARE(EcsPercentage);
+FLECS_API extern ECS_DECLARE(EcsPercentage);
 
-extern ECS_DECLARE(EcsLength);
-extern     ECS_DECLARE(EcsMeters);
-extern         ECS_DECLARE(EcsPicoMeters);
-extern         ECS_DECLARE(EcsNanoMeters);
-extern         ECS_DECLARE(EcsMicroMeters);
-extern         ECS_DECLARE(EcsMilliMeters);
-extern         ECS_DECLARE(EcsCentiMeters);
-extern         ECS_DECLARE(EcsKiloMeters);
-extern     ECS_DECLARE(EcsMiles);
+FLECS_API extern ECS_DECLARE(EcsLength);
+FLECS_API extern     ECS_DECLARE(EcsMeters);
+FLECS_API extern         ECS_DECLARE(EcsPicoMeters);
+FLECS_API extern         ECS_DECLARE(EcsNanoMeters);
+FLECS_API extern         ECS_DECLARE(EcsMicroMeters);
+FLECS_API extern         ECS_DECLARE(EcsMilliMeters);
+FLECS_API extern         ECS_DECLARE(EcsCentiMeters);
+FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
+FLECS_API extern     ECS_DECLARE(EcsMiles);
 
-extern ECS_DECLARE(EcsInformation);
-extern     ECS_DECLARE(EcsBits);
-extern         ECS_DECLARE(EcsKiloBits);
-extern         ECS_DECLARE(EcsMegaBits);
-extern         ECS_DECLARE(EcsGigaBits);
-extern     ECS_DECLARE(EcsBytes);
-extern         ECS_DECLARE(EcsKiloBytes);
-extern         ECS_DECLARE(EcsMegaBytes);
-extern         ECS_DECLARE(EcsGigaBytes);
-extern         ECS_DECLARE(EcsKibiBytes);
-extern         ECS_DECLARE(EcsMibiBytes);
-extern         ECS_DECLARE(EcsGibiBytes);
+FLECS_API extern ECS_DECLARE(EcsData);
+FLECS_API extern     ECS_DECLARE(EcsBits);
+FLECS_API extern         ECS_DECLARE(EcsKiloBits);
+FLECS_API extern         ECS_DECLARE(EcsMegaBits);
+FLECS_API extern         ECS_DECLARE(EcsGigaBits);
+FLECS_API extern     ECS_DECLARE(EcsBytes);
+FLECS_API extern         ECS_DECLARE(EcsKiloBytes);
+FLECS_API extern         ECS_DECLARE(EcsMegaBytes);
+FLECS_API extern         ECS_DECLARE(EcsGigaBytes);
+FLECS_API extern         ECS_DECLARE(EcsKibiBytes);
+FLECS_API extern         ECS_DECLARE(EcsMebiBytes);
+FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module

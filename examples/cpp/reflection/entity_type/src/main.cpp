@@ -11,7 +11,7 @@ int main(int, char *[]) {
     // Using flecs::entity_t directly would resolve to a uint64_t datatype, so
     // use flecs::Entity instead.
     ecs.component<TypeWithEntity>()
-        .member("e", flecs::Entity);
+        .member(flecs::Entity, "e");
 
     auto foo = ecs.entity("Foo");
 

@@ -600,7 +600,11 @@ struct entity_builder : entity_view {
     }
 
 #   ifdef FLECS_DOC
-#   include "../doc/entity_builder_mixin.inl"
+#   include "../doc/entity_builder.inl"
+#   endif
+
+#   ifdef FLECS_META
+#   include "../meta/entity_builder.inl"
 #   endif
 
 protected:
