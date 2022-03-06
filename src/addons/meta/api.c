@@ -192,13 +192,10 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
-    char *base_symbol = NULL;
     ecs_entity_t t = ecs_entity_init(world, &desc->entity);
     if (!t) {
         goto error;
     }
-
-    const char *symbol = desc->symbol;
 
     ecs_entity_t quantity = desc->quantity;
     if (quantity) {
@@ -213,122 +210,24 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    ecs_entity_t base = desc->base;
-    if (base) {
-        if (!ecs_has(world, base, EcsUnit)) {
-            ecs_err("entity '%s' for unit '%s' used as base is not a unit",
-                ecs_get_name(world, base), ecs_get_name(world, t));
-            goto error;
-        }
+    EcsUnit *value = ecs_get_mut(world, t, EcsUnit, 0);
+    value->base = desc->base;
+    value->over = desc->over;
+    value->translation = desc->translation;
+    value->prefix = desc->prefix;
+    ecs_os_strset(&value->symbol, desc->symbol);
+
+    if (!flecs_unit_validate(world, t, value)) {
+        goto error;
     }
 
-    ecs_entity_t over = desc->over;
-    if (over) {
-        if (!base) {
-            ecs_err("invalid unit '%s': cannot specify over without base",
-                ecs_get_name(world, t));
-            goto error;
-        }
-        if (!ecs_has(world, over, EcsUnit)) {
-            ecs_err("entity '%s' for unit '%s' used as over is not a unit",
-                ecs_get_name(world, over), ecs_get_name(world, t));
-            goto error;
-        }
-    }
-
-    ecs_unit_translation_t translation = desc->translation;
-
-    ecs_entity_t prefix = desc->prefix;
-    if (prefix) {
-        if (!base) {
-            ecs_err("invalid unit '%s': cannot specify prefix without base",
-                ecs_get_name(world, t));
-            goto error;
-        }
-        const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
-        if (!prefix_ptr) {
-            ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
-                ecs_get_name(world, over), ecs_get_name(world, t));
-            goto error;
-        }
-
-        if (translation.factor || translation.power) {
-            if (prefix_ptr->translation.factor != translation.factor ||
-                prefix_ptr->translation.power != translation.power)
-            {
-                ecs_err(
-                    "factor for unit '%s' is inconsistent with prefix '%s'",
-                    ecs_get_name(world, t), ecs_get_name(world, prefix));
-                goto error;
-            }
-        } else {
-            translation = prefix_ptr->translation;
-        }
-    }
-
-    if (base) {
-        bool must_match = false; /* Must base symbol match symbol? */
-        ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
-        if (prefix) {
-            const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
-            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (ptr->symbol) {
-                ecs_strbuf_appendstr(&sbuf, ptr->symbol);
-                must_match = true;
-            }
-        }
-
-        const EcsUnit *uptr = ecs_get(world, base, EcsUnit);
-        ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (uptr->symbol) {
-            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
-        }
-
-        if (over) {
-            uptr = ecs_get(world, over, EcsUnit);
-            ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (uptr->symbol) {
-                ecs_strbuf_appendstr(&sbuf, "/");
-                ecs_strbuf_appendstr(&sbuf, uptr->symbol);
-                must_match = true;
-            }
-        }
-
-        base_symbol = ecs_strbuf_get(&sbuf);
-        if (base_symbol && !ecs_os_strlen(base_symbol)) {
-            ecs_os_free(base_symbol);
-            base_symbol = NULL;
-        }
-
-        if (base_symbol && symbol && ecs_os_strcmp(symbol, base_symbol)) {
-            if (must_match) {
-                ecs_err("symbol '%s' for unit '%s' does not match base"
-                    " symbol '%s'", symbol, 
-                        ecs_get_name(world, t), base_symbol);
-                goto error;
-            }
-        }
-        if (!symbol && base_symbol && (prefix || over)) {
-            symbol = base_symbol;
-        }
-    }
-
-    ecs_set(world, t, EcsUnit, {
-        .symbol = (char*)symbol,
-        .base = base,
-        .over = over,
-        .prefix = prefix,
-        .translation = translation
-    });
-
-    ecs_os_free(base_symbol);
+    ecs_modified(world, t, EcsUnit);
 
     return t;
 error:
     if (t) {
         ecs_delete(world, t);
     }
-    ecs_os_free(base_symbol);
     return 0;
 }
 

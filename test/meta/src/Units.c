@@ -205,6 +205,33 @@ void Units_unit_w_self_quantity() {
     ecs_fini(world);
 }
 
+void Units_unit_w_self_quantity_after_init() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t) {
+        .entity.name = "percentage",
+        .symbol = "%"
+    });
+    test_assert(u != 0);
+    test_str("percentage", ecs_get_name(world, u));
+    test_assert(ecs_has(world, u, EcsUnit));
+
+    const EcsUnit *uptr = ecs_get(world, u, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "%");
+
+    ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t) {
+        .entity = u
+    });
+    test_assert(q != 0);
+    test_assert(q == u);
+    test_assert(ecs_has_id(world, q, EcsQuantity));
+
+    test_assert(ecs_has_pair(world, u, EcsQuantity, u));
+
+    ecs_fini(world);
+}
+
 void Units_unit_w_derived() {
     ecs_world_t *world = ecs_init();
 
@@ -596,6 +623,245 @@ void Units_define_twice_remove_quantity() {
     uptr = ecs_get(world, u, EcsUnit);
     test_assert(uptr != NULL);
     test_str(uptr->symbol, "s");
+
+    ecs_fini(world);
+}
+
+void Units_set_unit() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = { EcsQuantity }
+    });
+    test_assert(q != 0);
+
+    ecs_entity_t u = ecs_new_id(world);
+    test_assert(u != 0);
+
+    ecs_set(world, u, EcsUnit, {
+        .symbol = "u"
+    });
+
+    const EcsUnit *uptr = ecs_get(world, u, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "u");
+
+    ecs_add_pair(world, u, EcsQuantity, q);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
+        }
+    });
+    test_assert(s != 0);
+
+    const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
+    test_assert(sptr != NULL);
+    test_int(1, ecs_vector_count(sptr->members));
+    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_str(members[0].name, "value");
+    test_uint(members[0].type, ecs_id(ecs_f32_t));
+    test_uint(members[0].unit, u);
+    test_int(members[0].count, 1);
+
+    ecs_entity_t m = ecs_lookup_child(world, s, "value");
+    test_assert(m != 0);
+
+    const EcsMember *mptr = ecs_get(world, m, EcsMember);
+    test_assert(mptr != NULL);
+    test_assert(mptr->type == ecs_id(ecs_f32_t));
+    test_assert(mptr->unit == u);
+
+    ecs_fini(world);
+}
+
+void Units_set_unit_w_derived() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = { EcsQuantity }
+    });
+    test_assert(q != 0);
+
+    ecs_entity_t d = ecs_new_id(world);
+    test_assert(d != 0);
+
+    ecs_set(world, d, EcsUnit, {
+        .symbol = "d"
+    });
+
+    ecs_entity_t u = ecs_new_id(world);
+    test_assert(u != 0);
+
+    ecs_set(world, u, EcsUnit, {
+        .symbol = "u",
+        .base = d
+    });
+
+    const EcsUnit *uptr = ecs_get(world, u, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "u");
+    test_assert(uptr->base == d);
+
+    ecs_add_pair(world, u, EcsQuantity, q);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
+        }
+    });
+    test_assert(s != 0);
+
+    const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
+    test_assert(sptr != NULL);
+    test_int(1, ecs_vector_count(sptr->members));
+    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_str(members[0].name, "value");
+    test_uint(members[0].type, ecs_id(ecs_f32_t));
+    test_uint(members[0].unit, u);
+    test_int(members[0].count, 1);
+
+    ecs_entity_t m = ecs_lookup_child(world, s, "value");
+    test_assert(m != 0);
+
+    const EcsMember *mptr = ecs_get(world, m, EcsMember);
+    test_assert(mptr != NULL);
+    test_assert(mptr->type == ecs_id(ecs_f32_t));
+    test_assert(mptr->unit == u);
+
+    ecs_fini(world);
+}
+
+void Units_set_unit_w_over() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = { EcsQuantity }
+    });
+    test_assert(q != 0);
+
+    ecs_entity_t d = ecs_new_id(world);
+    test_assert(d != 0);
+
+    ecs_set(world, d, EcsUnit, {
+        .symbol = "d"
+    });
+
+    ecs_entity_t o = ecs_new_id(world);
+    test_assert(o != 0);
+
+    ecs_set(world, o, EcsUnit, {
+        .symbol = "o"
+    });
+
+    ecs_entity_t u = ecs_new_id(world);
+    test_assert(u != 0);
+
+    ecs_set(world, u, EcsUnit, {
+        .base = d,
+        .over = o
+    });
+
+    const EcsUnit *uptr = ecs_get(world, u, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "d/o");
+    test_assert(uptr->base == d);
+    test_assert(uptr->over == o);
+
+    ecs_add_pair(world, u, EcsQuantity, q);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
+        }
+    });
+    test_assert(s != 0);
+
+    const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
+    test_assert(sptr != NULL);
+    test_int(1, ecs_vector_count(sptr->members));
+    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_str(members[0].name, "value");
+    test_uint(members[0].type, ecs_id(ecs_f32_t));
+    test_uint(members[0].unit, u);
+    test_int(members[0].count, 1);
+
+    ecs_entity_t m = ecs_lookup_child(world, s, "value");
+    test_assert(m != 0);
+
+    const EcsMember *mptr = ecs_get(world, m, EcsMember);
+    test_assert(mptr != NULL);
+    test_assert(mptr->type == ecs_id(ecs_f32_t));
+    test_assert(mptr->unit == u);
+
+    ecs_fini(world);
+}
+
+void Units_set_unit_w_prefix() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .add = { EcsQuantity }
+    });
+    test_assert(q != 0);
+
+    ecs_entity_t d = ecs_new_id(world);
+    test_assert(d != 0);
+
+    ecs_set(world, d, EcsUnit, {
+        .symbol = "d"
+    });
+
+    ecs_entity_t p = ecs_new_id(world);
+    test_assert(p != 0);
+
+    ecs_set(world, p, EcsUnitPrefix, {
+        .symbol = "P",
+        .translation.factor = 10,
+        .translation.power = 2
+    });
+
+    ecs_entity_t u = ecs_new_id(world);
+    test_assert(u != 0);
+
+    ecs_set(world, u, EcsUnit, {
+        .prefix = p,
+        .base = d
+    });
+
+    const EcsUnit *uptr = ecs_get(world, u, EcsUnit);
+    test_assert(uptr != NULL);
+    test_str(uptr->symbol, "Pd");
+    test_assert(uptr->prefix == p);
+    test_assert(uptr->base == d);
+    test_int(uptr->translation.factor, 10);
+    test_int(uptr->translation.power, 2);
+
+    ecs_add_pair(world, u, EcsQuantity, q);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
+        }
+    });
+    test_assert(s != 0);
+
+    const EcsStruct *sptr = ecs_get(world, s, EcsStruct);
+    test_assert(sptr != NULL);
+    test_int(1, ecs_vector_count(sptr->members));
+    ecs_member_t *members = ecs_vector_first(sptr->members, ecs_member_t);
+    test_str(members[0].name, "value");
+    test_uint(members[0].type, ecs_id(ecs_f32_t));
+    test_uint(members[0].unit, u);
+    test_int(members[0].count, 1);
+
+    ecs_entity_t m = ecs_lookup_child(world, s, "value");
+    test_assert(m != 0);
+
+    const EcsMember *mptr = ecs_get(world, m, EcsMember);
+    test_assert(mptr != NULL);
+    test_assert(mptr->type == ecs_id(ecs_f32_t));
+    test_assert(mptr->unit == u);
 
     ecs_fini(world);
 }

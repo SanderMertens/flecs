@@ -840,15 +840,155 @@ void set_vector(ecs_iter_t *it) {
     }
 }
 
+bool flecs_unit_validate(
+    ecs_world_t *world,
+    ecs_entity_t t,
+    EcsUnit *data)
+{
+    char *derived_symbol = NULL;
+    const char *symbol = data->symbol;
+
+    ecs_entity_t base = data->base;
+    ecs_entity_t over = data->over;
+    ecs_entity_t prefix = data->prefix;
+    ecs_unit_translation_t translation = data->translation;
+
+    if (base) {
+        if (!ecs_has(world, base, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as base is not a unit",
+                ecs_get_name(world, base), ecs_get_name(world, t));
+            goto error;
+        }
+    }
+
+    if (over) {
+        if (!base) {
+            ecs_err("invalid unit '%s': cannot specify over without base",
+                ecs_get_name(world, t));
+            goto error;
+        }
+        if (!ecs_has(world, over, EcsUnit)) {
+            ecs_err("entity '%s' for unit '%s' used as over is not a unit",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            goto error;
+        }
+    }
+
+    if (prefix) {
+        if (!base) {
+            ecs_err("invalid unit '%s': cannot specify prefix without base",
+                ecs_get_name(world, t));
+            goto error;
+        }
+        const EcsUnitPrefix *prefix_ptr = ecs_get(world, prefix, EcsUnitPrefix);
+        if (!prefix_ptr) {
+            ecs_err("entity '%s' for unit '%s' used as prefix is not a prefix",
+                ecs_get_name(world, over), ecs_get_name(world, t));
+            goto error;
+        }
+
+        if (translation.factor || translation.power) {
+            if (prefix_ptr->translation.factor != translation.factor ||
+                prefix_ptr->translation.power != translation.power)
+            {
+                ecs_err(
+                    "factor for unit '%s' is inconsistent with prefix '%s'",
+                    ecs_get_name(world, t), ecs_get_name(world, prefix));
+                goto error;
+            }
+        } else {
+            translation = prefix_ptr->translation;
+        }
+    }
+
+    if (base) {
+        bool must_match = false; /* Must base symbol match symbol? */
+        ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
+        if (prefix) {
+            const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (ptr->symbol) {
+                ecs_strbuf_appendstr(&sbuf, ptr->symbol);
+                must_match = true;
+            }
+        }
+
+        const EcsUnit *uptr = ecs_get(world, base, EcsUnit);
+        ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (uptr->symbol) {
+            ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+        }
+
+        if (over) {
+            uptr = ecs_get(world, over, EcsUnit);
+            ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (uptr->symbol) {
+                ecs_strbuf_appendstr(&sbuf, "/");
+                ecs_strbuf_appendstr(&sbuf, uptr->symbol);
+                must_match = true;
+            }
+        }
+
+        derived_symbol = ecs_strbuf_get(&sbuf);
+        if (derived_symbol && !ecs_os_strlen(derived_symbol)) {
+            ecs_os_free(derived_symbol);
+            derived_symbol = NULL;
+        }
+
+        if (derived_symbol && symbol && ecs_os_strcmp(symbol, derived_symbol)) {
+            if (must_match) {
+                ecs_err("symbol '%s' for unit '%s' does not match base"
+                    " symbol '%s'", symbol, 
+                        ecs_get_name(world, t), derived_symbol);
+                goto error;
+            }
+        }
+        if (!symbol && derived_symbol && (prefix || over)) {
+            ecs_os_free(data->symbol);
+            data->symbol = derived_symbol;
+        } else {
+            ecs_os_free(derived_symbol);
+        }
+    }
+
+    data->base = base;
+    data->over = over;
+    data->prefix = prefix;
+    data->translation = translation;
+
+    return true;
+error:
+    ecs_os_free(derived_symbol);
+    return false;
+}
+
 static
 void set_unit(ecs_iter_t *it) {
+    EcsUnit *u = ecs_term(it, EcsUnit, 1);
+
     ecs_world_t *world = it->world;
-    
+
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (ecs_has_id(world, e, EcsQuantity)) {
+        flecs_unit_validate(world, e, &u[i]);
+    }
+}
+
+static
+void unit_quantity_monitor(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    if (it->event == EcsOnAdd) {
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = it->entities[i];
             ecs_add_pair(world, e, EcsQuantity, e);
+        }
+    } else {
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = it->entities[i];
+            ecs_remove_pair(world, e, EcsQuantity, e);
         }
     }
 }
@@ -1029,6 +1169,15 @@ void FlecsMetaImport(
         .term.subj.set.mask = EcsSelf,
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {
+            { .id = ecs_id(EcsUnit) },
+            { .id = EcsQuantity }
+        },
+        .events = { EcsMonitor },
+        .callback = unit_quantity_monitor
     });
 
     /* Initialize primitive types */
