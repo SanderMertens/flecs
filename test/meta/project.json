@@ -171,6 +171,7 @@
                 "cursor_get_unit_type",
                 "unit_w_quantity",
                 "unit_w_self_quantity",
+                "unit_w_self_quantity_after_init",
                 "unit_w_derived",
                 "unit_w_over",
                 "unit_w_prefix",
@@ -183,7 +184,11 @@
                 "unit_w_over_no_derived",
                 "define_twice",
                 "define_twice_different_quantity",
-                "define_twice_remove_quantity"
+                "define_twice_remove_quantity",
+                "set_unit",
+                "set_unit_w_derived",
+                "set_unit_w_over",
+                "set_unit_w_prefix"
             ]
         }, {
             "id": "Serialized",

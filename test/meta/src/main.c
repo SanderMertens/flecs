@@ -152,6 +152,7 @@ void Units_cursor_get_unit(void);
 void Units_cursor_get_unit_type(void);
 void Units_unit_w_quantity(void);
 void Units_unit_w_self_quantity(void);
+void Units_unit_w_self_quantity_after_init(void);
 void Units_unit_w_derived(void);
 void Units_unit_w_over(void);
 void Units_unit_w_prefix(void);
@@ -165,6 +166,10 @@ void Units_unit_w_over_no_derived(void);
 void Units_define_twice(void);
 void Units_define_twice_different_quantity(void);
 void Units_define_twice_remove_quantity(void);
+void Units_set_unit(void);
+void Units_set_unit_w_derived(void);
+void Units_set_unit_w_over(void);
+void Units_set_unit_w_prefix(void);
 
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
@@ -1083,6 +1088,10 @@ bake_test_case Units_testcases[] = {
         Units_unit_w_self_quantity
     },
     {
+        "unit_w_self_quantity_after_init",
+        Units_unit_w_self_quantity_after_init
+    },
+    {
         "unit_w_derived",
         Units_unit_w_derived
     },
@@ -1133,6 +1142,22 @@ bake_test_case Units_testcases[] = {
     {
         "define_twice_remove_quantity",
         Units_define_twice_remove_quantity
+    },
+    {
+        "set_unit",
+        Units_set_unit
+    },
+    {
+        "set_unit_w_derived",
+        Units_set_unit_w_derived
+    },
+    {
+        "set_unit_w_over",
+        Units_set_unit_w_over
+    },
+    {
+        "set_unit_w_prefix",
+        Units_set_unit_w_prefix
     }
 };
 
@@ -2662,7 +2687,7 @@ static bake_test_suite suites[] = {
         "Units",
         NULL,
         NULL,
-        19,
+        24,
         Units_testcases
     },
     {
