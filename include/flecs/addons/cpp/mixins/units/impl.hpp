@@ -177,6 +177,10 @@ inline units::units(flecs::world& world) {
 
     // Initialize percentage
     world.entity<Percentage>("::flecs::units::Percentage");
+
+    // Initialize Bel
+    world.entity<Bel>("::flecs::units::Bel");
+    world.entity<DeciBel>("::flecs::units::DeciBel");
 }
 
 }

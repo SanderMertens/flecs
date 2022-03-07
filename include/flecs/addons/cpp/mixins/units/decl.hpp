@@ -158,6 +158,8 @@ struct GigaBytesPerSecond { };
 };
 
 struct Percentage { };
+struct Bel { };
+struct DeciBel { };
 
 units(flecs::world& world);
 

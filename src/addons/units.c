@@ -119,6 +119,9 @@ ECS_DECLARE(EcsAngle);
     ECS_DECLARE(EcsRadians);
     ECS_DECLARE(EcsDegrees);
 
+ECS_DECLARE(EcsBel);
+ECS_DECLARE(EcsDeciBel);
+
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -902,6 +905,24 @@ void FlecsUnitsImport(
             .kind = EcsF32
         });
     ecs_set_scope(world, prev_scope);
+
+    /* DeciBel */
+
+    EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        .entity.name = "Bel",
+        .symbol = "B" });
+    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        .entity.entity = EcsBel,
+        .kind = EcsF32
+    });
+    EcsDeciBel = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        .entity.name = "DeciBel",
+        .prefix = EcsDeci,
+        .base = EcsBel });
+    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        .entity.entity = EcsDeciBel,
+        .kind = EcsF32
+    });
 
     /* Documentation */
 #ifdef FLECS_DOC

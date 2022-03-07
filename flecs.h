@@ -9530,6 +9530,9 @@ FLECS_API extern ECS_DECLARE(EcsAngle);
 FLECS_API extern     ECS_DECLARE(EcsRadians);
 FLECS_API extern     ECS_DECLARE(EcsDegrees);
 
+FLECS_API extern ECS_DECLARE(EcsBel);
+FLECS_API extern ECS_DECLARE(EcsDeciBel);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
@@ -13565,6 +13568,8 @@ struct GigaBytesPerSecond { };
 };
 
 struct Percentage { };
+struct Bel { };
+struct DeciBel { };
 
 units(flecs::world& world);
 
@@ -22334,6 +22339,10 @@ inline units::units(flecs::world& world) {
 
     // Initialize percentage
     world.entity<Percentage>("::flecs::units::Percentage");
+
+    // Initialize Bel
+    world.entity<Bel>("::flecs::units::Bel");
+    world.entity<DeciBel>("::flecs::units::DeciBel");
 }
 
 }
