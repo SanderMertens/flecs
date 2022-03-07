@@ -188,7 +188,8 @@
                 "set_unit",
                 "set_unit_w_derived",
                 "set_unit_w_over",
-                "set_unit_w_prefix"
+                "set_unit_w_prefix",
+                "builtin_units"
             ]
         }, {
             "id": "Serialized",

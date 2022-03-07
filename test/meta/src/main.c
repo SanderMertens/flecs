@@ -170,6 +170,7 @@ void Units_set_unit(void);
 void Units_set_unit_w_derived(void);
 void Units_set_unit_w_over(void);
 void Units_set_unit_w_prefix(void);
+void Units_builtin_units(void);
 
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
@@ -1158,6 +1159,10 @@ bake_test_case Units_testcases[] = {
     {
         "set_unit_w_prefix",
         Units_set_unit_w_prefix
+    },
+    {
+        "builtin_units",
+        Units_builtin_units
     }
 };
 
@@ -2687,7 +2692,7 @@ static bake_test_suite suites[] = {
         "Units",
         NULL,
         NULL,
-        24,
+        25,
         Units_testcases
     },
     {

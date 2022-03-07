@@ -45,9 +45,18 @@ struct Yobi { };
 
 struct Duration { };
 struct Time { };
+struct Mass { };
+struct ElectricCurrent { };
+struct LuminousIntensity { };
+struct Force { };
+struct Amount { };
 struct Length { };
+struct Pressure { };
+struct Speed { };
+struct Temperature { };
 struct Data { };
 struct DataRate { };
+struct Angle { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,8 +74,34 @@ struct Hours { };
 struct Days { };
 };
 
+struct angle {
+struct Radians { };
+struct Degrees { };
+};
+
 struct time {
 struct Date { };
+};
+
+struct mass {
+struct Grams { };
+struct KiloGrams { };
+};
+
+struct electric_current {
+struct Ampere { };
+};
+
+struct amount {
+struct Mole { };
+};
+
+struct luminous_intensity {
+struct Candela { };
+};
+
+struct force {
+struct Newton { };
 };
 
 struct length {
@@ -78,6 +113,23 @@ struct MilliMeters { };
 struct CentiMeters { };
 struct KiloMeters { };
 struct Miles { };
+};
+
+struct pressure {
+struct Pascal { };
+struct Bar { };
+};
+
+struct speed {
+struct MetersPerSecond { };
+struct KiloMetersPerHour { };
+struct MilesPerHour { };
+};
+
+struct temperature {
+struct Kelvin { };
+struct Celsius { };
+struct Fahrenheit { };
 };
 
 struct data {
