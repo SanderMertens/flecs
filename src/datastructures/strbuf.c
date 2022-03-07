@@ -112,6 +112,17 @@ int ecs_strbuf_ftoa(
 		}
 	}
 	*ptr = 0;
+
+    /* Remove trailing 0s */
+    while ((&ptr[-1] != buf) && (ptr[-1] == '0')) {
+        if (ptr - buf >= 2) {
+            if (ptr[-2] == '.') {
+                break;
+            }
+        }
+        ptr[-1] = '\0';
+        ptr --;
+    }
     
     return ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
@@ -417,7 +428,7 @@ bool ecs_strbuf_appendflt(
     char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return ecs_strbuf_ftoa(b, flt, 2, nan_delim);
+    return ecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
 bool ecs_strbuf_appendstr_zerocpy(

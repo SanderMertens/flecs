@@ -358,7 +358,7 @@ void SerializeToExpr_float() {
     ecs_f32_t value = 0;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0.00");
+    test_str(expr, "0.0");
     ecs_os_free(expr);
     }
 
@@ -366,7 +366,7 @@ void SerializeToExpr_float() {
     ecs_f32_t value = 10.5;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "10.50");
+    test_str(expr, "10.5");
     ecs_os_free(expr);
     }
 
@@ -374,7 +374,7 @@ void SerializeToExpr_float() {
     ecs_f32_t value = -10.5;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f32_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "-10.50");
+    test_str(expr, "-10.5");
     ecs_os_free(expr);
     }
 
@@ -388,7 +388,7 @@ void SerializeToExpr_double() {
     ecs_f64_t value = 0;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0.00");
+    test_str(expr, "0.0");
     ecs_os_free(expr);
     }
 
@@ -396,7 +396,7 @@ void SerializeToExpr_double() {
     ecs_f64_t value = 10.5;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "10.50");
+    test_str(expr, "10.5");
     ecs_os_free(expr);
     }
 
@@ -404,7 +404,7 @@ void SerializeToExpr_double() {
     ecs_f64_t value = -10.5;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_f64_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "-10.50");
+    test_str(expr, "-10.5");
     ecs_os_free(expr);
     }
 

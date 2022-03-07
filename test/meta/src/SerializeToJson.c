@@ -329,7 +329,7 @@ void SerializeToJson_struct_float() {
     T value = {10.5};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":10.50}");
+    test_str(expr, "{\"x\":10.5}");
     ecs_os_free(expr);
 
     ecs_fini(world);
@@ -352,7 +352,7 @@ void SerializeToJson_struct_double() {
     T value = {10.5};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":10.50}");
+    test_str(expr, "{\"x\":10.5}");
     ecs_os_free(expr);
 
     ecs_fini(world);

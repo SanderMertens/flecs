@@ -239,7 +239,7 @@ void Strbuf_append_flt() {
 
     char *str = ecs_strbuf_get(&b);
     test_assert(str != NULL);
-    test_str(str, "10.50");
+    test_str(str, "10.5");
     ecs_os_free(str);
 }
 
