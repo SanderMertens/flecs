@@ -28,8 +28,8 @@ struct entity : entity_builder<entity>
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(flecs::world_t *world, flecs::id_t id) {
-        m_world = world;
+    explicit entity(const flecs::world_t *world, flecs::id_t id) {
+        m_world = const_cast<flecs::world_t*>(world);
         m_id = id;
     }
 

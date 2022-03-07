@@ -391,22 +391,22 @@ int ecs_meta_pop(
 /** Is the current scope a collection? */
 FLECS_API
 bool ecs_meta_is_collection(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get type of current element. */
 FLECS_API
 ecs_entity_t ecs_meta_get_type(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get unit of current element. */
 FLECS_API
 ecs_entity_t ecs_meta_get_unit(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get member name of current member */
 FLECS_API
 const char* ecs_meta_get_member(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
@@ -464,6 +464,48 @@ int ecs_meta_set_entity(
 FLECS_API
 int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor);
+
+
+/** Functions for getting members. */
+
+/** Get field value as boolean. */
+FLECS_API
+bool ecs_meta_get_bool(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as char. */
+FLECS_API
+char ecs_meta_get_char(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as signed integer. */
+FLECS_API
+int64_t ecs_meta_get_int(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as unsigned integer. */
+FLECS_API
+uint64_t ecs_meta_get_uint(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as float. */
+FLECS_API
+double ecs_meta_get_float(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as string. 
+ * This operation does not perform conversions. If the field is not a string,
+ * this operation will fail.
+ */
+FLECS_API
+const char* ecs_meta_get_string(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as entity. 
+ * This operation does not perform conversions. */
+FLECS_API
+ecs_entity_t ecs_meta_get_entity(
+    const ecs_meta_cursor_t *cursor);
 
 
 /** API functions for creating meta types */

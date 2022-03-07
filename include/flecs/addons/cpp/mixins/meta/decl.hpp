@@ -82,17 +82,13 @@ struct cursor {
         return ecs_meta_is_collection(&m_cursor);
     }
 
-    flecs::string_view get_member() {
+    flecs::string_view get_member() const {
         return flecs::string_view(ecs_meta_get_member(&m_cursor));
     }
 
-    flecs::entity_t get_type() {
-        return ecs_meta_get_type(&m_cursor);
-    }
+    flecs::entity get_type() const;
 
-    flecs::entity_t get_unit() {
-        return ecs_meta_get_unit(&m_cursor);
-    }
+    flecs::entity get_unit() const;
 
     void* get_ptr() {
         return ecs_meta_get_ptr(&m_cursor);
@@ -133,6 +129,33 @@ struct cursor {
     int set_null() {
         return ecs_meta_set_null(&m_cursor);
     }
+
+
+    bool get_bool() const {
+        return ecs_meta_get_bool(&m_cursor);
+    }
+
+    char get_char() const {
+        return ecs_meta_get_char(&m_cursor);
+    }
+
+    int64_t get_int() const {
+        return ecs_meta_get_int(&m_cursor);
+    }
+
+    uint64_t get_uint() const {
+        return ecs_meta_get_uint(&m_cursor);
+    }
+
+    double get_float() const {
+        return ecs_meta_get_float(&m_cursor);
+    }
+
+    const char *get_string() const {
+        return ecs_meta_get_string(&m_cursor);
+    }
+
+    flecs::entity get_entity() const;
 
     ecs_meta_cursor_t m_cursor;
 };

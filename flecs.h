@@ -9941,22 +9941,22 @@ int ecs_meta_pop(
 /** Is the current scope a collection? */
 FLECS_API
 bool ecs_meta_is_collection(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get type of current element. */
 FLECS_API
 ecs_entity_t ecs_meta_get_type(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get unit of current element. */
 FLECS_API
 ecs_entity_t ecs_meta_get_unit(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** Get member name of current member */
 FLECS_API
 const char* ecs_meta_get_member(
-    ecs_meta_cursor_t *cursor);
+    const ecs_meta_cursor_t *cursor);
 
 /** The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
@@ -10014,6 +10014,48 @@ int ecs_meta_set_entity(
 FLECS_API
 int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor);
+
+
+/** Functions for getting members. */
+
+/** Get field value as boolean. */
+FLECS_API
+bool ecs_meta_get_bool(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as char. */
+FLECS_API
+char ecs_meta_get_char(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as signed integer. */
+FLECS_API
+int64_t ecs_meta_get_int(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as unsigned integer. */
+FLECS_API
+uint64_t ecs_meta_get_uint(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as float. */
+FLECS_API
+double ecs_meta_get_float(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as string. 
+ * This operation does not perform conversions. If the field is not a string,
+ * this operation will fail.
+ */
+FLECS_API
+const char* ecs_meta_get_string(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as entity. 
+ * This operation does not perform conversions. */
+FLECS_API
+ecs_entity_t ecs_meta_get_entity(
+    const ecs_meta_cursor_t *cursor);
 
 
 /** API functions for creating meta types */
@@ -13275,17 +13317,13 @@ struct cursor {
         return ecs_meta_is_collection(&m_cursor);
     }
 
-    flecs::string_view get_member() {
+    flecs::string_view get_member() const {
         return flecs::string_view(ecs_meta_get_member(&m_cursor));
     }
 
-    flecs::entity_t get_type() {
-        return ecs_meta_get_type(&m_cursor);
-    }
+    flecs::entity get_type() const;
 
-    flecs::entity_t get_unit() {
-        return ecs_meta_get_unit(&m_cursor);
-    }
+    flecs::entity get_unit() const;
 
     void* get_ptr() {
         return ecs_meta_get_ptr(&m_cursor);
@@ -13326,6 +13364,33 @@ struct cursor {
     int set_null() {
         return ecs_meta_set_null(&m_cursor);
     }
+
+
+    bool get_bool() const {
+        return ecs_meta_get_bool(&m_cursor);
+    }
+
+    char get_char() const {
+        return ecs_meta_get_char(&m_cursor);
+    }
+
+    int64_t get_int() const {
+        return ecs_meta_get_int(&m_cursor);
+    }
+
+    uint64_t get_uint() const {
+        return ecs_meta_get_uint(&m_cursor);
+    }
+
+    double get_float() const {
+        return ecs_meta_get_float(&m_cursor);
+    }
+
+    const char *get_string() const {
+        return ecs_meta_get_string(&m_cursor);
+    }
+
+    flecs::entity get_entity() const;
 
     ecs_meta_cursor_t m_cursor;
 };
@@ -17407,8 +17472,8 @@ struct entity : entity_builder<entity>
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(flecs::world_t *world, flecs::id_t id) {
-        m_world = world;
+    explicit entity(const flecs::world_t *world, flecs::id_t id) {
+        m_world = const_cast<flecs::world_t*>(world);
         m_id = id;
     }
 
@@ -22070,6 +22135,19 @@ inline void init(flecs::world& world) {
 }
 
 } // namespace _
+
+flecs::entity cursor::get_type() const {
+    return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
+}
+
+flecs::entity cursor::get_unit() const {
+    return flecs::entity(m_cursor.world, ecs_meta_get_unit(&m_cursor));
+}
+
+flecs::entity cursor::get_entity() const {
+    return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
+}
+
 } // namespace meta
 } // namespace flecs
 
