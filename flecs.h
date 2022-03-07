@@ -9459,7 +9459,21 @@ FLECS_API extern     ECS_DECLARE(EcsDays);
 FLECS_API extern ECS_DECLARE(EcsTime);
 FLECS_API extern     ECS_DECLARE(EcsDate);
 
-FLECS_API extern ECS_DECLARE(EcsPercentage);
+FLECS_API extern ECS_DECLARE(EcsMass);
+FLECS_API extern     ECS_DECLARE(EcsGrams);
+FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
+
+FLECS_API extern ECS_DECLARE(EcsElectricCurrent);
+FLECS_API extern     ECS_DECLARE(EcsAmpere);
+
+FLECS_API extern ECS_DECLARE(EcsAmount);
+FLECS_API extern     ECS_DECLARE(EcsMole);
+
+FLECS_API extern ECS_DECLARE(EcsLuminousIntensity);
+FLECS_API extern     ECS_DECLARE(EcsCandela);
+
+FLECS_API extern ECS_DECLARE(EcsForce);
+FLECS_API extern     ECS_DECLARE(EcsNewton);
 
 FLECS_API extern ECS_DECLARE(EcsLength);
 FLECS_API extern     ECS_DECLARE(EcsMeters);
@@ -9470,6 +9484,22 @@ FLECS_API extern         ECS_DECLARE(EcsMilliMeters);
 FLECS_API extern         ECS_DECLARE(EcsCentiMeters);
 FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
 FLECS_API extern     ECS_DECLARE(EcsMiles);
+
+FLECS_API extern ECS_DECLARE(EcsPressure);
+FLECS_API extern     ECS_DECLARE(EcsPascal);
+FLECS_API extern     ECS_DECLARE(EcsBar);
+
+FLECS_API extern ECS_DECLARE(EcsSpeed);
+FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);
+FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
+
+FLECS_API extern ECS_DECLARE(EcsTemperature);
+FLECS_API extern     ECS_DECLARE(EcsKelvin);
+FLECS_API extern     ECS_DECLARE(EcsCelsius);
+FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
+
+FLECS_API extern ECS_DECLARE(EcsAcceleration);
 
 FLECS_API extern ECS_DECLARE(EcsData);
 FLECS_API extern     ECS_DECLARE(EcsBits);
@@ -9493,6 +9523,12 @@ FLECS_API extern     ECS_DECLARE(EcsBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
+
+FLECS_API extern ECS_DECLARE(EcsPercentage);
+
+FLECS_API extern ECS_DECLARE(EcsAngle);
+FLECS_API extern     ECS_DECLARE(EcsRadians);
+FLECS_API extern     ECS_DECLARE(EcsDegrees);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -13351,9 +13387,18 @@ struct Yobi { };
 
 struct Duration { };
 struct Time { };
+struct Mass { };
+struct ElectricCurrent { };
+struct LuminousIntensity { };
+struct Force { };
+struct Amount { };
 struct Length { };
+struct Pressure { };
+struct Speed { };
+struct Temperature { };
 struct Data { };
 struct DataRate { };
+struct Angle { };
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -13371,8 +13416,34 @@ struct Hours { };
 struct Days { };
 };
 
+struct angle {
+struct Radians { };
+struct Degrees { };
+};
+
 struct time {
 struct Date { };
+};
+
+struct mass {
+struct Grams { };
+struct KiloGrams { };
+};
+
+struct electric_current {
+struct Ampere { };
+};
+
+struct amount {
+struct Mole { };
+};
+
+struct luminous_intensity {
+struct Candela { };
+};
+
+struct force {
+struct Newton { };
 };
 
 struct length {
@@ -13384,6 +13455,23 @@ struct MilliMeters { };
 struct CentiMeters { };
 struct KiloMeters { };
 struct Miles { };
+};
+
+struct pressure {
+struct Pascal { };
+struct Bar { };
+};
+
+struct speed {
+struct MetersPerSecond { };
+struct KiloMetersPerHour { };
+struct MilesPerHour { };
+};
+
+struct temperature {
+struct Kelvin { };
+struct Celsius { };
+struct Fahrenheit { };
 };
 
 struct data {
@@ -21992,10 +22080,11 @@ inline void init(flecs::world& world) {
 namespace flecs {
 
 inline units::units(flecs::world& world) {
+    /* Import C module  */
     FlecsUnitsImport(world);
-    
-    world.module<units>();
 
+    /* Bridge between C++ types and flecs.units entities */
+    world.module<units>();
 
     // Initialize world.entity(prefixes) scope
     world.entity<Prefixes>("::flecs::units::prefixes");
@@ -22033,9 +22122,18 @@ inline units::units(flecs::world& world) {
     // Initialize quantities
     world.entity<Duration>("::flecs::units::Duration");
     world.entity<Time>("::flecs::units::Time");
+    world.entity<Mass>("::flecs::units::Mass");
+    world.entity<Force>("::flecs::units::Force");
+    world.entity<ElectricCurrent>("::flecs::units::ElectricCurrent");
+    world.entity<Amount>("::flecs::units::Amount");
+    world.entity<LuminousIntensity>("::flecs::units::LuminousIntensity");
     world.entity<Length>("::flecs::units::Length");
+    world.entity<Pressure>("::flecs::units::Pressure");
+    world.entity<Speed>("::flecs::units::Speed");
+    world.entity<Temperature>("::flecs::units::Temperature");
     world.entity<Data>("::flecs::units::Data");
     world.entity<DataRate>("::flecs::units::DataRate");
+    world.entity<Angle>("::flecs::units::Angle");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -22058,6 +22156,24 @@ inline units::units(flecs::world& world) {
     // Initialize time units
     world.entity<time::Date>("::flecs::units::Time::Date");
 
+    // Initialize mass units
+    world.entity<mass::Grams>("::flecs::units::Mass::Grams");
+    world.entity<mass::KiloGrams>("::flecs::units::Mass::KiloGrams");
+
+    // Initialize current units
+    world.entity<electric_current::Ampere>
+    ("::flecs::units::ElectricCurrent::Ampere");  
+
+    // Initialize amount units
+    world.entity<amount::Mole>("::flecs::units::Amount::Mole");
+
+    // Initialize luminous intensity units
+    world.entity<luminous_intensity::Candela>(
+        "::flecs::units::LuminousIntensity::Candela");
+
+    // Initialize force units
+    world.entity<force::Newton>("::flecs::units::Force::Newton");
+
     // Initialize length units
     world.entity<length::Meters>("::flecs::units::Length::Meters");
     world.entity<length::PicoMeters>("::flecs::units::Length::PicoMeters");
@@ -22067,6 +22183,26 @@ inline units::units(flecs::world& world) {
     world.entity<length::CentiMeters>("::flecs::units::Length::CentiMeters");
     world.entity<length::KiloMeters>("::flecs::units::Length::KiloMeters");
     world.entity<length::Miles>("::flecs::units::Length::Miles");
+
+    // Initialize pressure units
+    world.entity<pressure::Pascal>("::flecs::units::Pressure::Pascal");
+    world.entity<pressure::Bar>("::flecs::units::Pressure::Bar");
+
+    // Initialize speed units
+    world.entity<speed::MetersPerSecond>(
+        "::flecs::units::Speed::MetersPerSecond");
+    world.entity<speed::KiloMetersPerHour>(
+        "::flecs::units::Speed::KiloMetersPerHour");
+    world.entity<speed::MilesPerHour>(
+        "::flecs::units::Speed::MilesPerHour");
+
+    // Initialize temperature units
+    world.entity<temperature::Kelvin>(
+        "::flecs::units::Temperature::Kelvin");
+    world.entity<temperature::Celsius>(
+        "::flecs::units::Temperature::Celsius");
+    world.entity<temperature::Fahrenheit>(
+        "::flecs::units::Temperature::Fahrenheit");
 
     // Initialize data units
     world.entity<data::Bits>(
@@ -22110,7 +22246,13 @@ inline units::units(flecs::world& world) {
     world.entity<datarate::GigaBytesPerSecond>(
         "::flecs::units::DataRate::GigaBytesPerSecond");
 
-    // Initialize percentage units
+    // Initialize angles
+    world.entity<angle::Radians>(
+        "::flecs::units::Angle::Radians");
+    world.entity<angle::Degrees>(
+        "::flecs::units::Angle::Degrees");
+
+    // Initialize percentage
     world.entity<Percentage>("::flecs::units::Percentage");
 }
 

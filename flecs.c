@@ -4463,7 +4463,7 @@ void* get_component(
 
     if (!table->storage_table) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
-            ECS_NOT_A_COMPONENT, NULL);
+            ECS_NOT_A_COMPONENT, ecs_id_str(world, id));
         return NULL;
     }
 
@@ -4471,7 +4471,7 @@ void* get_component(
         world, table->storage_table, id);
     if (!tr) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
-            ECS_NOT_A_COMPONENT, NULL);
+            ECS_NOT_A_COMPONENT, ecs_id_str(world, id));
        return NULL;
     }
 
@@ -25698,7 +25698,21 @@ ECS_DECLARE(EcsDuration);
 ECS_DECLARE(EcsTime);
     ECS_DECLARE(EcsDate);
 
-ECS_DECLARE(EcsPercentage);
+ECS_DECLARE(EcsMass);
+    ECS_DECLARE(EcsGrams);
+    ECS_DECLARE(EcsKiloGrams);
+
+ECS_DECLARE(EcsElectricCurrent);
+    ECS_DECLARE(EcsAmpere);
+
+ECS_DECLARE(EcsAmount);
+    ECS_DECLARE(EcsMole);
+
+ECS_DECLARE(EcsLuminousIntensity);
+    ECS_DECLARE(EcsCandela);
+
+ECS_DECLARE(EcsForce);
+    ECS_DECLARE(EcsNewton);
 
 ECS_DECLARE(EcsLength);
     ECS_DECLARE(EcsMeters);
@@ -25709,6 +25723,22 @@ ECS_DECLARE(EcsLength);
         ECS_DECLARE(EcsCentiMeters);
         ECS_DECLARE(EcsKiloMeters);
     ECS_DECLARE(EcsMiles);
+
+ECS_DECLARE(EcsPressure);
+    ECS_DECLARE(EcsPascal);
+    ECS_DECLARE(EcsBar);
+
+ECS_DECLARE(EcsSpeed);
+    ECS_DECLARE(EcsMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerHour);
+    ECS_DECLARE(EcsMilesPerHour);
+
+ECS_DECLARE(EcsAcceleration);
+
+ECS_DECLARE(EcsTemperature);
+    ECS_DECLARE(EcsKelvin);
+    ECS_DECLARE(EcsCelsius);
+    ECS_DECLARE(EcsFahrenheit);
 
 ECS_DECLARE(EcsData);
     ECS_DECLARE(EcsBits);
@@ -25733,6 +25763,11 @@ ECS_DECLARE(EcsDataRate);
     ECS_DECLARE(EcsMegaBytesPerSecond);
     ECS_DECLARE(EcsGigaBytesPerSecond);
 
+ECS_DECLARE(EcsPercentage);
+
+ECS_DECLARE(EcsAngle);
+    ECS_DECLARE(EcsRadians);
+    ECS_DECLARE(EcsDegrees);
 
 void FlecsUnitsImport(
     ecs_world_t *world)
@@ -25998,6 +26033,92 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
+    /* Mass units */
+
+    EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Mass" });
+    prev_scope = ecs_set_scope(world, EcsMass);
+        EcsGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Grams",
+            .quantity = EcsMass,
+            .symbol = "g" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsGrams,
+            .kind = EcsF32
+        });
+        EcsKiloGrams = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "KiloGrams",
+            .quantity = EcsMass,
+            .prefix = EcsKilo,
+            .base = EcsGrams });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsKiloGrams,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Electric current units */
+
+    EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "ElectricCurrent" });
+    prev_scope = ecs_set_scope(world, EcsElectricCurrent);
+        EcsAmpere = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Ampere",
+            .quantity = EcsElectricCurrent,
+            .symbol = "A" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsAmpere,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Amount of substance units */
+
+    EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Amount" });
+    prev_scope = ecs_set_scope(world, EcsAmount);
+        EcsMole = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Mole",
+            .quantity = EcsAmount,
+            .symbol = "mol" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsMole,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Luminous intensity units */
+
+    EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "LuminousIntensity" });
+    prev_scope = ecs_set_scope(world, EcsLuminousIntensity);
+        EcsCandela = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Candela",
+            .quantity = EcsLuminousIntensity,
+            .symbol = "cd" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsCandela,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Force units */
+
+    EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Force" });
+    prev_scope = ecs_set_scope(world, EcsForce);
+        EcsNewton = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Newton",
+            .quantity = EcsForce,
+            .symbol = "N" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsNewton,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Length units */
+
     EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
         .name = "Length" });
     prev_scope = ecs_set_scope(world, EcsLength);
@@ -26077,6 +26198,108 @@ void FlecsUnitsImport(
         });
         ecs_primitive_init(world, &(ecs_primitive_desc_t) {
             .entity.entity = EcsMiles,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Pressure units */
+
+    EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Pressure" });
+    prev_scope = ecs_set_scope(world, EcsPressure);
+        EcsPascal = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Pascal",
+            .quantity = EcsPressure,
+            .symbol = "Pa" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsPascal,
+            .kind = EcsF32
+        });
+        EcsBar = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Bar",
+            .quantity = EcsPressure,
+            .symbol = "bar" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsBar,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
+    /* Speed units */
+
+    EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Speed" });
+    prev_scope = ecs_set_scope(world, EcsSpeed);
+        EcsMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "MetersPerSecond",
+            .quantity = EcsSpeed,
+            .base = EcsMeters,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsMetersPerSecond,
+            .kind = EcsF32
+        });
+        EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "KiloMetersPerHour",
+            .quantity = EcsSpeed,
+            .base = EcsKiloMeters,
+            .over = EcsHours });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsKiloMetersPerHour,
+            .kind = EcsF32
+        });
+        EcsMilesPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "MilesPerHour",
+            .quantity = EcsSpeed,
+            .base = EcsMiles,
+            .over = EcsHours });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsMilesPerHour,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+    
+    /* Acceleration */
+
+    EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+        .entity.name = "Acceleration",
+        .base = EcsMetersPerSecond,
+        .over = EcsSeconds });
+    ecs_quantity_init(world, &(ecs_entity_desc_t) {
+        .entity = EcsAcceleration
+    });
+    ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+        .entity.entity = EcsAcceleration,
+        .kind = EcsF32
+    });
+
+    /* Temperature units */
+
+    EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Temperature" });
+    prev_scope = ecs_set_scope(world, EcsTemperature);
+        EcsKelvin = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Kelvin",
+            .quantity = EcsTemperature,
+            .symbol = "K" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsKelvin,
+            .kind = EcsF32
+        });
+        EcsCelsius = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Celsius",
+            .quantity = EcsTemperature,
+            .symbol = "°C" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsCelsius,
+            .kind = EcsF32
+        });
+        EcsFahrenheit = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Fahrenheit",
+            .quantity = EcsTemperature,
+            .symbol = "F" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsFahrenheit,
             .kind = EcsF32
         });
     ecs_set_scope(world, prev_scope);
@@ -26293,6 +26516,7 @@ void FlecsUnitsImport(
 
         ecs_set_scope(world, prev_scope);
 
+    /* Percentage */
 
     EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
         .name = "Percentage" });
@@ -26305,8 +26529,34 @@ void FlecsUnitsImport(
         .kind = EcsF32
     });
 
+    /* Angles */
+
+    EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t) { 
+        .name = "Angle" });
+    prev_scope = ecs_set_scope(world, EcsAngle);
+        EcsRadians = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Radians",
+            .quantity = EcsAngle,
+            .symbol = "rad" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsRadians,
+            .kind = EcsF32
+        });
+
+        EcsDegrees = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "Degrees",
+            .quantity = EcsAngle,
+            .symbol = "°" });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsDegrees,
+            .kind = EcsF32
+        });
+    ecs_set_scope(world, prev_scope);
+
     /* Documentation */
 #ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+
     ecs_doc_set_brief(world, EcsDuration, 
         "Time amount (e.g. \"20 seconds\", \"2 hours\")");
     ecs_doc_set_brief(world, EcsSeconds, "Time amount in seconds");
@@ -26319,15 +26569,43 @@ void FlecsUnitsImport(
     ecs_doc_set_brief(world, EcsDate,
         "Seconds passed since January 1st 1970");
 
+    ecs_doc_set_brief(world, EcsMass, "Units of mass (e.g. \"5 kilograms\")");
+
+    ecs_doc_set_brief(world, EcsElectricCurrent,
+        "Units of electrical current (e.g. \"2 ampere\")");
+
+    ecs_doc_set_brief(world, EcsAmount,
+        "Units of amount of substance (e.g. \"2 mole\")");
+
+    ecs_doc_set_brief(world, EcsLuminousIntensity,
+        "Units of luminous intensity (e.g. \"1 candela\")");
+
+    ecs_doc_set_brief(world, EcsForce, "Units of force (e.g. \"10 newton\")");
+
     ecs_doc_set_brief(world, EcsLength,
-        "Unit of length (e.g. \"5 meters\", \"20 miles\")");
-    ecs_doc_set_brief(world, EcsMeters, "Length in meters");
-    ecs_doc_set_brief(world, EcsMiles, "Length in miles");
+        "Units of length (e.g. \"5 meters\", \"20 miles\")");
+
+    ecs_doc_set_brief(world, EcsPressure, 
+        "Units of pressure (e.g. \"1 bar\", \"1000 pascal\")");
+
+    ecs_doc_set_brief(world, EcsSpeed,
+        "Units of movement (e.g. \"5 meters/second\")");
+
+    ecs_doc_set_brief(world, EcsAcceleration,
+        "Unit of speed increase (e.g. \"5 meters/second/second\")");
+
+    ecs_doc_set_brief(world, EcsTemperature,
+        "Units of temperature (e.g. \"5 degrees Celsius\")");
 
     ecs_doc_set_brief(world, EcsData,
-        "Unit of information (e.g. \"8 bits\", \"100 megabytes\")");
-    ecs_doc_set_brief(world, EcsBits, "Basic unit of information (0 or 1)");
-    ecs_doc_set_brief(world, EcsBytes, "8 bits");
+        "Units of information (e.g. \"8 bits\", \"100 megabytes\")");
+
+    ecs_doc_set_brief(world, EcsDataRate,
+        "Units of data transmission (e.g. \"100 megabits/second\")");
+
+    ecs_doc_set_brief(world, EcsAngle,
+        "Units of rotation (e.g. \"1.2 radians\", \"180 degrees\")");
+
 #endif
 }
 

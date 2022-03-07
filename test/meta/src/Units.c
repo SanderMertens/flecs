@@ -865,3 +865,13 @@ void Units_set_unit_w_prefix() {
 
     ecs_fini(world);
 }
+
+void Units_builtin_units() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsUnits);
+
+    test_assert(true); // Ensure builtin units can be successfully imported
+
+    ecs_fini(world);
+}
