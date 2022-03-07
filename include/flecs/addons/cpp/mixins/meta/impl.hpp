@@ -58,15 +58,15 @@ inline void init(flecs::world& world) {
 
 } // namespace _
 
-flecs::entity cursor::get_type() const {
+inline flecs::entity cursor::get_type() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
 }
 
-flecs::entity cursor::get_unit() const {
+inline flecs::entity cursor::get_unit() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_unit(&m_cursor));
 }
 
-flecs::entity cursor::get_entity() const {
+inline flecs::entity cursor::get_entity() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
 }
 

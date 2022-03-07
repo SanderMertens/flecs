@@ -894,8 +894,10 @@ int64_t ecs_meta_get_int(
     case EcsOpString: return atoi(*(const char**)ptr);
     case EcsOpEnum: return *(ecs_i32_t*)ptr;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr;
-    case EcsOpEntity: ecs_throw(ECS_INVALID_PARAMETER, 
-                        "invalid conversion from entity to int");
+    case EcsOpEntity: 
+        ecs_throw(ECS_INVALID_PARAMETER, 
+            "invalid conversion from entity to int");
+        break;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
     }
 error:
@@ -950,17 +952,19 @@ double ecs_meta_get_float(
     case EcsOpU16:  return *(ecs_u16_t*)ptr;
     case EcsOpI32:  return *(ecs_i32_t*)ptr;
     case EcsOpU32:  return *(ecs_u32_t*)ptr;
-    case EcsOpI64:  return *(ecs_i64_t*)ptr;
-    case EcsOpU64:  return *(ecs_u64_t*)ptr;
-    case EcsOpIPtr: return *(ecs_iptr_t*)ptr;
-    case EcsOpUPtr: return *(ecs_uptr_t*)ptr;
+    case EcsOpI64:  return (double)*(ecs_i64_t*)ptr;
+    case EcsOpU64:  return (double)*(ecs_u64_t*)ptr;
+    case EcsOpIPtr: return (double)*(ecs_iptr_t*)ptr;
+    case EcsOpUPtr: return (double)*(ecs_uptr_t*)ptr;
     case EcsOpF32:  return (double)*(ecs_f32_t*)ptr;
     case EcsOpF64:  return *(ecs_f64_t*)ptr;
     case EcsOpString: return atof(*(const char**)ptr);
     case EcsOpEnum: return *(ecs_i32_t*)ptr;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr;
-    case EcsOpEntity: ecs_throw(ECS_INVALID_PARAMETER, 
-                        "invalid conversion from entity to float");
+    case EcsOpEntity: 
+        ecs_throw(ECS_INVALID_PARAMETER, 
+            "invalid conversion from entity to float");
+        break;
     default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
     }
 error:

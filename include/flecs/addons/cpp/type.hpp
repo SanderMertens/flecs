@@ -25,8 +25,9 @@ struct type_base {
     }
 
     explicit type_base(world_t *world, table_t *t)
-        : m_entity( world, static_cast<flecs::id_t>(0) )
-        , m_table( t ) { }
+        : m_entity( flecs::entity::null(world) )
+        , m_table( t )
+    { }
 
     type_base(table_t *t)
         : m_table( t ) { }

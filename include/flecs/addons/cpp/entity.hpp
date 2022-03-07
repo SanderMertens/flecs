@@ -237,14 +237,15 @@ struct entity : entity_builder<entity>
      * @param world The world.
      */
     static
-    flecs::entity null(const flecs::world& world) {
-        return flecs::entity(world.get_world().c_ptr(), 
-            static_cast<entity_t>(0));
+    flecs::entity null(const flecs::world_t *world) {
+        flecs::entity result;
+        result.m_world = const_cast<flecs::world_t*>(world);
+        return result;
     }
 
     static
     flecs::entity null() {
-        return flecs::entity(static_cast<entity_t>(0));
+        return flecs::entity();
     }
 };
 

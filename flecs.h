@@ -17681,14 +17681,15 @@ struct entity : entity_builder<entity>
      * @param world The world.
      */
     static
-    flecs::entity null(const flecs::world& world) {
-        return flecs::entity(world.get_world().c_ptr(), 
-            static_cast<entity_t>(0));
+    flecs::entity null(const flecs::world_t *world) {
+        flecs::entity result;
+        result.m_world = const_cast<flecs::world_t*>(world);
+        return result;
     }
 
     static
     flecs::entity null() {
-        return flecs::entity(static_cast<entity_t>(0));
+        return flecs::entity();
     }
 };
 
@@ -19034,8 +19035,9 @@ struct type_base {
     }
 
     explicit type_base(world_t *world, table_t *t)
-        : m_entity( world, static_cast<flecs::id_t>(0) )
-        , m_table( t ) { }
+        : m_entity( flecs::entity::null(world) )
+        , m_table( t )
+    { }
 
     type_base(table_t *t)
         : m_table( t ) { }
@@ -22136,15 +22138,15 @@ inline void init(flecs::world& world) {
 
 } // namespace _
 
-flecs::entity cursor::get_type() const {
+inline flecs::entity cursor::get_type() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
 }
 
-flecs::entity cursor::get_unit() const {
+inline flecs::entity cursor::get_unit() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_unit(&m_cursor));
 }
 
-flecs::entity cursor::get_entity() const {
+inline flecs::entity cursor::get_entity() const {
     return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
 }
 
