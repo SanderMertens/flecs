@@ -34,6 +34,17 @@ void json_false(
     json_literal(buf, "false");
 }
 
+void json_bool(
+    ecs_strbuf_t *buf,
+    bool value)
+{
+    if (value) {
+        json_true(buf);
+    } else {
+        json_false(buf);
+    }
+}
+
 void json_array_push(
     ecs_strbuf_t *buf)
 {

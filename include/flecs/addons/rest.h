@@ -28,13 +28,17 @@
  *      Add label (from doc framework) for entity.
  *        Default: false
  *
+ *    - id_labels : bool
+ *      Add labels (from doc framework) for (component) ids.
+ *        Default: false
+ * 
  *    - base : bool
  *      Add base components.
  *        Default: true
  * 
  *    - values : bool
  *      Add component values.
- *        Default: true
+ *        Default: false
  * 
  *    - private : bool
  *      Add private components.

@@ -19,6 +19,10 @@ void json_true(
 void json_false(
     ecs_strbuf_t *buf);
 
+void json_bool(
+    ecs_strbuf_t *buf,
+    bool value);
+
 void json_array_push(
     ecs_strbuf_t *buf);
 

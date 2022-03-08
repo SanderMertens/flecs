@@ -116,10 +116,11 @@ int ecs_strbuf_ftoa(
     /* Remove trailing 0s */
     while ((&ptr[-1] != buf) && (ptr[-1] == '0')) {
         if (ptr - buf >= 2) {
-            if (ptr[-2] == '.') {
-                break;
-            }
         }
+        ptr[-1] = '\0';
+        ptr --;
+    }
+    if (ptr != buf && ptr[-1] == '.') {
         ptr[-1] = '\0';
         ptr --;
     }

@@ -8067,13 +8067,17 @@ int ecs_app_set_frame_action(
  *      Add label (from doc framework) for entity.
  *        Default: false
  *
+ *    - id_labels : bool
+ *      Add labels (from doc framework) for (component) ids.
+ *        Default: false
+ * 
  *    - base : bool
  *      Add base components.
  *        Default: true
  * 
  *    - values : bool
  *      Add component values.
- *        Default: true
+ *        Default: false
  * 
  *    - private : bool
  *      Add private components.
@@ -9283,14 +9287,16 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_path;       /* Serialize full pathname */
     bool serialize_label;      /* Serialize doc name */
+    bool serialize_id_labels;  /* Serialize labels of (component) ids */
     bool serialize_base;       /* Serialize base components */
     bool serialize_private;    /* Serialize private components */
+    bool serialize_hidden;     /* Serialize ids hidden by override */
     bool serialize_values;     /* Serialize component values */
     bool serialize_type_info;  /* Serialize type info (requires serialize_values) */
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, false, true, false, true, false }
+    true, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
