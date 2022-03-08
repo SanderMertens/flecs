@@ -585,6 +585,13 @@ int ecs_entity_to_json_buf(
         ecs_os_free(path);
     }
 
+#ifdef FLECS_DOC
+    if (desc && desc->serialize_label) {
+        json_member(buf, "label");
+        json_string(buf, ecs_doc_get_name(world, entity));
+    }
+#endif
+
     ecs_type_t type = ecs_get_type(world, entity);
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);

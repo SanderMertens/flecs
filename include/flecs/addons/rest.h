@@ -23,7 +23,11 @@
  *    - path : bool
  *      Add path (name) for entity.
  *        Default: true
- * 
+ *
+ *    - label : bool
+ *      Add label (from doc framework) for entity.
+ *        Default: false
+ *
  *    - base : bool
  *      Add base components.
  *        Default: true
@@ -86,6 +90,14 @@
  *    - entities : bool
  *      Add result-specific "entities" array with matched entities.
  *        Default: true
+ * 
+ *    - entity_labels : bool
+ *       Include doc name for entities.
+ *        Default: false
+ * 
+ *    - variable_labels : bool
+ *       Include doc name for variables.
+ *        Default: false
  * 
  *    - duration : bool
  *      Include measurement on how long it took to serialize result.
