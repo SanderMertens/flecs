@@ -103,6 +103,8 @@ Type: Array([Id label](#id-label)), optional
 #### **"hidden"**
 Array indicating whether a component is hidden. Only applies to components of base entities (in the ["is_a"](is_a) array).
 
+A base component is hidden when it is overridden by an entity higher in the inheritance hierarchy.
+
 Type: Array(bool), optional
 
 #### **"values"**
@@ -460,7 +462,7 @@ Serialize the ["variables"](#variables) member.
 Example result for query `Position, (Likes, _Food)`
 ```json
 {
-    "variables": ["Food"],
+  "variables": ["Food"],
   "results": [{
     "ids": ["Position", "(Likes,Apples)"],
         "variables": ["Apples"],
