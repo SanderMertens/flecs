@@ -122,6 +122,7 @@ struct Bar { };
 
 struct speed {
 struct MetersPerSecond { };
+struct KiloMetersPerSecond { };
 struct KiloMetersPerHour { };
 struct MilesPerHour { };
 };

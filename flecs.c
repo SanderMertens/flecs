@@ -11442,9 +11442,9 @@ static const double rounders[MAX_PRECISION + 1] =
 };
 
 static
-char* strbuf_utoa(
+char* strbuf_itoa(
     char *buf,
-    uint64_t v)
+    int64_t v)
 {
     char *ptr = buf;
     char * p1;
@@ -11535,7 +11535,7 @@ int ecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = strbuf_utoa(ptr, intPart);
+    ptr = strbuf_itoa(ptr, intPart);
 
 	if (precision) {
 		*ptr++ = '.';
@@ -11572,14 +11572,28 @@ int ecs_strbuf_ftoa(
     }
 
     if (exp) {
+        char *p1 = &buf[1];
         if (nan_delim) {
-            ecs_os_memmove(buf + 1, buf, ptr - buf);
+            ecs_os_memmove(buf + 1, buf, 1 + (ptr - buf));
             buf[0] = nan_delim;
-            ptr ++;
+            p1 ++;
         }
 
+        /* Make sure that exp starts after first character */
+        c = p1[0];
+        p1[0] = '.';
+
+        do {
+            char t = (++p1)[0];
+            p1[0] = c;
+            c = t;
+            exp ++;
+        } while (c);
+
+        ptr = p1 + 1;
+
         ptr[0] = 'e';
-        ptr = strbuf_utoa(ptr + 1, exp);
+        ptr = strbuf_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -26486,6 +26500,15 @@ void FlecsUnitsImport(
             .entity.entity = EcsMetersPerSecond,
             .kind = EcsF32
         });
+        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "KiloMetersPerSecond",
+            .quantity = EcsSpeed,
+            .base = EcsKiloMeters,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsKiloMetersPerSecond,
+            .kind = EcsF32
+        });
         EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "KiloMetersPerHour",
             .quantity = EcsSpeed,
@@ -28561,9 +28584,19 @@ bool skip_id(
         }
     }
 
-    if (pred == EcsIsA) {
-        return true;
+    if (!desc || !desc->serialize_meta_ids) {
+        if (pred == EcsIsA || pred == EcsChildOf ||
+            pred == ecs_id(EcsIdentifier)) 
+        {
+            return true;
+        }
+#ifdef FLECS_DOC
+        if (pred == ecs_id(EcsDocDescription)) {
+            return true;
+        }
+#endif
     }
+
     if (is_base) {
         if (ecs_has_id(world, pred, EcsDontInherit)) {
             return true;
@@ -28922,6 +28955,22 @@ int ecs_entity_to_json_buf(
             char num_buf[20];
             ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
             json_string(buf, num_buf);
+        }
+    }
+
+    if (desc && desc->serialize_brief) {
+        const char *doc_brief = ecs_doc_get_brief(world, entity);
+        if (doc_brief) {
+            json_member(buf, "brief");
+            json_string(buf, doc_brief);
+        }
+    }
+
+    if (desc && desc->serialize_link) {
+        const char *doc_link = ecs_doc_get_link(world, entity);
+        if (doc_link) {
+            json_member(buf, "link");
+            json_string(buf, doc_link);
         }
     }
 #endif
@@ -30010,6 +30059,8 @@ void rest_parse_json_ser_entity_params(
 {
     rest_bool_param(req, "path", &desc->serialize_path);
     rest_bool_param(req, "label", &desc->serialize_label);
+    rest_bool_param(req, "brief", &desc->serialize_brief);
+    rest_bool_param(req, "link", &desc->serialize_link);
     rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
     rest_bool_param(req, "base", &desc->serialize_base);
     rest_bool_param(req, "values", &desc->serialize_values);

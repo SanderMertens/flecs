@@ -75,6 +75,16 @@ Add label (from doc framework) for entity.
 
 **Default**: false
 
+#### **brief**
+Add brief description (from doc framework) for entity.
+
+**Default**: false
+
+#### **link**
+Add link (from doc framework) for entity.
+
+**Default**: false
+
 #### **id_labels**
 Add labels (from doc framework) for (component) ids.
 

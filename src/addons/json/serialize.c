@@ -446,9 +446,19 @@ bool skip_id(
         }
     }
 
-    if (pred == EcsIsA) {
-        return true;
+    if (!desc || !desc->serialize_meta_ids) {
+        if (pred == EcsIsA || pred == EcsChildOf ||
+            pred == ecs_id(EcsIdentifier)) 
+        {
+            return true;
+        }
+#ifdef FLECS_DOC
+        if (pred == ecs_id(EcsDocDescription)) {
+            return true;
+        }
+#endif
     }
+
     if (is_base) {
         if (ecs_has_id(world, pred, EcsDontInherit)) {
             return true;
@@ -807,6 +817,22 @@ int ecs_entity_to_json_buf(
             char num_buf[20];
             ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
             json_string(buf, num_buf);
+        }
+    }
+
+    if (desc && desc->serialize_brief) {
+        const char *doc_brief = ecs_doc_get_brief(world, entity);
+        if (doc_brief) {
+            json_member(buf, "brief");
+            json_string(buf, doc_brief);
+        }
+    }
+
+    if (desc && desc->serialize_link) {
+        const char *doc_link = ecs_doc_get_link(world, entity);
+        if (doc_link) {
+            json_member(buf, "link");
+            json_string(buf, doc_link);
         }
     }
 #endif

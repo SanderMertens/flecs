@@ -9181,7 +9181,10 @@ int ecs_type_info_to_json_buf(
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_path;       /* Serialize full pathname */
+    bool serialize_meta_ids;   /* Serialize 'meta' ids (Name, ChildOf, etc) */
     bool serialize_label;      /* Serialize doc name */
+    bool serialize_brief;      /* Serialize brief doc description */
+    bool serialize_link;       /* Serialize doc link (URL) */
     bool serialize_id_labels;  /* Serialize labels of (component) ids */
     bool serialize_base;       /* Serialize base components */
     bool serialize_private;    /* Serialize private components */
@@ -9191,7 +9194,7 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t) {\
-    true, false, false, true, false, false, false, false }
+    true, false, false, false, false, false, true, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -13447,6 +13450,7 @@ struct Bar { };
 
 struct speed {
 struct MetersPerSecond { };
+struct KiloMetersPerSecond { };
 struct KiloMetersPerHour { };
 struct MilesPerHour { };
 };
@@ -22191,6 +22195,8 @@ inline units::units(flecs::world& world) {
     // Initialize speed units
     world.entity<speed::MetersPerSecond>(
         "::flecs::units::Speed::MetersPerSecond");
+    world.entity<speed::KiloMetersPerSecond>(
+        "::flecs::units::Speed::KiloMetersPerSecond");
     world.entity<speed::KiloMetersPerHour>(
         "::flecs::units::Speed::KiloMetersPerHour");
     world.entity<speed::MilesPerHour>(

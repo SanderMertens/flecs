@@ -85,6 +85,16 @@ The entity doc name.
 
 Type: [Label](#label), optional
 
+#### **"brief"**
+Brief description (as returned by `ecs_doc_get_brief`).
+
+Type: string, optional
+
+#### **"link"**
+Link to URL (as returned by `ecs_doc_get_link`).
+
+Type: string, optional
+
 #### **"is_a"**
 Base entities.
 
@@ -153,6 +163,8 @@ This example shows an entity with a base with all serializer options enabled:
 {
     "path":"Sun.Earth",
     "label": "The Earth", 
+    "brief": "The planet you call home", 
+    "link": "www.earth.com",
     "is_a": [{
         "path":"planets.RockyPlanet",
         "label":"A rocky planet", 
@@ -303,7 +315,27 @@ Serialize the ["label"](#label-1) member.
 
 **Example**:
 ```json
-{"label": "A rocky planet"}
+{"label": "Rocky planet"}
+```
+
+#### **serialize_brief**
+Serialize the ["brief"](#brief) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{"brief": "A rocky planet"}
+```
+
+#### **serialize_link**
+Serialize the ["link"](#link) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{"brief": "www.rocky-planet.com"}
 ```
 
 #### **serialize_id_labels**

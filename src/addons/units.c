@@ -593,6 +593,15 @@ void FlecsUnitsImport(
             .entity.entity = EcsMetersPerSecond,
             .kind = EcsF32
         });
+        EcsKiloMetersPerSecond = ecs_unit_init(world, &(ecs_unit_desc_t) { 
+            .entity.name = "KiloMetersPerSecond",
+            .quantity = EcsSpeed,
+            .base = EcsKiloMeters,
+            .over = EcsSeconds });
+        ecs_primitive_init(world, &(ecs_primitive_desc_t) {
+            .entity.entity = EcsKiloMetersPerSecond,
+            .kind = EcsF32
+        });
         EcsKiloMetersPerHour = ecs_unit_init(world, &(ecs_unit_desc_t) { 
             .entity.name = "KiloMetersPerHour",
             .quantity = EcsSpeed,

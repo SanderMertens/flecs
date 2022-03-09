@@ -29,9 +29,9 @@ static const double rounders[MAX_PRECISION + 1] =
 };
 
 static
-char* strbuf_utoa(
+char* strbuf_itoa(
     char *buf,
-    uint64_t v)
+    int64_t v)
 {
     char *ptr = buf;
     char * p1;
@@ -122,7 +122,7 @@ int ecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = strbuf_utoa(ptr, intPart);
+    ptr = strbuf_itoa(ptr, intPart);
 
 	if (precision) {
 		*ptr++ = '.';
@@ -159,14 +159,28 @@ int ecs_strbuf_ftoa(
     }
 
     if (exp) {
+        char *p1 = &buf[1];
         if (nan_delim) {
-            ecs_os_memmove(buf + 1, buf, ptr - buf);
+            ecs_os_memmove(buf + 1, buf, 1 + (ptr - buf));
             buf[0] = nan_delim;
-            ptr ++;
+            p1 ++;
         }
 
+        /* Make sure that exp starts after first character */
+        c = p1[0];
+        p1[0] = '.';
+
+        do {
+            char t = (++p1)[0];
+            p1[0] = c;
+            c = t;
+            exp ++;
+        } while (c);
+
+        ptr = p1 + 1;
+
         ptr[0] = 'e';
-        ptr = strbuf_utoa(ptr + 1, exp);
+        ptr = strbuf_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;

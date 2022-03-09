@@ -445,7 +445,6 @@ void SerializeToJson_struct_float_inf(void);
 void SerializeToJson_struct_double_nan(void);
 void SerializeToJson_struct_double_inf(void);
 void SerializeToJson_struct_double_large(void);
-void SerializeToJson_struct_double_large_w_fraction(void);
 void SerializeToJson_struct_enum(void);
 void SerializeToJson_struct_bitmask(void);
 void SerializeToJson_struct_i32_i32(void);
@@ -479,6 +478,11 @@ void SerializeToJson_serialize_entity_w_private(void);
 void SerializeToJson_serialize_entity_w_label(void);
 void SerializeToJson_serialize_entity_w_label_no_name(void);
 void SerializeToJson_serialize_entity_w_id_labels(void);
+void SerializeToJson_serialize_entity_w_brief(void);
+void SerializeToJson_serialize_entity_w_brief_no_brief(void);
+void SerializeToJson_serialize_entity_w_link(void);
+void SerializeToJson_serialize_entity_w_link_no_link(void);
+void SerializeToJson_serialize_entity_w_meta_ids(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
 void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
 void SerializeToJson_serialize_iterator_1_tag_2_ents_same_table(void);
@@ -2236,10 +2240,6 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_double_large
     },
     {
-        "struct_double_large_w_fraction",
-        SerializeToJson_struct_double_large_w_fraction
-    },
-    {
         "struct_enum",
         SerializeToJson_struct_enum
     },
@@ -2370,6 +2370,26 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_entity_w_id_labels",
         SerializeToJson_serialize_entity_w_id_labels
+    },
+    {
+        "serialize_entity_w_brief",
+        SerializeToJson_serialize_entity_w_brief
+    },
+    {
+        "serialize_entity_w_brief_no_brief",
+        SerializeToJson_serialize_entity_w_brief_no_brief
+    },
+    {
+        "serialize_entity_w_link",
+        SerializeToJson_serialize_entity_w_link
+    },
+    {
+        "serialize_entity_w_link_no_link",
+        SerializeToJson_serialize_entity_w_link_no_link
+    },
+    {
+        "serialize_entity_w_meta_ids",
+        SerializeToJson_serialize_entity_w_meta_ids
     },
     {
         "serialize_iterator_1_comps_empty",
@@ -2759,7 +2779,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        89,
+        93,
         SerializeToJson_testcases
     },
     {

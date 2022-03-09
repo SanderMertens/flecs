@@ -114,6 +114,8 @@ inline units::units(flecs::world& world) {
     // Initialize speed units
     world.entity<speed::MetersPerSecond>(
         "::flecs::units::Speed::MetersPerSecond");
+    world.entity<speed::KiloMetersPerSecond>(
+        "::flecs::units::Speed::KiloMetersPerSecond");
     world.entity<speed::KiloMetersPerHour>(
         "::flecs::units::Speed::KiloMetersPerHour");
     world.entity<speed::MilesPerHour>(
