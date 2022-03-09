@@ -256,6 +256,11 @@ Array with elements for each returned result.
 
 Type: Array([Result](#result))
 
+#### **"eval_duration"**
+Time it took to serialize the iterator.
+
+Type: Number
+
 #### **Example**
 
 ```json
@@ -404,7 +409,7 @@ Example result for query `Position, Jedi`
 ```json
 {
   "ids": ["Position", "Jedi"],
-  "results": [ ... ]
+  "results": [ ]
 }
 ```
 
