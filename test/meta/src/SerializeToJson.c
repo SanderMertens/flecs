@@ -1577,11 +1577,11 @@ void SerializeToJson_serialize_entity_w_label_no_name() {
         ecs_os_strlen(
             "{"
                 "\"path\":\"000\", "
-                "\"label\":\"\" "
+                "\"label\":\"000\", "
                 "\"ids\":["
                     "[\"Tag\"]"
             "]}"
-        )
+        ) + 1
     );
 
     ecs_os_sprintf(str, 
