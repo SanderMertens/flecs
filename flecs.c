@@ -11482,7 +11482,7 @@ int ecs_strbuf_ftoa(
 	char * ptr = buf;
 	char c;
 	int64_t intPart;
-    int32_t exp = 0;
+    int64_t exp = 0;
 
     if (isnan(f)) {
         if (nan_delim) {
