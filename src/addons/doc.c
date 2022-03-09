@@ -128,6 +128,8 @@ void FlecsDocImport(
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)
     });
+
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
 }
 
 #endif

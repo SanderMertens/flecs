@@ -28548,7 +28548,9 @@ int append_type_labels(
     ecs_entity_t inst,
     const ecs_entity_to_json_desc_t *desc) 
 {
-    (void)world; (void)buf; (void)ent; (void)inst; (void)desc;
+    (void)world; (void)buf; (void)ids; (void)count; (void)ent; (void)inst; 
+    (void)desc;
+    
 #ifdef FLECS_DOC
     if (!desc || !desc->serialize_id_labels) {
         return 0;
@@ -28574,6 +28576,8 @@ int append_type_labels(
                 json_next(buf);
                 json_label(buf, world, obj);
             }
+
+            json_array_pop(buf);
         }
     }
 
@@ -28592,7 +28596,7 @@ int append_type_values(
     ecs_entity_t inst,
     const ecs_entity_to_json_desc_t *desc) 
 {
-    if (desc && !desc->serialize_values) {
+    if (!desc || !desc->serialize_values) {
         return 0;
     }
 
@@ -28711,6 +28715,10 @@ int append_type_hidden(
         return 0;
     }
 
+    if (ent == inst) {
+        return 0; /* if this is not a base, components are never hidden */
+    }
+
     json_member(buf, "hidden");
     json_array_push(buf);
 
@@ -28774,59 +28782,6 @@ int append_type(
             }
         }
         json_array_pop(buf);
-
-// #ifdef FLECS_DOC
-//         if (desc && desc->serialize_id_labels) {
-//             json_next(buf);
-
-//             json_array_push(buf);
-//             json_next(buf);
-//             json_label(buf, world, pred);
-//             if (obj) {
-//                 json_next(buf);
-//                 json_label(buf, world, obj);
-//             }
-//         }
-// #endif
-
-        // bool hidden = false;
-
-        // if (ent != inst) {
-        //     if (ecs_get_object_for_id(world, inst, EcsIsA, id) != ent) {
-        //         hidden = true;
-        //         ecs_strbuf_list_appendstr(buf, "\"hidden\":true");
-        //     }
-        // }
-
-        // if (!hidden) {
-        //     ecs_entity_t typeid = ecs_get_typeid(world, id);
-        //     if (typeid) {
-        //         if (!desc || desc->serialize_values) {
-        //             const EcsMetaTypeSerialized *ser = ecs_get(
-        //                 world, typeid, EcsMetaTypeSerialized);
-        //             if (ser) {
-        //                 const void *ptr = ecs_get_id(world, ent, id);
-        //                 ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        //                 json_member(buf, "value");
-        //                 if (json_ser_type(world, ser->ops, ptr, buf) != 0) {
-        //                     /* Entity contains invalid value */
-        //                     return -1;
-        //                 }
-
-        //                 if (desc && desc->serialize_type_info) {
-        //                     json_member(buf, "type_info");
-        //                     if (ecs_type_info_to_json_buf(
-        //                         world, typeid, buf) != 0) 
-        //                     {
-        //                         return -1;
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
-        // json_object_pop(buf);
     }
 
     json_array_pop(buf);
@@ -28872,10 +28827,9 @@ int append_base(
         }
     }
 
-    json_path(buf, world, ent);
-    ecs_strbuf_appendch(buf, ':');
-
     json_object_push(buf);
+    json_member(buf, "path");
+    json_path(buf, world, ent);
 
     if (append_type(world, buf, ent, inst, desc)) {
         return -1;
@@ -28919,7 +28873,7 @@ int ecs_entity_to_json_buf(
     if (!desc || desc->serialize_base) {
         if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
             json_member(buf, "is_a");
-            json_object_push(buf);
+            json_array_push(buf);
 
             for (i = 0; i < count; i ++) {
                 ecs_id_t id = ids[i];
@@ -28932,7 +28886,7 @@ int ecs_entity_to_json_buf(
                 }
             }
 
-            json_object_pop(buf);
+            json_array_pop(buf);
         }
     }
 
@@ -31529,6 +31483,8 @@ void FlecsDocImport(
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)
     });
+
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
 }
 
 #endif
