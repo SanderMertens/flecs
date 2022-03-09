@@ -233,11 +233,6 @@ Each element in the array can be either an array with component values when the 
 
 Type: Array(Array([Value](#value))), optional
 
-#### **"type_info"**
-Array with objects that describe the component types of the terms.
-
-Type: Array([Type info](#type-info)), optional
-
 ### **Iterator**
 The iterator kind is an object that contains metadata and data of all the entities yielded by an iterator.
 
@@ -260,6 +255,11 @@ Type: Array([Result](#result))
 Time it took to serialize the iterator.
 
 Type: Number
+
+#### **"type_info"**
+Array with objects that describe the component types of the terms.
+
+Type: Array([Type info](#type-info)), optional
 
 #### **Example**
 
@@ -564,7 +564,7 @@ Serialize the ["eval_duration"](#eval_duration) member.
 ```
 
 #### **serialize_type_info**
-Serialize the ["type_info"](#type_info-1) member.
+Serialize the ["type_info"](#type_info_1) member.
 
 **Default**: `false`
 
