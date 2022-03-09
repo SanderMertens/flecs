@@ -96,7 +96,7 @@ Add private components.
 **Default**: false
 
 #### **type_info**
-Add reflection data for component types. Requires values=true.
+Add reflection data for component types.
 
 **Default**: false
 

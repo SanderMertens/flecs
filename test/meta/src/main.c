@@ -444,6 +444,8 @@ void SerializeToJson_struct_float_nan(void);
 void SerializeToJson_struct_float_inf(void);
 void SerializeToJson_struct_double_nan(void);
 void SerializeToJson_struct_double_inf(void);
+void SerializeToJson_struct_double_large(void);
+void SerializeToJson_struct_double_large_w_fraction(void);
 void SerializeToJson_struct_enum(void);
 void SerializeToJson_struct_bitmask(void);
 void SerializeToJson_struct_i32_i32(void);
@@ -2230,6 +2232,14 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_double_inf
     },
     {
+        "struct_double_large",
+        SerializeToJson_struct_double_large
+    },
+    {
+        "struct_double_large_w_fraction",
+        SerializeToJson_struct_double_large_w_fraction
+    },
+    {
         "struct_enum",
         SerializeToJson_struct_enum
     },
@@ -2749,7 +2759,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        87,
+        89,
         SerializeToJson_testcases
     },
     {

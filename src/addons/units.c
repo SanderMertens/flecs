@@ -80,6 +80,7 @@ ECS_DECLARE(EcsPressure);
 
 ECS_DECLARE(EcsSpeed);
     ECS_DECLARE(EcsMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerSecond);
     ECS_DECLARE(EcsKiloMetersPerHour);
     ECS_DECLARE(EcsMilesPerHour);
 

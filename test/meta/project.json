@@ -475,6 +475,7 @@
                 "struct_float_inf",
                 "struct_double_nan",
                 "struct_double_inf",
+                "struct_double_large",
                 "struct_enum",
                 "struct_bitmask",
                 "struct_i32_i32",

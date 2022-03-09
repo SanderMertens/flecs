@@ -11423,6 +11423,9 @@ error:
  */
 
 #define MAX_PRECISION	(10)
+#define EXP_THRESHOLD   (3)
+#define INT64_MAX_F ((double)INT64_MAX)
+
 static const double rounders[MAX_PRECISION + 1] =
 {
 	0.5,				// 0
@@ -11439,6 +11442,36 @@ static const double rounders[MAX_PRECISION + 1] =
 };
 
 static
+char* strbuf_utoa(
+    char *buf,
+    uint64_t v)
+{
+    char *ptr = buf;
+    char * p1;
+	char c;
+
+	if (!v) {
+		*ptr++ = '0';
+    } else {
+		char *p = ptr;
+		while (v) {
+			*p++ = (char)('0' + v % 10);
+			v /= 10;
+		}
+
+		p1 = p;
+
+		while (p > ptr) {
+			c = *--p;
+			*p = *ptr;
+			*ptr++ = c;
+		}
+		ptr = p1;
+	}
+    return ptr;
+}
+
+static
 int ecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
@@ -11447,9 +11480,9 @@ int ecs_strbuf_ftoa(
 {
     char buf[64];
 	char * ptr = buf;
-	char * p1;
 	char c;
 	int64_t intPart;
+    int32_t exp = 0;
 
     if (isnan(f)) {
         if (nan_delim) {
@@ -11493,27 +11526,16 @@ int ecs_strbuf_ftoa(
 		f += rounders[precision];
     }
 
+    /* Make sure that number can be represented as 64bit int, increase exp */
+    while (f > INT64_MAX_F) {
+        f /= 1000 * 1000 * 1000;
+        exp += 9;
+    }
+
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-	if (!intPart) {
-		*ptr++ = '0';
-    } else {
-		char *p = ptr;
-		while (intPart) {
-			*p++ = (char)('0' + intPart % 10);
-			intPart /= 10;
-		}
-
-		p1 = p;
-
-		while (p > ptr) {
-			c = *--p;
-			*p = *ptr;
-			*ptr++ = c;
-		}
-		ptr = p1;
-	}
+    ptr = strbuf_utoa(ptr, intPart);
 
 	if (precision) {
 		*ptr++ = '.';
@@ -11528,8 +11550,6 @@ int ecs_strbuf_ftoa(
 
     /* Remove trailing 0s */
     while ((&ptr[-1] != buf) && (ptr[-1] == '0')) {
-        if (ptr - buf >= 2) {
-        }
         ptr[-1] = '\0';
         ptr --;
     }
@@ -11537,10 +11557,40 @@ int ecs_strbuf_ftoa(
         ptr[-1] = '\0';
         ptr --;
     }
+
+    /* If 0s before . exceed threshold, convert to exponent to save space 
+     * without losing precision. */
+    char *cur = ptr;
+    while ((&cur[-1] != buf) && (cur[-1] == '0')) {
+        cur --;
+    }
+
+    if (exp || ((ptr - cur) > EXP_THRESHOLD)) {
+        cur[0] = '\0';
+        exp += (ptr - cur);
+        ptr = cur;
+    }
+
+    if (exp) {
+        if (nan_delim) {
+            ecs_os_memmove(buf + 1, buf, ptr - buf);
+            buf[0] = nan_delim;
+            ptr ++;
+        }
+
+        ptr[0] = 'e';
+        ptr = strbuf_utoa(ptr + 1, exp);
+
+        if (nan_delim) {
+            ptr[0] = nan_delim;
+            ptr ++;
+        }
+
+        ptr[0] = '\0';
+    }
     
     return ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
-
 
 /* Add an extra element to the buffer */
 static
@@ -25923,6 +25973,7 @@ ECS_DECLARE(EcsPressure);
 
 ECS_DECLARE(EcsSpeed);
     ECS_DECLARE(EcsMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerSecond);
     ECS_DECLARE(EcsKiloMetersPerHour);
     ECS_DECLARE(EcsMilesPerHour);
 

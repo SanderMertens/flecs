@@ -335,29 +335,6 @@ void SerializeToJson_struct_float() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double() {
-    typedef struct {
-        ecs_f64_t x;
-    } T;
-
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
-        .entity.name = "T",
-        .members = {
-            {"x", ecs_id(ecs_f64_t)}
-        }
-    });
-
-    T value = {10.5};
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"x\":10.5}");
-    ecs_os_free(expr);
-
-    ecs_fini(world);
-}
-
 void SerializeToJson_struct_float_nan() {
     typedef struct {
         ecs_f32_t x;
@@ -413,6 +390,29 @@ void SerializeToJson_struct_float_inf() {
     ecs_fini(world);
 }
 
+void SerializeToJson_struct_double() {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    T value = {10.5};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":10.5}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_struct_double_nan() {
     typedef struct {
         ecs_f64_t x;
@@ -464,6 +464,29 @@ void SerializeToJson_struct_double_inf() {
         test_str(expr, "{\"x\":\"Inf\"}");
         ecs_os_free(expr);
     }
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_large() {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    T value = {5.9722e24};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"59722e20\"}");
+    ecs_os_free(expr);
 
     ecs_fini(world);
 }

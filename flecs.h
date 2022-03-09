@@ -9405,6 +9405,7 @@ FLECS_API extern     ECS_DECLARE(EcsBar);
 
 FLECS_API extern ECS_DECLARE(EcsSpeed);
 FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);
+FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerSecond);
 FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);
 FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
 
