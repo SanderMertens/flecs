@@ -33897,6 +33897,9 @@ void init_store(
     ecs_world_t *world) 
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
+
+    /* Initialize EcsAny record in id index */
+    flecs_ensure_id_record(world, EcsAny);
     
     /* Initialize entity index */
     world->store.entity_index = flecs_sparse_new(ecs_record_t);
@@ -35268,6 +35271,10 @@ bool for_each_id(
 
     if (!has_childof && count) {
         result |= action(world, table, ecs_pair(EcsChildOf, 0), 0);
+    }
+
+    if (table->type) {
+        action(world, table, EcsAny, 0);
     }
 
     return result;
@@ -37237,7 +37244,7 @@ void term_iter_init_wildcard(
     ecs_term_iter_t *iter)
 {
     iter->term = (ecs_term_t){ .index = -1 };
-    iter->self_index = flecs_get_id_record(world, EcsWildcard);
+    iter->self_index = flecs_get_id_record(world, EcsAny);
     iter->cur = iter->self_index;
     flecs_table_cache_iter(&iter->self_index->cache, &iter->it);
     iter->index = 0;
@@ -37548,7 +37555,7 @@ const ecs_filter_t* init_filter_iter(
             filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
     } else {
         ecs_filter_init(world, &iter->filter, &(ecs_filter_desc_t) {
-            .terms = {{ .id = EcsWildcard }}
+            .terms = {{ .id = EcsAny }}
         });
 
         filter = &iter->filter;
@@ -37633,6 +37640,7 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsIterEvalIndex;
 
         pivot_term = ecs_filter_pivot_term(world, filter);
+
         if (pivot_term == -2) {
             /* One or more terms have no matching results */
             term_iter_init_no_data(&iter->term_iter);
@@ -43688,7 +43696,9 @@ bool flecs_iter_populate_term_data(
         goto no_data;
     }
 
-    ecs_assert(it->terms != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!it->terms) {
+        goto no_data;
+    }
 
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutFilter) {

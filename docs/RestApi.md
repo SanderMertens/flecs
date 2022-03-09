@@ -34,15 +34,15 @@ To test if the REST API is working, navigate to http://localhost:27750/entity/fl
 For the full C/C++ API reference [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
 
 ## Explorer
-An application with REST enabled can be remotely monitored with the Flecs Explorer. When the application is running with REST API enabled, navigate to https://flecs.dev/explorer. This should connect the Explorer to the application.
+An application with REST enabled can be remotely monitored with the [Flecs Explorer](https://github.com/flecs-hub/explorer). When the application is running with REST enabled, navigate to https://flecs.dev/explorer. This should connect the Explorer to the application.
 
 When the connection is successful, the Explorer should look similar to this:
 
 ![Remote Explorer](explorer-remote.png)
 
-To ensure the Explorer is connected, ensure the remote icon next to the title is visible. If the connection is not successful it is possible that the response was too slow. To force the explorer to connect remotely `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
+The remote icon next to the title should be visible. If the connection is not successful it could be that the explorer did not receive a response fast enough. To force the explorer to connect remotely, add `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
 
-If connection issues persist, it is possible that the browser is preventing connections from the hosted explorer to the local application. See the [Explorer repository README](https://github.com/flecs-hub/explorer) for more information on how to host a local instance of the explorer & more troubleshooting.
+If connection issues persist, the browser could be preventing connections to a local application. See the [Explorer repository README](https://github.com/flecs-hub/explorer) for more information on how to workaround this and other issues.
 
 **Tip**: To show the application title in the explorer, pass the command line arguments to `ecs_init`/`flecs::world::world`:
 

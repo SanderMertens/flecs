@@ -392,6 +392,9 @@ void init_store(
     ecs_world_t *world) 
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
+
+    /* Initialize EcsAny record in id index */
+    flecs_ensure_id_record(world, EcsAny);
     
     /* Initialize entity index */
     world->store.entity_index = flecs_sparse_new(ecs_record_t);
@@ -1763,6 +1766,10 @@ bool for_each_id(
 
     if (!has_childof && count) {
         result |= action(world, table, ecs_pair(EcsChildOf, 0), 0);
+    }
+
+    if (table->type) {
+        action(world, table, EcsAny, 0);
     }
 
     return result;

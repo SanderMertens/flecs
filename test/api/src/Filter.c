@@ -2877,7 +2877,6 @@ void Filter_filter_iter_pair_2_pred_obj() {
 }
 
 void Filter_filter_iter_null() {
-    test_quarantine("Thu Sep 23 2021");
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2924,12 +2923,13 @@ void Filter_filter_iter_1_not_tag() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
     ECS_TAG(world, TagC);
 
     ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagB);
-    ecs_entity_t e_3 = ecs_new(world, TagB);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, Obj);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
     ecs_add_id(world, e_3, TagC);
     
     bool e_1_found = false;

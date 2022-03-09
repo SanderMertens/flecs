@@ -1528,7 +1528,7 @@ void term_iter_init_wildcard(
     ecs_term_iter_t *iter)
 {
     iter->term = (ecs_term_t){ .index = -1 };
-    iter->self_index = flecs_get_id_record(world, EcsWildcard);
+    iter->self_index = flecs_get_id_record(world, EcsAny);
     iter->cur = iter->self_index;
     flecs_table_cache_iter(&iter->self_index->cache, &iter->it);
     iter->index = 0;
@@ -1839,7 +1839,7 @@ const ecs_filter_t* init_filter_iter(
             filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
     } else {
         ecs_filter_init(world, &iter->filter, &(ecs_filter_desc_t) {
-            .terms = {{ .id = EcsWildcard }}
+            .terms = {{ .id = EcsAny }}
         });
 
         filter = &iter->filter;
@@ -1924,6 +1924,7 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsIterEvalIndex;
 
         pivot_term = ecs_filter_pivot_term(world, filter);
+
         if (pivot_term == -2) {
             /* One or more terms have no matching results */
             term_iter_init_no_data(&iter->term_iter);

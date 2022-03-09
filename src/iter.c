@@ -74,7 +74,9 @@ bool flecs_iter_populate_term_data(
         goto no_data;
     }
 
-    ecs_assert(it->terms != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!it->terms) {
+        goto no_data;
+    }
 
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutFilter) {
