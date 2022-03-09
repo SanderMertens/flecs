@@ -1,5 +1,7 @@
 # REST API
-This document provides an overview of the REST API endpoints. For an overview of how to use the REST API, [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
+This document provides an overview of the REST API. The Flecs REST API enables (web) clients to inspect the contents of the ECS store, by remotely running queries and requesting entities.
+
+For the C/C++ REST API reference, [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
 
 ## Explorer
 The REST API can be used together with the Flecs explorer to remotely monitor the entities of a Flecs application. To use the explorer, enable the REST API in your application by instantiating the `EcsRest`/`flecs::Rest` component:
@@ -22,7 +24,7 @@ ecs_app_run(world, &(ecs_app_desc_t){
 world.app().enable_rest().run();
 ```
 
-When the application is running, navigate to https://flecs.dev/explorer. The explorer should connect automatically to your application. For more information and troubleshooting, see the [Explorer repository README](https://github/com/flecs-hub/explorer).
+When the application is running, navigate to https://flecs.dev/explorer. The explorer should connect automatically to your application. For more information and troubleshooting, see the [Explorer repository README](https://github.com/flecs-hub/explorer).
 
 ## Endpoints
 This section describes the endpoints of the REST API.
@@ -32,7 +34,7 @@ This section describes the endpoints of the REST API.
 /entity/<path>
 ```
 The entity endpoint requests data from an entity. The path is the entity
-path or name of the entity to query for. The reply is formatted as an [Entity](JsonFormat.md#entity).
+path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](JsonFormat.md#entity) type.
 
 The following parameters can be provided to the endpoint:
 
@@ -83,7 +85,7 @@ Add reflection data for component types. Requires values=true.
 /query?q=<query>
 ```
 The query endpoint requests data for a query. The implementation uses the
-rules query engine. The reply is formatted as an [Iterator](JsonFormat.md#iterator).
+rules query engine. The reply is formatted as an [JSON serializer Iterator](JsonFormat.md#iterator) type.
 
 The following parameters can be provided to the endpoint:
 
