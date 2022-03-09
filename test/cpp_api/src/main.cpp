@@ -783,6 +783,7 @@ void World_reregister_after_reset_w_namespace(void);
 void World_reregister_namespace(void);
 void World_implicit_reregister_after_reset(void);
 void World_reregister_after_reset_different_name(void);
+void World_register_short_template(void);
 void World_reimport(void);
 void World_reimport_module_after_reset(void);
 void World_reimport_module_new_world(void);
@@ -3870,6 +3871,10 @@ bake_test_case World_testcases[] = {
         World_reregister_after_reset_different_name
     },
     {
+        "register_short_template",
+        World_register_short_template
+    },
+    {
         "reimport",
         World_reimport
     },
@@ -4430,7 +4435,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        80,
+        81,
         World_testcases
     },
     {

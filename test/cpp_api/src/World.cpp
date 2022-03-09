@@ -288,6 +288,23 @@ void World_reregister_after_reset_different_name() {
     ecs.component<Position>("Velocity");
 }
 
+template <typename T>
+struct Tmp { int32_t v; };
+struct Test { };
+
+void World_register_short_template() {
+    flecs::world ecs;
+
+    auto c = ecs.component<Tmp<Test>>();
+    test_assert(c != 0);
+    test_str(c.name(), "Tmp<Test>");
+
+    const EcsComponent *ptr = c.get<flecs::Component>();
+    test_assert(ptr != NULL);
+    test_int(ptr->size, 4);
+    test_int(ptr->alignment, 4);
+}
+
 void World_reimport() {
     flecs::world ecs;
 
