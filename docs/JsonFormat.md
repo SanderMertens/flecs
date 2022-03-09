@@ -2,7 +2,7 @@
 This document provides an overview of the JSON serializer format. For an overview of how to use the JSON serializer API, [see the JSON addon documentation](https://flecs.docsforge.com/master/api-json/).
 
 ## Value kinds
-This section describes value kinds that are reused across JSON serializers.
+This section describes value kinds that are used by the JSON serializers.
 
 ### **Path**
 A path field returns the path identifier of an entity as returned by `ecs_get_fullpath` or `flecs::entity::path`. The path contains the entity's name and the names of its parent and grandparents separated by a dot (`.`).
@@ -29,7 +29,7 @@ An id field returns a component id or pair. It is formatted as an array of at le
 - Second element of pair
 - Type flag
 
-Each element is formatted as a [Path](#Path).
+Each element is formatted as a [Path](#path).
 
 **Example**: 
 ```json
@@ -39,7 +39,7 @@ Each element is formatted as a [Path](#Path).
 ```
 
 ### **Id label**
-Same as [Id](#Id) but with [Label](Label)'s instead of paths.
+Same as [Id](#id) but with [Label](#label)'s instead of paths.
 
 **Example**: 
 ```json
@@ -60,52 +60,63 @@ When a component has no value (e.g. a tag) or is not described by the reflection
 ### **Type info**
 A JSON object that represents the structure of a component type.
 
+**Example**: 
+```json
+{
+    "type_info": [{
+        "x": ["float"],
+        "y": ["float"]
+    }, 0, 0]
+}
+```
+
 ### **Entity**
-An entity is the top-level object returned by the entity serializer. It can have the following properties:
+The entity kind is an object that contains metadata and data of a single serialized entity, and is returned by the [Entity serializer](#entity-serializer).
+
+The following sections describe the fields that an object of the entity kind may contain:
 
 #### **"path"**
 The entity path.
 
-Type: [Path](#Path), optional
+Type: [Path](#path), optional
 
 #### **"label"**
 The entity doc name.
 
-Type: [Label](#Label), optional
+Type: [Label](#label), optional
 
 #### **"is_a"**
 Base entities.
 
-Type: Array([Entity](#Entity))
+Type: Array([Entity](#entity)), optional
 
 #### **"ids"**
 Component ids.
 
-Type: Array([Id](#Id))
+Type: Array([Id](#id))
 
 #### **"id_labels"**
 Component labels.
 
-Type: Array([Id label](#Id_label))
+Type: Array([Id label](#id-label)), optional
 
 #### **"hidden"**
-Array indicating whether a component is hidden. Only applies to components of base entities (in the ["is_a"](_is_a_) array).
+Array indicating whether a component is hidden. Only applies to components of base entities (in the ["is_a"](is_a) array).
 
-Type: Array(bool)
+Type: Array(bool), optional
 
 #### **"values"**
 Component values.
 
+Type: Array([Value](#value)), optional
+
+#### **"type_info"**
+Array with objects that describe the component types of the terms.
+
+Type: Array([Type info](#type-info)), optional
+
 #### **Example**
-See [Entity format](#Entity_format).
-
-Type: Array([Value](#Value))
-
-## Entity format
-The entity format serializes the data and metadata of a single entity to JSON. This format is returned by functions that serialize entities to JSON, like `ecs_entity_to_json` and `flecs::entity::to_json`.
-
-### Example
-This example uses the default serializer options:
+Default serializer options:
 ```json
 {
     "path":"Sun.Earth", 
@@ -175,11 +186,101 @@ This example shows an entity with a base with all serializer options enabled:
 }
 ```
 
+### **Result**
+The result kind is an object that contains the metadata and data of a single result returned by an iterator (see [Iterator](#iterator)).
+
+The following sections describe the fields that an object of the entity kind may contain:
+
+#### **"entities"**
+Array with paths of the returned entities.
+
+Type: Array([Path](#path)), optional
+
+#### **"entity_labels"**
+Same as [entities](#entities), but with [Label](#label)'s instead of paths.
+
+Type: Array([Label](#label)), optional
+
+#### **"subjects"**
+Array with paths of subjects for each term. A subject indicates the actual entity on which a component is stored. If this is the matched entity (default) the array will contain a `0` element.
+
+Type: Array([Path](#path)), optional
+
+#### **"variables"**
+Array with variable values for current result (see [query variables](https://flecs.docsforge.com/master/query-manual/#variables)).
+
+Type: Array([Path](#path)), optional
+
+#### **"variable_labels"**
+Same as [variables](#variables), but with [Label](#label)'s instead of paths.
+
+Type: Array([Label](#label)), optional
+
+#### **"ids"**
+Array with component ids. This list is more specific than the ids array provided by the top-level iterator object. The arrays can be different in the case of terms with an `Or` operator, or terms with wildcard ids.
+
+Type: Array(string), optional
+
+#### **"is_set"**
+Array with booleans that can be used to determine whether terms with the `Optional` operator are set.
+
+Type: Array(bool), optional
+
+#### **"values"**
+Array with component values. The array contains an element for each term. If a component has no value, or no value could be serialized for the component a `[]` element is added.
+
+Each element in the array can be either an array with component values when the component is from the matched entity, or a single component value when the component is from another entity (like a parent, prefab, singleton).
+
+Type: Array(Array([Value](#value))), optional
+
+#### **"type_info"**
+Array with objects that describe the component types of the terms.
+
+Type: Array([Type info](#type-info)), optional
+
+### **Iterator**
+The iterator kind is an object that contains metadata and data of all the entities yielded by an iterator.
+
+#### **"ids"**
+Array with ids for each term.
+
+Type: Array(string), optional
+
+#### **"variables"**
+Array with variable names (see [query variables](https://flecs.docsforge.com/master/query-manual/#variables)).
+
+Type: Array(string), optional
+
+#### **"results"**
+Array with elements for each returned result.
+
+Type: Array([Result](#result))
+
+#### **Example**
+
+```json
+{
+  "ids": ["Position", "Jedi"],
+  "results": [{
+    "is_set": [true, true],
+    "entities": ["Luke", "Joda"],
+    "values": [
+      [{ "x": 10, "y": 20 }, 
+       { "x": 20, "y": 30 }],
+      0
+    ]
+  }]
+}
+```
+
+## Entity serializer
+The entity serializer returns a JSON string of the [Entity](#entity) type. This format is returned by `ecs_entity_to_json` and `flecs::entity::to_json`.
+
 ### Serializer options
 The following options (found in `ecs_entity_to_json_desc_t`) customize the output of the entity serializer:
 
 #### **serialize_path**
-Serialize the ["path"](#_path_) member.
+Serialize the ["path"](#path-1) member.
 
 **Default**: `true`
 
@@ -189,7 +290,7 @@ Serialize the ["path"](#_path_) member.
 ```
 
 #### **serialize_label**
-Serialize the ["label"](#_label_) member.
+Serialize the ["label"](#label-1) member.
 
 **Default**: `false`
 
@@ -199,7 +300,7 @@ Serialize the ["label"](#_label_) member.
 ```
 
 #### **serialize_id_labels**
-Serializes the ["id_labels"](#_id_labels_) member.
+Serializes the ["id_labels"](#id_labels) member.
 
 **Default**: `false`
 
@@ -209,7 +310,7 @@ Serializes the ["id_labels"](#_id_labels_) member.
 ```
 
 #### **serialize_base**
-Serializes the ["is_a"](#_is_a_) member.
+Serializes the ["is_a"](#is_a) member.
 
 **Default**: `true`
 
@@ -234,7 +335,7 @@ Serialize private components. Private components are regular components with the
 **Default**: `false`
 
 #### **serialize_hidden**
-Serializes the ["hidden"](#_hidden_) member.
+Serializes the ["hidden"](#hidden) member.
 
 **Example**: 
 ```json
@@ -265,7 +366,7 @@ Note that `hidden[0]` is `true` in this example, because the `Position` componen
 **Default**: `false`
 
 #### **serialize_values**
-Serializes the ["values"](#_values_) member.
+Serializes the ["values"](#values) member.
 
 **Example**: 
 ```json
@@ -275,7 +376,7 @@ Serializes the ["values"](#_values_) member.
 **Default**: `false`
 
 #### **serialize_type_info**
-Serialize the ["type_info"](#_type_info_) member.
+Serialize the ["type_info"](#type_info) member.
 
 **Example**: 
 ```json
@@ -284,5 +385,193 @@ Serialize the ["type_info"](#_type_info_) member.
         "x": ["float"],
         "y": ["float"]
     }, 0, 0]
+}
+```
+
+## Iterator serializer
+The entity serializer returns a JSON string of the [Iterator](#iterator) type. This format is returned by `ecs_iter_to_json`.
+
+### Serializer options
+
+#### **serialize_term_ids**
+Serialize the top level ["ids"](#term_ids) member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position, Jedi`
+```json
+{
+  "ids": ["Position", "Jedi"],
+  "results": [ ... ]
+}
+```
+
+#### **serialize_ids**
+Serialize the result specific ["ids"](#ids-1) member. 
+
+If the iterated query does not contain variable ids (either an `Or` term or a term with a wildcard id) the result specific `ids` member will exactly match the top-level `ids` member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position, (Likes, *)`
+```json
+{
+  "ids": ["Position", "(Likes,*)"],
+  "results": [{
+    "ids": ["Position", "(Likes,Apples)"]
+  }]
+}
+```
+
+#### **serialize_subjects**
+Serialize the ["subjects"](#subjects) member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position, Position(parent)`
+```json
+{
+  "ids": ["Position", "Position"],
+  "results": [{
+    "entities": ["Parent.A", "Parent.B"],
+        "subjects": [0, "Parent"]
+  }]
+}
+```
+
+#### **serialize_variables**
+Serialize the ["variables"](#variables) member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position, (Likes, _Food)`
+```json
+{
+    "variables": ["Food"],
+  "results": [{
+    "ids": ["Position", "(Likes,Apples)"],
+        "variables": ["Apples"],
+  }]
+}
+```
+
+#### **serialize_is_set**
+Serialize the ["is_set"](#is_set) member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position, ?Velocity`
+```json
+{
+    "ids": ["Position", "Velocity"],
+  "results": [{
+        "is_set": [true, false]
+  }]
+}
+```
+
+#### **serialize_values**
+Serialize the ["values"](#values) member.
+
+**Default**: `true`
+
+**Example**:
+
+Example result for query `Position`
+```json
+{
+  "ids": ["Position"],
+  "results": [{
+    "values": [
+      [{
+        "x": 10,
+        "y": 20
+      }]
+    ]
+  }]
+}
+```
+
+#### **serialize_entities**
+Serialize the ["entities"](#entities) member.
+
+**Default**: `true`
+
+**Example**:
+```json
+{
+  "results": [{
+    "entities": ["MyEntity"]
+  }]
+}
+```
+
+#### **serialize_entity_labels**
+Serialize the ["entity_labels"](#entity_labels) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{
+  "results": [{
+    "entities": ["Parent.MyEntity"],
+        "entity_labels": ["My entity"]
+  }]
+}
+```
+
+#### **serialize_variable_labels**
+Serialize the ["variable_labels"](#variable_labels) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{
+  "results": [{
+    "variables": ["GrannySmith"],
+    "variable_labels": ["Granny smith"]
+  }]
+}
+```
+
+#### **measure_eval_duration**
+Serialize the ["eval_duration"](#eval_duration) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{
+  "eval_duration": 0.001
+}
+```
+
+#### **serialize_type_info**
+Serialize the ["type_info"](#type_info-1) member.
+
+**Default**: `false`
+
+**Example**:
+```json
+{
+  "ids": ["Position", "Jedi"],
+  "results": [{
+    "type_info": [{
+        "x": ["float"],
+        "y": ["float"]
+    }, 0]
+  }]
 }
 ```
