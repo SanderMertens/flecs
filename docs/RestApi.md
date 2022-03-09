@@ -40,9 +40,18 @@ When the connection is successful, the Explorer should look similar to this:
 
 ![Remote Explorer](explorer-remote.png)
 
-If the connection is not successful it is possible that the response was too slow. To force the explorer to connect remotely `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
+To ensure the Explorer is connected, ensure the remote icon next to the title is visible. If the connection is not successful it is possible that the response was too slow. To force the explorer to connect remotely `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
 
 If connection issues persist, it is possible that the browser is preventing connections from the hosted explorer to the local application. See the [Explorer repository README](https://github.com/flecs-hub/explorer) for more information on how to host a local instance of the explorer & more troubleshooting.
+
+**Tip**: To show the application title in the explorer, pass the command line arguments to `ecs_init`/`flecs::world::world`:
+
+```c
+ecs_world_t *world = ecs_init_w_args(argc, argv);
+```
+```c++
+flecs::world world(argc, argc);
+```
 
 ## Endpoints
 This section describes the endpoints of the REST API.
