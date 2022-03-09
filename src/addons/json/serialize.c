@@ -1,5 +1,6 @@
 
 #include "json.h"
+#include <stdio.h>
 
 #ifdef FLECS_JSON
 
@@ -799,7 +800,14 @@ int ecs_entity_to_json_buf(
 #ifdef FLECS_DOC
     if (desc && desc->serialize_label) {
         json_member(buf, "label");
-        json_string(buf, ecs_doc_get_name(world, entity));
+        const char *doc_name = ecs_doc_get_name(world, entity);
+        if (doc_name) {
+            json_string(buf, doc_name);
+        } else {
+            char num_buf[20];
+            ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
+            json_string(buf, num_buf);
+        }
     }
 #endif
 

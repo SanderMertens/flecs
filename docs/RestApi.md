@@ -1,30 +1,48 @@
 # REST API
 This document provides an overview of the REST API. The Flecs REST API enables (web) clients to inspect the contents of the ECS store, by remotely running queries and requesting entities.
 
-For the C/C++ REST API reference, [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
-
-## Explorer
-The REST API can be used together with the Flecs explorer to remotely monitor the entities of a Flecs application. To use the explorer, enable the REST API in your application by instantiating the `EcsRest`/`flecs::Rest` component:
+## Enable the REST API
+The REST API can be enabled in an application by instantiating the `EcsRest`/`flecs::Rest` component:
 
 ```c
+// Start REST API with default parameters
 ecs_singleton_set(world, EcsRest, {0});
 ```
 ```cpp
+// Start REST API with default parameters
 world.set<flecs::Rest>({});
 ```
 
-Alternatively, enable the REST API through the flecs app ([FLECS_APP](https://flecs.docsforge.com/master/api-app/)) interface:
+When an application uses the app addon [FLECS_APP](https://flecs.docsforge.com/master/api-app/) the REST interface can be enabled like this:
 
 ```c
+// Start application main loop, enable REST interface
 ecs_app_run(world, &(ecs_app_desc_t){
     .enable_rest = true
 })
 ```
 ```cpp
+// Start application main loop, enable REST interface
 world.app().enable_rest().run();
 ```
 
-When the application is running, navigate to https://flecs.dev/explorer. The explorer should connect automatically to your application. For more information and troubleshooting, see the [Explorer repository README](https://github.com/flecs-hub/explorer).
+To test if the REST API is working, navigate to http://localhost:27750/entity/flecs/core/World. Upon success this request should return a reply that looks like:
+```json
+{"path":"World", "ids":[["flecs.rest.Rest"], ["flecs.core.Identifier", "flecs.core.Name"], ["flecs.core.Identifier", "flecs.core.Symbol"], ["flecs.core.ChildOf", "flecs.core"], ["flecs.doc.Description", "flecs.core.Name"], ["flecs.doc.Description", "flecs.doc.Brief"]]}
+```
+
+For the full C/C++ API reference [see the REST addon documentation](https://flecs.docsforge.com/master/api-rest/).
+
+## Explorer
+An application with REST enabled can be remotely monitored with the Flecs Explorer. When the application is running with REST API enabled, navigate to https://flecs.dev/explorer. This should connect the Explorer to the application.
+
+When the connection is successful, the Explorer should look similar to this:
+
+![Remote Explorer](explorer-remote.png)
+
+If the connection is not successful it is possible that the response was too slow. To force the explorer to connect remotely `?remote=true` to the request: https://flecs.dev/explorer?remote=true.
+
+If connection issues persist, it is possible that the browser is preventing connections from the hosted explorer to the local application. See the [Explorer repository README](https://github.com/flecs-hub/explorer) for more information on how to host a local instance of the explorer & more troubleshooting.
 
 ## Endpoints
 This section describes the endpoints of the REST API.

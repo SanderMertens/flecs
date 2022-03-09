@@ -1565,6 +1565,45 @@ void SerializeToJson_serialize_entity_w_label() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_label_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+
+    char *str = ecs_os_malloc(
+        ecs_os_strlen(
+            "{"
+                "\"path\":\"000\", "
+                "\"label\":\"\" "
+                "\"ids\":["
+                    "[\"Tag\"]"
+            "]}"
+        )
+    );
+
+    ecs_os_sprintf(str, 
+        "{"
+            "\"path\":\"%u\", "
+            "\"label\":\"%u\", "
+            "\"ids\":["
+                "[\"Tag\"]"
+        "]}", (uint32_t)e,  (uint32_t)e);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_label = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, str);
+
+    ecs_os_free(json);
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_w_id_labels() {
     ecs_world_t *world = ecs_init();
 

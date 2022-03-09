@@ -506,6 +506,7 @@
                 "serialize_entity_wo_private",
                 "serialize_entity_w_private",
                 "serialize_entity_w_label",
+                "serialize_entity_w_label_no_name",
                 "serialize_entity_w_id_labels",
                 "serialize_iterator_1_comps_empty",
                 "serialize_iterator_1_comps_2_ents_same_table",
