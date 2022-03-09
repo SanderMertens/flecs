@@ -15093,7 +15093,8 @@ void ecs_cpp_trim_type_name(
             /* Make sure we're not matched with part of a longer identifier
              * that contains 'struct' */
             if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
-                ecs_os_memmove(ptr, ptr + ECS_STRUCT_LEN, len - ECS_STRUCT_LEN);
+                ecs_os_memmove(ptr, ptr + ECS_STRUCT_LEN, 
+                    ecs_os_strlen(ptr + ECS_STRUCT_LEN) + 1);
                 len -= ECS_STRUCT_LEN;
             }
         }
