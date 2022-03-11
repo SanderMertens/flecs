@@ -234,7 +234,7 @@ int ecs_meta_member(
 
     ecs_hashed_string_t key = ecs_get_hashed_string(
         name, ecs_os_strlen(name), 0);
-    int32_t *cur = flecs_hashmap_get(*push_op->members, &key, int32_t);
+    int32_t *cur = flecs_hashmap_get(push_op->members, &key, int32_t);
     if (!cur) {
         char *path = ecs_get_fullpath(world, scope->type);
         ecs_err("unknown member '%s' for type '%s'", name, path);

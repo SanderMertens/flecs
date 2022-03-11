@@ -38,9 +38,8 @@ void unregister_event_trigger(
     ecs_event_record_t *evt,
     ecs_id_t id)
 {
-    if (ecs_map_remove(evt->event_ids, id) == 0) {
-        ecs_map_free(evt->event_ids);
-        evt->event_ids = NULL;
+    if (ecs_map_remove(&evt->event_ids, id) == 0) {
+        ecs_map_fini(&evt->event_ids);
     }
 }
 
@@ -66,7 +65,7 @@ void inc_trigger_count(
     ecs_id_t id,
     int32_t value)
 {
-    ecs_event_id_record_t *idt = ensure_event_id_record(evt->event_ids, id);
+    ecs_event_id_record_t *idt = ensure_event_id_record(&evt->event_ids, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
     
     int32_t result = idt->trigger_count += value;
@@ -85,7 +84,9 @@ void inc_trigger_count(
         });
 
         /* Remove admin for id for event */
-        if (!idt->triggers && !idt->set_triggers) {
+        if (!ecs_map_is_initialized(&idt->triggers) && 
+            !ecs_map_is_initialized(&idt->set_triggers)) 
+        {
             unregister_event_trigger(evt, id);
             ecs_os_free(idt);
         }
@@ -113,21 +114,21 @@ void register_trigger_for_id(
             events, ecs_event_record_t, event);
         ecs_assert(evt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (!evt->event_ids) {
-            evt->event_ids = ecs_map_new(ecs_event_id_record_t*, 1);
+        if (!ecs_map_is_initialized(&evt->event_ids)) {
+            ecs_map_init(&evt->event_ids, ecs_event_id_record_t*, 1);
         }
 
         /* Get triggers for (component) id for event */
         ecs_event_id_record_t *idt = ensure_event_id_record(
-            evt->event_ids, id);
+            &evt->event_ids, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_t **triggers = ECS_OFFSET(idt, triggers_offset);
-        if (!triggers[0]) {
-            triggers[0] = ecs_map_new(ecs_trigger_t*, 1);
+        ecs_map_t *triggers = ECS_OFFSET(idt, triggers_offset);
+        if (!ecs_map_is_initialized(triggers)) {
+            ecs_map_init(triggers, ecs_trigger_t*, 1);
         }
 
-        ecs_map_ensure(triggers[0], ecs_trigger_t*, trigger->id)[0] = trigger;
+        ecs_map_ensure(triggers, ecs_trigger_t*, trigger->id)[0] = trigger;
 
         inc_trigger_count(world, event, evt, term_id, 1);
         if (term_id != id) {
@@ -197,14 +198,13 @@ void unregister_trigger_for_id(
 
         /* Get triggers for (component) id */
         ecs_event_id_record_t *idt = ecs_map_get_ptr(
-            evt->event_ids, ecs_event_id_record_t*, id);
+            &evt->event_ids, ecs_event_id_record_t*, id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_t **id_triggers = ECS_OFFSET(idt, triggers_offset);
+        ecs_map_t *id_triggers = ECS_OFFSET(idt, triggers_offset);
 
-        if (ecs_map_remove(id_triggers[0], trigger->id) == 0) {
-            ecs_map_free(id_triggers[0]);
-            id_triggers[0] = NULL;
+        if (ecs_map_remove(id_triggers, trigger->id) == 0) {
+            ecs_map_fini(id_triggers);
         }
 
         inc_trigger_count(world, event, evt, term_id, -1);
@@ -212,7 +212,10 @@ void unregister_trigger_for_id(
         if (id != term_id) {
             /* Id is different from term_id in case of a set trigger. If they're
              * the same, inc_trigger_count could already have done cleanup */
-            if (!idt->triggers && !idt->set_triggers && !idt->trigger_count) {
+            if (!ecs_map_is_initialized(&idt->triggers) && 
+                !ecs_map_is_initialized(&idt->set_triggers) && 
+                !idt->trigger_count) 
+            {
                 unregister_event_trigger(evt, id);
             }
 
@@ -274,7 +277,7 @@ ecs_map_t* get_triggers_for_event(
         events, ecs_event_record_t, event);
     
     if (evt) {
-        return evt->event_ids;
+        return (ecs_map_t*)&evt->event_ids;
     }
 
 error:
@@ -626,18 +629,17 @@ void notify_triggers_for_id(
         return;
     }
 
-    ecs_map_t *triggers;
-    if ((triggers = idt->triggers)) {
+    if (ecs_map_is_initialized(&idt->triggers)) {
         init_iter(it, iter_set);
-        notify_self_triggers(world, it, triggers);
+        notify_self_triggers(world, it, &idt->triggers);
     }
-    if ((triggers = idt->entity_triggers)) {
+    if (ecs_map_is_initialized(&idt->entity_triggers)) {
         init_iter(it, iter_set);
-        notify_entity_triggers(world, it, triggers);
+        notify_entity_triggers(world, it, &idt->entity_triggers);
     }
-    if ((triggers = idt->set_triggers)) {
+    if (ecs_map_is_initialized(&idt->set_triggers)) {
         init_iter(it, iter_set);
-        notify_set_base_triggers(world, it, triggers);
+        notify_set_base_triggers(world, it, &idt->set_triggers);
     }
 }
 
@@ -650,9 +652,9 @@ void notify_set_triggers_for_id(
     ecs_id_t set_id)
 {
     const ecs_event_id_record_t *idt = get_triggers_for_id(evt, set_id);
-    if (idt && idt->set_triggers) {
+    if (idt && ecs_map_is_initialized(&idt->set_triggers)) {
         init_iter(it, iter_set);
-        notify_set_triggers(world, it, idt->set_triggers);
+        notify_set_triggers(world, it, &idt->set_triggers);
     }
 }
 

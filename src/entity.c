@@ -2245,7 +2245,7 @@ ecs_entity_t ecs_type_init(
 
         /* This will allow the type to show up in debug tools */
         if (type) {
-            ecs_map_set(world->type_handles, (uintptr_t)type, &result);
+            ecs_map_set(&world->type_handles, (uintptr_t)type, &result);
         }
 
         ecs_modified(world, result, EcsType);

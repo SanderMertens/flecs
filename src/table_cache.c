@@ -4,8 +4,8 @@ static
 void ensure_index(
     ecs_table_cache_t *cache)
 {
-    if (!cache->index) {
-        cache->index = ecs_map_new(ecs_table_cache_hdr_t*, 0);
+    if (!ecs_map_is_initialized(&cache->index)) {
+        ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 0);
     }
 }
 
@@ -72,15 +72,15 @@ void ecs_table_cache_fini(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_free(cache->index);
+    ecs_map_fini(&cache->index);
 }
 
 bool ecs_table_cache_is_empty(
     const ecs_table_cache_t *cache)
 {
-    ecs_assert(cache->index == NULL || ecs_map_count(cache->index), 
-        ECS_INTERNAL_ERROR, NULL);
-    return cache->index == NULL;
+    ecs_assert(!ecs_map_is_initialized(&cache->index) || 
+        ecs_map_count(&cache->index), ECS_INTERNAL_ERROR, NULL);
+    return !ecs_map_is_initialized(&cache->index);
 }
 
 void ecs_table_cache_insert(
@@ -108,7 +108,7 @@ void ecs_table_cache_insert(
 
     if (table) {
         ensure_index(cache);
-        ecs_map_set_ptr(cache->index, table->id, result);
+        ecs_map_set_ptr(&cache->index, table->id, result);
     }
 
     ecs_assert(empty || cache->tables.first != NULL, 
@@ -123,7 +123,7 @@ void* ecs_table_cache_get(
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_map_get_ptr(cache->index, ecs_table_cache_hdr_t*, table->id);
+    return ecs_map_get_ptr(&cache->index, ecs_table_cache_hdr_t*, table->id);
 }
 
 void* ecs_table_cache_remove(
@@ -134,13 +134,13 @@ void* ecs_table_cache_remove(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!cache->index) {
+    if (!ecs_map_is_initialized(&cache->index)) {
         return NULL;
     }
 
     if (!elem) {
         elem = ecs_map_get_ptr(
-            cache->index, ecs_table_cache_hdr_t*, table->id);
+            &cache->index, ecs_table_cache_hdr_t*, table->id);
         if (!elem) {
             return false;
         }
@@ -152,9 +152,8 @@ void* ecs_table_cache_remove(
 
     table_cache_list_remove(cache, elem);
 
-    if (ecs_map_remove(cache->index, table->id) == 0) {
-        ecs_map_free(cache->index);
-        cache->index = NULL;
+    if (ecs_map_remove(&cache->index, table->id) == 0) {
+        ecs_map_fini(&cache->index);
     }
 
     return elem;
@@ -169,7 +168,7 @@ bool ecs_table_cache_set_empty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_cache_hdr_t *elem = ecs_map_get_ptr(
-        cache->index, ecs_table_cache_hdr_t*, table->id);
+        &cache->index, ecs_table_cache_hdr_t*, table->id);
     if (!elem) {
         return false;
     }
@@ -190,15 +189,15 @@ void ecs_table_cache_fini_delete_all(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!cache->index) {
+    if (!ecs_map_is_initialized(&cache->index)) {
         return;
     }
 
     /* Temporarily set index to NULL, so that when the table tries to remove
      * itself from the cache it won't be able to. This keeps the arrays we're
      * iterating over consistent */
-    ecs_map_t *index = cache->index;
-    cache->index = NULL;
+    ecs_map_t index = cache->index;
+    ecs_os_zeromem(&cache->index);
 
     ecs_table_cache_hdr_t *cur, *next = cache->tables.first;
     while ((cur = next)) {

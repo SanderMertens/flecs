@@ -13,7 +13,7 @@ void ecs_meta_dtor_serialized(
     for (i = 0; i < count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
         if (op->members) {
-            flecs_hashmap_free(*op->members);
+            flecs_hashmap_fini(op->members);
             ecs_os_free(op->members);
         }
     }
@@ -33,7 +33,7 @@ static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
         ecs_meta_type_op_t *op = &ops[o];
         if (op->members) {
             op->members = ecs_os_memdup_t(op->members, ecs_hashmap_t);
-            *op->members = flecs_hashmap_copy(*op->members);
+            flecs_hashmap_copy(op->members, op->members);
         }
     }
 })

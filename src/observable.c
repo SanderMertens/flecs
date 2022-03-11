@@ -17,13 +17,13 @@ void flecs_observable_fini(
             ecs_sparse_get_dense(triggers, ecs_event_record_t, i);
         ecs_assert(et != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_iter_t it = ecs_map_iter(et->event_ids);
+        ecs_map_iter_t it = ecs_map_iter(&et->event_ids);
         ecs_event_id_record_t *idt;
         while ((idt = ecs_map_next(&it, ecs_event_id_record_t, NULL))) {
-            ecs_map_free(idt->triggers);
-            ecs_map_free(idt->set_triggers);
+            ecs_map_fini(&idt->triggers);
+            ecs_map_fini(&idt->set_triggers);
         }
-        ecs_map_free(et->event_ids);
+        ecs_map_fini(&et->event_ids);
     }
 
     flecs_sparse_free(observable->events);

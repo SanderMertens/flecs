@@ -8,20 +8,6 @@
 #define GET_ELEM(array, elem_size, index) \
     ECS_OFFSET(array, (elem_size) * (index))
 
-typedef struct ecs_bucket_t {
-    ecs_map_key_t *keys;    /* Array with keys */
-    void *payload;          /* Payload array */
-    int32_t count;          /* Number of elements in bucket */
-} ecs_bucket_t;
-
-struct ecs_map_t {
-    ecs_bucket_t *buckets;
-    int16_t elem_size;
-    uint8_t bucket_shift;
-    int32_t bucket_count;
-    int32_t count;
-};
-
 static
 uint8_t ecs_log2(uint32_t v) {
     static const uint8_t log2table[32] = 
@@ -259,27 +245,51 @@ void rehash(
     }
 }
 
-ecs_map_t* _ecs_map_new(
+void _ecs_map_init(
+    ecs_map_t *result,
     ecs_size_t elem_size,
     int32_t element_count)
 {
-    ecs_map_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_map_t) * 1);
-    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     ecs_assert(elem_size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_os_zeromem(result);
 
     result->count = 0;
     result->elem_size = (int16_t)elem_size;
 
     ensure_buckets(result, get_bucket_count(element_count));
+}
+
+ecs_map_t* _ecs_map_new(
+    ecs_size_t elem_size,
+    int32_t element_count)
+{
+    ecs_map_t *result = ecs_os_malloc_t(ecs_map_t);
+    ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
+
+    _ecs_map_init(result, elem_size, element_count);
 
     return result;
+}
+
+bool ecs_map_is_initialized(
+    const ecs_map_t *result)
+{
+    return result != NULL && result->bucket_count != 0;
+}
+
+void ecs_map_fini(
+    ecs_map_t *map)
+{
+    ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
+    clear_buckets(map);
 }
 
 void ecs_map_free(
     ecs_map_t *map)
 {
     if (map) {
-        clear_buckets(map);
+        ecs_map_fini(map);
         ecs_os_free(map);
     }
 }
@@ -291,7 +301,7 @@ void* _ecs_map_get(
 {
     (void)elem_size;
 
-    if (!map) {
+    if (!ecs_map_is_initialized(map)) {
         return NULL;
     }
 
@@ -322,7 +332,7 @@ bool ecs_map_has(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
-    if (!map) {
+    if (!ecs_map_is_initialized(map)) {
         return false;
     }
 
@@ -445,7 +455,7 @@ void* _ecs_map_next(
     ecs_map_key_t *key_out)
 {
     const ecs_map_t *map = iter->map;
-    if (!map) {
+    if (!ecs_map_is_initialized(map)) {
         return NULL;
     }
     
@@ -526,7 +536,7 @@ void ecs_map_set_size(
 ecs_map_t* ecs_map_copy(
     ecs_map_t *map)
 {
-    if (!map) {
+    if (!ecs_map_is_initialized(map)) {
         return NULL;
     }
 

@@ -180,7 +180,7 @@ typedef struct ecs_graph_edge_t {
 /* Edges to other tables. */
 typedef struct ecs_graph_edges_t {
     ecs_graph_edge_t *lo; /* Small array optimized for low edges */
-    ecs_map_t *hi;  /* Map for hi edges (map<id, edge_t>) */
+    ecs_map_t hi;  /* Map for hi edges (map<id, edge_t>) */
 } ecs_graph_edges_t;
 
 /* Table graph node */
@@ -245,7 +245,7 @@ typedef struct ecs_table_cache_list_t {
 
 /** Table cache */
 typedef struct ecs_table_cache_t {
-    ecs_map_t *index; /* <table_id, T*> */
+    ecs_map_t index; /* <table_id, T*> */
     ecs_table_cache_list_t tables;
     ecs_table_cache_list_t empty_tables;
 } ecs_table_cache_t;
@@ -356,7 +356,7 @@ struct ecs_query_t {
     ecs_query_table_list_t list;
 
     /* Contains head/tail to nodes of query groups (if group_by is used) */
-    ecs_map_t *groups;
+    ecs_map_t groups;
 
     /* Handle to system (optional) */
     ecs_entity_t system;
@@ -393,13 +393,13 @@ struct ecs_query_t {
 /** All triggers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
-    ecs_map_t *triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t triggers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for SuperSet, SubSet */
-    ecs_map_t *set_triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t set_triggers; /* map<trigger_id, trigger_t> */
 
     /* Triggers for Self with non-This subject */
-    ecs_map_t *entity_triggers; /* map<trigger_id, trigger_t> */
+    ecs_map_t entity_triggers; /* map<trigger_id, trigger_t> */
 
     /* Number of active triggers for (component) id */
     int32_t trigger_count;
@@ -407,7 +407,7 @@ typedef struct ecs_event_id_record_t {
 
 /** All triggers for a specific event */
 typedef struct ecs_event_record_t {
-    ecs_map_t *event_ids;     /* map<id, ecs_event_id_record_t> */
+    ecs_map_t event_ids;     /* map<id, ecs_event_id_record_t> */
 } ecs_event_record_t;
 
 /** Types for deferred operations */
@@ -488,13 +488,13 @@ typedef struct ecs_monitor_t {
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t *monitors;         /* map<id, ecs_monitor_t> */
+    ecs_map_t monitors;         /* map<id, ecs_monitor_t> */
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
 /* Relation monitors. TODO: implement generic monitor mechanism */
 typedef struct ecs_relation_monitor_t {
-    ecs_map_t *monitor_sets;     /* map<relation_id, ecs_monitor_set_t> */
+    ecs_map_t monitor_sets;     /* map<relation_id, ecs_monitor_set_t> */
     bool is_dirty;               /* Should monitor sets be evaluated? */
 } ecs_relation_monitor_t;
 
@@ -529,9 +529,8 @@ typedef struct ecs_store_t {
     /* Root table */
     ecs_table_t root;
 
-    /* Reusable id sequence storage to prevent having to do allocs
-     * when generating an id list for a new table */
-    ecs_ids_t id_cache;
+    /* Table edge cache */
+    ecs_graph_edge_hdr_t *first_free;
 } ecs_store_t;
 
 /** Supporting type to store looked up or derived entity data */
@@ -617,7 +616,7 @@ struct ecs_world_t {
 
     /* -- Lookup Indices -- */
 
-    ecs_map_t *type_handles;     /* Handles to named types */
+    ecs_map_t type_handles;     /* Handles to named types */
 
 
     /* -- Identifiers -- */

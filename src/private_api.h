@@ -808,11 +808,11 @@ char * ecs_ftoa(
 uint64_t flecs_string_hash(
     const void *ptr);
 
-ecs_hashmap_t flecs_table_hashmap_new(void);
-ecs_hashmap_t _flecs_string_hashmap_new(ecs_size_t size);
+void flecs_table_hashmap_init(ecs_hashmap_t *hm);
+void _flecs_string_hashmap_init(ecs_hashmap_t *hm, ecs_size_t size);
 
-#define flecs_string_hashmap_new(T)\
-    _flecs_string_hashmap_new(ECS_SIZEOF(T))
+#define flecs_string_hashmap_init(hm, T)\
+    _flecs_string_hashmap_init(hm, ECS_SIZEOF(T))
 
 ecs_hashed_string_t ecs_get_hashed_string(
     const char *name,
