@@ -3236,7 +3236,7 @@ ecs_table_record_t find_next_table(
 
     const ecs_table_record_t *tr;
     while ((column == -1) && (tr = flecs_table_cache_next(it, ecs_table_record_t))) {
-        table = tr->table;
+        table = tr->hdr.table;
 
         /* Should only iterate non-empty tables */
         ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
@@ -3251,7 +3251,7 @@ ecs_table_record_t find_next_table(
         table = NULL;
     }
 
-    return (ecs_table_record_t){.table = table, .column = column};
+    return (ecs_table_record_t){.hdr.table = table, .column = column};
 }
 
 
@@ -3512,13 +3512,13 @@ bool eval_subset(
         table_record = find_next_table(&filter, &frame->with_ctx);
         
         /* If first table set has no non-empty table, yield nothing */
-        if (!table_record.table) {
+        if (!table_record.hdr.table) {
             return false;
         }
 
         frame->row = 0;
         frame->column = table_record.column;
-        table_reg_set(rule, regs, r, (frame->table = table_record.table));
+        table_reg_set(rule, regs, r, (frame->table = table_record.hdr.table));
         goto yield;
     }
 
@@ -3533,8 +3533,8 @@ bool eval_subset(
         while ((sp >= 0) && (row >= ecs_table_count(table))) {
             table_record = find_next_table(&filter, &frame->with_ctx);
 
-            if (table_record.table) {
-                table = frame->table = table_record.table;
+            if (table_record.hdr.table) {
+                table = frame->table = table_record.hdr.table;
                 ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
                 frame->row = 0;
                 frame->column = table_record.column;
@@ -3586,8 +3586,8 @@ bool eval_subset(
                 table_record = find_next_table(&filter, &new_frame->with_ctx);
 
                 /* If set contains non-empty table, push it to stack */
-                if (table_record.table) {
-                    table = table_record.table;
+                if (table_record.hdr.table) {
+                    table = table_record.hdr.table;
                     op_ctx->sp ++;
                     new_frame->table = table;
                     new_frame->row = 0;
@@ -3683,8 +3683,7 @@ bool eval_select(
 
         /* Check if table can be found in the id record. If not, the provided 
         * table does not match with the query. */
-        ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, 
-            ecs_table_record_t, table);
+        ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
         if (!tr) {
             return false;
         }
@@ -3701,11 +3700,11 @@ bool eval_select(
             table_record = find_next_table(&filter, op_ctx);
         
             /* If no table record was found, there are no results. */
-            if (!table_record.table) {
+            if (!table_record.hdr.table) {
                 return false;
             }
 
-            table = table_record.table;
+            table = table_record.hdr.table;
 
             /* Set current column to first occurrence of queried for entity */
             column = op_ctx->column = table_record.column;
@@ -3734,12 +3733,12 @@ bool eval_select(
             }
 
             table_record = find_next_table(&filter, op_ctx);
-            if (!table_record.table) {
+            if (!table_record.hdr.table) {
                 return false;
             }
 
             /* Assign new table to table register */
-            table_reg_set(rule, regs, r, (table = table_record.table));
+            table_reg_set(rule, regs, r, (table = table_record.hdr.table));
 
             /* Assign first matching column */
             column = op_ctx->column = table_record.column;

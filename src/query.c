@@ -1054,8 +1054,8 @@ void add_table(
     ecs_query_table_match_t *table_data;
     ecs_vector_t *references = NULL;
 
-    ecs_query_table_t *qt = ecs_table_cache_insert(
-        &query->cache, ecs_query_table_t, table);
+    ecs_query_table_t *qt = ecs_os_calloc_t(ecs_query_table_t);
+    ecs_table_cache_insert(&query->cache, table, &qt->hdr);
 
 add_pair:
     table_data = cache_add(qt);
@@ -1968,8 +1968,7 @@ void update_table(
     int32_t cur_count = ecs_query_table_count(query);
 
     if (prev_count != cur_count) {
-        ecs_query_table_t *qt = ecs_table_cache_get(
-            &query->cache, ecs_query_table_t, table);
+        ecs_query_table_t *qt = ecs_table_cache_get(&query->cache, table);
         ecs_assert(qt != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_query_table_match_t *cur, *next;
 
@@ -2096,14 +2095,10 @@ void resolve_cascade_subject(
 
 /* Remove table */
 static
-void remove_table(
-    ecs_poly_t *poly,
-    void *ptr)
+void query_table_free(
+    ecs_query_t *query,
+    ecs_query_table_t *elem)
 {
-    ecs_poly_assert(poly, ecs_query_t);
-
-    ecs_query_t *query = poly;
-    ecs_query_table_t *elem = ptr;
     ecs_query_table_match_t *cur, *next;
 
     for (cur = elem->first; cur != NULL; cur = next) {
@@ -2125,7 +2120,7 @@ void remove_table(
         ecs_os_free(cur);
     }
 
-    elem->first = NULL;
+    ecs_os_free(elem);
 }
 
 static
@@ -2133,7 +2128,11 @@ void unmatch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    ecs_table_cache_remove(&query->cache, ecs_query_table_t, table);
+    ecs_query_table_t *qt = ecs_table_cache_remove(
+        &query->cache, table, NULL);
+    if (qt) {
+        query_table_free(query, qt);
+    }
 }
 
 static
@@ -2142,8 +2141,7 @@ void rematch_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
-    ecs_query_table_t *match = ecs_table_cache_get(
-        &query->cache, ecs_query_table_t, table);
+    ecs_query_table_t *match = ecs_table_cache_get(&query->cache, table);
 
     if (flecs_query_match(world, table, query)) {
         /* If the table matches, and it is not currently matched, add */
@@ -2414,7 +2412,7 @@ void query_on_event(
 
     /* The observer isn't doing the matching because the query can do it more
      * efficiently by checking the table with the query cache. */
-    if (ecs_table_cache_get(&query->cache, ecs_query_table_t, table) == NULL) {
+    if (ecs_table_cache_get(&query->cache, table) == NULL) {
         return;
     }
 
@@ -2446,9 +2444,6 @@ ecs_query_t* ecs_query_init(
 
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
-
-    ecs_table_cache_init(
-        &result->cache, ecs_query_table_t, result, remove_table);
 
     if (ecs_filter_init(world, &result->filter, &observer_desc.filter)) {
         goto error;
@@ -2557,6 +2552,28 @@ error:
     return NULL;
 }
 
+static
+void table_cache_free(
+    ecs_query_t *query)
+{
+    ecs_table_cache_iter_t it;
+    ecs_query_table_t *qt;
+
+    if (flecs_table_cache_iter(&query->cache, &it)) {
+        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+            query_table_free(query, qt);
+        }
+    }
+
+    if (flecs_table_cache_empty_iter(&query->cache, &it)) {
+        while ((qt = flecs_table_cache_next(&it, ecs_query_table_t))) {
+            query_table_free(query, qt);
+        }
+    }
+
+    ecs_table_cache_fini(&query->cache);
+}
+
 void ecs_query_fini(
     ecs_query_t *query)
 {
@@ -2584,7 +2601,8 @@ void ecs_query_fini(
         .kind = EcsQueryOrphan
     });
 
-    ecs_table_cache_fini(&query->cache);
+    table_cache_free(query);
+
     ecs_map_free(query->groups);
 
     ecs_vector_free(query->subqueries);

@@ -665,8 +665,6 @@ void flecs_table_free(
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {
-        flecs_unregister_table(world, table);
-
         ecs_ids_t ids = {
             .array = ecs_vector_first(table->type, ecs_id_t),
             .count = ecs_vector_count(table->type)
@@ -681,6 +679,8 @@ void flecs_table_free(
     if (table->c_info) {
         ecs_os_free(table->c_info);
     }
+
+    flecs_table_records_unregister(world, table);
 
     if (table->storage_table && table->storage_table != table) {
         flecs_table_release(world, table->storage_table);
@@ -704,7 +704,7 @@ void flecs_table_claim(
     (void)world;
 }
 
-void flecs_table_release(
+bool flecs_table_release(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -714,7 +714,10 @@ void flecs_table_release(
 
     if (--table->refcount == 0) {
         flecs_table_free(world, table);
+        return true;
     }
+    
+    return false;
 }
 
 /* Free table type. Do this separately from freeing the table as types can be

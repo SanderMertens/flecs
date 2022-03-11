@@ -435,7 +435,7 @@ void clean_tables(
         ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
             ecs_table_t, i);
         flecs_table_free_type(t);
-    }    
+    }
 
     /* Clear the root table */
     if (count) {
@@ -617,7 +617,6 @@ ecs_world_t *ecs_mini(void) {
     world->queries = flecs_sparse_new(ecs_query_t);
     world->triggers = flecs_sparse_new(ecs_trigger_t);
     world->observers = flecs_sparse_new(ecs_observer_t);
-    world->id_records = flecs_sparse_new(ecs_id_record_t);
     
     world->pending_tables = flecs_sparse_new(ecs_table_t*);
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
@@ -780,12 +779,12 @@ void flecs_notify_tables(
 
         flecs_table_cache_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->table, event);
+            flecs_table_notify(world, tr->hdr.table, event);
         }
 
         flecs_table_cache_empty_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->table, event);
+            flecs_table_notify(world, tr->hdr.table, event);
         }
     }
 }
@@ -1117,19 +1116,69 @@ void fini_stages(
 
 /* Cleanup id index */
 static
+bool free_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_id_record_t *idr)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_assert(world, ecs_world_t);
+    (void)id;
+
+    /* Force the empty table administration to be consistent if the non-empty
+     * list of the id record has elements */
+    if (ecs_table_cache_count(&idr->cache)) {
+        ecs_force_aperiodic(world);
+    }
+
+    /* If there are still tables in the non-empty list they're really not empty.
+     * We can't free the record yet. */
+    if (ecs_table_cache_count(&idr->cache)) {
+        return false;
+    }
+
+    /* If id record contains no more empty tables, free it */
+    if (ecs_table_cache_empty_count(&idr->cache) == 0) {
+        ecs_os_free(idr);
+        return true;
+    }
+
+    /* Delete empty tables */
+    ecs_table_cache_iter_t cache_it;
+    flecs_table_cache_empty_iter(&idr->cache, &cache_it);
+
+    const ecs_table_record_t *tr;
+    while ((tr = flecs_table_cache_next(&cache_it, ecs_table_record_t))) {
+        if (!flecs_table_release(world, tr->hdr.table)) {
+            /* Releasing the table did not free it, which means that something
+             * is keeping the table alive. Cleanup of the id record will happen
+             * when the last reference(s) to the table are released */
+            return false;
+        }
+    }
+
+    /* If all tables were deleted for this id record, the last deleted table
+     * should have removed the record from the world. */
+    ecs_assert(flecs_get_id_record(world, id) == NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    return true;
+}
+
+static
 void fini_id_index(
     ecs_world_t *world)
 {
     ecs_map_iter_t it = ecs_map_iter(world->id_index);
     ecs_id_record_t *idr;
-    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, NULL))) {
-        ecs_table_cache_fini(&idr->cache);
-        ecs_map_free(idr->add_refs);
-        ecs_map_free(idr->remove_refs);
+    ecs_map_key_t key;
+    while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, &key))) {
+        free_id_record(world, key, idr);
     }
 
     ecs_map_free(world->id_index);
-    flecs_sparse_free(world->id_records);
     flecs_sparse_free(world->pending_tables);
     flecs_sparse_free(world->pending_buffer);
 }
@@ -1628,167 +1677,6 @@ void flecs_delete_table(
     flecs_table_release(world, table);
 }
 
-static
-bool register_table(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column)
-{
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_table_record_t *tr = ecs_table_cache_get(
-        &idr->cache, ecs_table_record_t, table);
-    if (tr) {
-        /* Tables can be registered multiple times for wildcard caches */
-        tr->count ++;
-    } else {
-        tr = ecs_table_cache_insert(&idr->cache, ecs_table_record_t, table);
-        tr->table = table;
-        tr->column = column;
-        tr->count = 1;
-    }
-
-    /* Set flags if triggers are registered for table */
-    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
-        table->flags |= EcsTableHasOnAdd;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
-        table->flags |= EcsTableHasOnRemove;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
-        table->flags |= EcsTableHasOnSet;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
-        table->flags |= EcsTableHasUnSet;
-    }
-
-    return true;
-}
-
-static
-bool unregister_table(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column)
-{
-    (void)column;
-
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (!idr) {
-        return false;
-    }
-
-    if (ecs_table_cache_remove(&idr->cache, ecs_table_record_t, table)) {
-        flecs_clear_id_record(world, id, idr);
-    }
-
-    return true;
-}
-
-static
-bool set_empty(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column)
-{
-    bool result = false;
-    (void)column;
-
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
-    if (idr) {
-        result = ecs_table_cache_set_empty(&idr->cache, table, 
-            ecs_table_count(table) == 0);
-    }
-
-    return result;
-}
-
-static
-bool for_each_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    bool(*action)(ecs_world_t*, ecs_table_t*, ecs_id_t, int32_t),
-    bool set_watch)
-{
-    int32_t i, count = ecs_vector_count(table->type);
-    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-    bool has_childof = false;
-    bool result = false;
-
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t id = ids[i];
-
-        /* This check ensures that legacy CHILDOF works */
-        if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            has_childof = true;
-        } 
-
-        result |= action(world, table, ecs_strip_generation(id), i);
-
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t pred_w_wildcard = ecs_pair(
-                ECS_PAIR_FIRST(id), EcsWildcard);       
-            result |= action(world, table, pred_w_wildcard, i);
-
-            ecs_entity_t obj_w_wildcard = ecs_pair(
-                EcsWildcard, ECS_PAIR_SECOND(id));
-            result |= action(world, table, obj_w_wildcard, i);
-
-            ecs_entity_t all_wildcard = ecs_pair(EcsWildcard, EcsWildcard);
-            result |= action(world, table, all_wildcard, i);
-
-            if (set_watch) {
-                ecs_entity_t rel = ecs_pair_first(world, id);
-                ecs_entity_t obj = ecs_pair_second(world, id);
-                flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
-                flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
-                if (ecs_has_id(world, rel, EcsAcyclic)) {
-                    flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
-                }
-            }
-        } else {
-            result |= action(world, table, EcsWildcard, i);
-            
-            if (id & ECS_ROLE_MASK) {
-                id &= ECS_COMPONENT_MASK;
-                result |= action(world, table, ecs_pair(id, EcsWildcard), i);
-            }
-
-            if (set_watch) {
-                flecs_add_flag(world, id, ECS_FLAG_OBSERVED_ID);
-            }            
-        }
-    }
-
-    if (!has_childof && count) {
-        result |= action(world, table, ecs_pair(EcsChildOf, 0), 0);
-    }
-
-    if (table->type) {
-        action(world, table, EcsAny, 0);
-    }
-
-    return result;
-}
-
-void flecs_register_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    for_each_id(world, table, register_table, true);
-}
-
-void flecs_unregister_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    for_each_id(world, table, unregister_table, false);
-}
-
 /** Walk over tables that had a state change which requires bookkeeping */
 void flecs_process_pending_tables(
     const ecs_world_t *world_r)
@@ -1841,7 +1729,7 @@ void flecs_process_pending_tables(
 
             /* For each id in the table, add it to the empty/non empty list
              * based on its current state */
-            if (for_each_id(world, table, set_empty, false)) {
+            if (flecs_table_records_update_empty(table)) {
                 /* Only emit an event when there was a change in the 
                  * administration. It is possible that a table ended up in the
                  * pending_tables list by going from empty->non-empty, but then
@@ -1888,11 +1776,9 @@ ecs_id_record_t* flecs_ensure_id_record(
 {
     ecs_id_record_t **idr_ptr = ecs_map_ensure(world->id_index, 
         ecs_id_record_t*, ecs_strip_generation(id));
-    ecs_id_record_t *idr;
-    if (!*idr_ptr) {
-        idr = flecs_sparse_add(world->id_records, ecs_id_record_t);
-        idr->id = flecs_sparse_last_id(world->id_records);
-        *idr_ptr = idr;
+    ecs_id_record_t *idr = idr_ptr[0];
+    if (!idr) {
+        idr_ptr[0] = idr = ecs_os_calloc_t(ecs_id_record_t);
 
         /* If id is a pair, inherit flags from relation id record */
         if (ECS_HAS_ROLE(id, PAIR)) {
@@ -1902,12 +1788,6 @@ ecs_id_record_t* flecs_ensure_id_record(
                 idr->flags = idr_r->flags;
             }
         }
-    } else {
-        idr = *idr_ptr;
-    }
-
-    if (!ecs_table_cache_is_initialized(&idr->cache)) {
-        ecs_table_cache_init(&idr->cache, ecs_table_record_t, world, NULL);
     }
 
     return idr;
@@ -1931,69 +1811,33 @@ ecs_table_record_t* flecs_get_table_record(
         return NULL;
     }
 
-    return ecs_table_cache_get(&idr->cache, ecs_table_record_t, table);
+    return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
-void flecs_register_add_ref(
+void flecs_remove_id_record(
     ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_id_record_t *idr)
 {
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    if (!idr->add_refs) {
-        idr->add_refs = ecs_map_new(ecs_table_t*, 1);
+    /* Free id record resources */
+    if (free_id_record(world, id, idr)) {
+        /* Remove record from world index */
+        ecs_map_remove(world->id_index, ecs_strip_generation(id));
     }
-
-    ecs_table_t **ptr = ecs_map_ensure(
-        idr->add_refs, ecs_table_t*, table->id);
-    ptr[0] = (ecs_table_t*)table;
-}
-
-void flecs_register_remove_ref(
-    ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id)
-{
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    if (!idr->remove_refs) {
-        idr->remove_refs = ecs_map_new(ecs_table_t*, 1);
-    }
-
-    ecs_table_t **ptr = ecs_map_ensure(
-        idr->remove_refs, ecs_table_t*, table->id);
-    ptr[0] = (ecs_table_t*)table;
 }
 
 void flecs_clear_id_record(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_id_record_t *idr_ptr)
+    ecs_id_record_t *idr)
 {
     if (world->is_fini) {
         return;
     }
 
-    ecs_id_record_t idr = *idr_ptr;
-    
-    flecs_sparse_remove(world->id_records, idr.id);
-    ecs_map_remove(world->id_index, ecs_strip_generation(id));
+    ecs_table_cache_fini_delete_all(world, &idr->cache);
 
-    ecs_table_cache_fini_delete_all(world, &idr.cache, ecs_table_record_t);
-
-    /* Remove add & remove references to id from tables */
-    ecs_table_t *table;
-    ecs_map_iter_t it = ecs_map_iter(idr.add_refs);
-    while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
-        flecs_table_clear_add_edge(table, id);
-    }
-
-    it = ecs_map_iter(idr.remove_refs);
-    while ((table = ecs_map_next_ptr(&it, ecs_table_t*, NULL))) {
-        flecs_table_clear_remove_edge(table, id);
-    }    
-
-    ecs_map_free(idr.add_refs);
-    ecs_map_free(idr.remove_refs);
+    flecs_remove_id_record(world, id, idr);
 }
 
 const ecs_table_record_t* flecs_id_record_table(
@@ -2003,7 +1847,7 @@ const ecs_table_record_t* flecs_id_record_table(
     if (!idr) {
         return NULL;
     }
-    return ecs_table_cache_get(&idr->cache, ecs_table_record_t, table);
+    return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
 ecs_id_record_t* flecs_table_iter(

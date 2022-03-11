@@ -47,7 +47,7 @@ void notify_subset(
 
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
-        ecs_table_t *table = tr->table;
+        ecs_table_t *table = tr->hdr.table;
         ecs_id_t id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
 

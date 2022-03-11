@@ -1,4 +1,8 @@
 #include "private_api.h"
+#include <stdio.h>
+
+/* Marker object used to differentiate a component vs. a tag edge */
+static ecs_table_diff_t ecs_table_edge_is_component;
 
 static
 uint64_t ids_hash(const void *ptr) {
@@ -112,39 +116,117 @@ ecs_vector_t* ids_to_vector(
 }
 
 static
-ecs_edge_t* get_edge(
+void table_diff_free(
+    ecs_table_diff_t *diff) 
+{
+    ecs_os_free(diff->added.array);
+    ecs_os_free(diff->removed.array);
+    ecs_os_free(diff->on_set.array);
+    ecs_os_free(diff->un_set.array);
+    ecs_os_free(diff);
+}
+
+static
+ecs_graph_edge_t* ecs_graph_edge_alloc(void) {
+    return ecs_os_calloc_t(ecs_graph_edge_t);
+}
+
+static 
+void ecs_graph_edge_free(ecs_graph_edge_t *edge) {
+    ecs_os_free(edge);
+}
+
+static
+ecs_graph_edge_t* ensure_hi_edge(
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
+    if (!edges->hi) {
+        edges->hi = ecs_map_new(ecs_graph_edge_t*, 1);
+    }
+
+    ecs_graph_edge_t **ep = ecs_map_ensure(edges->hi, ecs_graph_edge_t*, id);
+    ecs_graph_edge_t *edge = ep[0];
+    if (edge) {
+        return edge;
+    }
+
+    if (id < ECS_HI_COMPONENT_ID) {
+        edge = &edges->lo[id];
+    } else {
+        edge = ecs_graph_edge_alloc();
+    }
+
+    ep[0] = edge;
+    return edge;
+}
+
+static
+ecs_graph_edge_t* ensure_edge(
+    ecs_graph_edges_t *edges,
+    ecs_id_t id)
+{
+    ecs_graph_edge_t *edge;
+    
     if (id < ECS_HI_COMPONENT_ID) {
         if (!edges->lo) {
-            return NULL;
+            edges->lo = ecs_os_calloc_n(ecs_graph_edge_t, ECS_HI_COMPONENT_ID);
         }
-        return &edges->lo[id];
+        edge = &edges->lo[id];
     } else {
         if (!edges->hi) {
-            return NULL;
+            edges->hi = ecs_map_new(ecs_graph_edge_t*, 1);
         }
-        return ecs_map_get(edges->hi, ecs_edge_t, id);
+        edge = ensure_hi_edge(edges, id);
+    }
+
+    return edge;
+}
+
+static
+void disconnect_edge(
+    ecs_id_t id,
+    ecs_graph_edge_t *edge)
+{
+    ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge->id == id, ECS_INTERNAL_ERROR, NULL);
+    (void)id;
+
+    /* Remove backref from destination table */
+    ecs_graph_edge_hdr_t *next = edge->hdr.next;
+    ecs_graph_edge_hdr_t *prev = edge->hdr.prev;
+
+    if (next) {
+        next->prev = prev;
+    }
+    if (prev) {
+        prev->next = next;
+    }
+
+    /* Remove data associated with edge */
+    ecs_table_diff_t *diff = edge->diff;
+    if (diff && diff != &ecs_table_edge_is_component) {
+        table_diff_free(diff);
+    }
+
+    /* If edge id is low, clear it from fast lookup array */
+    if (id < ECS_HI_COMPONENT_ID) {
+        edge->from = NULL;
+    } else {
+        ecs_graph_edge_free(edge);
     }
 }
 
 static
-ecs_edge_t* ensure_edge(
+void remove_edge(
     ecs_graph_edges_t *edges,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_graph_edge_t *edge)
 {
-    if (id < ECS_HI_COMPONENT_ID) {
-        if (!edges->lo) {
-            edges->lo = ecs_os_calloc_n(ecs_edge_t, ECS_HI_COMPONENT_ID);
-        }
-        return &edges->lo[id];
-    } else {
-        if (!edges->hi) {
-            edges->hi = ecs_map_new(ecs_edge_t, 1);
-        }
-        return ecs_map_ensure(edges->hi, ecs_edge_t, id);
-    }
+    ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edges->hi != NULL, ECS_INTERNAL_ERROR, NULL);
+    disconnect_edge(id, edge);
+    ecs_map_remove(edges->hi, id);
 }
 
 static
@@ -163,6 +245,241 @@ void init_node(
     init_edges(&node->remove);
 }
 
+typedef struct {
+    int32_t first;
+    int32_t count;
+} id_first_count_t;
+
+static
+void set_trigger_flags_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id)
+{
+    /* Set flags if triggers are registered for table */
+    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
+        table->flags |= EcsTableHasOnAdd;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
+        table->flags |= EcsTableHasOnRemove;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
+        table->flags |= EcsTableHasOnSet;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
+        table->flags |= EcsTableHasUnSet;
+    }
+}
+
+static
+void register_table_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    int32_t column,
+    int32_t count,
+    ecs_table_record_t *tr)
+{
+    id = ecs_strip_generation(id);
+
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+    tr->column = column;
+    tr->count = count;
+    tr->id = id;
+    set_trigger_flags_for_id(world, table, id);
+    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+}
+
+static
+void flecs_table_records_register(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    int32_t count = ecs_vector_count(table->type);
+
+    if (!count) {
+        return;
+    }
+
+    /* Count number of unique ids, pairs, relations and objects so we can figure
+     * out how many table records are needed for this table. */
+    int32_t id_count = 0, pair_count = 0, type_flag_count = 0;
+    int32_t first_id = -1, first_pair = -1;
+    ecs_map_t *relations = ecs_map_new(id_first_count_t, count);
+    ecs_map_t *objects = ecs_map_new(id_first_count_t, count);
+    bool has_childof = false;
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_entity_t rel = 0, obj = 0;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            id_first_count_t *r;
+
+            rel = ECS_PAIR_FIRST(id);
+            obj = ECS_PAIR_SECOND(id);
+
+            if (0 == pair_count ++) {
+                first_pair = i;
+            }
+
+            if (rel == EcsChildOf) {
+                has_childof = true;
+            }
+
+            r = ecs_map_ensure(relations, id_first_count_t, rel);
+            if ((++r->count) == 1) {
+                r->first = i;
+            }
+
+            r = ecs_map_ensure(objects, id_first_count_t, obj);
+            if ((++r->count) == 1) {
+                r->first = i;
+            }
+        } else {
+            rel = id & ECS_COMPONENT_MASK;
+            if (rel != id) {
+                type_flag_count ++;
+            }
+
+            if (0 == id_count ++) {
+                first_id = i;
+            }
+        }
+
+        /* Mark entities that are used as component/pair ids. When a tracked
+         * entity is deleted, cleanup policies are applied so that the store
+         * won't contain any tables with deleted ids. */
+
+        rel = ecs_get_alive(world, rel);
+        flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
+        if (obj) {
+            obj = ecs_get_alive(world, obj);
+            flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
+            if (ecs_has_id(world, rel, EcsAcyclic)) {
+                flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
+            }
+        }
+    }
+
+    int32_t record_count = count + type_flag_count + (id_count != 0) + 
+        (pair_count != 0) + ecs_map_count(relations) + ecs_map_count(objects) 
+            + 1 /* for any */;
+    int32_t r = 0;
+
+    if (!has_childof) {
+        record_count ++;
+    }
+
+    table->records = ecs_os_calloc_n(ecs_table_record_t, record_count);
+    table->record_count = record_count;
+
+    /* First initialize records for regular (non-wildcard) ids */
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        register_table_for_id(world, table, id, i, 1, &table->records[r]);
+        r ++;
+        
+        ecs_entity_t role = id & ECS_ROLE_MASK;
+        if (role && role != ECS_PAIR) {
+            id &= ECS_COMPONENT_MASK;
+            id = ecs_pair(id, EcsWildcard);
+            register_table_for_id(world, table, id, i, 1, &table->records[r]);
+            r ++;
+        }
+    }
+
+    /* Initialize records for relation wildcards */
+    ecs_map_iter_t mit = ecs_map_iter(relations);
+    id_first_count_t *elem; 
+    uint64_t key;
+    while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
+        ecs_id_t id = ecs_pair(key, EcsWildcard);
+        register_table_for_id(world, table, id, elem->first, elem->count,
+            &table->records[r]);
+        r ++;
+    }
+
+    /* Initialize records for object wildcards */
+    mit = ecs_map_iter(objects);
+    while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
+        ecs_id_t id = ecs_pair(EcsWildcard, key);
+        register_table_for_id(world, table, id, elem->first, elem->count,
+            &table->records[r]);
+        r ++;
+    }
+
+    /* Initialize records for all wildcards ids */
+    if (id_count) {
+        register_table_for_id(world, table, EcsWildcard, 
+            first_id, id_count, &table->records[r]);
+        r ++;
+    }
+    if (pair_count) {
+        register_table_for_id(world, table, ecs_pair(EcsWildcard, EcsWildcard), 
+            first_pair, pair_count, &table->records[r]);
+        r ++;
+    }
+    if (count) {
+        register_table_for_id(world, table, EcsAny, 0, 1, &table->records[r]);
+        r ++;
+    }
+
+    /* Insert into (ChildOf, 0) (root) if table doesn't have childof */
+    if (!has_childof && count) {
+        register_table_for_id(world, table, ecs_pair(EcsChildOf, 0), 
+            0, 1, &table->records[r]);
+    }
+
+    ecs_set_free(relations);
+    ecs_set_free(objects);
+}
+
+void flecs_table_records_unregister(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    int32_t i, count = table->record_count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &table->records[i];
+        ecs_table_cache_t *cache = tr->hdr.cache;
+        ecs_id_t id = tr->id;
+
+        ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(flecs_get_id_record(world, id) == (ecs_id_record_t*)cache,
+            ECS_INTERNAL_ERROR, NULL);
+
+        ecs_table_cache_remove(cache, table, &tr->hdr);
+
+        if (ecs_table_cache_is_empty(cache)) {
+            ecs_id_record_t *idr = (ecs_id_record_t*)cache;
+            flecs_remove_id_record(world, id, idr);
+        }
+    }
+    
+    ecs_os_free(table->records);
+}
+
+bool flecs_table_records_update_empty(
+    ecs_table_t *table)
+{
+    bool result = false;
+    bool is_empty = ecs_table_count(table) == 0;
+
+    int32_t i, count = table->record_count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &table->records[i];
+        ecs_table_cache_t *cache = tr->hdr.cache;
+        result |= ecs_table_cache_set_empty(cache, table, is_empty);
+    }
+
+    return result;
+}
+
 static
 void init_flags(
     ecs_world_t *world,
@@ -170,7 +487,7 @@ void init_flags(
 {
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     int32_t count = ecs_vector_count(table->type);
-    
+
     /* Iterate components to initialize table flags */
     int32_t i;
     for (i = 0; i < count; i ++) {
@@ -262,8 +579,7 @@ void init_table(
 
     init_node(&table->node);
     init_flags(world, table);
-
-    flecs_register_table(world, table);
+    flecs_table_records_register(world, table);
     flecs_table_init_data(world, table);
 
     /* Register component info flags for all columns */
@@ -619,7 +935,7 @@ void compute_table_diff(
     ecs_world_t *world,
     ecs_table_t *node,
     ecs_table_t *next,
-    ecs_edge_t *edge,
+    ecs_graph_edge_t *edge,
     ecs_id_t id)
 {
     if (node == next) {
@@ -665,15 +981,16 @@ void compute_table_diff(
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it.
-         * Encode in the id whether the id is a tag or not, so that we can
-         * still tell whether an UnSet handler should be called or not. */
-        edge->diff_index = -1 * (node->storage_table == next->storage_table);
+         * Store whether the id is a tag or not, so that we can still tell 
+         * whether an UnSet handler should be called or not. */
+        if (node->storage_table != next->storage_table) {
+            edge->diff = &ecs_table_edge_is_component;
+        }
         return;
     }
 
-    ecs_table_diff_t *diff = ecs_vector_add(&node->node.diffs, ecs_table_diff_t);
-    ecs_os_memset_t(diff, 0, ecs_table_diff_t);
-    edge->diff_index = ecs_vector_count(node->node.diffs);
+    ecs_table_diff_t *diff = ecs_os_calloc_t(ecs_table_diff_t);
+    edge->diff = diff;
     if (added_count) {
         diff->added.array = ecs_os_malloc_n(ecs_id_t, added_count);
         diff->added.count = 0;
@@ -852,66 +1169,130 @@ ecs_table_t* find_or_create_table_with_isa(
 }
 
 static
+void init_edge(
+    ecs_table_t *table,
+    ecs_graph_edge_t *edge,
+    ecs_id_t id,
+    ecs_table_t *to)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge->id == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge->hdr.next == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge->hdr.prev == NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    edge->from = table;
+    edge->to = to;
+    edge->id = id;
+}
+
+static
+void init_add_edge(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_graph_edge_t *edge,
+    ecs_id_t id,
+    ecs_table_t *to)
+{
+    init_edge(table, edge, id, to);
+
+    ensure_hi_edge(&table->node.add, id);
+
+    if (table != to) {
+        /* Add edges are appended to refs.next */
+        ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
+        ecs_graph_edge_hdr_t *next = to_refs->next;
+        
+        to_refs->next = &edge->hdr;
+        edge->hdr.prev = to_refs;
+
+        edge->hdr.next = next;
+        if (next) {
+            next->prev = &edge->hdr;
+        }
+
+        compute_table_diff(world, table, to, edge, id);
+    }
+}
+
+static
+void init_remove_edge(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_graph_edge_t *edge,
+    ecs_id_t id,
+    ecs_table_t *to)
+{
+    init_edge(table, edge, id, to);
+
+    ensure_hi_edge(&table->node.remove, id);
+
+    if (table != to) {
+        /* Remove edges are appended to refs.prev */
+        ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
+        ecs_graph_edge_hdr_t *prev = to_refs->prev;
+
+        to_refs->prev = &edge->hdr;
+        edge->hdr.next = to_refs;
+
+        edge->hdr.prev = prev;
+        if (prev) {
+            prev->next = &edge->hdr;
+        }
+
+        compute_table_diff(world, table, to, edge, id);
+    }
+}
+
+static
 ecs_table_t* find_or_create_table_without(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_edge_t *edge,
+    ecs_graph_edge_t *edge,
     ecs_id_t id)
 {
-    ecs_table_t *next = find_or_create_table_without_id(world, node, id);
+    ecs_table_t *to = find_or_create_table_without_id(world, node, id);
+    
+    init_remove_edge(world, node, edge, id, to);
 
-    edge->next = next;
-
-    compute_table_diff(world, node, next, edge, id);
-
-    if (node != next) {
-        flecs_register_remove_ref(world, node, id);
-    }
-
-    return next;   
+    return to;   
 }
 
 static
 ecs_table_t* find_or_create_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
-    ecs_edge_t *edge,
+    ecs_graph_edge_t *edge,
     ecs_id_t id)
 {
-    ecs_table_t *next = find_or_create_table_with_id(world, node, id);
+    ecs_table_t *to = find_or_create_table_with_id(world, node, id);
 
     if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsIsA) {
         ecs_entity_t base = ecs_pair_second(world, id);
-        next = find_or_create_table_with_isa(world, next, base);
+        to = find_or_create_table_with_isa(world, to, base);
     }
 
-    edge->next = next;
+    init_add_edge(world, node, edge, id, to);
 
-    compute_table_diff(world, node, next, edge, id);
-
-    if (node != next) {
-        flecs_register_add_ref(world, node, id);
-    }
-
-    return next;
+    return to;
 }
 
 static
-void populate_diff(
-    ecs_table_t *table, 
-    ecs_edge_t *edge,
+void populate_diff( 
+    ecs_graph_edge_t *edge,
     ecs_id_t *add_ptr,
     ecs_id_t *remove_ptr,
     ecs_table_diff_t *out)
 {
     if (out) {
-        int32_t di = edge->diff_index;
-        if (di > 0) {
+        ecs_table_diff_t *diff = edge->diff;
+
+        if (diff && diff != &ecs_table_edge_is_component) {
             ecs_assert(!add_ptr || !ECS_HAS_ROLE(add_ptr[0], CASE), 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(!remove_ptr || !ECS_HAS_ROLE(remove_ptr[0], CASE), 
                 ECS_INTERNAL_ERROR, NULL);
-            *out = ecs_vector_first(table->node.diffs, ecs_table_diff_t)[di - 1];
+            *out = *diff;
         } else {
             out->on_set.count = 0;
 
@@ -925,7 +1306,7 @@ void populate_diff(
             if (remove_ptr) {
                 out->removed.array = remove_ptr;
                 out->removed.count = 1;
-                if (di == 0) {
+                if (diff == &ecs_table_edge_is_component) {
                     out->un_set.array = remove_ptr;
                     out->un_set.count = 1;
                 } else {
@@ -954,18 +1335,18 @@ ecs_table_t* flecs_table_traverse_remove(
     ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
-    ecs_edge_t *edge = ensure_edge(&node->node.remove, id);
-    ecs_table_t *next = edge->next;
+    ecs_graph_edge_t *edge = ensure_edge(&node->node.remove, id);
+    ecs_table_t *to = edge->to;
 
-    if (!next) {
-        next = find_or_create_table_without(world, node, edge, id);
-        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(edge->next != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!to) {
+        to = find_or_create_table_without(world, node, edge, id);
+        ecs_assert(to != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    populate_diff(node, edge, NULL, id_ptr, diff);
+    populate_diff(edge, NULL, id_ptr, diff);
 
-    return next;
+    return to;
 error:
     return NULL;
 }
@@ -985,18 +1366,18 @@ ecs_table_t* flecs_table_traverse_add(
     ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
-    ecs_edge_t *edge = ensure_edge(&node->node.add, id);
-    ecs_table_t *next = edge->next;
+    ecs_graph_edge_t *edge = ensure_edge(&node->node.add, id);
+    ecs_table_t *to = edge->to;
 
-    if (!next) {
-        next = find_or_create_table_with(world, node, edge, id);
-        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(edge->next != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!to) {
+        to = find_or_create_table_with(world, node, edge, id);
+        ecs_assert(to != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    populate_diff(node, edge, id_ptr, NULL, diff);
+    populate_diff(edge, id_ptr, NULL, diff);
 
-    return next;
+    return to;
 error:
     return NULL;
 }
@@ -1035,52 +1416,68 @@ void flecs_table_clear_edges(
     (void)world;
     ecs_poly_assert(world, ecs_world_t);
 
-    int32_t i;
-    ecs_graph_node_t *node = &table->node;
+    ecs_log_push_1();
 
-    ecs_os_free(node->add.lo);
-    ecs_os_free(node->remove.lo);
-    ecs_map_free(node->add.hi);
-    ecs_map_free(node->remove.hi);
-    node->add.lo = NULL;
-    node->remove.lo = NULL;
-    node->add.hi = NULL;
-    node->remove.hi = NULL;
+    ecs_map_iter_t it;
+    ecs_graph_node_t *table_node = &table->node;
+    ecs_graph_edges_t *node_add = &table_node->add;
+    ecs_graph_edges_t *node_remove = &table_node->remove;
+    ecs_map_t *add_hi = node_add->hi;
+    ecs_map_t *remove_hi = node_remove->hi;
+    ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
-    int32_t count = ecs_vector_count(node->diffs);
-    ecs_table_diff_t *diffs = ecs_vector_first(node->diffs, ecs_table_diff_t);
-    for (i = 0; i < count; i ++) {
-        ecs_table_diff_t *diff = &diffs[i];
-        ecs_os_free(diff->added.array);
-        ecs_os_free(diff->removed.array);
-        ecs_os_free(diff->on_set.array);
-        ecs_os_free(diff->un_set.array);
+    ecs_dbg("clear edges for table %u", (uint32_t)table->id);
+
+    /* Cleanup outgoing edges */
+    it = ecs_map_iter(add_hi);
+    ecs_graph_edge_t *edge;
+    uint64_t key;
+    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+        ecs_dbg(" - cleanup add edge %u to table %u", key, 0);
+        disconnect_edge(key, edge);
+    }
+    it = ecs_map_iter(remove_hi);
+    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+        ecs_dbg(" - cleanup remove edge %u to table %u", key, edge->to->id);
+        disconnect_edge(key, edge);
     }
 
-    ecs_vector_free(node->diffs);
-    node->diffs = NULL;
-}
-
-void flecs_table_clear_add_edge(
-    ecs_table_t *table,
-    ecs_id_t id)
-{
-    ecs_edge_t *edge = get_edge(&table->node.add, id);
-    if (edge) {
-        edge->next = NULL;
-        edge->diff_index = 0;
+    /* Cleanup incoming add edges */
+    ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
+    if (cur) {
+        do {
+            edge = (ecs_graph_edge_t*)cur;
+            ecs_dbg(" - cleanup add edge %u from table %u", edge->id, edge->from->id);
+            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
+            next = cur->next;
+            remove_edge(&edge->from->node.add, edge->id, edge);
+        } while ((cur = next));
     }
-}
 
-void flecs_table_clear_remove_edge(
-    ecs_table_t *table,
-    ecs_id_t id)
-{
-    ecs_edge_t *edge = get_edge(&table->node.remove, id);
-    if (edge) {
-        edge->next = NULL;
-        edge->diff_index = 0;
+    /* Cleanup incoming remove edges */
+    cur = node_refs->prev;
+    if (cur) {
+        do {
+            edge = (ecs_graph_edge_t*)cur;
+            ecs_dbg(" - cleanup remove edge %u from table %u", edge->id, edge->from->id);
+            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
+            next = cur->prev;
+            remove_edge(&edge->from->node.remove, edge->id, edge);
+        } while ((cur = next));
     }
+
+    ecs_os_free(node_add->lo);
+    ecs_os_free(node_remove->lo);
+    ecs_map_free(add_hi);
+    ecs_map_free(remove_hi);
+    table_node->add.lo = NULL;
+    table_node->remove.lo = NULL;
+    table_node->add.hi = NULL;
+    table_node->remove.hi = NULL;
+
+    ecs_log_pop_1();
 }
 
 /* Public convenience functions for traversing table graph */

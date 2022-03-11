@@ -10,74 +10,37 @@
 extern "C" {
 #endif
 
-void _ecs_table_cache_init(
-    ecs_table_cache_t *cache,
-    ecs_size_t size,
-    ecs_poly_t *parent,
-    void(*free_payload)(ecs_poly_t *parent, void*));
-
-#define ecs_table_cache_init(cache, T, parent, free_payload)\
-    _ecs_table_cache_init(cache, ECS_SIZEOF(T), parent, free_payload)
-
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
 
-bool ecs_table_cache_is_initialized(
-    ecs_table_cache_t *cache);
-
-void* _ecs_table_cache_insert(
+void ecs_table_cache_insert(
     ecs_table_cache_t *cache,
-    ecs_size_t size,
-    const ecs_table_t *table);
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result);
 
-#define ecs_table_cache_insert(cache, T, table)\
-    ECS_CAST(T*, _ecs_table_cache_insert(cache, ECS_SIZEOF(T), table))
-
-bool _ecs_table_cache_remove(
+void* ecs_table_cache_remove(
     ecs_table_cache_t *cache,
-    ecs_size_t size,
-    const ecs_table_t *table);
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *elem);
 
-#define ecs_table_cache_remove(cache, T, table)\
-    _ecs_table_cache_remove(cache, ECS_SIZEOF(T), table)
-
-ecs_table_cache_hdr_t* _ecs_table_cache_get(
+void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
-    ecs_size_t size,
     const ecs_table_t *table);
-
-#define ecs_table_cache_get(cache, T, table)\
-    ECS_CAST(T*, _ecs_table_cache_get(cache, ECS_SIZEOF(T), table))
 
 bool ecs_table_cache_set_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
     bool empty);
 
-void* _ecs_table_cache_tables(
-    const ecs_table_cache_t *cache,
-    ecs_size_t size);
-
-#define ecs_table_cache_tables(cache, T)\
-    ECS_CAST(T*, _ecs_table_cache_tables(cache, ECS_SIZEOF(T)))
-
-void* _ecs_table_cache_empty_tables(
-    const ecs_table_cache_t *cache,
-    ecs_size_t size);
-
-#define ecs_table_cache_empty_tables(cache, T)\
-    ECS_CAST(T*, _ecs_table_cache_empty_tables(cache, ECS_SIZEOF(T)))
+bool ecs_table_cache_is_empty(
+    const ecs_table_cache_t *cache);
 
 #define ecs_table_cache_count(cache) (cache)->tables.count
 #define ecs_table_cache_empty_count(cache) (cache)->empty_tables.count
 
-void _ecs_table_cache_fini_delete_all(
+void ecs_table_cache_fini_delete_all(
     ecs_world_t *world,
-    ecs_table_cache_t *cache,
-    ecs_size_t size);
-
-#define ecs_table_cache_fini_delete_all(world, cache, T)\
-    _ecs_table_cache_fini_delete_all(world, cache, ECS_SIZEOF(T))
+    ecs_table_cache_t *cache);
 
 #ifdef __cplusplus
 }

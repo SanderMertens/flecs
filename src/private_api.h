@@ -163,17 +163,12 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
 #define flecs_table_cache_next(it, T)\
     (ECS_CAST(T*, _flecs_table_cache_next(it)))
 
-void flecs_register_add_ref(
-    ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
-void flecs_register_remove_ref(
-    ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
 void flecs_clear_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_id_record_t *idr);
+
+void flecs_remove_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
@@ -431,8 +426,17 @@ void flecs_table_claim(
     ecs_table_t *table);
 
 /* Decrease refcount of table (may delete) */
-void flecs_table_release(
+bool flecs_table_release(
     ecs_world_t *world,
+    ecs_table_t *table);
+
+/* Unregister table cache records */
+void flecs_table_records_unregister(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+/* Make sure table records are in correct table cache list */
+bool flecs_table_records_update_empty(
     ecs_table_t *table);
 
 /* Move a row from one table to another */
@@ -545,14 +549,6 @@ void flecs_table_notify(
 void flecs_table_clear_edges(
     ecs_world_t *world,
     ecs_table_t *table);
-
-void flecs_table_clear_add_edge(
-    ecs_table_t *table,
-    ecs_id_t id);
-
-void flecs_table_clear_remove_edge(
-    ecs_table_t *table,
-    ecs_id_t id);
 
 void flecs_table_delete_entities(
     ecs_world_t *world,
