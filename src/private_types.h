@@ -159,29 +159,38 @@ typedef struct ecs_table_diff_t {
     ecs_ids_t added;         /* Components added between tables */
     ecs_ids_t removed;       /* Components removed between tables */
     ecs_ids_t on_set;        /* OnSet from exposing/adding base components */
-    ecs_ids_t un_set;        /* UnSet from hiding/removing base components */   
+    ecs_ids_t un_set;        /* UnSet from hiding/removing base components */
 } ecs_table_diff_t;
 
+/** Edge linked list (used to keep track of incoming edges) */
+typedef struct ecs_graph_edge_hdr_t {
+    struct ecs_graph_edge_hdr_t *prev;
+    struct ecs_graph_edge_hdr_t *next;
+} ecs_graph_edge_hdr_t;
+
 /** Single edge. */
-typedef struct ecs_edge_t {
-    ecs_table_t *next;       /* Edge traversed when adding */
-    int32_t diff_index;      /* Index into diff vector, if non trivial edge */
-} ecs_edge_t;
+typedef struct ecs_graph_edge_t {
+    ecs_graph_edge_hdr_t hdr;
+    ecs_table_t *from;       /* Edge source table */
+    ecs_table_t *to;         /* Edge destination table */
+    ecs_table_diff_t *diff;  /* Index into diff vector, if non trivial edge */
+    ecs_id_t id;             /* Id associated with edge */
+} ecs_graph_edge_t;
 
 /* Edges to other tables. */
 typedef struct ecs_graph_edges_t {
-    ecs_edge_t *lo; /* Small array optimized for low edges */
-    ecs_map_t *hi;  /* Map for hi edges */
+    ecs_graph_edge_t *lo; /* Small array optimized for low edges */
+    ecs_map_t *hi;  /* Map for hi edges (map<id, edge_t>) */
 } ecs_graph_edges_t;
 
 /* Table graph node */
 typedef struct ecs_graph_node_t {
-    /* Add & remove edges to other tables */
-    ecs_graph_edges_t add;
-    ecs_graph_edges_t remove;
+    /* Outgoing edges */
+    ecs_graph_edges_t add;    
+    ecs_graph_edges_t remove; 
 
-    /* Metadata that keeps track of id diffs for non-trivial edges */ 
-    ecs_vector_t *diffs;
+    /* Incoming edges (next = add edges, prev = remove edges) */
+    ecs_graph_edge_hdr_t refs;
 } ecs_graph_node_t;
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -192,6 +201,9 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
+    
+    struct ecs_table_record_t *records; /* Array with table records */
+    int32_t record_count;
 
     ecs_table_t *storage_table;      /* Table w/type without tags */
     ecs_type_t storage_type;         /* Storage table type (prevents indirection) */
@@ -218,6 +230,7 @@ struct ecs_table_t {
 
 /** Must appear as first member in payload of table cache */
 typedef struct ecs_table_cache_hdr_t {
+    struct ecs_table_cache_t *cache;
     ecs_table_t *table;
     struct ecs_table_cache_hdr_t *prev, *next;
     bool empty;
@@ -235,9 +248,6 @@ typedef struct ecs_table_cache_t {
     ecs_map_t *index; /* <table_id, T*> */
     ecs_table_cache_list_t tables;
     ecs_table_cache_list_t empty_tables;
-    ecs_size_t size;
-    ecs_poly_t *parent;
-    void(*free_payload)(ecs_poly_t*, void*);
 } ecs_table_cache_t;
 
 /* Sparse query column */
@@ -492,26 +502,18 @@ typedef struct ecs_relation_monitor_t {
  * the column of the component in the table. */
 typedef struct ecs_table_record_t {
     ecs_table_cache_hdr_t hdr;
-    ecs_table_t *table;
+    ecs_id_t id;
     int32_t column;
     int32_t count;
 } ecs_table_record_t;
 
 /* Payload for id index which contains all datastructures for an id. */
 struct ecs_id_record_t {
-    /* Cache with all tables that contain the id */
+    /* Cache with all tables that contain the id. Must be first member. */
     ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
-
-    /* All tables for which an outgoing (add) edge to the id was created */
-    ecs_map_t *add_refs;
-
-    /* All tables for which an incoming (remove) edge to the id was created */
-    ecs_map_t *remove_refs;
 
     /* Flags for id */
     ecs_flags32_t flags;
-
-    uint64_t id; /* Id to element in storage */
 };
 
 typedef struct ecs_store_t {
@@ -588,7 +590,6 @@ struct ecs_world_t {
     ecs_sparse_t *queries;         /* sparse<query_id, ecs_query_t> */
     ecs_sparse_t *triggers;        /* sparse<query_id, ecs_trigger_t> */
     ecs_sparse_t *observers;       /* sparse<query_id, ecs_observer_t> */
-    ecs_sparse_t *id_records;      /* sparse<idr_id, ecs_id_record_t> */
 
 
     /* --  Pending table event buffers -- */

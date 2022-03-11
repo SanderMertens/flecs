@@ -181,6 +181,18 @@ void ecs_map_memory(
     int32_t *allocd,
     int32_t *used);
 
+#define ecs_set_new(elem_count)\
+    _ecs_map_new(0, elem_count)
+
+#define ecs_set_ensure(map, key)\
+    _ecs_map_ensure(map, 0, key)
+
+#define ecs_set_free(map)\
+    ecs_map_free(map);
+
+#define ecs_set_count(map)\
+    ecs_map_count(map)
+
 #ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\
     {\

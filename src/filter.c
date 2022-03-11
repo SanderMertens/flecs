@@ -1704,7 +1704,7 @@ bool term_iter_next(
                 }
             }
 
-            table = tr->table;
+            table = tr->hdr.table;
 
             if (!match_prefab && (table->flags & EcsTableIsPrefab)) {
                 continue;

@@ -151,12 +151,16 @@ int32_t add_to_bucket(
     int32_t bucket_count = index + 1;
 
     bucket->keys = ecs_os_realloc(bucket->keys, KEY_SIZE * bucket_count);
-    bucket->payload = ecs_os_realloc(bucket->payload, elem_size * bucket_count);
     bucket->keys[index] = key;
 
-    if (payload) {
-        void *elem = GET_ELEM(bucket->payload, elem_size, index);
-        ecs_os_memcpy(elem, payload, elem_size);
+    if (elem_size) {
+        bucket->payload = ecs_os_realloc(bucket->payload, elem_size * bucket_count);
+        if (payload) {
+            void *elem = GET_ELEM(bucket->payload, elem_size, index);
+            ecs_os_memcpy(elem, payload, elem_size);
+        }
+    } else {
+        bucket->payload = NULL;
     }
 
     return index;
@@ -338,8 +342,10 @@ void* _ecs_map_ensure(
     void *result = _ecs_map_get(map, elem_size, key);
     if (!result) {
         result = _ecs_map_set(map, elem_size, key, NULL);
-        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_os_memset(result, 0, elem_size);
+        if (elem_size) {
+            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_os_memset(result, 0, elem_size);
+        }
     }
 
     return result;

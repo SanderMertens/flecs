@@ -8,9 +8,7 @@ int32_t type_search(
     ecs_id_t *id_out,
     ecs_table_record_t **tr_out)
 {    
-    ecs_table_record_t *tr = ecs_table_cache_get(
-        &idr->cache, ecs_table_record_t, table);
-
+    ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
     if (tr) {
         int32_t r = tr->column;
         if (tr_out) tr_out[0] = tr;

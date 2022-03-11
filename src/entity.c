@@ -59,7 +59,7 @@ void* get_component(
 
     if (!table->storage_table) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
-            ECS_NOT_A_COMPONENT,  NULL);
+            ECS_NOT_A_COMPONENT, NULL);
         return NULL;
     }
 
@@ -451,7 +451,7 @@ void instantiate(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             instantiate_children(
-                world, base, table, data, row, count, tr->table);
+                world, base, table, data, row, count, tr->hdr.table);
         }
     }
 }
@@ -2470,7 +2470,7 @@ void on_delete_object_action(
             const ecs_table_record_t *tr;
             if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                 do {
-                    ecs_table_t *table = tr->table;
+                    ecs_table_t *table = tr->hdr.table;
 
                     if (!ecs_table_count(table)) {
                         continue;
@@ -2561,7 +2561,7 @@ void on_delete_object_action(
         } while (deleted);
 
         /* Delete all remaining (empty) tables with id */
-        flecs_clear_id_record(world, id, idr);
+        flecs_remove_id_record(world, id, idr);
     }
 }
 
@@ -2582,9 +2582,10 @@ void on_delete_id_action(
             throw_invalid_delete(world, id);
         }
 
+        /* Delete non-empty tables */
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->table;
+            ecs_table_t *table = tr->hdr.table;
 
             if (!action || action == EcsRemove) {
                 remove_from_table(world, table, id, tr->column, tr->count);
@@ -2593,7 +2594,7 @@ void on_delete_id_action(
             }
         }
 
-        flecs_clear_id_record(world, id, idr);
+        flecs_remove_id_record(world, id, idr);
     }
 }
 

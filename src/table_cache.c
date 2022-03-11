@@ -68,65 +68,30 @@ void table_cache_list_insert(
     }
 }
 
-void _ecs_table_cache_init(
-    ecs_table_cache_t *cache,
-    ecs_size_t size,
-    ecs_poly_t *parent,
-    void(*free_payload)(ecs_poly_t*, void*))
-{
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size >= ECS_SIZEOF(ecs_table_cache_hdr_t), 
-        ECS_INTERNAL_ERROR, NULL);
-
-    ecs_os_zeromem(cache);
-
-    cache->size = size;
-    cache->parent = parent;
-    cache->free_payload = free_payload;
-}
-
-static
-void free_payload(
-    ecs_table_cache_t *cache,
-    ecs_table_cache_hdr_t *first)
-{
-    void(*free_payload_func)(ecs_poly_t*, void*) = cache->free_payload;
-    if (free_payload_func) {
-        ecs_poly_t *parent = cache->parent;
-        ecs_table_cache_hdr_t *cur, *next = first;
-
-        while ((cur = next)) {
-            next = cur->next;
-            free_payload_func(parent, cur);
-            ecs_os_free(cur);
-        }
-    }
-}
-
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_free(cache->index);
-    free_payload(cache, cache->tables.first);
-    free_payload(cache, cache->empty_tables.first);
 }
 
-bool ecs_table_cache_is_initialized(
-    ecs_table_cache_t *cache)
+bool ecs_table_cache_is_empty(
+    const ecs_table_cache_t *cache)
 {
-    return cache->size != 0;
+    ecs_assert(cache->index == NULL || ecs_map_count(cache->index), 
+        ECS_INTERNAL_ERROR, NULL);
+    return cache->index == NULL;
 }
 
-void* _ecs_table_cache_insert(
+void ecs_table_cache_insert(
     ecs_table_cache_t *cache,
-    ecs_size_t size,
-    const ecs_table_t *table)
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!table || (_ecs_table_cache_get(cache, size, table) == NULL), 
+    ecs_assert(!table || (ecs_table_cache_get(cache, table) == NULL), 
         ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
     bool empty;
     if (!table) {
@@ -135,7 +100,7 @@ void* _ecs_table_cache_insert(
         empty = ecs_table_count(table) == 0;
     }
 
-    ecs_table_cache_hdr_t *result = ecs_os_calloc(size);
+    result->cache = cache;
     result->table = (ecs_table_t*)table;
     result->empty = empty;
 
@@ -146,55 +111,53 @@ void* _ecs_table_cache_insert(
         ecs_map_set_ptr(cache->index, table->id, result);
     }
 
-    ecs_assert(empty || cache->tables.first != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!empty || cache->empty_tables.first != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
+    ecs_assert(empty || cache->tables.first != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!empty || cache->empty_tables.first != NULL, 
+        ECS_INTERNAL_ERROR, NULL);
 }
 
-ecs_table_cache_hdr_t* _ecs_table_cache_get(
+void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
-    ecs_size_t size,
     const ecs_table_t *table)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
-    (void)size;
     return ecs_map_get_ptr(cache->index, ecs_table_cache_hdr_t*, table->id);
 }
 
-bool _ecs_table_cache_remove(
+void* ecs_table_cache_remove(
     ecs_table_cache_t *cache,
-    ecs_size_t size,
-    const ecs_table_t *table)
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *elem)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size == cache->size, ECS_INTERNAL_ERROR, NULL);
-    (void)size;
 
-    ecs_table_cache_hdr_t *elem = ecs_map_get_ptr(
-        cache->index, ecs_table_cache_hdr_t*, table->id);
+    if (!cache->index) {
+        return NULL;
+    }
+
     if (!elem) {
-        return false;
+        elem = ecs_map_get_ptr(
+            cache->index, ecs_table_cache_hdr_t*, table->id);
+        if (!elem) {
+            return false;
+        }
     }
 
-    if (cache->free_payload) {
-        cache->free_payload(cache->parent, elem);
-    }
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem->cache == cache, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem->table == table, ECS_INTERNAL_ERROR, NULL);
 
     table_cache_list_remove(cache, elem);
-
-    ecs_os_free(elem);
 
     if (ecs_map_remove(cache->index, table->id) == 0) {
         ecs_map_free(cache->index);
         cache->index = NULL;
-        return true;
-    } else {
-        return false;
     }
+
+    return elem;
 }
 
 bool ecs_table_cache_set_empty(
@@ -222,18 +185,14 @@ bool ecs_table_cache_set_empty(
     return true;
 }
 
-void _ecs_table_cache_fini_delete_all(
+void ecs_table_cache_fini_delete_all(
     ecs_world_t *world,
-    ecs_table_cache_t *cache,
-    ecs_size_t size)
+    ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!cache->index) {
         return;
     }
-
-    ecs_assert(cache->size == size, ECS_INTERNAL_ERROR, NULL);
-    (void)size;
 
     /* Temporarily set index to NULL, so that when the table tries to remove
      * itself from the cache it won't be able to. This keeps the arrays we're
@@ -245,14 +204,12 @@ void _ecs_table_cache_fini_delete_all(
     while ((cur = next)) {
         flecs_delete_table(world, cur->table);
         next = cur->next;
-        ecs_os_free(cur);
     }
 
     next = cache->empty_tables.first;
     while ((cur = next)) {
         flecs_delete_table(world, cur->table);
         next = cur->next;
-        ecs_os_free(cur);
     }
 
     cache->index = index;

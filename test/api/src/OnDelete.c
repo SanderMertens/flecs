@@ -46,6 +46,8 @@ void OnDelete_on_delete_id_default() {
 
     test_assert(!ecs_is_alive(world, c));
     test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_id(world, e, c));
+
     test_assert(ecs_get_type(world, e) == NULL);
 
     ecs_fini(world);
