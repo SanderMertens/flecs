@@ -33,8 +33,22 @@
 extern "C" {
 #endif
 
-typedef struct ecs_map_t ecs_map_t;
 typedef uint64_t ecs_map_key_t;
+
+/* Map type */
+typedef struct ecs_bucket_t {
+    ecs_map_key_t *keys;    /* Array with keys */
+    void *payload;          /* Payload array */
+    int32_t count;          /* Number of elements in bucket */
+} ecs_bucket_t;
+
+typedef struct ecs_map_t {
+    ecs_bucket_t *buckets;
+    int16_t elem_size;
+    uint8_t bucket_shift;
+    int32_t bucket_count;
+    int32_t count;
+} ecs_map_t;
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
@@ -44,6 +58,21 @@ typedef struct ecs_map_iter_t {
     void *payload;
 } ecs_map_iter_t;
 
+/** Initialize new map. */
+FLECS_API
+void _ecs_map_init(
+    ecs_map_t *map,
+    ecs_size_t elem_size,
+    int32_t elem_count);
+
+#define ecs_map_init(map, T, elem_count)\
+    _ecs_map_init(map, sizeof(T), elem_count)
+
+/** Deinitialize map. */
+FLECS_API
+void ecs_map_fini(
+    ecs_map_t *map);
+
 /** Create new map. */
 FLECS_API
 ecs_map_t* _ecs_map_new(
@@ -52,6 +81,10 @@ ecs_map_t* _ecs_map_new(
 
 #define ecs_map_new(T, elem_count)\
     _ecs_map_new(sizeof(T), elem_count)
+
+/** Is map initialized */
+bool ecs_map_is_initialized(
+    const ecs_map_t *result);
 
 /** Get element for key, returns NULL if they key doesn't exist. */
 FLECS_API
@@ -180,18 +213,6 @@ void ecs_map_memory(
     ecs_map_t *map,
     int32_t *allocd,
     int32_t *used);
-
-#define ecs_set_new(elem_count)\
-    _ecs_map_new(0, elem_count)
-
-#define ecs_set_ensure(map, key)\
-    _ecs_map_ensure(map, 0, key)
-
-#define ecs_set_free(map)\
-    ecs_map_free(map);
-
-#define ecs_set_count(map)\
-    ecs_map_count(map)
 
 #ifndef FLECS_LEGACY
 #define ecs_map_each(map, T, key, var, ...)\

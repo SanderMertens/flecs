@@ -812,6 +812,7 @@ void accept_connections(
 done:
     if (srv->sock && errno != EBADF) {
         http_close(srv->sock);
+        srv->sock = 0;
     }
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",

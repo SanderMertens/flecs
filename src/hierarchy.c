@@ -80,7 +80,7 @@ ecs_entity_t find_by_name(
 {
     ecs_hashed_string_t key = ecs_get_hashed_string(name, length, hash);
 
-    ecs_entity_t *e = flecs_hashmap_get(*map, &key, ecs_entity_t);
+    ecs_entity_t *e = flecs_hashmap_get(map, &key, ecs_entity_t);
 
     if (!e) {
         return 0;
@@ -113,7 +113,7 @@ void register_by_name(
     }
 
     flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
-        *map, &key, ecs_entity_t);
+        map, &key, ecs_entity_t);
 
     *((ecs_entity_t*)hmr.value) = entity;
 error:
@@ -294,8 +294,8 @@ int string_compare(
     return ecs_os_memcmp(str1->value, str2->value, len1);
 }
 
-ecs_hashmap_t _flecs_string_hashmap_new(ecs_size_t size) {
-    return _flecs_hashmap_new(ECS_SIZEOF(ecs_hashed_string_t), size, 
+void _flecs_string_hashmap_init(ecs_hashmap_t *hm, ecs_size_t size) {
+    _flecs_hashmap_init(hm, ECS_SIZEOF(ecs_hashed_string_t), size, 
         string_hash, 
         string_compare);
 }

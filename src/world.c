@@ -277,7 +277,7 @@ void eval_component_monitor(
         return;
     }
 
-    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_map_iter_t it = ecs_map_iter(&rm->monitor_sets);
     ecs_monitor_set_t *ms;
 
     while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
@@ -285,22 +285,20 @@ void eval_component_monitor(
             continue;
         }
 
-        if (ms->monitors) {
-            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
-            ecs_monitor_t *m;
-            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
-                if (!m->is_dirty) {
-                    continue;
-                }
-
-                ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
-                    flecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
-                        .kind = EcsQueryTableRematch
-                    });
-                });
-
-                m->is_dirty = false;
+        ecs_map_iter_t mit = ecs_map_iter(&ms->monitors);
+        ecs_monitor_t *m;
+        while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+            if (!m->is_dirty) {
+                continue;
             }
+
+            ecs_vector_each(m->queries, ecs_query_t*, q_ptr, {
+                flecs_query_notify(world, *q_ptr, &(ecs_query_event_t) {
+                    .kind = EcsQueryTableRematch
+                });
+            });
+
+            m->is_dirty = false;
         }
 
         ms->is_dirty = false;
@@ -314,14 +312,12 @@ void flecs_monitor_mark_dirty(
     ecs_entity_t relation,
     ecs_entity_t id)
 {
-    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
-
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
-    ecs_monitor_set_t *ms = ecs_map_get(world->monitors.monitor_sets, 
+    ecs_monitor_set_t *ms = ecs_map_get(&world->monitors.monitor_sets, 
         ecs_monitor_set_t, relation);
-    if (ms && ms->monitors) {
-        ecs_monitor_t *m = ecs_map_get(ms->monitors, 
+    if (ms && ecs_map_is_initialized(&ms->monitors)) {
+        ecs_monitor_t *m = ecs_map_get(&ms->monitors, 
             ecs_monitor_t, id);
         if (m) {
             m->is_dirty = true;
@@ -340,17 +336,16 @@ void flecs_monitor_register(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->monitors.monitor_sets != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_monitor_set_t *ms = ecs_map_ensure(
-        world->monitors.monitor_sets, ecs_monitor_set_t, relation);
+        &world->monitors.monitor_sets, ecs_monitor_set_t, relation);
     ecs_assert(ms != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ms->monitors) {
-        ms->monitors = ecs_map_new(ecs_monitor_t, 1);
+    if (!ecs_map_is_initialized(&ms->monitors)) {
+        ecs_map_init(&ms->monitors, ecs_monitor_t, 1);
     }
 
-    ecs_monitor_t *m = ecs_map_ensure(ms->monitors, ecs_monitor_t, id);
+    ecs_monitor_t *m = ecs_map_ensure(&ms->monitors, ecs_monitor_t, id);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);        
 
     ecs_query_t **q = ecs_vector_add(&m->queries, ecs_query_t*);
@@ -361,7 +356,7 @@ static
 void monitors_init(
     ecs_relation_monitor_t *rm)
 {
-    rm->monitor_sets = ecs_map_new(ecs_monitor_t, 0);
+    ecs_map_init(&rm->monitor_sets, ecs_monitor_set_t, 0);
     rm->is_dirty = false;
 }
 
@@ -369,22 +364,20 @@ static
 void monitors_fini(
     ecs_relation_monitor_t *rm)
 {
-    ecs_map_iter_t it = ecs_map_iter(rm->monitor_sets);
+    ecs_map_iter_t it = ecs_map_iter(&rm->monitor_sets);
     ecs_monitor_set_t *ms;
 
     while ((ms = ecs_map_next(&it, ecs_monitor_set_t, NULL))) {
-        if (ms->monitors) {
-            ecs_map_iter_t mit = ecs_map_iter(ms->monitors);
-            ecs_monitor_t *m;
-            while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
-                ecs_vector_free(m->queries);
-            }
-
-            ecs_map_free(ms->monitors);
+        ecs_map_iter_t mit = ecs_map_iter(&ms->monitors);
+        ecs_monitor_t *m;
+        while ((m = ecs_map_next(&mit, ecs_monitor_t, NULL))) {
+            ecs_vector_free(m->queries);
         }
+
+        ecs_map_fini(&ms->monitors);
     }
 
-    ecs_map_free(rm->monitor_sets);
+    ecs_map_fini(&rm->monitor_sets);
 }
 
 static
@@ -404,7 +397,7 @@ void init_store(
     world->store.tables = flecs_sparse_new(ecs_table_t);
 
     /* Initialize table map */
-    world->store.table_map = flecs_table_hashmap_new();
+    flecs_table_hashmap_init(&world->store.table_map);
 
     /* Initialize one root table per stage */
     flecs_init_root_table(world);
@@ -449,8 +442,13 @@ void fini_store(ecs_world_t *world) {
     flecs_sparse_free(world->store.tables);
     flecs_table_release(world, &world->store.root);
     flecs_sparse_clear(world->store.entity_index);
-    flecs_hashmap_free(world->store.table_map);
-    ecs_os_free(world->store.id_cache.array);
+    flecs_hashmap_fini(&world->store.table_map);
+
+    ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
+    while ((cur = next)) {
+        next = cur->next;
+        ecs_os_free(cur);
+    }
 }
 
 /* Implementation for iterable mixin */
@@ -622,9 +620,9 @@ ecs_world_t *ecs_mini(void) {
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
 
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-    world->aliases = flecs_string_hashmap_new(ecs_entity_t);
-    world->symbols = flecs_string_hashmap_new(ecs_entity_t);
-    world->type_handles = ecs_map_new(ecs_entity_t, 0);
+    flecs_string_hashmap_init(&world->aliases, ecs_entity_t);
+    flecs_string_hashmap_init(&world->symbols, ecs_entity_t);
+    ecs_map_init(&world->type_handles, ecs_entity_t, 0);
 
     world->stats.time_scale = 1.0;
     
@@ -1188,13 +1186,13 @@ static
 void fini_aliases(
     ecs_hashmap_t *map)
 {
-    flecs_hashmap_iter_t it = flecs_hashmap_iter(*map);
+    flecs_hashmap_iter_t it = flecs_hashmap_iter(map);
     ecs_hashed_string_t *key;
     while (flecs_hashmap_next_w_key(&it, ecs_hashed_string_t, &key, ecs_entity_t)) {
         ecs_os_free(key->value);
     }
-    
-    flecs_hashmap_free(*map);
+
+    flecs_hashmap_fini(map);
 }
 
 /* Cleanup misc structures */
@@ -1202,7 +1200,7 @@ static
 void fini_misc(
     ecs_world_t *world)
 {
-    ecs_map_free(world->type_handles);
+    ecs_map_fini(&world->type_handles);
     ecs_vector_free(world->fini_tasks);
     monitors_fini(&world->monitors);
 }

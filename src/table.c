@@ -670,7 +670,7 @@ void flecs_table_free(
             .count = ecs_vector_count(table->type)
         };
 
-        flecs_hashmap_remove(world->store.table_map, &ids, ecs_table_t*);
+        flecs_hashmap_remove(&world->store.table_map, &ids, ecs_table_t*);
     }
 
     ecs_os_free(table->dirty_state);

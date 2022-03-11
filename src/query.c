@@ -27,7 +27,7 @@ ecs_query_table_list_t* get_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
-    return ecs_map_get(query->groups, ecs_query_table_list_t, group_id);
+    return ecs_map_get(&query->groups, ecs_query_table_list_t, group_id);
 }
 
 static
@@ -35,7 +35,7 @@ ecs_query_table_list_t* ensure_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
-    return ecs_map_ensure(query->groups, ecs_query_table_list_t, group_id);
+    return ecs_map_ensure(&query->groups, ecs_query_table_list_t, group_id);
 }
 
 /* Find the last node of the group after which this group should be inserted */
@@ -47,7 +47,7 @@ ecs_query_table_node_t* find_group_insertion_node(
     /* Grouping must be enabled */
     ecs_assert(query->group_by != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_map_iter_t it = ecs_map_iter(query->groups);
+    ecs_map_iter_t it = ecs_map_iter(&query->groups);
     ecs_query_table_list_t *list, *closest_list = NULL;
     uint64_t id, closest_id = 0;
 
@@ -129,7 +129,7 @@ void remove_group(
     ecs_query_t *query,
     uint64_t group_id)
 {
-    ecs_map_remove(query->groups, group_id);
+    ecs_map_remove(&query->groups, group_id);
 }
 
 /* Find the list the node should be part of */
@@ -1657,7 +1657,7 @@ void build_sorted_tables(
                 ecs_query_table_match_t *match = cur->match;
                 ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
                 uint64_t group_id = match->group_id;
-                ecs_query_table_list_t *list = ecs_map_get(query->groups, 
+                ecs_query_table_list_t *list = ecs_map_get(&query->groups, 
                     ecs_query_table_list_t, group_id);
                 ecs_assert(list != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2369,7 +2369,7 @@ void query_group_by(
 
     query->group_by_id = sort_component;
     query->group_by = group_by;
-    query->groups = ecs_map_new(ecs_query_table_list_t, 16);
+    ecs_map_init(&query->groups, ecs_query_table_list_t, 16);
 error:
     return;
 }
@@ -2603,7 +2603,7 @@ void ecs_query_fini(
 
     table_cache_free(query);
 
-    ecs_map_free(query->groups);
+    ecs_map_fini(&query->groups);
 
     ecs_vector_free(query->subqueries);
     ecs_vector_free(query->table_slices);

@@ -41,8 +41,8 @@ int ids_compare(const void *ptr_1, const void *ptr_2) {
     return 0;
 }
 
-ecs_hashmap_t flecs_table_hashmap_new(void) {
-    return flecs_hashmap_new(ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
+void flecs_table_hashmap_init(ecs_hashmap_t *hm) {
+    flecs_hashmap_init(hm, ecs_ids_t, ecs_table_t*, ids_hash, ids_compare);
 }
 
 const EcsComponent* flecs_component_from_id(
@@ -127,25 +127,43 @@ void table_diff_free(
 }
 
 static
-ecs_graph_edge_t* ecs_graph_edge_alloc(void) {
-    return ecs_os_calloc_t(ecs_graph_edge_t);
+ecs_graph_edge_t* graph_edge_new(
+    ecs_world_t *world)
+{
+    ecs_graph_edge_t *result = (ecs_graph_edge_t*)world->store.first_free;
+    if (result) {
+        world->store.first_free = result->hdr.next;
+        ecs_os_zeromem(result);
+    } else {
+        result = ecs_os_calloc_t(ecs_graph_edge_t);
+    }
+    return result;
 }
 
-static 
-void ecs_graph_edge_free(ecs_graph_edge_t *edge) {
-    ecs_os_free(edge);
+static
+void graph_edge_free(
+    ecs_world_t *world,
+    ecs_graph_edge_t *edge)
+{
+    if (world->is_fini) {
+        ecs_os_free(edge);
+    } else {
+        edge->hdr.next = world->store.first_free;
+        world->store.first_free = &edge->hdr;
+    }
 }
 
 static
 ecs_graph_edge_t* ensure_hi_edge(
+    ecs_world_t *world,
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
-    if (!edges->hi) {
-        edges->hi = ecs_map_new(ecs_graph_edge_t*, 1);
+    if (!ecs_map_is_initialized(&edges->hi)) {
+        ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
     }
 
-    ecs_graph_edge_t **ep = ecs_map_ensure(edges->hi, ecs_graph_edge_t*, id);
+    ecs_graph_edge_t **ep = ecs_map_ensure(&edges->hi, ecs_graph_edge_t*, id);
     ecs_graph_edge_t *edge = ep[0];
     if (edge) {
         return edge;
@@ -154,7 +172,7 @@ ecs_graph_edge_t* ensure_hi_edge(
     if (id < ECS_HI_COMPONENT_ID) {
         edge = &edges->lo[id];
     } else {
-        edge = ecs_graph_edge_alloc();
+        edge = graph_edge_new(world);
     }
 
     ep[0] = edge;
@@ -163,6 +181,7 @@ ecs_graph_edge_t* ensure_hi_edge(
 
 static
 ecs_graph_edge_t* ensure_edge(
+    ecs_world_t *world,
     ecs_graph_edges_t *edges,
     ecs_id_t id)
 {
@@ -174,10 +193,10 @@ ecs_graph_edge_t* ensure_edge(
         }
         edge = &edges->lo[id];
     } else {
-        if (!edges->hi) {
-            edges->hi = ecs_map_new(ecs_graph_edge_t*, 1);
+        if (!ecs_map_is_initialized(&edges->hi)) {
+            ecs_map_init(&edges->hi, ecs_graph_edge_t*, 1);
         }
-        edge = ensure_hi_edge(edges, id);
+        edge = ensure_hi_edge(world, edges, id);
     }
 
     return edge;
@@ -185,6 +204,7 @@ ecs_graph_edge_t* ensure_edge(
 
 static
 void disconnect_edge(
+    ecs_world_t *world,
     ecs_id_t id,
     ecs_graph_edge_t *edge)
 {
@@ -213,20 +233,21 @@ void disconnect_edge(
     if (id < ECS_HI_COMPONENT_ID) {
         edge->from = NULL;
     } else {
-        ecs_graph_edge_free(edge);
+        graph_edge_free(world, edge);
     }
 }
 
 static
 void remove_edge(
+    ecs_world_t *world,
     ecs_graph_edges_t *edges,
     ecs_id_t id,
     ecs_graph_edge_t *edge)
 {
     ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edges->hi != NULL, ECS_INTERNAL_ERROR, NULL);
-    disconnect_edge(id, edge);
-    ecs_map_remove(edges->hi, id);
+    ecs_assert(ecs_map_is_initialized(&edges->hi), ECS_INTERNAL_ERROR, NULL);
+    disconnect_edge(world, id, edge);
+    ecs_map_remove(&edges->hi, id);
 }
 
 static
@@ -234,7 +255,7 @@ void init_edges(
     ecs_graph_edges_t *edges)
 {
     edges->lo = NULL;
-    edges->hi = NULL;
+    ecs_os_zeromem(&edges->hi);
 }
 
 static
@@ -307,8 +328,9 @@ void flecs_table_records_register(
      * out how many table records are needed for this table. */
     int32_t id_count = 0, pair_count = 0, type_flag_count = 0;
     int32_t first_id = -1, first_pair = -1;
-    ecs_map_t *relations = ecs_map_new(id_first_count_t, count);
-    ecs_map_t *objects = ecs_map_new(id_first_count_t, count);
+    ecs_map_t relations, objects;
+    ecs_map_init(&relations, id_first_count_t, count);
+    ecs_map_init(&objects, id_first_count_t, count);
     bool has_childof = false;
 
     int32_t i;
@@ -330,12 +352,12 @@ void flecs_table_records_register(
                 has_childof = true;
             }
 
-            r = ecs_map_ensure(relations, id_first_count_t, rel);
+            r = ecs_map_ensure(&relations, id_first_count_t, rel);
             if ((++r->count) == 1) {
                 r->first = i;
             }
 
-            r = ecs_map_ensure(objects, id_first_count_t, obj);
+            r = ecs_map_ensure(&objects, id_first_count_t, obj);
             if ((++r->count) == 1) {
                 r->first = i;
             }
@@ -366,7 +388,7 @@ void flecs_table_records_register(
     }
 
     int32_t record_count = count + type_flag_count + (id_count != 0) + 
-        (pair_count != 0) + ecs_map_count(relations) + ecs_map_count(objects) 
+        (pair_count != 0) + ecs_map_count(&relations) + ecs_map_count(&objects) 
             + 1 /* for any */;
     int32_t r = 0;
 
@@ -393,7 +415,7 @@ void flecs_table_records_register(
     }
 
     /* Initialize records for relation wildcards */
-    ecs_map_iter_t mit = ecs_map_iter(relations);
+    ecs_map_iter_t mit = ecs_map_iter(&relations);
     id_first_count_t *elem; 
     uint64_t key;
     while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
@@ -404,7 +426,7 @@ void flecs_table_records_register(
     }
 
     /* Initialize records for object wildcards */
-    mit = ecs_map_iter(objects);
+    mit = ecs_map_iter(&objects);
     while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
         ecs_id_t id = ecs_pair(EcsWildcard, key);
         register_table_for_id(world, table, id, elem->first, elem->count,
@@ -434,8 +456,8 @@ void flecs_table_records_register(
             0, 1, &table->records[r]);
     }
 
-    ecs_set_free(relations);
-    ecs_set_free(objects);
+    ecs_map_fini(&relations);
+    ecs_map_fini(&objects);
 }
 
 void flecs_table_records_unregister(
@@ -651,7 +673,7 @@ ecs_table_t* find_or_create(
 
     ecs_table_t *table;
     flecs_hashmap_result_t elem = flecs_hashmap_ensure(
-        world->store.table_map, ids, ecs_table_t*);
+        &world->store.table_map, ids, ecs_table_t*);
     if ((table = *(ecs_table_t**)elem.value)) {
         if (type) {
             ecs_vector_free(type);
@@ -1196,7 +1218,7 @@ void init_add_edge(
 {
     init_edge(table, edge, id, to);
 
-    ensure_hi_edge(&table->node.add, id);
+    ensure_hi_edge(world, &table->node.add, id);
 
     if (table != to) {
         /* Add edges are appended to refs.next */
@@ -1225,7 +1247,7 @@ void init_remove_edge(
 {
     init_edge(table, edge, id, to);
 
-    ensure_hi_edge(&table->node.remove, id);
+    ensure_hi_edge(world, &table->node.remove, id);
 
     if (table != to) {
         /* Remove edges are appended to refs.prev */
@@ -1335,7 +1357,7 @@ ecs_table_t* flecs_table_traverse_remove(
     ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
-    ecs_graph_edge_t *edge = ensure_edge(&node->node.remove, id);
+    ecs_graph_edge_t *edge = ensure_edge(world, &node->node.remove, id);
     ecs_table_t *to = edge->to;
 
     if (!to) {
@@ -1366,7 +1388,7 @@ ecs_table_t* flecs_table_traverse_add(
     ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_t id = id_ptr[0];
-    ecs_graph_edge_t *edge = ensure_edge(&node->node.add, id);
+    ecs_graph_edge_t *edge = ensure_edge(world, &node->node.add, id);
     ecs_table_t *to = edge->to;
 
     if (!to) {
@@ -1422,20 +1444,25 @@ void flecs_table_clear_edges(
     ecs_graph_node_t *table_node = &table->node;
     ecs_graph_edges_t *node_add = &table_node->add;
     ecs_graph_edges_t *node_remove = &table_node->remove;
-    ecs_map_t *add_hi = node_add->hi;
-    ecs_map_t *remove_hi = node_remove->hi;
+    ecs_map_t *add_hi = &node_add->hi;
+    ecs_map_t *remove_hi = &node_remove->hi;
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
-
-    /* Cleanup outgoing edges */
-    it = ecs_map_iter(add_hi);
     ecs_graph_edge_t *edge;
     uint64_t key;
-    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        disconnect_edge(key, edge);
+
+    /* Cleanup outgoing edges */
+    if (ecs_map_is_initialized(add_hi)) {
+        it = ecs_map_iter(add_hi);
+        while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+            disconnect_edge(world, key, edge);
+        }
     }
-    it = ecs_map_iter(remove_hi);
-    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        disconnect_edge(key, edge);
+
+    if (ecs_map_is_initialized(remove_hi)) {
+        it = ecs_map_iter(remove_hi);
+        while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+            disconnect_edge(world, key, edge);
+        }
     }
 
     /* Cleanup incoming add edges */
@@ -1446,7 +1473,7 @@ void flecs_table_clear_edges(
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->next;
-            remove_edge(&edge->from->node.add, edge->id, edge);
+            remove_edge(world, &edge->from->node.add, edge->id, edge);
         } while ((cur = next));
     }
 
@@ -1458,18 +1485,16 @@ void flecs_table_clear_edges(
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->prev;
-            remove_edge(&edge->from->node.remove, edge->id, edge);
+            remove_edge(world, &edge->from->node.remove, edge->id, edge);
         } while ((cur = next));
     }
 
     ecs_os_free(node_add->lo);
     ecs_os_free(node_remove->lo);
-    ecs_map_free(add_hi);
-    ecs_map_free(remove_hi);
+    ecs_map_fini(add_hi);
+    ecs_map_fini(remove_hi);
     table_node->add.lo = NULL;
     table_node->remove.lo = NULL;
-    table_node->add.hi = NULL;
-    table_node->remove.hi = NULL;
 
     ecs_log_pop_1();
 }

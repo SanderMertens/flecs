@@ -170,7 +170,7 @@ ecs_vector_t* serialize_struct(
     ecs_hashmap_t *member_index = NULL;
     if (count) {
         member_index = ecs_os_malloc_t(ecs_hashmap_t);
-        *member_index = flecs_string_hashmap_new(int32_t);
+        flecs_string_hashmap_init(member_index, int32_t);
         op->members = member_index;
     }
 
@@ -198,7 +198,7 @@ ecs_vector_t* serialize_struct(
 
         ecs_hashed_string_t key = ecs_get_hashed_string(member_name, len, 0);
         flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
-            *member_index, &key, int32_t);
+            member_index, &key, int32_t);
         *((int32_t*)hmr.value) = cur - first - 1;
     }
 
