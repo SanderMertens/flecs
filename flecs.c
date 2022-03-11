@@ -43835,19 +43835,15 @@ void flecs_table_clear_edges(
     ecs_map_t *remove_hi = node_remove->hi;
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
-    ecs_dbg("clear edges for table %u", (uint32_t)table->id);
-
     /* Cleanup outgoing edges */
     it = ecs_map_iter(add_hi);
     ecs_graph_edge_t *edge;
     uint64_t key;
     while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        ecs_dbg(" - cleanup add edge %u to table %u", key, 0);
         disconnect_edge(key, edge);
     }
     it = ecs_map_iter(remove_hi);
     while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-        ecs_dbg(" - cleanup remove edge %u to table %u", key, edge->to->id);
         disconnect_edge(key, edge);
     }
 
@@ -43856,7 +43852,6 @@ void flecs_table_clear_edges(
     if (cur) {
         do {
             edge = (ecs_graph_edge_t*)cur;
-            ecs_dbg(" - cleanup add edge %u from table %u", edge->id, edge->from->id);
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->next;
@@ -43869,7 +43864,6 @@ void flecs_table_clear_edges(
     if (cur) {
         do {
             edge = (ecs_graph_edge_t*)cur;
-            ecs_dbg(" - cleanup remove edge %u from table %u", edge->id, edge->from->id);
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->prev;
