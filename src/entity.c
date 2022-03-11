@@ -59,7 +59,7 @@ void* get_component(
 
     if (!table->storage_table) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
-            ECS_NOT_A_COMPONENT, ecs_id_str(world, id));
+            ECS_NOT_A_COMPONENT,  NULL);
         return NULL;
     }
 
@@ -67,7 +67,7 @@ void* get_component(
         world, table->storage_table, id);
     if (!tr) {
         ecs_check(ecs_search(world, table, id, 0) == -1, 
-            ECS_NOT_A_COMPONENT, ecs_id_str(world, id));
+            ECS_NOT_A_COMPONENT, NULL);
        return NULL;
     }
 
