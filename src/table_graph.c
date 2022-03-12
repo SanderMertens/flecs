@@ -328,7 +328,7 @@ void flecs_table_records_register(
      * out how many table records are needed for this table. */
     int32_t id_count = 0, pair_count = 0, type_flag_count = 0;
     int32_t first_id = -1, first_pair = -1;
-    ecs_map_t relations, objects;
+    ecs_map_t relations = ECS_MAP_INIT(0), objects = ECS_MAP_INIT(0);
     ecs_map_init(&relations, id_first_count_t, count);
     ecs_map_init(&objects, id_first_count_t, count);
     bool has_childof = false;
@@ -1451,18 +1451,14 @@ void flecs_table_clear_edges(
     uint64_t key;
 
     /* Cleanup outgoing edges */
-    if (ecs_map_is_initialized(add_hi)) {
-        it = ecs_map_iter(add_hi);
-        while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-            disconnect_edge(world, key, edge);
-        }
+    it = ecs_map_iter(add_hi);
+    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+        disconnect_edge(world, key, edge);
     }
 
-    if (ecs_map_is_initialized(remove_hi)) {
-        it = ecs_map_iter(remove_hi);
-        while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
-            disconnect_edge(world, key, edge);
-        }
+    it = ecs_map_iter(remove_hi);
+    while ((edge = ecs_map_next_ptr(&it, ecs_graph_edge_t*, &key))) {
+        disconnect_edge(world, key, edge);
     }
 
     /* Cleanup incoming add edges */

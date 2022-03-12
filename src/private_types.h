@@ -25,14 +25,14 @@
 #define ECS_OBJECT_MAGIC (0x6563736f)
 
 /* Magic number to identify the type of the object */
-#define ECS_ecs_world_t_MAGIC     (0x65637377)
-#define ECS_ecs_stage_t_MAGIC     (0x65637373)
-#define ECS_ecs_query_t_MAGIC     (0x65637371)
-#define ECS_ecs_rule_t_MAGIC      (0x65637375)
-#define ECS_ecs_table_t_MAGIC     (0x65637374)
-#define ECS_ecs_filter_t_MAGIC    (0x65637366)
-#define ECS_ecs_trigger_t_MAGIC   (0x65637372)
-#define ECS_ecs_observer_t_MAGIC  (0x65637362)
+#define ecs_world_t_magic     (0x65637377)
+#define ecs_stage_t_magic     (0x65637373)
+#define ecs_query_t_magic     (0x65637371)
+#define ecs_rule_t_magic      (0x65637375)
+#define ecs_table_t_magic     (0x65637374)
+#define ecs_filter_t_magic    (0x65637366)
+#define ecs_trigger_t_magic   (0x65637372)
+#define ecs_observer_t_magic  (0x65637362)
 
 /* Mixin kinds */
 typedef enum ecs_mixin_kind_t {
@@ -561,7 +561,7 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_map_t *id_index;         /* map<id, ecs_id_record_t*> */
+    ecs_map_t id_index;          /* map<id, ecs_id_record_t*> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
     /* Cached handle to (IsA, *) */

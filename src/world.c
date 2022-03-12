@@ -608,7 +608,7 @@ ecs_world_t *ecs_mini(void) {
 
     world->self = world;
     world->type_info = flecs_sparse_new(ecs_type_info_t);
-    world->id_index = ecs_map_new(ecs_id_record_t*, ECS_HI_COMPONENT_ID);
+    ecs_map_init(&world->id_index, ecs_id_record_t*, ECS_HI_COMPONENT_ID);
     flecs_observable_init(&world->observable);
     world->iterable.init = world_iter_init;
 
@@ -1139,6 +1139,7 @@ bool free_id_record(
 
     /* If id record contains no more empty tables, free it */
     if (ecs_table_cache_empty_count(&idr->cache) == 0) {
+        ecs_table_cache_fini(&idr->cache);
         ecs_os_free(idr);
         return true;
     }
@@ -1169,14 +1170,14 @@ static
 void fini_id_index(
     ecs_world_t *world)
 {
-    ecs_map_iter_t it = ecs_map_iter(world->id_index);
+    ecs_map_iter_t it = ecs_map_iter(&world->id_index);
     ecs_id_record_t *idr;
     ecs_map_key_t key;
     while ((idr = ecs_map_next_ptr(&it, ecs_id_record_t*, &key))) {
         free_id_record(world, key, idr);
     }
 
-    ecs_map_free(world->id_index);
+    ecs_map_fini(&world->id_index);
     flecs_sparse_free(world->pending_tables);
     flecs_sparse_free(world->pending_buffer);
 }
@@ -1772,11 +1773,13 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t **idr_ptr = ecs_map_ensure(world->id_index, 
+    ecs_id_record_t **idr_ptr = ecs_map_ensure(&world->id_index, 
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
     if (!idr) {
         idr_ptr[0] = idr = ecs_os_calloc_t(ecs_id_record_t);
+        
+        ecs_table_cache_init(&idr->cache);
 
         /* If id is a pair, inherit flags from relation id record */
         if (ECS_HAS_ROLE(id, PAIR)) {
@@ -1795,7 +1798,7 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    return ecs_map_get_ptr(world->id_index, ecs_id_record_t*,
+    return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
         ecs_strip_generation(id));
 }
 
@@ -1820,7 +1823,7 @@ void flecs_remove_id_record(
     /* Free id record resources */
     if (free_id_record(world, id, idr)) {
         /* Remove record from world index */
-        ecs_map_remove(world->id_index, ecs_strip_generation(id));
+        ecs_map_remove(&world->id_index, ecs_strip_generation(id));
     }
 }
 

@@ -1,15 +1,6 @@
 #include "private_api.h"
 
 static
-void ensure_index(
-    ecs_table_cache_t *cache)
-{
-    if (!ecs_map_is_initialized(&cache->index)) {
-        ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 0);
-    }
-}
-
-static
 void table_cache_list_remove(
     ecs_table_cache_t *cache,
     ecs_table_cache_hdr_t *elem)
@@ -68,6 +59,13 @@ void table_cache_list_insert(
     }
 }
 
+void ecs_table_cache_init(
+    ecs_table_cache_t *cache)
+{
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 0);
+}
+
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache)
 {
@@ -78,9 +76,7 @@ void ecs_table_cache_fini(
 bool ecs_table_cache_is_empty(
     const ecs_table_cache_t *cache)
 {
-    ecs_assert(!ecs_map_is_initialized(&cache->index) || 
-        ecs_map_count(&cache->index), ECS_INTERNAL_ERROR, NULL);
-    return !ecs_map_is_initialized(&cache->index);
+    return ecs_map_count(&cache->index) == 0;
 }
 
 void ecs_table_cache_insert(
@@ -107,7 +103,6 @@ void ecs_table_cache_insert(
     table_cache_list_insert(cache, result);
 
     if (table) {
-        ensure_index(cache);
         ecs_map_set_ptr(&cache->index, table->id, result);
     }
 
@@ -152,9 +147,7 @@ void* ecs_table_cache_remove(
 
     table_cache_list_remove(cache, elem);
 
-    if (ecs_map_remove(&cache->index, table->id) == 0) {
-        ecs_map_fini(&cache->index);
-    }
+    ecs_map_remove(&cache->index, table->id);
 
     return elem;
 }
