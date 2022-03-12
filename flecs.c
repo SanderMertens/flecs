@@ -10101,7 +10101,6 @@ void _flecs_sparse_fini(
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_sparse_clear(sparse);
     ecs_vector_free(sparse->dense);
-    ecs_os_free(sparse);
 }
 
 void flecs_sparse_free(
@@ -10109,6 +10108,7 @@ void flecs_sparse_free(
 {
     if (sparse) {
         _flecs_sparse_fini(sparse);
+        ecs_os_free(sparse);
     }
 }
 
@@ -34019,7 +34019,7 @@ void clean_tables(
 static
 void fini_store(ecs_world_t *world) {
     clean_tables(world);
-    flecs_sparse_free(&world->store.tables);
+    flecs_sparse_fini(&world->store.tables);
     flecs_table_release(world, &world->store.root);
     flecs_sparse_clear(&world->store.entity_index);
     flecs_hashmap_fini(&world->store.table_map);
@@ -34881,7 +34881,7 @@ int ecs_fini(
     /* Entity index is kept alive until this point so that user code can do
      * validity checks on entity ids, even though after store cleanup the index
      * will be empty, so all entity ids are invalid. */
-    flecs_sparse_free(&world->store.entity_index);
+    flecs_sparse_fini(&world->store.entity_index);
     
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
