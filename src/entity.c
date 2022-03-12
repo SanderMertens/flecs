@@ -999,7 +999,7 @@ const ecs_entity_t* new_w_data(
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = ecs_eis_count(world);
-        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+        entities = flecs_sparse_new_ids(ecs_eis(world), count);
     }
 
     if (!table) {
@@ -1087,7 +1087,7 @@ const ecs_entity_t* new_w_data(
     }
 
     if (sparse_count) {
-        entities = flecs_sparse_ids(world->store.entity_index);
+        entities = flecs_sparse_ids(ecs_eis(world));
         return &entities[sparse_count];
     } else {
         return entities;
@@ -2071,7 +2071,7 @@ const ecs_entity_t* ecs_bulk_init(
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = ecs_eis_count(world);
-        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+        entities = flecs_sparse_new_ids(ecs_eis(world), count);
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         int i;
@@ -2107,7 +2107,7 @@ const ecs_entity_t* ecs_bulk_init(
         return entities;
     } else {
         /* Refetch entity ids, in case the underlying array was reallocated */
-        entities = flecs_sparse_ids(world->store.entity_index);
+        entities = flecs_sparse_ids(ecs_eis(world));
         return &entities[sparse_count];
     }
 error:
@@ -2687,7 +2687,7 @@ void ecs_delete(
     }
 
     ecs_record_t *r = flecs_sparse_get(
-        world->store.entity_index, ecs_record_t, entity);
+        ecs_eis(world), ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
         set_info_from_record(&info, r);
@@ -2727,7 +2727,7 @@ void ecs_delete(
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
-        if (table_id && flecs_sparse_is_alive(world->store.tables, table_id)) {
+        if (table_id && flecs_sparse_is_alive(&world->store.tables, table_id)) {
             ecs_table_diff_t diff = {
                 .removed = flecs_type_to_ids(table->type),
                 .un_set = flecs_type_to_ids(table->storage_type)
@@ -2741,7 +2741,7 @@ void ecs_delete(
         r->table = NULL;
 
         /* Remove (and invalidate) entity after executing handlers */
-        flecs_sparse_remove(world->store.entity_index, entity);
+        flecs_sparse_remove(ecs_eis(world), entity);
     }
 
     flecs_defer_flush(world, stage);

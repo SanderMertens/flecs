@@ -33,23 +33,24 @@
 extern "C" {
 #endif
 
-#define ecs_eis_get(world, entity) flecs_sparse_get((world->store).entity_index, ecs_record_t, entity)
-#define ecs_eis_get_any(world, entity) flecs_sparse_get_any((world->store).entity_index, ecs_record_t, entity)
-#define ecs_eis_set(world, entity, ...) (flecs_sparse_set((world->store).entity_index, ecs_record_t, entity, (__VA_ARGS__)))
-#define ecs_eis_ensure(world, entity) flecs_sparse_ensure((world->store).entity_index, ecs_record_t, entity)
-#define ecs_eis_delete(world, entity) flecs_sparse_remove((world->store).entity_index, entity)
-#define ecs_eis_set_generation(world, entity) flecs_sparse_set_generation((world->store).entity_index, entity)
-#define ecs_eis_is_alive(world, entity) flecs_sparse_is_alive((world->store).entity_index, entity)
-#define ecs_eis_get_current(world, entity) flecs_sparse_get_alive((world->store).entity_index, entity)
-#define ecs_eis_exists(world, entity) flecs_sparse_exists((world->store).entity_index, entity)
-#define ecs_eis_recycle(world) flecs_sparse_new_id((world->store).entity_index)
-#define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set((world->store).entity_index, entity, &(ecs_record_t){NULL, is_watched})
-#define ecs_eis_set_size(world, size) flecs_sparse_set_size((world->store).entity_index, size)
-#define ecs_eis_count(world) flecs_sparse_count((world->store).entity_index)
-#define ecs_eis_clear(world) flecs_sparse_clear((world->store).entity_index)
-#define ecs_eis_copy(world) flecs_sparse_copy((world->store).entity_index)
-#define ecs_eis_free(world) flecs_sparse_free((world->store).entity_index)
-#define ecs_eis_memory(world, allocd, used) flecs_sparse_memory((world->store).entity_index, allocd, used)
+#define ecs_eis(world) (&((world)->store.entity_index))
+#define ecs_eis_get(world, entity) flecs_sparse_get(ecs_eis(world), ecs_record_t, entity)
+#define ecs_eis_get_any(world, entity) flecs_sparse_get_any(ecs_eis(world), ecs_record_t, entity)
+#define ecs_eis_set(world, entity, ...) (flecs_sparse_set(ecs_eis(world), ecs_record_t, entity, (__VA_ARGS__)))
+#define ecs_eis_ensure(world, entity) flecs_sparse_ensure(ecs_eis(world), ecs_record_t, entity)
+#define ecs_eis_delete(world, entity) flecs_sparse_remove(ecs_eis(world), entity)
+#define ecs_eis_set_generation(world, entity) flecs_sparse_set_generation(ecs_eis(world), entity)
+#define ecs_eis_is_alive(world, entity) flecs_sparse_is_alive(ecs_eis(world), entity)
+#define ecs_eis_get_current(world, entity) flecs_sparse_get_alive(ecs_eis(world), entity)
+#define ecs_eis_exists(world, entity) flecs_sparse_exists(ecs_eis(world), entity)
+#define ecs_eis_recycle(world) flecs_sparse_new_id(ecs_eis(world))
+#define ecs_eis_clear_entity(world, entity, is_watched) ecs_eis_set(ecs_eis(world), entity, &(ecs_record_t){NULL, is_watched})
+#define ecs_eis_set_size(world, size) flecs_sparse_set_size(ecs_eis(world), size)
+#define ecs_eis_count(world) flecs_sparse_count(ecs_eis(world))
+#define ecs_eis_clear(world) flecs_sparse_clear(ecs_eis(world))
+#define ecs_eis_copy(world) flecs_sparse_copy(ecs_eis(world))
+#define ecs_eis_free(world) flecs_sparse_free(ecs_eis(world))
+#define ecs_eis_memory(world, allocd, used) flecs_sparse_memory(ecs_eis(world), allocd, used)
 
 #ifdef __cplusplus
 }
@@ -779,10 +780,10 @@ struct ecs_id_record_t {
 
 typedef struct ecs_store_t {
     /* Entity lookup */
-    ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
+    ecs_sparse_t entity_index; /* sparse<entity, ecs_record_t> */
 
     /* Table lookup by id */
-    ecs_sparse_t *tables;       /* sparse<table_id, ecs_table_t> */
+    ecs_sparse_t tables;       /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
     ecs_hashmap_t table_map;    /* hashmap<ecs_ids_t, ecs_table_t*> */
@@ -2664,7 +2665,7 @@ void flecs_table_free(
     bool is_root = table == &world->store.root;
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(is_root || flecs_sparse_is_alive(world->store.tables, table->id),
+    ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
     (void)world;
 
@@ -2716,7 +2717,7 @@ void flecs_table_free(
     if (!world->is_fini) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(table);
-        flecs_sparse_remove(world->store.tables, table->id);
+        flecs_sparse_remove(&world->store.tables, table->id);
     }
 }
 
@@ -5368,7 +5369,7 @@ const ecs_entity_t* new_w_data(
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = ecs_eis_count(world);
-        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+        entities = flecs_sparse_new_ids(ecs_eis(world), count);
     }
 
     if (!table) {
@@ -5456,7 +5457,7 @@ const ecs_entity_t* new_w_data(
     }
 
     if (sparse_count) {
-        entities = flecs_sparse_ids(world->store.entity_index);
+        entities = flecs_sparse_ids(ecs_eis(world));
         return &entities[sparse_count];
     } else {
         return entities;
@@ -6440,7 +6441,7 @@ const ecs_entity_t* ecs_bulk_init(
     int32_t sparse_count = 0;
     if (!entities) {
         sparse_count = ecs_eis_count(world);
-        entities = flecs_sparse_new_ids(world->store.entity_index, count);
+        entities = flecs_sparse_new_ids(ecs_eis(world), count);
         ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         int i;
@@ -6476,7 +6477,7 @@ const ecs_entity_t* ecs_bulk_init(
         return entities;
     } else {
         /* Refetch entity ids, in case the underlying array was reallocated */
-        entities = flecs_sparse_ids(world->store.entity_index);
+        entities = flecs_sparse_ids(ecs_eis(world));
         return &entities[sparse_count];
     }
 error:
@@ -7056,7 +7057,7 @@ void ecs_delete(
     }
 
     ecs_record_t *r = flecs_sparse_get(
-        world->store.entity_index, ecs_record_t, entity);
+        ecs_eis(world), ecs_record_t, entity);
     if (r) {
         ecs_entity_info_t info = {0};
         set_info_from_record(&info, r);
@@ -7096,7 +7097,7 @@ void ecs_delete(
 
         /* If entity has components, remove them. Check if table is still alive,
          * as delete actions could have deleted the table already. */
-        if (table_id && flecs_sparse_is_alive(world->store.tables, table_id)) {
+        if (table_id && flecs_sparse_is_alive(&world->store.tables, table_id)) {
             ecs_table_diff_t diff = {
                 .removed = flecs_type_to_ids(table->type),
                 .un_set = flecs_type_to_ids(table->storage_type)
@@ -7110,7 +7111,7 @@ void ecs_delete(
         r->table = NULL;
 
         /* Remove (and invalidate) entity after executing handlers */
-        flecs_sparse_remove(world->store.entity_index, entity);
+        flecs_sparse_remove(ecs_eis(world), entity);
     }
 
     flecs_defer_flush(world, stage);
@@ -9759,19 +9760,6 @@ typedef struct chunk_t {
                                  * indirection and provide stable pointers. */
 } chunk_t;
 
-struct ecs_sparse_t {
-    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
-                                 * dense array stores both alive and not alive
-                                 * sparse indices. The 'count' member keeps
-                                 * track of which indices are alive. */
-
-    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
-    ecs_size_t size;            /* Element size */
-    int32_t count;              /* Number of alive entries */
-    uint64_t max_id_local;      /* Local max index (if no global is set) */
-    uint64_t *max_id;           /* Maximum issued sparse index */
-};
-
 static
 chunk_t* chunk_new(
     ecs_sparse_t *sparse,
@@ -10055,10 +10043,10 @@ void swap_dense(
     assign_index(chunk_b, dense_array, index_b, a);
 }
 
-ecs_sparse_t* _flecs_sparse_new(
+void _flecs_sparse_init(
+    ecs_sparse_t *result,
     ecs_size_t size)
 {
-    ecs_sparse_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_sparse_t));
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
     result->size = size;
     result->max_id_local = UINT64_MAX;
@@ -10070,6 +10058,14 @@ ecs_sparse_t* _flecs_sparse_new(
     *first = 0;
 
     result->count = 1;
+}
+
+ecs_sparse_t* _flecs_sparse_new(
+    ecs_size_t size)
+{
+    ecs_sparse_t *result = ecs_os_calloc_t(ecs_sparse_t);
+
+    _flecs_sparse_init(result, size);
 
     return result;
 }
@@ -10099,13 +10095,20 @@ void flecs_sparse_clear(
     sparse->max_id_local = 0;
 }
 
+void _flecs_sparse_fini(
+    ecs_sparse_t *sparse)
+{
+    ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_sparse_clear(sparse);
+    ecs_vector_free(sparse->dense);
+    ecs_os_free(sparse);
+}
+
 void flecs_sparse_free(
     ecs_sparse_t *sparse)
 {
     if (sparse) {
-        flecs_sparse_clear(sparse);
-        ecs_vector_free(sparse->dense);
-        ecs_os_free(sparse);
+        _flecs_sparse_fini(sparse);
     }
 }
 
@@ -10392,7 +10395,7 @@ void* _flecs_sparse_get(
 }
 
 void* _flecs_sparse_get_any(
-    ecs_sparse_t *sparse,
+    const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
 {
@@ -13296,7 +13299,6 @@ const char* ecs_strerror(
 
 /* Empty bodies for when logging is disabled */
 
-FLECS_API
 void _ecs_log(
     int32_t level,
     const char *file,
@@ -13310,7 +13312,6 @@ void _ecs_log(
     (void)fmt;
 }
 
-FLECS_API
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
@@ -13324,7 +13325,6 @@ void _ecs_parser_error(
     (void)fmt;
 }
 
-FLECS_API
 void _ecs_parser_errorv(
     const char *name,
     const char *expr, 
@@ -13339,7 +13339,6 @@ void _ecs_parser_errorv(
     (void)args;
 }
 
-FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *file,
@@ -13353,7 +13352,6 @@ void _ecs_abort(
     (void)fmt;
 }
 
-FLECS_API
 bool _ecs_assert(
     bool condition,
     int32_t error_code,
@@ -24473,7 +24471,6 @@ int ecs_meta_set_null(
     return 0;
 }
 
-FLECS_API
 bool ecs_meta_get_bool(
     const ecs_meta_cursor_t *cursor)
 {
@@ -24507,7 +24504,6 @@ error:
     return 0;
 }
 
-FLECS_API
 char ecs_meta_get_char(
     const ecs_meta_cursor_t *cursor)
 {
@@ -25610,7 +25606,7 @@ void ecs_get_world_stats(
         record_gauge(&s->fps, t, 0);
     }
 
-    record_gauge(&s->entity_count, t, flecs_sparse_count(world->store.entity_index));
+    record_gauge(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
     record_gauge(&s->component_count, t, ecs_count_id(world, ecs_id(EcsComponent)));
     record_gauge(&s->query_count, t, flecs_sparse_count(world->queries));
     record_gauge(&s->system_count, t, ecs_count_id(world, ecs_id(EcsSystem)));
@@ -25629,9 +25625,10 @@ void ecs_get_world_stats(
     int32_t singleton_table_count = 0;
     int32_t matched_table_count = 0, matched_entity_count = 0;
 
-    int32_t i, count = flecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(&world->store.tables, 
+            ecs_table_t, i);
         int32_t entity_count = ecs_table_count(table);
 
         if (!entity_count) {
@@ -27011,7 +27008,7 @@ ecs_snapshot_t* snapshot_create(
      * will run a diff between the tables in the world and the snapshot, to see
      * which of the world tables still exist, no longer exist, or need to be
      * deleted. */
-    uint64_t t, table_count = flecs_sparse_last_id(world->store.tables) + 1;
+    uint64_t t, table_count = flecs_sparse_last_id(&world->store.tables) + 1;
     result->tables = ecs_vector_new(ecs_table_leaf_t, (int32_t)table_count);
     ecs_vector_set_count(&result->tables, ecs_table_leaf_t, (int32_t)table_count);
     ecs_table_leaf_t *arr = ecs_vector_first(result->tables, ecs_table_leaf_t);
@@ -27028,7 +27025,7 @@ ecs_snapshot_t* snapshot_create(
     } else {
         for (t = 0; t < table_count; t ++) {
             ecs_table_t *table = flecs_sparse_get(
-                world->store.tables, ecs_table_t, t);
+                &world->store.tables, ecs_table_t, t);
             snapshot_table(world, result, table);
         }
     }
@@ -27043,10 +27040,7 @@ ecs_snapshot_t* ecs_snapshot_take(
     const ecs_world_t *world = ecs_get_world(stage);
 
     ecs_snapshot_t *result = snapshot_create(
-        world,
-        world->store.entity_index,
-        NULL,
-        NULL);
+        world, ecs_eis(world), NULL, NULL);
 
     result->last_id = world->stats.last_id;
 
@@ -27061,10 +27055,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_snapshot_t *result = snapshot_create(
-        world,
-        world->store.entity_index,
-        iter,
-        iter ? iter->next : NULL);
+        world, ecs_eis(world), iter, iter ? iter->next : NULL);
 
     result->last_id = world->stats.last_id;
 
@@ -27078,19 +27069,19 @@ void restore_unfiltered(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    flecs_sparse_restore(world->store.entity_index, snapshot->entity_index);
+    flecs_sparse_restore(ecs_eis(world), snapshot->entity_index);
     flecs_sparse_free(snapshot->entity_index);
     
     world->stats.last_id = snapshot->last_id;
 
     ecs_table_leaf_t *leafs = ecs_vector_first(
         snapshot->tables, ecs_table_leaf_t);
-    int32_t i, count = (int32_t)flecs_sparse_last_id(world->store.tables);
+    int32_t i, count = (int32_t)flecs_sparse_last_id(&world->store.tables);
     int32_t snapshot_count = ecs_vector_count(snapshot->tables);
 
     for (i = 0; i <= count; i ++) {
         ecs_table_t *world_table = flecs_sparse_get(
-            world->store.tables, ecs_table_t, (uint32_t)i);
+            &world->store.tables, ecs_table_t, (uint32_t)i);
 
         if (world_table && (world_table->flags & EcsTableHasBuiltins)) {
             continue;
@@ -27156,10 +27147,10 @@ void restore_unfiltered(
 
     /* Now that all tables have been restored and world is in a consistent
      * state, run OnSet systems */
-    int32_t world_count = flecs_sparse_count(world->store.tables);
+    int32_t world_count = flecs_sparse_count(&world->store.tables);
     for (i = 0; i < world_count; i ++) {
         ecs_table_t *table = flecs_sparse_get_dense(
-            world->store.tables, ecs_table_t, i);
+            &world->store.tables, ecs_table_t, i);
         if (table->flags & EcsTableHasBuiltins) {
             continue;
         }
@@ -33978,11 +33969,12 @@ void init_store(
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
     
     /* Initialize entity index */
-    world->store.entity_index = flecs_sparse_new(ecs_record_t);
-    flecs_sparse_set_id_source(world->store.entity_index, &world->stats.last_id);
+    flecs_sparse_init(&world->store.entity_index, ecs_record_t);
+    flecs_sparse_set_id_source(&world->store.entity_index, 
+        &world->stats.last_id);
 
     /* Initialize root table */
-    world->store.tables = flecs_sparse_new(ecs_table_t);
+    flecs_sparse_init(&world->store.tables, ecs_table_t);
 
     /* Initialize table map */
     flecs_table_hashmap_init(&world->store.table_map);
@@ -33995,17 +33987,17 @@ static
 void clean_tables(
     ecs_world_t *world)
 {
-    int32_t i, count = flecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
 
     /* Ensure that first table in sparse set has id 0. This is a dummy table
      * that only exists so that there is no table with id 0 */
-    ecs_table_t *first = flecs_sparse_get_dense(world->store.tables, 
+    ecs_table_t *first = flecs_sparse_get_dense(&world->store.tables, 
         ecs_table_t, 0);
     ecs_assert(first->id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)first;
 
     for (i = 1; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+        ecs_table_t *t = flecs_sparse_get_dense(&world->store.tables, 
             ecs_table_t, i);
         flecs_table_release(world, t);
     }
@@ -34013,7 +34005,7 @@ void clean_tables(
     /* Free table types separately so that if application destructors rely on
      * a type it's still valid. */
     for (i = 1; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense(world->store.tables, 
+        ecs_table_t *t = flecs_sparse_get_dense(&world->store.tables, 
             ecs_table_t, i);
         flecs_table_free_type(t);
     }
@@ -34027,9 +34019,9 @@ void clean_tables(
 static
 void fini_store(ecs_world_t *world) {
     clean_tables(world);
-    flecs_sparse_free(world->store.tables);
+    flecs_sparse_free(&world->store.tables);
     flecs_table_release(world, &world->store.root);
-    flecs_sparse_clear(world->store.entity_index);
+    flecs_sparse_clear(&world->store.entity_index);
     flecs_hashmap_fini(&world->store.table_map);
 
     ecs_graph_edge_hdr_t *cur, *next = world->store.first_free;
@@ -34049,7 +34041,7 @@ bool world_iter_next(
     }
 
     ecs_world_t *world = it->real_world;
-    ecs_sparse_t *entity_index = world->store.entity_index;
+    ecs_sparse_t *entity_index = &world->store.entity_index;
     it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
     it->count = flecs_sparse_count(entity_index);
     return it->is_valid = true;
@@ -34346,7 +34338,7 @@ void flecs_notify_tables(
 
     /* If no id is specified, broadcast to all tables */
     if (!id) {
-        ecs_sparse_t *tables = world->store.tables;
+        ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense(tables, ecs_table_t, i);
@@ -34642,7 +34634,7 @@ static
 void fini_unset_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_t *tables = world->store.tables;
+    ecs_sparse_t *tables = &world->store.tables;
     int32_t i, count = flecs_sparse_count(tables);
 
     for (i = 0; i < count; i ++) {
@@ -34889,7 +34881,7 @@ int ecs_fini(
     /* Entity index is kept alive until this point so that user code can do
      * validity checks on entity ids, even though after store cleanup the index
      * will be empty, so all entity ids are invalid. */
-    flecs_sparse_free(world->store.entity_index);
+    flecs_sparse_free(&world->store.entity_index);
     
     if (world->locking_enabled) {
         ecs_os_mutex_free(world->mutex);
@@ -35045,7 +35037,8 @@ void ecs_set_entity_generation(
     ecs_world_t *world,
     ecs_entity_t entity_with_generation)
 {
-    flecs_sparse_set_generation(world->store.entity_index, entity_with_generation);
+    flecs_sparse_set_generation(
+        &world->store.entity_index, entity_with_generation);
 }
 
 int32_t ecs_get_threads(
@@ -40560,11 +40553,11 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = flecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = flecs_sparse_get_dense(
-            world->store.tables, ecs_table_t, i);
+            &world->store.tables, ecs_table_t, i);
 
         if (flecs_query_match(world, table, query)) {
             add_table(world, query, table);
@@ -41458,7 +41451,7 @@ void rematch_tables(
             }
         }       
     } else {
-        ecs_sparse_t *tables = world->store.tables;
+        ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {
@@ -43068,12 +43061,12 @@ ecs_table_t *create_table(
     ecs_vector_t *type,
     flecs_hashmap_result_t table_elem)
 {
-    ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
+    ecs_table_t *result = flecs_sparse_add(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vector_reclaim(&type, ecs_id_t);
 
-    result->id = flecs_sparse_last_id(world->store.tables);
+    result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = type;
 
     init_table(world, result);
@@ -43878,7 +43871,7 @@ void flecs_init_root_table(
     init_table(world, &world->store.root);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
-    uint64_t new_id = flecs_sparse_new_id(world->store.tables);
+    uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
     ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)new_id;
 }

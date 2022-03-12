@@ -819,7 +819,6 @@ int ecs_meta_set_null(
     return 0;
 }
 
-FLECS_API
 bool ecs_meta_get_bool(
     const ecs_meta_cursor_t *cursor)
 {
@@ -853,7 +852,6 @@ error:
     return 0;
 }
 
-FLECS_API
 char ecs_meta_get_char(
     const ecs_meta_cursor_t *cursor)
 {

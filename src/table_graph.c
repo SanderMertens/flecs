@@ -605,12 +605,12 @@ ecs_table_t *create_table(
     ecs_vector_t *type,
     flecs_hashmap_result_t table_elem)
 {
-    ecs_table_t *result = flecs_sparse_add(world->store.tables, ecs_table_t);
+    ecs_table_t *result = flecs_sparse_add(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vector_reclaim(&type, ecs_id_t);
 
-    result->id = flecs_sparse_last_id(world->store.tables);
+    result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = type;
 
     init_table(world, result);
@@ -1415,7 +1415,7 @@ void flecs_init_root_table(
     init_table(world, &world->store.root);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
-    uint64_t new_id = flecs_sparse_new_id(world->store.tables);
+    uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
     ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)new_id;
 }

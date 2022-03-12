@@ -518,10 +518,10 @@ struct ecs_id_record_t {
 
 typedef struct ecs_store_t {
     /* Entity lookup */
-    ecs_sparse_t *entity_index; /* sparse<entity, ecs_record_t> */
+    ecs_sparse_t entity_index; /* sparse<entity, ecs_record_t> */
 
     /* Table lookup by id */
-    ecs_sparse_t *tables;       /* sparse<table_id, ecs_table_t> */
+    ecs_sparse_t tables;       /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
     ecs_hashmap_t table_map;    /* hashmap<ecs_ids_t, ecs_table_t*> */

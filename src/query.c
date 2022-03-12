@@ -1358,11 +1358,11 @@ void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = flecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
 
     for (i = 0; i < count; i ++) {
         ecs_table_t *table = flecs_sparse_get_dense(
-            world->store.tables, ecs_table_t, i);
+            &world->store.tables, ecs_table_t, i);
 
         if (flecs_query_match(world, table, query)) {
             add_table(world, query, table);
@@ -2256,7 +2256,7 @@ void rematch_tables(
             }
         }       
     } else {
-        ecs_sparse_t *tables = world->store.tables;
+        ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
 
         for (i = 0; i < count; i ++) {

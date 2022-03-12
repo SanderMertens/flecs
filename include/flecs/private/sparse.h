@@ -42,20 +42,42 @@
 extern "C" {
 #endif
 
+struct ecs_sparse_t {
+    ecs_vector_t *dense;        /* Dense array with indices to sparse array. The
+                                 * dense array stores both alive and not alive
+                                 * sparse indices. The 'count' member keeps
+                                 * track of which indices are alive. */
+
+    ecs_vector_t *chunks;       /* Chunks with sparse arrays & data */
+    ecs_size_t size;            /* Element size */
+    int32_t count;              /* Number of alive entries */
+    uint64_t max_id_local;      /* Local max index (if no global is set) */
+    uint64_t *max_id;           /* Maximum issued sparse index */
+};
+
+/** Initialize sparse set */
+FLECS_DBG_API
+void _flecs_sparse_init(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size);
+
+#define flecs_sparse_init(sparse, T)\
+    _flecs_sparse_init(sparse, ECS_SIZEOF(T))
+
 /** Create new sparse set */
 FLECS_DBG_API
 ecs_sparse_t* _flecs_sparse_new(
     ecs_size_t elem_size);
 
-#define flecs_sparse_new(type)\
-    _flecs_sparse_new(sizeof(type))
+#define flecs_sparse_new(T)\
+    _flecs_sparse_new(ECS_SIZEOF(T))
 
-/** Set id source. This allows the sparse set to use an external variable for
- * issuing and increasing new ids. */
 FLECS_DBG_API
-void flecs_sparse_set_id_source(
-    ecs_sparse_t *sparse,
-    uint64_t *id_source);
+void _flecs_sparse_fini(
+    ecs_sparse_t *sparse);
+
+#define flecs_sparse_fini(sparse)\
+    _flecs_sparse_fini(sparse)
 
 /** Free sparse set */
 FLECS_DBG_API
@@ -67,14 +89,21 @@ FLECS_DBG_API
 void flecs_sparse_clear(
     ecs_sparse_t *sparse);
 
+/** Set id source. This allows the sparse set to use an external variable for
+ * issuing and increasing new ids. */
+FLECS_DBG_API
+void flecs_sparse_set_id_source(
+    ecs_sparse_t *sparse,
+    uint64_t *id_source);
+
 /** Add element to sparse set, this generates or recycles an id */
 FLECS_DBG_API
 void* _flecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
 
-#define flecs_sparse_add(sparse, type)\
-    ((type*)_flecs_sparse_add(sparse, sizeof(type)))
+#define flecs_sparse_add(sparse, T)\
+    ((T*)_flecs_sparse_add(sparse, ECS_SIZEOF(T)))
 
 /** Get last issued id. */
 FLECS_DBG_API
@@ -107,8 +136,8 @@ void* _flecs_sparse_remove_get(
     ecs_size_t elem_size,
     uint64_t id);    
 
-#define flecs_sparse_remove_get(sparse, type, index)\
-    ((type*)_flecs_sparse_remove_get(sparse, sizeof(type), index))
+#define flecs_sparse_remove_get(sparse, T, index)\
+    ((T*)_flecs_sparse_remove_get(sparse, ECS_SIZEOF(T), index))
 
 /** Check whether an id has ever been issued. */
 FLECS_DBG_API
@@ -136,8 +165,8 @@ void* _flecs_sparse_get_dense(
     ecs_size_t elem_size,
     int32_t index);
 
-#define flecs_sparse_get_dense(sparse, type, index)\
-    ((type*)_flecs_sparse_get_dense(sparse, sizeof(type), index))
+#define flecs_sparse_get_dense(sparse, T, index)\
+    ((T*)_flecs_sparse_get_dense(sparse, ECS_SIZEOF(T), index))
 
 /** Get the number of alive elements in the sparse set. */
 FLECS_DBG_API
@@ -157,18 +186,18 @@ void* _flecs_sparse_get(
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_get(sparse, type, index)\
-    ((type*)_flecs_sparse_get(sparse, sizeof(type), index))
+#define flecs_sparse_get(sparse, T, index)\
+    ((T*)_flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
 /** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
 void* _flecs_sparse_get_any(
-    ecs_sparse_t *sparse,
+    const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_get_any(sparse, type, index)\
-    ((type*)_flecs_sparse_get_any(sparse, sizeof(type), index))
+#define flecs_sparse_get_any(sparse, T, index)\
+    ((T*)_flecs_sparse_get_any(sparse, ECS_SIZEOF(T), index))
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API
@@ -177,8 +206,8 @@ void* _flecs_sparse_ensure(
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_ensure(sparse, type, index)\
-    ((type*)_flecs_sparse_ensure(sparse, sizeof(type), index))
+#define flecs_sparse_ensure(sparse, T, index)\
+    ((T*)_flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
 
 /** Set value. */
 FLECS_DBG_API
@@ -188,8 +217,8 @@ void* _flecs_sparse_set(
     uint64_t id,
     void *value);
 
-#define flecs_sparse_set(sparse, type, index, value)\
-    ((type*)_flecs_sparse_set(sparse, sizeof(type), index, value))
+#define flecs_sparse_set(sparse, T, index, value)\
+    ((T*)_flecs_sparse_set(sparse, ECS_SIZEOF(T), index, value))
 
 /** Get pointer to ids (alive and not alive). Use with count() or size(). */
 FLECS_DBG_API
@@ -247,16 +276,16 @@ FLECS_API
 ecs_sparse_t* _ecs_sparse_new(
     ecs_size_t elem_size);
 
-#define ecs_sparse_new(type)\
-    _ecs_sparse_new(sizeof(type))
+#define ecs_sparse_new(T)\
+    _ecs_sparse_new(ECS_SIZEOF(T))
 
 FLECS_API
 void* _ecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size);
 
-#define ecs_sparse_add(sparse, type)\
-    ((type*)_ecs_sparse_add(sparse, sizeof(type)))
+#define ecs_sparse_add(sparse, T)\
+    ((T*)_ecs_sparse_add(sparse, ECS_SIZEOF(T)))
 
 FLECS_API
 uint64_t ecs_sparse_last_id(
@@ -278,8 +307,8 @@ void* _ecs_sparse_get_dense(
     ecs_size_t elem_size,
     int32_t index);
 
-#define ecs_sparse_get_dense(sparse, type, index)\
-    ((type*)_ecs_sparse_get_dense(sparse, sizeof(type), index))
+#define ecs_sparse_get_dense(sparse, T, index)\
+    ((T*)_ecs_sparse_get_dense(sparse, ECS_SIZEOF(T), index))
 
 FLECS_API
 void* _ecs_sparse_get(
@@ -287,8 +316,8 @@ void* _ecs_sparse_get(
     ecs_size_t elem_size,
     uint64_t id);
 
-#define ecs_sparse_get(sparse, type, index)\
-    ((type*)_ecs_sparse_get(sparse, sizeof(type), index))
+#define ecs_sparse_get(sparse, T, index)\
+    ((T*)_ecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
 #ifdef __cplusplus
 }

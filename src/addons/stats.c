@@ -144,7 +144,7 @@ void ecs_get_world_stats(
         record_gauge(&s->fps, t, 0);
     }
 
-    record_gauge(&s->entity_count, t, flecs_sparse_count(world->store.entity_index));
+    record_gauge(&s->entity_count, t, flecs_sparse_count(ecs_eis(world)));
     record_gauge(&s->component_count, t, ecs_count_id(world, ecs_id(EcsComponent)));
     record_gauge(&s->query_count, t, flecs_sparse_count(world->queries));
     record_gauge(&s->system_count, t, ecs_count_id(world, ecs_id(EcsSystem)));
@@ -163,9 +163,10 @@ void ecs_get_world_stats(
     int32_t singleton_table_count = 0;
     int32_t matched_table_count = 0, matched_entity_count = 0;
 
-    int32_t i, count = flecs_sparse_count(world->store.tables);
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(world->store.tables, ecs_table_t, i);
+        ecs_table_t *table = flecs_sparse_get_dense(&world->store.tables, 
+            ecs_table_t, i);
         int32_t entity_count = ecs_table_count(table);
 
         if (!entity_count) {

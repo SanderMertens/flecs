@@ -637,7 +637,7 @@ void flecs_table_free(
     bool is_root = table == &world->store.root;
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(is_root || flecs_sparse_is_alive(world->store.tables, table->id),
+    ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
     (void)world;
 
@@ -689,7 +689,7 @@ void flecs_table_free(
     if (!world->is_fini) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(table);
-        flecs_sparse_remove(world->store.tables, table->id);
+        flecs_sparse_remove(&world->store.tables, table->id);
     }
 }
 

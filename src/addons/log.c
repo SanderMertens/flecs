@@ -408,7 +408,6 @@ const char* ecs_strerror(
 
 /* Empty bodies for when logging is disabled */
 
-FLECS_API
 void _ecs_log(
     int32_t level,
     const char *file,
@@ -422,7 +421,6 @@ void _ecs_log(
     (void)fmt;
 }
 
-FLECS_API
 void _ecs_parser_error(
     const char *name,
     const char *expr, 
@@ -436,7 +434,6 @@ void _ecs_parser_error(
     (void)fmt;
 }
 
-FLECS_API
 void _ecs_parser_errorv(
     const char *name,
     const char *expr, 
@@ -451,7 +448,6 @@ void _ecs_parser_errorv(
     (void)args;
 }
 
-FLECS_API
 void _ecs_abort(
     int32_t error_code,
     const char *file,
@@ -465,7 +461,6 @@ void _ecs_abort(
     (void)fmt;
 }
 
-FLECS_API
 bool _ecs_assert(
     bool condition,
     int32_t error_code,
