@@ -1075,7 +1075,7 @@ void DeferredActions_defer_add_to_deleted_object_childof() {
 }
 
 void DeferredActions_defer_delete_added_id() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1093,7 +1093,7 @@ void DeferredActions_defer_delete_added_id() {
 
     ecs_defer_end(world);  
 
-    ecs_frame_end(world);    
+    ecs_frame_end(world);
 
     test_assert(!ecs_is_alive(world, id));
     test_assert(ecs_is_alive(world, child));

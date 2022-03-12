@@ -385,9 +385,6 @@ void init_store(
     ecs_world_t *world) 
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
-
-    /* Initialize EcsAny record in id index */
-    flecs_ensure_id_record(world, EcsAny);
     
     /* Initialize entity index */
     world->store.entity_index = flecs_sparse_new(ecs_record_t);
@@ -1112,6 +1109,59 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
+static
+ecs_id_record_t* new_id_record(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
+    ecs_table_cache_init(&idr->cache);
+
+    ecs_entity_t rel = 0, obj = 0;
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        rel = ecs_pair_first(world, id);
+        ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+
+        obj = ECS_PAIR_SECOND(id);
+        if (obj) {
+            obj = ecs_get_alive(world, obj);
+            ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+        }
+        
+        /* If id is a pair, inherit flags from relation id record */
+        ecs_id_record_t *idr_r = flecs_get_id_record(
+            world, ECS_PAIR_FIRST(id));
+        if (idr_r) {
+            idr->flags = idr_r->flags;
+        }
+    } else {
+        rel = id & ECS_COMPONENT_MASK;
+        rel = ecs_get_alive(world, rel);
+        ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    /* Mark entities that are used as component/pair ids. When a tracked
+     * entity is deleted, cleanup policies are applied so that the store
+     * won't contain any tables with deleted ids. */
+
+    flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
+    if (obj) {
+        flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
+        if (ecs_has_id(world, rel, EcsAcyclic)) {
+            flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
+        }
+    }
+
+    if (ecs_should_log_2()) {
+        char *id_str = ecs_id_str(world, id);
+        ecs_dbg_2("#[green]id#[normal] %s #[green]created", id_str);
+        ecs_os_free(id_str);
+    }
+
+    return idr;
+}
+
+
 /* Cleanup id index */
 static
 bool free_id_record(
@@ -1139,6 +1189,12 @@ bool free_id_record(
 
     /* If id record contains no more empty tables, free it */
     if (ecs_table_cache_empty_count(&idr->cache) == 0) {
+        if (ecs_should_log_2()) {
+            char *id_str = ecs_id_str(world, id);
+            ecs_dbg_2("#[green]id#[normal] %s #[red]deleted", id_str);
+            ecs_os_free(id_str);
+        }
+
         ecs_table_cache_fini(&idr->cache);
         ecs_os_free(idr);
         return true;
@@ -1777,18 +1833,7 @@ ecs_id_record_t* flecs_ensure_id_record(
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
     if (!idr) {
-        idr_ptr[0] = idr = ecs_os_calloc_t(ecs_id_record_t);
-        
-        ecs_table_cache_init(&idr->cache);
-
-        /* If id is a pair, inherit flags from relation id record */
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_id_record_t *idr_r = flecs_get_id_record(
-                world, ECS_PAIR_FIRST(id));
-            if (idr_r) {
-                idr->flags = idr_r->flags;
-            }
-        }
+        idr_ptr[0] = idr = new_id_record(world, id);
     }
 
     return idr;

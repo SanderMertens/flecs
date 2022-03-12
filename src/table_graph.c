@@ -329,8 +329,6 @@ void flecs_table_records_register(
     int32_t id_count = 0, pair_count = 0, type_flag_count = 0;
     int32_t first_id = -1, first_pair = -1;
     ecs_map_t relations = ECS_MAP_INIT(0), objects = ECS_MAP_INIT(0);
-    ecs_map_init(&relations, id_first_count_t, count);
-    ecs_map_init(&objects, id_first_count_t, count);
     bool has_childof = false;
 
     int32_t i;
@@ -352,6 +350,11 @@ void flecs_table_records_register(
                 has_childof = true;
             }
 
+            if (!ecs_map_is_initialized(&relations)) {
+                ecs_map_init(&relations, id_first_count_t, count);
+                ecs_map_init(&objects, id_first_count_t, count);
+            }
+
             r = ecs_map_ensure(&relations, id_first_count_t, rel);
             if ((++r->count) == 1) {
                 r->first = i;
@@ -369,20 +372,6 @@ void flecs_table_records_register(
 
             if (0 == id_count ++) {
                 first_id = i;
-            }
-        }
-
-        /* Mark entities that are used as component/pair ids. When a tracked
-         * entity is deleted, cleanup policies are applied so that the store
-         * won't contain any tables with deleted ids. */
-
-        rel = ecs_get_alive(world, rel);
-        flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
-        if (obj) {
-            obj = ecs_get_alive(world, obj);
-            flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
-            if (ecs_has_id(world, rel, EcsAcyclic)) {
-                flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
             }
         }
     }
