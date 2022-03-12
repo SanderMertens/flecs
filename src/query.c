@@ -2441,6 +2441,7 @@ ecs_query_t* ecs_query_init(
     result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
     result->id = flecs_sparse_last_id(world->queries);
+    ecs_table_cache_init(&result->cache);
 
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;

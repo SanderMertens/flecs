@@ -58,6 +58,8 @@ typedef struct ecs_map_iter_t {
     void *payload;
 } ecs_map_iter_t;
 
+#define ECS_MAP_INIT(T) { .elem_size = ECS_SIZEOF(T) }
+
 /** Initialize new map. */
 FLECS_API
 void _ecs_map_init(

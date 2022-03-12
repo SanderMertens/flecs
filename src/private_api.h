@@ -631,7 +631,7 @@ void* _ecs_poly_init(
     ecs_mixins_t *mixins);
 
 #define ecs_poly_init(object, type)\
-    _ecs_poly_init(object, ECS_##type##_MAGIC, sizeof(type), &type##_mixins)
+    _ecs_poly_init(object, type##_magic, sizeof(type), &type##_mixins)
 
 /* Deinitialize object for specified type */
 void _ecs_poly_fini(
@@ -639,7 +639,7 @@ void _ecs_poly_fini(
     int32_t kind);
 
 #define ecs_poly_fini(object, type)\
-    _ecs_poly_fini(object, ECS_##type##_MAGIC)
+    _ecs_poly_fini(object, type##_magic)
 
 /* Utility functions for creating an object on the heap */
 #define ecs_poly_new(type)\
@@ -658,7 +658,7 @@ void _ecs_poly_assert(
     int32_t line);
 
 #define ecs_poly_assert(object, type)\
-    _ecs_poly_assert(object, ECS_##type##_MAGIC, __FILE__, __LINE__)
+    _ecs_poly_assert(object, type##_magic, __FILE__, __LINE__)
 #else
 #define ecs_poly_assert(object, type)
 #endif
@@ -668,7 +668,7 @@ bool _ecs_poly_is(
     int32_t type);
 
 #define ecs_poly_is(object, type)\
-    _ecs_poly_is(object, ECS_##type##_MAGIC)
+    _ecs_poly_is(object, type##_magic)
 
 /* Utility functions for getting a mixin from an object */
 ecs_iterable_t* ecs_get_iterable(

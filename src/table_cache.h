@@ -10,6 +10,9 @@
 extern "C" {
 #endif
 
+void ecs_table_cache_init(
+    ecs_table_cache_t *cache);
+
 void ecs_table_cache_fini(
     ecs_table_cache_t *cache);
 

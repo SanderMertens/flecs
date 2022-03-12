@@ -252,8 +252,6 @@ void _ecs_map_init(
 {
     ecs_assert(elem_size < INT16_MAX, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_os_zeromem(result);
-
     result->count = 0;
     result->elem_size = (int16_t)elem_size;
 
@@ -264,7 +262,7 @@ ecs_map_t* _ecs_map_new(
     ecs_size_t elem_size,
     int32_t element_count)
 {
-    ecs_map_t *result = ecs_os_malloc_t(ecs_map_t);
+    ecs_map_t *result = ecs_os_calloc_t(ecs_map_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
     _ecs_map_init(result, elem_size, element_count);
@@ -459,7 +457,8 @@ void* _ecs_map_next(
         return NULL;
     }
     
-    ecs_assert(!elem_size || elem_size == map->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!elem_size || elem_size == map->elem_size, 
+        ECS_INVALID_PARAMETER, NULL);
  
     ecs_bucket_t *bucket = iter->bucket;
     int32_t element_index = iter->element_index;
