@@ -2797,7 +2797,7 @@ void Trigger_on_add_yield_existing_wildcard_pair() {
     test_int(ctx.count, 3);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnAdd);
-    test_int(ctx.event_id, ecs_pair(Rel, EcsWildcard));
+    test_int(ctx.event_id, ecs_pair(Rel, ObjB)); /* last triggered id */
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
 

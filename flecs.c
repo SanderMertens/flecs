@@ -34705,6 +34705,8 @@ ecs_id_record_t* new_id_record(
         rel = ecs_pair_first(world, id);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
+        /* Relation object can be 0, as tables without a ChildOf relation are
+         * added to the (ChildOf, 0) id record */
         obj = ECS_PAIR_SECOND(id);
         if (obj) {
             obj = ecs_get_alive(world, obj);
@@ -34727,10 +34729,14 @@ ecs_id_record_t* new_id_record(
      * entity is deleted, cleanup policies are applied so that the store
      * won't contain any tables with deleted ids. */
 
+    /* Flag for OnDelete policies */
     flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
     if (obj) {
+        /* Flag for OnDeleteObject policies */
         flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
+            /* Flag used to determine if object should be traversed when
+             * propagating events or with super/subset queries */
             flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
         }
     }
@@ -45479,6 +45485,7 @@ void trigger_yield_existing(
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
+            it.event_id = it.ids[0];
             callback(&it);
         }
     }

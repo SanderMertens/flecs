@@ -685,6 +685,7 @@ void trigger_yield_existing(
         ecs_iter_next_action_t next = it.next;
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
+            it.event_id = it.ids[0];
             callback(&it);
         }
     }
