@@ -288,22 +288,23 @@ An application can use pair wildcard expressions to find all instances of a rela
 
 ```c
 // Bob eats apples and pears
-ecs_entity_t Eats = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
-ecs_entity_t Pears = ecs_new_id(world);
+ecs_entity_t Eats = ecs_new_entity(world, "Eats");
+ecs_entity_t Apples = ecs_new_entity(world, "Apples");
+ecs_entity_t Pears = ecs_new_entity(world, "Pears");
 
 ecs_entity_t Bob = ecs_new_id(world);
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
 
 // Find all (Eats, *) relations in Bob's type
-ecs_table_t bob_table = ecs_get_table(world, Bob);
+ecs_table_t *bob_table = ecs_get_table(world, Bob);
+ecs_type_t bob_type = ecs_get_type(world, Bob);
 ecs_id_t wildcard = ecs_pair(Eats, EcsWildcard);
-ecs_id_t *ids = ecs_vector_first(bob_type);
+ecs_id_t *ids = ecs_vector_first(bob_type, ecs_id_t);
 int32_t cur = -1;
 
 while (-1 != (cur = ecs_search_offset(world, bob_table, cur + 1, wildcard, 0))){
-  ecs_entity_t obj = ecs_pair_second(ids[cur]);
+  ecs_entity_t obj = ecs_pair_second(world, ids[cur]);
   printf("Bob eats %s\n", ecs_get_name(world, obj));
 }
 ```
