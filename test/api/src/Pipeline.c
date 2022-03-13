@@ -183,7 +183,7 @@ void Pipeline_system_order_different_phase_after_disable() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_same_phase_after_activate() {
+void Pipeline_system_order_same_phase_after_activate() {    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

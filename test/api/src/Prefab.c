@@ -3368,3 +3368,36 @@ void Prefab_get_component_pair_from_prefab_base() {
 
     ecs_fini(world);
 }
+
+
+void ctor_to_zero(
+    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
+    void *ptr, size_t size, int32_t count, void *ctx)
+{
+    ecs_os_memset(ptr, 0, size * count);
+}
+
+
+void Prefab_override_dont_inherit() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontInherit);
+
+    ecs_set_component_actions(world, Position, {
+        .ctor = ctor_to_zero
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( !ecs_has(world, inst, Position));
+
+    ecs_add(world, inst, Position);
+    test_assert( ecs_has(world, inst, Position));
+    const Position *p = ecs_get(world, inst, Position);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}

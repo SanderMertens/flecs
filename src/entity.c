@@ -647,6 +647,11 @@ void components_override(
             continue;
         }
 
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        if (idr->flags & ECS_ID_DONT_INHERIT) {
+            continue;
+        }
+
         ecs_column_t *column = &columns[tr->column];
         if (!column->size) {
             continue;
@@ -1290,7 +1295,6 @@ void flecs_notify_on_set(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_vector_count(data->entities), 
         ECS_INTERNAL_ERROR, NULL);
-    entities = ecs_offset(entities, ecs_entity_t, row);
 
     ecs_ids_t local_ids;
     if (!ids) {
@@ -1317,9 +1321,13 @@ void flecs_notify_on_set(
                 flecs_iter_init(&it);
                 it.world = world;
                 it.real_world = world;
+                it.table = table;
+                it.type = table->type;
                 it.ptrs[0] = ptr;
                 it.sizes[0] = size;
                 it.ids[0] = id;
+                it.event = EcsOnSet;
+                it.event_id = id;
                 it.ctx = info->lifecycle.ctx;
                 it.count = count;
                 
@@ -3425,8 +3433,12 @@ ecs_entity_t set_identifier(
     if (!entity) {
         entity = ecs_new_id(world);
     }
+
+    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag, 0);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_os_strset(&ptr->value, name);
+    ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);
     
-    ecs_set_pair(world, entity, EcsIdentifier, tag, {.value = (char*)name});
     return entity;
 error:
     return 0;
@@ -3452,6 +3464,14 @@ ecs_entity_t ecs_set_symbol(
     const char *name)
 {
     return set_identifier(world, entity, EcsSymbol, name);
+}
+
+void ecs_set_alias(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    set_identifier(world, entity, EcsAlias, name);
 }
 
 ecs_id_t ecs_make_pair(

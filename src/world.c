@@ -72,6 +72,7 @@ const ecs_entity_t EcsIsA =                   ECS_HI_COMPONENT_ID + 26;
 /* Identifier tags */
 const ecs_entity_t EcsName =                  ECS_HI_COMPONENT_ID + 27;
 const ecs_entity_t EcsSymbol =                ECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsAlias =                 ECS_HI_COMPONENT_ID + 29;
 
 /* Events */
 const ecs_entity_t EcsOnAdd =                 ECS_HI_COMPONENT_ID + 30;
@@ -82,7 +83,7 @@ const ecs_entity_t EcsOnDelete =              ECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsOnCreateTable =         ECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsOnDeleteTable =         ECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsOnTableEmpty =          ECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableFill =         ECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnTableFill =           ECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnCreateTrigger =       ECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnDeleteTrigger =       ECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnDeleteObservable =    ECS_HI_COMPONENT_ID + 41;
@@ -618,8 +619,8 @@ ecs_world_t *ecs_mini(void) {
     world->pending_buffer = flecs_sparse_new(ecs_table_t*);
 
     world->fini_tasks = ecs_vector_new(ecs_entity_t, 0);
-    flecs_string_hashmap_init(&world->aliases, ecs_entity_t);
-    flecs_string_hashmap_init(&world->symbols, ecs_entity_t);
+    flecs_name_index_init(&world->aliases);
+    flecs_name_index_init(&world->symbols);
     ecs_map_init(&world->type_handles, ecs_entity_t, 0);
 
     world->stats.time_scale = 1.0;
@@ -918,6 +919,9 @@ void ecs_set_component_actions_w_id(
         if (!c_info->lifecycle.on_set) {
             c_info->lifecycle.on_set = lifecycle->on_set;
         }
+        if (!c_info->lifecycle.on_remove) {
+            c_info->lifecycle.on_remove = lifecycle->on_remove;
+        }
     } else {
         c_info->component = component;
         c_info->lifecycle = *lifecycle;
@@ -1203,6 +1207,7 @@ bool free_id_record(
         }
 
         ecs_table_cache_fini(&idr->cache);
+        flecs_name_index_free(idr->name_index);
         ecs_os_free(idr);
         return true;
     }
@@ -1243,20 +1248,6 @@ void fini_id_index(
     ecs_map_fini(&world->id_index);
     flecs_sparse_free(world->pending_tables);
     flecs_sparse_free(world->pending_buffer);
-}
-
-/* Cleanup aliases & symbols */
-static
-void fini_aliases(
-    ecs_hashmap_t *map)
-{
-    flecs_hashmap_iter_t it = flecs_hashmap_iter(map);
-    ecs_hashed_string_t *key;
-    while (flecs_hashmap_next_w_key(&it, ecs_hashed_string_t, &key, ecs_entity_t)) {
-        ecs_os_free(key->value);
-    }
-
-    flecs_hashmap_fini(map);
 }
 
 /* Cleanup misc structures */
@@ -1327,9 +1318,8 @@ int ecs_fini(
 
     flecs_sparse_free(world->triggers);
 
-    fini_aliases(&world->aliases);
-    
-    fini_aliases(&world->symbols);
+    flecs_name_index_fini(&world->aliases);
+    flecs_name_index_fini(&world->symbols);
     
     fini_misc(world);
 
@@ -1675,7 +1665,7 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->stats.world_time_total += world->stats.delta_time;
 
-    flecs_eval_component_monitors(world);
+    ecs_force_aperiodic(world);
 
     return world->stats.delta_time;
 error:
@@ -1756,7 +1746,7 @@ void flecs_process_pending_tables(
 
     /* Safe to cast, world is not readonly */
     ecs_world_t *world = (ecs_world_t*)world_r;
-
+    
     /* If pending buffer is NULL there already is a stackframe that's iterating
      * the table list. This can happen when a trigger for a table event results
      * in a mutation that causes another table to change state. A typical 
@@ -1853,6 +1843,33 @@ ecs_id_record_t* flecs_get_id_record(
 {
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
         ecs_strip_generation(id));
+}
+
+ecs_hashmap_t* flecs_ensure_id_name_index(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_hashmap_t *map = idr->name_index;
+    if (!map) {
+        map = idr->name_index = flecs_name_index_new();
+    }
+
+    return map;
+}
+
+ecs_hashmap_t* flecs_get_id_name_index(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return NULL;
+    }
+
+    return idr->name_index;
 }
 
 ecs_table_record_t* flecs_get_table_record(

@@ -1050,7 +1050,6 @@ void add_table(
             ECS_SIZEOF(pair_offset_t) * term_count);
     }
 
-    /* From here we recurse */
     ecs_query_table_match_t *table_data;
     ecs_vector_t *references = NULL;
 
@@ -2438,10 +2437,15 @@ ecs_query_t* ecs_query_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_fini, ECS_INVALID_OPERATION, NULL);
 
+    /* Ensure that while initially populating the query with tables, they are
+     * in the right empty/non-empty list. This ensures the query won't miss
+     * empty/non-empty events for tables that are currently out of sync, but
+     * change back to being in sync before processing pending events. */
+    ecs_force_aperiodic(world);
+
     result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
     result->id = flecs_sparse_last_id(world->queries);
-    ecs_table_cache_init(&result->cache);
 
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     observer_desc.filter.match_empty_tables = true;
@@ -2468,6 +2472,8 @@ ecs_query_t* ecs_query_init(
             goto error;
         }
     }
+
+    ecs_table_cache_init(&result->cache);
 
     result->world = world;
     result->iterable.init = query_iter_init;

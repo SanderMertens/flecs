@@ -232,17 +232,15 @@ int ecs_meta_member(
         return -1;
     }
 
-    ecs_hashed_string_t key = ecs_get_hashed_string(
-        name, ecs_os_strlen(name), 0);
-    int32_t *cur = flecs_hashmap_get(push_op->members, &key, int32_t);
-    if (!cur) {
+    const uint64_t *cur_ptr = flecs_name_index_find_ptr(push_op->members, name, 0, 0);
+    if (!cur_ptr) {
         char *path = ecs_get_fullpath(world, scope->type);
         ecs_err("unknown member '%s' for type '%s'", name, path);
         ecs_os_free(path);
         return -1;
     }
 
-    scope->op_cur = *cur;
+    scope->op_cur = flecs_uto(int32_t, cur_ptr[0]);
 
     return 0;
 }

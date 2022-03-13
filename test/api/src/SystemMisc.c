@@ -1392,6 +1392,8 @@ void SystemMisc_redeclare_system_explicit_id_no_name() {
 }
 
 void SystemMisc_declare_different_id_same_name() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e1 = ecs_new(world, 0);
@@ -1404,19 +1406,18 @@ void SystemMisc_declare_different_id_same_name() {
     });
     test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+    test_expect_abort();
+
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.entity = e2, .name = "Move", .add = {EcsOnUpdate} },
         .query.filter.expr = "0", 
         .callback = Dummy
     });
-    test_assert(e2 == s_2);
-
-    test_assert(e1 != e2);
-
-    ecs_fini(world);
 }
 
 void SystemMisc_declare_different_id_same_name_w_scope() {
+    install_test_abort();
+    
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t scope = ecs_new(world, 0);
@@ -1432,16 +1433,13 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
     });
     test_assert(e1 == s_1);
 
-    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
+    test_expect_abort();
+
+    ecs_system_init(world, &(ecs_system_desc_t){
         .entity = {.entity = e2, .name = "Move", .add = {EcsOnUpdate} },
         .query.filter.expr = "0", 
         .callback = Dummy
     });
-    test_assert(e2 == s_2);
-
-    test_assert(e1 != e2);
-
-    ecs_fini(world);
 }
 
 void SystemMisc_rw_in_implicit_any() {

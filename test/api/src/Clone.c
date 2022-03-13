@@ -327,8 +327,9 @@ void Clone_1_tag_1_component_w_value() {
 
     ECS_ENTITY(world, Tag, 0);
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, e1, Position, Tag);
 
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Tag);
     ecs_set(world, e1, Position, {10, 20});
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, true);

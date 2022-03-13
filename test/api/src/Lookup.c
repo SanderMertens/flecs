@@ -224,7 +224,7 @@ void Lookup_lookup_alias() {
     ecs_entity_t e = ecs_set_name(world, 0, "MyEntity");
     test_assert(e != 0);
 
-    ecs_use(world, e, "MyAlias");
+    ecs_set_alias(world, e, "MyAlias");
 
     ecs_entity_t a = ecs_lookup(world, "MyAlias");
     test_assert(a != 0);
@@ -242,7 +242,7 @@ void Lookup_lookup_scoped_alias() {
     test_assert(e != 0);
     ecs_add_pair(world, e, EcsChildOf, p);
 
-    ecs_use(world, e, "MyAlias");
+    ecs_set_alias(world, e, "MyAlias");
 
     ecs_entity_t a = ecs_lookup(world, "MyAlias");
     test_assert(a != 0);
@@ -263,8 +263,8 @@ void Lookup_define_duplicate_alias() {
     
     test_expect_abort(); /* Not allowed to create duplicate aliases */
 
-    ecs_use(world, e1, "MyAlias");
-    ecs_use(world, e2, "MyAlias");
+    ecs_set_alias(world, e1, "MyAlias");
+    ecs_set_alias(world, e2, "MyAlias");
 
 }
 
@@ -510,5 +510,56 @@ void Lookup_lookup_custom_search_path_n_elems() {
 
     ecs_set_lookup_path(world, old_path);
 
+    ecs_fini(world);
+}
+
+void Lookup_set_same_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    test_assert(e != 0);
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "MyName"));
+
+    ecs_set_name(world, e, "MyName");
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "MyName"));
+    
+    ecs_fini(world);
+}
+
+void Lookup_defer_set_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    test_assert(e != 0);
+    test_str("Foo", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "Foo"));
+
+    ecs_defer_begin(world);
+    ecs_set_name(world, e, "Bar");
+    ecs_defer_end(world);
+
+    test_str("Bar", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "Bar"));
+    
+    ecs_fini(world);
+}
+
+void Lookup_defer_set_same_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    test_assert(e != 0);
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "MyName"));
+
+    ecs_defer_begin(world);
+    ecs_set_name(world, e, "MyName");
+    ecs_defer_end(world);
+    
+    test_str("MyName", ecs_get_name(world, e));
+    test_uint(e, ecs_lookup(world, "MyName"));
+    
     ecs_fini(world);
 }

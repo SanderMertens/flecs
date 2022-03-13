@@ -2899,3 +2899,28 @@ void Query_query_w_component_from_parent_from_non_this() {
 
     ecs_fini(world);
 }
+
+void Query_create_query_while_pending() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ TagA }}
+    });
+    test_assert(q != NULL);
+
+    ecs_add(world, e, TagB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert( ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+
+    test_assert( !ecs_query_next(&it));
+    
+    ecs_fini(world);
+}

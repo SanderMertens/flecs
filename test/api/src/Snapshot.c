@@ -569,7 +569,9 @@ void Snapshot_snapshot_copy() {
     p->x ++;
     p->y ++;
 
+    ecs_log_set_level(2);
     ecs_snapshot_restore(world, s_copy);
+    ecs_log_set_level(-1);
 
     test_assert(ecs_has(world, e, Position));
     p = ecs_get_mut(world, e, Position, NULL);

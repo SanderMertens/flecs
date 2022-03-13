@@ -1,10 +1,5 @@
 #include "../private_api.h"
 
-typedef struct ecs_hm_bucket_t {
-    ecs_vector_t *keys;
-    ecs_vector_t *values;
-} ecs_hm_bucket_t;
-
 static
 int32_t find_key(
     const ecs_hashmap_t *map,
@@ -149,6 +144,30 @@ void _flecs_hashmap_set(
     ecs_os_memcpy(value_ptr, value, value_size);
 }
 
+ecs_hm_bucket_t* flecs_hashmap_get_bucket(
+    const ecs_hashmap_t *map,
+    uint64_t hash)
+{
+    ecs_assert(map != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_map_get(&map->impl, ecs_hm_bucket_t, hash);
+}
+
+void flecs_hm_bucket_remove(
+    ecs_hashmap_t *map,
+    ecs_hm_bucket_t *bucket,
+    uint64_t hash,
+    int32_t index)
+{
+    ecs_vector_remove_t(bucket->keys, map->key_size, 8, index);
+    ecs_vector_remove_t(bucket->values, map->value_size, 8, index);
+
+    if (!ecs_vector_count(bucket->keys)) {
+        ecs_vector_free(bucket->keys);
+        ecs_vector_free(bucket->values);
+        ecs_map_remove(&map->impl, hash);
+    }
+}
+
 void _flecs_hashmap_remove_w_hash(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -156,6 +175,10 @@ void _flecs_hashmap_remove_w_hash(
     ecs_size_t value_size,
     uint64_t hash)
 {
+    ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    (void)value_size;
+
     ecs_hm_bucket_t *bucket = ecs_map_get(&map->impl, ecs_hm_bucket_t, hash);
     if (!bucket) {
         return;
@@ -166,14 +189,7 @@ void _flecs_hashmap_remove_w_hash(
         return;
     }
 
-    ecs_vector_remove_t(bucket->keys, key_size, 8, index);
-    ecs_vector_remove_t(bucket->values, value_size, 8, index);
-
-    if (!ecs_vector_count(bucket->keys)) {
-        ecs_vector_free(bucket->keys);
-        ecs_vector_free(bucket->values);
-        ecs_map_remove(&map->impl, hash);
-    }
+    flecs_hm_bucket_remove(map, bucket, hash, index);
 }
 
 void _flecs_hashmap_remove(
