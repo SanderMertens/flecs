@@ -1045,8 +1045,8 @@ void World_register_alias_twice_same_entity() {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_use(world, e, "Foo");
-    ecs_use(world, e, "Foo");
+    ecs_set_alias(world, e, "Foo");
+    ecs_set_alias(world, e, "Foo");
 
     ecs_entity_t f = ecs_lookup(world, "Foo");
     test_assert(f == e);
@@ -1062,10 +1062,10 @@ void World_register_alias_twice_different_entity() {
     ecs_entity_t e = ecs_new_id(world);
     ecs_entity_t f = ecs_new_id(world);
 
-    ecs_use(world, e, "Foo");
+    ecs_set_alias(world, e, "Foo");
     
     test_expect_abort();
-    ecs_use(world, f, "Foo");
+    ecs_set_alias(world, f, "Foo");
 }
 
 void World_redefine_component() {

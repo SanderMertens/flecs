@@ -44,7 +44,7 @@ inline flecs::entity world::use(const char *alias) {
         // If no name is defined, use the entity name without the scope
         name = ecs_get_name(m_world, e);
     }
-    ecs_use(m_world, e, name);
+    ecs_set_alias(m_world, e, name);
     return flecs::entity(m_world, e);
 }
 
@@ -52,7 +52,7 @@ inline flecs::entity world::use(const char *name, const char *alias) {
     entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
     ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_use(m_world, e, alias);
+    ecs_set_alias(m_world, e, alias);
     return flecs::entity(m_world, e);
 }
 
@@ -63,7 +63,7 @@ inline void world::use(flecs::entity e, const char *alias) {
         // If no name is defined, use the entity name without the scope
         ecs_get_name(m_world, eid);
     }
-    ecs_use(m_world, eid, alias);
+    ecs_set_alias(m_world, eid, alias);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity_t s) const {

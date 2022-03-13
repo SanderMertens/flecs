@@ -4,6 +4,7 @@
 #include "private_types.h"
 #include "table_cache.h"
 #include "datastructures/qsort.h"
+#include "datastructures/name_index.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Core bootstrap functions
@@ -127,6 +128,14 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+ecs_hashmap_t* flecs_ensure_id_name_index(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+ecs_hashmap_t* flecs_get_id_name_index(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
 ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -172,6 +181,11 @@ void flecs_remove_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
+
+void flecs_name_index_erase(
+    ecs_hashmap_t *map,
+    ecs_entity_t entity,
+    uint64_t hash);
 
 void flecs_triggers_notify(
     ecs_iter_t *it,
@@ -726,20 +740,20 @@ uint64_t _flecs_ito(
     (T)_flecs_ito(\
         sizeof(T),\
         flecs_signed_##T##__,\
-        value < 0,\
-        (uint64_t)value,\
-        FLECS_CONVERSION_ERR(T, value))
+        (value) < 0,\
+        (uint64_t)(value),\
+        FLECS_CONVERSION_ERR(T, (value)))
 
 #define flecs_uto(T, value)\
     (T)_flecs_ito(\
         sizeof(T),\
         flecs_signed_##T##__,\
         false,\
-        (uint64_t)value,\
-        FLECS_CONVERSION_ERR(T, value))
+        (uint64_t)(value),\
+        FLECS_CONVERSION_ERR(T, (value)))
 #else
-#define flecs_ito(T, value) (T)value
-#define flecs_uto(T, value) (T)value
+#define flecs_ito(T, value) (T)(value)
+#define flecs_uto(T, value) (T)(value)
 #endif
 
 #define flecs_itosize(value) flecs_ito(size_t, (value))
@@ -808,16 +822,8 @@ char * ecs_ftoa(
 uint64_t flecs_string_hash(
     const void *ptr);
 
-void flecs_table_hashmap_init(ecs_hashmap_t *hm);
-void _flecs_string_hashmap_init(ecs_hashmap_t *hm, ecs_size_t size);
-
-#define flecs_string_hashmap_init(hm, T)\
-    _flecs_string_hashmap_init(hm, ECS_SIZEOF(T))
-
-ecs_hashed_string_t ecs_get_hashed_string(
-    const char *name,
-    ecs_size_t length,
-    uint64_t hash);
+void flecs_table_hashmap_init(
+    ecs_hashmap_t *hm);
 
 #define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
 void _assert_func(

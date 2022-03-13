@@ -479,7 +479,6 @@ struct ecs_observer_t {
 #include "flecs/private/sparse.h"           /* Sparse set */
 #include "flecs/private/hashmap.h"          /* Hashmap */
 
-
 /**
  * @defgroup desc_types Types used for creating API constructs
  * @{
@@ -766,7 +765,9 @@ typedef struct ecs_observer_desc_t {
 typedef struct EcsIdentifier {
     char *value;
     ecs_size_t length;
-    uint64_t hash;    
+    uint64_t hash;
+    uint64_t index_hash; /* Hash of existing record in current index */
+    ecs_hashmap_t *index; /* Current index */
 } EcsIdentifier;
 
 /** Component information. */
@@ -814,6 +815,11 @@ struct EcsComponentLifecycle {
      * callback is invoked before triggers are invoked, and enable the component
      * to respond to changes on itself before others can. */
     ecs_iter_action_t on_set;
+
+    /* Callback that is invoked when an instance of the component is removed. 
+     * This callback is invoked after the triggers are invoked, and before the
+     * destructor is invoked. */
+    ecs_iter_action_t on_remove;
 };
 
 /** Component that stores reference to trigger */
@@ -1013,6 +1019,9 @@ FLECS_API extern const ecs_entity_t EcsName;
 
 /* Tag to indicate symbol identifier */
 FLECS_API extern const ecs_entity_t EcsSymbol;
+
+/* Tag to indicate alias identifier */
+FLECS_API extern const ecs_entity_t EcsAlias;
 
 /* Used to express parent-child relations. */
 FLECS_API extern const ecs_entity_t EcsChildOf;
@@ -2198,7 +2207,7 @@ const char* ecs_get_symbol(
  *
  * @param world The world.
  * @param entity The entity.
- * @param name The entity's name.
+ * @param name The name.
  * @return The provided entity, or a new entity if 0 was provided.
  */
 FLECS_API
@@ -2215,7 +2224,7 @@ ecs_entity_t ecs_set_name(
  *
  * @param world The world.
  * @param entity The entity.
- * @param symbol The entity's symbol.
+ * @param symbol The symbol.
  * @return The provided entity, or a new entity if 0 was provided.
  */
 FLECS_API
@@ -2223,6 +2232,23 @@ ecs_entity_t ecs_set_symbol(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *symbol);
+
+/** Set alias for entity. 
+ * An entity can be looked up using its alias from the root scope without 
+ * providing the fully qualified name if its parent. An entity can only have
+ * a single alias.
+ * 
+ * The symbol is stored in (EcsIdentifier, EcsAlias).
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param alias The alias.
+ */
+FLECS_API
+void ecs_set_alias(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *alias);
 
 /** Convert role to string.
  * This operation converts a role to a string.
@@ -2434,13 +2460,6 @@ ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
     const char *symbol,
     bool lookup_as_path);
-
-/* Add alias for entity to global scope */
-FLECS_API
-void ecs_use(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name);
 
 /** @} */
 

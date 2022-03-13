@@ -474,7 +474,7 @@ bool ecs_pipeline_update(
      * notify appropriate queries so caches are up to date. This includes the
      * pipeline query. */
     if (start_of_frame) {
-        flecs_eval_component_monitors(world);
+        ecs_force_aperiodic(world);
     }
 
     bool added = false;

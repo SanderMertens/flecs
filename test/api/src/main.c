@@ -647,6 +647,13 @@ void Hierarchies_long_name_depth_1(void);
 void Hierarchies_long_name_depth_2(void);
 void Hierarchies_ensure_1_parent_after_adding_2(void);
 void Hierarchies_ensure_child_alive_after_deleting_prev_parent(void);
+void Hierarchies_lookup_after_root_to_parent_move(void);
+void Hierarchies_lookup_after_parent_to_root_move(void);
+void Hierarchies_lookup_after_parent_to_parent_move(void);
+void Hierarchies_lookup_after_clear_from_root(void);
+void Hierarchies_lookup_after_clear_from_parent(void);
+void Hierarchies_lookup_after_delete_from_root(void);
+void Hierarchies_lookup_after_delete_from_parent(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -867,6 +874,9 @@ void Lookup_lookup_core_from_stage(void);
 void Lookup_lookup_custom_search_path(void);
 void Lookup_lookup_custom_search_path_from_stage(void);
 void Lookup_lookup_custom_search_path_n_elems(void);
+void Lookup_set_same_name(void);
+void Lookup_defer_set_name(void);
+void Lookup_defer_set_same_name(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -1316,6 +1326,7 @@ void Query_no_instancing_w_shared(void);
 void Query_query_iter_frame_offset(void);
 void Query_add_singleton_after_query(void);
 void Query_query_w_component_from_parent_from_non_this(void);
+void Query_create_query_while_pending(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -2077,6 +2088,7 @@ void Prefab_nested_prefab_w_named_children(void);
 void Prefab_dont_copy_children_for_non_prefab_base(void);
 void Prefab_get_component_pair_from_base(void);
 void Prefab_get_component_pair_from_prefab_base(void);
+void Prefab_override_dont_inherit(void);
 
 // Testsuite 'System_w_FromParent'
 void System_w_FromParent_setup(void);
@@ -5027,6 +5039,34 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "ensure_child_alive_after_deleting_prev_parent",
         Hierarchies_ensure_child_alive_after_deleting_prev_parent
+    },
+    {
+        "lookup_after_root_to_parent_move",
+        Hierarchies_lookup_after_root_to_parent_move
+    },
+    {
+        "lookup_after_parent_to_root_move",
+        Hierarchies_lookup_after_parent_to_root_move
+    },
+    {
+        "lookup_after_parent_to_parent_move",
+        Hierarchies_lookup_after_parent_to_parent_move
+    },
+    {
+        "lookup_after_clear_from_root",
+        Hierarchies_lookup_after_clear_from_root
+    },
+    {
+        "lookup_after_clear_from_parent",
+        Hierarchies_lookup_after_clear_from_parent
+    },
+    {
+        "lookup_after_delete_from_root",
+        Hierarchies_lookup_after_delete_from_root
+    },
+    {
+        "lookup_after_delete_from_parent",
+        Hierarchies_lookup_after_delete_from_parent
     }
 };
 
@@ -5851,6 +5891,18 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_custom_search_path_n_elems",
         Lookup_lookup_custom_search_path_n_elems
+    },
+    {
+        "set_same_name",
+        Lookup_set_same_name
+    },
+    {
+        "defer_set_name",
+        Lookup_defer_set_name
+    },
+    {
+        "defer_set_same_name",
+        Lookup_defer_set_same_name
     }
 };
 
@@ -7594,6 +7646,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_w_component_from_parent_from_non_this",
         Query_query_w_component_from_parent_from_non_this
+    },
+    {
+        "create_query_while_pending",
+        Query_create_query_while_pending
     }
 };
 
@@ -10541,6 +10597,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "get_component_pair_from_prefab_base",
         Prefab_get_component_pair_from_prefab_base
+    },
+    {
+        "override_dont_inherit",
+        Prefab_override_dont_inherit
     }
 };
 
@@ -12344,7 +12404,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        89,
+        96,
         Hierarchies_testcases
     },
     {
@@ -12400,7 +12460,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        35,
+        38,
         Lookup_testcases
     },
     {
@@ -12463,7 +12523,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        64,
+        65,
         Query_testcases
     },
     {
@@ -12582,7 +12642,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        95,
+        96,
         Prefab_testcases
     },
     {

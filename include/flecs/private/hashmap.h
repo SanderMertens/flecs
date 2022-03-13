@@ -16,6 +16,11 @@ extern "C" {
 #endif
 
 typedef struct {
+    ecs_vector_t *keys;
+    ecs_vector_t *values;
+} ecs_hm_bucket_t;
+
+typedef struct {
     ecs_hash_value_action_t hash;
     ecs_compare_action_t compare;
     ecs_size_t key_size;
@@ -25,7 +30,7 @@ typedef struct {
 
 typedef struct {
     ecs_map_iter_t it;
-    struct ecs_hm_bucket_t *bucket;
+    ecs_hm_bucket_t *bucket;
     int32_t index;
 } flecs_hashmap_iter_t;
 
@@ -101,6 +106,18 @@ void _flecs_hashmap_remove_w_hash(
 
 #define flecs_hashmap_remove_w_hash(map, key, V, hash)\
     _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
+
+FLECS_DBG_API
+ecs_hm_bucket_t* flecs_hashmap_get_bucket(
+    const ecs_hashmap_t *map,
+    uint64_t hash);
+
+FLECS_DBG_API
+void flecs_hm_bucket_remove(
+    ecs_hashmap_t *map,
+    ecs_hm_bucket_t *bucket,
+    uint64_t hash,
+    int32_t index);
 
 FLECS_DBG_API
 void flecs_hashmap_copy(

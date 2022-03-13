@@ -676,7 +676,14 @@
                 "long_name_depth_1",
                 "long_name_depth_2",
                 "ensure_1_parent_after_adding_2",
-                "ensure_child_alive_after_deleting_prev_parent"
+                "ensure_child_alive_after_deleting_prev_parent",
+                "lookup_after_root_to_parent_move",
+                "lookup_after_parent_to_root_move",
+                "lookup_after_parent_to_parent_move",
+                "lookup_after_clear_from_root",
+                "lookup_after_clear_from_parent",
+                "lookup_after_delete_from_root",
+                "lookup_after_delete_from_parent"
             ]
         }, {
             "id": "Has",
@@ -912,7 +919,10 @@
                 "lookup_core_from_stage",
                 "lookup_custom_search_path",
                 "lookup_custom_search_path_from_stage",
-                "lookup_custom_search_path_n_elems"
+                "lookup_custom_search_path_n_elems",
+                "set_same_name",
+                "defer_set_name",
+                "defer_set_same_name"
             ]
         }, {
             "id": "Singleton",
@@ -1379,7 +1389,8 @@
                 "no_instancing_w_shared",
                 "query_iter_frame_offset",
                 "add_singleton_after_query",
-                "query_w_component_from_parent_from_non_this"
+                "query_w_component_from_parent_from_non_this",
+                "create_query_while_pending"
             ]
         }, {
             "id": "Iter",
@@ -2174,7 +2185,8 @@
                 "nested_prefab_w_named_children",
                 "dont_copy_children_for_non_prefab_base",
                 "get_component_pair_from_base",
-                "get_component_pair_from_prefab_base"
+                "get_component_pair_from_prefab_base",
+                "override_dont_inherit"
             ]
         }, {
             "id": "System_w_FromParent",

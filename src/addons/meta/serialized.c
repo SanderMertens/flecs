@@ -168,10 +168,8 @@ ecs_vector_t* serialize_struct(
     int32_t i, count = ecs_vector_count(ptr->members);
 
     ecs_hashmap_t *member_index = NULL;
-    if (count) {
-        member_index = ecs_os_calloc_t(ecs_hashmap_t);
-        flecs_string_hashmap_init(member_index, int32_t);
-        op->members = member_index;
+    if (count) {        
+        op->members = member_index = flecs_name_index_new();
     }
 
     for (i = 0; i < count; i ++) {
@@ -188,18 +186,15 @@ ecs_vector_t* serialize_struct(
         if (op->count <= 1) {
             op->count = member->count;
         }
-        
+
         const char *member_name = member->name;
         op->name = member_name;
         op->unit = member->unit;
         op->op_count = ecs_vector_count(ops) - cur;
 
-        ecs_size_t len = ecs_os_strlen(member_name);
-
-        ecs_hashed_string_t key = ecs_get_hashed_string(member_name, len, 0);
-        flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
-            member_index, &key, int32_t);
-        *((int32_t*)hmr.value) = cur - first - 1;
+        flecs_name_index_ensure(
+            member_index, flecs_ito(uint64_t, cur - first - 1), 
+                member_name, 0, 0);
     }
 
     ops_add(&ops, EcsOpPop);

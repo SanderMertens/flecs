@@ -236,6 +236,9 @@ ecs_flags32_t get_component_action_flags(
     if (c_info->lifecycle.dtor) {
         flags |= EcsTableHasDtors;
     }
+    if (c_info->lifecycle.on_remove) {
+        flags |= EcsTableHasDtors;
+    }
     if (c_info->lifecycle.copy) {
         flags |= EcsTableHasCopy;
     }
@@ -384,30 +387,81 @@ void ctor_component(
 }
 
 static
+void on_remove_component(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_iter_action_t on_remove,
+    void *ptr,
+    ecs_size_t size,
+    ecs_entity_t *entities,
+    ecs_id_t id,
+    int32_t count,
+    void *ctx)
+{
+    ecs_iter_t it = { .term_count = 1 };
+    it.entities = entities;
+
+    flecs_iter_init(&it);
+    it.world = world;
+    it.real_world = world;
+    it.table = table;
+    it.type = table->type;
+    it.ptrs[0] = ptr;
+    it.sizes[0] = size;
+    it.ids[0] = id;
+    it.event = EcsOnRemove;
+    it.event_id = id;
+    it.ctx = ctx;
+    it.count = count;
+    on_remove(&it);
+}
+
+static
 void dtor_component(
     ecs_world_t *world,
+    ecs_table_t *table,
     ecs_type_info_t *cdata,
     ecs_column_t *column,
     ecs_entity_t *entities,
+    ecs_id_t id,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool is_remove)
 {
     if (!count) {
         return;
     }
-    
-    /* An old component is destructed */
-    ecs_xtor_t dtor;
-    if (cdata && (dtor = cdata->lifecycle.dtor)) {
-        void *ctx = cdata->lifecycle.ctx;
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
 
-        ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
-        void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!cdata) {
+        return;
+    }
 
-        dtor(world, cdata->component, &entities[row], ptr,
+    ecs_iter_action_t on_remove = 0;
+    if (is_remove) {
+        on_remove = cdata->lifecycle.on_remove;
+    }
+
+    ecs_xtor_t dtor = cdata->lifecycle.dtor;
+    if (!on_remove && !dtor) {
+        return;
+    }
+
+    void *ctx = cdata->lifecycle.ctx;
+    int16_t size = column->size;
+    int16_t alignment = column->alignment;
+    ecs_entity_t *entity_elem = &entities[row];
+
+    ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
+    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (on_remove) {
+        on_remove_component(world, table, on_remove, ptr, size, 
+            entity_elem, id, count, ctx);
+    }
+
+    if (dtor) {
+        dtor(world, cdata->component, entity_elem, ptr,
             flecs_itosize(size), count, ctx);
     }
 }
@@ -425,6 +479,7 @@ void dtor_all_components(
     /* Can't delete and not update the entity index */
     ecs_assert(!is_delete || update_entity_index, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_id_t *ids = ecs_vector_first(table->storage_type, ecs_id_t);
     ecs_record_t **records = ecs_vector_first(data->record_ptrs, ecs_record_t*);
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
     int32_t i, c, end = row + count;
@@ -446,7 +501,8 @@ void dtor_all_components(
         for (i = row; i < end; i ++) {
             for (c = 0; c < column_count; c++) {
                 ecs_column_t *column = &data->columns[c];
-                dtor_component(world, table->c_info[c], column, entities, i, 1);
+                dtor_component(world, table, table->c_info[c], column, 
+                    entities, ids[c], i, 1, is_delete);
             }
 
             /* Update entity index after invoking destructors so that entity can
@@ -1257,6 +1313,8 @@ void flecs_table_delete(
         return;
     }
 
+    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+
     /* Last element, destruct & remove */
     if (index == count) {
         /* If table has component destructors, invoke */
@@ -1265,14 +1323,12 @@ void flecs_table_delete(
             
             for (i = 0; i < column_count; i ++) {
                 ecs_type_info_t *c_info = c_info_array[i];
-                ecs_xtor_t dtor;
-                if (c_info && (dtor = c_info->lifecycle.dtor)) {
-                    ecs_size_t size = c_info->size;
-                    ecs_size_t alignment = c_info->alignment;
-                    dtor(world, c_info->component, &entity_to_delete,
-                        ecs_vector_last_t(columns[i].data, size, alignment),
-                        flecs_itosize(size), 1, c_info->lifecycle.ctx);
-                }        
+                if (!c_info) {
+                    continue;
+                }
+
+                dtor_component(world, table, c_info, &columns[i], 
+                    entities, ids[i], index, 1, true);
             }
         }
 
@@ -1293,6 +1349,14 @@ void flecs_table_delete(
                 void *src = ecs_vector_last_t(vec, size, align);
                 
                 ecs_type_info_t *c_info = c_info_array[i];
+
+                ecs_iter_action_t on_remove;
+                if (c_info && (on_remove = c_info->lifecycle.on_remove)) {
+                    on_remove_component(world, table, on_remove, dst,
+                        size, &entity_to_delete, ids[i], 1,     
+                            c_info->lifecycle.ctx);
+                }
+
                 ecs_move_ctor_t move_dtor;
                 if (c_info && (move_dtor = c_info->lifecycle.move_dtor)) {
                     move_dtor(world, c_info->component, &c_info->lifecycle,
@@ -1469,8 +1533,9 @@ void flecs_table_move(
                         &new_columns[i_new], &dst_entity, new_index, 1);
                 }
             } else {
-                dtor_component(world, old_table->c_info[i_old],
-                    &old_columns[i_old], &src_entity, old_index, 1);
+                dtor_component(world, old_table, old_table->c_info[i_old],
+                    &old_columns[i_old], &src_entity, old_component, 
+                        old_index, 1, true);
             }
         }
 
@@ -1486,8 +1551,9 @@ void flecs_table_move(
     }
 
     for (; (i_old < old_column_count); i_old ++) {
-        dtor_component(world, old_table->c_info[i_old],
-            &old_columns[i_old], &src_entity, old_index, 1);
+        dtor_component(world, old_table, old_table->c_info[i_old],
+            &old_columns[i_old], &src_entity, old_components[i_old], 
+                old_index, 1, true);
     }
 }
 
@@ -1810,8 +1876,8 @@ void merge_table_data(
             /* Destruct old values */
             ecs_type_info_t *c_info = old_table->c_info[i_old];
             if (c_info) {
-                dtor_component(world, c_info, column, 
-                    entities, 0, old_count);
+                dtor_component(world, old_table, c_info, column, 
+                    entities, 0, 0, old_count, false);
             }
 
             /* Old column does not occur in new table, remove */
@@ -1850,8 +1916,8 @@ void merge_table_data(
         /* Destruct old values */
         ecs_type_info_t *c_info = old_table->c_info[i_old];
         if (c_info) {
-            dtor_component(world, c_info, column, entities, 
-                0, old_count);
+            dtor_component(world, old_table, c_info, column, entities, 0,
+                0, old_count, false);
         }
 
         /* Old column does not occur in new table, remove */
