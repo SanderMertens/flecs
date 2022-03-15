@@ -91,9 +91,12 @@ void sync_worker(
         /* Only signal main thread when all threads are waiting */
         ecs_os_cond_signal(world->sync_cond);
     }
+    
+    if (!world->quit_workers) {
+        /* Wait until main thread signals that thread can continue */
+        ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
+    }
 
-    /* Wait until main thread signals that thread can continue */
-    ecs_os_cond_wait(world->worker_cond, world->sync_mutex);
     ecs_os_mutex_unlock(world->sync_mutex);
 }
 
