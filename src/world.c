@@ -1215,9 +1215,9 @@ ecs_id_record_t* new_id_record(
         }
     }
 
-    if (ecs_should_log_2()) {
+    if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
-        ecs_dbg_2("#[green]id#[normal] %s #[green]created", id_str);
+        ecs_dbg_1("#[green]id#[normal] %s #[green]created", id_str);
         ecs_os_free(id_str);
     }
 
@@ -1252,9 +1252,9 @@ bool free_id_record(
 
     /* If id record contains no more empty tables, free it */
     if (ecs_table_cache_empty_count(&idr->cache) == 0) {
-        if (ecs_should_log_2()) {
+        if (ecs_should_log_1()) {
             char *id_str = ecs_id_str(world, id);
-            ecs_dbg_2("#[green]id#[normal] %s #[red]deleted", id_str);
+            ecs_dbg_1("#[green]id#[normal] %s #[red]deleted", id_str);
             ecs_os_free(id_str);
         }
 
