@@ -495,6 +495,24 @@ void dtor_all_components(
         /* Throw up a lock just to be sure */
         table->lock = true;
 
+        /* Run on_remove callbacks in bulk for improved performance */
+        for (c = 0; c < column_count; c++) {
+            ecs_column_t *column = &data->columns[c];
+            ecs_type_info_t *cdata = table->c_info[c];
+            if (!cdata) {
+                continue;
+            }
+
+            ecs_iter_action_t on_remove = cdata->lifecycle.on_remove;
+            if (on_remove) {
+                ecs_size_t size = column->size;
+                ecs_size_t align = column->alignment;
+                void *ptr = ecs_vector_get_t(column->data, size, align, row);
+                on_remove_component(world, table, on_remove, ptr, column->size, 
+                    &entities[row], ids[c], count, cdata->lifecycle.ctx);
+            }
+        }
+
         /* Iterate entities first, then components. This ensures that only one
          * entity is invalidated at a time, which ensures that destructors can
          * safely access other entities. */
@@ -502,7 +520,7 @@ void dtor_all_components(
             for (c = 0; c < column_count; c++) {
                 ecs_column_t *column = &data->columns[c];
                 dtor_component(world, table, table->c_info[c], column, 
-                    entities, ids[c], i, 1, is_delete);
+                    entities, ids[c], i, 1, false);
             }
 
             /* Update entity index after invoking destructors so that entity can
