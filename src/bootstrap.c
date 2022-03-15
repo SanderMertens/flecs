@@ -616,6 +616,7 @@ void flecs_bootstrap(
 
     flecs_bootstrap_tag(world, EcsName);
     flecs_bootstrap_tag(world, EcsSymbol);
+    flecs_bootstrap_tag(world, EcsAlias);
 
     flecs_bootstrap_tag(world, EcsModule);
     flecs_bootstrap_tag(world, EcsPrivate);
