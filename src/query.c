@@ -1801,9 +1801,14 @@ bool has_pairs(
 }
 
 static
-void register_monitors(
+void for_each_component_monitor(
     ecs_world_t *world,
-    ecs_query_t *query)
+    ecs_query_t *query,
+    void(*callback)(
+        ecs_world_t* world,
+        ecs_entity_t relation,
+        ecs_id_t id,
+        ecs_query_t *query))
 {
     ecs_term_t *terms = query->filter.terms;
     int32_t i, count = query->filter.term_count;
@@ -1824,10 +1829,10 @@ void register_monitors(
         {
             if (term->oper != EcsOr) {
                 if (term->subj.set.relation != EcsIsA) {
-                    flecs_monitor_register(
+                    callback(
                         world, term->subj.set.relation, term->id, query);
                 }
-                flecs_monitor_register(world, 0, term->id, query);
+                callback(world, 0, term->id, query);
             }
 
         /* FromAny also requires registering a monitor, as FromAny columns can
@@ -1835,10 +1840,26 @@ void register_monitors(
          * registering a monitor are FromOwned and FromEmpty. */
         } else if ((subj->set.mask & EcsSuperSet) || (subj->entity != EcsThis)){
             if (term->oper != EcsOr) {
-                flecs_monitor_register(world, 0, term->id, query);
+                callback(world, 0, term->id, query);
             }
         }
-    };
+    }
+}
+
+static
+void register_monitors(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    for_each_component_monitor(world, query, flecs_monitor_register);
+}
+
+static
+void unregister_monitors(
+    ecs_world_t *world,
+    ecs_query_t *query)
+{
+    for_each_component_monitor(world, query, flecs_monitor_unregister);
 }
 
 static
@@ -2607,6 +2628,8 @@ void ecs_query_fini(
     notify_subqueries(world, query, &(ecs_query_event_t){
         .kind = EcsQueryOrphan
     });
+
+    unregister_monitors(world, query);
 
     table_cache_free(query);
 

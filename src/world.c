@@ -353,6 +353,56 @@ void flecs_monitor_register(
     *q = query;
 }
 
+void flecs_monitor_unregister(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
+    ecs_query_t *query)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_monitor_set_t *ms = ecs_map_get(
+        &world->monitors.monitor_sets, ecs_monitor_set_t, relation);
+    if (!ms) {
+        return;
+    }
+
+    if (!ecs_map_is_initialized(&ms->monitors)) {
+        return;
+    }
+
+    ecs_monitor_t *m = ecs_map_get(&ms->monitors, ecs_monitor_t, id);
+    if (!m) {
+        return;
+    }
+
+    int32_t i, count = ecs_vector_count(m->queries);
+    ecs_query_t **queries = ecs_vector_first(m->queries, ecs_query_t*);
+    for (i = 0; i < count; i ++) {
+        if (queries[i] == query) {
+            ecs_vector_remove(m->queries, ecs_query_t*, i);
+            count --;
+            break;
+        }
+    }
+
+    if (!count) {
+        ecs_vector_free(m->queries);
+        ecs_map_remove(&ms->monitors, id);
+    }
+
+    if (!ecs_map_count(&ms->monitors)) {
+        ecs_map_fini(&ms->monitors);
+        ecs_map_remove(&world->monitors.monitor_sets, relation);
+    }
+
+    if (!ecs_map_count(&world->monitors.monitor_sets)) {
+        ecs_map_fini(&world->monitors.monitor_sets);
+    }
+}
+
 static
 void monitors_init(
     ecs_relation_monitor_t *rm)
@@ -1090,6 +1140,8 @@ static
 void fini_queries(
     ecs_world_t *world)
 {
+    monitors_fini(&world->monitors);
+    
     int32_t i, count = flecs_sparse_count(world->queries);
     for (i = 0; i < count; i ++) {
         ecs_query_t *query = flecs_sparse_get_dense(world->queries, ecs_query_t, 0);
@@ -1257,7 +1309,6 @@ void fini_misc(
 {
     ecs_map_fini(&world->type_handles);
     ecs_vector_free(world->fini_tasks);
-    monitors_fini(&world->monitors);
 }
 
 /* The destroyer of worlds */

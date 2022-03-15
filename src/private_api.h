@@ -99,6 +99,12 @@ void flecs_monitor_register(
     ecs_entity_t id,
     ecs_query_t *query);
 
+void flecs_monitor_unregister(
+    ecs_world_t *world,
+    ecs_entity_t relation,
+    ecs_entity_t id,
+    ecs_query_t *query);
+
 void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
