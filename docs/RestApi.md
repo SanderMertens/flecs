@@ -126,6 +126,16 @@ rules query engine. The reply is formatted as an [JSON serializer Iterator](Json
 
 The following parameters can be provided to the endpoint:
 
+#### **offset**
+Skip the first _offset_ number of entities.
+
+**Default**: 0
+
+#### **limit**
+Return at most _limit_ number of entities.
+
+**Default**: 100
+
 #### **term_ids**
 Add top-level "ids" array with components as specified by query.
 

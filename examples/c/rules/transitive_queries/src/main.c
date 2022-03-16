@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     // Iterate the rule
     ecs_iter_t it = ecs_rule_iter(ecs, r);
     while (ecs_rule_next(&it)) {
-        ecs_entity_t location = ecs_rule_get_var(&it, location_var);
+        ecs_entity_t location = ecs_iter_get_var(&it, location_var);
         for (int i = 0; i < it.count; i ++) {
             printf("%s lives in %s\n",
                 ecs_get_name(ecs, it.entities[i]),

@@ -3485,6 +3485,16 @@ FLECS_API
 bool ecs_iter_is_true(
     ecs_iter_t *it);
 
+/** Get value for iterator variable.
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ */
+FLECS_API
+ecs_entity_t ecs_iter_get_var(
+    ecs_iter_t *it,
+    int32_t var_id);
+
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
  * return at most 'limit' results.

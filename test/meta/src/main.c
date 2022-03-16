@@ -515,6 +515,10 @@ void SerializeToJson_serialize_iterator_w_inout_filter_reflected_component(void)
 void SerializeToJson_serialize_iterator_w_inout_out_tag(void);
 void SerializeToJson_serialize_iterator_w_inout_out_component(void);
 void SerializeToJson_serialize_iterator_w_inout_out_reflected_component(void);
+void SerializeToJson_serialize_paged_iterator(void);
+void SerializeToJson_serialize_paged_iterator_w_optional_component(void);
+void SerializeToJson_serialize_paged_iterator_w_optional_tag(void);
+void SerializeToJson_serialize_paged_iterator_w_vars(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -2518,6 +2522,22 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_iterator_w_inout_out_reflected_component",
         SerializeToJson_serialize_iterator_w_inout_out_reflected_component
+    },
+    {
+        "serialize_paged_iterator",
+        SerializeToJson_serialize_paged_iterator
+    },
+    {
+        "serialize_paged_iterator_w_optional_component",
+        SerializeToJson_serialize_paged_iterator_w_optional_component
+    },
+    {
+        "serialize_paged_iterator_w_optional_tag",
+        SerializeToJson_serialize_paged_iterator_w_optional_tag
+    },
+    {
+        "serialize_paged_iterator_w_vars",
+        SerializeToJson_serialize_paged_iterator_w_vars
     }
 };
 
@@ -2779,7 +2799,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        93,
+        97,
         SerializeToJson_testcases
     },
     {

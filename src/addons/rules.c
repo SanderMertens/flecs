@@ -3024,23 +3024,6 @@ bool ecs_rule_var_is_entity(
     return rule->vars[var_id].kind == EcsRuleVarKindEntity;
 }
 
-/* Public function to get the value of a variable. */
-ecs_entity_t ecs_rule_get_var(
-    const ecs_iter_t *iter,
-    int32_t var_id)
-{
-    const ecs_rule_iter_t *it = &iter->priv.iter.rule;
-    const ecs_rule_t *rule = it->rule;
-
-    /* We can only return entity variables */
-    if (rule->vars[var_id].kind == EcsRuleVarKindEntity) {
-        ecs_rule_reg_t *regs = get_register_frame(it, rule->frame_count - 1);
-        return entity_reg_get(rule, regs, var_id);
-    } else {
-        return 0;
-    }
-}
-
 /* Public function to set the value of a variable before iterating. */
 void ecs_rule_set_var(
     ecs_iter_t *it,

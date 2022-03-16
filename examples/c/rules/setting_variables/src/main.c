@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
     ecs_rule_set_var(&it, player_var, ecs_lookup(ecs, "MyPlayer"));
 
     while (ecs_rule_next(&it)) {
-        ecs_entity_t player = ecs_rule_get_var(&it, player_var);
-        ecs_entity_t platoon = ecs_rule_get_var(&it, platoon_var);
+        ecs_entity_t player = ecs_iter_get_var(&it, player_var);
+        ecs_entity_t platoon = ecs_iter_get_var(&it, platoon_var);
         char *platoon_str = ecs_get_fullpath(ecs, platoon);
         char *class_str = ecs_id_str(ecs, ecs_term_id(&it, 1));
 

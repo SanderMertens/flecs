@@ -57,7 +57,7 @@ inline flecs::type iter::type() const {
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+    return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));
 }
 
 /** Get value of variable by name.
@@ -69,7 +69,7 @@ inline flecs::entity iter::get_var(const char *name) const {
     const flecs::rule_t *r = rit->rule;
     int var_id = ecs_rule_find_var(r, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
-    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+    return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));
 }
 #endif
 

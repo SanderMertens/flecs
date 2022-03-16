@@ -105,7 +105,7 @@ int32_t ecs_rule_var_count(
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
- * be used in operations like ecs_rule_set_var and ecs_rule_get_var.
+ * be used in operations like ecs_rule_set_var and ecs_iter_get_var.
  * 
  * @param rule The rule.
  * @param name The variable name.
@@ -163,22 +163,6 @@ void ecs_rule_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t value);
-
-/** Get value of variable for current result.
- * This operation should be called after ecs_rule_next has returned true.
- * 
- * If a variable has not been initialized with a value (for example, if it 
- * occurs in a term with an optional operator) this operation will return
- * EcsWildcard.
- * 
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The value of the variable.
- */
-FLECS_API
-ecs_entity_t ecs_rule_get_var(
-    const ecs_iter_t *it,
-    int32_t var_id);
 
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When

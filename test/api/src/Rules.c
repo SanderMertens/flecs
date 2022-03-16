@@ -17,7 +17,7 @@
 }
 
 #define test_var(it, var_id, str) {\
-    ecs_entity_t _var_e = ecs_rule_get_var(it, var_id);\
+    ecs_entity_t _var_e = ecs_iter_get_var(it, var_id);\
     test_assert(_var_e != 0);\
     char *_var_str = ecs_id_str((it)->world, _var_e);\
     test_str(_var_str, str);\
@@ -3610,13 +3610,13 @@ void Rules_not_term_w_subj_var() {
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_1);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_4);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_4);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3659,25 +3659,25 @@ void Rules_not_term_w_subj_var_match_n_per_type() {
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_1);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_1);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_2);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_2);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_3);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_3);
 
     test_bool(true, ecs_rule_next(&it));
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), TagB);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e_4);
+    test_assert(ecs_iter_get_var(&it, x_var) == e_4);
 
     test_bool(false, ecs_rule_next(&it));
 
@@ -3963,7 +3963,7 @@ void Rules_childof_this() {
     test_int(it.entities[0], e1);
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child1);
 
@@ -3972,7 +3972,7 @@ void Rules_childof_this() {
     test_int(it.entities[0], e1);
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child2);
 
@@ -4011,7 +4011,7 @@ void Rules_childof_this_as_identifier() {
     test_int(it.entities[0], e1);
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child1);
 
@@ -4020,7 +4020,7 @@ void Rules_childof_this_as_identifier() {
     test_int(it.entities[0], e1);
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(EcsChildOf, e1));
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == child2);
 
@@ -4203,7 +4203,7 @@ void Rules_optional_term_on_variable() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_1);
     test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_1));
@@ -4218,7 +4218,7 @@ void Rules_optional_term_on_variable() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_2);
     test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_2));
@@ -4233,7 +4233,7 @@ void Rules_optional_term_on_variable() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    var = ecs_rule_get_var(&it, x_var);
+    var = ecs_iter_get_var(&it, x_var);
     test_assert(var != 0);
     test_assert(var == obj_3);
     test_int(ecs_term_id(&it, 1), ecs_pair(Likes, obj_3));
@@ -4426,7 +4426,7 @@ void Rules_optional_w_obj_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
-    test_int(EcsWildcard, ecs_rule_get_var(&it, x_var));
+    test_int(EcsWildcard, ecs_iter_get_var(&it, x_var));
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(Likes, EcsWildcard));
     test_bool(true, ecs_term_is_set(&it, 1));
@@ -4435,7 +4435,7 @@ void Rules_optional_w_obj_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
-    test_int(parent, ecs_rule_get_var(&it, x_var));
+    test_int(parent, ecs_iter_get_var(&it, x_var));
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(Likes, parent));
     test_bool(true, ecs_term_is_set(&it, 1));
@@ -4444,7 +4444,7 @@ void Rules_optional_w_obj_var() {
     test_bool(true, ecs_rule_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
-    test_int(EcsWildcard, ecs_rule_get_var(&it, x_var));
+    test_int(EcsWildcard, ecs_iter_get_var(&it, x_var));
     test_int(ecs_term_id(&it, 1), Tag);
     test_int(ecs_term_id(&it, 2), ecs_pair(Likes, EcsWildcard));
     test_bool(true, ecs_term_is_set(&it, 1));
@@ -4610,7 +4610,7 @@ void Rules_term_w_x_x_x() {
     test_int(it.term_count, 1);
     test_assert(it.terms != NULL);
     test_int(it.count, 0);
-    test_assert(ecs_rule_get_var(&it, x_var) == e);
+    test_assert(ecs_iter_get_var(&it, x_var) == e);
 
     test_assert(!ecs_rule_next(&it));
     
@@ -4874,7 +4874,7 @@ void Rules_rule_iter_set_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(it.ids[0], ecs_pair(Rel, ObjA));
-    test_int(ObjA, ecs_rule_get_var(&it, x_var));
+    test_int(ObjA, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
@@ -4883,7 +4883,7 @@ void Rules_rule_iter_set_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(it.ids[0], ecs_pair(Rel, ObjB));
-    test_int(ObjB, ecs_rule_get_var(&it, x_var));
+    test_int(ObjB, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
@@ -4892,7 +4892,7 @@ void Rules_rule_iter_set_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(it.ids[0], ecs_pair(Rel, ObjC));
-    test_int(ObjC, ecs_rule_get_var(&it, x_var));
+    test_int(ObjC, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     ecs_rule_fini(r);
@@ -4942,16 +4942,16 @@ void Rules_rule_iter_set_2_vars() {
     test_int(it.entities[0], e1);
     test_int(it.ids[0], ecs_pair(RelX, ObjA));
     test_int(it.ids[1], ecs_pair(RelY, ObjB));
-    test_int(ObjA, ecs_rule_get_var(&it, x_var));
-    test_int(ObjB, ecs_rule_get_var(&it, y_var));
+    test_int(ObjA, ecs_iter_get_var(&it, x_var));
+    test_int(ObjB, ecs_iter_get_var(&it, y_var));
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(it.ids[0], ecs_pair(RelX, ObjB));
     test_int(it.ids[1], ecs_pair(RelY, ObjB));
-    test_int(ObjB, ecs_rule_get_var(&it, x_var));
-    test_int(ObjB, ecs_rule_get_var(&it, y_var));
+    test_int(ObjB, ecs_iter_get_var(&it, x_var));
+    test_int(ObjB, ecs_iter_get_var(&it, y_var));
     test_bool(ecs_rule_next(&it), false);
 
     /* X = ObjA, Y = ObjB */
@@ -4963,8 +4963,8 @@ void Rules_rule_iter_set_2_vars() {
     test_int(it.entities[0], e1);
     test_int(it.ids[0], ecs_pair(RelX, ObjA));
     test_int(it.ids[1], ecs_pair(RelY, ObjB));
-    test_int(ObjA, ecs_rule_get_var(&it, x_var));
-    test_int(ObjB, ecs_rule_get_var(&it, y_var));
+    test_int(ObjA, ecs_iter_get_var(&it, x_var));
+    test_int(ObjB, ecs_iter_get_var(&it, y_var));
     test_bool(ecs_rule_next(&it), false);
 
     /* X = ObjC, Y = * */
@@ -4976,8 +4976,8 @@ void Rules_rule_iter_set_2_vars() {
     test_int(it.entities[0], e3);
     test_int(it.ids[0], ecs_pair(RelX, ObjC));
     test_int(it.ids[1], ecs_pair(RelY, ObjA));
-    test_int(ObjC, ecs_rule_get_var(&it, x_var));
-    test_int(ObjA, ecs_rule_get_var(&it, y_var));
+    test_int(ObjC, ecs_iter_get_var(&it, x_var));
+    test_int(ObjA, ecs_iter_get_var(&it, y_var));
     test_bool(ecs_rule_next(&it), false);
 
     ecs_rule_fini(r);
@@ -5011,7 +5011,7 @@ void Rules_rule_iter_set_pred_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
     test_int(it.ids[0], TagA);
-    test_int(TagA, ecs_rule_get_var(&it, x_var));
+    test_int(TagA, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
@@ -5020,7 +5020,7 @@ void Rules_rule_iter_set_pred_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
     test_int(it.ids[0], TagB);
-    test_int(TagB, ecs_rule_get_var(&it, x_var));
+    test_int(TagB, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
@@ -5029,7 +5029,7 @@ void Rules_rule_iter_set_pred_var() {
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_int(it.ids[0], TagC);
-    test_int(TagC, ecs_rule_get_var(&it, x_var));
+    test_int(TagC, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     ecs_rule_fini(r);
@@ -5076,7 +5076,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_int(it.entities[0], e1);
     test_int(it.ids[0], ecs_pair(RelX, ObjA));
     test_int(it.ids[1], ecs_pair(RelY, ObjA));
-    test_int(ObjA, ecs_rule_get_var(&it, x_var));
+    test_int(ObjA, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
@@ -5086,7 +5086,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_int(it.entities[0], e2);
     test_int(it.ids[0], ecs_pair(RelX, ObjB));
     test_int(it.ids[1], ecs_pair(RelY, ObjB));
-    test_int(ObjB, ecs_rule_get_var(&it, x_var));
+    test_int(ObjB, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
     
     it = ecs_rule_iter(world, r);
@@ -5096,7 +5096,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_int(it.entities[0], e3);
     test_int(it.ids[0], ecs_pair(RelX, ObjC));
     test_int(it.ids[1], ecs_pair(RelY, ObjC));
-    test_int(ObjC, ecs_rule_get_var(&it, x_var));
+    test_int(ObjC, ecs_iter_get_var(&it, x_var));
     test_bool(ecs_rule_next(&it), false);
 
     ecs_rule_fini(r);
@@ -5134,36 +5134,36 @@ void Rules_rule_iter_set_cyclic_variable() {
     
     // First verify that all entities match when no variables are set
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), alice);
-    test_int(ecs_rule_get_var(&it, y_var), bob);
+    test_int(ecs_iter_get_var(&it, x_var), alice);
+    test_int(ecs_iter_get_var(&it, y_var), bob);
 
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), bob);
-    test_int(ecs_rule_get_var(&it, y_var), alice);
+    test_int(ecs_iter_get_var(&it, x_var), bob);
+    test_int(ecs_iter_get_var(&it, y_var), alice);
 
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), john);
-    test_int(ecs_rule_get_var(&it, y_var), jane);
+    test_int(ecs_iter_get_var(&it, x_var), john);
+    test_int(ecs_iter_get_var(&it, y_var), jane);
 
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), jane);
-    test_int(ecs_rule_get_var(&it, y_var), john);
+    test_int(ecs_iter_get_var(&it, x_var), jane);
+    test_int(ecs_iter_get_var(&it, y_var), john);
     test_bool( ecs_rule_next(&it), false );
 
     // Iterate again with X = bob
     it = ecs_rule_iter(world, r);
     ecs_rule_set_var(&it, x_var, bob);
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), bob);
-    test_int(ecs_rule_get_var(&it, y_var), alice);
+    test_int(ecs_iter_get_var(&it, x_var), bob);
+    test_int(ecs_iter_get_var(&it, y_var), alice);
     test_bool( ecs_rule_next(&it), false );
 
     // Iterate again with Y = alice
     it = ecs_rule_iter(world, r);
     ecs_rule_set_var(&it, x_var, alice);
     test_bool( ecs_rule_next(&it), true );
-    test_int(ecs_rule_get_var(&it, x_var), alice);
-    test_int(ecs_rule_get_var(&it, y_var), bob);
+    test_int(ecs_iter_get_var(&it, x_var), alice);
+    test_int(ecs_iter_get_var(&it, y_var), bob);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);
@@ -5205,22 +5205,22 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], alice);
-    test_int(ecs_rule_get_var(&it, x_var), bob);
+    test_int(ecs_iter_get_var(&it, x_var), bob);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], bob);
-    test_int(ecs_rule_get_var(&it, x_var), alice);
+    test_int(ecs_iter_get_var(&it, x_var), alice);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], john);
-    test_int(ecs_rule_get_var(&it, x_var), jane);
+    test_int(ecs_iter_get_var(&it, x_var), jane);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], jane);
-    test_int(ecs_rule_get_var(&it, x_var), john);
+    test_int(ecs_iter_get_var(&it, x_var), john);
     test_bool( ecs_rule_next(&it), false );
 
     // Iterate again with X = bob
@@ -5230,7 +5230,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], alice);
-    test_int(ecs_rule_get_var(&it, x_var), bob);
+    test_int(ecs_iter_get_var(&it, x_var), bob);
     test_bool( ecs_rule_next(&it), false );
 
     // Iterate again with Y = alice
@@ -5240,7 +5240,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
     test_int(it.entities[0], bob);
-    test_int(ecs_rule_get_var(&it, x_var), alice);
+    test_int(ecs_iter_get_var(&it, x_var), alice);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);
@@ -5280,12 +5280,12 @@ void Rules_term_w_same_subj_obj_var() {
     test_bool( ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e1));
-    test_int( ecs_rule_get_var(&it, x_var), e1);
+    test_int( ecs_iter_get_var(&it, x_var), e1);
 
     test_bool( ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int( ecs_term_id(&it, 1), ecs_pair(Rel, e5));
-    test_int( ecs_rule_get_var(&it, x_var), e5);
+    test_int( ecs_iter_get_var(&it, x_var), e5);
 
     test_bool( ecs_rule_next(&it), false);
 
@@ -5576,13 +5576,13 @@ void Rules_test_subj_w_wildcard_w_pairs_var() {
     test_int(it.count, 0);
     test_int(it.subjects[0], e);
     test_int(ecs_term_id(&it, 1), TagA);
-    test_int(ecs_rule_get_var(&it, c_var), TagA);
+    test_int(ecs_iter_get_var(&it, c_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.subjects[0], e);
     test_int(ecs_term_id(&it, 1), TagB);
-    test_int(ecs_rule_get_var(&it, c_var), TagB);
+    test_int(ecs_iter_get_var(&it, c_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5617,22 +5617,22 @@ void Rules_test_subj_w_wildcard_wildcard_w_pairs_var() {
     test_int(it.count, 0);
     test_int(it.subjects[0], e);
     test_int(ecs_term_id(&it, 1), ecs_pair(ecs_id(EcsIdentifier), EcsName));
-    test_int(ecs_rule_get_var(&it, r_var), ecs_id(EcsIdentifier));
-    test_int(ecs_rule_get_var(&it, o_var), EcsName);
+    test_int(ecs_iter_get_var(&it, r_var), ecs_id(EcsIdentifier));
+    test_int(ecs_iter_get_var(&it, o_var), EcsName);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.subjects[0], e);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
-    test_int(ecs_rule_get_var(&it, r_var), Rel);
-    test_int(ecs_rule_get_var(&it, o_var), TagA);
+    test_int(ecs_iter_get_var(&it, r_var), Rel);
+    test_int(ecs_iter_get_var(&it, o_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 0);
     test_int(it.subjects[0], e);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
-    test_int(ecs_rule_get_var(&it, r_var), Rel);
-    test_int(ecs_rule_get_var(&it, o_var), TagB);
+    test_int(ecs_iter_get_var(&it, r_var), Rel);
+    test_int(ecs_iter_get_var(&it, o_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5667,21 +5667,21 @@ void Rules_test_this_w_wildcard_w_pairs_var() {
     test_int(it.entities[0], e);
     test_int(ecs_term_id(&it, 1), MyTag);
     test_int(ecs_term_id(&it, 2), MyTag);
-    test_int(ecs_rule_get_var(&it, c_var), MyTag);
+    test_int(ecs_iter_get_var(&it, c_var), MyTag);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(ecs_term_id(&it, 1), TagA);
     test_int(ecs_term_id(&it, 2), MyTag);
-    test_int(ecs_rule_get_var(&it, c_var), TagA);
+    test_int(ecs_iter_get_var(&it, c_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(ecs_term_id(&it, 1), TagB);
     test_int(ecs_term_id(&it, 2), MyTag);
-    test_int(ecs_rule_get_var(&it, c_var), TagB);
+    test_int(ecs_iter_get_var(&it, c_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 
@@ -5718,16 +5718,16 @@ void Rules_test_this_w_wildcard_wildcard_w_pairs_var() {
     test_int(it.entities[0], e);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagA));
     test_int(ecs_term_id(&it, 2), MyTag);
-    test_int(ecs_rule_get_var(&it, r_var), Rel);
-    test_int(ecs_rule_get_var(&it, o_var), TagA);
+    test_int(ecs_iter_get_var(&it, r_var), Rel);
+    test_int(ecs_iter_get_var(&it, o_var), TagA);
 
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(ecs_term_id(&it, 1), ecs_pair(Rel, TagB));
     test_int(ecs_term_id(&it, 2), MyTag);
-    test_int(ecs_rule_get_var(&it, r_var), Rel);
-    test_int(ecs_rule_get_var(&it, o_var), TagB);
+    test_int(ecs_iter_get_var(&it, r_var), Rel);
+    test_int(ecs_iter_get_var(&it, o_var), TagB);
 
     test_bool(ecs_rule_next(&it), false);
 

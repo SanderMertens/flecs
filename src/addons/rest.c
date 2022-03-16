@@ -101,6 +101,18 @@ void rest_bool_param(
 }
 
 static
+void rest_int_param(
+    const ecs_http_request_t *req,
+    const char *name,
+    int32_t *value_out)
+{
+    const char *value = ecs_http_get_param(req, name);
+    if (value) {
+        *value_out = atoi(value);
+    }
+}
+
+static
 void rest_parse_json_ser_entity_params(
     ecs_entity_to_json_desc_t *desc,
     const ecs_http_request_t *req)
@@ -200,9 +212,16 @@ bool rest_reply(
             } else {
                 ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
                 rest_parse_json_ser_iter_params(&desc, req);
-                
+
+                int32_t offset = 0;
+                int32_t limit = 100;
+
+                rest_int_param(req, "offset", &offset);
+                rest_int_param(req, "limit", &limit);
+
                 ecs_iter_t it = ecs_rule_iter(world, r);
-                ecs_iter_to_json_buf(world, &it, &reply->body, &desc);
+                ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
+                ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
                 ecs_rule_fini(r);
             }
 

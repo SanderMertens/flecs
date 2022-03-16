@@ -55,8 +55,8 @@ int main(int argc, char *argv[]) {
     // Iterate the rule
     ecs_iter_t it = ecs_rule_iter(ecs, r);
     while (ecs_rule_next(&it)) {
-        ecs_entity_t x = ecs_rule_get_var(&it, x_var);
-        ecs_entity_t y = ecs_rule_get_var(&it, y_var);
+        ecs_entity_t x = ecs_iter_get_var(&it, x_var);
+        ecs_entity_t y = ecs_iter_get_var(&it, y_var);
         printf("%s likes %s\n", ecs_get_name(ecs, x), ecs_get_name(ecs, y));
     }
 

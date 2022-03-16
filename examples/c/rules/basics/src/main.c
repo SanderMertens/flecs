@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     // Iterate the rule
     ecs_iter_t it = ecs_rule_iter(ecs, r);
     while (ecs_rule_next(&it)) {
-        ecs_entity_t food = ecs_rule_get_var(&it, food_var);
+        ecs_entity_t food = ecs_iter_get_var(&it, food_var);
         for (int i = 0; i < it.count; i ++) {
             printf("%s eats %s\n", ecs_get_name(ecs, it.entities[i]),
                 ecs_get_name(ecs, food));

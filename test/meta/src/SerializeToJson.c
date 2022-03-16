@@ -3401,3 +3401,199 @@ void SerializeToJson_serialize_iterator_w_inout_out_reflected_component() {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_serialize_paged_iterator() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
+    ecs_set(world, 0, Position, {10, 20});
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {{ .id = ecs_id(Position) }}
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(3, pit.count);
+    test_uint(e2, pit.entities[0]);
+    test_uint(e3, pit.entities[1]);
+    test_uint(e4, pit.entities[2]);
+
+    Position *p = ecs_term(&pit, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_int(p[2].x, 30);
+    test_int(p[2].y, 40);
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_paged_iterator_w_optional_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_set(world, e4, Velocity, {1, 2});
+    ecs_set(world, e5, Velocity, {2, 3});
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsOptional }
+        }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(2, pit.count);
+    test_bool(true, ecs_term_is_set(&pit, 1));
+    test_bool(false, ecs_term_is_set(&pit, 2));
+    test_uint(e2, pit.entities[0]);
+    test_uint(e3, pit.entities[1]);
+
+    Position *p = ecs_term(&pit, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_bool(true, ecs_term_is_set(&pit, 1));
+    test_bool(true, ecs_term_is_set(&pit, 2));
+
+    test_uint(e4, pit.entities[0]);
+    p = ecs_term(&pit, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    Velocity *v = ecs_term(&pit, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_paged_iterator_w_optional_tag() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = Tag, .oper = EcsOptional }
+        }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(2, pit.count);
+    test_bool(true, ecs_term_is_set(&pit, 1));
+    test_bool(false, ecs_term_is_set(&pit, 2));
+    test_uint(e2, pit.entities[0]);
+    test_uint(e3, pit.entities[1]);
+
+    Position *p = ecs_term(&pit, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_bool(true, ecs_term_is_set(&pit, 1));
+    test_bool(true, ecs_term_is_set(&pit, 2));
+
+    test_uint(e4, pit.entities[0]);
+    p = ecs_term(&pit, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_paged_iterator_w_vars() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, ObjA);
+    ecs_entity_t e4 = ecs_new_w_pair(world, Rel, ObjB);
+    ecs_new_w_pair(world, Rel, ObjB);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+        .expr = "(Rel, _Var)"
+    });
+
+    int32_t var = ecs_rule_find_var(r, "Var");
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
+
+    test_assert(var < pit.variable_count);
+    test_str("Var", pit.variable_names[var]);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(2, pit.count);
+    test_uint(e2, pit.entities[0]);
+    test_uint(e3, pit.entities[1]);
+    test_uint(ObjA, ecs_iter_get_var(&pit, var));
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_uint(e4, pit.entities[0]);
+    test_uint(ObjB, ecs_iter_get_var(&pit, var));
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

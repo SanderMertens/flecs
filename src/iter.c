@@ -583,6 +583,17 @@ error:
     return false;
 }
 
+ecs_entity_t ecs_iter_get_var(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    return it->variables[var_id];
+error:
+    return 0;
+}
+
 ecs_iter_t ecs_page_iter(
     const ecs_iter_t *it,
     int32_t offset,
@@ -591,18 +602,16 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    return (ecs_iter_t){
-        .real_world = it->real_world,
-        .world = it->world,
-        .priv.iter.page = {
-            .offset = offset,
-            .limit = limit,
-            .remaining = limit
-        },
-        .next = ecs_page_next,
-        .chain_it = (ecs_iter_t*)it,
-        .is_instanced = it->is_instanced
+    ecs_iter_t result = *it;
+    result.priv.iter.page = (ecs_page_iter_t){
+        .offset = offset,
+        .limit = limit,
+        .remaining = limit
     };
+    result.next = ecs_page_next;
+    result.chain_it = (ecs_iter_t*)it;
+
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }

@@ -6807,6 +6807,16 @@ FLECS_API
 bool ecs_iter_is_true(
     ecs_iter_t *it);
 
+/** Get value for iterator variable.
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ */
+FLECS_API
+ecs_entity_t ecs_iter_get_var(
+    ecs_iter_t *it,
+    int32_t var_id);
+
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
  * return at most 'limit' results.
@@ -10796,7 +10806,7 @@ int32_t ecs_rule_var_count(
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
- * be used in operations like ecs_rule_set_var and ecs_rule_get_var.
+ * be used in operations like ecs_rule_set_var and ecs_iter_get_var.
  * 
  * @param rule The rule.
  * @param name The variable name.
@@ -10854,22 +10864,6 @@ void ecs_rule_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t value);
-
-/** Get value of variable for current result.
- * This operation should be called after ecs_rule_next has returned true.
- * 
- * If a variable has not been initialized with a value (for example, if it 
- * occurs in a term with an optional operator) this operation will return
- * EcsWildcard.
- * 
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The value of the variable.
- */
-FLECS_API
-ecs_entity_t ecs_rule_get_var(
-    const ecs_iter_t *it,
-    int32_t var_id);
 
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When
@@ -22458,7 +22452,7 @@ inline flecs::type iter::type() const {
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(m_iter->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+    return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));
 }
 
 /** Get value of variable by name.
@@ -22470,7 +22464,7 @@ inline flecs::entity iter::get_var(const char *name) const {
     const flecs::rule_t *r = rit->rule;
     int var_id = ecs_rule_find_var(r, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
-    return flecs::entity(m_iter->world, ecs_rule_get_var(m_iter, var_id));
+    return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));
 }
 #endif
 

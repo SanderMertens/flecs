@@ -20424,23 +20424,6 @@ bool ecs_rule_var_is_entity(
     return rule->vars[var_id].kind == EcsRuleVarKindEntity;
 }
 
-/* Public function to get the value of a variable. */
-ecs_entity_t ecs_rule_get_var(
-    const ecs_iter_t *iter,
-    int32_t var_id)
-{
-    const ecs_rule_iter_t *it = &iter->priv.iter.rule;
-    const ecs_rule_t *rule = it->rule;
-
-    /* We can only return entity variables */
-    if (rule->vars[var_id].kind == EcsRuleVarKindEntity) {
-        ecs_rule_reg_t *regs = get_register_frame(it, rule->frame_count - 1);
-        return entity_reg_get(rule, regs, var_id);
-    } else {
-        return 0;
-    }
-}
-
 /* Public function to set the value of a variable before iterating. */
 void ecs_rule_set_var(
     ecs_iter_t *it,
@@ -30418,6 +30401,18 @@ void rest_bool_param(
 }
 
 static
+void rest_int_param(
+    const ecs_http_request_t *req,
+    const char *name,
+    int32_t *value_out)
+{
+    const char *value = ecs_http_get_param(req, name);
+    if (value) {
+        *value_out = atoi(value);
+    }
+}
+
+static
 void rest_parse_json_ser_entity_params(
     ecs_entity_to_json_desc_t *desc,
     const ecs_http_request_t *req)
@@ -30517,9 +30512,16 @@ bool rest_reply(
             } else {
                 ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
                 rest_parse_json_ser_iter_params(&desc, req);
-                
+
+                int32_t offset = 0;
+                int32_t limit = 100;
+
+                rest_int_param(req, "offset", &offset);
+                rest_int_param(req, "limit", &limit);
+
                 ecs_iter_t it = ecs_rule_iter(world, r);
-                ecs_iter_to_json_buf(world, &it, &reply->body, &desc);
+                ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
+                ecs_iter_to_json_buf(world, &pit, &reply->body, &desc);
                 ecs_rule_fini(r);
             }
 
@@ -45035,6 +45037,17 @@ error:
     return false;
 }
 
+ecs_entity_t ecs_iter_get_var(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    return it->variables[var_id];
+error:
+    return 0;
+}
+
 ecs_iter_t ecs_page_iter(
     const ecs_iter_t *it,
     int32_t offset,
@@ -45043,18 +45056,16 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    return (ecs_iter_t){
-        .real_world = it->real_world,
-        .world = it->world,
-        .priv.iter.page = {
-            .offset = offset,
-            .limit = limit,
-            .remaining = limit
-        },
-        .next = ecs_page_next,
-        .chain_it = (ecs_iter_t*)it,
-        .is_instanced = it->is_instanced
+    ecs_iter_t result = *it;
+    result.priv.iter.page = (ecs_page_iter_t){
+        .offset = offset,
+        .limit = limit,
+        .remaining = limit
     };
+    result.next = ecs_page_next;
+    result.chain_it = (ecs_iter_t*)it;
+
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }
