@@ -8,10 +8,11 @@ namespace _
 
 template <typename T>
 inline void ctor_world_entity_impl(
-    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
-    size_t size, int32_t count, void*)
+    ecs_world_t* world, const ecs_entity_t* ids, void *ptr, 
+    int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
     flecs::world w(world);
     for (int i = 0; i < count; i ++) {

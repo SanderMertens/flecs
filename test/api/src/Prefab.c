@@ -3369,15 +3369,6 @@ void Prefab_get_component_pair_from_prefab_base() {
     ecs_fini(world);
 }
 
-
-void ctor_to_zero(
-    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
-    void *ptr, size_t size, int32_t count, void *ctx)
-{
-    ecs_os_memset(ptr, 0, size * count);
-}
-
-
 void Prefab_override_dont_inherit() {
     ecs_world_t *world = ecs_init();
 
@@ -3386,7 +3377,7 @@ void Prefab_override_dont_inherit() {
     ecs_add_id(world, ecs_id(Position), EcsDontInherit);
 
     ecs_set_component_actions(world, Position, {
-        .ctor = ctor_to_zero
+        .ctor = ecs_default_ctor
     });
 
     ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});

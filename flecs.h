@@ -373,20 +373,16 @@ typedef int32_t ecs_size_t;
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
     void type##_##postfix(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *entity_ptr,\
         void *_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)entity_ptr;\
         (void)_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t entity = entity_ptr[i];\
             type *var = &((type*)_ptr)[i];\
@@ -400,24 +396,20 @@ typedef int32_t ecs_size_t;
 #define ECS_COPY_IMPL(type, dst_var, src_var, ...)\
     void type##_##copy(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         const void *_src_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)dst_entities;\
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
@@ -435,24 +427,20 @@ typedef int32_t ecs_size_t;
 #define ECS_MOVE_IMPL(type, dst_var, src_var, ...)\
     void type##_##move(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         void *_src_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)dst_entities;\
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
@@ -466,7 +454,7 @@ typedef int32_t ecs_size_t;
         }\
     }
 
-/* Constructor / destructor convenience macro */
+
 #define ECS_ON_SET_IMPL(type, var, ...)\
     void type##_##on_set(ecs_iter_t *_it)\
     {\
@@ -2538,6 +2526,9 @@ typedef struct ecs_iter_t ecs_iter_t;
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
 
+/** Type information */
+typedef struct ecs_type_info_t ecs_type_info_t;
+
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
@@ -2660,6 +2651,34 @@ typedef int (*ecs_compare_action_t)(
 /** Callback used for hashing values */
 typedef uint64_t (*ecs_hash_value_action_t)(
     const void *ptr); 
+
+/** Constructor/destructor callback */
+typedef void (*ecs_xtor_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *entities,
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Copy is invoked when a component is copied into another component. */
+typedef void (*ecs_copy_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *dst_entities,
+    const ecs_entity_t *src_entities,
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Move is invoked when a component is moved to another component. */
+typedef void (*ecs_move_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *dst_entities,
+    const ecs_entity_t *src_entities,
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
 
 /** @} */
 
@@ -3148,72 +3167,6 @@ struct ecs_iter_t {
     ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// Function types
-////////////////////////////////////////////////////////////////////////////////
-
-typedef struct EcsComponentLifecycle EcsComponentLifecycle;
-
-/** Constructor/destructor. Used for initializing / deinitializing components. */
-typedef void (*ecs_xtor_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entity_ptr,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
-/** Copy is invoked when a component is copied into another component. */
-typedef void (*ecs_copy_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,    
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    const void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
-/** Move is invoked when a component is moved to another component. */
-typedef void (*ecs_move_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
-/** Copy ctor */
-typedef void (*ecs_copy_ctor_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    const void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
-/** Move ctor */
-typedef void (*ecs_move_ctor_t)(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    void *src_ptr,
-    size_t size,
-    int32_t count,
-    void *ctx);
-
 #ifdef __cplusplus
 }
 #endif
@@ -3286,9 +3239,13 @@ const char* ecs_identifier_is_var(
 //// Ctor that initializes component to 0
 ////////////////////////////////////////////////////////////////////////////////
 
+FLECS_API
 void ecs_default_ctor(
-    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
-    void *ptr, size_t size, int32_t count, void *ctx);
+    ecs_world_t *world, 
+    const ecs_entity_t *entity_ptr,
+    void *ptr, 
+    int32_t count, 
+    const ecs_type_info_t *ctx);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -4086,7 +4043,7 @@ typedef struct EcsType {
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
-struct EcsComponentLifecycle {
+typedef struct EcsComponentLifecycle {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
     ecs_copy_t copy;            /* copy assignment */
@@ -4095,22 +4052,22 @@ struct EcsComponentLifecycle {
     void *ctx;                  /* User defined context */
 
     /* Ctor + copy */
-    ecs_copy_ctor_t copy_ctor;
+    ecs_copy_t copy_ctor;
 
     /* Ctor + move */  
-    ecs_move_ctor_t move_ctor;
+    ecs_move_t move_ctor;
 
     /* Ctor + move + dtor (or move_ctor + dtor).
      * This combination is typically used when a component is moved from one
      * location to a new location, like when it is moved to a new table. If
      * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t ctor_move_dtor;
+    ecs_move_t ctor_move_dtor;
 
     /* Move + dtor.
      * This combination is typically used when a component is moved from one
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t move_dtor;
+    ecs_move_t move_dtor;
 
     /* Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component
@@ -4121,6 +4078,15 @@ struct EcsComponentLifecycle {
      * This callback is invoked after the triggers are invoked, and before the
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
+} EcsComponentLifecycle;
+
+/** Type that contains component information (passed to ctors/dtors/...) */
+struct ecs_type_info_t {
+    EcsComponentLifecycle lifecycle;
+    ecs_entity_t component;
+    ecs_size_t size;
+    ecs_size_t alignment;
+    bool lifecycle_set;
 };
 
 /** Component that stores reference to trigger */
@@ -13848,64 +13814,64 @@ namespace flecs
 namespace _ 
 {
 
-inline void ecs_ctor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    void *, size_t, int32_t, void*)
+inline void ecs_ctor_illegal(ecs_world_t* w, const ecs_entity_t*, 
+    void *, int32_t, const ecs_type_info_t* info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot default construct %s, add %s::%s() or use emplace<T>", 
-        path, path, ecs_get_name(w, id));
+        path, path, ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
-inline void ecs_dtor_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    void *, size_t, int32_t, void*)
+inline void ecs_dtor_illegal(ecs_world_t* w, const ecs_entity_t*, 
+    void *, int32_t, const ecs_type_info_t *info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, "cannnot destruct %s, add ~%s::%s()", 
-        path, path, ecs_get_name(w, id));
+        path, path, ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
-inline void ecs_copy_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, const void *, size_t, int32_t, void*)
+inline void ecs_copy_illegal(ecs_world_t* w, const ecs_entity_t*, 
+    const ecs_entity_t*, void *, const void *, int32_t, const ecs_type_info_t *info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy assign %s, add %s& %s::operator =(const %s&)", path, 
-        ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
+        ecs_get_name(w, info->component), path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
-inline void ecs_move_illegal(ecs_world_t* w, ecs_entity_t id, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, void *, size_t, int32_t, void*)
+inline void ecs_move_illegal(ecs_world_t* w, const ecs_entity_t*, 
+    const ecs_entity_t*, void *, void *, int32_t, const ecs_type_info_t *info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move assign %s, add %s& %s::operator =(%s&&)", path, 
-        ecs_get_name(w, id), path, ecs_get_name(w, id), ecs_get_name(w, id));
+        ecs_get_name(w, info->component), path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
-inline void ecs_copy_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
-    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
-    void *, const void *, size_t, int32_t, void*)
+inline void ecs_copy_ctor_illegal(ecs_world_t* w, 
+    const ecs_entity_t*, const ecs_entity_t*, 
+    void *, const void *, int32_t, const ecs_type_info_t *info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot copy construct %s, add %s::%s(const %s&)",
-        path, path, ecs_get_name(w, id), ecs_get_name(w, id));
+        path, path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
-inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id, 
-    const EcsComponentLifecycle*, const ecs_entity_t*, const ecs_entity_t*, 
-    void *, void *, size_t, int32_t, void*)
+inline void ecs_move_ctor_illegal(ecs_world_t* w,
+    const ecs_entity_t*, const ecs_entity_t*, 
+    void *, void *, int32_t, const ecs_type_info_t *info)
 {
-    char *path = ecs_get_path_w_sep(w, 0, id, "::", "::");
+    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
     ecs_abort(ECS_INVALID_OPERATION, 
         "cannnot move construct %s, add %s::%s(%s&&)",
-        path, path, ecs_get_name(w, id), ecs_get_name(w, id));
+        path, path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
     ecs_os_free(path);
 }
 
@@ -13914,10 +13880,11 @@ inline void ecs_move_ctor_illegal(ecs_world_t* w, ecs_entity_t id,
 // Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
 template <typename T>
 void ctor_impl(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, void *ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
+        ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
         FLECS_PLACEMENT_NEW(&arr[i], T);
@@ -13927,16 +13894,17 @@ void ctor_impl(
 // T(flecs::world, flecs::entity)
 template <typename T>
 void ctor_world_entity_impl(
-    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
-    size_t size, int32_t count, void*);
+    ecs_world_t* world, const ecs_entity_t* ids, void *ptr, int32_t count, 
+    const ecs_type_info_t *info);
 
 // ~T()
 template <typename T>
 void dtor_impl(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, void *ptr, size_t size,
-    int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, void *ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
         arr[i].~T();
@@ -13946,10 +13914,11 @@ void dtor_impl(
 // T& operator=(const T&)
 template <typename T>
 void copy_impl(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*, 
-    void *dst_ptr, const void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    const void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     const T *src_arr = static_cast<const T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -13960,10 +13929,11 @@ void copy_impl(
 // T& operator=(T&&)
 template <typename T>
 void move_impl(
-    ecs_world_t*, ecs_entity_t, const ecs_entity_t*, const ecs_entity_t*,
-    void *dst_ptr, void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -13974,11 +13944,11 @@ void move_impl(
 // T(T&)
 template <typename T>
 void copy_ctor_impl(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr,
+    const void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     const T *src_arr = static_cast<const T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -13989,11 +13959,11 @@ void copy_ctor_impl(
 // T(T&&)
 template <typename T>
 void move_ctor_impl(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -14005,11 +13975,11 @@ void move_ctor_impl(
 // Typically used when moving to a new table, and removing from the old table
 template <typename T>
 void ctor_move_dtor_impl(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -14023,11 +13993,11 @@ void ctor_move_dtor_impl(
 template <typename T, if_not_t<
     std::is_trivially_move_assignable<T>::value > = 0>
 void move_dtor_impl(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -14044,11 +14014,11 @@ void move_dtor_impl(
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value > = 0>
 void move_dtor_impl(
-    ecs_world_t*, ecs_entity_t, const EcsComponentLifecycle*, 
-    const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, size_t size, int32_t count, void*)
+    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
+    void *src_ptr, int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -14190,13 +14160,13 @@ ecs_move_t move() {
 // Trivially copy constructible
 template <typename T, if_t<
     std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_ctor_t copy_ctor() {
+ecs_copy_t copy_ctor() {
     return nullptr;
 }
 
 // No copy ctor
 template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
-ecs_copy_ctor_t copy_ctor() {
+ecs_copy_t copy_ctor() {
     return ecs_copy_ctor_illegal;
 }
 
@@ -14204,20 +14174,20 @@ ecs_copy_ctor_t copy_ctor() {
 template <typename T, if_t<
     std::is_copy_constructible<T>::value &&
     ! std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_ctor_t copy_ctor() {
+ecs_copy_t copy_ctor() {
     return copy_ctor_impl<T>;
 }
 
 // Trivially move constructible
 template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_ctor_t move_ctor() {
+ecs_move_t move_ctor() {
     return nullptr;
 }
 
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
-ecs_move_ctor_t move_ctor() {
+ecs_move_t move_ctor() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible");    
     return ecs_move_ctor_illegal;
@@ -14227,7 +14197,7 @@ ecs_move_ctor_t move_ctor() {
 template <typename T, if_t<
     std::is_move_constructible<T>::value &&
     ! std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_ctor_t move_ctor() {
+ecs_move_t move_ctor() {
     return move_ctor_impl<T>;
 }
 
@@ -14235,7 +14205,7 @@ ecs_move_ctor_t move_ctor() {
 template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value  &&
     std::is_trivially_destructible<T>::value > = 0>
-ecs_move_ctor_t ctor_move_dtor() {
+ecs_move_t ctor_move_dtor() {
     return nullptr;
 }
 
@@ -14243,7 +14213,7 @@ ecs_move_ctor_t ctor_move_dtor() {
 template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
-ecs_move_ctor_t ctor_move_dtor() {
+ecs_move_t ctor_move_dtor() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
@@ -14255,7 +14225,7 @@ template <typename T, if_t<
       std::is_trivially_destructible<T>::value) &&
     std::is_move_constructible<T>::value &&
     std::is_destructible<T>::value > = 0>
-ecs_move_ctor_t ctor_move_dtor() {
+ecs_move_t ctor_move_dtor() {
     return ctor_move_dtor_impl<T>;
 }
 
@@ -14263,7 +14233,7 @@ ecs_move_ctor_t ctor_move_dtor() {
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value  &&
     std::is_trivially_destructible<T>::value > = 0>
-ecs_move_ctor_t move_dtor() {
+ecs_move_t move_dtor() {
     return nullptr;
 }
 
@@ -14271,7 +14241,7 @@ ecs_move_ctor_t move_dtor() {
 template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
-ecs_move_ctor_t move_dtor() {
+ecs_move_t move_dtor() {
     flecs_static_assert(always_false<T>::value,
         "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
@@ -14283,7 +14253,7 @@ template <typename T, if_t<
       std::is_trivially_destructible<T>::value) &&
     std::is_move_assignable<T>::value &&
     std::is_destructible<T>::value > = 0>
-ecs_move_ctor_t move_dtor() {
+ecs_move_t move_dtor() {
     return move_dtor_impl<T>;
 }
 
@@ -22378,10 +22348,11 @@ namespace _
 
 template <typename T>
 inline void ctor_world_entity_impl(
-    ecs_world_t* world, ecs_entity_t, const ecs_entity_t* ids, void *ptr, 
-    size_t size, int32_t count, void*)
+    ecs_world_t* world, const ecs_entity_t* ids, void *ptr, 
+    int32_t count, const ecs_type_info_t *info)
 {
-    (void)size; ecs_assert(size == sizeof(T), ECS_INTERNAL_ERROR, NULL);
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+        ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
     flecs::world w(world);
     for (int i = 0; i < count; i ++) {

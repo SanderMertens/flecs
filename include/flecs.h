@@ -152,6 +152,9 @@ typedef struct ecs_iter_t ecs_iter_t;
 /** Refs cache data that lets them access components faster than ecs_get. */
 typedef struct ecs_ref_t ecs_ref_t;
 
+/** Type information */
+typedef struct ecs_type_info_t ecs_type_info_t;
+
 /* Mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
@@ -274,6 +277,34 @@ typedef int (*ecs_compare_action_t)(
 /** Callback used for hashing values */
 typedef uint64_t (*ecs_hash_value_action_t)(
     const void *ptr); 
+
+/** Constructor/destructor callback */
+typedef void (*ecs_xtor_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *entities,
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Copy is invoked when a component is copied into another component. */
+typedef void (*ecs_copy_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *dst_entities,
+    const ecs_entity_t *src_entities,
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Move is invoked when a component is moved to another component. */
+typedef void (*ecs_move_t)(
+    ecs_world_t *world,
+    const ecs_entity_t *dst_entities,
+    const ecs_entity_t *src_entities,
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
 
 /** @} */
 
@@ -785,7 +816,7 @@ typedef struct EcsType {
 } EcsType;
 
 /** Component that contains lifecycle callbacks for a component. */
-struct EcsComponentLifecycle {
+typedef struct EcsComponentLifecycle {
     ecs_xtor_t ctor;            /* ctor */
     ecs_xtor_t dtor;            /* dtor */
     ecs_copy_t copy;            /* copy assignment */
@@ -794,22 +825,22 @@ struct EcsComponentLifecycle {
     void *ctx;                  /* User defined context */
 
     /* Ctor + copy */
-    ecs_copy_ctor_t copy_ctor;
+    ecs_copy_t copy_ctor;
 
     /* Ctor + move */  
-    ecs_move_ctor_t move_ctor;
+    ecs_move_t move_ctor;
 
     /* Ctor + move + dtor (or move_ctor + dtor).
      * This combination is typically used when a component is moved from one
      * location to a new location, like when it is moved to a new table. If
      * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t ctor_move_dtor;
+    ecs_move_t ctor_move_dtor;
 
     /* Move + dtor.
      * This combination is typically used when a component is moved from one
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
-    ecs_move_ctor_t move_dtor;
+    ecs_move_t move_dtor;
 
     /* Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component
@@ -820,6 +851,15 @@ struct EcsComponentLifecycle {
      * This callback is invoked after the triggers are invoked, and before the
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
+} EcsComponentLifecycle;
+
+/** Type that contains component information (passed to ctors/dtors/...) */
+struct ecs_type_info_t {
+    EcsComponentLifecycle lifecycle;
+    ecs_entity_t component;
+    ecs_size_t size;
+    ecs_size_t alignment;
+    bool lifecycle_set;
 };
 
 /** Component that stores reference to trigger */

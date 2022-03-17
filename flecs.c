@@ -330,15 +330,6 @@ typedef struct ecs_hashed_string_t {
     uint64_t hash;
 } ecs_hashed_string_t;
 
-/** Component-specific data */
-typedef struct ecs_type_info_t {
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
-    ecs_entity_t component;
-    ecs_size_t size;
-    ecs_size_t alignment;
-    bool lifecycle_set;
-} ecs_type_info_t;
-
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
@@ -2464,7 +2455,7 @@ void run_on_remove(
 static
 void ctor_component(
     ecs_world_t *world,
-    ecs_type_info_t *cdata,
+    ecs_type_info_t *ti,
     ecs_column_t *column,
     ecs_entity_t *entities,
     int32_t row,
@@ -2472,15 +2463,11 @@ void ctor_component(
 {
     /* A new component is constructed */
     ecs_xtor_t ctor;
-    if (cdata && (ctor = cdata->lifecycle.ctor)) {
-        void *ctx = cdata->lifecycle.ctx;
+    if (ti && (ctor = ti->lifecycle.ctor)) {
         int16_t size = column->size;
         int16_t alignment = column->alignment;
-
         void *ptr = ecs_vector_get_t(column->data, size, alignment, row);
-
-        ctor(world, cdata->component, entities, ptr, 
-            flecs_itosize(size), count, ctx);
+        ctor(world, entities, ptr, count, ti);
     }
 }
 
@@ -2518,7 +2505,7 @@ static
 void dtor_component(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_type_info_t *cdata,
+    ecs_type_info_t *ti,
     ecs_column_t *column,
     ecs_entity_t *entities,
     ecs_id_t id,
@@ -2530,21 +2517,21 @@ void dtor_component(
         return;
     }
 
-    if (!cdata) {
+    if (!ti) {
         return;
     }
 
     ecs_iter_action_t on_remove = 0;
     if (is_remove) {
-        on_remove = cdata->lifecycle.on_remove;
+        on_remove = ti->lifecycle.on_remove;
     }
 
-    ecs_xtor_t dtor = cdata->lifecycle.dtor;
+    ecs_xtor_t dtor = ti->lifecycle.dtor;
     if (!on_remove && !dtor) {
         return;
     }
 
-    void *ctx = cdata->lifecycle.ctx;
+    void *ctx = ti->lifecycle.ctx;
     int16_t size = column->size;
     int16_t alignment = column->alignment;
     ecs_entity_t *entity_elem = &entities[row];
@@ -2559,8 +2546,7 @@ void dtor_component(
     }
 
     if (dtor) {
-        dtor(world, cdata->component, entity_elem, ptr,
-            flecs_itosize(size), count, ctx);
+        dtor(world, entity_elem, ptr, count, ti);
     }
 }
 
@@ -3043,7 +3029,7 @@ void grow_column(
     ecs_world_t *world,
     ecs_entity_t *entities,
     ecs_column_t *column,
-    ecs_type_info_t *c_info,
+    ecs_type_info_t *ti,
     int32_t to_add,
     int32_t new_size,
     bool construct)
@@ -3061,11 +3047,11 @@ void grow_column(
 
     /* If the array could possibly realloc and the component has a move action 
      * defined, move old elements manually */
-    ecs_move_ctor_t move_ctor;
-    if (c_info && count && can_realloc && 
-        (move_ctor = c_info->lifecycle.move_ctor)) 
+    ecs_move_t move_ctor;
+    if (ti && count && can_realloc && 
+        (move_ctor = ti->lifecycle.move_ctor)) 
     {
-        ecs_xtor_t ctor = c_info->lifecycle.ctor;
+        ecs_xtor_t ctor = ti->lifecycle.ctor;
         ecs_assert(ctor != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -3073,24 +3059,16 @@ void grow_column(
         ecs_vector_t *new_vec = ecs_vector_new_t(size, alignment, new_size);
         ecs_vector_set_count_t(&new_vec, size, alignment, new_count);
 
-        void *old_buffer = ecs_vector_first_t(
-            vec, size, alignment);
-
-        void *new_buffer = ecs_vector_first_t(
-            new_vec, size, alignment);
-
-        size_t size_u = flecs_itosize(size);
+        void *old_buffer = ecs_vector_first_t(vec, size, alignment);
+        void *new_buffer = ecs_vector_first_t(new_vec, size, alignment);
 
         /* Move (and construct) existing elements to new vector */
-        move_ctor(world, c_info->component, &c_info->lifecycle, entities,
-            entities, new_buffer, old_buffer, size_u, count, 
-            c_info->lifecycle.ctx);
+        move_ctor(world, entities, entities, new_buffer, old_buffer, count, ti);
 
         if (construct) {
             /* Construct new element(s) */
             void *elem = ECS_OFFSET(new_buffer, size * count);
-            ctor(world, c_info->component, &entities[count], elem, 
-                size_u, to_add, c_info->lifecycle.ctx);
+            ctor(world, &entities[count], elem, to_add, ti);
         }
 
         /* Free old vector */
@@ -3106,11 +3084,10 @@ void grow_column(
         void *elem = ecs_vector_addn_t(&vec, size, alignment, to_add);
 
         ecs_xtor_t ctor;
-        if (construct && c_info && (ctor = c_info->lifecycle.ctor)) {
+        if (construct && ti && (ctor = ti->lifecycle.ctor)) {
             /* If new elements need to be constructed and component has a
              * constructor, construct */
-            ctor(world, c_info->component, &entities[count], elem, 
-                flecs_itosize(size), to_add, c_info->lifecycle.ctx);
+            ctor(world, &entities[count], elem, to_add, ti);
         }
 
         column->data = vec;
@@ -3438,12 +3415,12 @@ void flecs_table_delete(
             ecs_assert(c_info_array != NULL, ECS_INTERNAL_ERROR, NULL);
             
             for (i = 0; i < column_count; i ++) {
-                ecs_type_info_t *c_info = c_info_array[i];
-                if (!c_info) {
+                ecs_type_info_t *ti = c_info_array[i];
+                if (!ti) {
                     continue;
                 }
 
-                dtor_component(world, table, c_info, &columns[i], 
+                dtor_component(world, table, ti, &columns[i], 
                     entities, ids[i], index, 1, true);
             }
         }
@@ -3464,27 +3441,25 @@ void flecs_table_delete(
                 void *dst = ecs_vector_get_t(vec, size, align, index);
                 void *src = ecs_vector_last_t(vec, size, align);
                 
-                ecs_type_info_t *c_info = c_info_array[i];
+                ecs_type_info_t *ti = c_info_array[i];
 
                 ecs_iter_action_t on_remove;
-                if (c_info && (on_remove = c_info->lifecycle.on_remove)) {
+                if (ti && (on_remove = ti->lifecycle.on_remove)) {
                     on_remove_component(world, table, on_remove, dst,
                         size, &entity_to_delete, ids[i], 1,     
-                            c_info->lifecycle.ctx);
+                            ti->lifecycle.ctx);
                 }
 
-                ecs_move_ctor_t move_dtor;
-                if (c_info && (move_dtor = c_info->lifecycle.move_dtor)) {
-                    move_dtor(world, c_info->component, &c_info->lifecycle,
-                        &entity_to_move, &entity_to_delete, dst, src, 
-                        flecs_itosize(size), 1, c_info->lifecycle.ctx);
+                ecs_move_t move_dtor;
+                if (ti && (move_dtor = ti->lifecycle.move_dtor)) {
+                    move_dtor(world, &entity_to_move, 
+                        &entity_to_delete, dst, src, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
 
                 ecs_vector_remove_last(vec);
             }
-
         } else {
             fast_delete(columns, column_count, index);
         }
@@ -3619,25 +3594,19 @@ void flecs_table_move(
             ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            ecs_type_info_t *cdata = new_table->c_info[i_new];
+            ecs_type_info_t *ti = new_table->c_info[i_new];
             if (same_entity) {
-                ecs_move_ctor_t callback;
-                if (cdata && (callback = cdata->lifecycle.ctor_move_dtor)) {
-                    void *ctx = cdata->lifecycle.ctx;
+                ecs_move_t callback;
+                if (ti && (callback = ti->lifecycle.ctor_move_dtor)) {
                     /* ctor + move + dtor */
-                    callback(world, new_component, &cdata->lifecycle, 
-                        &dst_entity, &src_entity, 
-                        dst, src, flecs_itosize(size), 1, ctx);
+                    callback(world, &dst_entity, &src_entity, dst, src, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
             } else {
-                ecs_copy_ctor_t copy;
-                if (cdata && (copy = cdata->lifecycle.copy_ctor)) {
-                    void *ctx = cdata->lifecycle.ctx;
-                    copy(world, new_component, &cdata->lifecycle, 
-                        &dst_entity, &src_entity, 
-                        dst, src, flecs_itosize(size), 1, ctx);
+                ecs_copy_t copy;
+                if (ti && (copy = ti->lifecycle.copy_ctor)) {
+                    copy(world, &dst_entity, &src_entity, dst, src, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, src, size);
                 }
@@ -3864,7 +3833,7 @@ void merge_column(
     ecs_vector_t *src)
 {
     ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
-    ecs_type_info_t *c_info = table->c_info[column_id];
+    ecs_type_info_t *ti = table->c_info[column_id];
     ecs_column_t *column = &data->columns[column_id];
     ecs_vector_t *dst = column->data;
     int16_t size = column->size;
@@ -3886,9 +3855,8 @@ void merge_column(
         column->data = dst;
 
         /* Construct new values */
-        if (c_info) {
-            ctor_component(
-                world, c_info, column, entities, dst_count, src_count);
+        if (ti) {
+            ctor_component(world, ti, column, entities, dst_count, src_count);
         }
         
         void *dst_ptr = ecs_vector_first_t(dst, size, alignment);
@@ -3898,10 +3866,8 @@ void merge_column(
         
         /* Move values into column */
         ecs_move_t move;
-        if (c_info && (move = c_info->lifecycle.move)) {
-            move(world, c_info->component, entities, entities, 
-                dst_ptr, src_ptr, flecs_itosize(size), src_count, 
-                c_info->lifecycle.ctx);
+        if (ti && (move = ti->lifecycle.move)) {
+            move(world, entities, entities, dst_ptr, src_ptr, src_count, ti);
         } else {
             ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
         }
@@ -5024,18 +4990,16 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
         int32_t index;
 
-        ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
+        ecs_copy_t copy = ti ? ti->lifecycle.copy : NULL;
         if (copy) {
             ecs_entity_t *entities = ecs_vector_first(
                 data->entities, ecs_entity_t);
 
-            void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
-                copy(world, component, &entities[row], &base,
-                    data_ptr, base_ptr, flecs_itosize(data_size), 1, ctx);
+                copy(world, &entities[row], &base, data_ptr, base_ptr, 1, ti);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
@@ -5589,17 +5553,17 @@ const ecs_entity_t* new_w_data(
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
-            const ecs_type_info_t *cdata = get_c_info(world, id);
+            const ecs_type_info_t *ti = get_c_info(world, id);
             ecs_copy_t copy;
             ecs_move_t move;
-            if (cdata && is_move && (move = cdata->lifecycle.move)) {
-                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
-                move(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_itosize(size), count, cdata->lifecycle.ctx);
-            } else if (cdata && !is_move && (copy = cdata->lifecycle.copy)) {
-                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
-                copy(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_itosize(size), count, cdata->lifecycle.ctx);
+            if (ti && is_move && (move = ti->lifecycle.move)) {
+                ecs_entity_t *eids = ecs_vector_first(
+                    data->entities, ecs_entity_t);
+                move(world, eids, eids, ptr, src_ptr, count, ti);
+            } else if (ti && !is_move && (copy = ti->lifecycle.copy)) {
+                ecs_entity_t *eids = ecs_vector_first(
+                    data->entities, ecs_entity_t);
+                copy(world, eids, eids, ptr, src_ptr, count, ti);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             } 
@@ -7615,21 +7579,19 @@ ecs_entity_t assign_ptr_w_id(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, id);
-        const ecs_type_info_t *cdata = get_c_info(world, real_id);
-        if (cdata) {
+        const ecs_type_info_t *ti = get_c_info(world, real_id);
+        if (ti) {
             if (is_move) {
-                ecs_move_t move = cdata->lifecycle.move;
+                ecs_move_t move = ti->lifecycle.move;
                 if (move) {
-                    move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                        cdata->lifecycle.ctx);
+                    move(world, &entity, &entity, dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             } else {
-                ecs_copy_t copy = cdata->lifecycle.copy;
+                ecs_copy_t copy = ti->lifecycle.copy;
                 if (copy) {
-                    copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                        cdata->lifecycle.ctx);
+                    copy(world, &entity, &entity, dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
@@ -8516,16 +8478,15 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *info = flecs_get_c_info(world, real_id);
+    const ecs_type_info_t *ti = flecs_get_c_info(world, real_id);
     ecs_xtor_t dtor;
     
-    if (info && (dtor = info->lifecycle.dtor)) {
-        ecs_size_t size = info->size;
+    if (ti && (dtor = ti->lifecycle.dtor)) {
+        ecs_size_t size = ti->size;
         void *ptr;
         int i;
         for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-            dtor(world, id, &entities[i], ptr, flecs_itosize(size), 1, 
-                info->lifecycle.ctx);
+            dtor(world, &entities[i], ptr, 1, ti);
         }
     }
 }
@@ -9081,26 +9042,23 @@ bool flecs_defer_set(
             }
         }
 
-        const ecs_type_info_t *c_info = NULL;
+        const ecs_type_info_t *ti = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
-            c_info = flecs_get_c_info(world, real_id);
+            ti = flecs_get_c_info(world, real_id);
         }
 
         if (value) {
-            ecs_copy_ctor_t copy;
-            if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
-                copy(world, id, &c_info->lifecycle, &entity, &entity, 
-                    op->is._1.value, value, flecs_itosize(size), 1, 
-                        c_info->lifecycle.ctx);
+            ecs_copy_t copy;
+            if (ti && (copy = ti->lifecycle.copy_ctor)) {
+                copy(world, &entity, &entity, op->is._1.value, value, 1, ti);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
         } else {
             ecs_xtor_t ctor;
-            if (c_info && (ctor = c_info->lifecycle.ctor)) {
-                ctor(world, id, &entity, op->is._1.value, 
-                    flecs_itosize(size), 1, c_info->lifecycle.ctx);
+            if (ti && (ctor = ti->lifecycle.ctor)) {
+                ctor(world, &entity, op->is._1.value, 1, ti);
             }
         }
 
@@ -27306,27 +27264,25 @@ ecs_data_t* duplicate_data(
 
         component = ecs_get_typeid(world, component);
 
-        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
 
-        if (cdata && (copy = cdata->lifecycle.copy)) {
+        if (ti && (copy = ti->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
             ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);
             void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
-            void *ctx = cdata->lifecycle.ctx;
             
-            ecs_xtor_t ctor = cdata->lifecycle.ctor;
+            ecs_xtor_t ctor = ti->lifecycle.ctor;
             if (ctor) {
-                ctor((ecs_world_t*)world, component, entities, dst_ptr, 
-                    flecs_itosize(size), count, ctx);
+                ctor((ecs_world_t*)world, entities, dst_ptr, count, ti);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
-            copy((ecs_world_t*)world, component, entities, entities, dst_ptr, 
-                src_ptr, flecs_itosize(size), count, ctx);
+            copy((ecs_world_t*)world, entities, entities, dst_ptr, 
+                src_ptr, count, ti);
 
             column->data = dst_vec;
         } else {
@@ -27985,80 +27941,42 @@ void* ecs_get_system_binding_ctx(
     }   
 }
 
-/* Generic constructor to initialize a component to 0 */
-static
-void sys_ctor_init_zero(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entities;
-    (void)ctx;
-    memset(ptr, 0, size * (size_t)count);
-}
-
 /* System destructor */
 static
-void ecs_colsystem_dtor(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)component;
-    (void)ctx;
-    (void)size;
-
-    EcsSystem *system_data = ptr;
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        EcsSystem *system = &system_data[i];
-        ecs_entity_t e = entities[i];
-
-        if (!ecs_is_alive(world, e)) {
-            /* This can happen when a set is deferred while a system is being
-             * cleaned up. The operation will be discarded, but the destructor
-             * still needs to be invoked for the value */
-            continue;
-        }
-
-        /* Invoke Deactivated action for active systems */
-        if (system->query && ecs_query_table_count(system->query)) {
-            invoke_status_action(world, e, ptr, EcsSystemDeactivated);
-        }
-
-        /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_id(world, e, EcsDisabled)) {
-            invoke_status_action(world, e, ptr, EcsSystemDisabled);
-        }
-
-        if (system->ctx_free) {
-            system->ctx_free(system->ctx);
-        }
-
-        if (system->status_ctx_free) {
-            system->status_ctx_free(system->status_ctx);
-        }
-
-        if (system->binding_ctx_free) {
-            system->binding_ctx_free(system->binding_ctx);
-        }  
-
-        if (system->query) {
-            ecs_query_fini(system->query);
-        }
+ECS_DTOR(EcsSystem, ptr, {
+    if (!ecs_is_alive(world, entity)) {
+        /* This can happen when a set is deferred while a system is being
+         * cleaned up. The operation will be discarded, but the destructor
+         * still needs to be invoked for the value */
+        continue;
     }
-}
+
+    /* Invoke Deactivated action for active systems */
+    if (ptr->query && ecs_query_table_count(ptr->query)) {
+        invoke_status_action(world, entity, ptr, EcsSystemDeactivated);
+    }
+
+    /* Invoke Disabled action for enabled systems */
+    if (!ecs_has_id(world, entity, EcsDisabled)) {
+        invoke_status_action(world, entity, ptr, EcsSystemDisabled);
+    }
+
+    if (ptr->ctx_free) {
+        ptr->ctx_free(ptr->ctx);
+    }
+
+    if (ptr->status_ctx_free) {
+        ptr->status_ctx_free(ptr->status_ctx);
+    }
+
+    if (ptr->binding_ctx_free) {
+        ptr->binding_ctx_free(ptr->binding_ctx);
+    }  
+
+    if (ptr->query) {
+        ecs_query_fini(ptr->query);
+    }
+})
 
 static
 void EnableMonitor(
@@ -28267,8 +28185,8 @@ void FlecsSystemImport(
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
         &(EcsComponentLifecycle) {
-            .ctor = sys_ctor_init_zero,
-            .dtor = ecs_colsystem_dtor
+            .ctor = ecs_default_ctor,
+            .dtor = ecs_dtor(EcsSystem)
         });
 
     ecs_observer_init(world, &(ecs_observer_desc_t) {
@@ -34812,103 +34730,99 @@ void flecs_notify_tables(
 }
 
 void ecs_default_ctor(
-    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
-    void *ptr, size_t size, int32_t count, void *ctx)
+    ecs_world_t *world, 
+    const ecs_entity_t *entity_ptr,
+    void *ptr, 
+    int32_t count, 
+    const ecs_type_info_t *ti)
 {
-    (void)world; (void)component; (void)entity_ptr; (void)ctx;
-    ecs_os_memset(ptr, 0, flecs_uto(ecs_size_t, size) * count);
+    (void)world; (void)entity_ptr;
+    ecs_os_memset(ptr, 0, ti->size * count);
 }
 
 static
 void default_copy_ctor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity, void *dst_ptr, const void *src_ptr,
-    size_t size, int32_t count, void *ctx)
+    int32_t count, const ecs_type_info_t *ti)
 {
-    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->copy(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->ctor(world, dst_entity, dst_ptr, count, ti);
+    cl->copy(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
 }
 
 static
 void default_move_ctor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
-    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->ctor(world, dst_entity, dst_ptr, count, ti);
+    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
 }
 
 static
 void default_ctor_w_move_w_dtor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
-    callbacks->ctor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    callbacks->move(world, component, dst_entity, src_entity, dst_ptr, src_ptr, 
-        size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->ctor(world, dst_entity, dst_ptr, count, ti);
+    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->dtor(world, src_entity, src_ptr, count, ti);
 }
 
 static
 void default_move_ctor_w_dtor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
-    callbacks->move_ctor(world, component, callbacks, dst_entity, src_entity, 
-        dst_ptr, src_ptr, size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->move_ctor(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->dtor(world, src_entity, src_ptr, count, ti);
 }
 
 static
 void default_move(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
-    callbacks->move(world, component, dst_entity, src_entity, 
-        dst_ptr, src_ptr, size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
 }
 
 static
 void default_dtor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
-    (void)callbacks;
     (void)src_entity;
 
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
-    callbacks->dtor(world, component, dst_entity, dst_ptr, size, count, ctx);
-    ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, size) * count);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->dtor(world, dst_entity, dst_ptr, count, ti);
+    ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
 
 static
 void default_move_w_dtor(
-    ecs_world_t *world, ecs_entity_t component,
-    const EcsComponentLifecycle *callbacks, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr, size_t size,
-    int32_t count, void *ctx)
+    ecs_world_t *world, const ecs_entity_t *dst_entity,
+    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *ti)
 {
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
-    callbacks->move(world, component, dst_entity, src_entity, 
-        dst_ptr, src_ptr, size, count, ctx);
-    callbacks->dtor(world, component, src_entity, src_ptr, size, count, ctx);
+    const EcsComponentLifecycle *cl = &ti->lifecycle;
+    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->dtor(world, src_entity, src_ptr, count, ti);
 }
 
 void ecs_set_component_actions_w_id(

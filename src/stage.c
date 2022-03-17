@@ -324,26 +324,23 @@ bool flecs_defer_set(
             }
         }
 
-        const ecs_type_info_t *c_info = NULL;
+        const ecs_type_info_t *ti = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
-            c_info = flecs_get_c_info(world, real_id);
+            ti = flecs_get_c_info(world, real_id);
         }
 
         if (value) {
-            ecs_copy_ctor_t copy;
-            if (c_info && (copy = c_info->lifecycle.copy_ctor)) {
-                copy(world, id, &c_info->lifecycle, &entity, &entity, 
-                    op->is._1.value, value, flecs_itosize(size), 1, 
-                        c_info->lifecycle.ctx);
+            ecs_copy_t copy;
+            if (ti && (copy = ti->lifecycle.copy_ctor)) {
+                copy(world, &entity, &entity, op->is._1.value, value, 1, ti);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
         } else {
             ecs_xtor_t ctor;
-            if (c_info && (ctor = c_info->lifecycle.ctor)) {
-                ctor(world, id, &entity, op->is._1.value, 
-                    flecs_itosize(size), 1, c_info->lifecycle.ctx);
+            if (ti && (ctor = ti->lifecycle.ctor)) {
+                ctor(world, &entity, op->is._1.value, 1, ti);
             }
         }
 

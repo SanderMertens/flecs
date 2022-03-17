@@ -500,18 +500,16 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
         int32_t index;
 
-        ecs_copy_t copy = cdata ? cdata->lifecycle.copy : NULL;
+        ecs_copy_t copy = ti ? ti->lifecycle.copy : NULL;
         if (copy) {
             ecs_entity_t *entities = ecs_vector_first(
                 data->entities, ecs_entity_t);
 
-            void *ctx = cdata->lifecycle.ctx;
             for (index = 0; index < count; index ++) {
-                copy(world, component, &entities[row], &base,
-                    data_ptr, base_ptr, flecs_itosize(data_size), 1, ctx);
+                copy(world, &entities[row], &base, data_ptr, base_ptr, 1, ti);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
@@ -1065,17 +1063,17 @@ const ecs_entity_t* new_w_data(
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
-            const ecs_type_info_t *cdata = get_c_info(world, id);
+            const ecs_type_info_t *ti = get_c_info(world, id);
             ecs_copy_t copy;
             ecs_move_t move;
-            if (cdata && is_move && (move = cdata->lifecycle.move)) {
-                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
-                move(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_itosize(size), count, cdata->lifecycle.ctx);
-            } else if (cdata && !is_move && (copy = cdata->lifecycle.copy)) {
-                ecs_entity_t *eids = ecs_vector_first(data->entities, ecs_entity_t);
-                copy(world, id, eids, eids, ptr, src_ptr, 
-                    flecs_itosize(size), count, cdata->lifecycle.ctx);
+            if (ti && is_move && (move = ti->lifecycle.move)) {
+                ecs_entity_t *eids = ecs_vector_first(
+                    data->entities, ecs_entity_t);
+                move(world, eids, eids, ptr, src_ptr, count, ti);
+            } else if (ti && !is_move && (copy = ti->lifecycle.copy)) {
+                ecs_entity_t *eids = ecs_vector_first(
+                    data->entities, ecs_entity_t);
+                copy(world, eids, eids, ptr, src_ptr, count, ti);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             } 
@@ -3091,21 +3089,19 @@ ecs_entity_t assign_ptr_w_id(
 
     if (ptr) {
         ecs_entity_t real_id = ecs_get_typeid(world, id);
-        const ecs_type_info_t *cdata = get_c_info(world, real_id);
-        if (cdata) {
+        const ecs_type_info_t *ti = get_c_info(world, real_id);
+        if (ti) {
             if (is_move) {
-                ecs_move_t move = cdata->lifecycle.move;
+                ecs_move_t move = ti->lifecycle.move;
                 if (move) {
-                    move(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                        cdata->lifecycle.ctx);
+                    move(world, &entity, &entity, dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             } else {
-                ecs_copy_t copy = cdata->lifecycle.copy;
+                ecs_copy_t copy = ti->lifecycle.copy;
                 if (copy) {
-                    copy(world, real_id, &entity, &entity, dst, ptr, size, 1, 
-                        cdata->lifecycle.ctx);
+                    copy(world, &entity, &entity, dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
@@ -3992,16 +3988,15 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *info = flecs_get_c_info(world, real_id);
+    const ecs_type_info_t *ti = flecs_get_c_info(world, real_id);
     ecs_xtor_t dtor;
     
-    if (info && (dtor = info->lifecycle.dtor)) {
-        ecs_size_t size = info->size;
+    if (ti && (dtor = ti->lifecycle.dtor)) {
+        ecs_size_t size = ti->size;
         void *ptr;
         int i;
         for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-            dtor(world, id, &entities[i], ptr, flecs_itosize(size), 1, 
-                info->lifecycle.ctx);
+            dtor(world, &entities[i], ptr, 1, ti);
         }
     }
 }

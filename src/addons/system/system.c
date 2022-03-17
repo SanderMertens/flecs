@@ -289,80 +289,42 @@ void* ecs_get_system_binding_ctx(
     }   
 }
 
-/* Generic constructor to initialize a component to 0 */
-static
-void sys_ctor_init_zero(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)world;
-    (void)component;
-    (void)entities;
-    (void)ctx;
-    memset(ptr, 0, size * (size_t)count);
-}
-
 /* System destructor */
 static
-void ecs_colsystem_dtor(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_entity_t *entities,
-    void *ptr,
-    size_t size,
-    int32_t count,
-    void *ctx)
-{
-    (void)component;
-    (void)ctx;
-    (void)size;
-
-    EcsSystem *system_data = ptr;
-
-    int i;
-    for (i = 0; i < count; i ++) {
-        EcsSystem *system = &system_data[i];
-        ecs_entity_t e = entities[i];
-
-        if (!ecs_is_alive(world, e)) {
-            /* This can happen when a set is deferred while a system is being
-             * cleaned up. The operation will be discarded, but the destructor
-             * still needs to be invoked for the value */
-            continue;
-        }
-
-        /* Invoke Deactivated action for active systems */
-        if (system->query && ecs_query_table_count(system->query)) {
-            invoke_status_action(world, e, ptr, EcsSystemDeactivated);
-        }
-
-        /* Invoke Disabled action for enabled systems */
-        if (!ecs_has_id(world, e, EcsDisabled)) {
-            invoke_status_action(world, e, ptr, EcsSystemDisabled);
-        }
-
-        if (system->ctx_free) {
-            system->ctx_free(system->ctx);
-        }
-
-        if (system->status_ctx_free) {
-            system->status_ctx_free(system->status_ctx);
-        }
-
-        if (system->binding_ctx_free) {
-            system->binding_ctx_free(system->binding_ctx);
-        }  
-
-        if (system->query) {
-            ecs_query_fini(system->query);
-        }
+ECS_DTOR(EcsSystem, ptr, {
+    if (!ecs_is_alive(world, entity)) {
+        /* This can happen when a set is deferred while a system is being
+         * cleaned up. The operation will be discarded, but the destructor
+         * still needs to be invoked for the value */
+        continue;
     }
-}
+
+    /* Invoke Deactivated action for active systems */
+    if (ptr->query && ecs_query_table_count(ptr->query)) {
+        invoke_status_action(world, entity, ptr, EcsSystemDeactivated);
+    }
+
+    /* Invoke Disabled action for enabled systems */
+    if (!ecs_has_id(world, entity, EcsDisabled)) {
+        invoke_status_action(world, entity, ptr, EcsSystemDisabled);
+    }
+
+    if (ptr->ctx_free) {
+        ptr->ctx_free(ptr->ctx);
+    }
+
+    if (ptr->status_ctx_free) {
+        ptr->status_ctx_free(ptr->status_ctx);
+    }
+
+    if (ptr->binding_ctx_free) {
+        ptr->binding_ctx_free(ptr->binding_ctx);
+    }  
+
+    if (ptr->query) {
+        ecs_query_fini(ptr->query);
+    }
+})
 
 static
 void EnableMonitor(
@@ -571,8 +533,8 @@ void FlecsSystemImport(
     /* Bootstrap ctor and dtor for EcsSystem */
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
         &(EcsComponentLifecycle) {
-            .ctor = sys_ctor_init_zero,
-            .dtor = ecs_colsystem_dtor
+            .ctor = ecs_default_ctor,
+            .dtor = ecs_dtor(EcsSystem)
         });
 
     ecs_observer_init(world, &(ecs_observer_desc_t) {
