@@ -64,9 +64,13 @@ const char* ecs_identifier_is_var(
 //// Ctor that initializes component to 0
 ////////////////////////////////////////////////////////////////////////////////
 
+FLECS_API
 void ecs_default_ctor(
-    ecs_world_t *world, ecs_entity_t component, const ecs_entity_t *entity_ptr,
-    void *ptr, size_t size, int32_t count, void *ctx);
+    ecs_world_t *world, 
+    const ecs_entity_t *entity_ptr,
+    void *ptr, 
+    int32_t count, 
+    const ecs_type_info_t *ctx);
 
 /** Calculate offset from address */
 #ifdef __cplusplus

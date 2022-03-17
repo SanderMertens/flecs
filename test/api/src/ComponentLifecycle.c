@@ -33,18 +33,16 @@ typedef struct cl_ctx {
 static
 void comp_ctor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
-    cl_ctx *data = ctx;
+    cl_ctx *data = info->lifecycle.ctx;
     data->ctor.world = world;
-    data->ctor.component = component;
+    data->ctor.component = info->component;
     data->ctor.entity = entity_ptr[0],
-    data->ctor.size = size;
+    data->ctor.size = info->size;
     data->ctor.count += count;
     data->ctor.invoked ++;
     
@@ -59,18 +57,16 @@ void comp_ctor(
 static
 void comp_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
-    cl_ctx *data = ctx;
+    cl_ctx *data = info->lifecycle.ctx;
     data->dtor.world = world;
-    data->dtor.component = component;
+    data->dtor.component = info->component;
     data->dtor.entity = entity_ptr[0],
-    data->dtor.size = size;
+    data->dtor.size = info->size;
     data->dtor.count += count;
     data->dtor.invoked ++;
 }
@@ -78,49 +74,45 @@ void comp_dtor(
 static
 void comp_copy(
     ecs_world_t *world,
-    ecs_entity_t component,    
     const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity,
     void *dst_ptr,
     const void *src_ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
-    cl_ctx *data = ctx;
+    cl_ctx *data = info->lifecycle.ctx;
     data->copy.world = world;
-    data->copy.component = component;
+    data->copy.component = info->component;
     data->copy.entity = dst_entity[0],
     data->copy.src_entity = src_entity[0],
-    data->copy.size = size;
+    data->copy.size = info->size;
     data->copy.count += count;
     data->copy.invoked ++;
     
-    memcpy(dst_ptr, src_ptr, size * count);
+    memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
 static
 void comp_move(
     ecs_world_t *world,
-    ecs_entity_t component,    
     const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity,
     void *dst_ptr,
     void *src_ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
-    cl_ctx *data = ctx;
+    cl_ctx *data = info->lifecycle.ctx;
     data->move.world = world;
-    data->move.component = component;
+    data->move.component = info->component;
     data->move.entity = dst_entity[0],
     data->move.src_entity = src_entity[0],
-    data->move.size = size;
+    data->move.size = info->size;
     data->move.count = count;
     data->move.invoked ++;
     
-    memcpy(dst_ptr, src_ptr, size * count);
+    memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
 void ComponentLifecycle_ctor_on_add() {
@@ -1392,12 +1384,10 @@ typedef struct Dummy {
 static
 void dummy_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     int i;
     for (i = 0; i < count; i ++) {
@@ -1473,12 +1463,10 @@ void ComponentLifecycle_dtor_on_fini() {
 static
 void type_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);
@@ -1508,12 +1496,10 @@ static int other_dtor_valid_entity;
 static
 void other_type_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);
@@ -1542,12 +1528,10 @@ ECS_COMPONENT_DECLARE(Entity);
 static
 void other_comp_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);
@@ -1579,12 +1563,10 @@ void other_comp_dtor(
 static
 void other_delete_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);
@@ -1615,12 +1597,10 @@ void other_delete_dtor(
 static
 void self_delete_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);
@@ -1642,12 +1622,10 @@ void self_delete_dtor(
 static
 void string_dtor(
     ecs_world_t *world,
-    ecs_entity_t component,
     const ecs_entity_t *entity_ptr,
     void *ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *info)
 {
     test_int(count, 1);
     test_assert(entity_ptr != NULL);

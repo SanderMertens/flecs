@@ -68,15 +68,6 @@ typedef struct ecs_hashed_string_t {
     uint64_t hash;
 } ecs_hashed_string_t;
 
-/** Component-specific data */
-typedef struct ecs_type_info_t {
-    EcsComponentLifecycle lifecycle; /* Component lifecycle callbacks */
-    ecs_entity_t component;
-    ecs_size_t size;
-    ecs_size_t alignment;
-    bool lifecycle_set;
-} ecs_type_info_t;
-
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,

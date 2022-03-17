@@ -258,20 +258,16 @@ typedef int32_t ecs_size_t;
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
     void type##_##postfix(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *entity_ptr,\
         void *_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)entity_ptr;\
         (void)_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t entity = entity_ptr[i];\
             type *var = &((type*)_ptr)[i];\
@@ -285,24 +281,20 @@ typedef int32_t ecs_size_t;
 #define ECS_COPY_IMPL(type, dst_var, src_var, ...)\
     void type##_##copy(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         const void *_src_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)dst_entities;\
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
@@ -320,24 +312,20 @@ typedef int32_t ecs_size_t;
 #define ECS_MOVE_IMPL(type, dst_var, src_var, ...)\
     void type##_##move(\
         ecs_world_t *world,\
-        ecs_entity_t component,\
         const ecs_entity_t *dst_entities,\
         const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         void *_src_ptr,\
-        size_t _size,\
         int32_t _count,\
-        void *ctx)\
+        const ecs_type_info_t *type_info)\
     {\
         (void)world;\
-        (void)component;\
         (void)dst_entities;\
         (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
-        (void)_size;\
         (void)_count;\
-        (void)ctx;\
+        (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             ecs_entity_t dst_entity = dst_entities[i];\
             ecs_entity_t src_entity = src_entities[i];\
@@ -351,7 +339,7 @@ typedef int32_t ecs_size_t;
         }\
     }
 
-/* Constructor / destructor convenience macro */
+
 #define ECS_ON_SET_IMPL(type, var, ...)\
     void type##_##on_set(ecs_iter_t *_it)\
     {\

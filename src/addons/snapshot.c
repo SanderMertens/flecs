@@ -53,27 +53,25 @@ ecs_data_t* duplicate_data(
 
         component = ecs_get_typeid(world, component);
 
-        const ecs_type_info_t *cdata = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
 
-        if (cdata && (copy = cdata->lifecycle.copy)) {
+        if (ti && (copy = ti->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
             ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);
             void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
-            void *ctx = cdata->lifecycle.ctx;
             
-            ecs_xtor_t ctor = cdata->lifecycle.ctor;
+            ecs_xtor_t ctor = ti->lifecycle.ctor;
             if (ctor) {
-                ctor((ecs_world_t*)world, component, entities, dst_ptr, 
-                    flecs_itosize(size), count, ctx);
+                ctor((ecs_world_t*)world, entities, dst_ptr, count, ti);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
-            copy((ecs_world_t*)world, component, entities, entities, dst_ptr, 
-                src_ptr, flecs_itosize(size), count, ctx);
+            copy((ecs_world_t*)world, entities, entities, dst_ptr, 
+                src_ptr, count, ti);
 
             column->data = dst_vec;
         } else {

@@ -312,6 +312,23 @@ void register_symmetric(ecs_iter_t *it) {
 }
 
 static
+void on_set_component(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsComponent *c = ecs_term(it, EcsComponent, 1);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_type_info_t *ti = flecs_sparse_get(
+            world->type_info, ecs_type_info_t, e);
+        if (ti) {
+            ti->size = c[i].size;
+        }
+    }
+}
+
+
+static
 void on_set_component_lifecycle(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponentLifecycle *cl = ecs_term(it, EcsComponentLifecycle, 1);
@@ -769,6 +786,13 @@ void flecs_bootstrap(
         .term = {.id = ecs_id(EcsComponentLifecycle), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = on_set_component_lifecycle
+    });  
+
+    /* Define trigger for updating component size when it changes */
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_id(EcsComponent), .subj.set.mask = EcsSelf },
+        .events = {EcsOnSet},
+        .callback = on_set_component
     });  
 
     ecs_add_id(world, EcsDisabled, EcsDontInherit);

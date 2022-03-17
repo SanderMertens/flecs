@@ -222,16 +222,14 @@ void Reference_get_nonexisting() {
 static
 void comp_move(
     ecs_world_t *world,
-    ecs_entity_t component,    
     const ecs_entity_t *dst_entity,
     const ecs_entity_t *src_entity,
     void *dst_ptr,
     void *src_ptr,
-    size_t size,
     int32_t count,
-    void *ctx)
+    const ecs_type_info_t *ti)
 {
-    memcpy(dst_ptr, src_ptr, size * count);
+    memcpy(dst_ptr, src_ptr, ti->size * count);
 }
 
 void Reference_get_ref_after_realloc_w_lifecycle() {
