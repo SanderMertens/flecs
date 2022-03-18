@@ -506,6 +506,9 @@ struct ecs_id_record_t {
 
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
+
+    /* Cached pointer to type info for id */
+    const ecs_type_info_t *type_info;
 };
 
 typedef struct ecs_store_t {

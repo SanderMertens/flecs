@@ -301,10 +301,7 @@ void register_table_for_id(
     int32_t count,
     ecs_table_record_t *tr)
 {
-    id = ecs_strip_generation(id);
-
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+    flecs_register_for_id_record(world, id, table, tr);
     tr->column = column;
     tr->count = count;
     tr->id = id;
@@ -379,7 +376,6 @@ void flecs_table_records_register(
     int32_t record_count = count + type_flag_count + (id_count != 0) + 
         (pair_count != 0) + ecs_map_count(&relations) + ecs_map_count(&objects) 
             + 1 /* for any */;
-    int32_t r = 0;
 
     if (!has_childof) {
         record_count ++;
@@ -388,18 +384,31 @@ void flecs_table_records_register(
     table->records = ecs_os_calloc_n(ecs_table_record_t, record_count);
     table->record_count = record_count;
 
-    /* First initialize records for regular (non-wildcard) ids */
+    /* First initialize records for regular (non-wildcard) ids. Make sure that
+     * these table records line up with ids in table type. */
+    int32_t first_role_id = -1;
     for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        register_table_for_id(world, table, id, i, 1, &table->records[r]);
-        r ++;
-        
-        ecs_entity_t role = id & ECS_ROLE_MASK;
-        if (role && role != ECS_PAIR) {
-            id &= ECS_COMPONENT_MASK;
-            id = ecs_pair(id, EcsWildcard);
-            register_table_for_id(world, table, id, i, 1, &table->records[r]);
-            r ++;
+        register_table_for_id(world, table, ids[i], i, 1, &table->records[i]);
+        if (first_role_id == -1) {
+            ecs_entity_t role = ids[i] & ECS_ROLE_MASK;
+            if (role && role != ECS_PAIR) {
+                first_role_id = i;
+            }
+        }
+    }
+
+    /* Initialize records for ids with roles */
+    int32_t r = i;
+    if (first_role_id != -1) {
+        for (i = first_role_id; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            ecs_entity_t role = id & ECS_ROLE_MASK;
+            if (role && role != ECS_PAIR) {
+                id &= ECS_COMPONENT_MASK;
+                id = ecs_pair(id, EcsWildcard);
+                register_table_for_id(world, table, id, i, 1, &table->records[r]);
+                r ++;
+            }
         }
     }
 

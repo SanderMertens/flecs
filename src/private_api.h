@@ -139,6 +139,12 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id);
 
+void flecs_register_for_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    const ecs_table_t *table,
+    ecs_table_record_t *tr);
+
 ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
