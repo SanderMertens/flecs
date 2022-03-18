@@ -13,7 +13,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #include <stdio.h> /* easier debugging, throws warning in release for printfs */
 #endif
 
@@ -1927,7 +1927,7 @@ void _ecs_poly_fini(
     ecs_os_free(obj)
 
 /* Utilities for testing/asserting an object type */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 void _ecs_poly_assert(
     const ecs_poly_t *object,
     int32_t type,
@@ -1998,7 +1998,7 @@ uint64_t _flecs_ito(
     uint64_t value,
     const char *err);
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define flecs_ito(T, value)\
     (T)_flecs_ito(\
         sizeof(T),\
@@ -4631,7 +4631,7 @@ void _ecs_poly_fini(
     _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
     assert(cond)
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 void _ecs_poly_assert(
     const ecs_poly_t *poly,
     int32_t type,
@@ -5079,7 +5079,7 @@ void instantiate_children(
         ecs_entity_t *children = ecs_vector_first(
             child_data->entities, ecs_entity_t);
 
-#ifdef FLECS_SANITIZE
+#ifdef FLECS_DEBUG
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];        
             ecs_check(child != instance, ECS_INVALID_PARAMETER, NULL);
@@ -9557,7 +9557,7 @@ struct ecs_vector_t {
     int32_t count;
     int32_t size;
     
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     int64_t elem_size; /* Used in debug mode to validate size */
 #endif
 };
@@ -9589,7 +9589,7 @@ ecs_vector_t* _ecs_vector_new(
 
     result->count = 0;
     result->size = elem_count;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     result->elem_size = elem_size;
 #endif
     return result;
@@ -9611,7 +9611,7 @@ ecs_vector_t* _ecs_vector_from_array(
 
     result->count = elem_count;
     result->size = elem_count;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     result->elem_size = elem_size;
 #endif
     return result;   
@@ -11471,7 +11471,7 @@ error:
  * into the hashing function, but only at word boundaries. This should be safe,
  * but trips up address sanitizers and valgrind.
  * This ensures clean valgrind logs in debug mode & the best perf in release */
-#if !defined(NDEBUG) || defined(ADDRESS_SANITIZER)
+#if !defined(FLECS_NDEBUG) || defined(ADDRESS_SANITIZER)
 #ifndef VALGRIND
 #define VALGRIND
 #endif
@@ -15837,7 +15837,7 @@ void ecs_cpp_component_validate(
     /* If entity has a name check if it matches */
     if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
         if (!implicit_name && id >= EcsFirstUserComponentId) {
-#           ifndef NDEBUG
+#           ifndef FLECS_NDEBUG
             char *path = ecs_get_path_w_sep(
                 world, 0, id, "::", NULL);
             if (ecs_os_strcmp(path, name)) {
@@ -15910,7 +15910,7 @@ ecs_entity_t ecs_cpp_component_register(
                 ecs_get_name(world, ent));
             (void)sym;
 
-#           ifndef NDEBUG
+#           ifndef FLECS_NDEBUG
             if (ecs_os_strcmp(sym, symbol)) {
                 ecs_err(
                     "component with name '%s' is already registered for"\
@@ -33687,7 +33687,7 @@ ecs_entity_t meta_lookup_bitmask(
         world, &params.type, params_decl, 1, &param_ctx);
     ecs_check(bitmask_type != 0, ECS_INVALID_PARAMETER, NULL);
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     /* Make sure this is a bitmask type */
     const EcsMetaType *type_ptr = ecs_get(world, bitmask_type, EcsMetaType);
     ecs_check(type_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -34683,8 +34683,12 @@ ecs_world_t *ecs_mini(void) {
 
     log_addons();
 
-#ifndef NDEBUG
-    ecs_trace("debug build, rebuild with NDEBUG for improved performance");
+#ifdef FLECS_SANITIZE
+    ecs_warn("sanitize build, rebuild witohut FLECS_SANITIZE for (much) "
+        "improved performance");
+#elif defined(FLECS_DEBUG)
+    ecs_trace("debug build, rebuild with NDEBUG or FLECS_NDEBUG for improved "
+        "performance");
 #else
     ecs_trace("#[green]release#[reset] build");
 #endif
@@ -46321,7 +46325,7 @@ void flecs_trigger_fini(
 
 #include <time.h>
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 static int64_t s_min[] = { 
     [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
 static int64_t s_max[] = { 

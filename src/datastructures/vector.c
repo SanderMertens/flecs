@@ -4,7 +4,7 @@ struct ecs_vector_t {
     int32_t count;
     int32_t size;
     
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     int64_t elem_size; /* Used in debug mode to validate size */
 #endif
 };
@@ -36,7 +36,7 @@ ecs_vector_t* _ecs_vector_new(
 
     result->count = 0;
     result->size = elem_count;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     result->elem_size = elem_size;
 #endif
     return result;
@@ -58,7 +58,7 @@ ecs_vector_t* _ecs_vector_from_array(
 
     result->count = elem_count;
     result->size = elem_count;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     result->elem_size = elem_size;
 #endif
     return result;   

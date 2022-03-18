@@ -448,7 +448,7 @@ private:
     template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> get_term(int32_t index) const {
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_term_id(m_iter, index);
         ecs_assert(term_id & ECS_PAIR || term_id & ECS_SWITCH || 
             term_id & ECS_CASE ||

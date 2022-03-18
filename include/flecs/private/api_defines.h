@@ -62,7 +62,7 @@ extern "C" {
 
 /* Some symbols are only exported when building in debug build, to enable
  * whitebox testing of internal datastructures */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define FLECS_DBG_API FLECS_API
 #else
 #define FLECS_DBG_API
@@ -239,7 +239,7 @@ typedef int32_t ecs_size_t;
 //// Debug macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define ECS_TABLE_LOCK(world, table) ecs_table_lock(world, table)
 #define ECS_TABLE_UNLOCK(world, table) ecs_table_unlock(world, table)
 #else

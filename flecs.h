@@ -26,10 +26,35 @@
 /* FLECS_NO_DEPRECATED_WARNINGS disables deprecated warnings */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
-/* FLECS_SANITIZE enables expensive checks that can detect issues early */
-#ifndef NDEBUG
-#define FLECS_SANITIZE
+/* Make sure provided configuration is valid */
+#if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
+#error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
 #endif
+#if defined(FLECS_DEBUG) && defined(NDEBUG)
+#error "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
+#endif
+
+/* Flecs debugging enables asserts, which are used for input parameter checking
+ * and cheap (constant time) sanity checks. There are lots of asserts in every
+ * part of the code, so this will slow down code. */
+#define FLECS_DEBUG
+#if defined(NDEBUG) || defined(FLECS_NDEBUG)
+#undef FLECS_DEBUG
+#endif
+#ifndef FLECS_DEBUG
+#define FLECS_NDEBUG /* Either FLECS_DEBUG or FLECS_NDEBUG must be defined */
+#endif
+
+/* FLECS_SANITIZE enables expensive checks that can detect issues early. This
+ * will severely slow down code. */
+// #define FLECS_SANITIZE
+#ifdef FLECS_SANITIZE
+#define FLECS_DEBUG /* If sanitized mode is enabled, so is debug mode */
+#endif
+
+/* Tip: if you see weird behavior that you think might be a bug, make sure to
+ * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
+ * chance that this gives you more information about the issue! */
 
 /* FLECS_SOFT_ASSERT disables aborting for recoverable errors */
 // #define FLECS_SOFT_ASSERT
@@ -177,7 +202,7 @@ extern "C" {
 
 /* Some symbols are only exported when building in debug build, to enable
  * whitebox testing of internal datastructures */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define FLECS_DBG_API FLECS_API
 #else
 #define FLECS_DBG_API
@@ -354,7 +379,7 @@ typedef int32_t ecs_size_t;
 //// Debug macro's
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define ECS_TABLE_LOCK(world, table) ecs_table_lock(world, table)
 #define ECS_TABLE_UNLOCK(world, table) ecs_table_unlock(world, table)
 #else
@@ -685,11 +710,11 @@ void _ecs_parser_errorv(
 
 /* If no tracing verbosity is defined, pick default based on build config */
 #if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-#if !defined(NDEBUG)
+#if !defined(FLECS_NDEBUG)
 #define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
 #else
 #define ECS_TRACE_0 /* Only enable infrequent tracing in release mode */
-#endif // !defined(NDEBUG)
+#endif // !defined(FLECS_NDEBUG)
 #endif // !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
 
 
@@ -805,7 +830,7 @@ void _ecs_parser_errorv(
 
 /** Assert 
  * Aborts if condition is false, disabled in debug mode. */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
@@ -813,11 +838,11 @@ void _ecs_parser_errorv(
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Debug assert 
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
 #else
 #define ecs_dbg_assert(condition, error_code, ...)
@@ -831,7 +856,7 @@ void _ecs_parser_errorv(
 
 /** Check
  * goto error if condition is false. */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_check(condition, error_code, ...) ecs_dummy_check
 #else
 #ifdef FLECS_SOFT_ASSERT
@@ -844,11 +869,11 @@ void _ecs_parser_errorv(
     ecs_assert(condition, error_code, __VA_ARGS__);\
     ecs_dummy_check
 #endif
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Throw
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_throw(error_code, ...) ecs_dummy_check
 #else
 #ifdef FLECS_SOFT_ASSERT
@@ -860,7 +885,7 @@ void _ecs_parser_errorv(
     ecs_abort(error_code, __VA_ARGS__);\
     ecs_dummy_check
 #endif
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Parser error */
 #define ecs_parser_error(name, expr, column, ...)\
@@ -1017,7 +1042,7 @@ int ecs_log_last_error(void);
 extern "C" {
 #endif
 
-#ifdef NDEBUG
+#ifdef FLECS_NDEBUG
 #define ECS_VECTOR_T_SIZE\
     (ECS_SIZEOF(int32_t) + ECS_SIZEOF(int32_t))
 #else
@@ -1032,7 +1057,7 @@ extern "C" {
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 /* Utility macro's for creating vector on stack */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define ECS_VECTOR_VALUE(T, elem_count)\
 {\
     .elem_size = (int32_t)(ECS_SIZEOF(T)),\
@@ -15988,7 +16013,7 @@ private:
     template <typename T, typename A = actual_type_t<T>>
     flecs::column<T> get_term(int32_t index) const {
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_term_id(m_iter, index);
         ecs_assert(term_id & ECS_PAIR || term_id & ECS_SWITCH || 
             term_id & ECS_CASE ||

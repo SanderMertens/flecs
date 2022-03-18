@@ -196,11 +196,11 @@ void _ecs_parser_errorv(
 
 /* If no tracing verbosity is defined, pick default based on build config */
 #if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-#if !defined(NDEBUG)
+#if !defined(FLECS_NDEBUG)
 #define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
 #else
 #define ECS_TRACE_0 /* Only enable infrequent tracing in release mode */
-#endif // !defined(NDEBUG)
+#endif // !defined(FLECS_NDEBUG)
 #endif // !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
 
 
@@ -316,7 +316,7 @@ void _ecs_parser_errorv(
 
 /** Assert 
  * Aborts if condition is false, disabled in debug mode. */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
@@ -324,11 +324,11 @@ void _ecs_parser_errorv(
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Debug assert 
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
 #else
 #define ecs_dbg_assert(condition, error_code, ...)
@@ -342,7 +342,7 @@ void _ecs_parser_errorv(
 
 /** Check
  * goto error if condition is false. */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_check(condition, error_code, ...) ecs_dummy_check
 #else
 #ifdef FLECS_SOFT_ASSERT
@@ -355,11 +355,11 @@ void _ecs_parser_errorv(
     ecs_assert(condition, error_code, __VA_ARGS__);\
     ecs_dummy_check
 #endif
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Throw
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
-#if defined(NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_throw(error_code, ...) ecs_dummy_check
 #else
 #ifdef FLECS_SOFT_ASSERT
@@ -371,7 +371,7 @@ void _ecs_parser_errorv(
     ecs_abort(error_code, __VA_ARGS__);\
     ecs_dummy_check
 #endif
-#endif // NDEBUG
+#endif // FLECS_NDEBUG
 
 /** Parser error */
 #define ecs_parser_error(name, expr, column, ...)\

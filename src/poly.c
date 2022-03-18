@@ -138,7 +138,7 @@ void _ecs_poly_fini(
     _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, NULL);\
     assert(cond)
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 void _ecs_poly_assert(
     const ecs_poly_t *poly,
     int32_t type,
