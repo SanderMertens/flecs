@@ -60,10 +60,32 @@
 /* FLECS_KEEP_ASSERT keeps asserts in release mode. */
 // #define FLECS_KEEP_ASSERT
 
-/* FLECS_CUSTOM_BUILD should be defined when manually selecting addons */
+/* The following macro's let you customize with which addons Flecs is built.
+ * Without any addons Flecs is just a minimal ECS storage, but addons add 
+ * features such as systems, scheduling and reflection. If an addon is disabled,
+ * it is excluded from the build, so that it consumes no resources. By default
+ * all addons are enabled.
+ * 
+ * You can customize a build by either whitelisting or blacklisting addons. To
+ * whitelist addons, first define the FLECS_CUSTOM_BUILD macro, which disables
+ * all addons. You can then manually select the addons you need by defining
+ * their macro, like "FLECS_SYSTEM".
+ * 
+ * To blacklist an addon, make sure to *not* define FLECS_CUSTOM_BUILD, and
+ * instead define the addons you don't need by defining FLECS_NO_<addon>, for
+ * example "FLECS_NO_SYSTEM". If there are any addons that depend on the 
+ * blacklisted addon, an error will be thrown during the build.
+ * 
+ * Note that addons can have dependencies on each other. Addons will 
+ * automatically enable their dependencies. To see the list of addons that was
+ * compiled in a build, enable tracing before creating the world by doing:
+ *   ecs_log_set_level(0);
+ * which outputs the full list of addons Flecs was compiled with.
+ */
+
+/* Define if you want to create a custom build by whitelisting addons */
 // #define FLECS_CUSTOM_BUILD
 
-/* If this is a regular, non-custom build, include all addons. */
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */
@@ -86,19 +108,13 @@
 #define FLECS_LOG           /* When enabled ECS provides more detailed logs */
 #define FLECS_APP           /* Application addon */
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
-
-/* Don't enable web addons if we're running as a webasm app */
-#ifndef ECS_TARGET_EM
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
-#endif
-
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
 
 #include "flecs/private/api_defines.h"
-#include "flecs/addons/log.h"               /* Logging API */
 #include "flecs/private/vector.h"           /* Vector datatype */
 #include "flecs/private/map.h"              /* Map */
 #include "flecs/private/strbuf.h"           /* String builder */
@@ -4357,82 +4373,10 @@ void* ecs_record_get_column(
 /** @} */
 
 #include "flecs/addons/flecs_c.h"
-
-#ifdef FLECS_APP
-#include "flecs/addons/app.h"
-#endif
-#ifdef FLECS_REST
-#include "flecs/addons/rest.h"
-#endif
-#ifdef FLECS_TIMER
-#include "flecs/addons/timer.h"
-#endif
-#ifdef FLECS_PIPELINE
-#include "flecs/addons/pipeline.h"
-#endif
-#ifdef FLECS_SYSTEM
-#include "flecs/addons/system.h"
-#endif
-#ifdef FLECS_COREDOC
-#include "flecs/addons/coredoc.h"
-#endif
-#ifdef FLECS_DOC
-#include "flecs/addons/doc.h"
-#endif
-#ifdef FLECS_JSON
-#include "flecs/addons/json.h"
-#endif
-#if defined(FLECS_EXPR) || defined(FLECS_META_C)
-#define FLECS_META
-#endif
-#ifdef FLECS_UNITS
-#include "flecs/addons/units.h"
-#endif
-#ifdef FLECS_META
-#include "flecs/addons/meta.h"
-#endif
-#ifdef FLECS_EXPR
-#include "flecs/addons/expr.h"
-#endif
-#ifdef FLECS_META_C
-#include "flecs/addons/meta_c.h"
-#endif
-#ifdef FLECS_PLECS
-#include "flecs/addons/plecs.h"
-#endif
-#ifdef FLECS_RULES
-#include "flecs/addons/rules.h"
-#endif
-#ifdef FLECS_SNAPSHOT
-#include "flecs/addons/snapshot.h"
-#endif
-#ifdef FLECS_STATS
-#include "flecs/addons/stats.h"
-#endif
-#ifdef FLECS_PARSER
-#include "flecs/addons/parser.h"
-#endif
-#ifdef FLECS_HTTP
-#include "flecs/addons/http.h"
-#endif
-#ifdef FLECS_OS_API_IMPL
-#include "flecs/addons/os_api_impl.h"
-#endif
-#ifdef FLECS_MODULE
-#include "flecs/addons/module.h"
-#endif
-
-#ifdef FLECS_CPP
-#include "flecs/addons/flecs_cpp.h"
-#endif
+#include "flecs/private/addons.h"
 
 #ifdef __cplusplus
 }
-
-#ifdef FLECS_CPP
-#include "flecs/addons/cpp/flecs.hpp"
-#endif
-
 #endif
 
 #endif

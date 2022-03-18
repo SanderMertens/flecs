@@ -128,7 +128,13 @@ Flecs has a modular architecture that makes it easy to only build the features y
 #define FLECS_SYSTEM        // Build FLECS_SYSTEM
 ```
 
-Here's an overview of all supported addons:
+Additionally, you can also specify addons to exclude from a build by adding `NO` to the define:
+
+```c
+#define FLECS_NO_LOG
+```
+
+The following addons can be configured:
 
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
