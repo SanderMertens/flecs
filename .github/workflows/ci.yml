@@ -4,8 +4,70 @@ on: [ push, pull_request ]
 
 jobs:
   build-linux:
-    timeout-minutes: 20
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: |
+          bake --strict
+
+  build-macos:
+    runs-on: macOS-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: |
+          bake --strict
+
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
+
+      - name: build flecs
+        run: bake/bake --strict
+
+  build-configs:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       CC: ${{ matrix.compiler.cc }}
       CXX: ${{ matrix.compiler.cxx }}
@@ -69,9 +131,10 @@ jobs:
           bake examples/os_api --strict --cfg release
           bake examples/os_api/bake --strict --cfg release
 
-  build-windows:
-    timeout-minutes: 20
+  build-configs-windows:
     runs-on: windows-latest
+    needs: [build-windows]
+    timeout-minutes: 20
 
     strategy:
       fail-fast: false
@@ -100,6 +163,7 @@ jobs:
         run: bake/bake examples --strict --cfg debug
 
   test-unix:
+    needs: [build-linux, build-macos]
     timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     strategy:
@@ -134,6 +198,7 @@ jobs:
         run: bake run test/cpp_api -- -j 8
 
   test-windows:
+    needs: build-windows
     timeout-minutes: 30
     runs-on: windows-latest
 
@@ -167,6 +232,7 @@ jobs:
         run: bake/bake run test\cpp_api -- -j 8
 
   analyze-scan-build:
+    needs: build-linux
     timeout-minutes: 30
     runs-on: ubuntu-latest
     env:
@@ -196,8 +262,9 @@ jobs:
           scan-build --status-bugs bake
 
   analyze-sanitized-api:
-    timeout-minutes: 30
+    needs: build-macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -219,8 +286,9 @@ jobs:
           bake run test/api --cfg sanitize -- -j 8
 
   analyze-sanitized-addons:
-    timeout-minutes: 30
+    needs: build-macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -242,8 +310,9 @@ jobs:
           bake run test/api --cfg sanitize -- -j 8
 
   analyze-sanitized-meta:
-    timeout-minutes: 30
+    needs: build-macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -265,8 +334,9 @@ jobs:
           bake run test/meta --cfg sanitize -- -j 8
 
   analyze-sanitized-collections:
-    timeout-minutes: 30
+    needs: build-macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -288,8 +358,9 @@ jobs:
           bake run test/collections --cfg sanitize -- -j 8
 
   analyze-sanitized-cpp_api:
-    timeout-minutes: 30
+    needs: build-macos
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -311,8 +382,8 @@ jobs:
           bake run test/cpp_api --cfg sanitize -- -j 8
 
   buildsystem-cmake:
-    timeout-minutes: 10
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
 
@@ -333,8 +404,8 @@ jobs:
           cmake --build .
 
   buildsystem-meson:
-    timeout-minutes: 10
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
 
@@ -355,8 +426,9 @@ jobs:
           meson compile
 
   flecs-custom-builds:
-    timeout-minutes: 10
+    needs: build-linux
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
@@ -492,8 +564,8 @@ jobs:
           bake runall test/custom_builds
 
   flecs-amalgamated:
-    timeout-minutes: 10
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
