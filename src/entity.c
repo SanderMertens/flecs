@@ -188,7 +188,7 @@ const ecs_type_info_t *get_c_info(
 {
     ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
-        return flecs_get_c_info(world, real_id);
+        return flecs_get_type_info(world, real_id);
     } else {
         return NULL;
     }
@@ -500,7 +500,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = ti ? ti->lifecycle.copy : NULL;
@@ -3988,7 +3988,7 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *ti = flecs_get_c_info(world, real_id);
+    const ecs_type_info_t *ti = flecs_get_type_info(world, real_id);
     ecs_xtor_t dtor;
     
     if (ti && (dtor = ti->lifecycle.dtor)) {

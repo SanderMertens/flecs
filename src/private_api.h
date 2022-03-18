@@ -76,14 +76,23 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_type_info_t *flecs_get_c_info(
+const ecs_type_info_t *flecs_get_type_info(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_type_info_t* flecs_get_or_create_c_info(
+ecs_type_info_t* flecs_ensure_type_info(
     ecs_world_t *world,
     ecs_entity_t component);
+
+void flecs_init_type_info(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_size_t size,
+    ecs_size_t alignment);
+
+#define flecs_init_type_info_t(world, T)\
+    flecs_init_type_info(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);
@@ -182,6 +191,10 @@ void flecs_clear_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
+
+bool flecs_id_existst(
+    ecs_world_t *world,
+    ecs_id_t id);
 
 void flecs_remove_id_record(
     ecs_world_t *world,

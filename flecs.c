@@ -1332,14 +1332,23 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */
-const ecs_type_info_t *flecs_get_c_info(
+const ecs_type_info_t *flecs_get_type_info(
     const ecs_world_t *world,
     ecs_entity_t component);
 
 /* Get or create component callbacks */
-ecs_type_info_t* flecs_get_or_create_c_info(
+ecs_type_info_t* flecs_ensure_type_info(
     ecs_world_t *world,
     ecs_entity_t component);
+
+void flecs_init_type_info(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_size_t size,
+    ecs_size_t alignment);
+
+#define flecs_init_type_info_t(world, T)\
+    flecs_init_type_info(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);
@@ -1438,6 +1447,10 @@ void flecs_clear_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
+
+bool flecs_id_existst(
+    ecs_world_t *world,
+    ecs_id_t id);
 
 void flecs_remove_id_record(
     ecs_world_t *world,
@@ -2504,7 +2517,7 @@ void notify_component_info(
             }
             ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
             
-            const ecs_type_info_t *c_info = flecs_get_c_info(world, c);
+            const ecs_type_info_t *c_info = flecs_get_type_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
                 table->flags |= flags;
@@ -4863,7 +4876,7 @@ const ecs_type_info_t *get_c_info(
 {
     ecs_entity_t real_id = ecs_get_typeid(world, component);
     if (real_id) {
-        return flecs_get_c_info(world, real_id);
+        return flecs_get_type_info(world, real_id);
     } else {
         return NULL;
     }
@@ -5175,7 +5188,7 @@ bool override_from_base(
         void *data_ptr = ECS_OFFSET(data_array, data_size * row);
 
         component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
         int32_t index;
 
         ecs_copy_t copy = ti ? ti->lifecycle.copy : NULL;
@@ -8663,7 +8676,7 @@ void free_value(
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *ti = flecs_get_c_info(world, real_id);
+    const ecs_type_info_t *ti = flecs_get_type_info(world, real_id);
     ecs_xtor_t dtor;
     
     if (ti && (dtor = ti->lifecycle.dtor)) {
@@ -9230,7 +9243,7 @@ bool flecs_defer_set(
         const ecs_type_info_t *ti = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
-            ti = flecs_get_c_info(world, real_id);
+            ti = flecs_get_type_info(world, real_id);
         }
 
         if (value) {
@@ -13836,6 +13849,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_CONVERSION);
     ECS_ERR_STR(ECS_MODULE_UNDEFINED);
     ECS_ERR_STR(ECS_MISSING_SYMBOL);
+    ECS_ERR_STR(ECS_ALREADY_IN_USE);
     ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
     ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
     ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
@@ -23801,17 +23815,16 @@ void unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
+    EcsMetaType *type = ecs_term(it, EcsMetaType, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t type = it->entities[i];
-
-        /* If component has no component actions (which is typical if a type is
-         * created with reflection data) make sure its values are always 
-         * initialized with zero. This prevents the injection of invalid data 
-         * through generic APIs after adding a component without setting it. */
-        if (!ecs_component_has_actions(world, type)) {
-            ecs_set_component_actions_w_id(world, type, 
+        /* If a component is defined from reflection data, configure it with the
+         * default constructor. This ensures that a new component value does not
+         * contain uninitialized memory, which could cause serializers to crash
+         * when for example inspecting string fields. */
+        if (!type->existing) {
+            ecs_set_component_actions_w_id(world, it->entities[i], 
                 &(EcsComponentLifecycle){ 
                     .ctor = ecs_default_ctor
                 });
@@ -27418,7 +27431,7 @@ ecs_data_t* duplicate_data(
 
         component = ecs_get_typeid(world, component);
 
-        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
@@ -34989,40 +35002,48 @@ void ecs_set_component_actions_w_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_stage_from_world(&world);
 
-    const EcsComponent *component_ptr = ecs_get(world, component, EcsComponent);
+    ecs_type_info_t *ti = flecs_ensure_type_info(world, component);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Cannot register lifecycle actions for things that aren't a component */
-    ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_size_t size = ti->size;
+    ecs_size_t alignment = ti->alignment;
 
-    /* Cannot register lifecycle actions for components with size 0 */
-    ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+    if (!size) {
+        const EcsComponent *component_ptr = ecs_get(
+            world, component, EcsComponent);
 
-    ecs_type_info_t *c_info = flecs_get_or_create_c_info(world, component);
-    ecs_assert(c_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        /* Cannot register lifecycle actions for things that aren't a component */
+        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        /* Cannot register lifecycle actions for components with size 0 */
+        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 
-    if (c_info->lifecycle_set) {
-        ecs_assert(c_info->component == component, ECS_INTERNAL_ERROR, NULL);
-        ecs_check(!lifecycle->ctor || c_info->lifecycle.ctor == lifecycle->ctor, 
+        size = component_ptr->size;
+        alignment = component_ptr->alignment;
+    }
+
+    if (ti->lifecycle_set) {
+        ecs_assert(ti->component == component, ECS_INTERNAL_ERROR, NULL);
+        ecs_check(!lifecycle->ctor || ti->lifecycle.ctor == lifecycle->ctor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(!lifecycle->dtor || c_info->lifecycle.dtor == lifecycle->dtor, 
+        ecs_check(!lifecycle->dtor || ti->lifecycle.dtor == lifecycle->dtor, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(!lifecycle->copy || c_info->lifecycle.copy == lifecycle->copy, 
+        ecs_check(!lifecycle->copy || ti->lifecycle.copy == lifecycle->copy, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_check(!lifecycle->move || c_info->lifecycle.move == lifecycle->move, 
+        ecs_check(!lifecycle->move || ti->lifecycle.move == lifecycle->move, 
             ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
 
-        if (!c_info->lifecycle.on_set) {
-            c_info->lifecycle.on_set = lifecycle->on_set;
+        if (!ti->lifecycle.on_set) {
+            ti->lifecycle.on_set = lifecycle->on_set;
         }
-        if (!c_info->lifecycle.on_remove) {
-            c_info->lifecycle.on_remove = lifecycle->on_remove;
+        if (!ti->lifecycle.on_remove) {
+            ti->lifecycle.on_remove = lifecycle->on_remove;
         }
     } else {
-        c_info->component = component;
-        c_info->lifecycle = *lifecycle;
-        c_info->lifecycle_set = true;
-        c_info->size = component_ptr->size;
-        c_info->alignment = component_ptr->alignment;
+        ti->component = component;
+        ti->lifecycle = *lifecycle;
+        ti->lifecycle_set = true;
+        ti->size = size;
+        ti->alignment = alignment;
 
         /* If no constructor is set, invoking any of the other lifecycle actions 
          * is not safe as they will potentially access uninitialized memory. For 
@@ -35031,16 +35052,16 @@ void ecs_set_component_actions_w_id(
         if (!lifecycle->ctor && 
             (lifecycle->dtor || lifecycle->copy || lifecycle->move)) 
         {
-            c_info->lifecycle.ctor = ecs_default_ctor;   
+            ti->lifecycle.ctor = ecs_default_ctor;   
         }
 
         /* Set default copy ctor, move ctor and merge */
         if (lifecycle->copy && !lifecycle->copy_ctor) {
-            c_info->lifecycle.copy_ctor = default_copy_ctor;
+            ti->lifecycle.copy_ctor = default_copy_ctor;
         }
 
         if (lifecycle->move && !lifecycle->move_ctor) {
-            c_info->lifecycle.move_ctor = default_move_ctor;
+            ti->lifecycle.move_ctor = default_move_ctor;
         }
 
         if (!lifecycle->ctor_move_dtor) {
@@ -35049,18 +35070,18 @@ void ecs_set_component_actions_w_id(
                     if (lifecycle->move_ctor) {
                         /* If an explicit move ctor has been set, use callback 
                          * that uses the move ctor vs. using a ctor+move */
-                        c_info->lifecycle.ctor_move_dtor = 
+                        ti->lifecycle.ctor_move_dtor = 
                             default_move_ctor_w_dtor;
                     } else {
                         /* If no explicit move_ctor has been set, use
                          * combination of ctor + move + dtor */
-                        c_info->lifecycle.ctor_move_dtor = 
+                        ti->lifecycle.ctor_move_dtor = 
                             default_ctor_w_move_w_dtor;
                     }
                 } else {
                     /* If no dtor has been set, this is just a move ctor */
-                    c_info->lifecycle.ctor_move_dtor = 
-                        c_info->lifecycle.move_ctor;
+                    ti->lifecycle.ctor_move_dtor = 
+                        ti->lifecycle.move_ctor;
                 }            
             }
         }
@@ -35068,28 +35089,23 @@ void ecs_set_component_actions_w_id(
         if (!lifecycle->move_dtor) {
             if (lifecycle->move) {
                 if (lifecycle->dtor) {
-                    c_info->lifecycle.move_dtor = default_move_w_dtor;
+                    ti->lifecycle.move_dtor = default_move_w_dtor;
                 } else {
-                    c_info->lifecycle.move_dtor = default_move;
+                    ti->lifecycle.move_dtor = default_move;
                 }
             } else {
                 if (lifecycle->dtor) {
-                    c_info->lifecycle.move_dtor = default_dtor;
+                    ti->lifecycle.move_dtor = default_dtor;
                 }
             }
         }
 
-        /* Broadcast to all tables since we need to register a ctor for every
-         * table that uses the component as itself, as predicate or as object.
-         * The latter is what makes selecting the right set of tables complex,
-         * as it depends on the predicate of a pair whether the object is used
-         * as the component type or not. 
-         * A more selective approach requires a more expressive notification
-         * framework. */
-        flecs_notify_tables(world, 0, &(ecs_table_event_t) {
-            .kind = EcsTableComponentInfo,
-            .component = component
-        });
+        /* Ensure that no tables have yet been created for the component */
+        ecs_assert( flecs_id_existst(world, component) == false, 
+            ECS_ALREADY_IN_USE, ecs_get_name(world, component));
+        ecs_assert( flecs_id_existst(world, 
+            ecs_pair(component, EcsWildcard)) == false, 
+                ECS_ALREADY_IN_USE, ecs_get_name(world, component));
     }
 error:
     return;
@@ -35103,8 +35119,8 @@ bool ecs_component_has_actions(
     ecs_check(component != 0, ECS_INVALID_PARAMETER, NULL);
     
     world = ecs_get_world(world);
-    const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
-    return (c_info != NULL) && c_info->lifecycle_set;
+    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    return (ti != NULL) && ti->lifecycle_set;
 error:
     return false;
 }
@@ -35615,7 +35631,7 @@ void ecs_end_wait(
     ecs_os_mutex_unlock(world->thr_sync);
 }
 
-const ecs_type_info_t* flecs_get_c_info(
+const ecs_type_info_t* flecs_get_type_info(
     const ecs_world_t *world,
     ecs_entity_t component)
 {
@@ -35627,23 +35643,38 @@ const ecs_type_info_t* flecs_get_c_info(
     return flecs_sparse_get(world->type_info, ecs_type_info_t, component);
 }
 
-ecs_type_info_t* flecs_get_or_create_c_info(
+ecs_type_info_t* flecs_ensure_type_info(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_poly_assert(world, ecs_world_t);  
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_type_info_t *c_info = flecs_get_c_info(world, component);
-    ecs_type_info_t *c_info_mut = NULL;
-    if (!c_info) {
-        c_info_mut = flecs_sparse_ensure(
+    const ecs_type_info_t *ti = flecs_get_type_info(world, component);
+    ecs_type_info_t *ti_mut = NULL;
+    if (!ti) {
+        ti_mut = flecs_sparse_ensure(
             world->type_info, ecs_type_info_t, component);
-        ecs_assert(c_info_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
+        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
     } else {
-        c_info_mut = (ecs_type_info_t*)c_info;
+        ti_mut = (ecs_type_info_t*)ti;
     }
 
-    return c_info_mut;
+    return ti_mut;
+}
+
+void flecs_init_type_info(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_size_t size,
+    ecs_size_t alignment)
+{
+    ecs_type_info_t *ti = flecs_ensure_type_info(world, component);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->size == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->alignment == 0, ECS_INTERNAL_ERROR, NULL);
+    ti->size = size;
+    ti->alignment = alignment;
 }
 
 static
@@ -36005,6 +36036,18 @@ void flecs_clear_id_record(
     ecs_table_cache_fini_delete_all(world, &idr->cache);
 
     flecs_remove_id_record(world, id, idr);
+}
+
+bool flecs_id_existst(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        return false;
+    }
+    return (ecs_table_cache_count(&idr->cache) != 0) ||
+        (ecs_table_cache_empty_count(&idr->cache) != 0);
 }
 
 const ecs_table_record_t* flecs_id_record_table(
@@ -47067,21 +47110,16 @@ void flecs_bootstrap(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    /* Create table for initial components */
-    ecs_table_t *table = bootstrap_component_table(world);
-    assert(table != NULL);
+    /* Bootstrap type info (otherwise initialized by setting EcsComponent) */
+    flecs_init_type_info_t(world, EcsComponent);
+    flecs_init_type_info_t(world, EcsIdentifier);
+    flecs_init_type_info_t(world, EcsTrigger);
+    flecs_init_type_info_t(world, EcsObserver);
 
-    bootstrap_component(world, table, EcsIdentifier);
-    bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsComponentLifecycle);
-
-    bootstrap_component(world, table, EcsType);
-    bootstrap_component(world, table, EcsQuery);
-    bootstrap_component(world, table, EcsTrigger);
-    bootstrap_component(world, table, EcsObserver);
-    bootstrap_component(world, table, EcsIterable);
-
-    ecs_set_component_actions(world, EcsComponent, { .ctor = ecs_default_ctor });
+    /* Setup component lifecycle actions */
+    ecs_set_component_actions(world, EcsComponent, { 
+        .ctor = ecs_default_ctor
+    });
 
     ecs_set_component_actions(world, EcsIdentifier, {
         .ctor = ecs_ctor(EcsIdentifier),
@@ -47105,6 +47143,20 @@ void flecs_bootstrap(
         .copy = ecs_copy(EcsObserver),
         .move = ecs_move(EcsObserver)
     });            
+
+    /* Create table for initial components */
+    ecs_table_t *table = bootstrap_component_table(world);
+    assert(table != NULL);
+
+    bootstrap_component(world, table, EcsIdentifier);
+    bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsComponentLifecycle);
+
+    bootstrap_component(world, table, EcsType);
+    bootstrap_component(world, table, EcsQuery);
+    bootstrap_component(world, table, EcsTrigger);
+    bootstrap_component(world, table, EcsObserver);
+    bootstrap_component(world, table, EcsIterable);
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;

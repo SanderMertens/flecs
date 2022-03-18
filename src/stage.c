@@ -327,7 +327,7 @@ bool flecs_defer_set(
         const ecs_type_info_t *ti = NULL;
         ecs_entity_t real_id = ecs_get_typeid(world, id);
         if (real_id) {
-            ti = flecs_get_c_info(world, real_id);
+            ti = flecs_get_type_info(world, real_id);
         }
 
         if (value) {

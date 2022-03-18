@@ -584,21 +584,16 @@ void flecs_bootstrap(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    /* Create table for initial components */
-    ecs_table_t *table = bootstrap_component_table(world);
-    assert(table != NULL);
+    /* Bootstrap type info (otherwise initialized by setting EcsComponent) */
+    flecs_init_type_info_t(world, EcsComponent);
+    flecs_init_type_info_t(world, EcsIdentifier);
+    flecs_init_type_info_t(world, EcsTrigger);
+    flecs_init_type_info_t(world, EcsObserver);
 
-    bootstrap_component(world, table, EcsIdentifier);
-    bootstrap_component(world, table, EcsComponent);
-    bootstrap_component(world, table, EcsComponentLifecycle);
-
-    bootstrap_component(world, table, EcsType);
-    bootstrap_component(world, table, EcsQuery);
-    bootstrap_component(world, table, EcsTrigger);
-    bootstrap_component(world, table, EcsObserver);
-    bootstrap_component(world, table, EcsIterable);
-
-    ecs_set_component_actions(world, EcsComponent, { .ctor = ecs_default_ctor });
+    /* Setup component lifecycle actions */
+    ecs_set_component_actions(world, EcsComponent, { 
+        .ctor = ecs_default_ctor
+    });
 
     ecs_set_component_actions(world, EcsIdentifier, {
         .ctor = ecs_ctor(EcsIdentifier),
@@ -622,6 +617,20 @@ void flecs_bootstrap(
         .copy = ecs_copy(EcsObserver),
         .move = ecs_move(EcsObserver)
     });            
+
+    /* Create table for initial components */
+    ecs_table_t *table = bootstrap_component_table(world);
+    assert(table != NULL);
+
+    bootstrap_component(world, table, EcsIdentifier);
+    bootstrap_component(world, table, EcsComponent);
+    bootstrap_component(world, table, EcsComponentLifecycle);
+
+    bootstrap_component(world, table, EcsType);
+    bootstrap_component(world, table, EcsQuery);
+    bootstrap_component(world, table, EcsTrigger);
+    bootstrap_component(world, table, EcsObserver);
+    bootstrap_component(world, table, EcsIterable);
 
     world->stats.last_component_id = EcsFirstUserComponentId;
     world->stats.last_id = EcsFirstUserEntityId;

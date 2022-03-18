@@ -669,8 +669,6 @@ void ComponentLifecycle_merge_to_different_table() {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e, Position, Velocity, Rotation);
-
     ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
         .ctor = ecs_ctor(Position),
         .dtor = ecs_dtor(Position),
@@ -697,7 +695,24 @@ void ComponentLifecycle_merge_to_different_table() {
         .dtor = ecs_dtor(Rotation),
         .copy = ecs_copy(Rotation),
         .move = ecs_move(Rotation)
-    });    
+    });
+
+    ECS_ENTITY(world, e, Position, Velocity, Rotation);
+
+    ctor_position = 0;
+    dtor_position = 0;
+    copy_position = 0;
+    move_position = 0;
+
+    ctor_velocity = 0;
+    dtor_velocity = 0;
+    copy_velocity = 0;
+    move_velocity = 0;
+
+    ctor_rotation = 0;
+    dtor_rotation = 0;
+    copy_rotation = 0;
+    move_rotation = 0;
 
     ecs_defer_begin(world);
 
@@ -804,8 +819,6 @@ void ComponentLifecycle_delete_in_stage() {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e, Position, Velocity, Mass);
-
     ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
         .ctor = ecs_ctor(Position),
         .dtor = ecs_dtor(Position),
@@ -826,6 +839,23 @@ void ComponentLifecycle_delete_in_stage() {
         .copy = ecs_copy(Mass),
         .move = ecs_move(Mass)
     });
+
+    ECS_ENTITY(world, e, Position, Velocity, Mass);
+
+    ctor_position = 0;
+    dtor_position = 0;
+    copy_position = 0;
+    move_position = 0;
+
+    ctor_velocity = 0;
+    dtor_velocity = 0;
+    copy_velocity = 0;
+    move_velocity = 0;
+
+    ctor_mass = 0;
+    dtor_mass = 0;
+    copy_mass = 0;
+    move_mass = 0;
 
     ecs_defer_begin(world);
 
@@ -894,40 +924,6 @@ void ComponentLifecycle_ctor_on_add_pair() {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_ctor_on_add_pair_set_ctor_after_table() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Pair);
-
-    cl_ctx ctx = { { 0 } };
-
-    ecs_entity_t e = ecs_new(world, 0);
-    test_int(ctx.ctor.invoked, 0);
-    ecs_add_pair(world, e, ecs_id(Pair), ecs_id(Position));
-
-    /* Remove pair so we can add it again after registering the ctor */
-    ecs_remove_pair(world, e, ecs_id(Pair), ecs_id(Position));
-
-    /* Register component after table has been created */
-    ecs_set(world, ecs_id(Pair), EcsComponentLifecycle, {
-        .ctor = comp_ctor,
-        .ctx = &ctx
-    });
-
-    /* Re-add */
-    ecs_add_pair(world, e, ecs_id(Pair), ecs_id(Position));
-
-    test_assert(ctx.ctor.invoked != 0);
-    test_assert(ctx.ctor.world == world);
-    test_int(ctx.ctor.component, ecs_id(Pair));
-    test_int(ctx.ctor.entity, e);
-    test_int(ctx.ctor.size, sizeof(Pair));
-    test_int(ctx.ctor.count, 1);
-
-    ecs_fini(world);
-}
-
 void ComponentLifecycle_ctor_on_add_pair_tag() {
     ecs_world_t *world = ecs_init();
 
@@ -945,40 +941,6 @@ void ComponentLifecycle_ctor_on_add_pair_tag() {
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add_pair(world, e, Pair, ecs_id(Position));
-
-    test_assert(ctx.ctor.invoked != 0);
-    test_assert(ctx.ctor.world == world);
-    test_int(ctx.ctor.component, ecs_id(Position));
-    test_int(ctx.ctor.entity, e);
-    test_int(ctx.ctor.size, sizeof(Position));
-    test_int(ctx.ctor.count, 1);
-
-    ecs_fini(world);
-}
-
-void ComponentLifecycle_ctor_on_add_pair_tag_set_ctor_after_table() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Pair);
-
-    cl_ctx ctx = { { 0 } };
-
-    ecs_entity_t e = ecs_new(world, 0);
-    test_int(ctx.ctor.invoked, 0);
-    ecs_add_pair(world, e, Pair, ecs_id(Position));
-
-    /* Remove pair so we can add it again after registering the ctor */
-    ecs_remove_pair(world, e, Pair, ecs_id(Position));
-
-    /* Register component after table has been created */
-    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        .ctor = comp_ctor,
-        .ctx = &ctx
-    });
-
-    /* Re-add */
-    ecs_add_pair(world, e, Pair, ecs_id(Position)); 
 
     test_assert(ctx.ctor.invoked != 0);
     test_assert(ctx.ctor.world == world);

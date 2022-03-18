@@ -56,7 +56,7 @@ ecs_data_t* duplicate_data(
 
         component = ecs_get_typeid(world, component);
 
-        const ecs_type_info_t *ti = flecs_get_c_info(world, component);
+        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
         int16_t size = column->size;
         int16_t alignment = column->alignment;
         ecs_copy_t copy;
