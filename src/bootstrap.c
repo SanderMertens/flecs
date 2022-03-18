@@ -584,8 +584,12 @@ void flecs_bootstrap(
     /* Bootstrap type info (otherwise initialized by setting EcsComponent) */
     flecs_init_type_info_t(world, EcsComponent);
     flecs_init_type_info_t(world, EcsIdentifier);
+    flecs_init_type_info_t(world, EcsComponentLifecycle);
+    flecs_init_type_info_t(world, EcsType);
+    flecs_init_type_info_t(world, EcsQuery);
     flecs_init_type_info_t(world, EcsTrigger);
     flecs_init_type_info_t(world, EcsObserver);
+    flecs_init_type_info_t(world, EcsIterable);
 
     /* Setup component lifecycle actions */
     ecs_set_component_actions(world, EcsComponent, { 
