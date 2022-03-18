@@ -37,10 +37,12 @@ void flecs_bitset_ensure(
     }
 }
 
-void flecs_bitset_deinit(
+void flecs_bitset_fini(
     ecs_bitset_t *bs)
 {
     ecs_os_free(bs->data);
+    bs->data = NULL;
+    bs->count = 0;
 }
 
 void flecs_bitset_addn(

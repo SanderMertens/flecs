@@ -847,7 +847,11 @@
                 "remove_childof_wildcard",
                 "delete_child_of_delete_with",
                 "deep_clean_64",
-                "deep_clean_256"
+                "deep_clean_256",
+                "on_delete_id_w_switch",
+                "on_delete_id_w_disabled",
+                "on_delete_id_to_no_switch",
+                "on_delete_id_to_no_disabled"
             ]
         }, {
             "id": "Set",

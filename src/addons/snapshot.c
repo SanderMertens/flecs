@@ -44,7 +44,10 @@ ecs_data_t* duplicate_data(
     ecs_entity_t *entities = ecs_vector_first(result->entities, ecs_entity_t);
 
     /* Copy record ptrs */
-    result->record_ptrs = ecs_vector_copy(main_data->record_ptrs, ecs_record_t*);
+    result->record_ptrs = ecs_vector_copy(
+        main_data->record_ptrs, ecs_record_t*);
+
+    ecs_size_t to_alloc = ecs_vector_size(result->entities);
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
@@ -60,7 +63,7 @@ ecs_data_t* duplicate_data(
 
         if (ti && (copy = ti->lifecycle.copy)) {
             int32_t count = ecs_vector_count(column->data);
-            ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, count);
+            ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, to_alloc);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);
             void *dst_ptr = ecs_vector_first_t(dst_vec, size, alignment);
             

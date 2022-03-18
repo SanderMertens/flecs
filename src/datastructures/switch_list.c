@@ -120,6 +120,20 @@ ecs_switch_t* flecs_switch_new(
     return result;
 }
 
+void flecs_switch_clear(
+    ecs_switch_t *sw)
+{
+    int32_t count = (int32_t)(sw->max - sw->min) + 1;
+    for (int i = 0; i < count; i ++) {
+        sw->headers[i].element = -1;
+        sw->headers[i].count = 0;
+    }
+    ecs_vector_free(sw->nodes);
+    ecs_vector_free(sw->values);
+    sw->nodes = NULL;
+    sw->values = NULL;
+}
+
 void flecs_switch_free(
     ecs_switch_t *sw)
 {
@@ -161,6 +175,14 @@ void flecs_switch_set_count(
         node->next = -1;
         values[i] = 0;
     }
+}
+
+int32_t flecs_switch_count(
+    ecs_switch_t *sw)
+{
+    ecs_assert(ecs_vector_count(sw->values) == ecs_vector_count(sw->nodes),
+        ECS_INTERNAL_ERROR, NULL);
+    return ecs_vector_count(sw->values);
 }
 
 void flecs_switch_ensure(

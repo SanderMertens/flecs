@@ -141,6 +141,10 @@ typedef enum ecs_type_kind_t {
 /** Component that is automatically added to every type with the right kind. */
 typedef struct EcsMetaType {
     ecs_type_kind_t kind;
+    bool existing;   /* Did the type exist or is it populated from reflection */
+    bool partial;    /* Is the reflection data a partial type description */
+    ecs_size_t size;       /* Computed size */
+    ecs_size_t alignment;  /* Computed alignment */
 } EcsMetaType;
 
 typedef enum ecs_primitive_kind_t {
