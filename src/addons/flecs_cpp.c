@@ -200,7 +200,7 @@ void ecs_cpp_component_validate(
     /* If entity has a name check if it matches */
     if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
         if (!implicit_name && id >= EcsFirstUserComponentId) {
-#           ifndef NDEBUG
+#           ifndef FLECS_NDEBUG
             char *path = ecs_get_path_w_sep(
                 world, 0, id, "::", NULL);
             if (ecs_os_strcmp(path, name)) {
@@ -273,7 +273,7 @@ ecs_entity_t ecs_cpp_component_register(
                 ecs_get_name(world, ent));
             (void)sym;
 
-#           ifndef NDEBUG
+#           ifndef FLECS_NDEBUG
             if (ecs_os_strcmp(sym, symbol)) {
                 ecs_err(
                     "component with name '%s' is already registered for"\

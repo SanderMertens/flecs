@@ -403,7 +403,7 @@ void instantiate_children(
         ecs_entity_t *children = ecs_vector_first(
             child_data->entities, ecs_entity_t);
 
-#ifdef FLECS_SANITIZE
+#ifdef FLECS_DEBUG
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];        
             ecs_check(child != instance, ECS_INVALID_PARAMETER, NULL);

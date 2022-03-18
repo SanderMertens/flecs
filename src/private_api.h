@@ -670,7 +670,7 @@ void _ecs_poly_fini(
     ecs_os_free(obj)
 
 /* Utilities for testing/asserting an object type */
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 void _ecs_poly_assert(
     const ecs_poly_t *object,
     int32_t type,
@@ -741,7 +741,7 @@ uint64_t _flecs_ito(
     uint64_t value,
     const char *err);
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #define flecs_ito(T, value)\
     (T)_flecs_ito(\
         sizeof(T),\

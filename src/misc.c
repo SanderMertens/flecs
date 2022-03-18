@@ -1,7 +1,7 @@
 #include "private_api.h"
 #include <time.h>
 
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 static int64_t s_min[] = { 
     [1] = INT8_MIN, [2] = INT16_MIN, [4] = INT32_MIN, [8] = INT64_MIN };
 static int64_t s_max[] = { 

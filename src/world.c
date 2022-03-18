@@ -637,8 +637,12 @@ ecs_world_t *ecs_mini(void) {
 
     log_addons();
 
-#ifndef NDEBUG
-    ecs_trace("debug build, rebuild with NDEBUG for improved performance");
+#ifdef FLECS_SANITIZE
+    ecs_trace("sanitize build, rebuild witohut FLECS_SANITIZE for (much) "
+        "improved performance");
+#elif defined(FLECS_DEBUG)
+    ecs_trace("debug build, rebuild with NDEBUG or FLECS_NDEBUG for improved "
+        "performance");
 #else
     ecs_trace("#[green]release#[reset] build");
 #endif

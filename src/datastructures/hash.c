@@ -8,7 +8,7 @@
  * into the hashing function, but only at word boundaries. This should be safe,
  * but trips up address sanitizers and valgrind.
  * This ensures clean valgrind logs in debug mode & the best perf in release */
-#if !defined(NDEBUG) || defined(ADDRESS_SANITIZER)
+#if !defined(FLECS_NDEBUG) || defined(ADDRESS_SANITIZER)
 #ifndef VALGRIND
 #define VALGRIND
 #endif

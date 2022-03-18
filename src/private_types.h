@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 #include <limits.h>
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
 #include <stdio.h> /* easier debugging, throws warning in release for printfs */
 #endif
 
