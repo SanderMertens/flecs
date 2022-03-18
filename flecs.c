@@ -480,10 +480,10 @@ struct ecs_table_t {
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
 
-    int32_t sw_column_count;
-    int32_t sw_column_offset;
-    int32_t bs_column_count;
-    int32_t bs_column_offset;
+    int16_t sw_column_count;
+    int16_t sw_column_offset;
+    int16_t bs_column_count;
+    int16_t bs_column_offset;
 
     int32_t lock;
     int32_t refcount;
@@ -2213,47 +2213,6 @@ void check_table_sanity(ecs_table_t *table) {
 #define check_table_sanity(table)
 #endif
 
-/* Count number of switch columns */
-static
-int32_t switch_column_count(
-    ecs_table_t *table)
-{
-    int32_t i, sw_count = 0, count = ecs_vector_count(table->type);
-    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        if (ECS_HAS_ROLE(id, SWITCH)) {
-            if (!sw_count) {
-                table->sw_column_offset = i;
-            }
-            sw_count ++;
-        }
-    }
-
-    return sw_count;
-}
-
-/* Count number of bitset columns */
-static
-int32_t bitset_column_count(
-    ecs_table_t *table)
-{
-    int32_t count = 0;
-    ecs_vector_each(table->type, ecs_entity_t, c_ptr, {
-        ecs_entity_t component = *c_ptr;
-
-        if (ECS_HAS_ROLE(component, DISABLED)) {
-            if (!count) {
-                table->bs_column_offset = c_ptr_i;
-            }
-            count ++;
-        }
-    });
-
-    return count;
-}
-
 static
 void init_storage_map(
     ecs_table_t *table)
@@ -2319,9 +2278,14 @@ void init_storage_table(
     int32_t i, count = ecs_vector_count(table->type);
     ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
     ecs_table_record_t *records = table->records;
+
+    ecs_id_t array[ECS_ID_CACHE_SIZE];
     ecs_ids_t storage_ids = {
-        .array = ecs_os_alloca_n(ecs_id_t, count)
+        .array = array
     };
+    if (count > ECS_ID_CACHE_SIZE) {
+        storage_ids.array = ecs_os_malloc_n(ecs_id_t, count);
+    }
 
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
@@ -2347,6 +2311,10 @@ void init_storage_table(
         table->storage_table = table;
         table->storage_type = table->storage_table->type;
         ecs_assert(table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (storage_ids.array != array) {
+        ecs_os_free(storage_ids.array);
     }
 
     if (!table->storage_map) {
@@ -2421,8 +2389,8 @@ void flecs_table_init_data(
     init_storage_table(world, table);
     init_type_info(table);
 
-    int32_t sw_count = table->sw_column_count = switch_column_count(table);
-    int32_t bs_count = table->bs_column_count = bitset_column_count(table);
+    int32_t sw_count = table->sw_column_count;
+    int32_t bs_count = table->bs_column_count;
 
     ecs_data_t *storage = &table->storage;
     ecs_type_t type = table->storage_type;
@@ -43427,6 +43395,19 @@ void flecs_table_records_register(
                 id = ecs_pair(id, EcsWildcard);
                 register_table_for_id(world, table, id, i, 1, &table->records[r]);
                 r ++;
+
+                /* Keep track of how many switch/bitset columns there are */
+                if (role == ECS_SWITCH) {
+                    if (!table->sw_column_count) {
+                        table->sw_column_offset = flecs_ito(int16_t, i);
+                    }
+                    table->sw_column_count ++;
+                } else if (role == ECS_DISABLED) {
+                    if (!table->bs_column_count) {
+                        table->bs_column_offset = flecs_ito(int16_t, i);
+                    }
+                    table->bs_column_count ++;
+                }
             }
         }
     }
