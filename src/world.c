@@ -1597,7 +1597,7 @@ ecs_type_info_t* flecs_ensure_type_info(
     if (!ti) {
         ti_mut = flecs_sparse_ensure(
             world->type_info, ecs_type_info_t, component);
-        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
+        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         ti_mut = (ecs_type_info_t*)ti;
     }

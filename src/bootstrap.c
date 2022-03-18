@@ -319,14 +319,11 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_type_info_t *ti = flecs_sparse_get(
-            world->type_info, ecs_type_info_t, e);
-        if (ti) {
-            ti->size = c[i].size;
-        }
+        ecs_type_info_t *ti = flecs_ensure_type_info(world, e);
+        ti->size = c[i].size;
+        ti->alignment = c[i].alignment;
     }
 }
-
 
 static
 void on_set_component_lifecycle(ecs_iter_t *it) {

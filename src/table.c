@@ -241,11 +241,65 @@ void init_storage_table(
     }
 }
 
+static
+ecs_flags32_t get_component_action_flags(
+    const ecs_type_info_t *c_info) 
+{
+    ecs_flags32_t flags = 0;
+
+    if (c_info->lifecycle.ctor) {
+        flags |= EcsTableHasCtors;
+    }
+    if (c_info->lifecycle.dtor) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->lifecycle.on_remove) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->lifecycle.copy) {
+        flags |= EcsTableHasCopy;
+    }
+    if (c_info->lifecycle.move) {
+        flags |= EcsTableHasMove;
+    }  
+
+    return flags;  
+}
+
+static
+void init_type_info(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_type_t type = table->storage_type;
+    if (!type) {
+        return;
+    }
+
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    table->c_info = ecs_os_calloc_n(ecs_type_info_t*, count);
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_entity_t t = ecs_get_typeid(world, id);
+
+        const ecs_type_info_t *ti = flecs_get_type_info(world, t);
+        if (ti) {
+            table->flags |= get_component_action_flags(ti);
+        }
+
+        table->c_info[i] = (ecs_type_info_t*)ti;
+    }
+}
+
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     init_storage_table(world, table);
+    init_type_info(world, table);
 
     int32_t sw_count = table->sw_column_count = switch_column_count(table);
     int32_t bs_count = table->bs_column_count = bitset_column_count(table);
@@ -319,102 +373,6 @@ void flecs_table_init_data(
         for (i = 0; i < bs_count; i ++) {
             flecs_bitset_init(&storage->bs_columns[i].data);
         }
-    }
-}
-
-static
-ecs_flags32_t get_component_action_flags(
-    const ecs_type_info_t *c_info) 
-{
-    ecs_flags32_t flags = 0;
-
-    if (c_info->lifecycle.ctor) {
-        flags |= EcsTableHasCtors;
-    }
-    if (c_info->lifecycle.dtor) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->lifecycle.on_remove) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->lifecycle.copy) {
-        flags |= EcsTableHasCopy;
-    }
-    if (c_info->lifecycle.move) {
-        flags |= EcsTableHasMove;
-    }  
-
-    return flags;  
-}
-
-/* Check if table has instance of component, including pairs */
-static
-bool has_component(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t component)
-{
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        if (component == ecs_get_typeid(world, entities[i])) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-static
-void notify_component_info(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t component)
-{
-    ecs_type_t table_type = table->storage_type;
-    if (!component || has_component(world, table_type, component)){
-        int32_t column_count = ecs_vector_count(table_type);
-        ecs_assert(!component || column_count != 0, ECS_INTERNAL_ERROR, NULL);
-
-        if (!column_count) {
-            return;
-        }
-        
-        if (!table->c_info) {
-            table->c_info = ecs_os_calloc(
-                ECS_SIZEOF(ecs_type_info_t*) * column_count);
-        }
-
-        /* Reset lifecycle flags before recomputing */
-        table->flags &= ~EcsTableHasLifecycle;
-
-        /* Recompute lifecycle flags */
-        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            ecs_id_t id = array[i];
-            ecs_entity_t c;
-
-            /* Hardcode components used in bootstrap */
-            if (id == ecs_id(EcsComponent)) {
-                c = id;
-            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
-                c = ecs_id(EcsIdentifier);
-            } else {
-                c = ecs_get_typeid(world, array[i]);
-            }
-            ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
-            
-            const ecs_type_info_t *c_info = flecs_get_type_info(world, c);
-            if (c_info) {
-                ecs_flags32_t flags = get_component_action_flags(c_info);
-                table->flags |= flags;
-            }
-
-            /* Store pointer to c_info for fast access */
-            table->c_info[i] = (ecs_type_info_t*)c_info;
-        }        
     }
 }
 
@@ -2244,9 +2202,6 @@ void flecs_table_notify(
     }
 
     switch(event->kind) {
-    case EcsTableComponentInfo:
-        notify_component_info(world, table, event->component);
-        break;
     case EcsTableTriggersForId:
         notify_trigger(world, table, event->event);
         break;
