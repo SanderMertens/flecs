@@ -242,24 +242,24 @@ void init_storage_table(
 }
 
 static
-ecs_flags32_t get_component_action_flags(
-    const ecs_type_info_t *c_info) 
+ecs_flags32_t type_info_flags(
+    const ecs_type_info_t *ti) 
 {
     ecs_flags32_t flags = 0;
 
-    if (c_info->lifecycle.ctor) {
+    if (ti->lifecycle.ctor) {
         flags |= EcsTableHasCtors;
     }
-    if (c_info->lifecycle.dtor) {
+    if (ti->lifecycle.dtor) {
         flags |= EcsTableHasDtors;
     }
-    if (c_info->lifecycle.on_remove) {
+    if (ti->lifecycle.on_remove) {
         flags |= EcsTableHasDtors;
     }
-    if (c_info->lifecycle.copy) {
+    if (ti->lifecycle.copy) {
         flags |= EcsTableHasCopy;
     }
-    if (c_info->lifecycle.move) {
+    if (ti->lifecycle.move) {
         flags |= EcsTableHasMove;
     }  
 
@@ -271,10 +271,21 @@ void init_type_info(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_type_t type = table->storage_type;
-    if (!type) {
+    ecs_table_t *storage_table = table->storage_table;
+    if (!storage_table) {
         return;
     }
+
+    if (storage_table != table) {
+        /* Because the storage table is guaranteed to have the same components
+         * (but not tags) as this table, we can share the type info cache */
+        table->type_info = storage_table->type_info;
+        table->flags |= storage_table->flags;
+        return;
+    }
+
+    ecs_type_t type = table->storage_type;
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
     int32_t i, count = ecs_vector_count(type);
@@ -285,11 +296,10 @@ void init_type_info(
         ecs_id_t id = ids[i];
         ecs_entity_t t = ecs_get_typeid(world, id);
 
+        /* Component type info must have been registered before using it */
         const ecs_type_info_t *ti = flecs_get_type_info(world, t);
-        if (ti) {
-            table->flags |= get_component_action_flags(ti);
-        }
-
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        table->flags |= type_info_flags(ti);
         table->type_info[i] = (ecs_type_info_t*)ti;
     }
 }
@@ -801,14 +811,15 @@ void flecs_table_free(
     ecs_os_free(table->dirty_state);
     ecs_os_free(table->storage_map);
 
-    if (table->type_info) {
-        ecs_os_free(table->type_info);
-    }
-
     flecs_table_records_unregister(world, table);
 
-    if (table->storage_table && table->storage_table != table) {
-        flecs_table_release(world, table->storage_table);
+    ecs_table_t *storage_table = table->storage_table;
+    if (storage_table == table) {
+        if (table->type_info) {
+            ecs_os_free(table->type_info);
+        }
+    } else if (storage_table) {
+        flecs_table_release(world, storage_table);
     }
 
     if (!world->is_fini) {
@@ -1274,7 +1285,7 @@ int32_t flecs_table_append(
         if (c_info_array) {
             c_info = c_info_array[i];
         }
-
+        
         grow_column(world, entities, column, c_info, 1, size, construct);
         
         ecs_assert(
