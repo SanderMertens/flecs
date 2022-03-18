@@ -1194,7 +1194,7 @@ ecs_id_record_t* new_id_record(
         ecs_id_record_t *idr_r = flecs_get_id_record(
             world, ECS_PAIR_FIRST(id));
         if (idr_r) {
-            idr->flags = idr_r->flags;
+            idr->flags = (idr_r->flags & ~ECS_TYPE_INFO_INITIALIZED);
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -1904,6 +1904,26 @@ ecs_id_record_t* flecs_ensure_id_record(
     }
 
     return idr;
+}
+
+void flecs_register_for_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    const ecs_table_t *table,
+    ecs_table_record_t *tr)
+{
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+
+    /* When id record is used by table, make sure type info is initialized */
+    if (!(idr->flags & ECS_TYPE_INFO_INITIALIZED)) {
+        ecs_entity_t type = ecs_get_typeid(world, id);
+        if (type) {
+            idr->type_info = flecs_get_type_info(world, type);
+            ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
+        idr->flags |= ECS_TYPE_INFO_INITIALIZED;
+    }
 }
 
 ecs_id_record_t* flecs_get_id_record(
