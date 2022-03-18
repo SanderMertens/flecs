@@ -408,6 +408,19 @@ void flecs_table_records_register(
                 id = ecs_pair(id, EcsWildcard);
                 register_table_for_id(world, table, id, i, 1, &table->records[r]);
                 r ++;
+
+                /* Keep track of how many switch/bitset columns there are */
+                if (role == ECS_SWITCH) {
+                    if (!table->sw_column_count) {
+                        table->sw_column_offset = flecs_ito(int16_t, i);
+                    }
+                    table->sw_column_count ++;
+                } else if (role == ECS_DISABLED) {
+                    if (!table->bs_column_count) {
+                        table->bs_column_offset = flecs_ito(int16_t, i);
+                    }
+                    table->bs_column_count ++;
+                }
             }
         }
     }

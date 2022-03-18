@@ -208,10 +208,10 @@ struct ecs_table_t {
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
 
-    int32_t sw_column_count;
-    int32_t sw_column_offset;
-    int32_t bs_column_count;
-    int32_t bs_column_offset;
+    int16_t sw_column_count;
+    int16_t sw_column_offset;
+    int16_t bs_column_count;
+    int16_t bs_column_offset;
 
     int32_t lock;
     int32_t refcount;
