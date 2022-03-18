@@ -62,10 +62,32 @@
 /* FLECS_KEEP_ASSERT keeps asserts in release mode. */
 // #define FLECS_KEEP_ASSERT
 
-/* FLECS_CUSTOM_BUILD should be defined when manually selecting addons */
+/* The following macro's let you customize with which addons Flecs is built.
+ * Without any addons Flecs is just a minimal ECS storage, but addons add 
+ * features such as systems, scheduling and reflection. If an addon is disabled,
+ * it is excluded from the build, so that it consumes no resources. By default
+ * all addons are enabled.
+ * 
+ * You can customize a build by either whitelisting or blacklisting addons. To
+ * whitelist addons, first define the FLECS_CUSTOM_BUILD macro, which disables
+ * all addons. You can then manually select the addons you need by defining
+ * their macro, like "FLECS_SYSTEM".
+ * 
+ * To blacklist an addon, make sure to *not* define FLECS_CUSTOM_BUILD, and
+ * instead define the addons you don't need by defining FLECS_NO_<addon>, for
+ * example "FLECS_NO_SYSTEM". If there are any addons that depend on the 
+ * blacklisted addon, an error will be thrown during the build.
+ * 
+ * Note that addons can have dependencies on each other. Addons will 
+ * automatically enable their dependencies. To see the list of addons that was
+ * compiled in a build, enable tracing before creating the world by doing:
+ *   ecs_log_set_level(0);
+ * which outputs the full list of addons Flecs was compiled with.
+ */
+
+/* Define if you want to create a custom build by whitelisting addons */
 // #define FLECS_CUSTOM_BUILD
 
-/* If this is a regular, non-custom build, include all addons. */
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /* C API convenience macro's, always enabled */
 #define FLECS_CPP           /* C++ API */
@@ -88,13 +110,8 @@
 #define FLECS_LOG           /* When enabled ECS provides more detailed logs */
 #define FLECS_APP           /* Application addon */
 #define FLECS_OS_API_IMPL   /* Default implementation for OS API */
-
-/* Don't enable web addons if we're running as a webasm app */
-#ifndef ECS_TARGET_EM
 #define FLECS_HTTP          /* Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /* REST API for querying application data */
-#endif
-
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @} */
@@ -511,499 +528,6 @@ typedef int32_t ecs_size_t;
 #endif
 
 #endif
-
-/**
- * @file log.h
- * @brief Logging addon.
- * 
- * The logging addon provides an API for (debug) tracing and reporting errors
- * at various levels. When enabled, the logging addon can provide more detailed
- * information about the state of the ECS and any errors that may occur.
- * 
- * The logging addon can be disabled to reduce footprint of the library, but
- * limits information logged to only file, line and error code.
- * 
- * When enabled the logging addon can be configured to exclude levels of tracing
- * from the build to reduce the impact on performance. By default all debug 
- * tracing is enabled for debug builds, tracing is enabled at release builds.
- * 
- * Applications can change the logging level at runtime with ecs_log_set_level,
- * but what is actually logged depends on what is compiled (when compiled 
- * without debug tracing, setting the runtime level to debug won't have an 
- * effect).
- * 
- * The logging addon uses the OS API log_ function for all tracing.
- * 
- * Note that even when the logging addon is not enabled, its header/source must
- * be included in a build. To prevent unused variable warnings in the code, some
- * API functions are included when the addon is disabled, but have empty bodies.
- */
-
-#ifndef FLECS_LOG_H
-#define FLECS_LOG_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef FLECS_LOG
-
-////////////////////////////////////////////////////////////////////////////////
-//// Tracing
-////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-void _ecs_deprecated(
-    const char *file, 
-    int32_t line, 
-    const char *msg);
-
-/** Increase log stack.
- * This operation increases the indent_ value of the OS API and can be useful to
- * make nested behavior more visible.
- * 
- * @param level The log level.
- */
-FLECS_API
-void _ecs_log_push(int32_t level);
-
-/** Decrease log stack.
- * This operation decreases the indent_ value of the OS API and can be useful to
- * make nested behavior more visible.
- * 
- * @param level The log level.
- */
-FLECS_API
-void _ecs_log_pop(int32_t level);
-
-/** Should current level be logged.
- * This operation returns true when the specified log level should be logged 
- * with the current log level.
- *
- * @param level The log level to check for.
- * @return Whether logging is enabled for the current level.
- */
-FLECS_API
-bool ecs_should_log(int32_t level);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Error reporting
-////////////////////////////////////////////////////////////////////////////////
-
-/** Get description for error code */
-FLECS_API
-const char* ecs_strerror(
-    int32_t error_code);
-
-#else // FLECS_LOG
-
-////////////////////////////////////////////////////////////////////////////////
-//// Dummy macro's for when logging is disabled
-////////////////////////////////////////////////////////////////////////////////
-
-#define _ecs_deprecated(file, line, msg)\
-    (void)file;\
-    (void)line;\
-    (void)msg
-
-#define _ecs_log_push(level)
-#define _ecs_log_pop(level)
-#define ecs_should_log(level) false
-
-#define ecs_strerror(error_code)\
-    (void)error_code
-
-#endif // FLECS_LOG
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Logging functions (do nothing when logging is enabled)
-////////////////////////////////////////////////////////////////////////////////
-
-FLECS_API
-void _ecs_log(
-    int32_t level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_logv(
-    int level,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    va_list args);
-
-FLECS_API
-void _ecs_abort(
-    int32_t error_code,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-bool _ecs_assert(
-    bool condition,
-    int32_t error_code,
-    const char *condition_str,
-    const char *file,
-    int32_t line,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_parser_error(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    ...);
-
-FLECS_API
-void _ecs_parser_errorv(
-    const char *name,
-    const char *expr, 
-    int64_t column,
-    const char *fmt,
-    va_list args);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Logging Macro's
-////////////////////////////////////////////////////////////////////////////////
-
-#ifndef FLECS_LEGACY /* C89 doesn't support variadic macro's */
-
-/* Base logging function. Accepts a custom level */
-#define ecs_log(level, ...)\
-    _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
-
-#define ecs_logv(level, fmt, args)\
-    _ecs_logv(level, __FILE__, __LINE__, fmt, args)
-
-/* Tracing. Used for logging of infrequent events  */
-#define _ecs_trace(file, line, ...) _ecs_log(0, file, line, __VA_ARGS__)
-#define ecs_trace(...) _ecs_trace(__FILE__, __LINE__, __VA_ARGS__)
-
-/* Warning. Used when an issue occurs, but operation is successful */
-#define _ecs_warn(file, line, ...) _ecs_log(-2, file, line, __VA_ARGS__)
-#define ecs_warn(...) _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
-
-/* Error. Used when an issue occurs, and operation failed. */
-#define _ecs_err(file, line, ...) _ecs_log(-3, file, line, __VA_ARGS__)
-#define ecs_err(...) _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
-
-/* Fatal. Used when an issue occurs, and the application cannot continue. */
-#define _ecs_fatal(file, line, ...) _ecs_log(-4, file, line, __VA_ARGS__)
-#define ecs_fatal(...) _ecs_fatal(__FILE__, __LINE__, __VA_ARGS__)
-
-/* Optionally include warnings about using deprecated features */
-#ifndef FLECS_NO_DEPRECATED_WARNINGS
-#define ecs_deprecated(...)\
-    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
-#else
-#define ecs_deprecated(...)
-#endif // FLECS_NO_DEPRECATED_WARNINGS
-
-/* If no tracing verbosity is defined, pick default based on build config */
-#if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-#if !defined(FLECS_NDEBUG)
-#define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
-#else
-#define ECS_TRACE_0 /* Only enable infrequent tracing in release mode */
-#endif // !defined(FLECS_NDEBUG)
-#endif // !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
-
-
-/* Define/undefine macro's based on compiled-in tracing level. This can optimize
- * out tracing statements from a build, which improves performance. */
-
-#if defined(ECS_TRACE_3) /* All debug tracing enabled */
-#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
-#define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
-#define ecs_dbg_3(...) ecs_log(3, __VA_ARGS__);
-
-#define ecs_log_push_1() _ecs_log_push(1);
-#define ecs_log_push_2() _ecs_log_push(2);
-#define ecs_log_push_3() _ecs_log_push(3);
-
-#define ecs_log_pop_1() _ecs_log_pop(1);
-#define ecs_log_pop_2() _ecs_log_pop(2);
-#define ecs_log_pop_3() _ecs_log_pop(3);
-
-#define ecs_should_log_1() ecs_should_log(1)
-#define ecs_should_log_2() ecs_should_log(2)
-#define ecs_should_log_3() ecs_should_log(3)
-
-#define ECS_TRACE_2
-#define ECS_TRACE_1
-#define ECS_TRACE_0
-
-#elif defined(ECS_TRACE_2) /* Level 2 and below debug tracing enabled */
-#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
-#define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1() _ecs_log_push(1);
-#define ecs_log_push_2() _ecs_log_push(2);
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1() _ecs_log_pop(1);
-#define ecs_log_pop_2() _ecs_log_pop(2);
-#define ecs_log_pop_3()
-
-#define ecs_should_log_1() ecs_should_log(1)
-#define ecs_should_log_2() ecs_should_log(2)
-#define ecs_should_log_3() false
-
-#define ECS_TRACE_1
-#define ECS_TRACE_0
-
-#elif defined(ECS_TRACE_1) /* Level 1 debug tracing enabled */
-#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
-#define ecs_dbg_2(...)
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1() _ecs_log_push(1);
-#define ecs_log_push_2()
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1() _ecs_log_pop(1);
-#define ecs_log_pop_2()
-#define ecs_log_pop_3()
-
-#define ecs_should_log_1() ecs_should_log(1)
-#define ecs_should_log_2() false
-#define ecs_should_log_3() false
-
-#define ECS_TRACE_0
-
-#elif defined(ECS_TRACE_0) /* No debug tracing enabled */
-#define ecs_dbg_1(...)
-#define ecs_dbg_2(...)
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1()
-#define ecs_log_push_2()
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1()
-#define ecs_log_pop_2()
-#define ecs_log_pop_3()
-
-#define ecs_should_log_1() false
-#define ecs_should_log_2() false
-#define ecs_should_log_3() false
-
-#else /* No tracing enabled */
-#undef ecs_trace
-#define ecs_trace(...)
-#define ecs_dbg_1(...)
-#define ecs_dbg_2(...)
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1()
-#define ecs_log_push_2()
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1()
-#define ecs_log_pop_2()
-#define ecs_log_pop_3()
-
-#endif // defined(ECS_TRACE_3)
-
-/* Default debug tracing is at level 1 */
-#define ecs_dbg ecs_dbg_1
-
-/* Default level for push/pop is 0 */
-#define ecs_log_push() _ecs_log_push(0)
-#define ecs_log_pop() _ecs_log_pop(0)
-
-/** Abort 
- * Unconditionally aborts process. */
-#define ecs_abort(error_code, ...)\
-    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
-    ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
-
-/** Assert 
- * Aborts if condition is false, disabled in debug mode. */
-#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_assert(condition, error_code, ...)
-#else
-#define ecs_assert(condition, error_code, ...)\
-    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
-        ecs_os_abort();\
-    }\
-    assert(condition) /* satisfy compiler/static analyzers */
-#endif // FLECS_NDEBUG
-
-/** Debug assert 
- * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
-#ifndef FLECS_NDEBUG
-#define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
-#else
-#define ecs_dbg_assert(condition, error_code, ...)
-#endif
-
-/* Silence dead code/unused label warnings when compiling without checks. */
-#define ecs_dummy_check\
-    if ((false)) {\
-        goto error;\
-    }
-
-/** Check
- * goto error if condition is false. */
-#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_check(condition, error_code, ...) ecs_dummy_check
-#else
-#ifdef FLECS_SOFT_ASSERT
-#define ecs_check(condition, error_code, ...)\
-    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
-        goto error;\
-    }
-#else // FLECS_SOFT_ASSERT
-#define ecs_check(condition, error_code, ...)\
-    ecs_assert(condition, error_code, __VA_ARGS__);\
-    ecs_dummy_check
-#endif
-#endif // FLECS_NDEBUG
-
-/** Throw
- * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
-#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_throw(error_code, ...) ecs_dummy_check
-#else
-#ifdef FLECS_SOFT_ASSERT
-#define ecs_throw(error_code, ...)\
-    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
-    goto error;
-#else
-#define ecs_throw(error_code, ...)\
-    ecs_abort(error_code, __VA_ARGS__);\
-    ecs_dummy_check
-#endif
-#endif // FLECS_NDEBUG
-
-/** Parser error */
-#define ecs_parser_error(name, expr, column, ...)\
-    _ecs_parser_error(name, expr, column, __VA_ARGS__)
-
-#define ecs_parser_errorv(name, expr, column, fmt, args)\
-    _ecs_parser_errorv(name, expr, column, fmt, args)
-
-#endif // FLECS_LEGACY
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Functions that are always available
-////////////////////////////////////////////////////////////////////////////////
-
-/** Enable or disable tracing.
- * This will enable builtin tracing. For tracing to work, it will have to be
- * compiled in which requires defining one of the following macro's:
- *
- * ECS_TRACE_0 - All tracing is disabled
- * ECS_TRACE_1 - Enable tracing level 1
- * ECS_TRACE_2 - Enable tracing level 2 and below
- * ECS_TRACE_3 - Enable tracing level 3 and below
- *
- * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
- * have been automatically defined.
- *
- * The provided level corresponds with the tracing level. If -1 is provided as
- * value, warnings are disabled. If -2 is provided, errors are disabled as well.
- *
- * @param level Desired tracing level.
- * @return Previous tracing level.
- */
-FLECS_API
-int ecs_log_set_level(
-    int level);
-
-/** Enable/disable tracing with colors.
- * By default colors are enabled.
- *
- * @param enabled Whether to enable tracing with colors.
- * @return Previous color setting.
- */
-FLECS_API
-bool ecs_log_enable_colors(
-    bool enabled);
-
-/** Get last logged error code.
- * Calling this operation resets the error code.
- *
- * @return Last error, 0 if none was logged since last call to last_error.
- */
-FLECS_API
-int ecs_log_last_error(void);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Error codes
-////////////////////////////////////////////////////////////////////////////////
-
-#define ECS_INVALID_OPERATION (1)
-#define ECS_INVALID_PARAMETER (2)
-#define ECS_CONSTRAINT_VIOLATED (3)
-#define ECS_OUT_OF_MEMORY (4)
-#define ECS_OUT_OF_RANGE (5)
-#define ECS_UNSUPPORTED (6)
-#define ECS_INTERNAL_ERROR (7)
-#define ECS_ALREADY_DEFINED (8)
-#define ECS_MISSING_OS_API (9)
-#define ECS_OPERATION_FAILED (10)
-#define ECS_INVALID_CONVERSION (11)
-#define ECS_ID_IN_USE (12)
-
-#define ECS_INCONSISTENT_NAME (20)
-#define ECS_NAME_IN_USE (21)
-#define ECS_NOT_A_COMPONENT (22)
-#define ECS_INVALID_COMPONENT_SIZE (23)
-#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
-#define ECS_COMPONENT_NOT_REGISTERED (25)
-#define ECS_INCONSISTENT_COMPONENT_ID (26)
-#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
-#define ECS_MODULE_UNDEFINED (28)
-#define ECS_MISSING_SYMBOL (29)
-
-#define ECS_COLUMN_ACCESS_VIOLATION (40)
-#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
-#define ECS_COLUMN_IS_NOT_SHARED (42)
-#define ECS_COLUMN_IS_SHARED (43)
-#define ECS_COLUMN_TYPE_MISMATCH (45)
-
-#define ECS_TYPE_INVALID_CASE (62)
-
-#define ECS_INVALID_WHILE_ITERATING (70)
-#define ECS_LOCKED_STORAGE (71)
-#define ECS_INVALID_FROM_WORKER (72)
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Used when logging with colors is enabled
-////////////////////////////////////////////////////////////////////////////////
-
-#define ECS_BLACK   "\033[1;30m"
-#define ECS_RED     "\033[0;31m"
-#define ECS_GREEN   "\033[0;32m"
-#define ECS_YELLOW  "\033[0;33m"
-#define ECS_BLUE    "\033[0;34m"
-#define ECS_MAGENTA "\033[0;35m"
-#define ECS_CYAN    "\033[0;36m"
-#define ECS_WHITE   "\033[1;37m"
-#define ECS_GREY    "\033[0;37m"
-#define ECS_NORMAL  "\033[0;49m"
-#define ECS_BOLD    "\033[1;49m"
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // FLECS_LOG_H
 
 
 /**
@@ -8032,8 +7556,594 @@ void* ecs_record_get_column(
 
 #endif // FLECS_C_
 
+/**
+ * @file addons.h
+ * @brief Include enabled addons.
+ *
+ * This file should only be included by the main flecs.h header.
+ */
+
+#ifndef FLECS_ADDONS_H
+#define FLECS_ADDONS_H
+
+/* Don't enable web addons if we're running as a webasm app */
+#ifdef ECS_TARGET_EM
+#ifndef FLECS_NO_HTTP
+#define FLECS_NO_HTTP
+#endif // FLECS_NO_HTTP
+
+#ifndef FLECS_NO_REST
+#define FLECS_NO_REST
+#endif // FLECS_NO_REST
+#endif // ECS_TARGET_EM
+
+/* Blacklist macro's */
+#ifdef FLECS_NO_CPP
+#undef FLECS_CPP
+#endif
+#ifdef FLECS_NO_MODULE
+#undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_PARSER
+#undef FLECS_PARSER
+#endif
+#ifdef FLECS_NO_PLECS
+#undef FLECS_PLECS
+#endif
+#ifdef FLECS_NO_RULES
+#undef FLECS_RULES
+#endif
+#ifdef FLECS_NO_SNAPSHOT
+#undef FLECS_SNAPSHOT
+#endif
+#ifdef FLECS_NO_STATS
+#undef FLECS_STATS
+#endif
+#ifdef FLECS_NO_SYSTEM
+#undef FLECS_SYSTEM
+#endif
+#ifdef FLECS_NO_PIPELINE
+#undef FLECS_PIPELINE
+#endif
+#ifdef FLECS_NO_TIMER
+#undef FLECS_TIMER
+#endif
+#ifdef FLECS_NO_META
+#undef FLECS_META
+#endif
+#ifdef FLECS_NO_META_C
+#undef FLECS_META_C
+#endif
+#ifdef FLECS_NO_UNITS
+#undef FLECS_UNITS
+#endif
+#ifdef FLECS_NO_EXPR
+#undef FLECS_EXPR
+#endif
+#ifdef FLECS_NO_JSON
+#undef FLECS_JSON
+#endif
+#ifdef FLECS_NO_DOC
+#undef FLECS_DOC
+#endif
+#ifdef FLECS_NO_COREDOC
+#undef FLECS_COREDOC
+#endif
+#ifdef FLECS_NO_LOG
+#undef FLECS_LOG
+#endif
+#ifdef FLECS_NO_APP
+#undef FLECS_APP
+#endif
+#ifdef FLECS_NO_OS_API_IMPL
+#undef FLECS_OS_API_IMPL
+#endif
+#ifdef FLECS_NO_HTTP
+#undef FLECS_HTTP
+#endif
+#ifdef FLECS_NO_REST
+#undef FLECS_REST
+#endif
+
+/* Always included, if disabled log functions are replaced with dummy macro's */
+/**
+ * @file log.h
+ * @brief Logging addon.
+ * 
+ * The logging addon provides an API for (debug) tracing and reporting errors
+ * at various levels. When enabled, the logging addon can provide more detailed
+ * information about the state of the ECS and any errors that may occur.
+ * 
+ * The logging addon can be disabled to reduce footprint of the library, but
+ * limits information logged to only file, line and error code.
+ * 
+ * When enabled the logging addon can be configured to exclude levels of tracing
+ * from the build to reduce the impact on performance. By default all debug 
+ * tracing is enabled for debug builds, tracing is enabled at release builds.
+ * 
+ * Applications can change the logging level at runtime with ecs_log_set_level,
+ * but what is actually logged depends on what is compiled (when compiled 
+ * without debug tracing, setting the runtime level to debug won't have an 
+ * effect).
+ * 
+ * The logging addon uses the OS API log_ function for all tracing.
+ * 
+ * Note that even when the logging addon is not enabled, its header/source must
+ * be included in a build. To prevent unused variable warnings in the code, some
+ * API functions are included when the addon is disabled, but have empty bodies.
+ */
+
+#ifndef FLECS_LOG_H
+#define FLECS_LOG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef FLECS_LOG
+
+////////////////////////////////////////////////////////////////////////////////
+//// Tracing
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void _ecs_deprecated(
+    const char *file, 
+    int32_t line, 
+    const char *msg);
+
+/** Increase log stack.
+ * This operation increases the indent_ value of the OS API and can be useful to
+ * make nested behavior more visible.
+ * 
+ * @param level The log level.
+ */
+FLECS_API
+void _ecs_log_push(int32_t level);
+
+/** Decrease log stack.
+ * This operation decreases the indent_ value of the OS API and can be useful to
+ * make nested behavior more visible.
+ * 
+ * @param level The log level.
+ */
+FLECS_API
+void _ecs_log_pop(int32_t level);
+
+/** Should current level be logged.
+ * This operation returns true when the specified log level should be logged 
+ * with the current log level.
+ *
+ * @param level The log level to check for.
+ * @return Whether logging is enabled for the current level.
+ */
+FLECS_API
+bool ecs_should_log(int32_t level);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Error reporting
+////////////////////////////////////////////////////////////////////////////////
+
+/** Get description for error code */
+FLECS_API
+const char* ecs_strerror(
+    int32_t error_code);
+
+#else // FLECS_LOG
+
+////////////////////////////////////////////////////////////////////////////////
+//// Dummy macro's for when logging is disabled
+////////////////////////////////////////////////////////////////////////////////
+
+#define _ecs_deprecated(file, line, msg)\
+    (void)file;\
+    (void)line;\
+    (void)msg
+
+#define _ecs_log_push(level)
+#define _ecs_log_pop(level)
+#define ecs_should_log(level) false
+
+#define ecs_strerror(error_code)\
+    (void)error_code
+
+#endif // FLECS_LOG
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Logging functions (do nothing when logging is enabled)
+////////////////////////////////////////////////////////////////////////////////
+
+FLECS_API
+void _ecs_log(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_logv(
+    int level,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    va_list args);
+
+FLECS_API
+void _ecs_abort(
+    int32_t error_code,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+bool _ecs_assert(
+    bool condition,
+    int32_t error_code,
+    const char *condition_str,
+    const char *file,
+    int32_t line,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_parser_error(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void _ecs_parser_errorv(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Logging Macro's
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef FLECS_LEGACY /* C89 doesn't support variadic macro's */
+
+/* Base logging function. Accepts a custom level */
+#define ecs_log(level, ...)\
+    _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
+
+#define ecs_logv(level, fmt, args)\
+    _ecs_logv(level, __FILE__, __LINE__, fmt, args)
+
+/* Tracing. Used for logging of infrequent events  */
+#define _ecs_trace(file, line, ...) _ecs_log(0, file, line, __VA_ARGS__)
+#define ecs_trace(...) _ecs_trace(__FILE__, __LINE__, __VA_ARGS__)
+
+/* Warning. Used when an issue occurs, but operation is successful */
+#define _ecs_warn(file, line, ...) _ecs_log(-2, file, line, __VA_ARGS__)
+#define ecs_warn(...) _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
+
+/* Error. Used when an issue occurs, and operation failed. */
+#define _ecs_err(file, line, ...) _ecs_log(-3, file, line, __VA_ARGS__)
+#define ecs_err(...) _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
+
+/* Fatal. Used when an issue occurs, and the application cannot continue. */
+#define _ecs_fatal(file, line, ...) _ecs_log(-4, file, line, __VA_ARGS__)
+#define ecs_fatal(...) _ecs_fatal(__FILE__, __LINE__, __VA_ARGS__)
+
+/* Optionally include warnings about using deprecated features */
+#ifndef FLECS_NO_DEPRECATED_WARNINGS
+#define ecs_deprecated(...)\
+    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
+#else
+#define ecs_deprecated(...)
+#endif // FLECS_NO_DEPRECATED_WARNINGS
+
+/* If no tracing verbosity is defined, pick default based on build config */
+#if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+#if !defined(FLECS_NDEBUG)
+#define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
+#else
+#define ECS_TRACE_0 /* Only enable infrequent tracing in release mode */
+#endif // !defined(FLECS_NDEBUG)
+#endif // !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+
+
+/* Define/undefine macro's based on compiled-in tracing level. This can optimize
+ * out tracing statements from a build, which improves performance. */
+
+#if defined(ECS_TRACE_3) /* All debug tracing enabled */
+#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
+#define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
+#define ecs_dbg_3(...) ecs_log(3, __VA_ARGS__);
+
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2() _ecs_log_push(2);
+#define ecs_log_push_3() _ecs_log_push(3);
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2() _ecs_log_pop(2);
+#define ecs_log_pop_3() _ecs_log_pop(3);
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() ecs_should_log(2)
+#define ecs_should_log_3() ecs_should_log(3)
+
+#define ECS_TRACE_2
+#define ECS_TRACE_1
+#define ECS_TRACE_0
+
+#elif defined(ECS_TRACE_2) /* Level 2 and below debug tracing enabled */
+#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
+#define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
+#define ecs_dbg_3(...)
+
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2() _ecs_log_push(2);
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2() _ecs_log_pop(2);
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() ecs_should_log(2)
+#define ecs_should_log_3() false
+
+#define ECS_TRACE_1
+#define ECS_TRACE_0
+
+#elif defined(ECS_TRACE_1) /* Level 1 debug tracing enabled */
+#define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
+#define ecs_dbg_2(...)
+#define ecs_dbg_3(...)
+
+#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() ecs_should_log(1)
+#define ecs_should_log_2() false
+#define ecs_should_log_3() false
+
+#define ECS_TRACE_0
+
+#elif defined(ECS_TRACE_0) /* No debug tracing enabled */
+#define ecs_dbg_1(...)
+#define ecs_dbg_2(...)
+#define ecs_dbg_3(...)
+
+#define ecs_log_push_1()
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1()
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
+#define ecs_should_log_1() false
+#define ecs_should_log_2() false
+#define ecs_should_log_3() false
+
+#else /* No tracing enabled */
+#undef ecs_trace
+#define ecs_trace(...)
+#define ecs_dbg_1(...)
+#define ecs_dbg_2(...)
+#define ecs_dbg_3(...)
+
+#define ecs_log_push_1()
+#define ecs_log_push_2()
+#define ecs_log_push_3()
+
+#define ecs_log_pop_1()
+#define ecs_log_pop_2()
+#define ecs_log_pop_3()
+
+#endif // defined(ECS_TRACE_3)
+
+/* Default debug tracing is at level 1 */
+#define ecs_dbg ecs_dbg_1
+
+/* Default level for push/pop is 0 */
+#define ecs_log_push() _ecs_log_push(0)
+#define ecs_log_pop() _ecs_log_pop(0)
+
+/** Abort 
+ * Unconditionally aborts process. */
+#define ecs_abort(error_code, ...)\
+    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
+
+/** Assert 
+ * Aborts if condition is false, disabled in debug mode. */
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#define ecs_assert(condition, error_code, ...)
+#else
+#define ecs_assert(condition, error_code, ...)\
+    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+        ecs_os_abort();\
+    }\
+    assert(condition) /* satisfy compiler/static analyzers */
+#endif // FLECS_NDEBUG
+
+/** Debug assert 
+ * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
+#ifndef FLECS_NDEBUG
+#define ecs_dbg_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
+#else
+#define ecs_dbg_assert(condition, error_code, ...)
+#endif
+
+/* Silence dead code/unused label warnings when compiling without checks. */
+#define ecs_dummy_check\
+    if ((false)) {\
+        goto error;\
+    }
+
+/** Check
+ * goto error if condition is false. */
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#define ecs_check(condition, error_code, ...) ecs_dummy_check
+#else
+#ifdef FLECS_SOFT_ASSERT
+#define ecs_check(condition, error_code, ...)\
+    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+        goto error;\
+    }
+#else // FLECS_SOFT_ASSERT
+#define ecs_check(condition, error_code, ...)\
+    ecs_assert(condition, error_code, __VA_ARGS__);\
+    ecs_dummy_check
+#endif
+#endif // FLECS_NDEBUG
+
+/** Throw
+ * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
+#if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
+#define ecs_throw(error_code, ...) ecs_dummy_check
+#else
+#ifdef FLECS_SOFT_ASSERT
+#define ecs_throw(error_code, ...)\
+    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    goto error;
+#else
+#define ecs_throw(error_code, ...)\
+    ecs_abort(error_code, __VA_ARGS__);\
+    ecs_dummy_check
+#endif
+#endif // FLECS_NDEBUG
+
+/** Parser error */
+#define ecs_parser_error(name, expr, column, ...)\
+    _ecs_parser_error(name, expr, column, __VA_ARGS__)
+
+#define ecs_parser_errorv(name, expr, column, fmt, args)\
+    _ecs_parser_errorv(name, expr, column, fmt, args)
+
+#endif // FLECS_LEGACY
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Functions that are always available
+////////////////////////////////////////////////////////////////////////////////
+
+/** Enable or disable tracing.
+ * This will enable builtin tracing. For tracing to work, it will have to be
+ * compiled in which requires defining one of the following macro's:
+ *
+ * ECS_TRACE_0 - All tracing is disabled
+ * ECS_TRACE_1 - Enable tracing level 1
+ * ECS_TRACE_2 - Enable tracing level 2 and below
+ * ECS_TRACE_3 - Enable tracing level 3 and below
+ *
+ * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
+ * have been automatically defined.
+ *
+ * The provided level corresponds with the tracing level. If -1 is provided as
+ * value, warnings are disabled. If -2 is provided, errors are disabled as well.
+ *
+ * @param level Desired tracing level.
+ * @return Previous tracing level.
+ */
+FLECS_API
+int ecs_log_set_level(
+    int level);
+
+/** Enable/disable tracing with colors.
+ * By default colors are enabled.
+ *
+ * @param enabled Whether to enable tracing with colors.
+ * @return Previous color setting.
+ */
+FLECS_API
+bool ecs_log_enable_colors(
+    bool enabled);
+
+/** Get last logged error code.
+ * Calling this operation resets the error code.
+ *
+ * @return Last error, 0 if none was logged since last call to last_error.
+ */
+FLECS_API
+int ecs_log_last_error(void);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Error codes
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_INVALID_OPERATION (1)
+#define ECS_INVALID_PARAMETER (2)
+#define ECS_CONSTRAINT_VIOLATED (3)
+#define ECS_OUT_OF_MEMORY (4)
+#define ECS_OUT_OF_RANGE (5)
+#define ECS_UNSUPPORTED (6)
+#define ECS_INTERNAL_ERROR (7)
+#define ECS_ALREADY_DEFINED (8)
+#define ECS_MISSING_OS_API (9)
+#define ECS_OPERATION_FAILED (10)
+#define ECS_INVALID_CONVERSION (11)
+#define ECS_ID_IN_USE (12)
+
+#define ECS_INCONSISTENT_NAME (20)
+#define ECS_NAME_IN_USE (21)
+#define ECS_NOT_A_COMPONENT (22)
+#define ECS_INVALID_COMPONENT_SIZE (23)
+#define ECS_INVALID_COMPONENT_ALIGNMENT (24)
+#define ECS_COMPONENT_NOT_REGISTERED (25)
+#define ECS_INCONSISTENT_COMPONENT_ID (26)
+#define ECS_INCONSISTENT_COMPONENT_ACTION (27)
+#define ECS_MODULE_UNDEFINED (28)
+#define ECS_MISSING_SYMBOL (29)
+
+#define ECS_COLUMN_ACCESS_VIOLATION (40)
+#define ECS_COLUMN_INDEX_OUT_OF_RANGE (41)
+#define ECS_COLUMN_IS_NOT_SHARED (42)
+#define ECS_COLUMN_IS_SHARED (43)
+#define ECS_COLUMN_TYPE_MISMATCH (45)
+
+#define ECS_TYPE_INVALID_CASE (62)
+
+#define ECS_INVALID_WHILE_ITERATING (70)
+#define ECS_LOCKED_STORAGE (71)
+#define ECS_INVALID_FROM_WORKER (72)
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Used when logging with colors is enabled
+////////////////////////////////////////////////////////////////////////////////
+
+#define ECS_BLACK   "\033[1;30m"
+#define ECS_RED     "\033[0;31m"
+#define ECS_GREEN   "\033[0;32m"
+#define ECS_YELLOW  "\033[0;33m"
+#define ECS_BLUE    "\033[0;34m"
+#define ECS_MAGENTA "\033[0;35m"
+#define ECS_CYAN    "\033[0;36m"
+#define ECS_WHITE   "\033[1;37m"
+#define ECS_GREY    "\033[0;37m"
+#define ECS_NORMAL  "\033[0;49m"
+#define ECS_BOLD    "\033[1;49m"
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // FLECS_LOG_H
+
 
 #ifdef FLECS_APP
+#ifdef FLECS_NO_APP
+#error "FLECS_NO_APP failed: APP is required by other addons"
+#endif
 /**
  * @file app.h
  * @brief App addon.
@@ -8141,6 +8251,9 @@ int ecs_app_set_frame_action(
 
 #endif
 #ifdef FLECS_REST
+#ifdef FLECS_NO_REST
+#error "FLECS_NO_REST failed: REST is required by other addons"
+#endif
 /**
  * @file rest.h
  * @brief REST API addon.
@@ -8206,6 +8319,9 @@ void FlecsRestImport(
 
 #endif
 #ifdef FLECS_TIMER
+#ifdef FLECS_NO_TIMER
+#error "FLECS_NO_TIMER failed: TIMER is required by other addons"
+#endif
 /**
  * @file timer.h
  * @brief Timer module.
@@ -8452,6 +8568,9 @@ void FlecsTimerImport(
 
 #endif
 #ifdef FLECS_PIPELINE
+#ifdef FLECS_NO_PIPELINE
+#error "FLECS_NO_PIPELINE failed: PIPELINE is required by other addons"
+#endif
 /**
  * @file pipeline.h
  * @brief Pipeline module.
@@ -8477,7 +8596,7 @@ void FlecsTimerImport(
 #define FLECS_SYSTEM
 #endif
 
-#ifndef FLECS_OS_API_IMPL
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
 
@@ -8641,6 +8760,9 @@ void FlecsPipelineImport(
 
 #endif
 #ifdef FLECS_SYSTEM
+#ifdef FLECS_NO_SYSTEM
+#error "FLECS_NO_SYSTEM failed: SYSTEM is required by other addons"
+#endif
 /**
  * @file system.h
  * @brief System module.
@@ -8947,6 +9069,9 @@ void FlecsSystemImport(
 
 #endif
 #ifdef FLECS_COREDOC
+#ifdef FLECS_NO_COREDOC
+#error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
+#endif
 /**
  * @file coredoc.h
  * @brief Core doc module.
@@ -8988,6 +9113,9 @@ void FlecsCoreDocImport(
 
 #endif
 #ifdef FLECS_DOC
+#ifdef FLECS_NO_DOC
+#error "FLECS_NO_DOC failed: DOC is required by other addons"
+#endif
 /**
  * @file doc.h
  * @brief Doc module.
@@ -9136,6 +9264,9 @@ void FlecsDocImport(
 
 #endif
 #ifdef FLECS_JSON
+#ifdef FLECS_NO_JSON
+#error "FLECS_NO_JSON failed: JSON is required by other addons"
+#endif
 /**
  * @file json.h
  * @brief JSON parser addon.
@@ -9391,6 +9522,9 @@ int ecs_iter_to_json_buf(
 #define FLECS_META
 #endif
 #ifdef FLECS_UNITS
+#ifdef FLECS_NO_UNITS
+#error "FLECS_NO_UNITS failed: UNITS is required by other addons"
+#endif
 /**
  * @file units.h
  * @brief Units module.
@@ -9573,6 +9707,9 @@ void FlecsUnitsImport(
 
 #endif
 #ifdef FLECS_META
+#ifdef FLECS_NO_META
+#error "FLECS_NO_META failed: META is required by other addons"
+#endif
 /**
  * @file meta.h
  * @brief Meta addon.
@@ -10238,6 +10375,9 @@ void FlecsMetaImport(
 
 #endif
 #ifdef FLECS_EXPR
+#ifdef FLECS_NO_EXPR
+#error "FLECS_NO_EXPR failed: EXPR is required by other addons"
+#endif
 /**
  * @file expr.h
  * @brief Flecs expression parser addon.
@@ -10448,6 +10588,9 @@ const char *ecs_parse_expr_token(
 
 #endif
 #ifdef FLECS_META_C
+#ifdef FLECS_NO_META_C
+#error "FLECS_NO_META_C failed: META_C is required by other addons"
+#endif
 /**
  * @file meta_c.h
  * @brief Utility macro's for populating reflection data in C.
@@ -10609,6 +10752,9 @@ int ecs_meta_from_desc(
 
 #endif
 #ifdef FLECS_PLECS
+#ifdef FLECS_NO_PLECS
+#error "FLECS_NO_PLECS failed: PLECS is required by other addons"
+#endif
 /**
  * @file pecs.h
  * @brief Plecs addon.
@@ -10694,6 +10840,9 @@ int ecs_plecs_from_file(
 
 #endif
 #ifdef FLECS_RULES
+#ifdef FLECS_NO_RULES
+#error "FLECS_NO_RULES failed: RULES is required by other addons"
+#endif
 
 /**
  * @file rules.h
@@ -10930,6 +11079,9 @@ char* ecs_rule_str(
 
 #endif
 #ifdef FLECS_SNAPSHOT
+#ifdef FLECS_NO_SNAPSHOT
+#error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
+#endif
 /**
  * @file snapshot.h
  * @brief Snapshot addon.
@@ -11031,6 +11183,9 @@ void ecs_snapshot_free(
 
 #endif
 #ifdef FLECS_STATS
+#ifdef FLECS_NO_STATS
+#error "FLECS_NO_STATS failed: STATS is required by other addons"
+#endif
 /**
  * @file stats.h
  * @brief Statistics addon.
@@ -11239,6 +11394,9 @@ void ecs_gauge_reduce(
 
 #endif
 #ifdef FLECS_PARSER
+#ifdef FLECS_NO_PARSER
+#error "FLECS_NO_PARSER failed: PARSER is required by other addons"
+#endif
 /**
  * @file parser.h
  * @brief Parser addon.
@@ -11361,6 +11519,9 @@ char* ecs_parse_term(
 
 #endif
 #ifdef FLECS_HTTP
+#ifdef FLECS_NO_HTTP
+#error "FLECS_NO_HTTP failed: HTTP is required by other addons"
+#endif
 /**
  * @file http.h
  * @brief HTTP addon.
@@ -11382,7 +11543,7 @@ char* ecs_parse_term(
 
 #ifdef FLECS_HTTP
 
-#ifndef FLECS_OS_API_IMPL
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
 
@@ -11552,6 +11713,9 @@ const char* ecs_http_get_param(
 
 #endif
 #ifdef FLECS_OS_API_IMPL
+#ifdef FLECS_NO_OS_API_IMPL
+#error "FLECS_NO_OS_API_IMPL failed: OS_API_IMPL is required by other addons"
+#endif
 /**
  * @file os_api_impl.h
  * @brief Default OS API implementation.
@@ -11579,6 +11743,9 @@ void ecs_set_os_api_impl(void);
 
 #endif
 #ifdef FLECS_MODULE
+#ifdef FLECS_NO_MODULE
+#error "FLECS_NO_MODULE failed: MODULE is required by other addons"
+#endif
 /**
  * @file module.h
  * @brief Module addon.
@@ -11694,6 +11861,9 @@ ecs_entity_t ecs_module_init(
 #endif
 
 #ifdef FLECS_CPP
+#ifdef FLECS_NO_CPP
+#error "FLECS_NO_CPP failed: CPP is required by other addons"
+#endif
 /**
  * @file flecs_cpp.h
  * @brief C++ utility functions
@@ -11806,12 +11976,10 @@ int32_t ecs_cpp_reset_count_inc(void);
 
 #endif // FLECS_CPP
 
-#endif
 
 #ifdef __cplusplus
 }
 
-#ifdef FLECS_CPP
 /**
  * @file flecs.hpp
  * @brief Flecs C++ API.
@@ -22656,8 +22824,17 @@ inline flecs::scoped_world world::scope() {
 
 
 
+
+extern "C" {
+#endif // __cplusplus
+
+#endif // FLECS_CPP
+
 #endif
 
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

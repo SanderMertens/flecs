@@ -34684,7 +34684,7 @@ ecs_world_t *ecs_mini(void) {
     log_addons();
 
 #ifdef FLECS_SANITIZE
-    ecs_warn("sanitize build, rebuild witohut FLECS_SANITIZE for (much) "
+    ecs_trace("sanitize build, rebuild witohut FLECS_SANITIZE for (much) "
         "improved performance");
 #elif defined(FLECS_DEBUG)
     ecs_trace("debug build, rebuild with NDEBUG or FLECS_NDEBUG for improved "

@@ -23,7 +23,7 @@
 #define FLECS_SYSTEM
 #endif
 
-#ifndef FLECS_OS_API_IMPL
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
 
