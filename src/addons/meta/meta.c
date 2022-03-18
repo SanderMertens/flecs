@@ -234,6 +234,13 @@ int init_type(
     EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType, &is_added);
     if (is_added) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
+
+        /* Ensure that component has a default constructor, to prevent crashing
+         * serializers on uninitialized values. */
+        ecs_type_info_t *ti = flecs_ensure_type_info(world, type);
+        if (!ti->lifecycle.ctor) {
+            ti->lifecycle.ctor = ecs_default_ctor;
+        }
     } else {
         if (meta_type->kind != kind) {
             ecs_err("type '%s' reregistered with different kind", 

@@ -343,7 +343,6 @@ typedef struct ecs_hashed_string_t {
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
-    EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
 typedef struct ecs_table_event_t {
@@ -2352,11 +2351,65 @@ void init_storage_table(
     }
 }
 
+static
+ecs_flags32_t get_component_action_flags(
+    const ecs_type_info_t *c_info) 
+{
+    ecs_flags32_t flags = 0;
+
+    if (c_info->lifecycle.ctor) {
+        flags |= EcsTableHasCtors;
+    }
+    if (c_info->lifecycle.dtor) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->lifecycle.on_remove) {
+        flags |= EcsTableHasDtors;
+    }
+    if (c_info->lifecycle.copy) {
+        flags |= EcsTableHasCopy;
+    }
+    if (c_info->lifecycle.move) {
+        flags |= EcsTableHasMove;
+    }  
+
+    return flags;  
+}
+
+static
+void init_type_info(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_type_t type = table->storage_type;
+    if (!type) {
+        return;
+    }
+
+    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = ecs_vector_count(type);
+
+    table->c_info = ecs_os_calloc_n(ecs_type_info_t*, count);
+
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        ecs_entity_t t = ecs_get_typeid(world, id);
+
+        const ecs_type_info_t *ti = flecs_get_type_info(world, t);
+        if (ti) {
+            table->flags |= get_component_action_flags(ti);
+        }
+
+        table->c_info[i] = (ecs_type_info_t*)ti;
+    }
+}
+
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
 {
     init_storage_table(world, table);
+    init_type_info(world, table);
 
     int32_t sw_count = table->sw_column_count = switch_column_count(table);
     int32_t bs_count = table->bs_column_count = bitset_column_count(table);
@@ -2430,102 +2483,6 @@ void flecs_table_init_data(
         for (i = 0; i < bs_count; i ++) {
             flecs_bitset_init(&storage->bs_columns[i].data);
         }
-    }
-}
-
-static
-ecs_flags32_t get_component_action_flags(
-    const ecs_type_info_t *c_info) 
-{
-    ecs_flags32_t flags = 0;
-
-    if (c_info->lifecycle.ctor) {
-        flags |= EcsTableHasCtors;
-    }
-    if (c_info->lifecycle.dtor) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->lifecycle.on_remove) {
-        flags |= EcsTableHasDtors;
-    }
-    if (c_info->lifecycle.copy) {
-        flags |= EcsTableHasCopy;
-    }
-    if (c_info->lifecycle.move) {
-        flags |= EcsTableHasMove;
-    }  
-
-    return flags;  
-}
-
-/* Check if table has instance of component, including pairs */
-static
-bool has_component(
-    ecs_world_t *world,
-    ecs_type_t type,
-    ecs_entity_t component)
-{
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
-    int32_t i, count = ecs_vector_count(type);
-
-    for (i = 0; i < count; i ++) {
-        if (component == ecs_get_typeid(world, entities[i])) {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-static
-void notify_component_info(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t component)
-{
-    ecs_type_t table_type = table->storage_type;
-    if (!component || has_component(world, table_type, component)){
-        int32_t column_count = ecs_vector_count(table_type);
-        ecs_assert(!component || column_count != 0, ECS_INTERNAL_ERROR, NULL);
-
-        if (!column_count) {
-            return;
-        }
-        
-        if (!table->c_info) {
-            table->c_info = ecs_os_calloc(
-                ECS_SIZEOF(ecs_type_info_t*) * column_count);
-        }
-
-        /* Reset lifecycle flags before recomputing */
-        table->flags &= ~EcsTableHasLifecycle;
-
-        /* Recompute lifecycle flags */
-        ecs_entity_t *array = ecs_vector_first(table_type, ecs_entity_t);
-        int32_t i;
-        for (i = 0; i < column_count; i ++) {
-            ecs_id_t id = array[i];
-            ecs_entity_t c;
-
-            /* Hardcode components used in bootstrap */
-            if (id == ecs_id(EcsComponent)) {
-                c = id;
-            } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
-                c = ecs_id(EcsIdentifier);
-            } else {
-                c = ecs_get_typeid(world, array[i]);
-            }
-            ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
-            
-            const ecs_type_info_t *c_info = flecs_get_type_info(world, c);
-            if (c_info) {
-                ecs_flags32_t flags = get_component_action_flags(c_info);
-                table->flags |= flags;
-            }
-
-            /* Store pointer to c_info for fast access */
-            table->c_info[i] = (ecs_type_info_t*)c_info;
-        }        
     }
 }
 
@@ -4355,9 +4312,6 @@ void flecs_table_notify(
     }
 
     switch(event->kind) {
-    case EcsTableComponentInfo:
-        notify_component_info(world, table, event->component);
-        break;
     case EcsTableTriggersForId:
         notify_trigger(world, table, event->event);
         break;
@@ -35655,7 +35609,13 @@ ecs_type_info_t* flecs_ensure_type_info(
     if (!ti) {
         ti_mut = flecs_sparse_ensure(
             world->type_info, ecs_type_info_t, component);
-        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);         
+        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Assign default ctor but don't set lifecycle_set to true. This will
+         * cause components to be initialized to 0 by default unless overridden
+         * by the application, while still allowing the application to override
+         * the ctor callback */
+        ti_mut->lifecycle.ctor = ecs_default_ctor;     
     } else {
         ti_mut = (ecs_type_info_t*)ti;
     }
@@ -43656,12 +43616,7 @@ void init_table(
     init_node(&table->node);
     init_flags(world, table);
     flecs_table_records_register(world, table);
-    flecs_table_init_data(world, table);
-
-    /* Register component info flags for all columns */
-    flecs_table_notify(world, table, &(ecs_table_event_t){
-        .kind = EcsTableComponentInfo
-    });    
+    flecs_table_init_data(world, table); 
 }
 
 static
@@ -46845,14 +46800,11 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_type_info_t *ti = flecs_sparse_get(
-            world->type_info, ecs_type_info_t, e);
-        if (ti) {
-            ti->size = c[i].size;
-        }
+        ecs_type_info_t *ti = flecs_ensure_type_info(world, e);
+        ti->size = c[i].size;
+        ti->alignment = c[i].alignment;
     }
 }
-
 
 static
 void on_set_component_lifecycle(ecs_iter_t *it) {

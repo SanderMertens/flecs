@@ -591,12 +591,7 @@ void init_table(
     init_node(&table->node);
     init_flags(world, table);
     flecs_table_records_register(world, table);
-    flecs_table_init_data(world, table);
-
-    /* Register component info flags for all columns */
-    flecs_table_notify(world, table, &(ecs_table_event_t){
-        .kind = EcsTableComponentInfo
-    });    
+    flecs_table_init_data(world, table); 
 }
 
 static

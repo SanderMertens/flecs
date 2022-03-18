@@ -71,7 +71,6 @@ typedef struct ecs_hashed_string_t {
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
-    EcsTableComponentInfo
 } ecs_table_eventkind_t;
 
 typedef struct ecs_table_event_t {
