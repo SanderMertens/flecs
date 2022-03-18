@@ -524,7 +524,7 @@ void Type_large_type_expr() {
 void Type_large_type_expr_limit() {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ECS_MAX_ADD_REMOVE == 32);
+    test_assert(ECS_ID_CACHE_SIZE == 32);
 
     int i;
     for (i = 0; i < 32; i ++) {

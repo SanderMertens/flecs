@@ -209,7 +209,7 @@ void ids_merge(
         ecs_id_t *arr = ecs_os_malloc(ids->size * ECS_SIZEOF(ecs_id_t));
         ecs_os_memcpy_n(arr, ids->array, ecs_id_t, ids->count);
 
-        if (ids->count >= ECS_MAX_ADD_REMOVE) {
+        if (ids->count >= ECS_ID_CACHE_SIZE) {
             ecs_os_free(ids->array);
         }
         
@@ -221,10 +221,10 @@ void ids_merge(
 }
 
 #define ECS_TABLE_DIFF_INIT {\
-    .added = {.array = (ecs_id_t[ECS_MAX_ADD_REMOVE]){0}, .size = ECS_MAX_ADD_REMOVE},\
-    .removed = {.array = (ecs_id_t[ECS_MAX_ADD_REMOVE]){0}, .size = ECS_MAX_ADD_REMOVE},\
-    .on_set = {.array = (ecs_id_t[ECS_MAX_ADD_REMOVE]){0}, .size = ECS_MAX_ADD_REMOVE},\
-    .un_set = {.array = (ecs_id_t[ECS_MAX_ADD_REMOVE]){0}, .size = ECS_MAX_ADD_REMOVE},\
+    .added = {.array = (ecs_id_t[ECS_ID_CACHE_SIZE]){0}, .size = ECS_ID_CACHE_SIZE},\
+    .removed = {.array = (ecs_id_t[ECS_ID_CACHE_SIZE]){0}, .size = ECS_ID_CACHE_SIZE},\
+    .on_set = {.array = (ecs_id_t[ECS_ID_CACHE_SIZE]){0}, .size = ECS_ID_CACHE_SIZE},\
+    .un_set = {.array = (ecs_id_t[ECS_ID_CACHE_SIZE]){0}, .size = ECS_ID_CACHE_SIZE},\
 }
 
 static
@@ -242,16 +242,16 @@ static
 void diff_free(
     ecs_table_diff_t *diff)
 {
-    if (diff->added.count > ECS_MAX_ADD_REMOVE) {
+    if (diff->added.count > ECS_ID_CACHE_SIZE) {
         ecs_os_free(diff->added.array);
     }
-    if (diff->removed.count > ECS_MAX_ADD_REMOVE) {
+    if (diff->removed.count > ECS_ID_CACHE_SIZE) {
         ecs_os_free(diff->removed.array);
     }
-    if (diff->on_set.count > ECS_MAX_ADD_REMOVE) {
+    if (diff->on_set.count > ECS_ID_CACHE_SIZE) {
         ecs_os_free(diff->on_set.array);
     }
-    if (diff->un_set.count > ECS_MAX_ADD_REMOVE) {
+    if (diff->un_set.count > ECS_ID_CACHE_SIZE) {
         ecs_os_free(diff->un_set.array);
     }
 }
@@ -1789,7 +1789,7 @@ int traverse_add(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
         bool should_add = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -1881,7 +1881,7 @@ void deferred_add_remove(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->add;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
         bool defer = true;
         if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
             scope = ECS_PAIR_SECOND(id);
@@ -1998,7 +1998,7 @@ ecs_entity_t ecs_entity_init(
             const ecs_id_t *ids = desc->add;
             ecs_id_t id;
             int32_t i = 0;
-            while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+            while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
                 if (ECS_HAS_ROLE(id, PAIR) && 
                     (ECS_PAIR_FIRST(id) == EcsChildOf))
                 {
@@ -2206,7 +2206,7 @@ ecs_entity_t ecs_type_init(
     int32_t i = 0;
     ecs_id_t id;
     const ecs_id_t *ids = desc->ids;
-    while ((i < ECS_MAX_ADD_REMOVE) && (id = ids[i ++])) {
+    while ((i < ECS_ID_CACHE_SIZE) && (id = ids[i ++])) {
         normalized = flecs_table_traverse_add(
             world, normalized, &id, &temp_diff);
         table = flecs_table_traverse_add(world, table, &id, NULL);

@@ -208,7 +208,7 @@ typedef struct ecs_mixins_t ecs_mixins_t;
  */
 
 /* Maximum number of components to add/remove in a single operation */
-#define ECS_MAX_ADD_REMOVE (32)
+#define ECS_ID_CACHE_SIZE (32)
 
 /* Maximum number of terms cached in static arrays */
 #define ECS_TERM_CACHE_SIZE (4)
@@ -585,7 +585,7 @@ typedef struct ecs_entity_desc_t {
                           * no id is specified. */
 
     /* Array of ids to add to the new or existing entity. */
-    ecs_id_t add[ECS_MAX_ADD_REMOVE];
+    ecs_id_t add[ECS_ID_CACHE_SIZE];
 
     /* String expression with components to add */
     const char *add_expr;
@@ -602,7 +602,7 @@ typedef struct ecs_bulk_desc_t {
 
     int32_t count;      /* Number of entities to create/populate */
 
-    ecs_id_t ids[ECS_MAX_ADD_REMOVE]; /* Ids to create the entities with */
+    ecs_id_t ids[ECS_ID_CACHE_SIZE]; /* Ids to create the entities with */
 
     void **data;       /* Array with component data to insert. Each element in 
                         * the array must correspond with an element in the ids
@@ -634,7 +634,7 @@ typedef struct ecs_type_desc_t {
     int32_t _canary;
 
     ecs_entity_desc_t entity;           /* Parameters for type entity */
-    ecs_id_t ids[ECS_MAX_ADD_REMOVE];   /* Ids to include in type */
+    ecs_id_t ids[ECS_ID_CACHE_SIZE];   /* Ids to include in type */
     const char *ids_expr;               /* Id expression to include in type */
 } ecs_type_desc_t;
 

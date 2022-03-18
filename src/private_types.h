@@ -19,7 +19,6 @@
 #include "flecs/private/switch_list.h"
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
-#define ECS_MAX_ADD_REMOVE (32)
 
 /* Magic number for a flecs object */
 #define ECS_OBJECT_MAGIC (0x6563736f)
