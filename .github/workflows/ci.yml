@@ -118,12 +118,20 @@ jobs:
       - name: build flecs
         run: bake --strict
 
-      - name: run tests
-        run: |
-          bake run test/api -- -j 4
-          bake run test/meta -- -j 4
-          bake run test/collections -- -j 4
-          bake run test/cpp_api -- -j 4
+      - name: test api
+        run: bake run test/api -- -j 8
+
+      - name: test addons
+        run: bake run test/addons -- -j 8
+
+      - name: test meta
+        run: bake run test/meta -- -j 8
+
+      - name: test collections
+        run: bake run test/collections -- -j 8
+
+      - name: test c++
+        run: bake run test/cpp_api -- -j 8
 
   test-windows:
     timeout-minutes: 30
@@ -144,16 +152,19 @@ jobs:
         run: bake/bake --strict
 
       - name: test api
-        run: bake/bake run test\api -- -j 4
+        run: bake/bake run test\api -- -j 8
+
+      - name: test addons
+        run: bake/bake run test\addons -- -j 8
 
       - name: test meta
-        run: bake/bake run test\meta -- -j 4
-
-      - name: test cpp_api
-        run: bake/bake run test\cpp_api -- -j 4
+        run: bake/bake run test\meta -- -j 8
 
       - name: test collections
-        run: bake/bake run test\collections -- -j 4
+        run: bake/bake run test\collections -- -j 8
+
+      - name: test c++
+        run: bake/bake run test\cpp_api -- -j 8
 
   analyze-scan-build:
     timeout-minutes: 30
@@ -205,7 +216,30 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/api --cfg sanitize -- -j 4
+          bake run test/api --cfg sanitize -- -j 8
+
+  analyze-sanitized-addons:
+    timeout-minutes: 30
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macOS-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake run test/api --cfg sanitize -- -j 8
 
   analyze-sanitized-meta:
     timeout-minutes: 30
@@ -228,7 +262,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/meta --cfg sanitize -- -j 4
+          bake run test/meta --cfg sanitize -- -j 8
 
   analyze-sanitized-collections:
     timeout-minutes: 30
@@ -251,7 +285,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/collections --cfg sanitize -- -j 4
+          bake run test/collections --cfg sanitize -- -j 8
 
   analyze-sanitized-cpp_api:
     timeout-minutes: 30
@@ -274,7 +308,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/cpp_api --cfg sanitize -- -j 4
+          bake run test/cpp_api --cfg sanitize -- -j 8
 
   buildsystem-cmake:
     timeout-minutes: 10
@@ -446,6 +480,11 @@ jobs:
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_REST
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_REST
+
+      - name: FLECS_NO_LOG
+        run: |
+          bake rebuild --strict -D FLECS_NO_LOG
+          bake rebuild --strict --cfg release -D FLECS_NO_LOG
 
       - name: custom_build tests
         run: |
