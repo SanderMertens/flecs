@@ -578,7 +578,7 @@ void init_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    table->c_info = NULL;
+    table->type_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->alloc_count = 0;

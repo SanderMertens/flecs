@@ -203,7 +203,7 @@ struct ecs_table_t {
                                      
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
-    ecs_type_info_t **c_info;        /* Cached pointers to component info */
+    ecs_type_info_t **type_info;     /* Cached pointers to type info */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t alloc_count;             /* Increases when columns are reallocd */
