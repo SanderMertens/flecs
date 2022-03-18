@@ -57,6 +57,11 @@ FLECS_DBG_API
 void flecs_switch_free(
     ecs_switch_t *sw);
 
+/** Remove all values. */
+FLECS_DBG_API
+void flecs_switch_clear(
+    ecs_switch_t *sw);
+
 /** Add element to switch, initialize value to 0 */
 FLECS_DBG_API
 void flecs_switch_add(
@@ -67,6 +72,11 @@ FLECS_DBG_API
 void flecs_switch_set_count(
     ecs_switch_t *sw,
     int32_t count);
+
+/** Get number of elements */
+FLECS_DBG_API
+int32_t flecs_switch_count(
+    ecs_switch_t *sw);
 
 /** Ensure that element exists. */
 FLECS_DBG_API

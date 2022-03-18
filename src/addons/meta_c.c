@@ -467,7 +467,7 @@ ecs_entity_t meta_lookup_array(
     }
 
     if (!e) {
-        e = ecs_set(world, 0, EcsMetaType, { EcsArrayType });
+        e = ecs_new_id(world);
     }
 
     ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
@@ -504,7 +504,7 @@ ecs_entity_t meta_lookup_vector(
         world, &params.type, params_decl, 1, &param_ctx);
 
     if (!e) {
-        e = ecs_set(world, 0, EcsMetaType, {EcsVectorType});
+        e = ecs_new_id(world);
     }
 
     return ecs_set(world, e, EcsVector, { element_type });
@@ -649,9 +649,7 @@ ecs_entity_t meta_lookup(
     if (count != 1) {
         ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
-        type = ecs_set(world, ecs_set(world, 0,
-            EcsMetaType, {EcsArrayType}),
-            EcsArray, {type, (int32_t)count});
+        type = ecs_set(world, 0, EcsArray, {type, (int32_t)count});
     }
 
     if (!type) {

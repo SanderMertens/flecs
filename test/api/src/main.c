@@ -806,6 +806,10 @@ void OnDelete_remove_childof_wildcard(void);
 void OnDelete_delete_child_of_delete_with(void);
 void OnDelete_deep_clean_64(void);
 void OnDelete_deep_clean_256(void);
+void OnDelete_on_delete_id_w_switch(void);
+void OnDelete_on_delete_id_w_disabled(void);
+void OnDelete_on_delete_id_to_no_switch(void);
+void OnDelete_on_delete_id_to_no_disabled(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5633,6 +5637,22 @@ bake_test_case OnDelete_testcases[] = {
     {
         "deep_clean_256",
         OnDelete_deep_clean_256
+    },
+    {
+        "on_delete_id_w_switch",
+        OnDelete_on_delete_id_w_switch
+    },
+    {
+        "on_delete_id_w_disabled",
+        OnDelete_on_delete_id_w_disabled
+    },
+    {
+        "on_delete_id_to_no_switch",
+        OnDelete_on_delete_id_to_no_switch
+    },
+    {
+        "on_delete_id_to_no_disabled",
+        OnDelete_on_delete_id_to_no_disabled
     }
 };
 
@@ -12446,7 +12466,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        68,
+        72,
         OnDelete_testcases
     },
     {

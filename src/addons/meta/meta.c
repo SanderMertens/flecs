@@ -223,55 +223,61 @@ static
 int init_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_type_kind_t kind)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
-
-    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType, NULL);
-    if (meta_type->kind && meta_type->kind != kind) {
-        ecs_err("type '%s' reregistered with different kind", 
-            ecs_get_name(world, type));
-        return -1;
-    }
-
-    meta_type->kind = kind;
-    ecs_modified(world, type, EcsMetaType);
-
-    return 0;
-}
-
-static
-int init_component(
-    ecs_world_t *world,
-    ecs_entity_t type,
+    ecs_type_kind_t kind,
     ecs_size_t size,
     ecs_size_t alignment)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(alignment != 0, ECS_INTERNAL_ERROR, NULL);
 
-    EcsComponent *component = ecs_get_mut(world, type, EcsComponent, NULL);
-    if (component->size && component->size != size) {
-        ecs_err("type '%s' reregistered with different size",
-            ecs_get_name(world, type));
-        return -1;
+    bool is_added = false;
+    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType, &is_added);
+    if (is_added) {
+        meta_type->existing = ecs_has(world, type, EcsComponent);
+    } else {
+        if (meta_type->kind != kind) {
+            ecs_err("type '%s' reregistered with different kind", 
+                ecs_get_name(world, type));
+            return -1;
+        }
     }
 
-    if (component->alignment && component->alignment != alignment) {
-        ecs_err("type '%s' reregistered with different alignment",
-            ecs_get_name(world, type));
-        return -1;
+    if (!meta_type->existing) {
+        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
+        comp->size = size;
+        comp->alignment = alignment;
+        ecs_modified(world, type, EcsComponent);
+    } else {
+        const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+        if (comp->size < size) {
+            ecs_err("computed size for '%s' is larger than actual type", 
+                ecs_get_name(world, type));
+            return -1;
+        }
+        if (comp->alignment < alignment) {
+            ecs_err("computed alignment for '%s' is larger than actual type", 
+                ecs_get_name(world, type));
+            return -1;
+        }
+        if (comp->size == size && comp->alignment != alignment) {
+            ecs_err("computed size for '%s' matches with actual type but "
+                "alignment is different", ecs_get_name(world, type));
+            return -1;
+        }
+        
+        meta_type->partial = comp->size != size;
     }
 
-    component->size = size;
-    component->alignment = alignment;
-    ecs_modified(world, type, EcsComponent);
+    meta_type->kind = kind;
+    meta_type->size = size;
+    meta_type->alignment = alignment;
+    ecs_modified(world, type, EcsMetaType);
 
     return 0;
 }
+
+#define init_type_t(world, type, kind, T) \
+    init_type(world, type, kind, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 static
 void set_struct_member(
@@ -432,16 +438,8 @@ int add_member_to_struct(
 
     ecs_modified(world, type, EcsStruct);
 
-    /* Overwrite component size & alignment */
-    if (type != ecs_id(EcsComponent)) {
-        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent, NULL);
-        comp->size = size;
-        comp->alignment = alignment;
-        ecs_modified(world, type, EcsComponent);
-    }
-
     /* Do this last as it triggers the update of EcsMetaTypeSerialized */
-    if (init_type(world, type, EcsStructType)) {
+    if (init_type(world, type, EcsStructType, size, alignment)) {
         return -1;
     }
 
@@ -609,89 +607,55 @@ void set_primitive(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         switch(type->kind) {
         case EcsBool:
-            init_component(world, e, 
-                ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, bool);
             break;
         case EcsChar:
-            init_component(world, e, 
-                ECS_SIZEOF(char), ECS_ALIGNOF(char));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, char);
             break;
         case EcsByte:
-            init_component(world, e, 
-                ECS_SIZEOF(bool), ECS_ALIGNOF(bool));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, bool);
             break;
         case EcsU8:
-            init_component(world, e, 
-                ECS_SIZEOF(uint8_t), ECS_ALIGNOF(uint8_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, uint8_t);
             break;
         case EcsU16:
-            init_component(world, e, 
-                ECS_SIZEOF(uint16_t), ECS_ALIGNOF(uint16_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, uint16_t);
             break;
         case EcsU32:
-            init_component(world, e, 
-                ECS_SIZEOF(uint32_t), ECS_ALIGNOF(uint32_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, uint32_t);
             break;
         case EcsU64:
-            init_component(world, e, 
-                ECS_SIZEOF(uint64_t), ECS_ALIGNOF(uint64_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, uint64_t);
             break;
         case EcsI8:
-            init_component(world, e, 
-                ECS_SIZEOF(int8_t), ECS_ALIGNOF(int8_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, int8_t);
             break;
         case EcsI16:
-            init_component(world, e, 
-                ECS_SIZEOF(int16_t), ECS_ALIGNOF(int16_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, int16_t);
             break;
         case EcsI32:
-            init_component(world, e, 
-                ECS_SIZEOF(int32_t), ECS_ALIGNOF(int32_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, int32_t);
             break;
         case EcsI64:
-            init_component(world, e, 
-                ECS_SIZEOF(int64_t), ECS_ALIGNOF(int64_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, int64_t);
             break;
         case EcsF32:
-            init_component(world, e, 
-                ECS_SIZEOF(float), ECS_ALIGNOF(float));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, float);
             break;
         case EcsF64:
-            init_component(world, e, 
-                ECS_SIZEOF(double), ECS_ALIGNOF(double));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, double);
             break;
         case EcsUPtr:
-            init_component(world, e, 
-                ECS_SIZEOF(uintptr_t), ECS_ALIGNOF(uintptr_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, uintptr_t);
             break;
         case EcsIPtr:
-            init_component(world, e, 
-                ECS_SIZEOF(intptr_t), ECS_ALIGNOF(intptr_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, intptr_t);
             break;
         case EcsString:
-            init_component(world, e, 
-                ECS_SIZEOF(char*), ECS_ALIGNOF(char*));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, char*);
             break;
         case EcsEntity:
-            init_component(world, e, 
-                ECS_SIZEOF(ecs_entity_t), ECS_ALIGNOF(ecs_entity_t));
-            init_type(world, e, EcsPrimitiveType);
+            init_type_t(world, e, EcsPrimitiveType, ecs_entity_t);
             break;
         }
     }
@@ -722,14 +686,8 @@ void add_enum(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        
-        if (init_component(
-            world, e, ECS_SIZEOF(ecs_i32_t), ECS_ALIGNOF(ecs_i32_t)))
-        {
-            continue;
-        }
 
-        if (init_type(world, e, EcsEnumType)) {
+        if (init_type_t(world, e, EcsEnumType, ecs_i32_t)) {
             continue;
         }
 
@@ -745,14 +703,8 @@ void add_bitmask(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        
-        if (init_component(
-            world, e, ECS_SIZEOF(ecs_u32_t), ECS_ALIGNOF(ecs_u32_t)))
-        {
-            continue;
-        }
 
-        if (init_type(world, e, EcsBitmaskType)) {
+        if (init_type_t(world, e, EcsBitmaskType, ecs_u32_t)) {
             continue;
         }
     }
@@ -801,13 +753,9 @@ void set_array(ecs_iter_t *it) {
         }
 
         const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
-        if (init_component(
-            world, e, elem_ptr->size * elem_count, elem_ptr->alignment))
+        if (init_type(world, e, EcsArrayType, 
+            elem_ptr->size * elem_count, elem_ptr->alignment)) 
         {
-            continue;
-        }
-
-        if (init_type(world, e, EcsArrayType)) {
             continue;
         }
     }
@@ -828,13 +776,7 @@ void set_vector(ecs_iter_t *it) {
             continue;
         }
 
-        if (init_component(world, e, 
-            ECS_SIZEOF(ecs_vector_t*), ECS_ALIGNOF(ecs_vector_t*)))
-        {
-            continue;
-        }
-
-        if (init_type(world, e, EcsVectorType)) {
+        if (init_type_t(world, e, EcsVectorType, ecs_vector_t*)) {
             continue;
         }
     }
