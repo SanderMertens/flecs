@@ -406,7 +406,7 @@ void notify_component_info(
             }
             ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
             
-            const ecs_type_info_t *c_info = flecs_get_c_info(world, c);
+            const ecs_type_info_t *c_info = flecs_get_type_info(world, c);
             if (c_info) {
                 ecs_flags32_t flags = get_component_action_flags(c_info);
                 table->flags |= flags;

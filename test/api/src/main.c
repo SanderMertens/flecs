@@ -627,9 +627,7 @@ void ComponentLifecycle_merge_to_different_table(void);
 void ComponentLifecycle_merge_to_new_table(void);
 void ComponentLifecycle_delete_in_stage(void);
 void ComponentLifecycle_ctor_on_add_pair(void);
-void ComponentLifecycle_ctor_on_add_pair_set_ctor_after_table(void);
 void ComponentLifecycle_ctor_on_add_pair_tag(void);
-void ComponentLifecycle_ctor_on_add_pair_tag_set_ctor_after_table(void);
 void ComponentLifecycle_ctor_on_move_pair(void);
 void ComponentLifecycle_move_on_realloc(void);
 void ComponentLifecycle_move_on_bulk_new(void);
@@ -4015,16 +4013,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_ctor_on_add_pair
     },
     {
-        "ctor_on_add_pair_set_ctor_after_table",
-        ComponentLifecycle_ctor_on_add_pair_set_ctor_after_table
-    },
-    {
         "ctor_on_add_pair_tag",
         ComponentLifecycle_ctor_on_add_pair_tag
-    },
-    {
-        "ctor_on_add_pair_tag_set_ctor_after_table",
-        ComponentLifecycle_ctor_on_add_pair_tag_set_ctor_after_table
     },
     {
         "ctor_on_move_pair",
@@ -8183,7 +8173,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        52,
+        50,
         ComponentLifecycle_testcases
     },
     {

@@ -938,17 +938,16 @@ void unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
+    EcsMetaType *type = ecs_term(it, EcsMetaType, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t type = it->entities[i];
-
-        /* If component has no component actions (which is typical if a type is
-         * created with reflection data) make sure its values are always 
-         * initialized with zero. This prevents the injection of invalid data 
-         * through generic APIs after adding a component without setting it. */
-        if (!ecs_component_has_actions(world, type)) {
-            ecs_set_component_actions_w_id(world, type, 
+        /* If a component is defined from reflection data, configure it with the
+         * default constructor. This ensures that a new component value does not
+         * contain uninitialized memory, which could cause serializers to crash
+         * when for example inspecting string fields. */
+        if (!type->existing) {
+            ecs_set_component_actions_w_id(world, it->entities[i], 
                 &(EcsComponentLifecycle){ 
                     .ctor = ecs_default_ctor
                 });
