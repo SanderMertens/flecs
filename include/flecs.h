@@ -863,8 +863,6 @@ typedef struct EcsComponentLifecycle {
     ecs_copy_t copy;            /* copy assignment */
     ecs_move_t move;            /* move assignment */
 
-    void *ctx;                  /* User defined context */
-
     /* Ctor + copy */
     ecs_copy_t copy_ctor;
 
@@ -892,14 +890,17 @@ typedef struct EcsComponentLifecycle {
      * This callback is invoked after the triggers are invoked, and before the
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
+
+    /* User defined context */
+    void *ctx;                  
 } EcsComponentLifecycle;
 
 /** Type that contains component information (passed to ctors/dtors/...) */
 struct ecs_type_info_t {
-    EcsComponentLifecycle lifecycle;
-    ecs_entity_t component;
     ecs_size_t size;
     ecs_size_t alignment;
+    EcsComponentLifecycle lifecycle;
+    ecs_entity_t component;
     bool lifecycle_set;
 };
 
