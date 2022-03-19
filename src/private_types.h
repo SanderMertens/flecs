@@ -93,8 +93,6 @@ typedef struct ecs_table_event_t {
 /** A component column. */
 struct ecs_column_t {
     ecs_vector_t *data;          /* Column data */
-    int16_t size;                /* Column element size */
-    int16_t alignment;           /* Column element alignment */
 };
 
 /** A switch column. */

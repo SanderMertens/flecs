@@ -140,9 +140,10 @@ bool flecs_iter_populate_term_data(
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
             column = tr->column;
+            ecs_type_info_t *ti = &table->type_info[column];
             ecs_column_t *s = &table->storage.columns[column];
-            size = s->size;
-            align = s->alignment;
+            size = ti->size;
+            align = ti->alignment;
             vec = s->data;
             /* Fallthrough to has_data */
         }
@@ -165,9 +166,10 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
+        ecs_type_info_t *ti = &table->type_info[storage_column];
         ecs_column_t *s = &table->storage.columns[storage_column];
-        size = s->size;
-        align = s->alignment;
+        size = ti->size;
+        align = ti->alignment;
         vec = s->data;
         /* Fallthrough to has_data */
     }
@@ -431,15 +433,14 @@ void* ecs_iter_column_w_size(
         return NULL;
     }
 
-    ecs_column_t *columns = table->storage.columns;
-    ecs_column_t *column = &columns[storage_index];
-    ecs_check(!size || (ecs_size_t)size == column->size, 
+    ecs_type_info_t *ti = &table->type_info[storage_index];
+    ecs_check(!size || (ecs_size_t)size == ti->size, 
         ECS_INVALID_PARAMETER, NULL);
 
-    void *ptr = ecs_vector_first_t(
-        column->data, column->size, column->alignment);
-
-    return ECS_OFFSET(ptr, column->size * it->offset);
+    ecs_column_t *column = &table->storage.columns[storage_index];
+    int32_t alignment = ti->alignment;
+    return ecs_vector_get_t(column->data, flecs_uto(int32_t, size), alignment,
+         it->offset);
 error:
     return NULL;
 }
@@ -457,10 +458,8 @@ size_t ecs_iter_column_size(
         return 0;
     }
 
-    ecs_column_t *columns = table->storage.columns;
-    ecs_column_t *column = &columns[storage_index];
-    
-    return flecs_ito(size_t, column->size);
+    ecs_type_info_t *ti = &table->type_info[storage_index];
+    return flecs_ito(size_t, ti->size);
 error:
     return 0;
 }
