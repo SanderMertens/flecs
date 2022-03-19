@@ -34,14 +34,15 @@ void* get_component_w_index(
     ecs_check(column_index < ecs_table_storage_count(table), 
         ECS_NOT_A_COMPONENT, NULL);
 
+    ecs_type_info_t *ti = &table->type_info[column_index];
     ecs_column_t *column = &table->storage.columns[column_index];
 
     /* If size is 0, component does not have a value. This is likely caused by
     * an application trying to call ecs_get with a tag. */
-    int32_t size = column->size;    
+    int32_t size = ti->size;    
     ecs_check(size != 0, ECS_INVALID_PARAMETER, NULL);
 
-    void *ptr = ecs_vector_first_t(column->data, size, column->alignment); 
+    void *ptr = ecs_vector_first_t(column->data, size, ti->alignment); 
     return ECS_OFFSET(ptr, size * row);  
 error:
     return NULL;
@@ -353,9 +354,10 @@ void instantiate_children(
 
         int32_t storage_index = ecs_table_type_to_storage_index(child_table, i);
         if (storage_index != -1) {
+            ecs_type_info_t *ti = &child_table->type_info[storage_index];
             ecs_column_t *column = &child_data->columns[storage_index];
             component_data[pos] = ecs_vector_first_t(
-                column->data, column->size, column->alignment);
+                column->data, ti->size, ti->alignment);
         } else {
             component_data[pos] = NULL;
         }
@@ -464,6 +466,7 @@ bool override_component(
     ecs_table_t *table,
     ecs_table_t *other_table,
     ecs_data_t *data,
+    const ecs_type_info_t *ti,
     ecs_column_t *column,
     int32_t row,
     int32_t count,
@@ -477,6 +480,7 @@ bool override_from_base(
     ecs_table_t *table,
     ecs_table_t *other_table,
     ecs_data_t *data,
+    const ecs_type_info_t *ti,
     ecs_column_t *column,
     int32_t row,
     int32_t count,
@@ -494,20 +498,16 @@ bool override_from_base(
     void *base_ptr = get_component(
         world, base_info.table, base_info.row, component);
     if (base_ptr) {
-        int16_t data_size = column->size;
-        void *data_array = ecs_vector_first_t(
-            column->data, column->size, column->alignment);
-        void *data_ptr = ECS_OFFSET(data_array, data_size * row);
+        int32_t data_size = ti->size;
+        void *data_ptr = ecs_vector_get_t(
+            column->data, data_size, ti->alignment, row);
 
-        component = ecs_get_typeid(world, component);
-        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
         int32_t index;
 
-        ecs_copy_t copy = ti ? ti->lifecycle.copy : NULL;
+        ecs_copy_t copy = ti->lifecycle.copy;
         if (copy) {
             ecs_entity_t *entities = ecs_vector_first(
                 data->entities, ecs_entity_t);
-
             for (index = 0; index < count; index ++) {
                 copy(world, &entities[row], &base, data_ptr, base_ptr, 1, ti);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
@@ -552,7 +552,7 @@ bool override_from_base(
         /* If component not found on base, check if base itself inherits */
         ecs_type_t base_type = base_info.table->type;
         return override_component(world, component, base_type, table, 
-            other_table, data, column, row, count, notify_on_set);
+            other_table, data, ti, column, row, count, notify_on_set);
     }
 }
 
@@ -564,6 +564,7 @@ bool override_component(
     ecs_table_t *table,
     ecs_table_t *other_table,
     ecs_data_t *data,
+    const ecs_type_info_t *ti,
     ecs_column_t *column,
     int32_t row,
     int32_t count,
@@ -583,7 +584,8 @@ bool override_component(
 
         if (ECS_HAS_RELATION(e, EcsIsA)) {
             if (override_from_base(world, ecs_pair_second(world, e), component,
-                table, other_table, data, column, row, count, notify_on_set))
+                table, other_table, data, ti, column, row, count, 
+                notify_on_set))
             {
                 return true;
             }
@@ -650,13 +652,14 @@ void components_override(
             continue;
         }
 
-        ecs_column_t *column = &columns[tr->column];
-        if (!column->size) {
+        const ecs_type_info_t *ti = idr->type_info;
+        if (!ti->size) {
             continue;
         }
 
-        override_component(world, id, type, table, other_table, data, column, 
-            row, count, notify_on_set);
+        ecs_column_t *column = &columns[tr->column];
+        override_component(world, id, type, table, other_table, data, ti, 
+            column, row, count, notify_on_set);
     }
 error:
     return;
@@ -1026,7 +1029,8 @@ const ecs_entity_t* new_w_data(
     
     /* Update entity index. */
     int i;
-    ecs_record_t **record_ptrs = ecs_vector_first(data->record_ptrs, ecs_record_t*);
+    ecs_record_t **record_ptrs = ecs_vector_first(
+        data->record_ptrs, ecs_record_t*);
     for (i = 0; i < count; i ++) { 
         record_ptrs[row + i] = ecs_eis_set(world, entities[i], 
             &(ecs_record_t){
@@ -1045,6 +1049,7 @@ const ecs_entity_t* new_w_data(
          * actions won't call OnSet triggers for them. This ensures we won't
          * call OnSet triggers multiple times for the same component */
         int32_t c_i;
+        ecs_table_t *storage_table = table->storage_table;
         for (c_i = 0; c_i < component_ids->count; c_i ++) {
             void *src_ptr = component_data[c_i];
             if (!src_ptr) {
@@ -1053,24 +1058,28 @@ const ecs_entity_t* new_w_data(
 
             /* Find component in storage type */
             ecs_entity_t id = component_ids->array[c_i];
-            ecs_column_t *column = ecs_table_column_for_id(world, table, id);
-            ecs_assert(column != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_table_record_t *tr = flecs_get_table_record(
+                world, storage_table, id);
+            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
 
-            int16_t size = column->size;
+            int32_t index = tr->column;
+            ecs_type_info_t *ti = &table->type_info[index];
+            ecs_column_t *column = &table->storage.columns[index];
+            int32_t size = ti->size;
+            int32_t alignment = ti->alignment;
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-            int16_t alignment = column->alignment;
             void *ptr = ecs_vector_first_t(column->data, size, alignment);
             ptr = ECS_OFFSET(ptr, size * row);
 
-            const ecs_type_info_t *ti = get_c_info(world, id);
             ecs_copy_t copy;
             ecs_move_t move;
-            if (ti && is_move && (move = ti->lifecycle.move)) {
+            if (is_move && (move = ti->lifecycle.move)) {
                 ecs_entity_t *eids = ecs_vector_first(
                     data->entities, ecs_entity_t);
                 move(world, eids, eids, ptr, src_ptr, count, ti);
-            } else if (ti && !is_move && (copy = ti->lifecycle.copy)) {
+            } else if (!is_move && (copy = ti->lifecycle.copy)) {
                 ecs_entity_t *eids = ecs_vector_first(
                     data->entities, ecs_entity_t);
                 copy(world, eids, eids, ptr, src_ptr, count, ti);
@@ -1296,21 +1305,28 @@ void flecs_notify_on_set(
 
     ecs_ids_t local_ids;
     if (!ids) {
-        local_ids.array = ecs_vector_first(table->storage_type, ecs_id_t);
-        local_ids.count = ecs_vector_count(table->storage_type);
+        ecs_type_t storage_type = table->storage_type;
+        local_ids.array = ecs_vector_first(storage_type, ecs_id_t);
+        local_ids.count = ecs_vector_count(storage_type);
         ids = &local_ids;
     }
 
     if (owned) {
+        ecs_table_t *storage_table = table->storage_table;
         int i;
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
-            const ecs_type_info_t *info = get_c_info(world, id);
-            ecs_iter_action_t on_set;
-            if (info && (on_set = info->lifecycle.on_set)) {
-                ecs_column_t *c = ecs_table_column_for_id(world, table, id);
-                ecs_size_t size = c->size;
-                void *ptr = ecs_vector_get_t(c->data, size, c->alignment, row);
+            const ecs_table_record_t *tr = flecs_get_table_record(world, 
+                storage_table, id);
+            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            int32_t column = tr->column;
+            const ecs_type_info_t *ti = &table->type_info[column];
+            ecs_iter_action_t on_set = ti->lifecycle.on_set;
+            if (on_set) {
+                ecs_column_t *c = &table->storage.columns[column];
+                ecs_size_t size = ti->size;
+                void *ptr = ecs_vector_get_t(c->data, size, ti->alignment, row);
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_iter_t it = {.term_count = 1};
@@ -1326,7 +1342,7 @@ void flecs_notify_on_set(
                 it.ids[0] = id;
                 it.event = EcsOnSet;
                 it.event_id = id;
-                it.ctx = info->lifecycle.ctx;
+                it.ctx = ti->lifecycle.ctx;
                 it.count = count;
                 
                 on_set(&it);

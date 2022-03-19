@@ -31,13 +31,10 @@ ecs_data_t* duplicate_data(
     }
 
     ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
-
     ecs_type_t storage_type = table->storage_type;
     int32_t i, column_count = ecs_vector_count(storage_type);
-    ecs_entity_t *components = ecs_vector_first(storage_type, ecs_entity_t);
-
-    result->columns = ecs_os_memdup(
-        main_data->columns, ECS_SIZEOF(ecs_column_t) * column_count);
+    result->columns = ecs_os_memdup_n(
+        main_data->columns, ecs_column_t, column_count);
 
     /* Copy entities */
     result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
@@ -51,17 +48,12 @@ ecs_data_t* duplicate_data(
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
-        ecs_entity_t component = components[i];
         ecs_column_t *column = &result->columns[i];
-
-        component = ecs_get_typeid(world, component);
-
-        const ecs_type_info_t *ti = flecs_get_type_info(world, component);
-        int16_t size = column->size;
-        int16_t alignment = column->alignment;
-        ecs_copy_t copy;
-
-        if (ti && (copy = ti->lifecycle.copy)) {
+        ecs_type_info_t *ti = &table->type_info[i];
+        int32_t size = ti->size;
+        int32_t alignment = ti->alignment;
+        ecs_copy_t copy = ti->lifecycle.copy;
+        if (copy) {
             int32_t count = ecs_vector_count(column->data);
             ecs_vector_t *dst_vec = ecs_vector_new_t(size, alignment, to_alloc);
             ecs_vector_set_count_t(&dst_vec, size, alignment, count);
