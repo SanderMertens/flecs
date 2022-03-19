@@ -31,8 +31,7 @@ void* get_component_w_index(
     int32_t column_index,
     int32_t row)
 {
-    ecs_check(column_index < ecs_table_storage_count(table), 
-        ECS_NOT_A_COMPONENT, NULL);
+    ecs_check(column_index < table->storage_count, ECS_NOT_A_COMPONENT, NULL);
 
     ecs_type_info_t *ti = &table->type_info[column_index];
     ecs_column_t *column = &table->storage.columns[column_index];
@@ -1305,9 +1304,8 @@ void flecs_notify_on_set(
 
     ecs_ids_t local_ids;
     if (!ids) {
-        ecs_type_t storage_type = table->storage_type;
-        local_ids.array = ecs_vector_first(storage_type, ecs_id_t);
-        local_ids.count = ecs_vector_count(storage_type);
+        local_ids.array = table->storage_ids;
+        local_ids.count = table->storage_count;
         ids = &local_ids;
     }
 
@@ -2332,7 +2330,7 @@ void ecs_clear(
     if (table) {
         ecs_table_diff_t diff = {
             .removed = flecs_type_to_ids(table->type),
-            .un_set = flecs_type_to_ids(table->storage_type)
+            .un_set = { table->storage_ids, table->storage_count, 0 }
         };
 
         delete_entity(world, table, &table->storage, info.row, &diff);
@@ -2752,7 +2750,7 @@ void ecs_delete(
         if (table_id && flecs_sparse_is_alive(&world->store.tables, table_id)) {
             ecs_table_diff_t diff = {
                 .removed = flecs_type_to_ids(table->type),
-                .un_set = flecs_type_to_ids(table->storage_type)
+                .un_set = { table->storage_ids, table->storage_count, 0 }
             };
 
             delete_entity(world, table, info.data, info.row, &diff);

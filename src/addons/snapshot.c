@@ -31,8 +31,7 @@ ecs_data_t* duplicate_data(
     }
 
     ecs_data_t *result = ecs_os_calloc(ECS_SIZEOF(ecs_data_t));
-    ecs_type_t storage_type = table->storage_type;
-    int32_t i, column_count = ecs_vector_count(storage_type);
+    int32_t i, column_count = table->storage_count;
     result->columns = ecs_os_memdup_n(
         main_data->columns, ecs_column_t, column_count);
 
