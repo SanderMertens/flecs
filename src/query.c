@@ -1464,9 +1464,10 @@ void sort_table(
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
+        ecs_type_info_t *ti = &table->type_info[column_index];
         ecs_column_t *column = &data->columns[column_index];
-        size = column->size;
-        ptr = ecs_vector_first_t(column->data, size, column->alignment);
+        size = ti->size;
+        ptr = ecs_vector_first_t(column->data, size, ti->alignment);
     }
 
     qsort_array(world, table, data, entities, ptr, size, 0, count - 1, compare);
@@ -1541,9 +1542,10 @@ void build_sorted_table_range(
         }
 
         if (index != -1) {
+            ecs_type_info_t *ti = &table->type_info[index];
             ecs_column_t *column = &data->columns[index];
-            int16_t size = column->size;
-            int16_t align = column->alignment;
+            int32_t size = ti->size;
+            int32_t align = ti->alignment;
             helper[to_sort].ptr = ecs_vector_first_t(column->data, size, align);
             helper[to_sort].elem_size = size;
             helper[to_sort].shared = false;
