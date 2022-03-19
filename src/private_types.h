@@ -88,7 +88,7 @@ typedef struct ecs_table_event_t {
     /* If the nubmer of fields gets out of hand, this can be turned into a union
      * but since events are very temporary objects, this works for now and makes
      * initializing an event a bit simpler. */
-} ecs_table_event_t;    
+} ecs_table_event_t;
 
 /** A component column. */
 struct ecs_column_t {
@@ -122,8 +122,7 @@ struct ecs_data_t {
 #define EcsTableHasChildOf          8u    /* Does the table type ChildOf relation */
 #define EcsTableHasPairs            16u   /* Does the table type have pairs */
 #define EcsTableHasModule           32u   /* Does the table have module data */
-#define EcsTableHasXor              64u   /* Does the table type has XOR */
-#define EcsTableIsDisabled          128u   /* Does the table type has EcsDisabled */
+#define EcsTableIsDisabled          128u  /* Does the table type has EcsDisabled */
 #define EcsTableHasCtors            256u
 #define EcsTableHasDtors            512u
 #define EcsTableHasCopy             1024u
@@ -188,12 +187,11 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
+    int32_t storage_count;           /* Number of (non-zero sized) components */
     
     struct ecs_table_record_t *records; /* Array with table records */
-    int32_t record_count;
-
     ecs_table_t *storage_table;      /* Table w/type without tags */
-    ecs_type_t storage_type;         /* Storage table type (prevents indirection) */
+    ecs_id_t *storage_ids;           /* Storage ids (prevent indirection) */
     int32_t *storage_map;            /* Map type <-> storage type
                                       *  - 0..count(T):         type -> storage_type
                                       *  - count(T)..count(S):  storage_type -> type
@@ -201,18 +199,19 @@ struct ecs_table_t {
                                      
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
-    ecs_type_info_t *type_info;     /* Cached pointers to type info */
+    ecs_type_info_t *type_info;      /* Cached pointers to type info */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
-    int32_t alloc_count;             /* Increases when columns are reallocd */
-
+    
     int16_t sw_column_count;
     int16_t sw_column_offset;
     int16_t bs_column_count;
     int16_t bs_column_offset;
 
+    int32_t alloc_count;             /* Increases when columns are reallocd */
     int32_t lock;
     int32_t refcount;
+    int32_t record_count;
 };
 
 /** Must appear as first member in payload of table cache */

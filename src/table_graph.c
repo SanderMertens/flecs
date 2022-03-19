@@ -548,11 +548,6 @@ void init_flags(
             table->flags |= EcsTableIsDisabled;
         }
 
-        /* Does table have exclusive or columns */
-        if (ECS_HAS_ROLE(id, XOR)) {
-            table->flags |= EcsTableHasXor;
-        }
-
         /* Does the table have pairs */
         if (ECS_HAS_ROLE(id, PAIR)) {
             table->flags |= EcsTableHasPairs;
