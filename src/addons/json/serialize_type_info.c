@@ -15,14 +15,14 @@ int json_typeinfo_ser_primitive(
 {
     switch(kind) {
     case EcsBool:
-        json_string(str, "bool");
+        flecs_json_string(str, "bool");
         break;
     case EcsChar:
     case EcsString:
-        json_string(str, "text");
+        flecs_json_string(str, "text");
         break;
     case EcsByte:
-        json_string(str, "byte");
+        flecs_json_string(str, "byte");
         break;
     case EcsU8:
     case EcsU16:
@@ -34,14 +34,14 @@ int json_typeinfo_ser_primitive(
     case EcsI64:
     case EcsIPtr:
     case EcsUPtr:
-        json_string(str, "int");
+        flecs_json_string(str, "int");
         break;
     case EcsF32:
     case EcsF64:
-        json_string(str, "float");
+        flecs_json_string(str, "float");
         break;
     case EcsEntity:
-        json_string(str, "entity");
+        flecs_json_string(str, "entity");
         break;
     default:
         return -1;
@@ -63,8 +63,8 @@ void json_typeinfo_ser_constants(
     while (ecs_term_next(&it)) {
         int32_t i, count = it.count;
         for (i = 0; i < count; i ++) {
-            json_next(str);
-            json_string(str, ecs_get_name(world, it.entities[i]));
+            flecs_json_next(str);
+            flecs_json_string(str, ecs_get_name(world, it.entities[i]));
         }
     }
 }
@@ -98,7 +98,7 @@ int json_typeinfo_ser_array(
 {
     ecs_strbuf_list_appendstr(str, "\"array\"");
 
-    json_next(str);
+    flecs_json_next(str);
     if (json_typeinfo_ser_type(world, elem_type, str)) {
         goto error;
     }
@@ -137,7 +137,7 @@ int json_typeinfo_ser_vector(
 
     ecs_strbuf_list_appendstr(str, "\"vector\"");
 
-    json_next(str);
+    flecs_json_next(str);
     if (json_typeinfo_ser_type(world, arr->type, str)) {
         goto error;
     }
@@ -154,19 +154,19 @@ int json_typeinfo_ser_unit(
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
 {
-    json_member(str, "unit");
-    json_path(str, world, unit);
+    flecs_json_member(str, "unit");
+    flecs_json_path(str, world, unit);
 
     const EcsUnit *uptr = ecs_get(world, unit, EcsUnit);
     if (uptr) {
         if (uptr->symbol) {
-            json_member(str, "symbol");
-            json_string(str, uptr->symbol);
+            flecs_json_member(str, "symbol");
+            flecs_json_string(str, uptr->symbol);
         }
         ecs_entity_t quantity = ecs_get_object(world, unit, EcsQuantity, 0);
         if (quantity) {
-            json_member(str, "quantity");
-            json_path(str, world, quantity);
+            flecs_json_member(str, "quantity");
+            flecs_json_path(str, world, quantity);
         }
     }
 
@@ -180,7 +180,7 @@ int json_typeinfo_ser_type_op(
     ecs_meta_type_op_t *op, 
     ecs_strbuf_t *str) 
 {
-    json_array_push(str);
+    flecs_json_array_push(str);
 
     switch(op->kind) {
     case EcsOpPush:
@@ -202,7 +202,7 @@ int json_typeinfo_ser_type_op(
         break;
     default:
         if (json_typeinfo_ser_primitive( 
-            json_op_to_primitive_kind(op->kind), str))
+            flecs_json_op_to_primitive_kind(op->kind), str))
         {
             /* Unknown operation */
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
@@ -213,15 +213,15 @@ int json_typeinfo_ser_type_op(
 
     ecs_entity_t unit = op->unit;
     if (unit) {
-        json_next(str);
-        json_next(str);
+        flecs_json_next(str);
+        flecs_json_next(str);
 
-        json_object_push(str);
+        flecs_json_object_push(str);
         json_typeinfo_ser_unit(world, str, unit);
-        json_object_pop(str);
+        flecs_json_object_pop(str);
     }
 
-    json_array_pop(str);
+    flecs_json_array_pop(str);
 
     return 0;
 error:
@@ -241,14 +241,14 @@ int json_typeinfo_ser_type_ops(
 
         if (op != ops) {
             if (op->name) {
-                json_member(str, op->name);
+                flecs_json_member(str, op->name);
             }
 
             int32_t elem_count = op->count;
             if (elem_count > 1 && op != ops) {
-                json_array_push(str);
+                flecs_json_array_push(str);
                 json_typeinfo_ser_array(world, op->type, op->count, str);
-                json_array_pop(str);
+                flecs_json_array_pop(str);
                 i += op->op_count - 1;
                 continue;
             }
@@ -256,10 +256,10 @@ int json_typeinfo_ser_type_ops(
         
         switch(op->kind) {
         case EcsOpPush:
-            json_object_push(str);
+            flecs_json_object_push(str);
             break;
         case EcsOpPop:
-            json_object_pop(str);
+            flecs_json_object_pop(str);
             break;
         default:
             if (json_typeinfo_ser_type_op(world, op, str)) {
