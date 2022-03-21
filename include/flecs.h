@@ -321,17 +321,12 @@ typedef uint64_t (*ecs_hash_value_action_t)(
 
 /** Constructor/destructor callback */
 typedef void (*ecs_xtor_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *entities,
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info);
 
 /** Copy is invoked when a component is copied into another component. */
 typedef void (*ecs_copy_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -339,9 +334,6 @@ typedef void (*ecs_copy_t)(
 
 /** Move is invoked when a component is moved to another component. */
 typedef void (*ecs_move_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -880,6 +872,10 @@ typedef struct EcsComponentLifecycle {
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
+
+    /* Callback that is invoked when an instance of a component is added. This
+     * callback is invoked before triggers are invoked. */
+    ecs_iter_action_t on_add;
 
     /* Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component

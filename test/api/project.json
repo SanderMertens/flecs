@@ -706,7 +706,13 @@
                 "delete_in_dtor_same_type_on_delete",
                 "delete_in_dtor_other_type_on_delete",
                 "delete_self_in_dtor_on_delete",
-                "on_set_after_set"
+                "on_set_after_set",
+                "on_add_after_new",
+                "on_add_after_add",
+                "on_add_after_set",
+                "on_remove_after_remove",
+                "on_remove_after_clear",
+                "on_remove_after_delete"
             ]
         }, {
             "id": "Sorting",

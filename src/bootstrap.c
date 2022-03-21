@@ -3,14 +3,6 @@
 /* -- Component lifecycle -- */
 
 /* Component lifecycle actions for EcsIdentifier */
-static ECS_CTOR(EcsIdentifier, ptr, {
-    ptr->value = NULL;
-    ptr->hash = 0;
-    ptr->length = 0;
-    ptr->index_hash = 0;
-    ptr->index = NULL;
-})
-
 static ECS_DTOR(EcsIdentifier, ptr, {
     ecs_os_strset(&ptr->value, NULL);
 })
@@ -66,7 +58,8 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         }
     }
 
-    for (int i = 0; i < it->count; i ++) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
         EcsIdentifier *cur = &ptr[i];
         uint64_t hash;
         ecs_size_t len;
@@ -111,51 +104,28 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
 }
 
 /* Component lifecycle actions for EcsTrigger */
-static ECS_CTOR(EcsTrigger, ptr, {
-    ptr->trigger = NULL;
-})
-
-static ECS_DTOR(EcsTrigger, ptr, {
-    if (ptr->trigger) {
-        flecs_trigger_fini(world, (ecs_trigger_t*)ptr->trigger);
+static void ecs_on_remove(EcsTrigger)(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsTrigger *ptr = ecs_term(it, EcsTrigger, 1);
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        if (ptr[i].trigger) {
+            flecs_trigger_fini(world, (ecs_trigger_t*)ptr[i].trigger);
+        }
     }
-})
-
-static ECS_COPY(EcsTrigger, dst, src, {
-    ecs_abort(ECS_INVALID_OPERATION, "Trigger component cannot be copied");
-})
-
-static ECS_MOVE(EcsTrigger, dst, src, {
-    if (dst->trigger) {
-        flecs_trigger_fini(world, (ecs_trigger_t*)dst->trigger);
-    }
-    dst->trigger = src->trigger;
-    src->trigger = NULL;
-})
+}
 
 /* Component lifecycle actions for EcsObserver */
-static ECS_CTOR(EcsObserver, ptr, {
-    ptr->observer = NULL;
-})
-
-static ECS_DTOR(EcsObserver, ptr, {
-    if (ptr->observer) {
-        flecs_observer_fini(world, (ecs_observer_t*)ptr->observer);
+static void ecs_on_remove(EcsObserver)(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsObserver *ptr = ecs_term(it, EcsObserver, 1);
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        if (ptr[i].observer) {
+            flecs_observer_fini(world, (ecs_observer_t*)ptr[i].observer);
+        }
     }
-})
-
-static ECS_COPY(EcsObserver, dst, src, {
-    ecs_abort(ECS_INVALID_OPERATION, "Observer component cannot be copied");
-})
-
-static ECS_MOVE(EcsObserver, dst, src, {
-    if (dst->observer) {
-        flecs_observer_fini(world, (ecs_observer_t*)dst->observer);
-    }
-    dst->observer = src->observer;
-    src->observer = NULL;
-})
-
+}
 
 /* -- Builtin triggers -- */
 
@@ -597,7 +567,7 @@ void flecs_bootstrap(
     });
 
     ecs_set_component_actions(world, EcsIdentifier, {
-        .ctor = ecs_ctor(EcsIdentifier),
+        .ctor = ecs_default_ctor,
         .dtor = ecs_dtor(EcsIdentifier),
         .copy = ecs_copy(EcsIdentifier),
         .move = ecs_move(EcsIdentifier),
@@ -606,17 +576,13 @@ void flecs_bootstrap(
     });
 
     ecs_set_component_actions(world, EcsTrigger, {
-        .ctor = ecs_ctor(EcsTrigger),
-        .dtor = ecs_dtor(EcsTrigger),
-        .copy = ecs_copy(EcsTrigger),
-        .move = ecs_move(EcsTrigger)
+        .ctor = ecs_default_ctor,
+        .on_remove = ecs_on_remove(EcsTrigger)
     }); 
 
     ecs_set_component_actions(world, EcsObserver, {
-        .ctor = ecs_ctor(EcsObserver),
-        .dtor = ecs_dtor(EcsObserver),
-        .copy = ecs_copy(EcsObserver),
-        .move = ecs_move(EcsObserver)
+        .ctor = ecs_default_ctor,
+        .on_remove = ecs_on_remove(EcsObserver)
     });            
 
     /* Create table for initial components */

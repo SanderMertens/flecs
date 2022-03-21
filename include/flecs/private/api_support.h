@@ -66,8 +66,6 @@ const char* ecs_identifier_is_var(
 
 FLECS_API
 void ecs_default_ctor(
-    ecs_world_t *world, 
-    const ecs_entity_t *entity_ptr,
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);

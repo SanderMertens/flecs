@@ -289,42 +289,51 @@ void* ecs_get_system_binding_ctx(
     }   
 }
 
-/* System destructor */
+/* System deinitialization */
 static
-ECS_DTOR(EcsSystem, ptr, {
-    if (!ecs_is_alive(world, entity)) {
-        /* This can happen when a set is deferred while a system is being
-         * cleaned up. The operation will be discarded, but the destructor
-         * still needs to be invoked for the value */
-        continue;
-    }
+void ecs_on_remove(EcsSystem)(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsSystem *ptr = ecs_term(it, EcsSystem, 1);
 
-    /* Invoke Deactivated action for active systems */
-    if (ptr->query && ecs_query_table_count(ptr->query)) {
-        invoke_status_action(world, entity, ptr, EcsSystemDeactivated);
-    }
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        EcsSystem *sys = &ptr[i];
+        ecs_entity_t entity = it->entities[i];
 
-    /* Invoke Disabled action for enabled systems */
-    if (!ecs_has_id(world, entity, EcsDisabled)) {
-        invoke_status_action(world, entity, ptr, EcsSystemDisabled);
-    }
+        if (!ecs_is_alive(world, entity)) {
+            /* This can happen when a set is deferred while a system is being
+            * cleaned up. The operation will be discarded, but the destructor
+            * still needs to be invoked for the value */
+            continue;
+        }
 
-    if (ptr->ctx_free) {
-        ptr->ctx_free(ptr->ctx);
-    }
+        /* Invoke Deactivated action for active systems */
+        if (sys->query && ecs_query_table_count(sys->query)) {
+            invoke_status_action(world, entity, sys, EcsSystemDeactivated);
+        }
 
-    if (ptr->status_ctx_free) {
-        ptr->status_ctx_free(ptr->status_ctx);
-    }
+        /* Invoke Disabled action for enabled systems */
+        if (!ecs_has_id(world, entity, EcsDisabled)) {
+            invoke_status_action(world, entity, sys, EcsSystemDisabled);
+        }
 
-    if (ptr->binding_ctx_free) {
-        ptr->binding_ctx_free(ptr->binding_ctx);
-    }  
+        if (sys->ctx_free) {
+            sys->ctx_free(sys->ctx);
+        }
 
-    if (ptr->query) {
-        ecs_query_fini(ptr->query);
+        if (sys->status_ctx_free) {
+            sys->status_ctx_free(sys->status_ctx);
+        }
+
+        if (sys->binding_ctx_free) {
+            sys->binding_ctx_free(sys->binding_ctx);
+        }  
+
+        if (sys->query) {
+            ecs_query_fini(sys->query);
+        }
     }
-})
+}
 
 static
 void EnableMonitor(
@@ -534,7 +543,7 @@ void FlecsSystemImport(
     ecs_set_component_actions_w_id(world, ecs_id(EcsSystem), 
         &(EcsComponentLifecycle) {
             .ctor = ecs_default_ctor,
-            .dtor = ecs_dtor(EcsSystem)
+            .on_remove = ecs_on_remove(EcsSystem)
         });
 
     ecs_observer_init(world, &(ecs_observer_desc_t) {

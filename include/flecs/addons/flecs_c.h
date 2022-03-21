@@ -402,6 +402,8 @@
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
 #define ecs_on_set(type) type##_on_set
+#define ecs_on_add(type) type##_on_add
+#define ecs_on_remove(type) type##_on_remove
 
 #define ecs_query_new(world, q_expr)\
     ecs_query_init(world, &(ecs_query_desc_t){\
