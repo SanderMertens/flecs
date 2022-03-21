@@ -841,99 +841,80 @@ void flecs_notify_tables(
 }
 
 void ecs_default_ctor(
-    ecs_world_t *world, 
-    const ecs_entity_t *entity_ptr,
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ti)
 {
-    (void)world; (void)entity_ptr;
     ecs_os_memset(ptr, 0, ti->size * count);
 }
 
 static
-void default_copy_ctor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, const void *src_ptr,
+void default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->ctor(world, dst_entity, dst_ptr, count, ti);
-    cl->copy(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->ctor(dst_ptr, count, ti);
+    cl->copy(dst_ptr, src_ptr, count, ti);
 }
 
 static
-void default_move_ctor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->ctor(world, dst_entity, dst_ptr, count, ti);
-    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->ctor(dst_ptr, count, ti);
+    cl->move(dst_ptr, src_ptr, count, ti);
 }
 
 static
-void default_ctor_w_move_w_dtor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->ctor(world, dst_entity, dst_ptr, count, ti);
-    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
-    cl->dtor(world, src_entity, src_ptr, count, ti);
+    cl->ctor(dst_ptr, count, ti);
+    cl->move(dst_ptr, src_ptr, count, ti);
+    cl->dtor(src_ptr, count, ti);
 }
 
 static
-void default_move_ctor_w_dtor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->move_ctor(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
-    cl->dtor(world, src_entity, src_ptr, count, ti);
+    cl->move_ctor(dst_ptr, src_ptr, count, ti);
+    cl->dtor(src_ptr, count, ti);
 }
 
 static
-void default_move(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
+    cl->move(dst_ptr, src_ptr, count, ti);
 }
 
 static
-void default_dtor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    (void)src_entity;
-
     /* When there is no move, destruct the destination component & memcpy the
      * component to dst. The src component does not have to be destructed when
      * a component has a trivial move. */
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->dtor(world, dst_entity, dst_ptr, count, ti);
+    cl->dtor(dst_ptr, count, ti);
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
 
 static
-void default_move_w_dtor(
-    ecs_world_t *world, const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity, void *dst_ptr, void *src_ptr,
+void default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* If a component has a move, the move will take care of memcpying the data
      * and destroying any data in dst. Because this is not a trivial move, the
      * src component must also be destructed. */
     const EcsComponentLifecycle *cl = &ti->lifecycle;
-    cl->move(world, dst_entity, src_entity, dst_ptr, src_ptr, count, ti);
-    cl->dtor(world, src_entity, src_ptr, count, ti);
+    cl->move(dst_ptr, src_ptr, count, ti);
+    cl->dtor(src_ptr, count, ti);
 }
 
 void ecs_set_component_actions_w_id(

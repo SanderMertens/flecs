@@ -412,24 +412,18 @@ typedef int32_t ecs_size_t;
 
 #ifndef FLECS_LEGACY
 
-/* Constructor / destructor convenience macro */
+/* Constructor/Destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
     void type##_##postfix(\
-        ecs_world_t *world,\
-        const ecs_entity_t *entity_ptr,\
         void *_ptr,\
         int32_t _count,\
         const ecs_type_info_t *type_info)\
     {\
-        (void)world;\
-        (void)entity_ptr;\
         (void)_ptr;\
         (void)_count;\
         (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
-            ecs_entity_t entity = entity_ptr[i];\
             type *var = &((type*)_ptr)[i];\
-            (void)entity;\
             (void)var;\
             __VA_ARGS__\
         }\
@@ -438,28 +432,18 @@ typedef int32_t ecs_size_t;
 /* Copy convenience macro */
 #define ECS_COPY_IMPL(type, dst_var, src_var, ...)\
     void type##_##copy(\
-        ecs_world_t *world,\
-        const ecs_entity_t *dst_entities,\
-        const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         const void *_src_ptr,\
         int32_t _count,\
         const ecs_type_info_t *type_info)\
     {\
-        (void)world;\
-        (void)dst_entities;\
-        (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
         (void)_count;\
         (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
-            ecs_entity_t dst_entity = dst_entities[i];\
-            ecs_entity_t src_entity = src_entities[i];\
             type *dst_var = &((type*)_dst_ptr)[i];\
             type *src_var = &((type*)_src_ptr)[i];\
-            (void)dst_entity;\
-            (void)src_entity;\
             (void)dst_var;\
             (void)src_var;\
             __VA_ARGS__\
@@ -469,28 +453,18 @@ typedef int32_t ecs_size_t;
 /* Move convenience macro */
 #define ECS_MOVE_IMPL(type, dst_var, src_var, ...)\
     void type##_##move(\
-        ecs_world_t *world,\
-        const ecs_entity_t *dst_entities,\
-        const ecs_entity_t *src_entities,\
         void *_dst_ptr,\
         void *_src_ptr,\
         int32_t _count,\
         const ecs_type_info_t *type_info)\
     {\
-        (void)world;\
-        (void)dst_entities;\
-        (void)src_entities;\
         (void)_dst_ptr;\
         (void)_src_ptr;\
         (void)_count;\
         (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
-            ecs_entity_t dst_entity = dst_entities[i];\
-            ecs_entity_t src_entity = src_entities[i];\
             type *dst_var = &((type*)_dst_ptr)[i];\
             type *src_var = &((type*)_src_ptr)[i];\
-            (void)dst_entity;\
-            (void)src_entity;\
             (void)dst_var;\
             (void)src_var;\
             __VA_ARGS__\
@@ -2204,17 +2178,12 @@ typedef uint64_t (*ecs_hash_value_action_t)(
 
 /** Constructor/destructor callback */
 typedef void (*ecs_xtor_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *entities,
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info);
 
 /** Copy is invoked when a component is copied into another component. */
 typedef void (*ecs_copy_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -2222,9 +2191,6 @@ typedef void (*ecs_copy_t)(
 
 /** Move is invoked when a component is moved to another component. */
 typedef void (*ecs_move_t)(
-    ecs_world_t *world,
-    const ecs_entity_t *dst_entities,
-    const ecs_entity_t *src_entities,
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -2791,8 +2757,6 @@ const char* ecs_identifier_is_var(
 
 FLECS_API
 void ecs_default_ctor(
-    ecs_world_t *world, 
-    const ecs_entity_t *entity_ptr,
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);
@@ -3616,6 +3580,10 @@ typedef struct EcsComponentLifecycle {
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
+
+    /* Callback that is invoked when an instance of a component is added. This
+     * callback is invoked before triggers are invoked. */
+    ecs_iter_action_t on_add;
 
     /* Callback that is invoked when an instance of the component is set. This
      * callback is invoked before triggers are invoked, and enable the component
@@ -7525,6 +7493,8 @@ void* ecs_record_get_column(
 #define ecs_copy(type) type##_copy
 #define ecs_move(type) type##_move
 #define ecs_on_set(type) type##_on_set
+#define ecs_on_add(type) type##_on_add
+#define ecs_on_remove(type) type##_on_remove
 
 #define ecs_query_new(world, q_expr)\
     ecs_query_init(world, &(ecs_query_desc_t){\
@@ -14005,75 +13975,41 @@ namespace flecs
 namespace _ 
 {
 
-inline void ecs_ctor_illegal(ecs_world_t* w, const ecs_entity_t*, 
-    void *, int32_t, const ecs_type_info_t* info)
-{
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, 
-        "cannnot default construct %s, add %s::%s() or use emplace<T>", 
-        path, path, ecs_get_name(w, info->component));
-    ecs_os_free(path);
+inline void ecs_ctor_illegal(void *, int32_t, const ecs_type_info_t*) {
+    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor");
 }
 
-inline void ecs_dtor_illegal(ecs_world_t* w, const ecs_entity_t*, 
-    void *, int32_t, const ecs_type_info_t *info)
-{
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, "cannnot destruct %s, add ~%s::%s()", 
-        path, path, ecs_get_name(w, info->component));
-    ecs_os_free(path);
+inline void ecs_dtor_illegal(void *, int32_t, const ecs_type_info_t*) {
+    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor");
 }
 
-inline void ecs_copy_illegal(ecs_world_t* w, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, const void *, int32_t, const ecs_type_info_t *info)
+inline void ecs_copy_illegal(
+    void *, const void *, int32_t, const ecs_type_info_t *)
 {
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, 
-        "cannnot copy assign %s, add %s& %s::operator =(const %s&)", path, 
-        ecs_get_name(w, info->component), path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
-    ecs_os_free(path);
+    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment");
 }
 
-inline void ecs_move_illegal(ecs_world_t* w, const ecs_entity_t*, 
-    const ecs_entity_t*, void *, void *, int32_t, const ecs_type_info_t *info)
-{
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, 
-        "cannnot move assign %s, add %s& %s::operator =(%s&&)", path, 
-        ecs_get_name(w, info->component), path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
-    ecs_os_free(path);
+inline void ecs_move_illegal(void *, void *, int32_t, const ecs_type_info_t *) {
+    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment");
 }
 
-inline void ecs_copy_ctor_illegal(ecs_world_t* w, 
-    const ecs_entity_t*, const ecs_entity_t*, 
-    void *, const void *, int32_t, const ecs_type_info_t *info)
+inline void ecs_copy_ctor_illegal(
+    void *, const void *, int32_t, const ecs_type_info_t *)
 {
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, 
-        "cannnot copy construct %s, add %s::%s(const %s&)",
-        path, path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
-    ecs_os_free(path);
+    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct");
 }
 
-inline void ecs_move_ctor_illegal(ecs_world_t* w,
-    const ecs_entity_t*, const ecs_entity_t*, 
-    void *, void *, int32_t, const ecs_type_info_t *info)
+inline void ecs_move_ctor_illegal(
+    void *, void *, int32_t, const ecs_type_info_t *)
 {
-    char *path = ecs_get_path_w_sep(w, 0, info->component, "::", "::");
-    ecs_abort(ECS_INVALID_OPERATION, 
-        "cannnot move construct %s, add %s::%s(%s&&)",
-        path, path, ecs_get_name(w, info->component), ecs_get_name(w, info->component));
-    ecs_os_free(path);
+    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct");
 }
 
 
 // T()
 // Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
 template <typename T>
-void ctor_impl(
-    ecs_world_t*, const ecs_entity_t*, void *ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
+void ctor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
         ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
@@ -14082,18 +14018,9 @@ void ctor_impl(
     }
 }
 
-// T(flecs::world, flecs::entity)
-template <typename T>
-void ctor_world_entity_impl(
-    ecs_world_t* world, const ecs_entity_t* ids, void *ptr, int32_t count, 
-    const ecs_type_info_t *info);
-
 // ~T()
 template <typename T>
-void dtor_impl(
-    ecs_world_t*, const ecs_entity_t*, void *ptr, int32_t count, 
-    const ecs_type_info_t *info)
-{
+void dtor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
     T *arr = static_cast<T*>(ptr);
@@ -14104,9 +14031,8 @@ void dtor_impl(
 
 // T& operator=(const T&)
 template <typename T>
-void copy_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    const void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void copy_impl(void *dst_ptr, const void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14119,9 +14045,8 @@ void copy_impl(
 
 // T& operator=(T&&)
 template <typename T>
-void move_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void move_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14134,9 +14059,8 @@ void move_impl(
 
 // T(T&)
 template <typename T>
-void copy_ctor_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr,
-    const void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void copy_ctor_impl(void *dst_ptr, const void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14149,9 +14073,8 @@ void copy_ctor_impl(
 
 // T(T&&)
 template <typename T>
-void move_ctor_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void move_ctor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14165,9 +14088,8 @@ void move_ctor_impl(
 // T(T&&), ~T()
 // Typically used when moving to a new table, and removing from the old table
 template <typename T>
-void ctor_move_dtor_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14183,9 +14105,8 @@ void ctor_move_dtor_impl(
 // Typically used when moving a component to a deleted component
 template <typename T, if_not_t<
     std::is_trivially_move_assignable<T>::value > = 0>
-void move_dtor_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14204,9 +14125,8 @@ void move_dtor_impl(
 // Typically used when moving a component to a deleted component
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value > = 0>
-void move_dtor_impl(
-    ecs_world_t*, const ecs_entity_t*, const ecs_entity_t*, void *dst_ptr, 
-    void *src_ptr, int32_t count, const ecs_type_info_t *info)
+void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+    const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
         ECS_INTERNAL_ERROR, NULL);
@@ -14225,29 +14145,11 @@ void move_dtor_impl(
 
 } // _
 
-// Trait to test if type has flecs constructor
-template <typename T>
-struct has_flecs_ctor {
-    static constexpr bool value = 
-        std::is_constructible<actual_type_t<T>, 
-            flecs::world&, flecs::entity>::value;
-};
-
 // Trait to test if type is constructible by flecs
 template <typename T>
 struct is_flecs_constructible {
     static constexpr bool value = 
-        std::is_default_constructible<actual_type_t<T>>::value ||
-        std::is_constructible<actual_type_t<T>, 
-            flecs::world&, flecs::entity>::value;
-};
-
-// Trait to test if type has a self constructor (flecs::entity, Args...)
-template <typename T, typename ... Args>
-struct is_self_constructible {
-    static constexpr bool value = 
-        std::is_constructible<actual_type_t<T>, 
-            flecs::entity, Args...>::value;
+        std::is_default_constructible<actual_type_t<T>>::value;
 };
 
 namespace _
@@ -14261,8 +14163,7 @@ ecs_xtor_t ctor() {
 
 // Not constructible by flecs
 template <typename T, if_t< 
-    ! std::is_default_constructible<T>::value &&
-    ! has_flecs_ctor<T>::value > = 0>
+    ! std::is_default_constructible<T>::value > = 0>
 ecs_xtor_t ctor() {
     return ecs_ctor_illegal;
 }
@@ -14270,16 +14171,9 @@ ecs_xtor_t ctor() {
 // Default constructible
 template <typename T, if_t<
     ! std::is_trivially_constructible<T>::value &&
-    std::is_default_constructible<T>::value &&
-    ! has_flecs_ctor<T>::value > = 0>
+    std::is_default_constructible<T>::value > = 0>
 ecs_xtor_t ctor() {
     return ctor_impl<T>;
-}
-
-// Flecs constructible: T(flecs::world, flecs::entity)
-template <typename T, if_t< has_flecs_ctor<T>::value > = 0>
-ecs_xtor_t ctor() {
-    return ctor_world_entity_impl<T>;
 }
 
 // No dtor
@@ -22598,32 +22492,6 @@ inline units::units(flecs::world& world) {
 
 #endif
 
-
-
-
-namespace flecs 
-{
-
-namespace _
-{
-
-template <typename T>
-inline void ctor_world_entity_impl(
-    ecs_world_t* world, const ecs_entity_t* ids, void *ptr, 
-    int32_t count, const ecs_type_info_t *info)
-{
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
-    T *arr = static_cast<T*>(ptr);
-    flecs::world w(world);
-    for (int i = 0; i < count; i ++) {
-        flecs::entity e(world, ids[i]);
-        FLECS_PLACEMENT_NEW(&arr[i], T(w, e));
-    }
-}
-
-} // _
-} // flecs
 
 
 namespace flecs

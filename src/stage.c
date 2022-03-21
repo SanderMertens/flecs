@@ -333,14 +333,14 @@ bool flecs_defer_set(
         if (value) {
             ecs_copy_t copy;
             if (ti && (copy = ti->lifecycle.copy_ctor)) {
-                copy(world, &entity, &entity, op->is._1.value, value, 1, ti);
+                copy(op->is._1.value, value, 1, ti);
             } else {
                 ecs_os_memcpy(op->is._1.value, value, size);
             }
         } else {
             ecs_xtor_t ctor;
             if (ti && (ctor = ti->lifecycle.ctor)) {
-                ctor(world, &entity, op->is._1.value, 1, ti);
+                ctor(op->is._1.value, 1, ti);
             }
         }
 

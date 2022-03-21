@@ -661,6 +661,12 @@ void ComponentLifecycle_delete_in_dtor_same_type_on_delete(void);
 void ComponentLifecycle_delete_in_dtor_other_type_on_delete(void);
 void ComponentLifecycle_delete_self_in_dtor_on_delete(void);
 void ComponentLifecycle_on_set_after_set(void);
+void ComponentLifecycle_on_add_after_new(void);
+void ComponentLifecycle_on_add_after_add(void);
+void ComponentLifecycle_on_add_after_set(void);
+void ComponentLifecycle_on_remove_after_remove(void);
+void ComponentLifecycle_on_remove_after_clear(void);
+void ComponentLifecycle_on_remove_after_delete(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4150,6 +4156,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_after_set",
         ComponentLifecycle_on_set_after_set
+    },
+    {
+        "on_add_after_new",
+        ComponentLifecycle_on_add_after_new
+    },
+    {
+        "on_add_after_add",
+        ComponentLifecycle_on_add_after_add
+    },
+    {
+        "on_add_after_set",
+        ComponentLifecycle_on_add_after_set
+    },
+    {
+        "on_remove_after_remove",
+        ComponentLifecycle_on_remove_after_remove
+    },
+    {
+        "on_remove_after_clear",
+        ComponentLifecycle_on_remove_after_clear
+    },
+    {
+        "on_remove_after_delete",
+        ComponentLifecycle_on_remove_after_delete
     }
 };
 
@@ -8188,7 +8218,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        50,
+        56,
         ComponentLifecycle_testcases
     },
     {

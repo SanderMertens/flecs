@@ -505,10 +505,8 @@ bool override_from_base(
 
         ecs_copy_t copy = ti->lifecycle.copy;
         if (copy) {
-            ecs_entity_t *entities = ecs_vector_first(
-                data->entities, ecs_entity_t);
             for (index = 0; index < count; index ++) {
-                copy(world, &entities[row], &base, data_ptr, base_ptr, 1, ti);
+                copy(data_ptr, base_ptr, 1, ti);
                 data_ptr = ECS_OFFSET(data_ptr, data_size);
             }
         } else {
@@ -1075,13 +1073,9 @@ const ecs_entity_t* new_w_data(
             ecs_copy_t copy;
             ecs_move_t move;
             if (is_move && (move = ti->lifecycle.move)) {
-                ecs_entity_t *eids = ecs_vector_first(
-                    data->entities, ecs_entity_t);
-                move(world, eids, eids, ptr, src_ptr, count, ti);
+                move(ptr, src_ptr, count, ti);
             } else if (!is_move && (copy = ti->lifecycle.copy)) {
-                ecs_entity_t *eids = ecs_vector_first(
-                    data->entities, ecs_entity_t);
-                copy(world, eids, eids, ptr, src_ptr, count, ti);
+                copy(ptr, src_ptr, count, ti);
             } else {
                 ecs_os_memcpy(ptr, src_ptr, size * count);
             } 
@@ -1216,7 +1210,6 @@ void *get_mutable(
 error:
     return NULL;
 }
-
 
 /* -- Private functions -- */
 static
@@ -3108,14 +3101,14 @@ ecs_entity_t assign_ptr_w_id(
             if (is_move) {
                 ecs_move_t move = ti->lifecycle.move;
                 if (move) {
-                    move(world, &entity, &entity, dst, ptr, 1, ti);
+                    move(dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
             } else {
                 ecs_copy_t copy = ti->lifecycle.copy;
                 if (copy) {
-                    copy(world, &entity, &entity, dst, ptr, 1, ti);
+                    copy(dst, ptr, 1, ti);
                 } else {
                     ecs_os_memcpy(dst, ptr, flecs_utosize(size));
                 }
@@ -3996,21 +3989,20 @@ void flush_bulk_new(
 static
 void free_value(
     ecs_world_t *world,
-    ecs_entity_t *entities,
     ecs_id_t id,
     void *value,
     int32_t count)
 {
     ecs_entity_t real_id = ecs_get_typeid(world, id);
     const ecs_type_info_t *ti = flecs_get_type_info(world, real_id);
-    ecs_xtor_t dtor;
+    ecs_xtor_t dtor = ti->lifecycle.dtor;
     
-    if (ti && (dtor = ti->lifecycle.dtor)) {
+    if (dtor) {
         ecs_size_t size = ti->size;
         void *ptr;
         int i;
         for (i = 0, ptr = value; i < count; i ++, ptr = ECS_OFFSET(ptr, size)) {
-            dtor(world, &entities[i], ptr, 1, ti);
+            dtor(ptr, 1, ti);
         }
     }
 }
@@ -4023,7 +4015,7 @@ void discard_op(
     if (op->kind != EcsOpBulkNew) {
         void *value = op->is._1.value;
         if (value) {
-            free_value(world, &op->is._1.entity, op->id, op->is._1.value, 1);
+            free_value(world, op->id, op->is._1.value, 1);
             ecs_os_free(value);
         }
     } else {

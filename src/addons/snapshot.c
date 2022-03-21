@@ -22,7 +22,6 @@ typedef struct ecs_table_leaf_t {
 
 static
 ecs_data_t* duplicate_data(
-    const ecs_world_t *world,
     ecs_table_t *table,
     ecs_data_t *main_data)
 {
@@ -37,7 +36,6 @@ ecs_data_t* duplicate_data(
 
     /* Copy entities */
     result->entities = ecs_vector_copy(main_data->entities, ecs_entity_t);
-    ecs_entity_t *entities = ecs_vector_first(result->entities, ecs_entity_t);
 
     /* Copy record ptrs */
     result->record_ptrs = ecs_vector_copy(
@@ -60,12 +58,11 @@ ecs_data_t* duplicate_data(
             
             ecs_xtor_t ctor = ti->lifecycle.ctor;
             if (ctor) {
-                ctor((ecs_world_t*)world, entities, dst_ptr, count, ti);
+                ctor(dst_ptr, count, ti);
             }
 
             void *src_ptr = ecs_vector_first_t(column->data, size, alignment);
-            copy((ecs_world_t*)world, entities, entities, dst_ptr, 
-                src_ptr, count, ti);
+            copy(dst_ptr, src_ptr, count, ti);
 
             column->data = dst_vec;
         } else {
@@ -78,7 +75,6 @@ ecs_data_t* duplicate_data(
 
 static
 void snapshot_table(
-    const ecs_world_t *world,
     ecs_snapshot_t *snapshot,
     ecs_table_t *table)
 {
@@ -92,7 +88,7 @@ void snapshot_table(
     
     l->table = table;
     l->type = ecs_vector_copy(table->type, ecs_id_t);
-    l->data = duplicate_data(world, table, &table->storage);
+    l->data = duplicate_data(table, &table->storage);
 }
 
 static
@@ -133,13 +129,13 @@ ecs_snapshot_t* snapshot_create(
     if (iter) {
         while (next(iter)) {
             ecs_table_t *table = iter->table;
-            snapshot_table(world, result, table);
+            snapshot_table(result, table);
         }
     } else {
         for (t = 0; t < table_count; t ++) {
             ecs_table_t *table = flecs_sparse_get(
                 &world->store.tables, ecs_table_t, t);
-            snapshot_table(world, result, table);
+            snapshot_table(result, table);
         }
     }
 

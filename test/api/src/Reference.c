@@ -219,18 +219,9 @@ void Reference_get_nonexisting() {
     ecs_fini(world);
 }
 
-static
-void comp_move(
-    ecs_world_t *world,
-    const ecs_entity_t *dst_entity,
-    const ecs_entity_t *src_entity,
-    void *dst_ptr,
-    void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    memcpy(dst_ptr, src_ptr, ti->size * count);
-}
+static ECS_MOVE(Position, dst, src, {
+    ecs_os_memcpy_t(dst, src, Position);
+})
 
 void Reference_get_ref_after_realloc_w_lifecycle() {
     ecs_world_t *world = ecs_init();
@@ -238,7 +229,7 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
     ECS_COMPONENT(world, Position);
 
     ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
-        .move = comp_move
+        .move = ecs_move(Position)
     });
 
     ECS_ENTITY(world, e, Position);
