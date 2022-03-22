@@ -280,7 +280,10 @@
                 "query_enum_constant",
                 "enum_type_from_stage",
                 "add_enum_from_stage",
-                "enum_w_2_worlds"
+                "enum_w_2_worlds",
+                "add_enum_constant_w_tag",
+                "remove_enum_constant_w_tag",
+                "set_enum_constant_w_tag"
             ]
         }, {
             "id": "Switch",

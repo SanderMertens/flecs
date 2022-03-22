@@ -210,12 +210,25 @@ struct entity_view : public id {
      * @tparam R the relation type.
      * @param object the object.
      */
-    template<typename R>
-    const R* get(flecs::id_t object) const {
+    template<typename R, typename O, if_not_t< is_enum<O>::value> = 0>
+    const R* get(O object) const {
         auto comp_id = _::cpp_type<R>::id(m_world);
         ecs_assert(_::cpp_type<R>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const R*>(
             ecs_get_id(m_world, m_id, ecs_pair(comp_id, object)));
+    }
+
+    /** Get a pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam R the relation type.
+     * @param constant the enum constant.
+     */
+    template<typename R, typename O, if_t< is_enum<O>::value> = 0>
+    const R* get(O constant) const {
+        const auto& et = enum_type<O>(this->m_world);
+        flecs::entity_t object = et.entity(constant);
+        return get<R>(object);
     }
 
     /** Get component value (untyped).
@@ -398,14 +411,27 @@ struct entity_view : public id {
 
     /** Check if entity has the provided pair.
      *
-     * @tparam Relation The relation type.
+     * @tparam R The relation type.
      * @param object The object.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template <typename Relation>
-    bool has(flecs::id_t object) const {
-        auto comp_id = _::cpp_type<Relation>::id(m_world);
+    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
+    bool has(O object) const {
+        auto comp_id = _::cpp_type<R>::id(m_world);
         return ecs_has_id(m_world, m_id, ecs_pair(comp_id, object));
+    }
+
+    /** Check if entity has the provided pair.
+     *
+     * @tparam R The relation type.
+     * @param value The enum constant.
+     * @return True if the entity has the provided component, false otherwise.
+     */
+    template<typename R, typename E, if_t< is_enum<E>::value > = 0>
+    bool has(E value) const {
+        const auto& et = enum_type<E>(this->m_world);
+        flecs::entity_t object = et.entity(value);
+        return has<R>(object);
     }
 
     /** Check if entity has the provided pair.

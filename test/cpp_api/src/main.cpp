@@ -271,6 +271,9 @@ void Enum_query_enum_constant(void);
 void Enum_enum_type_from_stage(void);
 void Enum_add_enum_from_stage(void);
 void Enum_enum_w_2_worlds(void);
+void Enum_add_enum_constant_w_tag(void);
+void Enum_remove_enum_constant_w_tag(void);
+void Enum_set_enum_constant_w_tag(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1926,6 +1929,18 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_w_2_worlds",
         Enum_enum_w_2_worlds
+    },
+    {
+        "add_enum_constant_w_tag",
+        Enum_add_enum_constant_w_tag
+    },
+    {
+        "remove_enum_constant_w_tag",
+        Enum_remove_enum_constant_w_tag
+    },
+    {
+        "set_enum_constant_w_tag",
+        Enum_set_enum_constant_w_tag
     }
 };
 
@@ -4288,7 +4303,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        20,
+        23,
         Enum_testcases
     },
     {
