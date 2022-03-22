@@ -528,3 +528,77 @@ void New_w_Count_bulk_init_2_components_tag_w_value() {
 
     ecs_fini(world);
 }
+
+void New_w_Count_add_after_bulk() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tag, 0);
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 10);
+    test_assert(ids != NULL);
+    test_int(ecs_count_id(world, Tag), 10);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        ecs_entity_t e = ids[i];
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Tag));
+    }
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Tag);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_add_after_bulk_w_component() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
+    test_int(ecs_count(world, Position), 10);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        ecs_entity_t e = ids[i];
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, Position));
+    }
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_add_after_bulk_w_ctor() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_component_actions(world, Position, {
+        .ctor = ecs_default_ctor
+    });
+
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
+    test_assert(ids != NULL);
+    test_int(ecs_count(world, Position), 10);
+
+    int i;
+    for (i = 0; i < 10; i ++) {
+        ecs_entity_t e = ids[i];
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, Position));
+    }
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

@@ -9564,6 +9564,7 @@ void* _ecs_vector_addn(
             }
         }
 
+        max_count = flecs_next_pow_of_2(max_count);
         vector = resize(vector, offset, max_count * elem_size);
         vector->size = max_count;
         *array_inout = vector;
@@ -9593,6 +9594,8 @@ void* _ecs_vector_add(
             if (!size) {
                 size = 2;
             }
+
+            size = flecs_next_pow_of_2(size);
             vector = resize(vector, offset, size * elem_size);
             *array_inout = vector;
             vector->size = size;
