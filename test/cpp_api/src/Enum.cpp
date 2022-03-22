@@ -518,3 +518,94 @@ void Enum_enum_w_2_worlds() {
         test_bool(enum_type.is_valid(Blue + 1), false);
     }
 }
+
+struct MyTag { };
+
+void Enum_add_enum_constant_w_tag() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .add<MyTag>(Red);
+    flecs::entity e2 = ecs.entity()
+        .add<MyTag>(Green);
+    flecs::entity e3 = ecs.entity()
+        .add<MyTag>(Blue);
+
+    test_assert(e1.has<MyTag>(Red));
+    test_assert(e2.has<MyTag>(Green));
+    test_assert(e3.has<MyTag>(Blue));
+
+    auto enum_type = flecs::enum_type<StandardEnum>(ecs);
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    auto t1 = e1.get_object<MyTag>();
+    auto t2 = e2.get_object<MyTag>();
+    auto t3 = e3.get_object<MyTag>();
+
+    test_assert(t1 == e_red);
+    test_assert(t2 == e_green);
+    test_assert(t3 == e_blue);
+}
+
+void Enum_remove_enum_constant_w_tag() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .add<MyTag>(Red);
+    flecs::entity e2 = ecs.entity()
+        .add<MyTag>(Green);
+    flecs::entity e3 = ecs.entity()
+        .add<MyTag>(Blue);
+
+    test_assert(e1.has<MyTag>(Red));
+    test_assert(e2.has<MyTag>(Green));
+    test_assert(e3.has<MyTag>(Blue));
+
+    e1.remove<MyTag>(Green);
+    e1.remove<MyTag>(Blue);
+    test_assert(e1.has<MyTag>(Red));
+    e1.remove<MyTag>(Red);
+    test_assert(!e1.has<MyTag>(Red));
+
+    e2.remove<MyTag>(Red);
+    e2.remove<MyTag>(Blue);
+    test_assert(e2.has<MyTag>(Green));
+    e2.remove<MyTag>(Green);
+    test_assert(!e2.has<MyTag>(Green));
+
+    e3.remove<MyTag>(Red);
+    e3.remove<MyTag>(Green);
+    test_assert(e3.has<MyTag>(Blue));
+    e3.remove<MyTag>(Blue);
+    test_assert(!e3.has<MyTag>(Blue));
+}
+
+void Enum_set_enum_constant_w_tag() {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>(Red, {1, 2})
+        .set<Position>(Green, {2, 3})
+        .set<Position>(Blue, {3, 4});
+
+    test_assert(e1.has<Position>(Red));
+    test_assert(e1.has<Position>(Green));
+    test_assert(e1.has<Position>(Blue));
+
+    const Position *p = e1.get<Position>(Red);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 2);
+    
+    p = e1.get<Position>(Green);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
+
+    p = e1.get<Position>(Blue);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 4);
+}

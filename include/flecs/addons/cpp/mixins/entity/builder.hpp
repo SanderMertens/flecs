@@ -34,8 +34,8 @@ struct entity_builder : entity_view {
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @param relation The relation id.
-     * @param object The object id.
+     * @param relation The relation.
+     * @param object The object.
      */
     Self& add(entity_t relation, entity_t object) {
         ecs_add_pair(this->m_world, this->m_id, relation, object);
@@ -45,8 +45,8 @@ struct entity_builder : entity_view {
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam R the relation type.
-     * @tparam O the object type.
+     * @tparam R The relation type
+     * @tparam O The object type.
      */
     template<typename R, typename O>
     Self& add() {
@@ -56,19 +56,35 @@ struct entity_builder : entity_view {
     /** Add a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam R the relation type.
-     * @param object the object type.
+     * @tparam R The relation type
+     * @param object The object.
      */
-    template<typename R>
-    Self& add(entity_t object) {
+    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
+    Self& add(O object) {
         flecs_static_assert(is_flecs_constructible<R>::value,
-            "cannot default construct type: add T::T() or use emplace<T>()");      
+            "cannot default construct type: add T::T() or use emplace<T>()");
         return this->add(_::cpp_type<R>::id(this->m_world), object);
+    }
+
+    /** Add a pair.
+     * This operation adds a pair to the entity that consists out of a tag
+     * combined with an enum constant.
+     *
+     * @tparam R The relation type
+     * @param constant the enum constant.
+     */
+    template<typename R, typename O, if_t< is_enum<O>::value > = 0>
+    Self& add(O constant) {
+        flecs_static_assert(is_flecs_constructible<R>::value,
+            "cannot default construct type: add T::T() or use emplace<T>()");
+        const auto& et = enum_type<O>(this->m_world);
+        flecs::entity_t object = et.entity(constant);
+        return this->add<R>(object);
     }
 
     /** Shortcut for add(IsA, obj).
      *
-     * @param object the object id.
+     * @param object The object.
      */
     Self& is_a(entity_t object) {
         return this->add(flecs::IsA, object);
@@ -76,7 +92,7 @@ struct entity_builder : entity_view {
 
     /** Shortcut for add(IsA, obj).
      *
-     * @tparam T the type associated with the object.
+     * @tparam T the type associated with the O.
      */
     template <typename T>
     Self& is_a() {
@@ -85,7 +101,7 @@ struct entity_builder : entity_view {
 
     /** Shortcut for add(ChildOf, obj).
      *
-     * @param object the object id.
+     * @param object The object.
      */
     Self& child_of(entity_t object) {
         return this->add(flecs::ChildOf, object);
@@ -93,19 +109,19 @@ struct entity_builder : entity_view {
 
     /** Shortcut for add(ChildOf, obj).
      *
-     * @tparam T the type associated with the object.
+     * @tparam T the type associated with the O.
      */
     template <typename T>
     Self& child_of() {
         return this->add(flecs::ChildOf, _::cpp_type<T>::id(this->m_world));
     }
  
-    /** Add a pair with object type.
-     * This operation adds a pair to the entity. The relation part of the pair
+    /** Add a pair with O type.
+     * This operation adds a pair to the entity. The R part of the pair
      * should not be a component.
      *
-     * @param relation the relation type.
-     * @tparam O the object type.
+     * @param relation The relation.
+     * @tparam O The object type.
      */
     template<typename O>
     Self& add_w_object(entity_t relation) {
@@ -136,8 +152,8 @@ struct entity_builder : entity_view {
     /** Remove a pair.
      * This operation removes a pair from the entity.
      *
-     * @param relation The relation id.
-     * @param object The object id.
+     * @param relation The relation.
+     * @param object The object.
      */
     Self& remove(entity_t relation, entity_t object) {
         ecs_remove_pair(this->m_world, this->m_id, relation, object);
@@ -147,34 +163,47 @@ struct entity_builder : entity_view {
     /** Removes a pair.
      * This operation removes a pair from the entity.
      *
-     * @tparam Relation the relation type.
-     * @tparam Object the object type.
+     * @tparam R The relation type
+     * @tparam O The object type.
      */
-    template<typename Relation, typename Object>
+    template<typename R, typename O>
     Self& remove() {
-        return this->remove<Relation>(_::cpp_type<Object>::id(this->m_world));
+        return this->remove<R>(_::cpp_type<O>::id(this->m_world));
     }
 
     /** Remove a pair.
      * This operation adds a pair to the entity.
      *
-     * @tparam Relation the relation type.
-     * @param object the object type.
+     * @tparam R The relation type
+     * @param object The object.
      */
-    template<typename Relation>
-    Self& remove(entity_t object) {
-        return this->remove(_::cpp_type<Relation>::id(this->m_world), object);
+    template<typename R, typename O, if_not_t< is_enum<O>::value > = 0>
+    Self& remove(O object) {
+        return this->remove(_::cpp_type<R>::id(this->m_world), object);
+    }
+
+    /** Remove a pair.
+     * This operation adds a pair to the entity.
+     *
+     * @tparam R The relation type
+     * @param constant the enum constant.
+     */
+    template<typename R, typename O, if_t< is_enum<O>::value > = 0>
+    Self& remove(O constant) {
+        const auto& et = enum_type<O>(this->m_world);
+        flecs::entity_t object = et.entity(constant);
+        return this->remove<R>(object);
     }  
 
-    /** Removes a pair with object type.
+    /** Removes a pair with O type.
      * This operation removes a pair from the entity.
      *
-     * @param relation the relation type.
-     * @tparam Object the object type.
+     * @param relation The relation.
+     * @tparam O The object type.
      */
-    template<typename Object>
+    template<typename O>
     Self& remove_w_object(entity_t relation) {
-        return this->remove(relation, _::cpp_type<Object>::id(this->m_world));
+        return this->remove(relation, _::cpp_type<O>::id(this->m_world));
     }    
 
     /** Add owned flag for component (forces ownership when instantiating)
@@ -216,7 +245,7 @@ struct entity_builder : entity_view {
         this->override<T>();
         this->set<T>(val);
         return to_base();  
-    }    
+    }
 
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
@@ -327,10 +356,10 @@ struct entity_builder : entity_view {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& add(E value) {
-        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
+        flecs::entity_t relation = _::cpp_type<E>::id(this->m_world);
         const auto& et = enum_type<E>(this->m_world);
-        flecs::entity_t o = et.entity(value);
-        return this->add(r, o);
+        flecs::entity_t object = et.entity(value);
+        return this->add(relation, object);
     }
 
     /** Remove pair for enum.
@@ -340,8 +369,8 @@ struct entity_builder : entity_view {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     Self& remove() {
-        flecs::entity_t r = _::cpp_type<E>::id(this->m_world);
-        return this->remove(r, flecs::Wildcard);
+        flecs::entity_t relation = _::cpp_type<E>::id(this->m_world);
+        return this->remove(relation, flecs::Wildcard);
     }
 
     /** Enable an entity.
@@ -450,11 +479,11 @@ struct entity_builder : entity_view {
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the relation as type. If the
+     * This operation sets the pair value, and uses the R as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam R The relation part of the pair.
-     * @tparam O The object part of the pair.
+     * @tparam R The relation type.
+     * @tparam O The object type.
      * @param value The value to set.
      */
     template <typename R, typename O, typename P = pair<R, O>, 
@@ -465,15 +494,15 @@ struct entity_builder : entity_view {
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the relation as type. If the
+     * This operation sets the pair value, and uses the R as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam R The relation part of the pair.
-     * @param object The object part of the pair.
+     * @tparam R The relation type.
+     * @param object The object.
      * @param value The value to set.
      */
-    template <typename R>
-    Self& set(entity_t object, const R& value) {
+    template <typename R, typename O, if_not_t< is_enum<O>::value > = 0>
+    Self& set(O object, const R& value) {
         auto relation = _::cpp_type<R>::id(this->m_world);
         flecs::set(this->m_world, this->m_id, value, 
             ecs_pair(relation, object));
@@ -481,11 +510,26 @@ struct entity_builder : entity_view {
     }
 
     /** Set a pair for an entity.
-     * This operation sets the pair value, and uses the relation as type. If the
+     * This operation sets the pair value, and uses the R as type. If the
      * entity did not yet have the pair, it will be added.
      *
-     * @tparam O The object part of the pair.
-     * @param relation The relation part of the pair.
+     * @tparam R The relation type.
+     * @param constant The enum constant.
+     * @param value The value to set.
+     */
+    template <typename R, typename O, if_t< is_enum<O>::value > = 0>
+    Self& set(O constant, const R& value) {
+        const auto& et = enum_type<O>(this->m_world);
+        flecs::entity_t object = et.entity(constant);
+        return set<R>(object, value);
+    }
+
+    /** Set a pair for an entity.
+     * This operation sets the pair value, and uses the R as type. If the
+     * entity did not yet have the pair, it will be added.
+     *
+     * @tparam O The object type.
+     * @param relation The relation.
      * @param value The value to set.
      */
     template <typename O>
@@ -522,7 +566,7 @@ struct entity_builder : entity_view {
 
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
-     * destructor on the object passed into the function.
+     * destructor on the O passed into the function.
      *
      * Emplace attempts the following signatures to construct the component:
      *  T{Args...}
@@ -557,25 +601,25 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (Relation, this) 
+    /** Entities created in function will have (relation, this) 
      * This operation is thread safe.
      *
-     * @tparam Relation The relation to use.
+     * @tparam R The R to use.
      * @param func The function to call.
      */
-    template <typename Relation, typename Func>
+    template <typename R, typename Func>
     Self& with(const Func& func) {
-        with(_::cpp_type<Relation>::id(this->m_world), func);
+        with(_::cpp_type<R>::id(this->m_world), func);
         return to_base();
     }
 
     /** Entities created in function will have (relation, this) 
      *
-     * @param relation The relation to use.
+     * @param relation The relation.
      * @param func The function to call.
      */
     template <typename Func>
-    Self& with(id_t relation, const Func& func) {
+    Self& with(entity_t relation, const Func& func) {
         ecs_id_t prev = ecs_set_with(this->m_world, 
             ecs_pair(relation, this->m_id));
         func();
