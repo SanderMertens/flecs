@@ -1051,7 +1051,7 @@ void serialize_iter_result_variables(
     ecs_strbuf_t *buf) 
 {
     char **variable_names = it->variable_names;
-    ecs_entity_t *variables = it->variables;
+    ecs_var_t *variables = it->variables;
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
@@ -1066,7 +1066,7 @@ void serialize_iter_result_variables(
         }
 
         ecs_strbuf_list_next(buf);
-        flecs_json_path(buf, world, variables[i]);
+        flecs_json_path(buf, world, variables[i].entity);
     }
 
     if (actual_count) {
@@ -1081,7 +1081,7 @@ void serialize_iter_result_variable_labels(
     ecs_strbuf_t *buf) 
 {
     char **variable_names = it->variable_names;
-    ecs_entity_t *variables = it->variables;
+    ecs_var_t *variables = it->variables;
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
@@ -1096,7 +1096,7 @@ void serialize_iter_result_variable_labels(
         }
 
         ecs_strbuf_list_next(buf);
-        flecs_json_label(buf, world, variables[i]);
+        flecs_json_label(buf, world, variables[i].entity);
     }
 
     if (actual_count) {
