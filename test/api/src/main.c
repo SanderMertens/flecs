@@ -1027,6 +1027,7 @@ void Query_add_singleton_after_query(void);
 void Query_query_w_component_from_parent_from_non_this(void);
 void Query_create_query_while_pending(void);
 void Query_empty_query(void);
+<<<<<<< HEAD
 void Query_isa_superset(void);
 void Query_isa_self_superset(void);
 void Query_childof_superset(void);
@@ -1039,6 +1040,12 @@ void Query_existing_custom_rel_cascade(void);
 void Query_new_custom_rel_cascade(void);
 void Query_cascade_w_2_depths(void);
 void Query_cascade_w_3_depths(void);
+=======
+void Query_not_pair_relation_wildcard(void);
+void Query_not_pair_object_wildcard(void);
+void Query_two_pair_wildcards_one_not(void);
+void Query_two_pair_wildcards_one_not_any(void);
+>>>>>>> 807c7099... #124 replace query matching code with filters
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -5742,6 +5749,7 @@ bake_test_case Query_testcases[] = {
         Query_empty_query
     },
     {
+<<<<<<< HEAD
         "isa_superset",
         Query_isa_superset
     },
@@ -5788,6 +5796,22 @@ bake_test_case Query_testcases[] = {
     {
         "cascade_w_3_depths",
         Query_cascade_w_3_depths
+=======
+        "not_pair_relation_wildcard",
+        Query_not_pair_relation_wildcard
+    },
+    {
+        "not_pair_object_wildcard",
+        Query_not_pair_object_wildcard
+    },
+    {
+        "two_pair_wildcards_one_not",
+        Query_two_pair_wildcards_one_not
+    },
+    {
+        "two_pair_wildcards_one_not_any",
+        Query_two_pair_wildcards_one_not_any
+>>>>>>> 807c7099... #124 replace query matching code with filters
     }
 };
 
@@ -8968,7 +8992,11 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
+<<<<<<< HEAD
         109,
+=======
+        70,
+>>>>>>> 807c7099... #124 replace query matching code with filters
         Query_testcases
     },
     {
