@@ -1093,7 +1093,11 @@
                 "existing_custom_rel_cascade",
                 "new_custom_rel_cascade",
                 "cascade_w_2_depths",
-                "cascade_w_3_depths"
+                "cascade_w_3_depths",
+                "not_pair_relation_wildcard",
+                "not_pair_object_wildcard",
+                "two_pair_wildcards_one_not",
+                "two_pair_wildcards_one_not_any"
             ]
         }, {
             "id": "Iter",

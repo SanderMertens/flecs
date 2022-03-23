@@ -1310,22 +1310,133 @@ bool flecs_query_match(
     return true;
 }
 
-/** Match existing tables against system (table is created before system) */
+static
+void add_table_match(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_query_table_t *qt,
+    ecs_table_t *table,
+    ecs_iter_t *it)
+{
+    ecs_filter_t *filter = &query->filter;
+    int32_t i, term_count = filter->term_count;
+
+    /* Add match for table. One table can have more than one match, if
+     * the query contains wildcards. */
+    ecs_query_table_match_t *qm = cache_add(qt);
+    qm->table = table;
+    qm->columns = ecs_os_memdup_n(it->columns, int32_t, term_count);
+    qm->ids = ecs_os_memdup_n(it->ids, ecs_id_t, term_count);
+    qm->subjects = ecs_os_memdup_n(it->subjects, ecs_entity_t, term_count);
+    qm->sizes = ecs_os_memdup_n(it->sizes, ecs_size_t, term_count);
+
+    /* Initialize switch/case terms */
+    for (i = 0; i < term_count; i ++) {
+        ecs_id_t id = it->ids[i];
+        if (ECS_HAS_ROLE(id, CASE)) {
+            flecs_switch_term_t *sc = ecs_vector_add(
+                &qm->sparse_columns, flecs_switch_term_t);
+            sc->signature_column_index = i;
+            sc->sw_case = ECS_PAIR_SECOND(id);
+            sc->sw_column = NULL;
+        }
+    }
+
+    /* Look for disabled terms */
+    if (table->flags & EcsTableHasDisabled) {
+        for (i = 0; i < term_count; i ++) {
+            ecs_id_t id = it->ids[i];
+            ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
+            int32_t bs_index = ecs_search(world, table, bs_id, 0);
+            if (bs_index != -1) {
+                flecs_bitset_term_t *bc = ecs_vector_add(
+                    &qm->bitset_columns, flecs_bitset_term_t);
+                bc->column_index = bs_index;
+                bc->bs_column = NULL;
+            }
+        }
+    }
+
+    /* Add references for non-This terms */
+    if (!filter->match_only_this) {
+        ecs_vector_t *refs = NULL;
+        for (i = 0; i < term_count; i ++) {
+            ecs_entity_t src = it->subjects[i];
+            ecs_size_t size = it->sizes[i];
+            if (src && size) {
+                ecs_term_t *term = &filter->terms[i];
+                ecs_id_t id = it->ids[i];
+                refs = add_ref(world, query, refs, term, id, src);
+
+                /* Use column index to bind term and ref */
+                qm->columns[i] = -ecs_vector_count(refs);
+            }
+        }
+        if (refs) {
+            int32_t count = ecs_vector_count(refs);
+            ecs_ref_t *ptr = ecs_vector_first(refs, ecs_ref_t);
+            qm->references = ecs_os_memdup_n(ptr, ecs_ref_t, count);
+            ecs_vector_free(refs);
+        }
+    }
+
+    /* Insert match to iteration list if table is not empty */
+    if (ecs_table_count(table) != 0) {
+        insert_table_node(query, &qm->node);
+    }
+
+    ecs_assert(table == qt->hdr.table, ECS_INTERNAL_ERROR, NULL);
+}
+
+/** Populate query cache with tables */
 static
 void match_tables(
     ecs_world_t *world,
     ecs_query_t *query)
 {
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
+    ecs_table_t *table = NULL;
+    ecs_query_table_t *qt = NULL;
+    ecs_iter_t it = ecs_filter_iter(world, &query->filter);
+    ECS_BIT_SET(it.flags, EcsIterIsInstanced);
 
-    for (i = 0; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense(
-            &world->store.tables, ecs_table_t, i);
-
-        if (flecs_query_match(world, table, query)) {
-            add_table(world, query, table);
+    while (ecs_filter_next(&it)) {
+        if (table != it.table) {
+            /* New table matched, add record to cache */
+            qt = ecs_os_calloc_t(ecs_query_table_t);
+            ecs_table_cache_insert(&query->cache, it.table, &qt->hdr);
+            table = it.table;
         }
+
+        add_table_match(world, query, qt, table, &it);
     }
+}
+
+static
+bool match_table(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_table_t *table)
+{
+    ecs_query_table_t *qt = NULL;
+    int var_id = ecs_filter_find_this_var(&query->filter);
+    ecs_assert(var_id != -1, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_iter_t it = ecs_filter_iter(world, &query->filter);
+    ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+    ecs_iter_set_var_as_table(&it, var_id, table);
+
+    while (ecs_filter_next(&it)) {
+        ecs_assert(it.table == table, ECS_INTERNAL_ERROR, NULL);
+        if (qt == NULL) {
+            qt = ecs_os_calloc_t(ecs_query_table_t);
+            ecs_table_cache_insert(&query->cache, it.table, &qt->hdr);
+            table = it.table;
+        }
+
+        add_table_match(world, query, qt, table, &it);
+    }
+
+    return qt != NULL;
 }
 
 static
@@ -1922,19 +2033,6 @@ void process_signature(
     }
 error:
     return;
-}
-
-static
-bool match_table(
-    ecs_world_t *world,
-    ecs_query_t *query,
-    ecs_table_t *table)
-{
-    if (flecs_query_match(world, table, query)) {
-        add_table(world, query, table);
-        return true;
-    }
-    return false;
 }
 
 /** When a table becomes empty remove it from the query list, or vice versa. */
