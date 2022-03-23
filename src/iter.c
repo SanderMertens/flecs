@@ -500,8 +500,8 @@ char* ecs_iter_str(
                 continue;
             }
 
-            ecs_entity_t var = it->variables[i];
-            if (!var) {
+            ecs_var_t var = it->variables[i];
+            if (!var.entity) {
                 /* Skip table variables */
                 continue;
             }
@@ -510,7 +510,7 @@ char* ecs_iter_str(
                 ecs_strbuf_list_push(&buf, "vars: ", ",");
             }
 
-            char *str = ecs_get_fullpath(world, var);
+            char *str = ecs_get_fullpath(world, var.entity);
             ecs_strbuf_list_append(&buf, "%s=%s", var_name, str);
             ecs_os_free(str);
 
@@ -586,11 +586,96 @@ ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id)
 {
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
-    return it->variables[var_id];
+    return it->variables[var_id].entity;
 error:
     return 0;
+}
+
+void ecs_iter_set_var(
+    ecs_iter_t *it,
+    int32_t var_id,
+    ecs_entity_t entity)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variable_count < var_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    /* Can't set variable while iterating */
+    ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
+
+    ecs_var_t *var = &it->variables[var_id];
+    var->entity = entity;
+
+    ecs_record_t *r = ecs_eis_get(it->real_world, entity);
+    if (r) {
+        var->range.table = r->table;
+        var->range.offset = ECS_RECORD_TO_ROW(r->row);
+        var->range.count = 1;
+    } else {
+        var->range.table = NULL;
+        var->range.offset = 0;
+        var->range.count = 0;
+    }
+
+    it->constrained_vars |= 1 << var_id;
+
+error:
+    return;
+}
+
+void ecs_iter_set_var_table(
+    ecs_iter_t *it,
+    int32_t var_id,
+    const ecs_table_t *table)
+{
+    ecs_table_range_t range = { .table = (ecs_table_t*)table };
+    ecs_iter_set_var_range(it, var_id, &range);
+}
+
+void ecs_iter_set_var_range(
+    ecs_iter_t *it,
+    int32_t var_id,
+    const ecs_table_range_t *range)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variable_count < var_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
+        ECS_INVALID_PARAMETER, NULL);
+    ecs_check((range->offset + range->count) <= ecs_table_count(range->table), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    /* Can't set variable while iterating */
+    ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
+
+    ecs_var_t *var = &it->variables[var_id];
+    var->range = *range;
+
+    if (range->count == 1) {
+        ecs_table_t *table = range->table;
+        var->entity = ecs_vector_get(
+            table->storage.entities, ecs_entity_t, range->offset)[0];
+    } else {
+        var->entity = 0;
+    }
+
+    it->constrained_vars |= 1 << var_id;
+
+error:
+    return;
+}
+
+bool ecs_iter_var_is_constrained(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    return (it->constrained_vars & (1 << var_id)) != 0;
 }
 
 ecs_iter_t ecs_page_iter(

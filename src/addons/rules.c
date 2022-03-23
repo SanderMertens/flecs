@@ -216,21 +216,6 @@ typedef enum ecs_rule_var_kind_t {
     EcsRuleVarKindUnknown
 } ecs_rule_var_kind_t;
 
-typedef struct ecs_table_slice_t {
-    ecs_table_t *table;
-    int32_t offset;
-    int32_t count;
-} ecs_table_slice_t;
-
-typedef struct ecs_rule_reg_t {
-    /* Used for table variable */
-    ecs_table_slice_t table;
-
-    /* Used for entity variable. May also be set for table variable if it needs
-     * to store an empty entity. */
-    ecs_entity_t entity;
-} ecs_rule_reg_t;
- 
 /* Operations describe how the rule should be evaluated */
 typedef enum ecs_rule_op_kind_t {
     EcsRuleInput,       /* Input placeholder, first instruction in every rule */
@@ -665,7 +650,7 @@ int32_t push_frame(
  * values for the reified variables. If a variable hasn't been reified yet, its
  * register will store a wildcard. */
 static
-ecs_rule_reg_t* get_register_frame(
+ecs_var_t* get_register_frame(
     const ecs_rule_iter_t *it,
     int32_t frame)    
 {
@@ -681,7 +666,7 @@ ecs_rule_reg_t* get_register_frame(
  * values for the reified variables. If a variable hasn't been reified yet, its
  * register will store a wildcard. */
 static
-ecs_rule_reg_t* get_registers(
+ecs_var_t* get_registers(
     const ecs_rule_iter_t *it,
     ecs_rule_op_t *op)    
 {
@@ -710,7 +695,7 @@ int32_t* rule_get_columns(
 static
 void entity_reg_set(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r,
     ecs_entity_t entity)
 {
@@ -726,7 +711,7 @@ error:
 static
 ecs_entity_t entity_reg_get(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r)
 {
     (void)rule;
@@ -744,7 +729,7 @@ error:
 static
 void table_reg_set(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r,
     ecs_table_t *table)
 {
@@ -752,30 +737,30 @@ void table_reg_set(
     ecs_assert(rule->vars[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
-    regs[r].table.table = table;
-    regs[r].table.offset = 0;
-    regs[r].table.count = 0;
+    regs[r].range.table = table;
+    regs[r].range.offset = 0;
+    regs[r].range.count = 0;
     regs[r].entity = 0;
 }
 
 static 
-ecs_table_slice_t table_reg_get(
+ecs_table_range_t table_reg_get(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r)
 {
     (void)rule;
     ecs_assert(rule->vars[r].kind == EcsRuleVarKindTable, 
         ECS_INTERNAL_ERROR, NULL);
 
-    return regs[r].table;       
+    return regs[r].range;       
 }
 
 static
 ecs_entity_t reg_get_entity(
     const ecs_rule_t *rule,
     ecs_rule_op_t *op,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r)
 {
     if (r == UINT8_MAX) {
@@ -790,9 +775,9 @@ ecs_entity_t reg_get_entity(
         return op->subject;
     }
     if (rule->vars[r].kind == EcsRuleVarKindTable) {
-        int32_t offset = regs[r].table.offset;
+        int32_t offset = regs[r].range.offset;
 
-        ecs_assert(regs[r].table.count == 1, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(regs[r].range.count == 1, ECS_INTERNAL_ERROR, NULL);
         ecs_data_t *data = &table_reg_get(rule, regs, r).table->storage;
         ecs_assert(data != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t *entities = ecs_vector_first(data->entities, ecs_entity_t);
@@ -816,13 +801,13 @@ error:
 }
 
 static
-ecs_table_slice_t table_from_entity(
+ecs_table_range_t table_from_entity(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_table_slice_t slice = {0};
+    ecs_table_range_t slice = {0};
     ecs_record_t *record = ecs_eis_get(world, entity);
     if (record) {
         slice.table = record->table;
@@ -834,10 +819,10 @@ ecs_table_slice_t table_from_entity(
 }
 
 static
-ecs_table_slice_t reg_get_table(
+ecs_table_range_t reg_get_table(
     const ecs_rule_t *rule,
     ecs_rule_op_t *op,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r)
 {
     if (r == UINT8_MAX) {
@@ -852,20 +837,20 @@ ecs_table_slice_t reg_get_table(
         return table_from_entity(rule->world, entity_reg_get(rule, regs, r));
     } 
 error:
-    return (ecs_table_slice_t){0};
+    return (ecs_table_range_t){0};
 }
 
 static
 void reg_set_entity(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r,
     ecs_entity_t entity)
 {
     if (rule->vars[r].kind == EcsRuleVarKindTable) {
         ecs_world_t *world = rule->world;
         ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-        regs[r].table = table_from_entity(world, entity);
+        regs[r].range = table_from_entity(world, entity);
         regs[r].entity = entity;
     } else {
         entity_reg_set(rule, regs, r, entity);
@@ -877,17 +862,17 @@ error:
 static
 void reg_set_table(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r,
-    ecs_table_slice_t table)
+    ecs_table_range_t table)
 {
     if (rule->vars[r].kind == EcsRuleVarKindEntity) {
         ecs_check(table.count == 1, ECS_INTERNAL_ERROR, NULL);
-        regs[r].table = table;
+        regs[r].range = table;
         regs[r].entity = ecs_vector_get(table.table->storage.entities, 
             ecs_entity_t, table.offset)[0];
     } else {
-        regs[r].table = table;
+        regs[r].range = table;
         regs[r].entity = 0;
     }
 error:
@@ -1013,7 +998,7 @@ ecs_rule_filter_t pair_to_filter(
     /* Get registers in case we need to resolve ids from registers. Get them
      * from the previous, not the current stack frame as the current operation
      * hasn't reified its variables yet. */
-    ecs_rule_reg_t *regs = get_register_frame(it, op->frame - 1);
+    ecs_var_t *regs = get_register_frame(it, op->frame - 1);
 
     if (pair.reg_mask & RULE_PAIR_OBJECT) {
         obj = entity_reg_get(it->rule, regs, pair.obj.reg);
@@ -1073,7 +1058,7 @@ void reify_variables(
     const ecs_rule_var_t *vars = rule->vars;
     (void)vars;
 
-    ecs_rule_reg_t *regs = get_registers(it, op);
+    ecs_var_t *regs = get_registers(it, op);
     ecs_entity_t *elem = ecs_vector_get(type, ecs_entity_t, column);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -3098,10 +3083,10 @@ ecs_iter_t ecs_rule_iter(
 
     if (rule->operation_count) {
         if (rule->var_count) {
-            it->registers = ecs_os_malloc_n(ecs_rule_reg_t, 
+            it->registers = ecs_os_malloc_n(ecs_var_t, 
                 rule->operation_count * rule->var_count);
 
-            it->variables = ecs_os_malloc_n(ecs_entity_t, rule->var_count);
+            it->variables = ecs_os_malloc_n(ecs_var_t, rule->var_count);
         }
         
         it->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, rule->operation_count);
@@ -3269,7 +3254,7 @@ static
 void set_source(
     ecs_iter_t *it,
     ecs_rule_op_t *op,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t r)
 {
     if (op->term == -1) {
@@ -3290,7 +3275,7 @@ void set_source(
 static
 void set_term_vars(
     const ecs_rule_t *rule,
-    ecs_rule_reg_t *regs,
+    ecs_var_t *regs,
     int32_t term,
     ecs_id_t id)
 {
@@ -3342,7 +3327,7 @@ bool eval_superset(
     ecs_world_t *world = rule->world;
     ecs_rule_superset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.superset;
     ecs_rule_superset_frame_t *frame = NULL;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
 
     /* Get register indices for output */
     int32_t sp;
@@ -3381,7 +3366,7 @@ bool eval_superset(
         if (obj == EcsWildcard) {
             ecs_assert(pair.reg_mask & RULE_PAIR_OBJECT, 
                 ECS_INTERNAL_ERROR, NULL);
-            table = regs[pair.obj.reg].table.table;
+            table = regs[pair.obj.reg].range.table;
         } else {
             table = table_from_entity(world, obj).table;
         }
@@ -3473,7 +3458,7 @@ bool eval_subset(
     ecs_rule_subset_ctx_t *op_ctx = &iter->op_ctx[op_index].is.subset;
     ecs_rule_subset_frame_t *frame = NULL;
     ecs_table_record_t table_record;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
 
     /* Get register indices for output */
     int32_t sp, row;
@@ -3613,7 +3598,7 @@ bool eval_select(
     ecs_world_t *world = rule->world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
     ecs_table_record_t table_record;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
 
     /* Get register indices for output */
     int32_t r = op->r_out;
@@ -3659,14 +3644,14 @@ bool eval_select(
 
     /* If the input register is not NULL, this is a variable that's been set by
      * the application. */
-    table = iter->registers[r].table.table;
+    table = iter->registers[r].range.table;
     bool output_is_input = table != NULL;
 
     if (output_is_input && !redo) {
-        ecs_assert(regs[r].table.table == iter->registers[r].table.table, 
+        ecs_assert(regs[r].range.table == iter->registers[r].range.table, 
             ECS_INTERNAL_ERROR, NULL);
 
-        table = iter->registers[r].table.table;
+        table = iter->registers[r].range.table;
 
         /* Check if table can be found in the id record. If not, the provided 
         * table does not match with the query. */
@@ -3761,7 +3746,7 @@ bool eval_with(
     const ecs_rule_t *rule = iter->rule;
     ecs_world_t *world = rule->world;
     ecs_rule_with_ctx_t *op_ctx = &iter->op_ctx[op_index].is.with;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
 
     /* Get register indices for input */
     int32_t r = op->r_in;
@@ -3909,7 +3894,7 @@ bool eval_each(
 {
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     ecs_rule_each_ctx_t *op_ctx = &iter->op_ctx[op_index].is.each;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
     ecs_entity_t e;
@@ -3922,7 +3907,7 @@ bool eval_each(
 
     /* Get table, make sure that it contains data. The select operation should
      * ensure that empty tables are never forwarded. */
-    ecs_table_slice_t slice = table_reg_get(iter->rule, regs, r_in);
+    ecs_table_range_t slice = table_reg_get(iter->rule, regs, r_in);
     ecs_table_t *table = slice.table;
     if (table) {       
         int32_t row, count = slice.count;
@@ -3995,7 +3980,7 @@ bool eval_store(
 
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
 
@@ -4018,16 +4003,16 @@ bool eval_store(
 
         reg_set_entity(rule, regs, r_out, in);
     } else {
-        ecs_table_slice_t out, in = reg_get_table(rule, op, regs, r_in);
+        ecs_table_range_t out, in = reg_get_table(rule, op, regs, r_in);
 
-        out = iter->registers[r_out].table;
+        out = iter->registers[r_out].range;
         bool output_is_input = out.table != NULL;
 
         if (output_is_input && !redo) {
             ecs_assert(regs[r_out].entity == iter->registers[r_out].entity, 
                 ECS_INTERNAL_ERROR, NULL);
 
-            if (ecs_os_memcmp_t(&out, &in, ecs_table_slice_t)) {
+            if (ecs_os_memcmp_t(&out, &in, ecs_table_range_t)) {
                 /* If output variable is set it must match the input */
                 return false;
             }
@@ -4037,7 +4022,7 @@ bool eval_store(
 
         /* Ensure that if the input was an empty entity, information is not
          * lost */
-        if (!regs[r_out].table.table) {
+        if (!regs[r_out].range.table) {
             regs[r_out].entity = reg_get_entity(rule, op, regs, r_in);
         }
     }
@@ -4123,7 +4108,7 @@ bool eval_intable(
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t  *rule = iter->rule;
     ecs_world_t *world = rule->world;
-    ecs_rule_reg_t *regs = get_registers(iter, op);
+    ecs_var_t *regs = get_registers(iter, op);
     ecs_table_t *table = table_reg_get(rule, regs, op->r_in).table;
 
     ecs_rule_pair_t pair = op->filter;
@@ -4209,11 +4194,11 @@ void push_registers(
         return;
     }
 
-    ecs_rule_reg_t *src_regs = get_register_frame(it, cur);
-    ecs_rule_reg_t *dst_regs = get_register_frame(it, next);
+    ecs_var_t *src_regs = get_register_frame(it, cur);
+    ecs_var_t *dst_regs = get_register_frame(it, next);
 
     ecs_os_memcpy_n(dst_regs, src_regs, 
-        ecs_rule_reg_t, it->rule->var_count);
+        ecs_var_t, it->rule->var_count);
 }
 
 /* Utility to copy all columns to the next frame. Columns keep track of which
@@ -4246,7 +4231,7 @@ void populate_iterator(
 {
     ecs_world_t *world = rule->world;
     int32_t r = op->r_in;
-    ecs_rule_reg_t *regs = get_register_frame(it, op->frame);
+    ecs_var_t *regs = get_register_frame(it, op->frame);
     ecs_table_t *table = NULL;
     int32_t count = 0;
     int32_t offset = 0;
@@ -4258,10 +4243,10 @@ void populate_iterator(
      * the variables that were resolved. */
     if (r != UINT8_MAX) {
         const ecs_rule_var_t *var = &rule->vars[r];
-        ecs_rule_reg_t *reg = &regs[r];
+        ecs_var_t *reg = &regs[r];
 
         if (var->kind == EcsRuleVarKindTable) {
-            ecs_table_slice_t slice = table_reg_get(rule, regs, r);
+            ecs_table_range_t slice = table_reg_get(rule, regs, r);
             table = slice.table;
             count = slice.count;
             offset = slice.offset;
@@ -4288,11 +4273,7 @@ void populate_iterator(
     iter->variables = it->variables;
 
     for (i = 0; i < var_count; i ++) {
-        if (rule->vars[i].kind == EcsRuleVarKindEntity) {
-            it->variables[i] = regs[i].entity;
-        } else {
-            it->variables[i] = 0;
-        }
+        it->variables[i] = regs[i];
     }
 
     for (i = 0; i < term_count; i ++) {
@@ -4307,7 +4288,7 @@ void populate_iterator(
                      * content of the variable is not of interest to the query.
                      * Just pick the first entity from the table, so that the 
                      * column can be correctly resolved */
-                    ecs_table_t *t = regs[var->id].table.table;
+                    ecs_table_t *t = regs[var->id].range.table;
                     if (t) {
                         iter->subjects[i] = ecs_vector_first(
                             t->storage.entities, ecs_entity_t)[0];
