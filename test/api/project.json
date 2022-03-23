@@ -887,6 +887,7 @@
                 "filter_lt_cache_size_terms_no_alloc",
                 "move_self",
                 "match_empty_tables",
+                "match_empty_tables_w_no_empty_tables",
                 "match_switch_w_switch",
                 "match_switch_w_case",
                 "match_switch_w_case_2_terms",

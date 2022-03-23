@@ -5805,6 +5805,41 @@ void Filter_match_empty_tables() {
     ecs_fini(world);
 }
 
+void Filter_match_empty_tables_w_no_empty_tables() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .terms = {
+            { Foo }
+        },
+        .match_empty_tables = true
+    }));
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+
 void Filter_match_switch_w_switch() {
     ecs_world_t *world = ecs_init();
 

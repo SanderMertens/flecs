@@ -1938,8 +1938,6 @@ ecs_iter_t ecs_filter_iter(
             term_iter_init(world, &terms[pivot_term], &iter->term_iter,
                 filter->match_empty_tables);
         }
-
-        iter->term_iter.empty_tables = filter->match_empty_tables;
     } else {
         if (!filter->match_anything) {
             iter->kind = EcsIterEvalCondition;
