@@ -237,17 +237,17 @@ typedef struct ecs_table_cache_t {
 } ecs_table_cache_t;
 
 /* Sparse query column */
-typedef struct flecs_sparse_column_t {
+typedef struct flecs_switch_term_t {
     ecs_sw_column_t *sw_column;
     ecs_entity_t sw_case; 
     int32_t signature_column_index;
-} flecs_sparse_column_t;
+} flecs_switch_term_t;
 
 /* Bitset query column */
-typedef struct flecs_bitset_column_t {
+typedef struct flecs_bitset_term_t {
     ecs_bs_column_t *bs_column;
     int32_t column_index;
-} flecs_bitset_column_t;
+} flecs_bitset_term_t;
 
 typedef struct ecs_query_table_match_t ecs_query_table_match_t;
 

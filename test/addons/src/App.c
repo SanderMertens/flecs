@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 static int dummy_frame_action(
     ecs_world_t *world,

@@ -6,7 +6,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <api.h>
+#include <addons.h>
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -581,6 +581,7 @@ void Rules_test_this_w_wildcard_w_isa(void);
 void Rules_test_this_w_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_2_isa(void);
 void Rules_rule_w_inout_filter(void);
+void Rules_variable_order(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -3157,6 +3158,10 @@ bake_test_case Rules_testcases[] = {
     {
         "rule_w_inout_filter",
         Rules_rule_w_inout_filter
+    },
+    {
+        "variable_order",
+        Rules_variable_order
     }
 };
 
@@ -4345,7 +4350,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        153,
+        154,
         Rules_testcases
     },
     {
@@ -4484,5 +4489,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 25);
+    return bake_test_run("addons", argc, argv, suites, 25);
 }

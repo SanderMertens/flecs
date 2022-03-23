@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 #define test_term_id(it, column_id, str) {\
     ecs_id_t _term_id = ecs_term_id(it, column_id);\
@@ -4360,7 +4360,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Bob),(Likes,*)"
     LINE "subj: Alice,John"
-    LINE "vars: Y=Bob,Z=John,X=Alice"
+    LINE "vars: X=Alice,Y=Bob,Z=John"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -4371,7 +4371,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Bob),(Likes,Jane)"
     LINE "subj: Jane,John"
-    LINE "vars: Y=Bob,Z=John,X=Jane"
+    LINE "vars: X=Jane,Y=Bob,Z=John"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -4382,7 +4382,7 @@ void Rules_optional_w_subj_var() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (Likes,Jane),(Likes,*)"
     LINE "subj: John,John"
-    LINE "vars: Y=Jane,Z=John,X=John"
+    LINE "vars: X=John,Y=Jane,Z=John"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -6251,6 +6251,31 @@ void Rules_rule_w_inout_filter() {
     test_assert(!ecs_rule_next(&it));
 
     ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void Rules_variable_order() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_rule_t *r = ecs_rule_new(world, "RelX(_X, _Y), RelX(_Y, _Z)");
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "X");
+    int y_var = ecs_rule_find_var(r, "Y");
+    int z_var = ecs_rule_find_var(r, "Z");
+
+    test_assert(x_var != -1);
+    test_assert(y_var != -1);
+    test_assert(z_var != -1);
+
+    test_assert(x_var < y_var);
+    test_assert(y_var < z_var);
 
     ecs_fini(world);
 }

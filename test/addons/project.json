@@ -1,9 +1,9 @@
 {
-    "id": "api",
+    "id": "addons",
     "type": "application",
     "value": {
         "author": "Sander Mertens",
-        "description": "Test project for flecs",
+        "description": "Test project for flecs addons",
         "public": false,
         "coverage": false,
         "use": [
@@ -595,7 +595,8 @@
                 "test_this_w_wildcard_w_isa",
                 "test_this_w_wildcard_w_isa_2_lvls",
                 "test_this_w_wildcard_w_2_isa",
-                "rule_w_inout_filter"
+                "rule_w_inout_filter",
+                "variable_order"
             ]
         }, {
             "id": "TransitiveRules",

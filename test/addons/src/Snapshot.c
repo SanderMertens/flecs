@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Snapshot_simple_snapshot() {
     ecs_world_t *world = ecs_init();

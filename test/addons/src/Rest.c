@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Rest_teardown() {
     ecs_world_t *world = ecs_init();

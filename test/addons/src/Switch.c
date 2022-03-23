@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Switch_get_case_empty() {
     ecs_world_t *world = ecs_init();

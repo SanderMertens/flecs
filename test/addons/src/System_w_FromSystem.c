@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void InitVelocity(ecs_iter_t *it) {
     Velocity *v = ecs_term(it, Velocity, 1);

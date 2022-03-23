@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Doc_get_set_name() {
     ecs_world_t *world = ecs_init();

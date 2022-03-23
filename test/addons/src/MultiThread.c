@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 static ECS_COMPONENT_DECLARE(Position);
 

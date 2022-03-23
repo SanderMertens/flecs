@@ -509,17 +509,17 @@ typedef struct ecs_table_cache_t {
 } ecs_table_cache_t;
 
 /* Sparse query column */
-typedef struct flecs_sparse_column_t {
+typedef struct flecs_switch_term_t {
     ecs_sw_column_t *sw_column;
     ecs_entity_t sw_case; 
     int32_t signature_column_index;
-} flecs_sparse_column_t;
+} flecs_switch_term_t;
 
 /* Bitset query column */
-typedef struct flecs_bitset_column_t {
+typedef struct flecs_bitset_term_t {
     ecs_bs_column_t *bs_column;
     int32_t column_index;
-} flecs_bitset_column_t;
+} flecs_bitset_term_t;
 
 typedef struct ecs_query_table_match_t ecs_query_table_match_t;
 
@@ -17799,14 +17799,17 @@ struct ecs_rule_t {
     ecs_rule_op_t *operations;  /* Operations array */
     ecs_filter_t filter;        /* Filter of rule */
 
+    /* Variable array */
+    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+
     /* Passed to iterator */
     char *var_names[ECS_RULE_MAX_VAR_COUNT]; 
 
     /* Variable ids used in terms */
     ecs_rule_term_vars_t term_vars[ECS_RULE_MAX_VAR_COUNT];
 
-    /* Variable array */
-    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+    /* Variable evaluation order */
+    int32_t var_eval_order[ECS_RULE_MAX_VAR_COUNT];
 
     int32_t var_count;          /* Number of variables in signature */
     int32_t subj_var_count;
@@ -18985,13 +18988,13 @@ int scan_variables(
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
     int32_t var_count = rule->var_count;
-    ecs_qsort_t(rule->vars, var_count, ecs_rule_var_t, compare_variable);
-
-    /* Iterate variables to correct ids after sort */
-    for (i = 0; i < rule->var_count; i ++) {
-        rule->vars[i].id = i;
+    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+    ecs_os_memcpy_n(vars, rule->vars, ecs_rule_var_t, var_count);
+    ecs_qsort_t(&vars, var_count, ecs_rule_var_t, compare_variable);
+    for (i = 0; i < var_count; i ++) {
+        rule->var_eval_order[i] = vars[i].id;
     }
-    
+
 done:
     return 0;
 error:
@@ -19995,7 +19998,8 @@ void compile_program(
 
     /* Insert variables based on dependency order */
     for (v = 0; v < rule->subj_var_count; v ++) {
-        ecs_rule_var_t *var = &rule->vars[v];
+        int32_t var_id = rule->var_eval_order[v];
+        ecs_rule_var_t *var = &rule->vars[var_id];
 
         ecs_assert(var->kind == EcsRuleVarKindTable, ECS_INTERNAL_ERROR, NULL);
 
@@ -20017,7 +20021,7 @@ void compile_program(
 
             insert_term(rule, term, c, written);
 
-            var = &rule->vars[v];
+            var = &rule->vars[var_id];
         }
     }
 
@@ -40765,8 +40769,8 @@ add_pair:
              * the column for this specific case. Add a sparse column with the
              * case id so we can find the correct entities when iterating */
             if (ECS_HAS_ROLE(component, CASE)) {
-                flecs_sparse_column_t *sc = ecs_vector_add(
-                    &table_data->sparse_columns, flecs_sparse_column_t);
+                flecs_switch_term_t *sc = ecs_vector_add(
+                    &table_data->sparse_columns, flecs_switch_term_t);
                 sc->signature_column_index = t;
                 sc->sw_case = ECS_PAIR_SECOND(component);
                 sc->sw_column = NULL;
@@ -40781,8 +40785,8 @@ add_pair:
                     (component & ECS_COMPONENT_MASK) | ECS_DISABLED;
                 int32_t bs_index = ecs_search(world, table, bs_id, 0);
                 if (bs_index != -1) {
-                    flecs_bitset_column_t *elem = ecs_vector_add(
-                        &table_data->bitset_columns, flecs_bitset_column_t);
+                    flecs_bitset_term_t *elem = ecs_vector_add(
+                        &table_data->bitset_columns, flecs_bitset_term_t);
                     elem->column_index = bs_index;
                     elem->bs_column = NULL;
                 }
@@ -42362,14 +42366,14 @@ int find_smallest_column(
     ecs_query_table_match_t *table_data,
     ecs_vector_t *sparse_columns)
 {
-    flecs_sparse_column_t *sparse_column_array = 
-        ecs_vector_first(sparse_columns, flecs_sparse_column_t);
+    flecs_switch_term_t *sparse_column_array = 
+        ecs_vector_first(sparse_columns, flecs_switch_term_t);
     int32_t i, count = ecs_vector_count(sparse_columns);
     int32_t min = INT_MAX, index = 0;
 
     for (i = 0; i < count; i ++) {
         /* The array with sparse queries for the matched table */
-        flecs_sparse_column_t *sparse_column = &sparse_column_array[i];
+        flecs_switch_term_t *sparse_column = &sparse_column_array[i];
 
         /* Pointer to the switch column struct of the table */
         ecs_sw_column_t *sc = sparse_column->sw_column;
@@ -42427,9 +42431,9 @@ int sparse_column_next(
 
     sparse_smallest -= 1;
 
-    flecs_sparse_column_t *columns = ecs_vector_first(
-        sparse_columns, flecs_sparse_column_t);
-    flecs_sparse_column_t *column = &columns[sparse_smallest];
+    flecs_switch_term_t *columns = ecs_vector_first(
+        sparse_columns, flecs_switch_term_t);
+    flecs_switch_term_t *column = &columns[sparse_smallest];
     ecs_switch_t *sw, *sw_smallest = column->sw_column->data;
     ecs_entity_t case_smallest = column->sw_case;
 
@@ -42548,15 +42552,15 @@ int bitset_column_next(
     };
 
     int32_t i, count = ecs_vector_count(bitset_columns);
-    flecs_bitset_column_t *columns = ecs_vector_first(
-        bitset_columns, flecs_bitset_column_t);
+    flecs_bitset_term_t *columns = ecs_vector_first(
+        bitset_columns, flecs_bitset_term_t);
     int32_t bs_offset = table->bs_column_offset;
 
     int32_t first = iter->bitset_first;
     int32_t last = 0;
 
     for (i = 0; i < count; i ++) {
-        flecs_bitset_column_t *column = &columns[i];
+        flecs_bitset_term_t *column = &columns[i];
         ecs_bs_column_t *bs_column = columns[i].bs_column;
 
         if (!bs_column) {

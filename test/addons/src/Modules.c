@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Modules_setup() {
 }

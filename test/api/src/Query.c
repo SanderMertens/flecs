@@ -2924,3 +2924,4 @@ void Query_create_query_while_pending() {
     
     ecs_fini(world);
 }
+

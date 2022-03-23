@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void SystemManual_setup() {
     ecs_log_set_level(-3);

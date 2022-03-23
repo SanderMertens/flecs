@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 static bool system_a_invoked;
 static bool system_b_invoked;

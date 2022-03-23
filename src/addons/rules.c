@@ -349,14 +349,17 @@ struct ecs_rule_t {
     ecs_rule_op_t *operations;  /* Operations array */
     ecs_filter_t filter;        /* Filter of rule */
 
+    /* Variable array */
+    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+
     /* Passed to iterator */
     char *var_names[ECS_RULE_MAX_VAR_COUNT]; 
 
     /* Variable ids used in terms */
     ecs_rule_term_vars_t term_vars[ECS_RULE_MAX_VAR_COUNT];
 
-    /* Variable array */
-    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+    /* Variable evaluation order */
+    int32_t var_eval_order[ECS_RULE_MAX_VAR_COUNT];
 
     int32_t var_count;          /* Number of variables in signature */
     int32_t subj_var_count;
@@ -1535,13 +1538,13 @@ int scan_variables(
      * array will later be used to lead the iteration over the terms, and
      * determine which operations get inserted first. */
     int32_t var_count = rule->var_count;
-    ecs_qsort_t(rule->vars, var_count, ecs_rule_var_t, compare_variable);
-
-    /* Iterate variables to correct ids after sort */
-    for (i = 0; i < rule->var_count; i ++) {
-        rule->vars[i].id = i;
+    ecs_rule_var_t vars[ECS_RULE_MAX_VAR_COUNT];
+    ecs_os_memcpy_n(vars, rule->vars, ecs_rule_var_t, var_count);
+    ecs_qsort_t(&vars, var_count, ecs_rule_var_t, compare_variable);
+    for (i = 0; i < var_count; i ++) {
+        rule->var_eval_order[i] = vars[i].id;
     }
-    
+
 done:
     return 0;
 error:
@@ -2545,7 +2548,8 @@ void compile_program(
 
     /* Insert variables based on dependency order */
     for (v = 0; v < rule->subj_var_count; v ++) {
-        ecs_rule_var_t *var = &rule->vars[v];
+        int32_t var_id = rule->var_eval_order[v];
+        ecs_rule_var_t *var = &rule->vars[var_id];
 
         ecs_assert(var->kind == EcsRuleVarKindTable, ECS_INTERNAL_ERROR, NULL);
 
@@ -2567,7 +2571,7 @@ void compile_program(
 
             insert_term(rule, term, c, written);
 
-            var = &rule->vars[v];
+            var = &rule->vars[var_id];
         }
     }
 

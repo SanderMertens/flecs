@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 static
 void Iter(ecs_iter_t *it) {

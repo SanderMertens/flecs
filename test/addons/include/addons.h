@@ -1,8 +1,8 @@
-#ifndef API_H
-#define API_H
+#ifndef ADDONS_H
+#define ADDONS_H
 
 /* This generated file contains includes for project dependencies */
-#include <api/bake_config.h>
+#include <addons/bake_config.h>
 #include <stdio.h>
 
 #ifdef __cplusplus

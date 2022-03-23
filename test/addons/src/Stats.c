@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 void Stats_get_world_stats() {
     ecs_world_t *world = ecs_init();

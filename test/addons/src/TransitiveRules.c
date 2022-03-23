@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 /* New set of tests just for transitivity. Transitive tests from TransitiveRules suite 
  * will be moved here */
@@ -120,7 +120,7 @@ void TransitiveRules_trans_reflexive_X_Y() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,UnitedStates)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=UnitedStates,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=UnitedStates"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -129,7 +129,7 @@ void TransitiveRules_trans_reflexive_X_Y() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,Earth)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=Earth,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=Earth"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -163,7 +163,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,UnitedStates)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=UnitedStates,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=UnitedStates"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -172,7 +172,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,Earth)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=Earth,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=Earth"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -181,7 +181,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,SanFrancisco)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=SanFrancisco,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=SanFrancisco"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -190,7 +190,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,UnitedStates)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=UnitedStates,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=UnitedStates"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -199,7 +199,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,Earth)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=Earth,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=Earth"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -232,7 +232,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,UnitedStates)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=UnitedStates,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=UnitedStates"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -241,7 +241,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,Earth)"
     LINE "subj: UnitedStates"
-    LINE "vars: Y=Earth,X=UnitedStates"
+    LINE "vars: X=UnitedStates,Y=Earth"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -250,7 +250,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,SanFrancisco)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=SanFrancisco,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=SanFrancisco"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -259,7 +259,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,UnitedStates)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=UnitedStates,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=UnitedStates"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -268,7 +268,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     result = ecs_iter_str(&it); expect =
     HEAD "term: (LocatedIn,Earth)"
     LINE "subj: SanFrancisco"
-    LINE "vars: Y=Earth,X=SanFrancisco"
+    LINE "vars: X=SanFrancisco,Y=Earth"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -339,7 +339,7 @@ void TransitiveRules_trans_constrained_x_y() {
     expect =
     HEAD "term: (LocatedIn,Earth),Location,Location"
     LINE "subj: Earth,Earth,Earth"
-    LINE "vars: Y=Earth,X=Earth"
+    LINE "vars: X=Earth,Y=Earth"
     LINE;
 
     result = ecs_iter_str(&it);
@@ -350,7 +350,7 @@ void TransitiveRules_trans_constrained_x_y() {
     expect =
     HEAD "term: (LocatedIn,Universe),Location,Location"
     LINE "subj: Earth,Earth,Universe"
-    LINE "vars: Y=Universe,X=Earth"
+    LINE "vars: X=Earth,Y=Universe"
     LINE;
 
     result = ecs_iter_str(&it);
@@ -787,7 +787,7 @@ void TransitiveRules_transitive_w_optional_nonfinal_w_var() {
     result = ecs_iter_str(&it), expect =
     HEAD "term: Foo,(Likes,*)"
     LINE "subj: Jane,Jane"
-    LINE "vars: Y=*,X=Jane"
+    LINE "vars: X=Jane,Y=*"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -796,7 +796,7 @@ void TransitiveRules_transitive_w_optional_nonfinal_w_var() {
     result = ecs_iter_str(&it), expect =
     HEAD "term: Foo,(Likes,Bob)"
     LINE "subj: Alice,Alice"
-    LINE "vars: Y=Bob,X=Alice"
+    LINE "vars: X=Alice,Y=Bob"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);
@@ -805,7 +805,7 @@ void TransitiveRules_transitive_w_optional_nonfinal_w_var() {
     result = ecs_iter_str(&it), expect =
     HEAD "term: Foo,(Loves,Alice)"
     LINE "subj: Bob,Bob"
-    LINE "vars: Y=Alice,X=Bob"
+    LINE "vars: X=Bob,Y=Alice"
     LINE;
     test_str(result, expect);
     ecs_os_free(result);

@@ -1,4 +1,4 @@
-#include <api.h>
+#include <addons.h>
 
 static
 int32_t dummy_invoked = false;
