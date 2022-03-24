@@ -466,49 +466,27 @@ void Pairs_query_2_pairs_2_instances_per_type() {
     ecs_progress(world, 0);
 
     const RelA *tr_a = ecs_get_pair(world, e1, RelA, ecs_id(Position));
-    test_int(tr_a->value, 2);
+    test_int(tr_a->value, 3);
 
     tr_a = ecs_get_pair(world, e1, RelA, ecs_id(Velocity));
-    test_int(tr_a->value, 4);
+    test_int(tr_a->value, 5);
 
     const RelB *tr_b = ecs_get_pair(world, e1, RelB, ecs_id(Position));
-    test_int(tr_b->value, 3);
+    test_int(tr_b->value, 4);
 
     tr_b = ecs_get_pair(world, e1, RelB, ecs_id(Velocity));
-    test_int(tr_b->value, 5);
+    test_int(tr_b->value, 6);
 
-    test_int(ctx.count, 2);
-    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 4);
+    test_int(ctx.invoked, 4);
     test_int(ctx.system, ProcessTwoPairs);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e1);
-
-    ecs_entity_t c = ctx.c[0][0];
-    ecs_entity_t hi = ECS_PAIR_FIRST(c);
-    ecs_entity_t lo = ECS_PAIR_SECOND(c);
-    test_int(hi, ecs_id(RelA));
-    test_int(lo, ecs_id(Position));
-
-    c = ctx.c[0][1];
-    hi = ECS_PAIR_FIRST(c);
-    lo = ECS_PAIR_SECOND(c);
-    test_int(hi, ecs_id(RelB));
-    test_int(lo, ecs_id(Position));    
-
-    c = ctx.c[1][0];
-    hi = ECS_PAIR_FIRST(c);
-    lo = ECS_PAIR_SECOND(c);
-    test_int(hi, ecs_id(RelA));
-    test_int(lo, ecs_id(Velocity));
-
-    c = ctx.c[1][1];
-    hi = ECS_PAIR_FIRST(c);
-    lo = ECS_PAIR_SECOND(c);
-    test_int(hi, ecs_id(RelB));
-    test_int(lo, ecs_id(Velocity));  
+    test_int(ctx.e[2], e1);
+    test_int(ctx.e[3], e1);
 
     ecs_fini(world);
 }

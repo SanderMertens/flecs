@@ -1054,8 +1054,6 @@
                 "nested_orphaned_query",
                 "invalid_access_orphaned_query",
                 "stresstest_query_free",
-                "only_from_entity",
-                "only_from_singleton",
                 "only_not_from_entity",
                 "only_not_from_singleton",
                 "get_filter",
@@ -1097,7 +1095,16 @@
                 "not_pair_relation_wildcard",
                 "not_pair_object_wildcard",
                 "two_pair_wildcards_one_not",
-                "two_pair_wildcards_one_not_any"
+                "two_pair_wildcards_one_not_any",
+                "implicit_existing_isa_superset",
+                "implicit_new_isa_superset",
+                "isa_superset",
+                "isa_self_superset",
+                "childof_superset",
+                "parent",
+                "existing_isa_cascade",
+                "new_isa_cascade",
+                "childof_cascade"
             ]
         }, {
             "id": "Iter",
