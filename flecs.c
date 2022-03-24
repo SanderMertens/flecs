@@ -1894,6 +1894,10 @@ void flecs_query_notify(
     ecs_query_event_t *event);
 
 void flecs_iter_init(
+    ecs_iter_t *it,
+    ecs_flags8_t fields);
+
+void flecs_iter_validate(
     ecs_iter_t *it);
 
 void flecs_iter_populate_data(
@@ -2504,7 +2508,7 @@ void on_component_callback(
     ecs_size_t size = ti->size;
     void *ptr = ecs_vector_get_t(column->data, size, ti->alignment, row);
 
-    flecs_iter_init(&it);
+    flecs_iter_init(&it, flecs_iter_cache_all);
     it.world = world;
     it.real_world = world;
     it.table = table;
@@ -2516,6 +2520,7 @@ void on_component_callback(
     it.event_id = id;
     it.ctx = ti->lifecycle.ctx;
     it.count = count;
+    flecs_iter_validate(&it);
     callback(&it);
 }
 
@@ -5871,7 +5876,7 @@ void flecs_notify_on_set(
                 ecs_iter_t it = {.term_count = 1};
                 it.entities = entities;
                 
-                flecs_iter_init(&it);
+                flecs_iter_init(&it, flecs_iter_cache_all);
                 it.world = world;
                 it.real_world = world;
                 it.table = table;
@@ -5883,7 +5888,7 @@ void flecs_notify_on_set(
                 it.event_id = id;
                 it.ctx = ti->lifecycle.ctx;
                 it.count = count;
-                
+                flecs_iter_validate(&it);
                 on_set(&it);
             }
         }
@@ -20505,7 +20510,6 @@ void ecs_rule_iter_free(
     ecs_os_free(it->registers);
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
-    ecs_os_free(it->variables);
     iter->columns = NULL;
     it->registers = NULL;
     it->columns = NULL;
@@ -20568,6 +20572,16 @@ ecs_iter_t ecs_rule_iter(
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
     result.is_filter = rule->filter.filter;
+
+    flecs_iter_init(&result, 
+        flecs_iter_cache_ids |
+        /* flecs_iter_cache_columns | provided by rule iterator */
+        flecs_iter_cache_subjects |
+        flecs_iter_cache_sizes |
+        flecs_iter_cache_ptrs |
+        /* flecs_iter_cache_match_indices | not necessary for iteration */
+        flecs_iter_cache_variables);
+
     result.columns = it->columns; /* prevent alloc */
 
     return result;
@@ -21754,6 +21768,7 @@ void populate_iterator(
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
     for (i = 0; i < term_count; i ++) {
+        ecs_assert(iter->subjects != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t subj = iter->subjects[i];
         int32_t c = ++ iter->columns[i];
         if (!subj) {
@@ -21857,7 +21872,7 @@ bool ecs_rule_next_instanced(
     /* Can't iterate an iterator that's already depleted */
     ecs_check(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_iter_init(it);
+    flecs_iter_validate(it);
 
     /* Make sure that if there are any terms with literal subjects, they're
      * initialized in the subjects array */
@@ -34428,7 +34443,9 @@ bool world_iter_next(
     ecs_sparse_t *entity_index = &world->store.entity_index;
     it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
     it->count = flecs_sparse_count(entity_index);
-    return it->is_valid = true;
+    flecs_iter_validate(it);
+
+    return true;
 }
 
 static
@@ -37727,6 +37744,16 @@ ecs_iter_t ecs_term_iter(
         .next = ecs_term_next
     };
 
+    /* Term iter populates the iterator with arrays from its own cache, ensure 
+     * they don't get overwritten by flecs_iter_validate.
+     *
+     * Note: the reason the term iterator doesn't use the iterator cache itself
+     * (which could easily accomodate a single term) is that the filter iterator
+     * is built on top of the term iterator. The private cache of the term
+     * iterator keeps the filter iterator code simple, as it doesn't need to
+     * worry about the term iter overwriting the iterator fields. */
+    flecs_iter_init(&it, 0);
+
     term_iter_init(world, term, &it.priv.iter.term, false);
 
     return it;
@@ -37756,6 +37783,8 @@ ecs_iter_t ecs_term_chain_iter(
         .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_term_next
     };
+
+    flecs_iter_init(&it, flecs_iter_cache_all);
 
     term_iter_init(world, term, &it.priv.iter.term, false);
 
@@ -37884,6 +37913,8 @@ bool ecs_term_next(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_iter_validate(it);
 
     ecs_term_iter_t *iter = &it->priv.iter.term;
     ecs_term_t *term = &iter->term;
@@ -38079,6 +38110,8 @@ ecs_iter_t ecs_filter_iter(
 
     it.is_filter = filter->filter;
 
+    flecs_iter_init(&it, flecs_iter_cache_all);
+
     return it;
 error:
     return (ecs_iter_t){ 0 };
@@ -38097,6 +38130,7 @@ ecs_iter_t ecs_filter_chain_iter(
         .next = ecs_filter_next
     };
 
+    flecs_iter_init(&it, flecs_iter_cache_all);
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
     init_filter_iter(it.world, &it, filter);
 
@@ -38142,7 +38176,7 @@ bool ecs_filter_next_instanced(
         filter->terms = filter->term_cache;
     }
 
-    flecs_iter_init(it);
+    flecs_iter_validate(it);
 
     ecs_iter_t *chain_it = it->chain_it;
     ecs_iter_kind_t kind = iter->kind;
@@ -38538,8 +38572,8 @@ bool observer_run(ecs_iter_t *it) {
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
-
-    flecs_iter_init(&user_it);
+    user_it.is_valid = false;
+    flecs_iter_init(&user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
@@ -38600,6 +38634,7 @@ bool observer_run(ecs_iter_t *it) {
         user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
+        flecs_iter_validate(&user_it);
 
         o->callback(&user_it);
 
@@ -42326,7 +42361,7 @@ ecs_iter_t ecs_query_iter(
         it.node = ecs_vector_first(query->table_slices, ecs_query_table_node_t);
     }
 
-    return (ecs_iter_t){
+    ecs_iter_t result = {
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
@@ -42337,6 +42372,12 @@ ecs_iter_t ecs_query_iter(
         .priv.iter.query = it,
         .next = ecs_query_next,
     };
+
+    /* Query populates the iterator with arrays from the cache, ensure they
+     * don't get overwritten by flecs_iter_validate */
+    flecs_iter_init(&result, flecs_iter_cache_ptrs);
+
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }
@@ -42756,6 +42797,8 @@ bool ecs_query_next_instanced(
 
     iter->skip_count = 0;
 
+    flecs_iter_validate(it);
+
     for (node = iter->node; node != NULL; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
@@ -42832,7 +42875,6 @@ bool ecs_query_next_instanced(
         it->references = match->references;
         it->instance_count = 0;
 
-        flecs_iter_init(it);
         flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, 
             it->ptrs, NULL);
 
@@ -44438,47 +44480,87 @@ ecs_table_t* ecs_table_remove_id(
 
 #include <stddef.h>
 
-#define INIT_CACHE(it, f, term_count)\
-    if (!it->f && term_count) {\
+/* Utility macro's to enforce consistency when initializing iterator fields */
+
+/* If term count is smaller than cache size, initialize with inline array,
+ * otherwise allocate. */
+#define INIT_CACHE(it, fields, f, term_count, cache_size)\
+    if (!it->f && (fields & flecs_iter_cache_##f) && term_count) {\
         if (term_count <= ECS_TERM_CACHE_SIZE) {\
             it->f = it->priv.cache.f;\
-            it->priv.cache.f##_alloc = false;\
+            it->priv.cache.used |= flecs_iter_cache_##f;\
         } else {\
             it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
-            it->priv.cache.f##_alloc = true;\
+            it->priv.cache.allocated |= flecs_iter_cache_##f;\
         }\
     }
 
+/* If array is using the cache, make sure that its address is correct in case
+ * the iterator got moved (typically happens when returned by a function) */
+#define VALIDATE_CACHE(it, f)\
+    if (it->f) {\
+        if (it->priv.cache.used & flecs_iter_cache_##f) {\
+            it->f = it->priv.cache.f;\
+        }\
+    }
+
+/* If array is allocated, free it when finalizing the iterator */
 #define FINI_CACHE(it, f)\
     if (it->f) {\
-        if (it->priv.cache.f##_alloc) {\
+        if (it->priv.cache.allocated & flecs_iter_cache_##f) {\
             ecs_os_free((void*)it->f);\
         }\
     }   
 
 void flecs_iter_init(
-    ecs_iter_t *it)
+    ecs_iter_t *it,
+    ecs_flags8_t fields)
 {
-    INIT_CACHE(it, ids, it->term_count);
-    INIT_CACHE(it, subjects, it->term_count);
-    INIT_CACHE(it, match_indices, it->term_count);
-    INIT_CACHE(it, columns, it->term_count);
-    
+    ecs_assert(!it->is_valid, ECS_INTERNAL_ERROR, NULL);
+
+    it->priv.cache.used = 0;
+    it->priv.cache.allocated = 0;
+
+    INIT_CACHE(it, fields, ids, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, subjects, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, match_indices, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
+    INIT_CACHE(it, fields, variables, it->variable_count, 
+        ECS_VARIABLE_CACHE_SIZE);
+
     if (!it->is_filter) {
-        INIT_CACHE(it, sizes, it->term_count);
-        INIT_CACHE(it, ptrs, it->term_count);
+        INIT_CACHE(it, fields, sizes, it->term_count, ECS_TERM_CACHE_SIZE);
+        INIT_CACHE(it, fields, ptrs, it->term_count, ECS_TERM_CACHE_SIZE);
     } else {
         it->sizes = NULL;
         it->ptrs = NULL;
     }
+}
 
+static
+void iter_validate_cache(
+    ecs_iter_t *it)
+{
+    /* Make sure pointers to cache are up to date in case iter has moved */
+    VALIDATE_CACHE(it, ids);
+    VALIDATE_CACHE(it, subjects);
+    VALIDATE_CACHE(it, match_indices);
+    VALIDATE_CACHE(it, columns);
+    VALIDATE_CACHE(it, variables);
+    VALIDATE_CACHE(it, sizes);
+    VALIDATE_CACHE(it, ptrs);
+}
+
+void flecs_iter_validate(
+    ecs_iter_t *it)
+{
+    iter_validate_cache(it);
     it->is_valid = true;
 }
 
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
-    ecs_check(it->is_valid == true, ECS_INVALID_PARAMETER, NULL);
     it->is_valid = false;
 
     if (it->fini) {
@@ -44491,8 +44573,7 @@ void ecs_iter_fini(
     FINI_CACHE(it, sizes);
     FINI_CACHE(it, ptrs);
     FINI_CACHE(it, match_indices);
-error:
-    return;
+    FINI_CACHE(it, variables);
 }
 
 static
@@ -44680,6 +44761,8 @@ void flecs_iter_populate_data(
         }
     } else {
         for (t = 0; t < term_count; t ++) {
+            ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
             int32_t column = it->columns[t];
             void **ptr = NULL;
             if (ptrs) {
@@ -45039,10 +45122,13 @@ void ecs_iter_set_var(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variable_count < var_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     /* Can't set variable while iterating */
     ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
+    ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    iter_validate_cache(it);
 
     ecs_var_t *var = &it->variables[var_id];
     var->entity = entity;
@@ -45079,8 +45165,9 @@ void ecs_iter_set_var_range(
     const ecs_table_range_t *range)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < ECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variable_count < var_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
@@ -45090,6 +45177,8 @@ void ecs_iter_set_var_range(
 
     /* Can't set variable while iterating */
     ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
+
+    iter_validate_cache(it);
 
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;
@@ -45694,7 +45783,8 @@ void init_iter(
         return;
     }
 
-    flecs_iter_init(it);
+    flecs_iter_init(it, flecs_iter_cache_all);
+    flecs_iter_validate(it);
 
     *iter_set = true;
 
@@ -46103,6 +46193,10 @@ void flecs_triggers_notify(
             } else {
                 notify_triggers_for_id(world, evt, EcsWildcard, it, &iter_set);
             }
+
+            if (iter_set) {
+                ecs_iter_fini(it);
+            }
         }
     }
 }
@@ -46137,6 +46231,10 @@ void flecs_set_triggers_notify(
             it->event_id = id;
 
             notify_set_triggers_for_id(world, evt, it, &iter_set, set_id);
+
+            if (iter_set) {
+                ecs_iter_fini(it);
+            }
         }
     }
 }

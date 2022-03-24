@@ -1323,7 +1323,7 @@ void flecs_notify_on_set(
                 ecs_iter_t it = {.term_count = 1};
                 it.entities = entities;
                 
-                flecs_iter_init(&it);
+                flecs_iter_init(&it, flecs_iter_cache_all);
                 it.world = world;
                 it.real_world = world;
                 it.table = table;
@@ -1335,7 +1335,7 @@ void flecs_notify_on_set(
                 it.event_id = id;
                 it.ctx = ti->lifecycle.ctx;
                 it.count = count;
-                
+                flecs_iter_validate(&it);
                 on_set(&it);
             }
         }

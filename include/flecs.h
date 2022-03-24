@@ -222,6 +222,9 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 /* Maximum number of query variables per query */
 #define ECS_VARIABLE_COUNT_MAX (64)
 
+/* Number of query variables in iterator cache */
+#define ECS_VARIABLE_CACHE_SIZE (4)
+
 /** @} */
 
 

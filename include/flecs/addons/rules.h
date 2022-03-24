@@ -105,7 +105,7 @@ int32_t ecs_rule_var_count(
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
- * be used in operations like ecs_rule_set_var and ecs_iter_get_var.
+ * be used in operations like ecs_iter_set_var and ecs_iter_get_var.
  * 
  * @param rule The rule.
  * @param name The variable name.
@@ -143,7 +143,7 @@ const char* ecs_rule_var_name(
  * 
  * // Set Food to Apples, so we're only matching (Eats, Apples)
  * ecs_iter_t it = ecs_rule_iter(world, r);
- * ecs_rule_set_var(&it, food_var, Apples);
+ * ecs_iter_set_var(&it, food_var, Apples);
  * 
  * while (ecs_rule_next(&it)) {
  *   for (int i = 0; i < it.count; i ++) {
@@ -159,7 +159,7 @@ const char* ecs_rule_var_name(
  * @param value The entity to initialize the variable with.
  */
 FLECS_API
-void ecs_rule_set_var(
+void ecs_iter_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t value);

@@ -328,7 +328,8 @@ void init_iter(
         return;
     }
 
-    flecs_iter_init(it);
+    flecs_iter_init(it, flecs_iter_cache_all);
+    flecs_iter_validate(it);
 
     *iter_set = true;
 
@@ -737,6 +738,10 @@ void flecs_triggers_notify(
             } else {
                 notify_triggers_for_id(world, evt, EcsWildcard, it, &iter_set);
             }
+
+            if (iter_set) {
+                ecs_iter_fini(it);
+            }
         }
     }
 }
@@ -771,6 +776,10 @@ void flecs_set_triggers_notify(
             it->event_id = id;
 
             notify_set_triggers_for_id(world, evt, it, &iter_set, set_id);
+
+            if (iter_set) {
+                ecs_iter_fini(it);
+            }
         }
     }
 }

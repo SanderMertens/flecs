@@ -62,28 +62,28 @@ int main(int argc, char *argv[]) {
     int y_var = ecs_rule_find_var(friends, "Y");
 
     ecs_iter_t it = ecs_rule_iter(ecs, friends);
-    ecs_rule_set_var(&it, x_var, bob);
-    ecs_rule_set_var(&it, y_var, alice);
+    ecs_iter_set_var(&it, x_var, bob);
+    ecs_iter_set_var(&it, y_var, alice);
     printf("Are Bob and Alice friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No");
 
     it = ecs_rule_iter(ecs, friends);
-    ecs_rule_set_var(&it, x_var, bob);
-    ecs_rule_set_var(&it, y_var, john);
+    ecs_iter_set_var(&it, x_var, bob);
+    ecs_iter_set_var(&it, y_var, john);
     printf("Are Bob and John friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No");
 
     it = ecs_rule_iter(ecs, friends);
-    ecs_rule_set_var(&it, x_var, jane);
-    ecs_rule_set_var(&it, y_var, john);
+    ecs_iter_set_var(&it, x_var, jane);
+    ecs_iter_set_var(&it, y_var, john);
     printf("Are Jane and John friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No");        
 
     // It doesn't matter who we assign to X or Y. After the variables are 
     // substituted, either yields a fact that is true.
     it = ecs_rule_iter(ecs, friends);
-    ecs_rule_set_var(&it, x_var, john);
-    ecs_rule_set_var(&it, y_var, jane);
+    ecs_iter_set_var(&it, x_var, john);
+    ecs_iter_set_var(&it, y_var, jane);
     printf("Are John and Jane friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No"); 
 

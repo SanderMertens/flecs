@@ -639,6 +639,10 @@ void flecs_query_notify(
     ecs_query_event_t *event);
 
 void flecs_iter_init(
+    ecs_iter_t *it,
+    ecs_flags8_t fields);
+
+void flecs_iter_validate(
     ecs_iter_t *it);
 
 void flecs_iter_populate_data(

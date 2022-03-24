@@ -513,7 +513,9 @@ bool world_iter_next(
     ecs_sparse_t *entity_index = &world->store.entity_index;
     it->entities = (ecs_entity_t*)flecs_sparse_ids(entity_index);
     it->count = flecs_sparse_count(entity_index);
-    return it->is_valid = true;
+    flecs_iter_validate(it);
+
+    return true;
 }
 
 static
