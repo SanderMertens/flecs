@@ -6277,5 +6277,7 @@ void Rules_variable_order() {
     test_assert(x_var < y_var);
     test_assert(y_var < z_var);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }

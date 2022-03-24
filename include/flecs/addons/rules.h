@@ -127,43 +127,6 @@ const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id);
 
-/** Set variable to a value.
- * This operation initializes the variable to the specified entity. By default
- * variables are initialized with a wildcard. By setting the variable it is
- * possible to reuse a single rule for different data sets. For example:
- * 
- * // Rule that matches (Eats, *)
- * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
- *   .terms = {
- *     { .pred.entity = Eats, .obj.name = "_Food" }
- *   }
- * });
- * 
- * int food_var = ecs_rule_find_var(r, "Food");
- * 
- * // Set Food to Apples, so we're only matching (Eats, Apples)
- * ecs_iter_t it = ecs_rule_iter(world, r);
- * ecs_iter_set_var(&it, food_var, Apples);
- * 
- * while (ecs_rule_next(&it)) {
- *   for (int i = 0; i < it.count; i ++) {
- *     // iterate as usual
- *   }
- * }
- * 
- * That the variable must be initialized after calling ecs_rule_iter and before
- * calling ecs_rule_next.
- * 
- * @param it The iterator.
- * @param var_id The variable index.
- * @param value The entity to initialize the variable with.
- */
-FLECS_API
-void ecs_iter_set_var(
-    ecs_iter_t *it,
-    int32_t var_id,
-    ecs_entity_t value);
-
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When
  * iterating through rule variables (by using ecs_rule_variable_count) only

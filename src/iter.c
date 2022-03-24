@@ -5,13 +5,13 @@
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
-#define INIT_CACHE(it, fields, f, term_count, cache_size)\
-    if (!it->f && (fields & flecs_iter_cache_##f) && term_count) {\
-        if (term_count <= ECS_TERM_CACHE_SIZE) {\
+#define INIT_CACHE(it, fields, f, count, cache_size)\
+    if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
+        if (count <= cache_size) {\
             it->f = it->priv.cache.f;\
             it->priv.cache.used |= flecs_iter_cache_##f;\
         } else {\
-            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * term_count);\
+            it->f = ecs_os_calloc(ECS_SIZEOF(*(it->f)) * count);\
             it->priv.cache.allocated |= flecs_iter_cache_##f;\
         }\
     }
@@ -665,7 +665,7 @@ void ecs_iter_set_var(
         var->range.count = 0;
     }
 
-    it->constrained_vars |= 1 << var_id;
+    it->constrained_vars |= flecs_ito(uint64_t, 1 << var_id);
 
 error:
     return;
@@ -712,7 +712,7 @@ void ecs_iter_set_var_range(
         var->entity = 0;
     }
 
-    it->constrained_vars |= 1 << var_id;
+    it->constrained_vars |= flecs_uto(uint64_t, 1 << var_id);
 
 error:
     return;
@@ -722,7 +722,7 @@ bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    return (it->constrained_vars & (1 << var_id)) != 0;
+    return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
 }
 
 ecs_iter_t ecs_page_iter(

@@ -2595,7 +2595,6 @@ typedef struct ecs_sparse_iter_t {
 typedef struct ecs_rule_iter_t {
     const ecs_rule_t *rule;
     struct ecs_var_t *registers;         /* Variable storage (tables, entities) */
-    ecs_var_t *variables;                /* Variable storage for iterator */
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     
     int32_t *columns;                    /* Column indices */
@@ -6331,10 +6330,32 @@ bool ecs_iter_is_true(
 
 /** Set value for iterator variable.
  * This constrains the iterator to return only results for which the variable
- * equals the specified value.
+ * equals the specified value. The default value for all variables is 
+ * EcsWildcard, which means the variable can assume any value.
  * 
- * The default value for all variables is EcsWildcard, which means the variable
- * is unconstrained.
+ * Example:
+ * 
+ * // Rule that matches (Eats, *)
+ * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+ *   .terms = {
+ *     { .pred.entity = Eats, .obj.name = "_Food" }
+ *   }
+ * });
+ * 
+ * int food_var = ecs_rule_find_var(r, "Food");
+ * 
+ * // Set Food to Apples, so we're only matching (Eats, Apples)
+ * ecs_iter_t it = ecs_rule_iter(world, r);
+ * ecs_iter_set_var(&it, food_var, Apples);
+ * 
+ * while (ecs_rule_next(&it)) {
+ *   for (int i = 0; i < it.count; i ++) {
+ *     // iterate as usual
+ *   }
+ * }
+ * 
+ * The variable must be initialized after creating the iterator and before the
+ * first call to next.
  * 
  * @param it The iterator.
  * @param var_id The variable index.
@@ -11031,43 +11052,6 @@ FLECS_API
 const char* ecs_rule_var_name(
     const ecs_rule_t *rule,
     int32_t var_id);
-
-/** Set variable to a value.
- * This operation initializes the variable to the specified entity. By default
- * variables are initialized with a wildcard. By setting the variable it is
- * possible to reuse a single rule for different data sets. For example:
- * 
- * // Rule that matches (Eats, *)
- * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
- *   .terms = {
- *     { .pred.entity = Eats, .obj.name = "_Food" }
- *   }
- * });
- * 
- * int food_var = ecs_rule_find_var(r, "Food");
- * 
- * // Set Food to Apples, so we're only matching (Eats, Apples)
- * ecs_iter_t it = ecs_rule_iter(world, r);
- * ecs_iter_set_var(&it, food_var, Apples);
- * 
- * while (ecs_rule_next(&it)) {
- *   for (int i = 0; i < it.count; i ++) {
- *     // iterate as usual
- *   }
- * }
- * 
- * That the variable must be initialized after calling ecs_rule_iter and before
- * calling ecs_rule_next.
- * 
- * @param it The iterator.
- * @param var_id The variable index.
- * @param value The entity to initialize the variable with.
- */
-FLECS_API
-void ecs_iter_set_var(
-    ecs_iter_t *it,
-    int32_t var_id,
-    ecs_entity_t value);
 
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When
