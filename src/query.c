@@ -1332,13 +1332,14 @@ void add_table_match(
 
     /* Initialize switch/case terms */
     for (i = 0; i < term_count; i ++) {
-        ecs_id_t id = it->ids[i];
+        ecs_id_t id = query->filter.terms[i].id;
         if (ECS_HAS_ROLE(id, CASE)) {
             flecs_switch_term_t *sc = ecs_vector_add(
                 &qm->sparse_columns, flecs_switch_term_t);
             sc->signature_column_index = i;
-            sc->sw_case = ECS_PAIR_SECOND(id);
+            sc->sw_case = ecs_pair_second(world, id);
             sc->sw_column = NULL;
+            qm->ids[i] = id;
         }
     }
 
@@ -1362,7 +1363,10 @@ void add_table_match(
         ecs_vector_t *refs = NULL;
         for (i = 0; i < term_count; i ++) {
             ecs_entity_t src = it->subjects[i];
-            ecs_size_t size = it->sizes[i];
+            ecs_size_t size = 0;
+            if (it->sizes) {
+                size = it->sizes[i];
+            }
             if (src && size) {
                 ecs_term_t *term = &filter->terms[i];
                 ecs_id_t id = it->ids[i];
@@ -1396,8 +1400,11 @@ void match_tables(
 {
     ecs_table_t *table = NULL;
     ecs_query_table_t *qt = NULL;
+
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterEntityOptional);
 
     while (ecs_filter_next(&it)) {
         if (table != it.table) {
@@ -1419,11 +1426,21 @@ bool match_table(
 {
     ecs_query_table_t *qt = NULL;
     int var_id = ecs_filter_find_this_var(&query->filter);
-    ecs_assert(var_id != -1, ECS_INTERNAL_ERROR, NULL);
+    if (var_id == -1) {
+        /* If query doesn't match with This term, it can't match with tables */
+        return false;
+    }
+
+    ecs_log_push_2();
 
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+    ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    ECS_BIT_SET(it.flags, EcsIterEntityOptional);
     ecs_iter_set_var_as_table(&it, var_id, table);
+
+    ecs_dbg_2(" - match for [%s]", ecs_filter_str(world, &query->filter));
+    ecs_dbg_2(" - match table [%s]", ecs_type_str(world, table->type));
 
     while (ecs_filter_next(&it)) {
         ecs_assert(it.table == table, ECS_INTERNAL_ERROR, NULL);
@@ -1433,8 +1450,12 @@ bool match_table(
             table = it.table;
         }
 
+        ecs_dbg_2(" - matched table [%s]", ecs_type_str(world, table->type));
+
         add_table_match(world, query, qt, table, &it);
     }
+
+    ecs_log_pop_2();
 
     return qt != NULL;
 }
@@ -1944,6 +1965,9 @@ bool is_term_id_supported(
     if (term_id->entity == EcsWildcard) {
         return true;
     }
+    if (term_id->entity == EcsAny) {
+        return true;
+    }
     return false;
 }
 
@@ -1980,7 +2004,9 @@ void process_signature(
             ECS_UNSUPPORTED, NULL);
 
         /* If self is not included in set, always start from depth 1 */
-        if (!subj->set.min_depth && !(subj->set.mask & EcsSelf)) {
+        if (!subj->set.min_depth && !(subj->set.mask & EcsSelf) && 
+            !(subj->set.mask & EcsNothing)) 
+        {
             subj->set.min_depth = 1;
         }
 

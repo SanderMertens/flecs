@@ -1427,7 +1427,7 @@ bool flecs_term_match_table(
         match_table = ecs_get_table(world, subj_entity);
         if (match_table) {
             match_type = match_table->type;
-        } else {
+        } else if (oper != EcsOptional) {
             return false;
         }
     } else {
