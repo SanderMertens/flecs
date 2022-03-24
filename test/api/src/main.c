@@ -831,6 +831,7 @@ void Filter_filter_no_this_component_2_ents(void);
 void Filter_filter_no_this_tag_2_ents_1_not(void);
 void Filter_filter_no_this_component_2_ents_1_not(void);
 void Filter_filter_no_this_component_1_not(void);
+void Filter_filter_iter_entities_optional_flag(void);
 void Filter_filter_iter_frame_offset(void);
 void Filter_filter_1_term_no_alloc(void);
 void Filter_filter_cache_size_terms_no_alloc(void);
@@ -4841,6 +4842,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_no_this_component_1_not
     },
     {
+        "filter_iter_entities_optional_flag",
+        Filter_filter_iter_entities_optional_flag
+    },
+    {
         "filter_iter_frame_offset",
         Filter_filter_iter_frame_offset
     },
@@ -8297,7 +8302,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        152,
+        153,
         Filter_testcases
     },
     {

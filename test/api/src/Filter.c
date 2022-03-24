@@ -5608,6 +5608,43 @@ void Filter_filter_no_this_component_1_not() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_entities_optional_flag() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new_entity(world, "e");
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA, TagB(e)",
+    }));
+
+    /* e2 doesn't have TagB, so regular iteration doesn't return anything */
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(false, ecs_filter_next(&it));
+
+    /* Treat terms matched on entities as optional */
+    it = ecs_filter_iter(world, &f);
+    it.flags |= EcsIterEntityOptional;
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], 0);
+    test_uint(it.subjects[1], e2);
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_id(&it, 2), TagB);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_iter_frame_offset() {
     ecs_world_t *world = ecs_mini();
 

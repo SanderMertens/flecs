@@ -1271,7 +1271,8 @@ bool flecs_n_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     int32_t *match_index_out,
-    bool first)
+    bool first,
+    ecs_flags32_t iter_flags)
 {
     (void)column_out;
     
@@ -1289,7 +1290,7 @@ bool flecs_n_term_match_table(
     for (i = 0; i < count; i ++) {
         temp.id = ids[i];
         bool result = flecs_term_match_table(world, &temp, table, type, id_out, 
-            0, subject_out, match_index_out, first);
+            0, subject_out, match_index_out, first, iter_flags);
         if (!result && oper == EcsAndFrom) {
             return false;
         } else
@@ -1318,7 +1319,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     int32_t *match_index_out,
-    bool first)
+    bool first,
+    ecs_flags32_t iter_flags)
 {
     const ecs_term_id_t *subj = &term->subj;
     ecs_oper_kind_t oper = term->oper;
@@ -1334,11 +1336,16 @@ bool flecs_term_match_table(
 
     if (oper == EcsAndFrom || oper == EcsOrFrom) {
         return flecs_n_term_match_table(world, term, table, type, id_out, column_out, 
-            subject_out, match_index_out, first);
+            subject_out, match_index_out, first, iter_flags);
     }
 
     /* If source is not This, search in table of source */
     if (subj_entity != EcsThis) {
+        if (iter_flags & EcsIterEntityOptional) {
+            /* Treat entity terms as optional */
+            oper = EcsOptional;
+        }
+
         match_table = ecs_get_table(world, subj_entity);
         if (match_table) {
             match_type = match_table->type;
@@ -1436,7 +1443,8 @@ bool flecs_filter_match_table(
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
-    int32_t skip_term)
+    int32_t skip_term,
+    ecs_flags32_t iter_flags)
 {
     ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
         ECS_INTERNAL_ERROR, NULL);
@@ -1507,7 +1515,8 @@ bool flecs_filter_match_table(
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
             &match_index,
-            first);
+            first,
+            iter_flags);
 
         if (is_or) {
             or_result |= result;
@@ -1851,7 +1860,8 @@ bool ecs_term_next(
 
             table = chain_it->table;
             match = flecs_term_match_table(world, term, table, table->type,
-                it->ids, it->columns, it->subjects, it->match_indices, true);
+                it->ids, it->columns, it->subjects, it->match_indices, true,
+                it->flags);
         } while (!match);
         goto yield;
 
@@ -2109,7 +2119,7 @@ bool ecs_filter_next_instanced(
             table = chain_it->table;
             match = flecs_filter_match_table(world, filter, table,
                 it->ids, it->columns, it->subjects, it->match_indices, NULL, 
-                true, -1);
+                true, -1, it->flags);
         } while (!match);
 
         goto yield;
@@ -2211,7 +2221,7 @@ bool ecs_filter_next_instanced(
                 match = flecs_filter_match_table(world, filter, table,
                     it->ids, it->columns, it->subjects,
                     it->match_indices, &iter->matches_left, first, 
-                    pivot_term);
+                    pivot_term, it->flags);
                 if (!match) {
                     it->table = table;
                     iter->matches_left = 0;
@@ -2246,13 +2256,14 @@ bool ecs_filter_next_instanced(
                 it->columns[i] ++;
                 flecs_term_match_table(world, &filter->terms[i], table, 
                     table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
-                    &it->match_indices[i], false);
+                    &it->match_indices[i], false, it->flags);
 
                 /* Reset remaining terms (if any) to first match */
                 for (j = i + 1; j < count; j ++) {
                     flecs_term_match_table(world, &filter->terms[j], table, 
                         table->type, &it->ids[j], &it->columns[j], 
-                        &it->subjects[j], &it->match_indices[j], true);
+                        &it->subjects[j], &it->match_indices[j], true, 
+                        it->flags);
                 }
             }
 

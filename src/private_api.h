@@ -613,7 +613,8 @@ bool flecs_term_match_table(
     int32_t *column_out,
     ecs_entity_t *subject_out,
     int32_t *match_indices,
-    bool first);
+    bool first,
+    ecs_flags32_t iter_flags);
 
 /* Match table with filter */
 bool flecs_filter_match_table(
@@ -626,7 +627,8 @@ bool flecs_filter_match_table(
     int32_t *match_indices,
     int32_t *matches_left,
     bool first,
-    int32_t skip_term);
+    int32_t skip_term,
+    ecs_flags32_t iter_flags);
 
 bool flecs_query_match(
     const ecs_world_t *world,

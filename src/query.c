@@ -2193,7 +2193,7 @@ void rematch_table(
                     int32_t t = term->index;
                     int32_t column = 0;
                     flecs_term_match_table(world, term, table,
-                        table->type, 0, &column, 0, 0, true);
+                        table->type, 0, &column, 0, 0, true, 0);
                     if (column && (qt->columns[t] == 0)) {
                         rematch = true;
                     } else if (!column && (qt->columns[t] != 0)) {
@@ -2243,7 +2243,7 @@ bool satisfy_constraints(
             }
 
             if (!flecs_term_match_table(world, term, table, table->type, NULL, 
-                NULL, NULL, NULL, true)) 
+                NULL, NULL, NULL, true, 0)) 
             {
                 goto no_match;
             }
