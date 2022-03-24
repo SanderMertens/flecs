@@ -630,9 +630,102 @@ ecs_entity_t ecs_iter_get_var(
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
-    return it->variables[var_id].entity;
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_entity_t e = var->entity;
+    if (!e) {
+        ecs_table_t *table = var->range.table;
+        if (table) {
+            if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
+                ecs_assert(ecs_table_count(table) > var->range.offset,
+                    ECS_INTERNAL_ERROR, NULL);
+                e = ecs_vector_get(table->storage.entities, ecs_entity_t, 
+                    var->range.offset)[0];
+            }
+        }
+    }
+
+    return e;
 error:
     return 0;
+}
+
+ecs_table_t* ecs_iter_get_var_as_table(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_table_t *table = var->range.table;
+    if (!table) {
+        /* If table is not set, try to get table from entity */
+        ecs_entity_t e = var->entity;
+        if (e) {
+            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            if (r) {
+                table = r->table;
+                if (ecs_table_count(table) != 1) {
+                    /* If table contains more than the entity, make sure not to
+                     * return a partial table. */
+                    return NULL;
+                }
+            }
+        }
+    }
+
+    if (table) {
+        if (var->range.offset) {
+            /* Don't return whole table if only partial table is matched */
+            return NULL;
+        }
+
+        if (!var->range.count || ecs_table_count(table) == var->range.count) {
+            /* Return table if count matches */
+            return table;
+        }
+    }
+
+error:
+    return NULL;
+}
+
+ecs_table_range_t ecs_iter_get_var_as_range(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_table_range_t result = { 0 };
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_table_t *table = var->range.table;
+    if (!table) {
+        ecs_entity_t e = var->entity;
+        if (e) {
+            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            if (r) {
+                result.table = r->table;
+                result.offset = ECS_RECORD_TO_ROW(r->row);
+                result.count = 1;
+            }
+        }
+    } else {
+        result.table = table;
+        result.offset = var->range.offset;
+        result.count = var->range.count;
+        if (!result.count) {
+            result.count = ecs_table_count(table);
+        }
+    }
+
+    return result;
+error:
+    return (ecs_table_range_t){0};
 }
 
 void ecs_iter_set_var(

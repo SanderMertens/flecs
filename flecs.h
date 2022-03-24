@@ -2335,6 +2335,7 @@ struct ecs_filter_t {
     
     char *name;                /* Name of filter (optional) */
     char *expr;                /* Expression of filter (if provided) */
+    char *variable_names[1];   /* Array with variable names */
 
     ecs_iterable_t iterable;   /* Iterable mixin */
 };
@@ -5779,6 +5780,21 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *filter); 
 
+/** Find index for This variable.
+ * This operation looks up the index of the This variable. This index can
+ * be used in operations like ecs_iter_set_var and ecs_iter_get_var.
+ * 
+ * The operation will return -1 if the variable was not found. This happens when
+ * a filter only has terms that are not matched on the This variable, like a
+ * filter that exclusively matches singleton components.
+ * 
+ * @param filter The rule.
+ * @return The index of the This variable.
+ */
+FLECS_API
+int32_t ecs_filter_find_this_var(
+    const ecs_filter_t *filter);
+
 /** Convert ter, to string expression.
  * Convert term to a string expression. The resulting expression is equivalent
  * to the same term, with the exception of And & Or operators.
@@ -6393,7 +6409,13 @@ void ecs_iter_set_var_range(
     int32_t var_id,
     const ecs_table_range_t *range);
 
-/** Get value for iterator variable.
+/** Get value of iterator variable as entity.
+ * A variable can be interpreted as entity if it is set to an entity, or if it
+ * is set to a table range with count 1.
+ * 
+ * This operation can only be invoked on valid iterators. The variable index
+ * must be smaller than the total number of variables provided by the iterator
+ * (as set in ecs_iter_t::variable_count).
  * 
  * @param it The iterator.
  * @param var_id The variable index.
@@ -6402,6 +6424,41 @@ FLECS_API
 ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id);
+
+/** Get value of iterator variable as table.
+ * A variable can be interpreted as table if it is set as table range with
+ * both offset and count set to 0, or if offset is 0 and count matches the
+ * number of elements in the table.
+ * 
+ * This operation can only be invoked on valid iterators. The variable index
+ * must be smaller than the total number of variables provided by the iterator
+ * (as set in ecs_iter_t::variable_count).
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ */
+FLECS_API
+ecs_table_t* ecs_iter_get_var_as_table(
+    ecs_iter_t *it,
+    int32_t var_id);
+
+/** Get value of iterator variable as table range.
+ * A value can be interpreted as table range if it is set as table range, or if
+ * it is set to an entity with a non-empty type (the entity must have at least
+ * one component, tag or relationship in its type).
+ * 
+ * This operation can only be invoked on valid iterators. The variable index
+ * must be smaller than the total number of variables provided by the iterator
+ * (as set in ecs_iter_t::variable_count).
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ */
+FLECS_API
+ecs_table_range_t ecs_iter_get_var_as_range(
+    ecs_iter_t *it,
+    int32_t var_id);
+
 
 /** Returns whether variable is constrained.
  * This operation returns true for variables set by one of the ecs_iter_set_var*
