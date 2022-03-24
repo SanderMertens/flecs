@@ -6497,3 +6497,104 @@ void Filter_set_this_to_table_1_wildcard() {
 
     ecs_fini(world);
 }
+
+void Filter_set_this_to_table_no_match_no_data() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, TagB);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    test_bool(f.match_this, true);
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+
+void Filter_set_this_to_table_no_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, TagB);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    test_bool(f.match_this, true);
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_table_2_terms_no_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_new(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, TagB);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+    
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    test_assert(t2 != NULL);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }, { TagB }}
+    }));
+
+    test_bool(f.match_this, true);
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+    test_bool(false, ecs_filter_next(&it));
+
+    it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t2);
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

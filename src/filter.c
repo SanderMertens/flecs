@@ -1987,7 +1987,6 @@ ecs_iter_t ecs_filter_iter(
         if (pivot_term == -2) {
             /* One or more terms have no matching results */
             term_iter_init_no_data(&iter->term_iter);
-            return it;
         } else if (pivot_term == -1) {
             /* No terms meet the criteria to be a pivot term, evaluate filter
              * against all tables */
@@ -2210,6 +2209,7 @@ bool ecs_filter_next_instanced(
                     it->match_indices, &iter->matches_left, first, 
                     pivot_term);
                 if (!match) {
+                    it->table = table;
                     iter->matches_left = 0;
                     continue;
                 }

@@ -851,6 +851,9 @@ void Filter_filter_wo_this_var(void);
 void Filter_set_this_to_table_1_term(void);
 void Filter_set_this_to_table_2_terms(void);
 void Filter_set_this_to_table_1_wildcard(void);
+void Filter_set_this_to_table_no_match_no_data(void);
+void Filter_set_this_to_table_no_match(void);
+void Filter_set_this_to_table_2_terms_no_match(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -4914,6 +4917,18 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_to_table_1_wildcard",
         Filter_set_this_to_table_1_wildcard
+    },
+    {
+        "set_this_to_table_no_match_no_data",
+        Filter_set_this_to_table_no_match_no_data
+    },
+    {
+        "set_this_to_table_no_match",
+        Filter_set_this_to_table_no_match
+    },
+    {
+        "set_this_to_table_2_terms_no_match",
+        Filter_set_this_to_table_2_terms_no_match
     }
 };
 
@@ -8272,7 +8287,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        147,
+        150,
         Filter_testcases
     },
     {
