@@ -1785,6 +1785,34 @@ bool term_iter_next(
     return true;
 }
 
+static
+bool term_iter_set_table(
+    ecs_term_iter_t *iter,
+    ecs_table_t *table)
+{
+    /* Can't set a (This) table if iterator has no self index */
+    const ecs_id_record_t *idr = iter->self_index;
+    if (!idr) {
+        return false;
+    }
+
+    /* Table must be in id cache of term iterator, or it won't match */
+    ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
+    if (!tr) {
+        return false;
+    }
+
+    /* Populate fields as usual */
+    iter->table = table;
+    iter->match_count = tr->count;
+    iter->cur_match = 0;
+    iter->last_column = tr->column;
+    iter->column = tr->column + 1;
+    iter->id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
+
+    return true;
+}
+
 bool ecs_term_next(
     ecs_iter_t *it)
 {
@@ -1952,7 +1980,7 @@ ecs_iter_t ecs_filter_iter(
         int32_t pivot_term = -1;
         ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
 
-        iter->kind = EcsIterEvalIndex;
+        iter->kind = EcsIterEvalTables;
 
         pivot_term = ecs_filter_pivot_term(world, filter);
 
@@ -2082,7 +2110,7 @@ bool ecs_filter_next_instanced(
         } while (!match);
 
         goto yield;
-    } else if (kind == EcsIterEvalIndex || kind == EcsIterEvalCondition) {
+    } else if (kind == EcsIterEvalTables || kind == EcsIterEvalCondition) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
         int32_t pivot_term = term->index;
@@ -2090,10 +2118,23 @@ bool ecs_filter_next_instanced(
 
         /* Check if the This variable has been set on the iterator. If set,
          * the filter should only be applied to the variable value */
-        // bool this_is_set = false;
-        // if (it->variable_count) {
-        //     this_is_set = ecs_iter_var_is_constrained(it, 0);
-        // }
+        ecs_var_t *this_var = NULL;
+        ecs_table_t *this_table = NULL;
+        if (it->variable_count) {
+            if (ecs_iter_var_is_constrained(it, 0)) {
+                this_var = it->variables;
+                this_table = this_var->range.table;
+
+                /* If variable is constrained, make sure it's a value that's
+                 * pointing to a table, as a filter can't iterate single
+                 * entities (yet) */
+                ecs_assert(this_table != NULL, ECS_INVALID_OPERATION, NULL);
+
+                /* Can't set variable for filter that does not iterate tables */
+                ecs_assert(kind == EcsIterEvalTables, 
+                    ECS_INVALID_OPERATION, NULL);
+            }
+        }
 
         do {
             /* If there are no matches left for the previous table, this is the
@@ -2102,11 +2143,33 @@ bool ecs_filter_next_instanced(
 
             if (first) {
                 if (kind != EcsIterEvalCondition) {
-                    /* Find new match, starting with the leading term */
-                    if (!term_iter_next(world, term_iter, 
-                        filter->match_prefab, filter->match_disabled)) 
-                    {
-                        goto done;
+                    /* Check if this variable was constrained */
+                    if (this_table != NULL) {
+                        /* If this is the first match of a new result and the
+                         * previous result was equal to the value of a 
+                         * constrained var, there's nothing left to iterate */
+                        if (it->table == this_table) {
+                            goto done;
+                        }
+
+                        /* If table doesn't match term iterator, it doesn't
+                         * match filter. */
+                        if (!term_iter_set_table(term_iter, this_table)){
+                            goto done;
+                        }
+
+                        /* But if it does, forward it to filter matching */
+                        ecs_assert(term_iter->table == this_table,
+                            ECS_INTERNAL_ERROR, NULL);
+
+                    /* If This variable is not constrained, iterate as usual */
+                    } else {
+                        /* Find new match, starting with the leading term */
+                        if (!term_iter_next(world, term_iter, 
+                            filter->match_prefab, filter->match_disabled)) 
+                        {
+                            goto done;
+                        }
                     }
 
                     ecs_assert(term_iter->match_count != 0, 

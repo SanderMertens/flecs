@@ -764,16 +764,16 @@ error:
     return;
 }
 
-void ecs_iter_set_var_table(
+void ecs_iter_set_var_as_table(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_t *table)
 {
     ecs_table_range_t range = { .table = (ecs_table_t*)table };
-    ecs_iter_set_var_range(it, var_id, &range);
+    ecs_iter_set_var_as_range(it, var_id, &range);
 }
 
-void ecs_iter_set_var_range(
+void ecs_iter_set_var_as_range(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_range_t *range)
