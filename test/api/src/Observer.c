@@ -45,13 +45,8 @@ void Observer_w_1_filter_term(ecs_iter_t *it) {
     test_assert(it->entities[0] != 0);
 
     test_assert(it->ptrs != NULL);
-    test_assert(it->sizes != NULL);
-
     test_assert(it->ptrs[0] == NULL);
-    test_assert(it->sizes[0] != 0);
-
     test_assert(it->ptrs[1] != NULL);
-    test_assert(it->sizes[1] != 0);
 
     Velocity *v = ecs_term(it, Velocity, 2);
     test_int(v->x, 1);
@@ -70,13 +65,8 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     test_assert(it->sizes != NULL);
 
     test_assert(it->ptrs[0] == NULL);
-    test_assert(it->sizes[0] != 0);
-
     test_assert(it->ptrs[1] == NULL);
-    test_assert(it->sizes[1] != 0);
-
     test_assert(it->ptrs[2] != NULL);
-    test_assert(it->sizes[2] != 0);
 
     Mass *m = ecs_term(it, Mass, 3);
     test_int(m[0], 100);
