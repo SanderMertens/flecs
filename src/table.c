@@ -249,6 +249,10 @@ void init_type_info(
         return;
     }
 
+    if (table->type_info) {
+        return;
+    }
+
     ecs_table_record_t *records = table->records;
     int32_t i, count = ecs_vector_count(table->type);
     table->type_info = ecs_os_calloc_n(ecs_type_info_t, count);
