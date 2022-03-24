@@ -202,14 +202,15 @@ typedef struct ecs_rule_iter_t {
 } ecs_rule_iter_t;
 
 /* Bits for tracking whether a cache was used/whether the array was allocated.
- * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. */
-#define flecs_iter_cache_ids           (1 << 0)
-#define flecs_iter_cache_columns       (1 << 1)
-#define flecs_iter_cache_subjects      (1 << 2)
-#define flecs_iter_cache_sizes         (1 << 3)
-#define flecs_iter_cache_ptrs          (1 << 4)
-#define flecs_iter_cache_match_indices (1 << 5)
-#define flecs_iter_cache_variables     (1 << 6)
+ * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
+ * Constants are named to enable easy macro substitution. */
+#define flecs_iter_cache_ids           (1u << 0u)
+#define flecs_iter_cache_columns       (1u << 1u)
+#define flecs_iter_cache_subjects      (1u << 2u)
+#define flecs_iter_cache_sizes         (1u << 3u)
+#define flecs_iter_cache_ptrs          (1u << 4u)
+#define flecs_iter_cache_match_indices (1u << 5u)
+#define flecs_iter_cache_variables     (1u << 6u)
 #define flecs_iter_cache_all           (255)
 
 /* Inline iterator arrays to prevent allocations for small array sizes */
@@ -241,6 +242,13 @@ typedef struct ecs_iter_private_t {
 
     ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
 } ecs_iter_private_t;
+
+/* Bits for iterator flags */
+#define EcsIterIsValid       (1u << 0u) /* Does iterator contain valid result */
+#define EcsIterIsFilter      (1u << 1u) /* Is iterator filter (metadata only) */
+#define EcsIterIsInstanced   (1u << 2u) /* Is iterator instanced */
+#define EcsIterHasShared     (1u << 3u) /* Does result have shared terms */
+#define EcsIterTableOnly     (1u << 4u) /* Result only populates table */
 
 /** Iterator.
  */
@@ -297,11 +305,7 @@ struct ecs_iter_t {
     int32_t instance_count;       /* Number of entities to iterate before next table */
 
     /* Iterator flags */
-    bool is_valid;                /* Set to true after first next() */
-    bool is_filter;               /* When true, data fields are not set */
-    bool is_instanced;            /* When true, owned terms are always returned as arrays */
-    bool has_shared;              /* Iterator may set this when iterator has shared terms */
-    bool table_only;              /* If false, iterator does not expose table data */
+    ecs_flags32_t flags;
 
     ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
 

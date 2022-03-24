@@ -1315,7 +1315,7 @@ int ecs_iter_to_json_buf(
     flecs_json_array_push(buf);
 
     /* Use instancing for improved performance */
-    it->is_instanced = true;
+    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {

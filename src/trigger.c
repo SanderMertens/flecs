@@ -322,7 +322,7 @@ void init_iter(
         return;
     }
 
-    if (it->table_only) {
+    if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
         it->ids = it->priv.cache.ids;
         it->ids[0] = it->event_id;
         return;
@@ -402,14 +402,15 @@ void notify_self_triggers(
             continue;
         }
 
-        it->is_filter = t->term.inout == EcsInOutFilter;
+        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
+            t->term.inout == EcsInOutFilter);
+
         it->system = t->entity;
         it->self = t->self;
         it->ctx = t->ctx;
         it->binding_ctx = t->binding_ctx;
         it->term_index = t->term.index;
         it->terms = &t->term;
-
         t->callback(it);
     }
 }
@@ -422,7 +423,7 @@ void notify_entity_triggers(
 {
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (it->table_only) {
+    if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
         return;
     }
 
@@ -445,7 +446,8 @@ void notify_entity_triggers(
                 continue;
             }
 
-            it->is_filter = t->term.inout == EcsInOutFilter;
+            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
+                t->term.inout == EcsInOutFilter);
             it->system = t->entity;
             it->self = t->self;
             it->ctx = t->ctx;
@@ -509,7 +511,7 @@ void notify_set_base_triggers(
             continue;
         }
 
-        if (!it->table_only) {
+        if (!ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
             if (!it->subjects[0]) {
                 it->subjects[0] = obj;
             }
@@ -521,7 +523,8 @@ void notify_set_base_triggers(
             }
         }
 
-        it->is_filter = t->term.inout == EcsInOutFilter;
+        ECS_BIT_COND(it->flags, EcsIterIsFilter, 
+            t->term.inout == EcsInOutFilter);
         it->event_id = t->term.id;
         it->system = t->entity;
         it->self = t->self;
@@ -543,7 +546,7 @@ void notify_set_triggers(
     ecs_assert(triggers != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(it->count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (it->table_only) {
+    if (ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
         return;
     }
 
@@ -588,7 +591,8 @@ void notify_set_triggers(
                 continue;
             }
 
-            it->is_filter = t->term.inout == EcsInOutFilter;
+            ECS_BIT_COND(it->flags, EcsIterIsFilter, 
+                t->term.inout == EcsInOutFilter);
             it->system = t->entity;
             it->self = t->self;
             it->ctx = t->ctx;
@@ -597,10 +601,12 @@ void notify_set_triggers(
             it->terms = &t->term;
 
             /* Triggers for supersets can be instanced */
-            if (it->count == 1 || t->instanced || it->is_filter || !it->sizes[0]) {
-                it->is_instanced = t->instanced;
+            bool instanced = t->instanced;
+            bool is_filter = ECS_BIT_IS_SET(it->flags, EcsIterIsFilter);
+            if (it->count == 1 || instanced || is_filter || !it->sizes[0]) {
+                ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
                 t->callback(it);
-                it->is_instanced = false;
+                ECS_BIT_CLEAR(it->flags, EcsIterIsInstanced);
             } else {
                 ecs_entity_t *entities = it->entities;
                 it->count = 1;

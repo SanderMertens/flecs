@@ -1828,13 +1828,13 @@ void Query_iter_valid() {
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(it.is_valid, false);
+    test_bool(it.flags & EcsIterIsValid, false);
 
     test_bool(ecs_query_next(&it), true);
-    test_bool(it.is_valid, true);
+    test_bool(it.flags & EcsIterIsValid, true);
 
     test_bool(ecs_query_next(&it), false);
-    test_bool(it.is_valid, false);
+    test_bool(it.flags & EcsIterIsValid, false);
 
     ecs_fini(world);
 }

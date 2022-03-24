@@ -2695,14 +2695,21 @@ ecs_iter_t ecs_query_iter(
         it.node = ecs_vector_first(query->table_slices, ecs_query_table_node_t);
     }
 
+    ecs_flags32_t flags = 0;
+    if (query->filter.filter) {
+        ECS_BIT_SET(flags, EcsIterIsFilter);
+    }
+    if (query->filter.instanced) {
+        ECS_BIT_SET(flags, EcsIterIsInstanced);
+    }
+
     ecs_iter_t result = {
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
         .term_count = query->filter.term_count_actual,
         .table_count = table_count,
-        .is_filter = query->filter.filter,
-        .is_instanced = query->filter.instanced,
+        .flags = flags,
         .priv.iter.query = it,
         .next = ecs_query_next,
     };
@@ -3109,7 +3116,7 @@ bool ecs_query_next_instanced(
     ecs_flags32_t flags = query->flags;
     (void)world;
 
-    it->is_valid = true;
+    ECS_BIT_SET(it->flags, EcsIterIsValid);
 
     ecs_poly_assert(world, ecs_world_t);
 
@@ -3232,7 +3239,8 @@ bool ecs_query_changed(
 {
     if (it) {
         ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-        ecs_check(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+            ECS_INVALID_PARAMETER, NULL);
 
         ecs_query_table_match_t *qt = 
             (ecs_query_table_match_t*)it->priv.iter.query.prev;
@@ -3278,7 +3286,8 @@ void ecs_query_skip(
     ecs_iter_t *it)
 {
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->is_valid, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+        ECS_INVALID_PARAMETER, NULL);
 
     if (it->instance_count > it->count) {
         it->priv.iter.query.skip_count ++;

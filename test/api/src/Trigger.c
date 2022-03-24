@@ -51,7 +51,7 @@ void Trigger_w_filter_term(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    test_bool(it->is_filter, true);
+    test_bool(it->flags & EcsIterIsFilter, true);
 }
 
 static

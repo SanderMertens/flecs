@@ -120,7 +120,7 @@ void ecs_emit(
         .offset = row,
         .count = count,
         .param = (void*)desc->param,
-        .table_only = desc->table_event
+        .flags = desc->table_event ? EcsIterTableOnly : 0
     };
 
     world->event_id ++;

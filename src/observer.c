@@ -17,13 +17,12 @@ bool observer_run(ecs_iter_t *it) {
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual;
     user_it.terms = o->filter.terms;
-    user_it.is_filter = o->filter.filter;
+    user_it.flags = o->filter.filter ? EcsIterIsFilter : 0;
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
-    user_it.is_valid = false;
     flecs_iter_init(&user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;

@@ -505,8 +505,9 @@ static
 bool world_iter_next(
     ecs_iter_t *it)
 {
-    if (it->is_valid) {
-        return it->is_valid = false;
+    if (ECS_BIT_IS_SET(it->flags, EcsIterIsValid)) {
+        ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
+        return false;
     }
 
     ecs_world_t *world = it->real_world;

@@ -3080,7 +3080,7 @@ ecs_iter_t ecs_rule_iter(
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
-    result.is_filter = rule->filter.filter;
+    result.flags |= EcsIterIsFilter * (rule->filter.filter == true);
 
     flecs_iter_init(&result, 
         flecs_iter_cache_ids |
@@ -4426,7 +4426,7 @@ bool ecs_rule_next_instanced(
     const ecs_rule_t *rule = iter->rule;
     bool redo = iter->redo;
     int32_t last_frame = -1;
-    bool first_time = it->is_valid == false;
+    bool first_time = !ECS_BIT_IS_SET(it->flags, EcsIterIsValid);
 
     ecs_poly_assert(rule, ecs_rule_t);
 

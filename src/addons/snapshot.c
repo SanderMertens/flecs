@@ -391,17 +391,17 @@ bool ecs_snapshot_next(
             it->entities = NULL;
         }
 
-        it->is_valid = true;
+        ECS_BIT_SET(it->flags, EcsIterIsValid);
         iter->index = i + 1;
         
         goto yield;
     }
 
-    it->is_valid = false;
+    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
     return false;
 
 yield:
-    it->is_valid = true;
+    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
     return true;    
 }
 

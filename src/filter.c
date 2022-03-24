@@ -1870,7 +1870,7 @@ bool ecs_term_next(
 
 yield:
     flecs_iter_populate_data(world, it, table, 0, 0, it->ptrs, it->sizes);
-    it->is_valid = true;
+    ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;
 done:
 error:
@@ -1962,12 +1962,14 @@ ecs_iter_t ecs_filter_iter(
     
     flecs_process_pending_tables(world);
 
+    bool instanced = filter ? filter->instanced : false;
+
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
-        .is_instanced = filter ? filter->instanced : false
+        .flags = instanced ? EcsIterIsInstanced : 0
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
@@ -2012,7 +2014,9 @@ ecs_iter_t ecs_filter_iter(
         iter->filter.terms = NULL;
     }
 
-    it.is_filter = filter->filter;
+    if (filter->filter) {
+        ECS_BIT_SET(it.flags, EcsIterIsFilter);
+    }
 
     if (filter->match_this) {
         /* Make space for one variable if the filter has terms for This var */ 
@@ -2269,6 +2273,6 @@ error:
 yield:
     it->offset = 0;
     flecs_iter_populate_data(world, it, table, 0, 0, it->ptrs, it->sizes);
-    it->is_valid = true;
+    ECS_BIT_SET(it->flags, EcsIterIsValid);
     return true;    
 }
