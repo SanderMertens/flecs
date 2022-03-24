@@ -819,7 +819,7 @@ ecs_table_range_t table_from_entity(
 }
 
 static
-ecs_table_range_t reg_get_table(
+ecs_table_range_t reg_get_range(
     const ecs_rule_t *rule,
     ecs_rule_op_t *op,
     ecs_var_t *regs,
@@ -860,19 +860,19 @@ error:
 }
 
 static
-void reg_set_table(
+void reg_set_range(
     const ecs_rule_t *rule,
     ecs_var_t *regs,
     int32_t r,
-    ecs_table_range_t table)
+    const ecs_table_range_t *range)
 {
     if (rule->vars[r].kind == EcsRuleVarKindEntity) {
-        ecs_check(table.count == 1, ECS_INTERNAL_ERROR, NULL);
-        regs[r].range = table;
-        regs[r].entity = ecs_vector_get(table.table->storage.entities, 
-            ecs_entity_t, table.offset)[0];
+        ecs_check(range->count == 1, ECS_INTERNAL_ERROR, NULL);
+        regs[r].range = *range;
+        regs[r].entity = ecs_vector_get(range->table->storage.entities,
+            ecs_entity_t, range->offset)[0];
     } else {
-        regs[r].range = table;
+        regs[r].range = *range;
         regs[r].entity = 0;
     }
 error:
@@ -3013,40 +3013,6 @@ bool ecs_rule_var_is_entity(
     return rule->vars[var_id].kind == EcsRuleVarKindEntity;
 }
 
-/* Public function to set the value of a variable before iterating. */
-void ecs_rule_set_var(
-    ecs_iter_t *it,
-    int32_t var_id,
-    ecs_entity_t value)
-{
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id != -1, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(value != 0, ECS_INVALID_PARAMETER, NULL);
-    /* Can't set variable while iterating */
-    ecs_check(it->is_valid == false, ECS_INVALID_OPERATION, NULL);
-    ecs_check(it->next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
-
-    ecs_rule_iter_t *iter = &it->priv.iter.rule;
-    ecs_check(iter->registers != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_rule_t *r = iter->rule;
-    ecs_check(var_id < r->var_count, ECS_INVALID_PARAMETER, NULL);
-
-    entity_reg_set(r, iter->registers, var_id, value);
-
-    /* Also set table variable if it exists */
-    const ecs_rule_var_t *var = &r->vars[var_id];
-    if (var->other != -1) {
-        const ecs_rule_var_t *tvar = &r->vars[var->other];
-        ecs_assert(tvar->kind == EcsRuleVarKindTable, 
-            ECS_INTERNAL_ERROR, NULL);
-        (void)tvar;
-        reg_set_entity(r, iter->registers, var->other, value);
-    }
-error:
-    return;
-}
-
 static
 void ecs_rule_iter_free(
     ecs_iter_t *iter)
@@ -3084,8 +3050,6 @@ ecs_iter_t ecs_rule_iter(
         if (rule->var_count) {
             it->registers = ecs_os_malloc_n(ecs_var_t, 
                 rule->operation_count * rule->var_count);
-
-            it->variables = ecs_os_malloc_n(ecs_var_t, rule->var_count);
         }
         
         it->op_ctx = ecs_os_calloc_n(ecs_rule_op_ctx_t, rule->operation_count);
@@ -3355,11 +3319,9 @@ bool eval_superset(
     };
     ecs_table_t *table = NULL;
 
-    /* If the input register is not NULL, this is a variable that's been set by
-     * the application. */
+    /* Check if input register is constrained */
     ecs_entity_t result = iter->registers[r].entity;
-    bool output_is_input = result && result != EcsWildcard;
-
+    bool output_is_input = ecs_iter_var_is_constrained(it, r);
     if (output_is_input && !redo) {
         ecs_assert(regs[r].entity == iter->registers[r].entity, 
             ECS_INTERNAL_ERROR, NULL);
@@ -3842,7 +3804,7 @@ bool eval_with(
         return false;
     }
 
-    table = reg_get_table(rule, op, regs, r).table;
+    table = reg_get_range(rule, op, regs, r).table;
     if (!table) {
         return false;
     }
@@ -3998,8 +3960,7 @@ bool eval_store(
         ecs_entity_t out, in = reg_get_entity(rule, op, regs, r_in);
 
         out = iter->registers[r_out].entity;
-        bool output_is_input = out && out != EcsWildcard;
-
+        bool output_is_input = ecs_iter_var_is_constrained(it, r_out);
         if (output_is_input && !redo) {
             ecs_assert(regs[r_out].entity == iter->registers[r_out].entity, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -4012,7 +3973,7 @@ bool eval_store(
 
         reg_set_entity(rule, regs, r_out, in);
     } else {
-        ecs_table_range_t out, in = reg_get_table(rule, op, regs, r_in);
+        ecs_table_range_t out, in = reg_get_range(rule, op, regs, r_in);
 
         out = iter->registers[r_out].range;
         bool output_is_input = out.table != NULL;
@@ -4027,7 +3988,7 @@ bool eval_store(
             }
         }
 
-        reg_set_table(rule, regs, r_out, in);
+        reg_set_range(rule, regs, r_out, &in);
 
         /* Ensure that if the input was an empty entity, information is not
          * lost */
@@ -4279,10 +4240,9 @@ void populate_iterator(
 
     int32_t i, var_count = rule->var_count;
     int32_t term_count = rule->filter.term_count;
-    iter->variables = it->variables;
 
     for (i = 0; i < var_count; i ++) {
-        it->variables[i] = regs[i];
+        iter->variables[i] = regs[i];
     }
 
     for (i = 0; i < term_count; i ++) {
@@ -4383,6 +4343,60 @@ bool is_control_flow(
     }
 }
 
+static
+void rule_iter_set_initial_state(
+    ecs_iter_t *it,
+    ecs_rule_iter_t *iter,
+    const ecs_rule_t *rule)
+{
+    int32_t i;
+
+    /* Make sure that if there are any terms with literal subjects, they're
+     * initialized in the subjects array */
+    const ecs_filter_t *filter = &rule->filter;
+    int32_t term_count = filter->term_count;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *t = &filter->terms[i];
+        ecs_term_id_t *subj = &t->subj;
+        ecs_assert(subj->var == EcsVarIsVariable || subj->entity != EcsThis,
+            ECS_INTERNAL_ERROR, NULL);
+
+        if (subj->var == EcsVarIsEntity) {
+            it->subjects[i] = subj->entity;
+        }
+    }
+
+    /* Initialize registers of constrained variables */
+    if (it->constrained_vars) {
+        ecs_var_t *regs = get_register_frame(iter, 0);
+
+        for (i = 0; i < it->variable_count; i ++) {
+            if (ecs_iter_var_is_constrained(it, i)) {
+                const ecs_rule_var_t *var = &rule->vars[i];
+                ecs_assert(var->id == i, ECS_INTERNAL_ERROR, NULL);
+                
+                int32_t other_var = var->other;
+                ecs_var_t *it_var = &it->variables[i];
+                ecs_entity_t e = it_var->entity;
+
+                if (e) {
+                    reg_set_entity(rule, regs, i, e);
+                    if (other_var != -1) {
+                        reg_set_entity(rule, regs, other_var, e);
+                    }
+                } else {
+                    ecs_assert(it_var->range.table != NULL, 
+                        ECS_INVALID_PARAMETER, NULL);
+                    reg_set_range(rule, regs, i, &it_var->range);
+                    if (other_var != -1) {
+                        reg_set_range(rule, regs, other_var, &it_var->range);
+                    }
+                }
+            }
+        }
+    }
+}
+
 bool ecs_rule_next(
     ecs_iter_t *it)
 {
@@ -4412,27 +4426,20 @@ bool ecs_rule_next_instanced(
     const ecs_rule_t *rule = iter->rule;
     bool redo = iter->redo;
     int32_t last_frame = -1;
-    bool init_subjects = it->subjects == NULL;
+    bool first_time = it->is_valid == false;
+
+    ecs_poly_assert(rule, ecs_rule_t);
+
+    /* Mark iterator as valid & ensure iterator resources are up to date */
+    flecs_iter_validate(it);
 
     /* Can't iterate an iterator that's already depleted */
     ecs_check(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_iter_validate(it);
-
-    /* Make sure that if there are any terms with literal subjects, they're
-     * initialized in the subjects array */
-    if (init_subjects) {
-        int32_t i;
-        for (i = 0; i < rule->filter.term_count; i ++) {
-            ecs_term_t *t = &rule->filter.terms[i];
-            ecs_term_id_t *subj = &t->subj;
-            ecs_assert(subj->var == EcsVarIsVariable || subj->entity != EcsThis,
-                ECS_INTERNAL_ERROR, NULL);
-
-            if (subj->var == EcsVarIsEntity) {
-                it->subjects[i] = subj->entity;
-            }
-        }
+    /* If this is the first time the iterator is iterated, set initial state */
+    if (first_time) {
+        ecs_assert(redo == false, ECS_INTERNAL_ERROR, NULL);
+        rule_iter_set_initial_state(it, iter, rule);
     }
 
     do {

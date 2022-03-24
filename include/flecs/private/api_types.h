@@ -190,7 +190,6 @@ typedef struct ecs_sparse_iter_t {
 typedef struct ecs_rule_iter_t {
     const ecs_rule_t *rule;
     struct ecs_var_t *registers;         /* Variable storage (tables, entities) */
-    ecs_var_t *variables;                /* Variable storage for iterator */
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     
     int32_t *columns;                    /* Column indices */

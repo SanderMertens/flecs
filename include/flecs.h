@@ -3571,10 +3571,32 @@ bool ecs_iter_is_true(
 
 /** Set value for iterator variable.
  * This constrains the iterator to return only results for which the variable
- * equals the specified value.
+ * equals the specified value. The default value for all variables is 
+ * EcsWildcard, which means the variable can assume any value.
  * 
- * The default value for all variables is EcsWildcard, which means the variable
- * is unconstrained.
+ * Example:
+ * 
+ * // Rule that matches (Eats, *)
+ * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
+ *   .terms = {
+ *     { .pred.entity = Eats, .obj.name = "_Food" }
+ *   }
+ * });
+ * 
+ * int food_var = ecs_rule_find_var(r, "Food");
+ * 
+ * // Set Food to Apples, so we're only matching (Eats, Apples)
+ * ecs_iter_t it = ecs_rule_iter(world, r);
+ * ecs_iter_set_var(&it, food_var, Apples);
+ * 
+ * while (ecs_rule_next(&it)) {
+ *   for (int i = 0; i < it.count; i ++) {
+ *     // iterate as usual
+ *   }
+ * }
+ * 
+ * The variable must be initialized after creating the iterator and before the
+ * first call to next.
  * 
  * @param it The iterator.
  * @param var_id The variable index.
