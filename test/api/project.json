@@ -900,8 +900,7 @@
                 "filter_wo_this_var",
                 "set_this_to_table_1_term",
                 "set_this_to_table_2_terms",
-                "set_this_to_entity_1_term",
-                "set_this_to_entity_2_terms"
+                "set_this_to_table_1_wildcard"
             ]
         }, {
             "id": "FilterStr",

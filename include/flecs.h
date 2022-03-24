@@ -3632,7 +3632,7 @@ void ecs_iter_set_var(
  * @param table The table variable value.
  */
 FLECS_API
-void ecs_iter_set_var_table(
+void ecs_iter_set_var_as_table(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_t *table);
@@ -3645,7 +3645,7 @@ void ecs_iter_set_var_table(
  * @param range The range variable value.
  */
 FLECS_API
-void ecs_iter_set_var_range(
+void ecs_iter_set_var_as_range(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_range_t *range);

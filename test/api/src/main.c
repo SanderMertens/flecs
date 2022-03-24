@@ -850,8 +850,7 @@ void Filter_iter_w_this_var_as_table_range(void);
 void Filter_filter_wo_this_var(void);
 void Filter_set_this_to_table_1_term(void);
 void Filter_set_this_to_table_2_terms(void);
-void Filter_set_this_to_entity_1_term(void);
-void Filter_set_this_to_entity_2_terms(void);
+void Filter_set_this_to_table_1_wildcard(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -4913,12 +4912,8 @@ bake_test_case Filter_testcases[] = {
         Filter_set_this_to_table_2_terms
     },
     {
-        "set_this_to_entity_1_term",
-        Filter_set_this_to_entity_1_term
-    },
-    {
-        "set_this_to_entity_2_terms",
-        Filter_set_this_to_entity_2_terms
+        "set_this_to_table_1_wildcard",
+        Filter_set_this_to_table_1_wildcard
     }
 };
 
@@ -8277,7 +8272,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        148,
+        147,
         Filter_testcases
     },
     {

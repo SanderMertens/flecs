@@ -146,7 +146,7 @@ typedef struct ecs_term_iter_t {
 } ecs_term_iter_t;
 
 typedef enum ecs_iter_kind_t {
-    EcsIterEvalIndex,
+    EcsIterEvalTables,
     EcsIterEvalChain,
     EcsIterEvalCondition,
     EcsIterEvalNone
