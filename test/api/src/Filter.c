@@ -5785,20 +5785,28 @@ void Filter_match_empty_tables() {
     test_bool( ecs_filter_next(&it), true);
     test_assert(it.table == t1);
     test_int(it.count, 0);
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_size(&it, 1), sizeof(Position));
 
     test_bool( ecs_filter_next(&it), true);
     test_assert(it.table == t2);
     test_int(it.count, 0);
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_size(&it, 1), sizeof(Position));
 
     test_bool( ecs_filter_next(&it), true);
     test_assert(it.table == t3);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_size(&it, 1), sizeof(Position));
 
     test_bool( ecs_filter_next(&it), true);
     test_assert(it.table == t4);
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_size(&it, 1), sizeof(Position));
 
     test_bool( ecs_filter_next(&it), false);
 
@@ -5839,6 +5847,9 @@ void Filter_match_empty_tables_w_no_empty_tables() {
     ecs_fini(world);
 }
 
+void Filter_match_empty_table_w_component() {
+    // Implement testcase
+}
 
 void Filter_match_switch_w_switch() {
     ecs_world_t *world = ecs_init();
@@ -6593,6 +6604,85 @@ void Filter_set_this_to_table_2_terms_no_match() {
     it = ecs_filter_iter(world, &f);
     ecs_iter_set_var_as_table(&it, this_var_id, t2);
     test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_empty_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_remove(world, e1, TagB);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 0);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_empty_table_w_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, TagA);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_remove(world, e1, TagA);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ ecs_id(Position) }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 0);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_size(&it, 1), sizeof(Position));
+    test_assert(ecs_term(&it, Position, 1) == NULL);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
 
     ecs_filter_fini(&f);
 

@@ -903,7 +903,9 @@
                 "set_this_to_table_1_wildcard",
                 "set_this_to_table_no_match_no_data",
                 "set_this_to_table_no_match",
-                "set_this_to_table_2_terms_no_match"
+                "set_this_to_table_2_terms_no_match",
+                "set_this_to_empty_table",
+                "set_this_to_empty_table_w_component"
             ]
         }, {
             "id": "FilterStr",

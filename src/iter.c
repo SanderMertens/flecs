@@ -107,7 +107,12 @@ bool flecs_iter_populate_term_data(
     ecs_size_t *size_out)
 {
     bool is_shared = false;
-
+    ecs_table_t *table;
+    ecs_vector_t *vec;
+    ecs_size_t size = 0;
+    ecs_size_t align;
+    int32_t row;
+    
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
         goto no_data;
@@ -121,12 +126,6 @@ bool flecs_iter_populate_term_data(
     if (it->terms[t].inout == EcsInOutFilter) {
         goto no_data;
     }
-
-    ecs_table_t *table;
-    ecs_vector_t *vec;
-    ecs_size_t size;
-    ecs_size_t align;
-    int32_t row;
 
     if (column < 0) {
         is_shared = true;
@@ -189,7 +188,7 @@ bool flecs_iter_populate_term_data(
     } else {
         /* Data is from This, use table from iterator */
         table = it->table;
-        if (!table || !ecs_table_count(table)) {
+        if (!table) {
             goto no_data;
         }
 
@@ -210,6 +209,11 @@ bool flecs_iter_populate_term_data(
         size = ti->size;
         align = ti->alignment;
         vec = s->data;
+
+        if (!table || !ecs_table_count(table)) {
+            goto no_data;
+        }
+
         /* Fallthrough to has_data */
     }
 
@@ -231,7 +235,7 @@ has_switch: {
 
 no_data:
     if (ptr_out) ptr_out[0] = NULL;
-    if (size_out) size_out[0] = 0;
+    if (size_out) size_out[0] = size;
     return false;
 }
 
