@@ -6057,3 +6057,241 @@ void Filter_iter_while_creating_components() {
 
     ecs_fini(world);
 }
+
+void Filter_iter_w_this_var_as_entity() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_entity_t this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var != 0);
+    test_assert(this_var == e1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var != 0);
+    test_assert(this_var == e2);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var == 0); /* more than one entity matches */
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_iter_w_this_var_as_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    test_assert(t2 != NULL);
+    test_assert(t2 != t1);
+
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    test_assert(t3 != NULL);
+    test_assert(t3 != t1);
+    test_assert(t3 != t2);
+    test_assert(t3 == ecs_get_table(world, e4));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_table_t *this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t2);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t3);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_iter_w_this_var_as_table_range() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    test_assert(t2 != NULL);
+    test_assert(t2 != t1);
+
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    test_assert(t3 != NULL);
+    test_assert(t3 != t1);
+    test_assert(t3 != t2);
+    test_assert(t3 == ecs_get_table(world, e4));
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_table_range_t this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t1);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t2);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t3);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 2);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_wo_this_var() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.entity = e1 }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id == -1); /* Filter has no This terms */
+
+    /* Make sure it matches for good measure */
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 0);
+    test_int(it.subjects[0], e1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_table_1_term() {
+    // Implement testcase
+}
+
+void Filter_set_this_to_table_2_terms() {
+    // Implement testcase
+}
+
+void Filter_set_this_to_entity_1_term() {
+    // Implement testcase
+}
+
+void Filter_set_this_to_entity_2_terms() {
+    // Implement testcase
+}
+

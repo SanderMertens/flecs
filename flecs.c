@@ -19348,9 +19348,102 @@ ecs_entity_t ecs_iter_get_var(
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
-    return it->variables[var_id].entity;
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_entity_t e = var->entity;
+    if (!e) {
+        ecs_table_t *table = var->range.table;
+        if (table) {
+            if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
+                ecs_assert(ecs_table_count(table) > var->range.offset,
+                    ECS_INTERNAL_ERROR, NULL);
+                e = ecs_vector_get(table->storage.entities, ecs_entity_t, 
+                    var->range.offset)[0];
+            }
+        }
+    }
+
+    return e;
 error:
     return 0;
+}
+
+ecs_table_t* ecs_iter_get_var_as_table(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_table_t *table = var->range.table;
+    if (!table) {
+        /* If table is not set, try to get table from entity */
+        ecs_entity_t e = var->entity;
+        if (e) {
+            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            if (r) {
+                table = r->table;
+                if (ecs_table_count(table) != 1) {
+                    /* If table contains more than the entity, make sure not to
+                     * return a partial table. */
+                    return NULL;
+                }
+            }
+        }
+    }
+
+    if (table) {
+        if (var->range.offset) {
+            /* Don't return whole table if only partial table is matched */
+            return NULL;
+        }
+
+        if (!var->range.count || ecs_table_count(table) == var->range.count) {
+            /* Return table if count matches */
+            return table;
+        }
+    }
+
+error:
+    return NULL;
+}
+
+ecs_table_range_t ecs_iter_get_var_as_range(
+    ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_table_range_t result = { 0 };
+
+    ecs_var_t *var = &it->variables[var_id];
+    ecs_table_t *table = var->range.table;
+    if (!table) {
+        ecs_entity_t e = var->entity;
+        if (e) {
+            ecs_record_t *r = ecs_eis_get(it->real_world, e);
+            if (r) {
+                result.table = r->table;
+                result.offset = ECS_RECORD_TO_ROW(r->row);
+                result.count = 1;
+            }
+        }
+    } else {
+        result.table = table;
+        result.offset = var->range.offset;
+        result.count = var->range.count;
+        if (!result.count) {
+            result.count = ecs_table_count(table);
+        }
+    }
+
+    return result;
+error:
+    return (ecs_table_range_t){0};
 }
 
 void ecs_iter_set_var(
@@ -24529,8 +24622,10 @@ int ecs_filter_init(
     if (f.term_cache_used) {
         filter_out->terms = filter_out->term_cache;
     }
+
     filter_out->name = ecs_os_strdup(desc->name);
     filter_out->expr = ecs_os_strdup(desc->expr);
+    filter_out->variable_names[0] = (char*)".";
 
     ecs_assert(!filter_out->term_cache_used || 
         filter_out->terms == filter_out->term_cache,
@@ -24784,6 +24879,21 @@ char* ecs_filter_str(
     return ecs_strbuf_get(&buf);
 error:
     return NULL;
+}
+
+int32_t ecs_filter_find_this_var(
+    const ecs_filter_t *filter)
+{
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    if (filter->match_this) {
+        /* Filters currently only support the This variable at index 0. Only
+         * return 0 if filter actually has terms for the This variable. */
+        return 0;
+    }
+
+error:
+    return -1;
 }
 
 static
@@ -25524,6 +25634,14 @@ ecs_iter_t ecs_filter_iter(
 
     it.is_filter = filter->filter;
 
+    if (filter->match_this) {
+        /* Make space for one variable if the filter has terms for This var */ 
+        it.variable_count = 1;
+
+        /* Set variable name array */
+        it.variable_names = (char**)filter->variable_names;
+    }
+
     flecs_iter_init(&it, flecs_iter_cache_all);
 
     return it;
@@ -25617,7 +25735,16 @@ bool ecs_filter_next_instanced(
         int32_t pivot_term = term->index;
         bool first;
 
+        /* Check if the This variable has been set on the iterator. If set,
+         * the filter should only be applied to the variable value */
+        // bool this_is_set = false;
+        // if (it->variable_count) {
+        //     this_is_set = ecs_iter_var_is_constrained(it, 0);
+        // }
+
         do {
+            /* If there are no matches left for the previous table, this is the
+             * first match of the next table. */
             first = iter->matches_left == 0;
 
             if (first) {
@@ -25670,7 +25797,14 @@ bool ecs_filter_next_instanced(
                     iter->matches_left = 0;
                     continue;
                 }
-                    
+
+                /* Table got matched, set This variable */
+                if (table) {
+                    ecs_assert(it->variable_count == 1, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+                    it->variables[0].range.table = table;
+                }
+
                 ecs_assert(iter->matches_left != 0, ECS_INTERNAL_ERROR, NULL);
             }
 

@@ -975,8 +975,10 @@ int ecs_filter_init(
     if (f.term_cache_used) {
         filter_out->terms = filter_out->term_cache;
     }
+
     filter_out->name = ecs_os_strdup(desc->name);
     filter_out->expr = ecs_os_strdup(desc->expr);
+    filter_out->variable_names[0] = (char*)".";
 
     ecs_assert(!filter_out->term_cache_used || 
         filter_out->terms == filter_out->term_cache,
@@ -1230,6 +1232,21 @@ char* ecs_filter_str(
     return ecs_strbuf_get(&buf);
 error:
     return NULL;
+}
+
+int32_t ecs_filter_find_this_var(
+    const ecs_filter_t *filter)
+{
+    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    if (filter->match_this) {
+        /* Filters currently only support the This variable at index 0. Only
+         * return 0 if filter actually has terms for the This variable. */
+        return 0;
+    }
+
+error:
+    return -1;
 }
 
 static
@@ -1970,6 +1987,14 @@ ecs_iter_t ecs_filter_iter(
 
     it.is_filter = filter->filter;
 
+    if (filter->match_this) {
+        /* Make space for one variable if the filter has terms for This var */ 
+        it.variable_count = 1;
+
+        /* Set variable name array */
+        it.variable_names = (char**)filter->variable_names;
+    }
+
     flecs_iter_init(&it, flecs_iter_cache_all);
 
     return it;
@@ -2063,7 +2088,16 @@ bool ecs_filter_next_instanced(
         int32_t pivot_term = term->index;
         bool first;
 
+        /* Check if the This variable has been set on the iterator. If set,
+         * the filter should only be applied to the variable value */
+        // bool this_is_set = false;
+        // if (it->variable_count) {
+        //     this_is_set = ecs_iter_var_is_constrained(it, 0);
+        // }
+
         do {
+            /* If there are no matches left for the previous table, this is the
+             * first match of the next table. */
             first = iter->matches_left == 0;
 
             if (first) {
@@ -2116,7 +2150,14 @@ bool ecs_filter_next_instanced(
                     iter->matches_left = 0;
                     continue;
                 }
-                    
+
+                /* Table got matched, set This variable */
+                if (table) {
+                    ecs_assert(it->variable_count == 1, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+                    it->variables[0].range.table = table;
+                }
+
                 ecs_assert(iter->matches_left != 0, ECS_INTERNAL_ERROR, NULL);
             }
 
