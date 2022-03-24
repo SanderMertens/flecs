@@ -248,6 +248,9 @@ typedef char bool;
 #define true !false
 #endif
 
+/* Utility types to indicate usage as bitmask */
+typedef uint8_t ecs_flags8_t;
+typedef uint16_t ecs_flags16_t;
 typedef uint32_t ecs_flags32_t;
 typedef uint64_t ecs_flags64_t;
 
@@ -2079,6 +2082,9 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 /* Maximum number of query variables per query */
 #define ECS_VARIABLE_COUNT_MAX (64)
 
+/* Number of query variables in iterator cache */
+#define ECS_VARIABLE_CACHE_SIZE (4)
+
 /** @} */
 
 
@@ -2601,7 +2607,18 @@ typedef struct ecs_rule_iter_t {
     int32_t sp;
 } ecs_rule_iter_t;
 
-/* Inline arrays for queries with small number of components */
+/* Bits for tracking whether a cache was used/whether the array was allocated.
+ * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. */
+#define flecs_iter_cache_ids           (1 << 0)
+#define flecs_iter_cache_columns       (1 << 1)
+#define flecs_iter_cache_subjects      (1 << 2)
+#define flecs_iter_cache_sizes         (1 << 3)
+#define flecs_iter_cache_ptrs          (1 << 4)
+#define flecs_iter_cache_match_indices (1 << 5)
+#define flecs_iter_cache_variables     (1 << 6)
+#define flecs_iter_cache_all           (255)
+
+/* Inline iterator arrays to prevent allocations for small array sizes */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
     int32_t columns[ECS_TERM_CACHE_SIZE];
@@ -2609,13 +2626,10 @@ typedef struct ecs_iter_cache_t {
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
     int32_t match_indices[ECS_TERM_CACHE_SIZE];
+    ecs_var_t variables[ECS_VARIABLE_CACHE_SIZE];
 
-    bool ids_alloc;
-    bool columns_alloc;
-    bool subjects_alloc;
-    bool sizes_alloc;
-    bool ptrs_alloc;
-    bool match_indices_alloc;
+    ecs_flags8_t used;       /* For which fields is the cache used */
+    ecs_flags8_t allocated; /* Which fields are allocated */
 } ecs_iter_cache_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
@@ -10996,7 +11010,7 @@ int32_t ecs_rule_var_count(
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
- * be used in operations like ecs_rule_set_var and ecs_iter_get_var.
+ * be used in operations like ecs_iter_set_var and ecs_iter_get_var.
  * 
  * @param rule The rule.
  * @param name The variable name.
@@ -11034,7 +11048,7 @@ const char* ecs_rule_var_name(
  * 
  * // Set Food to Apples, so we're only matching (Eats, Apples)
  * ecs_iter_t it = ecs_rule_iter(world, r);
- * ecs_rule_set_var(&it, food_var, Apples);
+ * ecs_iter_set_var(&it, food_var, Apples);
  * 
  * while (ecs_rule_next(&it)) {
  *   for (int i = 0; i < it.count; i ++) {
@@ -11050,7 +11064,7 @@ const char* ecs_rule_var_name(
  * @param value The entity to initialize the variable with.
  */
 FLECS_API
-void ecs_rule_set_var(
+void ecs_iter_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t value);
@@ -18567,7 +18581,7 @@ struct iter_iterable final : iterable<Components...> {
 iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
     ecs_assert(m_it.next == ecs_rule_next, ECS_INVALID_OPERATION, NULL);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-    ecs_rule_set_var(&m_it, var_id, value);
+    ecs_iter_set_var(&m_it, var_id, value);
     return *this;
 }
 
@@ -18576,7 +18590,7 @@ iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
     ecs_rule_iter_t *rit = &m_it.priv.iter.rule;
     int var_id = ecs_rule_find_var(rit->rule, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
-    ecs_rule_set_var(&m_it, var_id, value);
+    ecs_iter_set_var(&m_it, var_id, value);
     return *this;
 }
 

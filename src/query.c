@@ -2695,7 +2695,7 @@ ecs_iter_t ecs_query_iter(
         it.node = ecs_vector_first(query->table_slices, ecs_query_table_node_t);
     }
 
-    return (ecs_iter_t){
+    ecs_iter_t result = {
         .real_world = world,
         .world = (ecs_world_t*)stage,
         .terms = query->filter.terms,
@@ -2706,6 +2706,12 @@ ecs_iter_t ecs_query_iter(
         .priv.iter.query = it,
         .next = ecs_query_next,
     };
+
+    /* Query populates the iterator with arrays from the cache, ensure they
+     * don't get overwritten by flecs_iter_validate */
+    flecs_iter_init(&result, flecs_iter_cache_ptrs);
+
+    return result;
 error:
     return (ecs_iter_t){ 0 };
 }
@@ -3125,6 +3131,8 @@ bool ecs_query_next_instanced(
 
     iter->skip_count = 0;
 
+    flecs_iter_validate(it);
+
     for (node = iter->node; node != NULL; node = next) {     
         ecs_query_table_match_t *match = node->match;
         ecs_table_t *table = match->table;
@@ -3201,7 +3209,6 @@ bool ecs_query_next_instanced(
         it->references = match->references;
         it->instance_count = 0;
 
-        flecs_iter_init(it);
         flecs_iter_populate_data(world, it, match->table, cur.first, cur.count, 
             it->ptrs, NULL);
 

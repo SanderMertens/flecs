@@ -4869,7 +4869,7 @@ void Rules_rule_iter_set_var() {
     test_assert(x_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjA);
+    ecs_iter_set_var(&it, x_var, ObjA);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
@@ -4878,7 +4878,7 @@ void Rules_rule_iter_set_var() {
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjB);
+    ecs_iter_set_var(&it, x_var, ObjB);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
@@ -4887,7 +4887,7 @@ void Rules_rule_iter_set_var() {
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjC);
+    ecs_iter_set_var(&it, x_var, ObjC);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -4935,8 +4935,8 @@ void Rules_rule_iter_set_2_vars() {
 
     /* X = *, Y = ObjB */
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, EcsWildcard);
-    ecs_rule_set_var(&it, y_var, ObjB);
+    ecs_iter_set_var(&it, x_var, EcsWildcard);
+    ecs_iter_set_var(&it, y_var, ObjB);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
@@ -4956,8 +4956,8 @@ void Rules_rule_iter_set_2_vars() {
 
     /* X = ObjA, Y = ObjB */
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjA);
-    ecs_rule_set_var(&it, y_var, ObjB);
+    ecs_iter_set_var(&it, x_var, ObjA);
+    ecs_iter_set_var(&it, y_var, ObjB);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
@@ -4969,8 +4969,8 @@ void Rules_rule_iter_set_2_vars() {
 
     /* X = ObjC, Y = * */
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjC);
-    ecs_rule_set_var(&it, y_var, EcsWildcard);
+    ecs_iter_set_var(&it, x_var, ObjC);
+    ecs_iter_set_var(&it, y_var, EcsWildcard);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -5006,7 +5006,7 @@ void Rules_rule_iter_set_pred_var() {
     test_assert(x_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, TagA);
+    ecs_iter_set_var(&it, x_var, TagA);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
@@ -5015,7 +5015,7 @@ void Rules_rule_iter_set_pred_var() {
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, TagB);
+    ecs_iter_set_var(&it, x_var, TagB);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
@@ -5024,7 +5024,7 @@ void Rules_rule_iter_set_pred_var() {
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, TagC);
+    ecs_iter_set_var(&it, x_var, TagC);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -5070,7 +5070,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_assert(x_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjA);
+    ecs_iter_set_var(&it, x_var, ObjA);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e1);
@@ -5080,7 +5080,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_bool(ecs_rule_next(&it), false);
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjB);
+    ecs_iter_set_var(&it, x_var, ObjB);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
@@ -5090,7 +5090,7 @@ void Rules_rule_iter_set_var_for_2_terms() {
     test_bool(ecs_rule_next(&it), false);
     
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, ObjC);
+    ecs_iter_set_var(&it, x_var, ObjC);
     test_bool(ecs_rule_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
@@ -5152,7 +5152,7 @@ void Rules_rule_iter_set_cyclic_variable() {
 
     // Iterate again with X = bob
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, bob);
+    ecs_iter_set_var(&it, x_var, bob);
     test_bool( ecs_rule_next(&it), true );
     test_int(ecs_iter_get_var(&it, x_var), bob);
     test_int(ecs_iter_get_var(&it, y_var), alice);
@@ -5160,7 +5160,7 @@ void Rules_rule_iter_set_cyclic_variable() {
 
     // Iterate again with Y = alice
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, alice);
+    ecs_iter_set_var(&it, x_var, alice);
     test_bool( ecs_rule_next(&it), true );
     test_int(ecs_iter_get_var(&it, x_var), alice);
     test_int(ecs_iter_get_var(&it, y_var), bob);
@@ -5225,7 +5225,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
 
     // Iterate again with X = bob
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, bob);
+    ecs_iter_set_var(&it, x_var, bob);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);
@@ -5235,7 +5235,7 @@ void Rules_rule_iter_set_cyclic_variable_w_this() {
 
     // Iterate again with Y = alice
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, alice);
+    ecs_iter_set_var(&it, x_var, alice);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 1);

@@ -388,7 +388,7 @@ void on_component_callback(
     ecs_size_t size = ti->size;
     void *ptr = ecs_vector_get_t(column->data, size, ti->alignment, row);
 
-    flecs_iter_init(&it);
+    flecs_iter_init(&it, flecs_iter_cache_all);
     it.world = world;
     it.real_world = world;
     it.table = table;
@@ -400,6 +400,7 @@ void on_component_callback(
     it.event_id = id;
     it.ctx = ti->lifecycle.ctx;
     it.count = count;
+    flecs_iter_validate(&it);
     callback(&it);
 }
 

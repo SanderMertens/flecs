@@ -91,6 +91,9 @@ typedef char bool;
 #define true !false
 #endif
 
+/* Utility types to indicate usage as bitmask */
+typedef uint8_t ecs_flags8_t;
+typedef uint16_t ecs_flags16_t;
 typedef uint32_t ecs_flags32_t;
 typedef uint64_t ecs_flags64_t;
 

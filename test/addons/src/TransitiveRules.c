@@ -852,15 +852,15 @@ void TransitiveRules_rule_iter_set_transitive_variable() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, Soma);
+    ecs_iter_set_var(&it, x_var, Soma);
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, UnitedStates);
+    ecs_iter_set_var(&it, x_var, UnitedStates);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
@@ -868,7 +868,7 @@ void TransitiveRules_rule_iter_set_transitive_variable() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, NorthAmerica);
+    ecs_iter_set_var(&it, x_var, NorthAmerica);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
@@ -876,7 +876,7 @@ void TransitiveRules_rule_iter_set_transitive_variable() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, Earth);
+    ecs_iter_set_var(&it, x_var, Earth);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
@@ -908,7 +908,7 @@ void TransitiveRules_rule_iter_set_transitive_self_variable() {
     test_assert(x_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, SanFrancisco));
@@ -916,7 +916,7 @@ void TransitiveRules_rule_iter_set_transitive_self_variable() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, Soma);
+    ecs_iter_set_var(&it, x_var, Soma);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);
@@ -946,7 +946,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_one() {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
@@ -965,7 +965,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_one() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    ecs_iter_set_var(&it, y_var, NorthAmerica);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
@@ -1010,8 +1010,8 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, UnitedStates);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, UnitedStates);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, UnitedStates));
@@ -1020,8 +1020,8 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, NorthAmerica);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, NorthAmerica));
@@ -1030,8 +1030,8 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, Earth);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, Earth);
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
     test_int(ecs_term_id(&it, 1), ecs_pair(LocatedIn, Earth));
@@ -1040,13 +1040,13 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, Soma);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, Soma);
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, SanFrancisco);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, SanFrancisco);
     test_bool( ecs_rule_next(&it), false );
 
     ecs_rule_fini(r);
@@ -1108,8 +1108,8 @@ void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, SanFrancisco);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, SanFrancisco);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
@@ -1119,8 +1119,8 @@ void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, UnitedStates);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, UnitedStates);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);
@@ -1130,8 +1130,8 @@ void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both() {
     test_bool( ecs_rule_next(&it), false );
 
     it = ecs_rule_iter(world, r);
-    ecs_rule_set_var(&it, x_var, SanFrancisco);
-    ecs_rule_set_var(&it, y_var, NorthAmerica);
+    ecs_iter_set_var(&it, x_var, SanFrancisco);
+    ecs_iter_set_var(&it, y_var, NorthAmerica);
 
     test_bool( ecs_rule_next(&it), true );
     test_int(it.count, 0);

@@ -202,7 +202,18 @@ typedef struct ecs_rule_iter_t {
     int32_t sp;
 } ecs_rule_iter_t;
 
-/* Inline arrays for queries with small number of components */
+/* Bits for tracking whether a cache was used/whether the array was allocated.
+ * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. */
+#define flecs_iter_cache_ids           (1 << 0)
+#define flecs_iter_cache_columns       (1 << 1)
+#define flecs_iter_cache_subjects      (1 << 2)
+#define flecs_iter_cache_sizes         (1 << 3)
+#define flecs_iter_cache_ptrs          (1 << 4)
+#define flecs_iter_cache_match_indices (1 << 5)
+#define flecs_iter_cache_variables     (1 << 6)
+#define flecs_iter_cache_all           (255)
+
+/* Inline iterator arrays to prevent allocations for small array sizes */
 typedef struct ecs_iter_cache_t {
     ecs_id_t ids[ECS_TERM_CACHE_SIZE];
     int32_t columns[ECS_TERM_CACHE_SIZE];
@@ -210,13 +221,10 @@ typedef struct ecs_iter_cache_t {
     ecs_size_t sizes[ECS_TERM_CACHE_SIZE];
     void *ptrs[ECS_TERM_CACHE_SIZE];
     int32_t match_indices[ECS_TERM_CACHE_SIZE];
+    ecs_var_t variables[ECS_VARIABLE_CACHE_SIZE];
 
-    bool ids_alloc;
-    bool columns_alloc;
-    bool subjects_alloc;
-    bool sizes_alloc;
-    bool ptrs_alloc;
-    bool match_indices_alloc;
+    ecs_flags8_t used;       /* For which fields is the cache used */
+    ecs_flags8_t allocated; /* Which fields are allocated */
 } ecs_iter_cache_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of

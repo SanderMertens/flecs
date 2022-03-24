@@ -23,8 +23,8 @@ bool observer_run(ecs_iter_t *it) {
     user_it.subjects = NULL;
     user_it.sizes = NULL;
     user_it.ptrs = NULL;
-
-    flecs_iter_init(&user_it);
+    user_it.is_valid = false;
+    flecs_iter_init(&user_it, flecs_iter_cache_all);
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
@@ -85,6 +85,7 @@ bool observer_run(ecs_iter_t *it) {
         user_it.self = o->self;
         user_it.ctx = o->ctx;
         user_it.term_count = o->filter.term_count_actual;
+        flecs_iter_validate(&user_it);
 
         o->callback(&user_it);
 

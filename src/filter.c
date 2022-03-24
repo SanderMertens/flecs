@@ -1604,6 +1604,16 @@ ecs_iter_t ecs_term_iter(
         .next = ecs_term_next
     };
 
+    /* Term iter populates the iterator with arrays from its own cache, ensure 
+     * they don't get overwritten by flecs_iter_validate.
+     *
+     * Note: the reason the term iterator doesn't use the iterator cache itself
+     * (which could easily accomodate a single term) is that the filter iterator
+     * is built on top of the term iterator. The private cache of the term
+     * iterator keeps the filter iterator code simple, as it doesn't need to
+     * worry about the term iter overwriting the iterator fields. */
+    flecs_iter_init(&it, 0);
+
     term_iter_init(world, term, &it.priv.iter.term, false);
 
     return it;
@@ -1633,6 +1643,8 @@ ecs_iter_t ecs_term_chain_iter(
         .chain_it = (ecs_iter_t*)chain_it,
         .next = ecs_term_next
     };
+
+    flecs_iter_init(&it, flecs_iter_cache_all);
 
     term_iter_init(world, term, &it.priv.iter.term, false);
 
@@ -1761,6 +1773,8 @@ bool ecs_term_next(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_term_next, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_iter_validate(it);
 
     ecs_term_iter_t *iter = &it->priv.iter.term;
     ecs_term_t *term = &iter->term;
@@ -1956,6 +1970,8 @@ ecs_iter_t ecs_filter_iter(
 
     it.is_filter = filter->filter;
 
+    flecs_iter_init(&it, flecs_iter_cache_all);
+
     return it;
 error:
     return (ecs_iter_t){ 0 };
@@ -1974,6 +1990,7 @@ ecs_iter_t ecs_filter_chain_iter(
         .next = ecs_filter_next
     };
 
+    flecs_iter_init(&it, flecs_iter_cache_all);
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
     init_filter_iter(it.world, &it, filter);
 
@@ -2019,7 +2036,7 @@ bool ecs_filter_next_instanced(
         filter->terms = filter->term_cache;
     }
 
-    flecs_iter_init(it);
+    flecs_iter_validate(it);
 
     ecs_iter_t *chain_it = it->chain_it;
     ecs_iter_kind_t kind = iter->kind;

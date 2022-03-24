@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 
     // Iterate rule, limit the results to units of MyPlayer
     ecs_iter_t it = ecs_rule_iter(ecs, r);
-    ecs_rule_set_var(&it, player_var, ecs_lookup(ecs, "MyPlayer"));
+    ecs_iter_set_var(&it, player_var, ecs_lookup(ecs, "MyPlayer"));
 
     while (ecs_rule_next(&it)) {
         ecs_entity_t player = ecs_iter_get_var(&it, player_var);

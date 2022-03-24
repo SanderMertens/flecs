@@ -3055,7 +3055,6 @@ void ecs_rule_iter_free(
     ecs_os_free(it->registers);
     ecs_os_free(it->columns);
     ecs_os_free(it->op_ctx);
-    ecs_os_free(it->variables);
     iter->columns = NULL;
     it->registers = NULL;
     it->columns = NULL;
@@ -3118,6 +3117,16 @@ ecs_iter_t ecs_rule_iter(
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
     result.is_filter = rule->filter.filter;
+
+    flecs_iter_init(&result, 
+        flecs_iter_cache_ids |
+        /* flecs_iter_cache_columns | provided by rule iterator */
+        flecs_iter_cache_subjects |
+        flecs_iter_cache_sizes |
+        flecs_iter_cache_ptrs |
+        /* flecs_iter_cache_match_indices | not necessary for iteration */
+        flecs_iter_cache_variables);
+
     result.columns = it->columns; /* prevent alloc */
 
     return result;
@@ -4304,6 +4313,7 @@ void populate_iterator(
     /* Iterator expects column indices to start at 1 */
     iter->columns = rule_get_columns_frame(it, op->frame);
     for (i = 0; i < term_count; i ++) {
+        ecs_assert(iter->subjects != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t subj = iter->subjects[i];
         int32_t c = ++ iter->columns[i];
         if (!subj) {
@@ -4407,7 +4417,7 @@ bool ecs_rule_next_instanced(
     /* Can't iterate an iterator that's already depleted */
     ecs_check(iter->op != -1, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_iter_init(it);
+    flecs_iter_validate(it);
 
     /* Make sure that if there are any terms with literal subjects, they're
      * initialized in the subjects array */
