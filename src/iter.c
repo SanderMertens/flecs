@@ -650,6 +650,8 @@ ecs_entity_t ecs_iter_get_var(
                     var->range.offset)[0];
             }
         }
+    } else {
+        ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, NULL);
     }
 
     return e;

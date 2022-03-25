@@ -439,7 +439,10 @@ void Rules_pair_recycled_pred_obj(void);
 void Rules_pair_recycled_matched_obj(void);
 void Rules_pair_recycled_matched_obj_2_terms(void);
 void Rules_pair_recycled_matched_pred_2_terms(void);
+void Rules_recycled_var(void);
 void Rules_superset_from_recycled(void);
+void Rules_superset_from_recycled_w_var(void);
+void Rules_superset_from_recycled_2_lvls_w_var(void);
 void Rules_1_comp(void);
 void Rules_2_comp(void);
 void Rules_1_comp_explicit_subject(void);
@@ -2593,8 +2596,20 @@ bake_test_case Rules_testcases[] = {
         Rules_pair_recycled_matched_pred_2_terms
     },
     {
+        "recycled_var",
+        Rules_recycled_var
+    },
+    {
         "superset_from_recycled",
         Rules_superset_from_recycled
+    },
+    {
+        "superset_from_recycled_w_var",
+        Rules_superset_from_recycled_w_var
+    },
+    {
+        "superset_from_recycled_2_lvls_w_var",
+        Rules_superset_from_recycled_2_lvls_w_var
     },
     {
         "1_comp",
@@ -4355,7 +4370,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        155,
+        158,
         Rules_testcases
     },
     {

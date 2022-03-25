@@ -3255,12 +3255,17 @@ void set_term_vars(
     ecs_id_t id)
 {
     if (term != -1) {
+        ecs_world_t *world = rule->world;
         const ecs_rule_term_vars_t *vars = &rule->term_vars[term];
         if (vars->pred != -1) {
-            regs[vars->pred].entity = ECS_PAIR_FIRST(id);
+            regs[vars->pred].entity = ecs_pair_first(world, id);
+            ecs_assert(ecs_is_valid(world, regs[vars->pred].entity), 
+                ECS_INTERNAL_ERROR, NULL);
         }
         if (vars->obj != -1) {
-            regs[vars->obj].entity = ECS_PAIR_SECOND(id);
+            regs[vars->obj].entity = ecs_pair_second(world, id);
+            ecs_assert(ecs_is_valid(world, regs[vars->obj].entity), 
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 }
@@ -3368,8 +3373,9 @@ bool eval_superset(
 
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_entity_t col_entity = rule_get_column(table->type, column);
-        ecs_entity_t col_obj = ecs_entity_t_lo(col_entity);
+        ecs_id_t col_id = rule_get_column(table->type, column);
+        ecs_assert(ECS_HAS_ROLE(col_id, PAIR), ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t col_obj = ecs_pair_second(world, col_id);
 
         reg_set_entity(rule, regs, r, col_obj);
 
@@ -3953,13 +3959,18 @@ bool eval_store(
 
     ecs_rule_iter_t *iter = &it->priv.iter.rule;
     const ecs_rule_t *rule = iter->rule;
+    ecs_world_t *world = rule->world;
     ecs_var_t *regs = get_registers(iter, op);
     int32_t r_in = op->r_in;
     int32_t r_out = op->r_out;
 
+    (void)world;
+
     const ecs_rule_var_t *var_out = &rule->vars[r_out];
     if (var_out->kind == EcsRuleVarKindEntity) {
         ecs_entity_t out, in = reg_get_entity(rule, op, regs, r_in);
+        ecs_assert(in != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_is_valid(world, in), ECS_INTERNAL_ERROR, NULL);
 
         out = iter->registers[r_out].entity;
         bool output_is_input = ecs_iter_var_is_constrained(it, r_out);
@@ -3996,6 +4007,8 @@ bool eval_store(
          * lost */
         if (!regs[r_out].range.table) {
             regs[r_out].entity = reg_get_entity(rule, op, regs, r_in);
+            ecs_assert(ecs_is_valid(world, regs[r_out].entity), 
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 
