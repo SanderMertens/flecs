@@ -417,6 +417,39 @@ void Rules_pair_recycled_matched_pred_2_terms() {
     ecs_fini(world);
 }
 
+void Rules_superset_from_recycled() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Transitive, Final);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+    ecs_delete(world, obj_b);
+    ecs_entity_t obj_c = ecs_new_id(world);
+    test_assert(obj_b != obj_c);
+    test_assert(ecs_strip_generation(obj_b) == ecs_strip_generation(obj_c));
+
+    ecs_add(world, obj_c, Tag); /* make sure it's not an empty table */
+
+    ecs_add_pair(world, obj_a, Rel, obj_c);
+
+    ecs_rule_t *r = ecs_rule_new(world, "(Rel, *)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(obj_a, it.entities[0]);
+    test_uint(ecs_pair(Rel, obj_c), ecs_term_id(&it, 1));
+    
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 static
 void test_1_comp(const char *expr) {
     ecs_world_t *world = ecs_init();

@@ -439,6 +439,7 @@ void Rules_pair_recycled_pred_obj(void);
 void Rules_pair_recycled_matched_obj(void);
 void Rules_pair_recycled_matched_obj_2_terms(void);
 void Rules_pair_recycled_matched_pred_2_terms(void);
+void Rules_superset_from_recycled(void);
 void Rules_1_comp(void);
 void Rules_2_comp(void);
 void Rules_1_comp_explicit_subject(void);
@@ -2592,6 +2593,10 @@ bake_test_case Rules_testcases[] = {
         Rules_pair_recycled_matched_pred_2_terms
     },
     {
+        "superset_from_recycled",
+        Rules_superset_from_recycled
+    },
+    {
         "1_comp",
         Rules_1_comp
     },
@@ -4350,7 +4355,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        154,
+        155,
         Rules_testcases
     },
     {

@@ -18267,6 +18267,8 @@ ecs_table_range_t table_from_entity(
     ecs_entity_t entity)
 {
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+
+    entity = ecs_get_alive(world, entity);
     
     ecs_table_range_t slice = {0};
     ecs_record_t *record = ecs_eis_get(world, entity);
