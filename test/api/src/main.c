@@ -934,6 +934,7 @@ void Query_query_iter_frame_offset(void);
 void Query_add_singleton_after_query(void);
 void Query_query_w_component_from_parent_from_non_this(void);
 void Query_create_query_while_pending(void);
+void Query_empty_query(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -5258,6 +5259,10 @@ bake_test_case Query_testcases[] = {
     {
         "create_query_while_pending",
         Query_create_query_while_pending
+    },
+    {
+        "empty_query",
+        Query_empty_query
     }
 };
 
@@ -8391,7 +8396,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        65,
+        66,
         Query_testcases
     },
     {

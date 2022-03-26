@@ -2924,3 +2924,16 @@ void Query_create_query_while_pending() {
     ecs_fini(world);
 }
 
+
+void Query_empty_query() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {{ 0 }}
+    });
+    test_assert(q != NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

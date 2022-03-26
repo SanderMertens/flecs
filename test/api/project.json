@@ -987,7 +987,8 @@
                 "query_iter_frame_offset",
                 "add_singleton_after_query",
                 "query_w_component_from_parent_from_non_this",
-                "create_query_while_pending"
+                "create_query_while_pending",
+                "empty_query"
             ]
         }, {
             "id": "Iter",

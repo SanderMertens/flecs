@@ -35914,7 +35914,7 @@ void flecs_process_pending_tables(
                 int32_t table_count = ecs_table_count(table);
 
                 ecs_emit(world, &(ecs_event_desc_t) {
-                    .event = count
+                    .event = table_count
                         ? EcsOnTableFill 
                         : EcsOnTableEmpty
                         ,
@@ -41460,9 +41460,9 @@ void build_sorted_table_range(
         ecs_data_t *data = &table->storage;
         ecs_vector_t *entities;
 
-        if (!(entities = data->entities) || !ecs_table_count(table)) {
-            continue;
-        }
+        ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
+
+        entities = data->entities;
 
         int32_t index = -1;
         if (id) {
@@ -42540,7 +42540,9 @@ void ecs_query_fini(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!world->is_fini) {
-        ecs_delete(world, query->observer);
+        if (query->observer) {
+            ecs_delete(world, query->observer);
+        }
     }
 
     if (query->group_by_ctx_free) {

@@ -2612,7 +2612,9 @@ void ecs_query_fini(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!world->is_fini) {
-        ecs_delete(world, query->observer);
+        if (query->observer) {
+            ecs_delete(world, query->observer);
+        }
     }
 
     if (query->group_by_ctx_free) {
