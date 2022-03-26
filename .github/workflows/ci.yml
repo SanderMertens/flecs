@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency: 
-      group: build-linux-${{ github.workflow }}-${{ github.ref }}
+      group: build-linux-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -29,7 +29,7 @@ jobs:
     runs-on: macOS-latest
     timeout-minutes: 20
     concurrency: 
-      group: build-macos-${{ github.workflow }}-${{ github.ref }}
+      group: build-macos-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -51,7 +51,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     concurrency: 
-      group: build-windows-${{ github.workflow }}-${{ github.ref }}
+      group: build-windows-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency: 
-      group: build-configs-${{ matrix.compiler.cc }}-${{ github.workflow }}-${{ github.ref }}
+      group: build-configs-${{ matrix.compiler.cc }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -145,7 +145,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     concurrency: 
-      group: build-configs-windows-${{ github.workflow }}-${{ github.ref }}
+      group: build-configs-windows-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -178,7 +178,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: test-unix-${{ matrix.os }}-${{ github.workflow }}-${{ github.ref }}
+      group: test-unix-${{ matrix.os }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -216,7 +216,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     concurrency: 
-      group: test-windows-${{ github.workflow }}-${{ github.ref }}
+      group: test-windows-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -255,7 +255,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency: 
-      group: analyze-scan-build-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-scan-build-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -288,7 +288,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: analyze-sanitized-api-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-sanitized-api-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -315,7 +315,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: analyze-sanitized-addons-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-sanitized-addons-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -342,7 +342,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: analyze-sanitized-meta-${{ matrix.os }}-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-sanitized-meta-${{ matrix.os }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -369,7 +369,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: analyze-sanitized-collections-${{ matrix.os }}-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-sanitized-collections-${{ matrix.os }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -396,7 +396,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     concurrency: 
-      group: analyze-sanitized-cpp_api-${{ matrix.os }}-${{ github.workflow }}-${{ github.ref }}
+      group: analyze-sanitized-cpp_api-${{ matrix.os }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -422,7 +422,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency: 
-      group: buildsystem-cmake-${{ github.workflow }}-${{ github.ref }}
+      group: buildsystem-cmake-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -447,7 +447,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency: 
-      group: buildsystem-meson-${{ github.workflow }}-${{ github.ref }}
+      group: buildsystem-meson-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -473,7 +473,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency: 
-      group: flecs-custom-builds-${{ matrix.compiler }}-${{ github.workflow }}-${{ github.ref }}
+      group: flecs-custom-builds-${{ matrix.compiler }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -612,7 +612,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency: 
-      group: flecs-amalgamated-${{ matrix.compiler }}-${{ github.workflow }}-${{ github.ref }}
+      group: flecs-amalgamated-${{ matrix.compiler }}-${{ github.workflow }}-${{ github.sha }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
