@@ -10647,7 +10647,7 @@ int32_t flecs_sparse_not_alive_count(
         return 0;
     }
 
-    return ecs_vector_count(sparse->dense) - (sparse->count - 1);
+    return ecs_vector_count(sparse->dense) - sparse->count;
 }
 
 int32_t flecs_sparse_size(

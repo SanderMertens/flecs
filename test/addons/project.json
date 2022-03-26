@@ -789,7 +789,9 @@
                 "get_pipeline_stats_after_progress_1_system",
                 "get_pipeline_stats_after_progress_1_inactive_system",
                 "get_pipeline_stats_after_progress_2_systems",
-                "get_pipeline_stats_after_progress_2_systems_one_merge"
+                "get_pipeline_stats_after_progress_2_systems_one_merge",
+                "get_entity_count",
+                "get_not_alive_entity_count"
             ]
         }, {
             "id": "Run",

@@ -1,5 +1,9 @@
 #include <addons.h>
 
+#define test_delta(prev, cur, field, value)\
+    test_int(value, (cur)->field - (prev)->field);\
+    (prev)->field = (cur)->field
+
 void Stats_get_world_stats() {
     ecs_world_t *world = ecs_init();
 
@@ -234,6 +238,59 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
     test_int(sys_bar_stats->invoke_count.value[2], 2);
 
     ecs_pipeline_stats_fini(&stats);
+
+    ecs_fini(world);
+}
+
+void Stats_get_entity_count() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_stats_t stats = {0};
+    ecs_get_world_stats(world, &stats);
+
+    float count;
+    float prev = count = stats.entity_count.avg[stats.t];
+    test_assert(count != 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_get_world_stats(world, &stats);
+    count = stats.entity_count.avg[stats.t];
+    test_int(count - prev, 1);
+
+    ecs_delete(world, e);
+
+    prev = count;
+    ecs_get_world_stats(world, &stats);
+    count = stats.entity_count.avg[stats.t];
+    test_int(count - prev, -1);
+
+    ecs_fini(world);
+}
+
+void Stats_get_not_alive_entity_count() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_stats_t stats = {0};
+    ecs_get_world_stats(world, &stats);
+
+    float count;
+    float prev = count = stats.entity_not_alive_count.avg[stats.t];
+    test_assert(count == 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    prev = count;
+    ecs_get_world_stats(world, &stats);
+    count = stats.entity_not_alive_count.avg[stats.t];
+    test_int(count - prev, 0);
+
+    ecs_delete(world, e);
+
+    prev = count;
+    ecs_get_world_stats(world, &stats);
+    count = stats.entity_not_alive_count.avg[stats.t];
+    test_int(count - prev, 1);
 
     ecs_fini(world);
 }

@@ -753,6 +753,8 @@ void Stats_get_pipeline_stats_after_progress_1_system(void);
 void Stats_get_pipeline_stats_after_progress_1_inactive_system(void);
 void Stats_get_pipeline_stats_after_progress_2_systems(void);
 void Stats_get_pipeline_stats_after_progress_2_systems_one_merge(void);
+void Stats_get_entity_count(void);
+void Stats_get_not_alive_entity_count(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -3787,6 +3789,14 @@ bake_test_case Stats_testcases[] = {
     {
         "get_pipeline_stats_after_progress_2_systems_one_merge",
         Stats_get_pipeline_stats_after_progress_2_systems_one_merge
+    },
+    {
+        "get_entity_count",
+        Stats_get_entity_count
+    },
+    {
+        "get_not_alive_entity_count",
+        Stats_get_not_alive_entity_count
     }
 };
 
@@ -4447,7 +4457,7 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        8,
+        10,
         Stats_testcases
     },
     {
