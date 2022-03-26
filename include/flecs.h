@@ -952,8 +952,26 @@ typedef struct ecs_world_info_t {
     
     int32_t frame_count_total;        /* Total number of frames */
     int32_t merge_count_total;        /* Total number of merges */
+
+    int32_t id_create_total;          /* Total number of times a new id was created */
+    int32_t id_delete_total;          /* Total number of times an id was deleted */
+    int32_t table_create_total;       /* Total number of times a table was created */
+    int32_t table_delete_total;       /* Total number of times a table was deleted */
     int32_t pipeline_build_count_total; /* Total number of pipeline builds */
     int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
+
+    int32_t id_count;                 /* Number of ids in the world (excluding wildcards) */
+    int32_t tag_id_count;             /* Number of tag (no data) ids in the world */
+    int32_t component_id_count;       /* Number of component (data) ids in the world */
+    int32_t pair_id_count;            /* Number of pair ids in the world */
+    int32_t wildcard_id_count;        /* Number of wildcard ids */
+
+    int32_t table_count;              /* Number of tables */
+    int32_t tag_table_count;          /* Number of tag-only tables */
+    int32_t trivial_table_count;      /* Number of tables with trivial components (no lifecycle callbacks) */
+    int32_t empty_table_count;        /* Number of tables without entities */
+    int32_t table_record_count;       /* Total number of table records (entries in table caches) */
+    int32_t table_storage_count;      /* Total number of table storages */
 } ecs_world_info_t;
 
 /** @} */

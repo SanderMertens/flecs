@@ -642,7 +642,7 @@ struct ecs_world_t {
 
     /* -- Metrics -- */
 
-    ecs_world_info_t stats;
+    ecs_world_info_t info;
 
 
     /* -- World lock -- */

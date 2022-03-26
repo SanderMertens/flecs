@@ -135,12 +135,15 @@ void assert_relation_unused(
     ecs_entity_t rel,
     ecs_entity_t property)
 {
+    if (world->is_fini) {
+        return;
+    }
     if (flecs_get_id_record(world, ecs_pair(rel, EcsWildcard)) != NULL) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
-            "cannot add property '%s' to relation '%s': already in use",
+            "cannot change property '%s' to relation '%s': already in use",
             p_str, r_str);
         
         ecs_os_free(r_str);
@@ -161,7 +164,7 @@ void register_final(ecs_iter_t *it) {
         if (flecs_get_id_record(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_fullpath(world, e);
             ecs_throw(ECS_ID_IN_USE,
-                "cannot add property 'Final' to '%s': already inherited from",
+                "cannot change property 'Final' to '%s': already inherited from",
                     e_str);
             ecs_os_free(e_str);
         error:
@@ -174,6 +177,7 @@ static
 void register_on_delete(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
+    ecs_entity_t event = it->event;
     
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -182,7 +186,12 @@ void register_on_delete(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
+
+        if (event == EcsOnAdd) {
+            r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
+        } else {
+            r->flags &= ~ECS_ID_ON_DELETE_MASK;
+        }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }
@@ -192,6 +201,7 @@ static
 void register_on_delete_object(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
+    ecs_entity_t event = it->event;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -200,7 +210,12 @@ void register_on_delete_object(ecs_iter_t *it) {
 
         ecs_id_record_t *r = flecs_ensure_id_record(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+
+        if (event == EcsOnAdd) {
+            r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+        } else {
+            r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+        }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
@@ -599,10 +614,10 @@ void flecs_bootstrap(
     bootstrap_component(world, table, EcsObserver);
     bootstrap_component(world, table, EcsIterable);
 
-    world->stats.last_component_id = EcsFirstUserComponentId;
-    world->stats.last_id = EcsFirstUserEntityId;
-    world->stats.min_id = 0;
-    world->stats.max_id = 0;
+    world->info.last_component_id = EcsFirstUserComponentId;
+    world->info.last_id = EcsFirstUserEntityId;
+    world->info.min_id = 0;
+    world->info.max_id = 0;
 
     /* Populate core module */
     ecs_set_scope(world, EcsFlecsCore);
@@ -721,13 +736,13 @@ void flecs_bootstrap(
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDelete, EcsWildcard), .subj.set.mask = EcsSelf },
-        .events = {EcsOnAdd},
+        .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
-        .events = {EcsOnAdd},
+        .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete_object
     });
 

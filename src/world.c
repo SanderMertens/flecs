@@ -440,7 +440,7 @@ void init_store(
     /* Initialize entity index */
     flecs_sparse_init(&world->store.entity_index, ecs_record_t);
     flecs_sparse_set_id_source(&world->store.entity_index, 
-        &world->stats.last_id);
+        &world->info.last_id);
 
     /* Initialize root table */
     flecs_sparse_init(&world->store.tables, ecs_table_t);
@@ -680,7 +680,7 @@ ecs_world_t *ecs_mini(void) {
     flecs_name_index_init(&world->symbols);
     ecs_map_init(&world->type_handles, ecs_entity_t, 0);
 
-    world->stats.time_scale = 1.0;
+    world->info.time_scale = 1.0;
     
     monitors_init(&world->monitors);
 
@@ -1208,6 +1208,22 @@ ecs_id_record_t* new_id_record(
         ecs_os_free(id_str);
     }
 
+    /* Update counters */
+    world->info.id_create_total ++;
+
+    if (!ecs_id_is_wildcard(id)) {
+        world->info.id_count ++;
+
+        /* if id is component, attaching type info will update counters */
+        world->info.tag_id_count ++;
+
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            world->info.pair_id_count ++;
+        }
+    } else {
+        world->info.wildcard_id_count ++;
+    }
+
     return idr;
 }
 
@@ -1243,6 +1259,25 @@ bool free_id_record(
             char *id_str = ecs_id_str(world, id);
             ecs_dbg_1("#[green]id#[normal] %s #[red]deleted", id_str);
             ecs_os_free(id_str);
+        }
+
+        /* Update counters */
+        world->info.id_delete_total ++;
+
+        if (!ecs_id_is_wildcard(id)) {
+            world->info.id_count --;
+
+            if (ECS_HAS_ROLE(id, PAIR)) {
+                world->info.pair_id_count --;
+            }
+
+            if (idr->type_info) {
+                world->info.component_id_count --;
+            } else {
+                world->info.tag_id_count --;
+            }
+        } else {
+            world->info.wildcard_id_count --;
         }
 
         ecs_table_cache_fini(&idr->cache);
@@ -1405,7 +1440,7 @@ void ecs_measure_frame_time(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
-    if (world->stats.target_fps == 0.0f || enable) {
+    if (world->info.target_fps == 0.0f || enable) {
         world->measure_frame_time = enable;
     }
 error:
@@ -1431,7 +1466,7 @@ void ecs_set_target_fps(
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
     ecs_measure_frame_time(world, true);
-    world->stats.target_fps = fps;
+    world->info.target_fps = fps;
     ecs_os_enable_high_timer_resolution(fps >= 60.0f);
 error:
     return;
@@ -1462,15 +1497,15 @@ void ecs_set_entity_range(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!id_end || id_end > world->stats.last_id, 
+    ecs_check(!id_end || id_end > world->info.last_id, 
         ECS_INVALID_PARAMETER, NULL);
 
-    if (world->stats.last_id < id_start) {
-        world->stats.last_id = id_start - 1;
+    if (world->info.last_id < id_start) {
+        world->info.last_id = id_start - 1;
     }
 
-    world->stats.min_id = id_start;
-    world->stats.max_id = id_end;
+    world->info.min_id = id_start;
+    world->info.max_id = id_end;
 error:
     return;
 }
@@ -1613,12 +1648,12 @@ FLECS_FLOAT insert_sleep(
     ecs_time_t start = *stop;
     FLECS_FLOAT delta_time = (FLECS_FLOAT)ecs_time_measure(stop);
 
-    if (world->stats.target_fps == (FLECS_FLOAT)0.0) {
+    if (world->info.target_fps == (FLECS_FLOAT)0.0) {
         return delta_time;
     }
 
     FLECS_FLOAT target_delta_time = 
-        ((FLECS_FLOAT)1.0 / (FLECS_FLOAT)world->stats.target_fps);
+        ((FLECS_FLOAT)1.0 / (FLECS_FLOAT)world->info.target_fps);
 
     /* Calculate the time we need to sleep by taking the measured delta from the
      * previous frame, and subtracting it from target_delta_time. */
@@ -1661,8 +1696,8 @@ FLECS_FLOAT start_measure_frame(
                 ecs_time_measure(&t);
             } else {
                 ecs_time_measure(&t);
-                if (world->stats.target_fps != 0) {
-                    delta_time = (FLECS_FLOAT)1.0 / world->stats.target_fps;
+                if (world->info.target_fps != 0) {
+                    delta_time = (FLECS_FLOAT)1.0 / world->info.target_fps;
                 } else {
                     /* Best guess */
                     delta_time = (FLECS_FLOAT)1.0 / (FLECS_FLOAT)60.0; 
@@ -1675,7 +1710,7 @@ FLECS_FLOAT start_measure_frame(
         world->frame_start_time = t;  
 
         /* Keep track of total time passed in world */
-        world->stats.world_time_total_raw += (FLECS_FLOAT)delta_time;
+        world->info.world_time_total_raw += (FLECS_FLOAT)delta_time;
     }
 
     return (FLECS_FLOAT)delta_time;
@@ -1689,7 +1724,7 @@ void stop_measure_frame(
 
     if (world->measure_frame_time) {
         ecs_time_t t = world->frame_start_time;
-        world->stats.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
+        world->info.frame_time_total += (FLECS_FLOAT)ecs_time_measure(&t);
     }
 }
 
@@ -1712,15 +1747,15 @@ FLECS_FLOAT ecs_frame_begin(
         user_delta_time = delta_time;
     }  
 
-    world->stats.delta_time_raw = user_delta_time;
-    world->stats.delta_time = user_delta_time * world->stats.time_scale;
+    world->info.delta_time_raw = user_delta_time;
+    world->info.delta_time = user_delta_time * world->info.time_scale;
 
     /* Keep track of total scaled time passed in world */
-    world->stats.world_time_total += world->stats.delta_time;
+    world->info.world_time_total += world->info.delta_time;
 
     ecs_force_aperiodic(world);
 
-    return world->stats.delta_time;
+    return world->info.delta_time;
 error:
     return (FLECS_FLOAT)0;
 }
@@ -1731,7 +1766,7 @@ void ecs_frame_end(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(world->is_readonly == false, ECS_INVALID_OPERATION, NULL);
 
-    world->stats.frame_count_total ++;
+    world->info.frame_count_total ++;
 
     ecs_vector_each(world->worker_stages, ecs_stage_t, stage, {
         flecs_stage_merge_post_frame(world, stage);
@@ -1754,7 +1789,7 @@ const ecs_world_info_t* ecs_get_world_info(
     const ecs_world_t *world)
 {
     world = ecs_get_world(world);
-    return &world->stats;
+    return &world->info;
 }
 
 void flecs_notify_queries(
@@ -1846,8 +1881,10 @@ void flecs_process_pending_tables(
                     .count = ecs_vector_count(table->type)
                 };
 
+                int32_t table_count = ecs_table_count(table);
+
                 ecs_emit(world, &(ecs_event_desc_t) {
-                    .event = ecs_table_count(table) 
+                    .event = table_count
                         ? EcsOnTableFill 
                         : EcsOnTableEmpty
                         ,
@@ -1856,6 +1893,8 @@ void flecs_process_pending_tables(
                     .observable = world,
                     .table_event = true
                 });
+
+                world->info.empty_table_count += (table_count == 0) * 2 - 1;
             }
         }
         flecs_sparse_clear(pending_tables);
@@ -1905,6 +1944,9 @@ void flecs_register_for_id_record(
         if (type) {
             idr->type_info = flecs_get_type_info(world, type);
             ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            world->info.tag_id_count --;
+            world->info.component_id_count ++;
         }
         idr->flags |= ECS_TYPE_INFO_INITIALIZED;
     }

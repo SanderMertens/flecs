@@ -268,7 +268,7 @@ bool build_pipeline(
         return false;
     }
 
-    world->stats.pipeline_build_count_total ++;
+    world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
 
     write_state_t ws = {
@@ -399,7 +399,7 @@ bool build_pipeline(
                 ecs_log_push_1();
             }
 
-            if (sys[i].last_frame == (world->stats.frame_count_total + 1)) {
+            if (sys[i].last_frame == (world->info.frame_count_total + 1)) {
                 last_system = it.entities[i];
 
                 /* Can't break from loop yet. It's possible that previously
@@ -554,10 +554,10 @@ void ecs_run_pipeline(
                     stage_count, delta_time, 0, 0, NULL);
             }
 
-            sys[i].last_frame = world->stats.frame_count_total + 1;
+            sys[i].last_frame = world->info.frame_count_total + 1;
 
             ran_since_merge ++;
-            world->stats.systems_ran_frame ++;
+            world->info.systems_ran_frame ++;
 
             if (op != op_last && ran_since_merge == op->count) {
                 ran_since_merge = 0;
@@ -752,14 +752,14 @@ void ecs_set_time_scale(
     ecs_world_t *world,
     FLECS_FLOAT scale)
 {
-    world->stats.time_scale = scale;
+    world->info.time_scale = scale;
 }
 
 void ecs_reset_clock(
     ecs_world_t *world)
 {
-    world->stats.world_time_total = 0;
-    world->stats.world_time_total_raw = 0;
+    world->info.world_time_total = 0;
+    world->info.world_time_total_raw = 0;
 }
 
 void ecs_deactivate_systems(

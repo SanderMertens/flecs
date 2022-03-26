@@ -27,7 +27,7 @@ void* worker(void *arg) {
         ecs_run_pipeline(
             (ecs_world_t*)stage, 
             world->pipeline, 
-            world->stats.delta_time);
+            world->info.delta_time);
 
         ecs_set_scope((ecs_world_t*)stage, old_scope);
     }
@@ -203,7 +203,7 @@ int32_t ecs_worker_sync(
 {
     int32_t stage_count = ecs_get_stage_count(world);
     ecs_assert(stage_count != 0, ECS_INTERNAL_ERROR, NULL);
-    int32_t build_count = world->stats.pipeline_build_count_total;
+    int32_t build_count = world->info.pipeline_build_count_total;
 
     /* If there are no threads, merge in place */
     if (stage_count == 1) {
@@ -219,7 +219,7 @@ int32_t ecs_worker_sync(
         sync_worker(world);
     }
 
-    if (build_count != world->stats.pipeline_build_count_total) {
+    if (build_count != world->info.pipeline_build_count_total) {
         i = ecs_pipeline_reset_iter(world, pq, it, op_out, last_op_out);
     } else {
         op_out[0] ++;
@@ -316,7 +316,7 @@ void ecs_workers_progress(
     }
 
     if (world->measure_frame_time) {
-        world->stats.system_time_total += (float)ecs_time_measure(&start);
+        world->info.system_time_total += (float)ecs_time_measure(&start);
     }    
 }
 

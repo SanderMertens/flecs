@@ -1532,9 +1532,9 @@ void build_sorted_table_range(
         ecs_data_t *data = &table->storage;
         ecs_vector_t *entities;
 
-        if (!(entities = data->entities) || !ecs_table_count(table)) {
-            continue;
-        }
+        ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
+
+        entities = data->entities;
 
         int32_t index = -1;
         if (id) {

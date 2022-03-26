@@ -79,10 +79,10 @@ void merge_stages(
     flecs_eval_component_monitors(world);
 
     if (measure_frame_time) {
-        world->stats.merge_time_total += (float)ecs_time_measure(&t_start);
+        world->info.merge_time_total += (float)ecs_time_measure(&t_start);
     }
 
-    world->stats.merge_count_total ++; 
+    world->info.merge_count_total ++; 
 
     /* If stage is asynchronous, deferring is always enabled */
     if (stage->asynchronous) {

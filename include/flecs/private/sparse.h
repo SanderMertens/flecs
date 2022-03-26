@@ -173,6 +173,11 @@ FLECS_DBG_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
+/** Get the number of not alive alive elements in the sparse set. */
+FLECS_DBG_API
+int32_t flecs_sparse_not_alive_count(
+    const ecs_sparse_t *sparse);
+
 /** Return total number of allocated elements in the dense array */
 FLECS_DBG_API
 int32_t flecs_sparse_size(

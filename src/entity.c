@@ -958,9 +958,9 @@ void commit(
     }
 
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
-        ecs_check(!world->stats.max_id || entity <= world->stats.max_id, 
+        ecs_check(!world->info.max_id || entity <= world->info.max_id, 
             ECS_OUT_OF_RANGE, 0);
-        ecs_check(entity >= world->stats.min_id, 
+        ecs_check(entity >= world->info.min_id, 
             ECS_OUT_OF_RANGE, 0);
     } 
 error:
@@ -1491,16 +1491,16 @@ ecs_entity_t ecs_new_id(
     int32_t stage_count = ecs_get_stage_count(unsafe_world);
     if (stage->asynchronous || (ecs_os_has_threading() && stage_count > 1)) {
         /* Can't atomically increase number above max int */
-        ecs_assert(unsafe_world->stats.last_id < UINT_MAX, 
+        ecs_assert(unsafe_world->info.last_id < UINT_MAX, 
             ECS_INVALID_OPERATION, NULL);
         entity = (ecs_entity_t)ecs_os_ainc(
-            (int32_t*)&unsafe_world->stats.last_id);
+            (int32_t*)&unsafe_world->info.last_id);
     } else {
         entity = ecs_eis_recycle(unsafe_world);
     }
 
-    ecs_assert(!unsafe_world->stats.max_id || 
-        ecs_entity_t_lo(entity) <= unsafe_world->stats.max_id, 
+    ecs_assert(!unsafe_world->info.max_id || 
+        ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -1525,9 +1525,9 @@ ecs_entity_t ecs_new_low_id(
     }
 
     ecs_entity_t id = 0;
-    if (unsafe_world->stats.last_component_id < ECS_HI_COMPONENT_ID) {
+    if (unsafe_world->info.last_component_id < ECS_HI_COMPONENT_ID) {
         do {
-            id = unsafe_world->stats.last_component_id ++;
+            id = unsafe_world->info.last_component_id ++;
         } while (ecs_exists(unsafe_world, id) && id <= ECS_HI_COMPONENT_ID);        
     }
 
@@ -2174,8 +2174,8 @@ ecs_entity_t ecs_component_init(
 
     ecs_modified(world, result, EcsComponent);
 
-    if (e >= world->stats.last_component_id && e < ECS_HI_COMPONENT_ID) {
-        world->stats.last_component_id = e + 1;
+    if (e >= world->info.last_component_id && e < ECS_HI_COMPONENT_ID) {
+        world->info.last_component_id = e + 1;
     }
 
     /* Ensure components cannot be deleted */

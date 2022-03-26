@@ -745,6 +745,8 @@ void flecs_table_free(
         ecs_os_free(expr);
     }
 
+    world->info.empty_table_count -= (ecs_table_count(table) == 0);
+
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     fini_data(world, table, &table->storage, false, true, true, false);
 
@@ -771,6 +773,18 @@ void flecs_table_free(
         }
     } else if (storage_table) {
         flecs_table_release(world, storage_table);
+    }
+
+    /* Update counters */
+    world->info.table_count --;
+    world->info.table_record_count -= table->record_count;
+    world->info.table_storage_count -= table->storage_count;
+    world->info.table_delete_total ++;
+    
+    if (!table->storage_count) {
+        world->info.tag_table_count --;
+    } else {
+        world->info.trivial_table_count -= !(table->flags & EcsTableIsComplex);
     }
 
     if (!world->is_fini) {

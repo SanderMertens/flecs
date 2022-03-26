@@ -514,6 +514,7 @@ void OnDelete_on_delete_id_w_switch(void);
 void OnDelete_on_delete_id_w_disabled(void);
 void OnDelete_on_delete_id_to_no_switch(void);
 void OnDelete_on_delete_id_to_no_disabled(void);
+void OnDelete_remove_on_delete_action(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1459,6 +1460,21 @@ void World_ensure_empty_root(void);
 void World_register_alias_twice_same_entity(void);
 void World_register_alias_twice_different_entity(void);
 void World_redefine_component(void);
+
+// Testsuite 'WorldInfo'
+void WorldInfo_get_tick(void);
+void WorldInfo_table_count(void);
+void WorldInfo_empty_table_count(void);
+void WorldInfo_tag_table_count(void);
+void WorldInfo_trivial_table_count(void);
+void WorldInfo_table_record_count(void);
+void WorldInfo_table_storage_count(void);
+void WorldInfo_table_create_count(void);
+void WorldInfo_table_delete_count(void);
+void WorldInfo_id_count(void);
+void WorldInfo_id_tag_component_count(void);
+void WorldInfo_id_pair_count(void);
+void WorldInfo_id_wildcard_count(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -3615,6 +3631,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_id_to_no_disabled",
         OnDelete_on_delete_id_to_no_disabled
+    },
+    {
+        "remove_on_delete_action",
+        OnDelete_remove_on_delete_action
     }
 };
 
@@ -7278,6 +7298,61 @@ bake_test_case World_testcases[] = {
     }
 };
 
+bake_test_case WorldInfo_testcases[] = {
+    {
+        "get_tick",
+        WorldInfo_get_tick
+    },
+    {
+        "table_count",
+        WorldInfo_table_count
+    },
+    {
+        "empty_table_count",
+        WorldInfo_empty_table_count
+    },
+    {
+        "tag_table_count",
+        WorldInfo_tag_table_count
+    },
+    {
+        "trivial_table_count",
+        WorldInfo_trivial_table_count
+    },
+    {
+        "table_record_count",
+        WorldInfo_table_record_count
+    },
+    {
+        "table_storage_count",
+        WorldInfo_table_storage_count
+    },
+    {
+        "table_create_count",
+        WorldInfo_table_create_count
+    },
+    {
+        "table_delete_count",
+        WorldInfo_table_delete_count
+    },
+    {
+        "id_count",
+        WorldInfo_id_count
+    },
+    {
+        "id_tag_component_count",
+        WorldInfo_id_tag_component_count
+    },
+    {
+        "id_pair_count",
+        WorldInfo_id_pair_count
+    },
+    {
+        "id_wildcard_count",
+        WorldInfo_id_wildcard_count
+    }
+};
+
 bake_test_case Type_testcases[] = {
     {
         "type_of_1_tostr",
@@ -8253,7 +8328,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        72,
+        73,
         OnDelete_testcases
     },
     {
@@ -8397,6 +8472,13 @@ static bake_test_suite suites[] = {
         World_testcases
     },
     {
+        "WorldInfo",
+        NULL,
+        NULL,
+        13,
+        WorldInfo_testcases
+    },
+    {
         "Type",
         Type_setup,
         NULL,
@@ -8448,5 +8530,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 43);
+    return bake_test_run("api", argc, argv, suites, 44);
 }

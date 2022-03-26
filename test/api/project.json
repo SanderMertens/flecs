@@ -549,7 +549,8 @@
                 "on_delete_id_w_switch",
                 "on_delete_id_w_disabled",
                 "on_delete_id_to_no_switch",
-                "on_delete_id_to_no_disabled"
+                "on_delete_id_to_no_disabled",
+                "remove_on_delete_action"
             ]
         }, {
             "id": "Set",
@@ -1535,6 +1536,23 @@
                 "register_alias_twice_same_entity",
                 "register_alias_twice_different_entity",
                 "redefine_component"
+            ]
+        }, {
+            "id": "WorldInfo",
+            "testcases": [
+                "get_tick",
+                "table_count",
+                "empty_table_count",
+                "tag_table_count",
+                "trivial_table_count",
+                "table_record_count",
+                "table_storage_count",
+                "table_create_count",
+                "table_delete_count",
+                "id_count",
+                "id_tag_component_count",
+                "id_pair_count",
+                "id_wildcard_count"
             ]
         }, {
             "id": "Type",

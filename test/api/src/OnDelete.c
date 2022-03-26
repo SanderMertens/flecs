@@ -2009,3 +2009,24 @@ void OnDelete_on_delete_id_to_no_disabled() {
 
     ecs_fini(world);
 }
+
+void OnDelete_remove_on_delete_action() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    test_assert( ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsThrow));
+
+    ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsWildcard);
+
+    test_assert( !ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsThrow));
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_delete(world, ecs_id(Position));
+
+    test_assert( !ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

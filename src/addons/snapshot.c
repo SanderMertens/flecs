@@ -151,7 +151,7 @@ ecs_snapshot_t* ecs_snapshot_take(
     ecs_snapshot_t *result = snapshot_create(
         world, ecs_eis(world), NULL, NULL);
 
-    result->last_id = world->stats.last_id;
+    result->last_id = world->info.last_id;
 
     return result;
 }
@@ -166,7 +166,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
     ecs_snapshot_t *result = snapshot_create(
         world, ecs_eis(world), iter, iter ? iter->next : NULL);
 
-    result->last_id = world->stats.last_id;
+    result->last_id = world->info.last_id;
 
     return result;
 }
@@ -181,7 +181,7 @@ void restore_unfiltered(
     flecs_sparse_restore(ecs_eis(world), snapshot->entity_index);
     flecs_sparse_free(snapshot->entity_index);
     
-    world->stats.last_id = snapshot->last_id;
+    world->info.last_id = snapshot->last_id;
 
     ecs_table_leaf_t *leafs = ecs_vector_first(
         snapshot->tables, ecs_table_leaf_t);

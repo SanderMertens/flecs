@@ -3000,6 +3000,11 @@ FLECS_DBG_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
+/** Get the number of not alive alive elements in the sparse set. */
+FLECS_DBG_API
+int32_t flecs_sparse_not_alive_count(
+    const ecs_sparse_t *sparse);
+
 /** Return total number of allocated elements in the dense array */
 FLECS_DBG_API
 int32_t flecs_sparse_size(
@@ -3703,8 +3708,26 @@ typedef struct ecs_world_info_t {
     
     int32_t frame_count_total;        /* Total number of frames */
     int32_t merge_count_total;        /* Total number of merges */
+
+    int32_t id_create_total;          /* Total number of times a new id was created */
+    int32_t id_delete_total;          /* Total number of times an id was deleted */
+    int32_t table_create_total;       /* Total number of times a table was created */
+    int32_t table_delete_total;       /* Total number of times a table was deleted */
     int32_t pipeline_build_count_total; /* Total number of pipeline builds */
     int32_t systems_ran_frame;  /* Total number of systems ran in last frame */
+
+    int32_t id_count;                 /* Number of ids in the world (excluding wildcards) */
+    int32_t tag_id_count;             /* Number of tag (no data) ids in the world */
+    int32_t component_id_count;       /* Number of component (data) ids in the world */
+    int32_t pair_id_count;            /* Number of pair ids in the world */
+    int32_t wildcard_id_count;        /* Number of wildcard ids */
+
+    int32_t table_count;              /* Number of tables */
+    int32_t tag_table_count;          /* Number of tag-only tables */
+    int32_t trivial_table_count;      /* Number of tables with trivial components (no lifecycle callbacks) */
+    int32_t empty_table_count;        /* Number of tables without entities */
+    int32_t table_record_count;       /* Total number of table records (entries in table caches) */
+    int32_t table_storage_count;      /* Total number of table storages */
 } ecs_world_info_t;
 
 /** @} */
@@ -11337,14 +11360,34 @@ typedef struct ecs_world_stats_t {
     int32_t dummy_;
 
     ecs_gauge_t entity_count;                 /* Number of entities */
-    ecs_gauge_t component_count;              /* Number of components */
-    ecs_gauge_t query_count;                  /* Number of queries */
-    ecs_gauge_t system_count;                 /* Number of systems */
+    ecs_gauge_t entity_not_alive_count;       /* Number of not alive (recyclable) entity ids */
+
+    /* Components and ids */
+    ecs_gauge_t id_count;                     /* Number of ids (excluding wildcards) */
+    ecs_gauge_t tag_id_count;                 /* Number of tag ids (ids without data) */
+    ecs_gauge_t component_id_count;           /* Number of components ids (ids with data) */
+    ecs_gauge_t pair_id_count;                /* Number of pair ids */
+    ecs_gauge_t wildcard_id_count;            /* Number of wildcard ids */
+    ecs_gauge_t component_count;              /* Number of components  (non-zero sized types) */
+    ecs_counter_t id_create_count;            /* Number of times id has been created */
+    ecs_counter_t id_delete_count;            /* Number of times id has been deleted */
+
+    /* Tables */
     ecs_gauge_t table_count;                  /* Number of tables */
     ecs_gauge_t empty_table_count;            /* Number of empty tables */
     ecs_gauge_t singleton_table_count;        /* Number of singleton tables. Singleton tables are tables with just a single entity that contains itself */
-    ecs_gauge_t matched_entity_count;         /* Number of entities matched by queries */
-    ecs_gauge_t matched_table_count;          /* Number of tables matched by queries */
+    ecs_gauge_t tag_table_count;              /* Number of tables with only tags */
+    ecs_gauge_t trivial_table_count;          /* Number of tables with only trivial components */
+    ecs_gauge_t table_record_count;           /* Number of table cache records */
+    ecs_gauge_t table_storage_count;          /* Number of table storages */
+    ecs_counter_t table_create_count;         /* Number of times table has been created */
+    ecs_counter_t table_delete_count;         /* Number of times table has been deleted */
+
+    /* Queries & events */
+    ecs_gauge_t query_count;                  /* Number of queries */
+    ecs_gauge_t trigger_count;                /* Number of triggers */
+    ecs_gauge_t observer_count;               /* Number of observers */
+    ecs_gauge_t system_count;                 /* Number of systems */
 
     /* Deferred operations */
     ecs_counter_t new_count;
