@@ -363,15 +363,28 @@ void OnDelete_on_delete_cyclic_id_remove() {
 
     ecs_entity_t a = ecs_new_id(world);
     ecs_entity_t b = ecs_new_id(world);
+
     ecs_add_pair(world, a, EcsOnDelete, EcsRemove);
 
     ecs_add_id(world, a, b);
     ecs_add_id(world, b, a);
 
+    ecs_record_t *r_a = ecs_record_find(world, a);
+    test_assert(r_a != NULL);
+    test_assert((r_a->row & ECS_ROW_FLAGS_MASK) != 0);
+
+    ecs_record_t *r_b = ecs_record_find(world, b);
+    test_assert(r_b != NULL);
+    test_assert((r_b->row & ECS_ROW_FLAGS_MASK) != 0);
+
     ecs_delete(world, a);
     test_assert(!ecs_is_alive(world, a));
     test_assert(ecs_is_alive(world, b));
     test_assert(ecs_get_type(world, b) == NULL);
+    test_assert(ecs_get_table(world, b) == NULL);
+
+    test_assert(r_b == ecs_record_find(world, b));
+    test_assert((r_b->row & ECS_ROW_FLAGS_MASK) != 0);
 
     ecs_delete(world, b);
     test_assert(!ecs_is_alive(world, a));

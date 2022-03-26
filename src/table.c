@@ -588,7 +588,7 @@ void dtor_all_components(
                 ecs_assert(!e || records[i]->table == table, 
                     ECS_INTERNAL_ERROR, NULL);
                 records[i]->table = NULL;
-                records[i]->row = 0;
+                records[i]->row = records[i]->row & ECS_ROW_FLAGS_MASK;
                 (void)e;
             }
         }      

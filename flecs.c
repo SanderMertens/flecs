@@ -2710,7 +2710,7 @@ void dtor_all_components(
                 ecs_assert(!e || records[i]->table == table, 
                     ECS_INTERNAL_ERROR, NULL);
                 records[i]->table = NULL;
-                records[i]->row = 0;
+                records[i]->row = records[i]->row & ECS_ROW_FLAGS_MASK;
                 (void)e;
             }
         }      
@@ -7329,6 +7329,13 @@ void ecs_delete(
         /* Remove (and invalidate) entity after executing handlers */
         flecs_sparse_remove(ecs_eis(world), entity);
     }
+
+    ecs_assert(flecs_get_id_record(world, entity) == NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_get_id_record(world, ecs_pair(EcsWildcard, entity))==NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_get_id_record(world, ecs_pair(entity, EcsWildcard))==NULL, 
+        ECS_INTERNAL_ERROR, NULL);
 
     flecs_defer_flush(world, stage);
 error:
@@ -47160,13 +47167,15 @@ void register_on_delete(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDelete);
 
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         if (event == EcsOnAdd) {
+            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
         } else {
-            r->flags &= ~ECS_ID_ON_DELETE_MASK;
+            ecs_id_record_t *r = flecs_get_id_record(world, e);
+            if (r) {
+                r->flags &= ~ECS_ID_ON_DELETE_MASK;
+            }
         }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
@@ -47184,13 +47193,15 @@ void register_on_delete_object(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDeleteObject);
 
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         if (event == EcsOnAdd) {
+            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
         } else {
-            r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            ecs_id_record_t *r = flecs_get_id_record(world, e);
+            if (r) {
+                r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            }
         }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);

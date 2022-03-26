@@ -2757,6 +2757,13 @@ void ecs_delete(
         flecs_sparse_remove(ecs_eis(world), entity);
     }
 
+    ecs_assert(flecs_get_id_record(world, entity) == NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_get_id_record(world, ecs_pair(EcsWildcard, entity))==NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_get_id_record(world, ecs_pair(entity, EcsWildcard))==NULL, 
+        ECS_INTERNAL_ERROR, NULL);
+
     flecs_defer_flush(world, stage);
 error:
     return;

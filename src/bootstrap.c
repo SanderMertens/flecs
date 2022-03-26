@@ -184,13 +184,15 @@ void register_on_delete(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDelete);
 
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         if (event == EcsOnAdd) {
+            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
         } else {
-            r->flags &= ~ECS_ID_ON_DELETE_MASK;
+            ecs_id_record_t *r = flecs_get_id_record(world, e);
+            if (r) {
+                r->flags &= ~ECS_ID_ON_DELETE_MASK;
+            }
         }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
@@ -208,13 +210,15 @@ void register_on_delete_object(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDeleteObject);
 
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         if (event == EcsOnAdd) {
+            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
         } else {
-            r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            ecs_id_record_t *r = flecs_get_id_record(world, e);
+            if (r) {
+                r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            }
         }
 
         flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
