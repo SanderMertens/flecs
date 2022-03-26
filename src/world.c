@@ -1027,9 +1027,9 @@ void ecs_set_component_actions_w_id(
         }
 
         /* Ensure that no tables have yet been created for the component */
-        ecs_assert( flecs_id_existst(world, component) == false, 
+        ecs_assert( ecs_id_in_use(world, component) == false, 
             ECS_ALREADY_IN_USE, ecs_get_name(world, component));
-        ecs_assert( flecs_id_existst(world, 
+        ecs_assert( ecs_id_in_use(world, 
             ecs_pair(component, EcsWildcard)) == false, 
                 ECS_ALREADY_IN_USE, ecs_get_name(world, component));
     }
@@ -2026,7 +2026,7 @@ void flecs_clear_id_record(
     flecs_remove_id_record(world, id, idr);
 }
 
-bool flecs_id_existst(
+bool ecs_id_in_use(
     ecs_world_t *world,
     ecs_id_t id)
 {

@@ -2446,9 +2446,9 @@ void delete_objects(
                 /* Strip mask to prevent infinite recursion */
                 r->row = r->row & ECS_ROW_MASK;
 
-                /* Run delete actions for objects */
+                /* Run delete actions for object */
                 on_delete_any_w_entity(world, entities[i], 0, flags);
-            }        
+            }
         }
 
         /* Clear components from table (invokes destructors, OnRemove) */
@@ -2757,11 +2757,10 @@ void ecs_delete(
         flecs_sparse_remove(ecs_eis(world), entity);
     }
 
-    ecs_assert(flecs_get_id_record(world, entity) == NULL, 
+    ecs_assert(!ecs_id_in_use(world, entity), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!ecs_id_in_use(world, ecs_pair(EcsWildcard, entity)), 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_get_id_record(world, ecs_pair(EcsWildcard, entity))==NULL, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_get_id_record(world, ecs_pair(entity, EcsWildcard))==NULL, 
+    ecs_assert(!ecs_id_in_use(world, ecs_pair(entity, EcsWildcard)), 
         ECS_INTERNAL_ERROR, NULL);
 
     flecs_defer_flush(world, stage);

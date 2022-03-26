@@ -3402,6 +3402,47 @@ void SerializeToJson_serialize_iterator_w_inout_out_reflected_component() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_iterator_component_from_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_rule_t *r = ecs_rule_new(world, "Position(_E)");
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[\"Position\"], "
+        "\"vars\":[\"E\"], "
+        "\"results\":[{"
+            "\"ids\":[\"Position\"], "
+            "\"subjects\":[\"e1\"], "
+            "\"vars\":[\"e1\"], "
+            "\"is_set\":[true], "
+            "\"values\":[{\"x\":10, \"y\":20}]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_paged_iterator() {
     ecs_world_t *world = ecs_init();
 

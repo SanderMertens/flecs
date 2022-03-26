@@ -546,6 +546,7 @@
                 "serialize_iterator_w_inout_out_tag",
                 "serialize_iterator_w_inout_out_component",
                 "serialize_iterator_w_inout_out_reflected_component",
+                "serialize_iterator_component_from_var",
                 "serialize_paged_iterator",
                 "serialize_paged_iterator_w_optional_component",
                 "serialize_paged_iterator_w_optional_tag",

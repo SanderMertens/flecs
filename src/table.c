@@ -562,7 +562,7 @@ void dtor_all_components(
         }
 
         table->lock = false;
-    
+
         ecs_defer_end(world);
 
     /* If table does not have destructors, just update entity index */

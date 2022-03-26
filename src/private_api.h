@@ -198,10 +198,6 @@ void flecs_clear_id_record(
     ecs_id_t id,
     ecs_id_record_t *idr);
 
-bool flecs_id_existst(
-    ecs_world_t *world,
-    ecs_id_t id);
-
 void flecs_remove_id_record(
     ecs_world_t *world,
     ecs_id_t id,

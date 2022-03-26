@@ -1158,11 +1158,6 @@ void serialize_iter_result_values(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf) 
 {
-    int32_t count = it->count;
-    if (!it->count) {
-        return;
-    }
-
     flecs_json_member(buf, "values");
     flecs_json_array_push(buf);
 
@@ -1174,6 +1169,7 @@ void serialize_iter_result_values(
         if (it->ptrs) {
             ptr = it->ptrs[i];
         }
+
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
             if (ecs_term_is_set(it, i + 1)) {
@@ -1221,6 +1217,7 @@ void serialize_iter_result_values(
         }
 
         if (ecs_term_is_owned(it, i + 1)) {
+            int32_t count = it->count;
             array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser);
         } else {
             array_to_json_buf_w_type_data(world, ptr, 0, buf, comp, ser);
