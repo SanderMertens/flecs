@@ -338,6 +338,10 @@ void flecs_monitor_register(
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!ecs_map_is_initialized(&world->monitors.monitor_sets)) {
+        ecs_map_init(&world->monitors.monitor_sets, ecs_monitor_set_t, 1);
+    }
+
     ecs_monitor_set_t *ms = ecs_map_ensure(
         &world->monitors.monitor_sets, ecs_monitor_set_t, relation);
     ecs_assert(ms != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -362,6 +366,10 @@ void flecs_monitor_unregister(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ecs_map_is_initialized(&world->monitors.monitor_sets)) {
+        return;
+    }
 
     ecs_monitor_set_t *ms = ecs_map_get(
         &world->monitors.monitor_sets, ecs_monitor_set_t, relation);
@@ -407,7 +415,6 @@ static
 void monitors_init(
     ecs_relation_monitor_t *rm)
 {
-    ecs_map_init(&rm->monitor_sets, ecs_monitor_set_t, 0);
     rm->is_dirty = false;
 }
 

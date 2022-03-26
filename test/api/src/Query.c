@@ -1532,7 +1532,7 @@ void Query_invalid_access_orphaned_query() {
 }
 
 void Query_stresstest_query_free() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -2923,7 +2923,6 @@ void Query_create_query_while_pending() {
     
     ecs_fini(world);
 }
-
 
 void Query_empty_query() {
     ecs_world_t *world = ecs_init();
