@@ -719,7 +719,7 @@ int get_comp_and_src(
                     ecs_entity_t source = 0;
                     int32_t result = ecs_search_relation(world, table, 
                         0, term->id, subj->set.relation, subj->set.min_depth, 
-                        subj->set.max_depth, &source, NULL, NULL);
+                        subj->set.max_depth, &source, 0, 0, 0);
 
                     if (result != -1) {
                         component = term->id;
@@ -736,7 +736,7 @@ int get_comp_and_src(
             ecs_entity_t source = 0;
             bool result = ecs_search_relation(world, table, 0, component, 
                 subj->set.relation, subj->set.min_depth, subj->set.max_depth, 
-                &source, NULL, NULL) != -1;
+                &source, 0, 0, 0) != -1;
 
             *match_out = result;
 
@@ -902,7 +902,7 @@ int32_t get_component_index(
     } else if (op == EcsOptional) {
         /* If table doesn't have the field, mark it as no data */
         if (-1 == ecs_search_relation(world, table, 0, component, EcsIsA, 
-            0, 0, 0, 0, 0)) 
+            0, 0, 0, 0, 0, 0)) 
         {
             result = 0;
         }
@@ -1241,7 +1241,7 @@ bool match_term(
 
     return ecs_search_relation(
         world, table, 0, term->id, subj->set.relation, 
-        subj->set.min_depth, subj->set.max_depth, NULL, NULL, NULL) != -1;
+        subj->set.min_depth, subj->set.max_depth, 0, 0, 0, 0) != -1;
 }
 
 /* Match table with query */
@@ -1553,7 +1553,7 @@ void build_sorted_table_range(
             /* Find component in prefab */
             ecs_entity_t base = 0;
             ecs_search_relation(world, table, 0, id, 
-                EcsIsA, 1, 0, &base, NULL, NULL);
+                EcsIsA, 1, 0, &base, 0, 0, 0);
 
             /* If a base was not found, the query should not have allowed using
              * the component for sorting */
@@ -2079,7 +2079,7 @@ void resolve_cascade_subject_for_table(
     /* Find source for component */
     ecs_entity_t subject = 0;
     ecs_search_relation(world, table, 0, term->id, 
-        term->subj.set.relation, 1, 0, &subject, NULL, NULL);
+        term->subj.set.relation, 1, 0, &subject, 0, 0, 0);
 
     /* If container was found, update the reference */
     if (subject) {

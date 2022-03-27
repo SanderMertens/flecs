@@ -954,7 +954,7 @@ void diff_insert_removed(
          * the removed component was an override. Removed overrides reexpose the
          * base component, thus "changing" the value which requires an OnSet. */
         if (ecs_search_relation(world, table, 0, id, EcsIsA,
-            1, -1, NULL, NULL, NULL) != -1)
+            1, -1, 0, 0, 0, 0) != -1)
         {
             ids_append(&diff->on_set, id);
             return;

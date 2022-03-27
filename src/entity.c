@@ -537,7 +537,7 @@ bool override_from_base(
              * relationship. Superset triggers will not be invoked because the
              * component is owned. */
             int32_t c = ecs_search_relation(world, other_table, 0, component, 
-                EcsIsA, 1, 0, 0, 0, 0);
+                EcsIsA, 1, 0, 0, 0, 0, 0);
             if (c == -1) {
                 notify(
                     world, table, other_table, row, count, EcsOnSet, &ids, 0);
@@ -3316,8 +3316,7 @@ bool ecs_has_id(
         }
 
         return ecs_search_relation(
-            world, table, 0, id, EcsIsA, 0, 0, 
-                NULL, NULL, NULL) != -1;
+            world, table, 0, id, EcsIsA, 0, 0, 0, 0, 0, 0) != -1;
     }
 error:
     return false;
@@ -3367,7 +3366,7 @@ ecs_entity_t ecs_get_object_for_id(
 
     if (rel) {
         int32_t column = ecs_search_relation(
-            world, table, 0, id, rel, 0, 0, &subject, NULL, NULL);
+            world, table, 0, id, rel, 0, 0, &subject, 0, 0, 0);
         if (column == -1) {
             return 0;
         }

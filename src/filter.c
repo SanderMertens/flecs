@@ -1429,7 +1429,7 @@ bool flecs_term_match_table(
     bool is_any = is_any_pair(id);
     column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, &source, id_out, &tr);
+        subj->set.max_depth, &source, id_out, 0, &tr);
 
     if (tr && match_index_out) {
         if (!is_any) {
@@ -1766,7 +1766,7 @@ bool iter_find_superset(
     /* Test if following the relation finds the id */
     int32_t index = ecs_search_relation(world, table, 0, 
         term->id, subj->set.relation, subj->set.min_depth, 
-        subj->set.max_depth, source, id, NULL);
+        subj->set.max_depth, source, id, 0, 0);
 
     if (index == -1) {
         *source = 0;

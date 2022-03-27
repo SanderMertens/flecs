@@ -3356,7 +3356,7 @@ bool eval_superset(
             ecs_id_t id = ecs_pair(rel, result);
             ecs_entity_t subj = 0;
             column = ecs_search_relation(world, table, 0, id, rel, 
-                0, 0, &subj, 0, NULL);
+                0, 0, &subj, 0, 0, 0);
             if (column != -1) {
                 if (subj != 0) {
                     table = ecs_get_table(world, subj);

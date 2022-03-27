@@ -80,6 +80,7 @@ int32_t type_search_relation(
     int32_t max_depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
+    int32_t *depth_out,
     ecs_table_record_t **tr_out)
 {
     ecs_type_t type = table->type;
@@ -134,10 +135,13 @@ int32_t type_search_relation(
             if (obj_table) {
                 r = type_search_relation(world, obj_table, offset, id, idr, 
                     rel, idr_r, min_depth - 1, max_depth - 1, subject_out, 
-                    id_out, tr_out);
+                    id_out, depth_out, tr_out);
                 if (r != -1) {
                     if (subject_out && !subject_out[0]) {
                         subject_out[0] = ecs_get_alive(world, obj);
+                    }
+                    if (depth_out) {
+                        depth_out[0] ++;
                     }
                     return r;
                 }
@@ -145,10 +149,13 @@ int32_t type_search_relation(
                 if (!is_a) {
                     r = type_search_relation(world, obj_table, offset, id, idr, 
                         ecs_pair(EcsIsA, EcsWildcard), world->idr_isa_wildcard, 
-                            1, INT_MAX, subject_out, id_out, tr_out);
+                            1, INT_MAX, subject_out, id_out, depth_out, tr_out);
                     if (r != -1) {
                         if (subject_out && !subject_out[0]) {
                             subject_out[0] = ecs_get_alive(world, obj);
+                        }
+                        if (depth_out) {
+                            depth_out[0] ++;
                         }
                         return r;
                     }
@@ -172,6 +179,7 @@ int32_t ecs_search_relation(
     int32_t max_depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
+    int32_t *depth_out,
     struct ecs_table_record_t **tr_out)
 {
     if (!table) return -1;
@@ -191,7 +199,7 @@ int32_t ecs_search_relation(
 
     int32_t result = type_search_relation(world, table, offset, id, idr, 
         ecs_pair(rel, EcsWildcard), NULL, min_depth, max_depth, subject_out, 
-            id_out, tr_out);
+            id_out, depth_out, tr_out);
 
     return result;
 }

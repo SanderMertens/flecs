@@ -4364,6 +4364,7 @@ int32_t ecs_search_offset(
  * @param max_depth The maximum search depth. Zero means no maximum.
  * @param subject_out If provided, it will be set to the matched entity.
  * @param id_out If provided, it will be set to the found id (optional).
+ * @param depth_out If provided, it will be set to the traversal depth.
  * @param tr_out Internal datatype.
  * @return The index of the id in the table type.
  */
@@ -4378,6 +4379,7 @@ int32_t ecs_search_relation(
     int32_t max_depth,
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
+    int32_t *depth_out,
     struct ecs_table_record_t **tr_out);
 
 /** @} */

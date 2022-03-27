@@ -342,7 +342,7 @@ void init_iter(
         ECS_INTERNAL_ERROR, NULL);
 
     int32_t index = ecs_search_relation(it->world, it->table, 0, 
-        it->event_id, EcsIsA, 0, 0, it->subjects, NULL, NULL);
+        it->event_id, EcsIsA, 0, 0, it->subjects, 0, 0, 0);
     
     if (index == -1) {
         it->columns[0] = 0;
@@ -495,7 +495,7 @@ void notify_set_base_triggers(
         ecs_term_t *term = &t->term;
         ecs_id_t id = term->id;
         int32_t column = ecs_search_relation(world, obj_table, 0, id, rel, 
-            0, 0, it->subjects, it->ids, 0);
+            0, 0, it->subjects, it->ids, 0, 0);
         
         bool result = column != -1;
         if (term->oper == EcsNot) {

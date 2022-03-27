@@ -85,6 +85,16 @@ void Entity_defer_entity_init_w_symbol(void);
 void Entity_staged_set_name_n_stages(void);
 void Entity_staged_set_symbol_n_stages(void);
 
+// Testsuite 'Search'
+void Search_search(void);
+void Search_search_wildcard(void);
+void Search_search_wildcard_w_offset(void);
+void Search_search_relation_wildcard_w_offset(void);
+void Search_search_follow_relation_lvl_0(void);
+void Search_search_follow_relation_lvl_1(void);
+void Search_search_follow_relation_lvl_2(void);
+void Search_search_follow_relation_lvl_3(void);
+
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
 void Event_table_2_ids_w_trigger(void);
@@ -2031,6 +2041,41 @@ bake_test_case Entity_testcases[] = {
     {
         "staged_set_symbol_n_stages",
         Entity_staged_set_symbol_n_stages
+    }
+};
+
+bake_test_case Search_testcases[] = {
+    {
+        "search",
+        Search_search
+    },
+    {
+        "search_wildcard",
+        Search_search_wildcard
+    },
+    {
+        "search_wildcard_w_offset",
+        Search_search_wildcard_w_offset
+    },
+    {
+        "search_relation_wildcard_w_offset",
+        Search_search_relation_wildcard_w_offset
+    },
+    {
+        "search_follow_relation_lvl_0",
+        Search_search_follow_relation_lvl_0
+    },
+    {
+        "search_follow_relation_lvl_1",
+        Search_search_follow_relation_lvl_1
+    },
+    {
+        "search_follow_relation_lvl_2",
+        Search_search_follow_relation_lvl_2
+    },
+    {
+        "search_follow_relation_lvl_3",
+        Search_search_follow_relation_lvl_3
     }
 };
 
@@ -8352,6 +8397,13 @@ static bake_test_suite suites[] = {
         Entity_testcases
     },
     {
+        "Search",
+        NULL,
+        NULL,
+        8,
+        Search_testcases
+    },
+    {
         "Event",
         NULL,
         NULL,
@@ -8655,5 +8707,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 44);
+    return bake_test_run("api", argc, argv, suites, 45);
 }
