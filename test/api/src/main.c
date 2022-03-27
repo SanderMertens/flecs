@@ -852,6 +852,7 @@ void Filter_match_empty_tables_w_no_empty_tables(void);
 void Filter_match_switch_w_switch(void);
 void Filter_match_switch_w_case(void);
 void Filter_match_switch_w_case_2_terms(void);
+void Filter_match_case_no_case(void);
 void Filter_and_term(void);
 void Filter_or_term(void);
 void Filter_iter_while_creating_components(void);
@@ -4952,6 +4953,10 @@ bake_test_case Filter_testcases[] = {
         Filter_match_switch_w_case_2_terms
     },
     {
+        "match_case_no_case",
+        Filter_match_case_no_case
+    },
+    {
         "and_term",
         Filter_and_term
     },
@@ -8427,7 +8432,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        162,
+        163,
         Filter_testcases
     },
     {

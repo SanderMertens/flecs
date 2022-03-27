@@ -902,6 +902,7 @@
                 "match_switch_w_switch",
                 "match_switch_w_case",
                 "match_switch_w_case_2_terms",
+                "match_case_no_case",
                 "and_term",
                 "or_term",
                 "iter_while_creating_components",
