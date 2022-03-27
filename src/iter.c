@@ -31,7 +31,7 @@
         if (it->priv.cache.allocated & flecs_iter_cache_##f) {\
             ecs_os_free((void*)it->f);\
         }\
-    }   
+    }
 
 void flecs_iter_init(
     ecs_iter_t *it,
@@ -49,12 +49,11 @@ void flecs_iter_init(
     INIT_CACHE(it, fields, columns, it->term_count, ECS_TERM_CACHE_SIZE);
     INIT_CACHE(it, fields, variables, it->variable_count, 
         ECS_VARIABLE_CACHE_SIZE);
+    INIT_CACHE(it, fields, sizes, it->term_count, ECS_TERM_CACHE_SIZE);
 
     if (!ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
-        INIT_CACHE(it, fields, sizes, it->term_count, ECS_TERM_CACHE_SIZE);
         INIT_CACHE(it, fields, ptrs, it->term_count, ECS_TERM_CACHE_SIZE);
     } else {
-        it->sizes = NULL;
         it->ptrs = NULL;
     }
 }
@@ -125,6 +124,11 @@ bool flecs_iter_populate_term_data(
 
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutFilter) {
+        if (size_out) {
+            const ecs_type_info_t *ti = flecs_get_type_info(world, it->ids[t]);
+            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            size = ti->size;
+        }
         goto no_data;
     }
 
@@ -270,12 +274,28 @@ void flecs_iter_populate_data(
         }
     }
 
+    int t, term_count = it->term_count;
+
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
+
+        if (!sizes) {
+            return;
+        }
+
+        /* Fetch sizes, skip fetching data */
+        for (t = 0; t < term_count; t ++) {
+            ecs_entity_t type_id = ecs_get_typeid(world, it->ids[t]);
+            if (!type_id) {
+                continue;
+            }
+            const ecs_type_info_t *ti = flecs_get_type_info(world, type_id);
+            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+            sizes[t] = ti->size;
+        }
         return;
     }
 
-    int t, term_count = it->term_count;
     bool has_shared = false;
 
     if (ptrs && sizes) {
@@ -298,6 +318,7 @@ void flecs_iter_populate_data(
             if (sizes) {
                 size = &sizes[t];
             }
+
             has_shared |= flecs_iter_populate_term_data(world, it, t, column,
                 ptr, size);
         }

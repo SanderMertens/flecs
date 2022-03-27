@@ -33,7 +33,6 @@ void Observer_w_filter_term(ecs_iter_t *it) {
     test_assert(it->entities[0] != 0);
 
     test_assert(it->ptrs == NULL);
-    test_assert(it->sizes == NULL);
 }
 
 static

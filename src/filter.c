@@ -1885,12 +1885,11 @@ bool ecs_term_next(
     it->subjects = &iter->subject;
     it->columns = &iter->column;
     it->terms = &iter->term;
+    it->sizes = &iter->size;
 
     if (term->inout != EcsInOutFilter) {
-        it->sizes = &iter->size;
         it->ptrs = &iter->ptr;
     } else {
-        it->sizes = NULL;
         it->ptrs = NULL;
     }
 

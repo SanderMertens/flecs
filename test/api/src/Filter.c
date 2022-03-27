@@ -5023,8 +5023,10 @@ void Filter_term_iter_w_filter_term() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
+    test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+
     test_assert(it.ptrs == NULL);
-    test_assert(it.sizes == NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_term_next(&it), false);
@@ -5055,9 +5057,10 @@ void Filter_filter_iter_w_filter_term() {
     test_int(it.count, 1);
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
+    test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
 
     test_assert(it.ptrs == NULL);
-    test_assert(it.sizes == NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_filter_next(&it), false);
@@ -5093,8 +5096,11 @@ void Filter_filter_iter_w_2_terms_1_filter() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+    test_int(it.sizes[1], ECS_SIZEOF(Velocity));
+
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
 
     test_assert(it.ptrs[0] == NULL);
@@ -5137,8 +5143,12 @@ void Filter_filter_iter_w_3_terms_2_filter() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+    test_int(it.sizes[1], ECS_SIZEOF(Velocity));
+    test_int(it.sizes[2], ECS_SIZEOF(Mass));
+
+    test_assert(it.ptrs != NULL);
     test_assert(it.columns != NULL);
 
     test_assert(it.ptrs[0] == NULL);
@@ -5180,8 +5190,11 @@ void Filter_filter_iter_2_terms_filter_all() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
+    test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+    test_int(it.sizes[1], ECS_SIZEOF(Velocity));
+
     test_assert(it.ptrs == NULL);
-    test_assert(it.sizes == NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_filter_next(&it), false);
@@ -5218,8 +5231,11 @@ void Filter_filter_iter_2_terms_filter_all_w_out() {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
+    test_assert(it.sizes != NULL);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+    test_int(it.sizes[1], ECS_SIZEOF(Velocity));
+
     test_assert(it.ptrs == NULL);
-    test_assert(it.sizes == NULL);
     test_assert(it.columns != NULL);
 
     test_bool(ecs_filter_next(&it), false);
