@@ -306,7 +306,13 @@ ecs_entity_t entity_from_identifier(
     } else if (identifier->var == EcsVarIsEntity) {
         return identifier->entity;
     } else if (identifier->var == EcsVarIsVariable) {
-        return EcsWildcard;
+        if (identifier->entity != EcsAny) {
+            /* Any variable should not use wildcard, as this would return all
+             * ids matching a wildcard, whereas Any returns the first match */
+            return EcsWildcard;
+        } else {
+            return EcsAny;
+        }
     } else {
         /* This should've been caught earlier */
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
@@ -1249,6 +1255,28 @@ error:
     return -1;
 }
 
+/* Check if the id is a pair that has Any as first or second element. Any 
+ * pairs behave just like Wildcard pairs and reuses the same data structures,
+ * with as only difference that the number of results returned for an Any pair
+ * is never more than one. This function is used to tell the difference. */
+static
+bool is_any_pair(
+    ecs_id_t id)
+{
+    if (!ECS_HAS_ROLE(id, PAIR)) {
+        return false;
+    }
+
+    if (ECS_PAIR_FIRST(id) == EcsAny) {
+        return true;
+    }
+    if (ECS_PAIR_SECOND(id) == EcsAny) {
+        return true;
+    }
+
+    return false;
+}
+
 static
 ecs_id_t actual_match_id(
     ecs_id_t id)
@@ -1256,6 +1284,16 @@ ecs_id_t actual_match_id(
     /* Table types don't store CASE, so replace it with corresponding SWITCH */
     if (ECS_HAS_ROLE(id, CASE)) {
         return ECS_SWITCH | ECS_PAIR_FIRST(id);
+    }
+
+    /* If the id is a pair and contains Any wildcards, replace them with * */
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        if (ECS_PAIR_FIRST(id) == EcsAny) {
+            id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
+        }
+        if (ECS_PAIR_SECOND(id) == EcsAny) {
+            id = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
+        }
     }
 
     return id;
@@ -1379,12 +1417,17 @@ bool flecs_term_match_table(
 
     /* Find location, source and id of match in table type */
     ecs_table_record_t *tr = 0;
+    bool is_any = is_any_pair(id);
     column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source, id_out, &tr);
 
     if (tr && match_index_out) {
-        match_index_out[0] = tr->count;
+        if (!is_any) {
+            match_index_out[0] = tr->count;
+        } else {
+            match_index_out[0] = 1;
+        }
     }
 
     bool result = column != -1;
@@ -1754,6 +1797,9 @@ bool term_iter_next(
 
             iter->table = table;
             iter->match_count = tr->count;
+            if (is_any_pair(term->id)) {
+                iter->match_count = 1;
+            }
             iter->cur_match = 0;
             iter->last_column = tr->column;
             iter->column = tr->column + 1;
@@ -1902,7 +1948,9 @@ const ecs_filter_t* init_filter_iter(
             iter->filter.terms = iter->filter.term_cache;
         }
 
-        ecs_filter_finalize(world, &iter->filter);
+        int filter_invalid = ecs_filter_finalize(world, &iter->filter);
+        ecs_assert(!filter_invalid, ECS_INTERNAL_ERROR, NULL);
+        (void)filter_invalid;
 
         ecs_assert(!filter->term_cache_used || 
             filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    

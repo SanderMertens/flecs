@@ -772,6 +772,9 @@ void Filter_term_iter_w_superset_pair_obj_wildcard(void);
 void Filter_term_iter_in_stage(void);
 void Filter_term_iter_w_readonly_term(void);
 void Filter_term_iter_type_set(void);
+void Filter_term_iter_any_match_wildcard(void);
+void Filter_term_iter_any_match_tag_and_wildcard(void);
+void Filter_term_iter_any_obj(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
@@ -803,6 +806,10 @@ void Filter_filter_iter_pair_w_2_wildcards_1_match(void);
 void Filter_filter_iter_pair_w_2_wildcards_2x1_matches(void);
 void Filter_filter_iter_pair_w_2_wildcards_2x2_matches(void);
 void Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches(void);
+void Filter_filter_iter_any(void);
+void Filter_filter_iter_any_match_wildcard(void);
+void Filter_filter_iter_any_match_tag_and_wildcard(void);
+void Filter_filter_iter_any_obj(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -4623,6 +4630,18 @@ bake_test_case Filter_testcases[] = {
         Filter_term_iter_type_set
     },
     {
+        "term_iter_any_match_wildcard",
+        Filter_term_iter_any_match_wildcard
+    },
+    {
+        "term_iter_any_match_tag_and_wildcard",
+        Filter_term_iter_any_match_tag_and_wildcard
+    },
+    {
+        "term_iter_any_obj",
+        Filter_term_iter_any_obj
+    },
+    {
         "filter_iter_1_tag",
         Filter_filter_iter_1_tag
     },
@@ -4745,6 +4764,22 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_pair_w_3_wildcards_2x2x2_matches",
         Filter_filter_iter_pair_w_3_wildcards_2x2x2_matches
+    },
+    {
+        "filter_iter_any",
+        Filter_filter_iter_any
+    },
+    {
+        "filter_iter_any_match_wildcard",
+        Filter_filter_iter_any_match_wildcard
+    },
+    {
+        "filter_iter_any_match_tag_and_wildcard",
+        Filter_filter_iter_any_match_tag_and_wildcard
+    },
+    {
+        "filter_iter_any_obj",
+        Filter_filter_iter_any_obj
     },
     {
         "match_disabled",
@@ -8382,7 +8417,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        153,
+        160,
         Filter_testcases
     },
     {
