@@ -610,70 +610,26 @@ void init_query_monitors(
     }
 }
 
-/* Builtin group_by callback for Cascade terms.
- * This function traces the hierarchy depth of an entity type by following a
- * relation upwards (to its 'parents') for as long as those parents have the
- * specified component id. 
- * The result of the function is the number of parents with the provided 
- * component for a given relation. */
+/* The group by function for cascade computes the tree depth for the table type.
+ * This causes tables in the query cache to be ordered by depth, which ensures
+ * breadth-first iteration order. */
 static
 uint64_t group_by_cascade(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t component,
+    ecs_id_t id,
     void *ctx)
 {
-    uint64_t result = 0;
-    ecs_type_t type = ecs_table_get_type(table);
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     ecs_term_t *term = ctx;
-    ecs_entity_t relation = term->subj.set.relation;
-
-    /* Cascade needs a relation to calculate depth from */
-    ecs_check(relation != 0, ECS_INVALID_PARAMETER, NULL);
-
-    /* Should only be used with cascade terms */
-    ecs_check(term->subj.set.mask & EcsCascade, ECS_INVALID_PARAMETER, NULL);
-
-    /* Iterate back to front as relations are more likely to occur near the
-     * end of a type. */
-    for (i = count - 1; i >= 0; i --) {
-        /* Find relation & relation object in entity type */
-        if (ECS_HAS_RELATION(array[i], relation)) {
-            ecs_entity_t obj = ecs_pair_second(world, array[i]);
-            ecs_table_t *obj_table = ecs_get_table(world, obj);
-            ecs_type_t obj_type = ecs_table_get_type(obj_table);
-            int32_t j, c_count = ecs_vector_count(obj_type);
-            ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
-
-            /* Iterate object type, check if it has the specified component */
-            for (j = 0; j < c_count; j ++) {
-                /* If it has the component, it is part of the tree matched by
-                 * the query, increase depth */
-                if (c_array[j] == component) {
-                    result ++;
-
-                    /* Recurse to test if the object has matching parents */
-                    result += group_by_cascade(
-                        world, obj_table, component, ctx);
-                    break;
-                }
-            }
-
-            if (j != c_count) {
-                break;
-            }
-
-        /* If the id doesn't have a role set, we'll find no more relations */
-        } else if (!(array[i] & ECS_ROLE_MASK)) {
-            break;
-        }
+    ecs_entity_t rel = term->subj.set.relation;
+    int32_t depth = 0;
+    if (-1 != ecs_search_relation_last(
+        world, table, 0, id, rel, 0, 0, 0, 0, &depth, 0))
+    {
+        return flecs_ito(uint64_t, depth);
+    } else {
+        return 0;
     }
-
-    return result;
-error:
-    return 0;
 }
 
 static
@@ -1945,7 +1901,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set.mask & EcsCascade && term->oper == EcsOptional) {
+        if (subj->set.mask & EcsCascade) {
             /* Query can only have one cascade column */
             ecs_assert(query->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
             query->cascade_by = i + 1;

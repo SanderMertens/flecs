@@ -2937,3 +2937,462 @@ void Query_empty_query() {
 
     ecs_fini(world);
 }
+
+void Query_implicit_existing_isa_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_implicit_new_isa_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_self_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(self|super)");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(super(ChildOf))");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_parent() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(parent)");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_existing_isa_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade)");
+    test_assert(q != NULL);
+
+    ecs_add_id(world, e1, Bar); /* mix up order */
+    ecs_add_id(world, e2, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_new_isa_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade(ChildOf))");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_parent_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(parent|cascade)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_existing_custom_rel_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, e2);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade(Rel))");
+    test_assert(q != NULL);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_new_custom_rel_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade(Rel))");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, e0);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e0);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_cascade_w_2_depths() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade(Rel))");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new_id(world);
+
+    ecs_add_pair(world, e1, Rel, e0);
+    ecs_add_pair(world, e2, Rel, e1);
+    ecs_add_pair(world, e3, Rel, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e1);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e1);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_cascade_w_3_depths() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(cascade(Rel))");
+    test_assert(q != NULL);
+
+    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_id(world);
+
+    ecs_add_pair(world, e1, Rel, e0);
+    ecs_add_pair(world, e2, Rel, e1);
+    ecs_add_pair(world, e3, Rel, e2);
+
+    ecs_add_id(world, e2, Foo); /* mix up order */
+    ecs_add_id(world, e1, Bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], e0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], e1);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], e2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

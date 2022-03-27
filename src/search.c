@@ -245,3 +245,63 @@ int32_t ecs_search_offset(
     int32_t count = ecs_vector_count(type);
     return type_offset_search(offset, id, ids, count, id_out);
 }
+
+int32_t ecs_search_relation_last(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    int32_t *depth_out,
+    struct ecs_table_record_t **tr_out)
+{
+    int32_t depth = 0;
+    ecs_entity_t subj = 0;
+    int32_t cur, result = ecs_search_relation(
+        world, table, offset, id, rel, min_depth, max_depth, &subj,
+        id_out, &depth, tr_out);
+    if (result == -1) {
+        return -1;
+    }
+
+    if (!subj) {
+        cur = ecs_search_relation(
+            world, table, offset, id, rel, 1, max_depth, &subj,
+            id_out, &depth, tr_out);
+        if (cur == -1) {
+            goto done;
+        }
+    }
+
+    do {
+        ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
+        table = ecs_get_table(world, subj);
+        int32_t cur_depth = 0;
+        ecs_entity_t cur_subj = 0;
+        cur = ecs_search_relation(
+            world, table, 0, id, rel, 1, max_depth, &cur_subj,
+            id_out, &cur_depth, tr_out);
+        if (cur == -1) {
+            break;
+        }
+
+        ecs_assert(subj != cur_subj, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t actual_depth = depth + cur_depth;
+        if (max_depth && (actual_depth > max_depth)) {
+            break;
+        }
+
+        subj = cur_subj;
+        depth = actual_depth;
+    } while(true);
+
+done:
+    if (depth_out) depth_out[0] = depth;
+    if (subject_out) subject_out[0] = subj;
+    return result;
+}

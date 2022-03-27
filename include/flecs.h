@@ -4385,6 +4385,37 @@ int32_t ecs_search_relation(
     int32_t *depth_out,
     struct ecs_table_record_t **tr_out);
 
+/** Similar to ecs_search_relation, but find component at maximum depth.
+ * Instead of searching for the first occurrence of a component following a
+ * relationship, this operation returns the last (deepest) occurrence of the
+ * component. This operation can be used to determine the depth of a tree.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param offset Offset from where to start searching.
+ * @param id The id to search for.
+ * @param rel The relation to traverse (optional).
+ * @param min_depth The minimum search depth. Use 1 for only shared components.
+ * @param max_depth The maximum search depth. Zero means no maximum.
+ * @param subject_out If provided, it will be set to the matched entity.
+ * @param id_out If provided, it will be set to the found id (optional).
+ * @param depth_out If provided, it will be set to the traversal depth.
+ * @param tr_out Internal datatype.
+ */
+FLECS_API
+int32_t ecs_search_relation_last(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    int32_t *depth_out,
+    struct ecs_table_record_t **tr_out);
+
 /** @} */
 
 /**

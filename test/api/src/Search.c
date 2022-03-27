@@ -75,7 +75,7 @@ void Search_search_wildcard_w_offset() {
     test_uint(id, ecs_pair(Rel, ObjC));
 
     c = ecs_search_offset(world, table, 4, ecs_pair(Rel, EcsWildcard), &id);
-    test_assert(c == -1);
+    test_int(c, -1);
 
     ecs_fini(world);
 }
@@ -112,7 +112,7 @@ void Search_search_relation_wildcard_w_offset() {
     test_uint(id, ecs_pair(RelZ, ObjB));
 
     c = ecs_search_offset(world, table, 7, ecs_pair(EcsWildcard, ObjB), &id);
-    test_assert(c == -1);
+    test_int(c, -1);
 
     ecs_fini(world);
 }
@@ -126,9 +126,6 @@ void Search_search_follow_relation_lvl_0() {
 
     ecs_entity_t e_0 = ecs_new(world, TagA);
     ecs_add(world, e_0, TagB);
-    // ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
-    // ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
-    // ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
 
     ecs_table_t *t = ecs_get_table(world, e_0);
     
@@ -137,10 +134,10 @@ void Search_search_follow_relation_lvl_0() {
     int32_t depth = 0;
     int32_t c = ecs_search_relation(
         world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
-    test_assert(c == 1);
+    test_int(c, 1);
+    test_int(depth, 0);
     test_uint(id, TagB);
     test_uint(subj, 0);
-    test_int(depth, 0);
 
     ecs_fini(world);
 }
@@ -155,8 +152,6 @@ void Search_search_follow_relation_lvl_1() {
     ecs_entity_t e_0 = ecs_new(world, TagA);
     ecs_add(world, e_0, TagB);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
-    // ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
-    // ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
 
     ecs_table_t *t = ecs_get_table(world, e_1);
     
@@ -165,10 +160,10 @@ void Search_search_follow_relation_lvl_1() {
     int32_t depth = 0;
     int32_t c = ecs_search_relation(
         world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
-    test_assert(c == 1);
+    test_int(c, 1);
+    test_int(depth, 1);
     test_uint(id, TagB);
     test_uint(subj, e_0);
-    test_int(depth, 1);
 
     ecs_fini(world);
 }
@@ -184,7 +179,6 @@ void Search_search_follow_relation_lvl_2() {
     ecs_add(world, e_0, TagB);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
-    // ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
 
     ecs_table_t *t = ecs_get_table(world, e_2);
     
@@ -193,10 +187,10 @@ void Search_search_follow_relation_lvl_2() {
     int32_t depth = 0;
     int32_t c = ecs_search_relation(
         world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
-    test_assert(c == 1);
+    test_int(c, 1);
+    test_int(depth, 2);
     test_uint(id, TagB);
     test_uint(subj, e_0);
-    test_int(depth, 2);
 
     ecs_fini(world);
 }
@@ -221,10 +215,257 @@ void Search_search_follow_relation_lvl_3() {
     int32_t depth = 0;
     int32_t c = ecs_search_relation(
         world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
-    test_assert(c == 1);
+    test_int(c, 1);
+    test_int(depth, 3);
     test_uint(id, TagB);
     test_uint(subj, e_0);
+
+    ecs_fini(world);
+}
+
+void Search_search_first_lvl_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_add(world, e_0, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_0);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 1);
+    test_int(depth, 0);
+    test_uint(id, TagB);
+    test_uint(subj, 0);
+
+    ecs_fini(world);
+}
+
+void Search_search_first_lvl_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_add(world, e_0, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_1);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 1);
+    test_int(depth, 1);
+    test_uint(id, TagB);
+    test_uint(subj, e_0);
+
+    ecs_fini(world);
+}
+
+void Search_search_first_lvl_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
+    ecs_add(world, e_0, TagB);
+    ecs_add(world, e_1, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_2);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 0);
+    test_int(depth, 1);
+    test_uint(id, TagB);
+    test_uint(subj, e_1);
+
+    ecs_fini(world);
+}
+
+void Search_search_first_lvl_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
+    ecs_add(world, e_0, TagB);
+    ecs_add(world, e_1, TagB);
+    ecs_add(world, e_2, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_3);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 0);
+    test_int(depth, 1);
+    test_uint(id, TagB);
+    test_uint(subj, e_2);
+
+    ecs_fini(world);
+}
+
+void Search_search_last_lvl_0() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_add(world, e_0, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_0);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation_last(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 1);
+    test_int(depth, 0);
+    test_uint(id, TagB);
+    test_uint(subj, 0);
+
+    ecs_fini(world);
+}
+
+void Search_search_last_lvl_1() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_add(world, e_0, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_1);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation_last(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 1);
+    test_int(depth, 1);
+    test_uint(id, TagB);
+    test_uint(subj, e_0);
+
+    ecs_fini(world);
+}
+
+void Search_search_last_lvl_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
+    ecs_add(world, e_0, TagB);
+    ecs_add(world, e_1, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_2);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation_last(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 0);
+    test_int(depth, 2);
+    test_uint(id, TagB);
+    test_uint(subj, e_0);
+
+    ecs_fini(world);
+}
+
+void Search_search_last_lvl_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
+    ecs_add(world, e_0, TagB);
+    ecs_add(world, e_1, TagB);
+    ecs_add(world, e_2, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_3);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation_last(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 0);
     test_int(depth, 3);
+    test_uint(id, TagB);
+    test_uint(subj, e_0);
+
+    ecs_fini(world);
+}
+
+void Search_search_last_lvl_3_root_without_id() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
+    ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
+    ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
+    ecs_add(world, e_1, TagB);
+    ecs_add(world, e_2, TagB);
+
+    ecs_table_t *t = ecs_get_table(world, e_3);
+    
+    ecs_entity_t subj = 0;
+    ecs_id_t id = 0;
+    int32_t depth = 0;
+    int32_t c = ecs_search_relation_last(
+        world, t, 0, TagB, Rel, 0, 0, &subj, &id, &depth, 0);
+    test_int(c, 0);
+    test_int(depth, 2);
+    test_uint(id, TagB);
+    test_uint(subj, e_1);
 
     ecs_fini(world);
 }

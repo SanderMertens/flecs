@@ -38905,6 +38905,66 @@ int32_t ecs_search_offset(
     return type_offset_search(offset, id, ids, count, id_out);
 }
 
+int32_t ecs_search_relation_last(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    int32_t min_depth,
+    int32_t max_depth,
+    ecs_entity_t *subject_out,
+    ecs_id_t *id_out,
+    int32_t *depth_out,
+    struct ecs_table_record_t **tr_out)
+{
+    int32_t depth = 0;
+    ecs_entity_t subj = 0;
+    int32_t cur, result = ecs_search_relation(
+        world, table, offset, id, rel, min_depth, max_depth, &subj,
+        id_out, &depth, tr_out);
+    if (result == -1) {
+        return -1;
+    }
+
+    if (!subj) {
+        cur = ecs_search_relation(
+            world, table, offset, id, rel, 1, max_depth, &subj,
+            id_out, &depth, tr_out);
+        if (cur == -1) {
+            goto done;
+        }
+    }
+
+    do {
+        ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
+        table = ecs_get_table(world, subj);
+        int32_t cur_depth = 0;
+        ecs_entity_t cur_subj = 0;
+        cur = ecs_search_relation(
+            world, table, 0, id, rel, 1, max_depth, &cur_subj,
+            id_out, &cur_depth, tr_out);
+        if (cur == -1) {
+            break;
+        }
+
+        ecs_assert(subj != cur_subj, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t actual_depth = depth + cur_depth;
+        if (max_depth && (actual_depth > max_depth)) {
+            break;
+        }
+
+        subj = cur_subj;
+        depth = actual_depth;
+    } while(true);
+
+done:
+    if (depth_out) depth_out[0] = depth;
+    if (subject_out) subject_out[0] = subj;
+    return result;
+}
+
 
 static
 bool observer_run(ecs_iter_t *it) {
@@ -40633,70 +40693,26 @@ void init_query_monitors(
     }
 }
 
-/* Builtin group_by callback for Cascade terms.
- * This function traces the hierarchy depth of an entity type by following a
- * relation upwards (to its 'parents') for as long as those parents have the
- * specified component id. 
- * The result of the function is the number of parents with the provided 
- * component for a given relation. */
+/* The group by function for cascade computes the tree depth for the table type.
+ * This causes tables in the query cache to be ordered by depth, which ensures
+ * breadth-first iteration order. */
 static
 uint64_t group_by_cascade(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_entity_t component,
+    ecs_id_t id,
     void *ctx)
 {
-    uint64_t result = 0;
-    ecs_type_t type = ecs_table_get_type(table);
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     ecs_term_t *term = ctx;
-    ecs_entity_t relation = term->subj.set.relation;
-
-    /* Cascade needs a relation to calculate depth from */
-    ecs_check(relation != 0, ECS_INVALID_PARAMETER, NULL);
-
-    /* Should only be used with cascade terms */
-    ecs_check(term->subj.set.mask & EcsCascade, ECS_INVALID_PARAMETER, NULL);
-
-    /* Iterate back to front as relations are more likely to occur near the
-     * end of a type. */
-    for (i = count - 1; i >= 0; i --) {
-        /* Find relation & relation object in entity type */
-        if (ECS_HAS_RELATION(array[i], relation)) {
-            ecs_entity_t obj = ecs_pair_second(world, array[i]);
-            ecs_table_t *obj_table = ecs_get_table(world, obj);
-            ecs_type_t obj_type = ecs_table_get_type(obj_table);
-            int32_t j, c_count = ecs_vector_count(obj_type);
-            ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
-
-            /* Iterate object type, check if it has the specified component */
-            for (j = 0; j < c_count; j ++) {
-                /* If it has the component, it is part of the tree matched by
-                 * the query, increase depth */
-                if (c_array[j] == component) {
-                    result ++;
-
-                    /* Recurse to test if the object has matching parents */
-                    result += group_by_cascade(
-                        world, obj_table, component, ctx);
-                    break;
-                }
-            }
-
-            if (j != c_count) {
-                break;
-            }
-
-        /* If the id doesn't have a role set, we'll find no more relations */
-        } else if (!(array[i] & ECS_ROLE_MASK)) {
-            break;
-        }
+    ecs_entity_t rel = term->subj.set.relation;
+    int32_t depth = 0;
+    if (-1 != ecs_search_relation_last(
+        world, table, 0, id, rel, 0, 0, 0, 0, &depth, 0))
+    {
+        return flecs_ito(uint64_t, depth);
+    } else {
+        return 0;
     }
-
-    return result;
-error:
-    return 0;
 }
 
 static
@@ -41968,7 +41984,7 @@ void process_signature(
             query->flags |= EcsQueryNeedsTables;
         }
 
-        if (subj->set.mask & EcsCascade && term->oper == EcsOptional) {
+        if (subj->set.mask & EcsCascade) {
             /* Query can only have one cascade column */
             ecs_assert(query->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
             query->cascade_by = i + 1;

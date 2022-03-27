@@ -94,6 +94,15 @@ void Search_search_follow_relation_lvl_0(void);
 void Search_search_follow_relation_lvl_1(void);
 void Search_search_follow_relation_lvl_2(void);
 void Search_search_follow_relation_lvl_3(void);
+void Search_search_first_lvl_0(void);
+void Search_search_first_lvl_1(void);
+void Search_search_first_lvl_2(void);
+void Search_search_first_lvl_3(void);
+void Search_search_last_lvl_0(void);
+void Search_search_last_lvl_1(void);
+void Search_search_last_lvl_2(void);
+void Search_search_last_lvl_3(void);
+void Search_search_last_lvl_3_root_without_id(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -969,6 +978,18 @@ void Query_add_singleton_after_query(void);
 void Query_query_w_component_from_parent_from_non_this(void);
 void Query_create_query_while_pending(void);
 void Query_empty_query(void);
+void Query_isa_superset(void);
+void Query_isa_self_superset(void);
+void Query_childof_superset(void);
+void Query_parent(void);
+void Query_existing_isa_cascade(void);
+void Query_new_isa_cascade(void);
+void Query_childof_cascade(void);
+void Query_parent_cascade(void);
+void Query_existing_custom_rel_cascade(void);
+void Query_new_custom_rel_cascade(void);
+void Query_cascade_w_2_depths(void);
+void Query_cascade_w_3_depths(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -2076,6 +2097,42 @@ bake_test_case Search_testcases[] = {
     {
         "search_follow_relation_lvl_3",
         Search_search_follow_relation_lvl_3
+    },
+    {
+        "search_first_lvl_0",
+        Search_search_first_lvl_0
+    },
+    {
+        "search_first_lvl_1",
+        Search_search_first_lvl_1
+    },
+    {
+        "search_first_lvl_2",
+        Search_search_first_lvl_2
+    },
+    {
+        "search_first_lvl_3",
+        Search_search_first_lvl_3
+    },
+    {
+        "search_last_lvl_0",
+        Search_search_last_lvl_0
+    },
+    {
+        "search_last_lvl_1",
+        Search_search_last_lvl_1
+    },
+    {
+        "search_last_lvl_2",
+        Search_search_last_lvl_2
+    },
+    {
+        "search_last_lvl_3",
+        Search_search_last_lvl_3
+    },
+    {
+        "search_last_lvl_3_root_without_id",
+        Search_search_last_lvl_3_root_without_id
     }
 };
 
@@ -5428,6 +5485,54 @@ bake_test_case Query_testcases[] = {
     {
         "empty_query",
         Query_empty_query
+    },
+    {
+        "isa_superset",
+        Query_isa_superset
+    },
+    {
+        "isa_self_superset",
+        Query_isa_self_superset
+    },
+    {
+        "childof_superset",
+        Query_childof_superset
+    },
+    {
+        "parent",
+        Query_parent
+    },
+    {
+        "existing_isa_cascade",
+        Query_existing_isa_cascade
+    },
+    {
+        "new_isa_cascade",
+        Query_new_isa_cascade
+    },
+    {
+        "childof_cascade",
+        Query_childof_cascade
+    },
+    {
+        "parent_cascade",
+        Query_parent_cascade
+    },
+    {
+        "existing_custom_rel_cascade",
+        Query_existing_custom_rel_cascade
+    },
+    {
+        "new_custom_rel_cascade",
+        Query_new_custom_rel_cascade
+    },
+    {
+        "cascade_w_2_depths",
+        Query_cascade_w_2_depths
+    },
+    {
+        "cascade_w_3_depths",
+        Query_cascade_w_3_depths
     }
 };
 
@@ -8400,7 +8505,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        8,
+        17,
         Search_testcases
     },
     {
@@ -8568,7 +8673,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        66,
+        78,
         Query_testcases
     },
     {

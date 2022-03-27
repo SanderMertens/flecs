@@ -100,7 +100,16 @@
                 "search_follow_relation_lvl_0",
                 "search_follow_relation_lvl_1",
                 "search_follow_relation_lvl_2",
-                "search_follow_relation_lvl_3"
+                "search_follow_relation_lvl_3",
+                "search_first_lvl_0",
+                "search_first_lvl_1",
+                "search_first_lvl_2",
+                "search_first_lvl_3",
+                "search_last_lvl_0",
+                "search_last_lvl_1",
+                "search_last_lvl_2",
+                "search_last_lvl_3",
+                "search_last_lvl_3_root_without_id"
             ]
         }, {
             "id": "Event",
@@ -1023,7 +1032,19 @@
                 "add_singleton_after_query",
                 "query_w_component_from_parent_from_non_this",
                 "create_query_while_pending",
-                "empty_query"
+                "empty_query",
+                "isa_superset",
+                "isa_self_superset",
+                "childof_superset",
+                "parent",
+                "existing_isa_cascade",
+                "new_isa_cascade",
+                "childof_cascade",
+                "parent_cascade",
+                "existing_custom_rel_cascade",
+                "new_custom_rel_cascade",
+                "cascade_w_2_depths",
+                "cascade_w_3_depths"
             ]
         }, {
             "id": "Iter",
