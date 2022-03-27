@@ -912,6 +912,37 @@ void FilterStr_three_terms_w_or_inout(void);
 void FilterStr_four_terms_three_w_or_inout(void);
 
 // Testsuite 'Query'
+void Query_simple_query_existing_table(void);
+void Query_simple_query_2_existing_tables(void);
+void Query_simple_query_new_table(void);
+void Query_simple_query_2_new_tables(void);
+void Query_simple_query_existing_and_new_table(void);
+void Query_wildcard_query_existing_table(void);
+void Query_wildcard_query_new_table(void);
+void Query_wildcard_query_existing_table_2_results_p_table(void);
+void Query_wildcard_query_new_table_2_results_p_table(void);
+void Query_simple_query_existing_empty_table(void);
+void Query_simple_query_new_empty_table(void);
+void Query_component_query_existing_table(void);
+void Query_component_query_new_table(void);
+void Query_component_query_existing_empty_table(void);
+void Query_query_only_from_entity(void);
+void Query_query_only_from_singleton(void);
+void Query_query_only_from_entity_match_after(void);
+void Query_query_only_from_singleton_match_after(void);
+void Query_query_only_from_nothing(void);
+void Query_query_w_from_entity(void);
+void Query_query_w_from_singleton(void);
+void Query_query_w_from_entity_match_after(void);
+void Query_query_w_from_singleton_match_after(void);
+void Query_query_w_from_nothing(void);
+void Query_query_w_existing_switch(void);
+void Query_query_w_existing_switch_and_case(void);
+void Query_query_w_new_switch(void);
+void Query_query_w_new_switch_and_case(void);
+void Query_query_for_case_existing(void);
+void Query_query_for_case_new(void);
+void Query_query_for_switch_filter_term(void);
 void Query_query_changed_after_new(void);
 void Query_query_changed_after_delete(void);
 void Query_query_changed_after_add(void);
@@ -5223,6 +5254,130 @@ bake_test_case FilterStr_testcases[] = {
 
 bake_test_case Query_testcases[] = {
     {
+        "simple_query_existing_table",
+        Query_simple_query_existing_table
+    },
+    {
+        "simple_query_2_existing_tables",
+        Query_simple_query_2_existing_tables
+    },
+    {
+        "simple_query_new_table",
+        Query_simple_query_new_table
+    },
+    {
+        "simple_query_2_new_tables",
+        Query_simple_query_2_new_tables
+    },
+    {
+        "simple_query_existing_and_new_table",
+        Query_simple_query_existing_and_new_table
+    },
+    {
+        "wildcard_query_existing_table",
+        Query_wildcard_query_existing_table
+    },
+    {
+        "wildcard_query_new_table",
+        Query_wildcard_query_new_table
+    },
+    {
+        "wildcard_query_existing_table_2_results_p_table",
+        Query_wildcard_query_existing_table_2_results_p_table
+    },
+    {
+        "wildcard_query_new_table_2_results_p_table",
+        Query_wildcard_query_new_table_2_results_p_table
+    },
+    {
+        "simple_query_existing_empty_table",
+        Query_simple_query_existing_empty_table
+    },
+    {
+        "simple_query_new_empty_table",
+        Query_simple_query_new_empty_table
+    },
+    {
+        "component_query_existing_table",
+        Query_component_query_existing_table
+    },
+    {
+        "component_query_new_table",
+        Query_component_query_new_table
+    },
+    {
+        "component_query_existing_empty_table",
+        Query_component_query_existing_empty_table
+    },
+    {
+        "query_only_from_entity",
+        Query_query_only_from_entity
+    },
+    {
+        "query_only_from_singleton",
+        Query_query_only_from_singleton
+    },
+    {
+        "query_only_from_entity_match_after",
+        Query_query_only_from_entity_match_after
+    },
+    {
+        "query_only_from_singleton_match_after",
+        Query_query_only_from_singleton_match_after
+    },
+    {
+        "query_only_from_nothing",
+        Query_query_only_from_nothing
+    },
+    {
+        "query_w_from_entity",
+        Query_query_w_from_entity
+    },
+    {
+        "query_w_from_singleton",
+        Query_query_w_from_singleton
+    },
+    {
+        "query_w_from_entity_match_after",
+        Query_query_w_from_entity_match_after
+    },
+    {
+        "query_w_from_singleton_match_after",
+        Query_query_w_from_singleton_match_after
+    },
+    {
+        "query_w_from_nothing",
+        Query_query_w_from_nothing
+    },
+    {
+        "query_w_existing_switch",
+        Query_query_w_existing_switch
+    },
+    {
+        "query_w_existing_switch_and_case",
+        Query_query_w_existing_switch_and_case
+    },
+    {
+        "query_w_new_switch",
+        Query_query_w_new_switch
+    },
+    {
+        "query_w_new_switch_and_case",
+        Query_query_w_new_switch_and_case
+    },
+    {
+        "query_for_case_existing",
+        Query_query_for_case_existing
+    },
+    {
+        "query_for_case_new",
+        Query_query_for_case_new
+    },
+    {
+        "query_for_switch_filter_term",
+        Query_query_for_switch_filter_term
+    },
+    {
         "query_changed_after_new",
         Query_query_changed_after_new
     },
@@ -8673,7 +8828,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        78,
+        109,
         Query_testcases
     },
     {
