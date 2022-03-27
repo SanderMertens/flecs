@@ -870,6 +870,11 @@ void Filter_set_this_to_table_no_match(void);
 void Filter_set_this_to_table_2_terms_no_match(void);
 void Filter_set_this_to_empty_table(void);
 void Filter_set_this_to_empty_table_w_component(void);
+void Filter_set_this_to_implicit_isa_superset_match(void);
+void Filter_set_this_to_self_isa_superset_match(void);
+void Filter_set_this_to_isa_superset_match(void);
+void Filter_set_this_to_childof_superset_match(void);
+void Filter_set_this_to_superset_w_self_filter_no_match(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -5025,6 +5030,26 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_to_empty_table_w_component",
         Filter_set_this_to_empty_table_w_component
+    },
+    {
+        "set_this_to_implicit_isa_superset_match",
+        Filter_set_this_to_implicit_isa_superset_match
+    },
+    {
+        "set_this_to_self_isa_superset_match",
+        Filter_set_this_to_self_isa_superset_match
+    },
+    {
+        "set_this_to_isa_superset_match",
+        Filter_set_this_to_isa_superset_match
+    },
+    {
+        "set_this_to_childof_superset_match",
+        Filter_set_this_to_childof_superset_match
+    },
+    {
+        "set_this_to_superset_w_self_filter_no_match",
+        Filter_set_this_to_superset_w_self_filter_no_match
     }
 };
 
@@ -8442,7 +8467,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        165,
+        170,
         Filter_testcases
     },
     {

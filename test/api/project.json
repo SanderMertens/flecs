@@ -919,7 +919,12 @@
                 "set_this_to_table_no_match",
                 "set_this_to_table_2_terms_no_match",
                 "set_this_to_empty_table",
-                "set_this_to_empty_table_w_component"
+                "set_this_to_empty_table_w_component",
+                "set_this_to_implicit_isa_superset_match",
+                "set_this_to_self_isa_superset_match",
+                "set_this_to_isa_superset_match",
+                "set_this_to_childof_superset_match",
+                "set_this_to_superset_w_self_filter_no_match"
             ]
         }, {
             "id": "FilterStr",

@@ -25569,6 +25569,34 @@ const ecs_table_record_t *next_table(
 }
 
 static
+bool iter_find_superset(
+    ecs_world_t *world, 
+    ecs_table_t *table, 
+    ecs_term_t *term, 
+    ecs_entity_t *source, 
+    ecs_id_t *id, 
+    int32_t *column)
+{
+    ecs_term_id_t *subj = &term->subj;
+
+    /* Test if following the relation finds the id */
+    int32_t index = ecs_search_relation(world, table, 0, 
+        term->id, subj->set.relation, subj->set.min_depth, 
+        subj->set.max_depth, source, id, NULL);
+
+    if (index == -1) {
+        *source = 0;
+        return false;
+    }
+
+    ecs_assert(*source != 0, ECS_INTERNAL_ERROR, NULL);
+
+    *column = (index + 1) * -1;
+
+    return true;
+}
+
+static
 bool term_iter_next(
     ecs_world_t *world,
     ecs_term_iter_t *iter,
@@ -25632,8 +25660,6 @@ bool term_iter_next(
         }
 
         if (iter->cur == iter->set_index) {
-            const ecs_term_id_t *subj = &term->subj;
-
             if (iter->self_index) {
                 if (flecs_id_record_table(iter->self_index, table) != NULL) {
                     /* If the table has the id itself and this term matched Self
@@ -25642,19 +25668,11 @@ bool term_iter_next(
                 }
             }
 
-            /* Test if following the relation finds the id */
-            int32_t index = ecs_search_relation(world, table, 0, 
-                term->id, subj->set.relation, subj->set.min_depth, 
-                subj->set.max_depth, &source, &iter->id, NULL);
-
-            if (index == -1) {
-                source = 0;
+            if (!iter_find_superset(
+                world, table, term, &source, &iter->id, &iter->column)) 
+            {
                 continue;
             }
-
-            ecs_assert(source != 0, ECS_INTERNAL_ERROR, NULL);
-
-            iter->column = (index + 1) * -1;
         }
 
         break;
@@ -25667,28 +25685,42 @@ bool term_iter_next(
 
 static
 bool term_iter_set_table(
+    ecs_world_t *world,
     ecs_term_iter_t *iter,
     ecs_table_t *table)
 {
-    /* Can't set a (This) table if iterator has no self index */
+    const ecs_table_record_t *tr = NULL;
     const ecs_id_record_t *idr = iter->self_index;
-    if (!idr) {
-        return false;
+    if (idr) {
+        tr = ecs_table_cache_get(&idr->cache, table);
+        if (tr) {
+            iter->match_count = tr->count;
+            iter->last_column = tr->column;
+            iter->column = tr->column + 1;
+            iter->id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
+        }
     }
 
-    /* Table must be in id cache of term iterator, or it won't match */
-    ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
+    if (!tr) {
+        idr = iter->set_index;
+        if (idr) {
+            tr = ecs_table_cache_get(&idr->cache, table);
+            if (!iter_find_superset(world, table, &iter->term, &iter->subject, 
+                &iter->id, &iter->column)) 
+            {
+                return false;
+            }
+            iter->match_count = 1;
+        }
+    }
+
     if (!tr) {
         return false;
     }
 
     /* Populate fields as usual */
     iter->table = table;
-    iter->match_count = tr->count;
     iter->cur_match = 0;
-    iter->last_column = tr->column;
-    iter->column = tr->column + 1;
-    iter->id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
 
     return true;
 }
@@ -26039,7 +26071,7 @@ bool ecs_filter_next_instanced(
 
                         /* If table doesn't match term iterator, it doesn't
                          * match filter. */
-                        if (!term_iter_set_table(term_iter, this_table)){
+                        if (!term_iter_set_table(world, term_iter, this_table)){
                             goto done;
                         }
 

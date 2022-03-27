@@ -7148,3 +7148,191 @@ void Filter_set_this_to_empty_table_w_component() {
 
     ecs_fini(world);
 }
+
+void Filter_set_this_to_implicit_isa_superset_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ TagA }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_self_isa_superset_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.set.mask = EcsSuperSet | EcsSelf }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_isa_superset_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.set.mask = EcsSuperSet }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_childof_superset_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = TagA, 
+            .subj.set = {
+                .mask = EcsSuperSet,
+                .relation = EcsChildOf
+            }
+        }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_superset_w_self_filter_no_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.set.mask = EcsSelf }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
