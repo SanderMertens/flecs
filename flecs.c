@@ -18911,6 +18911,26 @@ void ecs_iter_fini(
 }
 
 static
+ecs_size_t iter_get_size_for_id(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ECS_HAS_ROLE(id, SWITCH)) {
+        return ECS_SIZEOF(ecs_entity_t);
+    }
+
+    ecs_entity_t type_id = ecs_get_typeid(world, id);
+    if (!type_id) {
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = flecs_get_type_info(world, type_id);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return ti->size;
+}
+
+static
 bool flecs_iter_populate_term_data(
     ecs_world_t *world,
     ecs_iter_t *it,
@@ -18938,9 +18958,7 @@ bool flecs_iter_populate_term_data(
     /* Filter terms may match with data but don't return it */
     if (it->terms[t].inout == EcsInOutFilter) {
         if (size_out) {
-            const ecs_type_info_t *ti = flecs_get_type_info(world, it->ids[t]);
-            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            *size_out = ti->size;
+            size = iter_get_size_for_id(world, it->ids[t]);
         }
         goto no_data;
     }
@@ -19089,12 +19107,8 @@ void flecs_iter_populate_data(
 
     int t, term_count = it->term_count;
 
-    printf(" - populate (%d)\n", term_count);
-
     if (ECS_BIT_IS_SET(it->flags, EcsIterIsFilter)) {
         ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
-
-        printf(" - filter\n");
 
         if (!sizes) {
             return;
@@ -19102,13 +19116,7 @@ void flecs_iter_populate_data(
 
         /* Fetch sizes, skip fetching data */
         for (t = 0; t < term_count; t ++) {
-            ecs_entity_t type_id = ecs_get_typeid(world, it->ids[t]);
-            if (!type_id) {
-                continue;
-            }
-            const ecs_type_info_t *ti = flecs_get_type_info(world, type_id);
-            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            sizes[t] = ti->size;
+            sizes[t] = iter_get_size_for_id(world, it->ids[t]);
         }
         return;
     }
@@ -19123,7 +19131,6 @@ void flecs_iter_populate_data(
                 &sizes[t]);
         }
     } else {
-        printf(" - ptrs = %p, sizes = %p\n", ptrs, sizes);
         for (t = 0; t < term_count; t ++) {
             ecs_assert(it->columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -19136,6 +19143,7 @@ void flecs_iter_populate_data(
             if (sizes) {
                 size = &sizes[t];
             }
+
             has_shared |= flecs_iter_populate_term_data(world, it, t, column,
                 ptr, size);
         }

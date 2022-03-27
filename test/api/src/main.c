@@ -830,6 +830,8 @@ void Filter_filter_iter_w_2_terms_1_filter(void);
 void Filter_filter_iter_w_3_terms_2_filter(void);
 void Filter_filter_iter_2_terms_filter_all(void);
 void Filter_filter_iter_2_terms_filter_all_w_out(void);
+void Filter_filter_iter_switch_term_filter(void);
+void Filter_filter_iter_2_terms_switch_term_filter(void);
 void Filter_filter_instanced_w_singleton(void);
 void Filter_filter_instanced_w_base(void);
 void Filter_filter_no_instancing_w_singleton(void);
@@ -4865,6 +4867,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_terms_filter_all_w_out
     },
     {
+        "filter_iter_switch_term_filter",
+        Filter_filter_iter_switch_term_filter
+    },
+    {
+        "filter_iter_2_terms_switch_term_filter",
+        Filter_filter_iter_2_terms_switch_term_filter
+    },
+    {
         "filter_instanced_w_singleton",
         Filter_filter_instanced_w_singleton
     },
@@ -8432,7 +8442,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        163,
+        165,
         Filter_testcases
     },
     {

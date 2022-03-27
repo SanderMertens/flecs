@@ -5243,6 +5243,68 @@ void Filter_filter_iter_2_terms_filter_all_w_out() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_switch_term_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, Type, TagA, TagB);
+
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_table_t *table = ecs_get_table(world, e);
+    
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = ECS_SWITCH | Type, .inout = EcsInOutFilter }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
+    test_assert(it.table == table);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_2_terms_switch_term_filter() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, Type, TagA, TagB);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_add(world, e, Position);
+    ecs_table_t *table = ecs_get_table(world, e);
+    
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ECS_SWITCH | Type, .inout = EcsInOutFilter }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.sizes[0], ECS_SIZEOF(Position));
+    test_int(it.sizes[1], ECS_SIZEOF(ecs_entity_t));
+    test_assert(it.table == table);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_instanced_w_singleton() {
     ecs_world_t *world = ecs_init();
     
@@ -6241,6 +6303,7 @@ void Filter_match_switch_w_switch() {
     test_bool(ecs_filter_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
+    test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
     test_assert(it.table == table);
 
     test_bool(ecs_filter_next(&it), false);
