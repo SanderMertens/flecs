@@ -556,14 +556,6 @@ const char* parse_set_expr(
         }
     } while (true);
 
-    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && 
-        !(id->set.mask & EcsSubSet))
-    {
-        /* If cascade is used without specifying super or sub, assume
-         * super */
-        id->set.mask |= EcsSuperSet;
-    }
-
     if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
         ecs_parser_error(name, expr, column, 
             "min_depth must be zero for set expression with 'self'");

@@ -506,6 +506,105 @@ void Filter_filter_1_term_dont_inherit_pair_default_set() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_term_cascade_implicit_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = Tag, .subj.set.mask = EcsCascade }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, Tag);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Tag);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSuperSet | EcsCascade);
+    test_int(f.terms[0].subj.set.relation, EcsIsA);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_cascade_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = Tag, 
+            .subj.set = {
+                .mask = EcsCascade,
+                .relation = EcsIsA
+            }
+        }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, Tag);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Tag);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSuperSet | EcsCascade);
+    test_int(f.terms[0].subj.set.relation, EcsIsA);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_term_cascade_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = Tag, 
+            .subj.set = {
+                .mask = EcsCascade,
+                .relation = EcsChildOf
+            }
+        }}
+    });
+    test_assert(r == 0);
+
+    test_int(f.term_count, 1);
+    test_int(f.term_count_actual, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, Tag);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].index, 0);
+    test_int(f.terms[0].pred.entity, Tag);
+    test_int(f.terms[0].pred.var, EcsVarIsEntity);
+    test_int(f.terms[0].subj.entity, EcsThis);
+    test_int(f.terms[0].subj.set.mask, EcsSuperSet | EcsCascade);
+    test_int(f.terms[0].subj.set.relation, EcsChildOf);
+    test_int(f.terms[0].subj.var, EcsVarIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();
 
@@ -4543,6 +4642,74 @@ void Filter_filter_iter_not_any_obj() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_cascade_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.set.mask = EcsCascade }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_cascade_childof() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = TagA, 
+            .subj.set = {
+                .mask = EcsCascade,
+                .relation = EcsChildOf
+            }
+        }}
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_match_disabled() {
     ecs_world_t *world = ecs_mini();
 
@@ -7336,3 +7503,84 @@ void Filter_set_this_to_superset_w_self_filter_no_match() {
     ecs_fini(world);
 }
 
+void Filter_set_this_to_isa_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = TagA, .subj.set.mask = EcsCascade }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_set_this_to_childof_cascade() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_table_t *t1 = ecs_get_table(world, inst);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .id = TagA, 
+            .subj.set = {
+                .mask = EcsCascade,
+                .relation = EcsChildOf
+            }
+        }}
+    }));
+
+    int this_var_id = ecs_filter_find_this_var(&f);
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_assert(it.table == t1);
+    test_assert(it.type == ecs_table_get_type(t1));
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_filter_next(&it));
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

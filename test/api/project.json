@@ -771,6 +771,9 @@
                 "filter_1_term_non_acyclic_superset",
                 "filter_1_term_dont_inherit_default_set",
                 "filter_1_term_dont_inherit_pair_default_set",
+                "filter_1_term_cascade_implicit_isa",
+                "filter_1_term_cascade_isa",
+                "filter_1_term_cascade_childof",
                 "filter_w_pair_id",
                 "filter_w_pred_obj",
                 "filter_move",
@@ -862,6 +865,8 @@
                 "filter_iter_any_obj",
                 "filter_iter_not_any",
                 "filter_iter_not_any_obj",
+                "filter_iter_cascade_isa",
+                "filter_iter_cascade_childof",
                 "match_disabled",
                 "match_prefab",
                 "chain_term_iter",
@@ -924,7 +929,9 @@
                 "set_this_to_self_isa_superset_match",
                 "set_this_to_isa_superset_match",
                 "set_this_to_childof_superset_match",
-                "set_this_to_superset_w_self_filter_no_match"
+                "set_this_to_superset_w_self_filter_no_match",
+                "set_this_to_isa_cascade",
+                "set_this_to_childof_cascade"
             ]
         }, {
             "id": "FilterStr",

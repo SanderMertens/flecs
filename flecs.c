@@ -23857,6 +23857,15 @@ int finalize_term_set(
         identifier->set.relation = EcsChildOf;
     }
 
+    if (identifier->set.mask & EcsCascade && 
+       !(identifier->set.mask & EcsSuperSet) && 
+       !(identifier->set.mask & EcsSubSet))
+    {
+        /* If cascade is used without specifying super or sub, assume
+         * super */
+        identifier->set.mask |= EcsSuperSet;
+    }
+
     /* Default relation for superset/subset is EcsIsA */
     if (identifier->set.mask & (EcsSuperSet|EcsSubSet)) {
         if (!identifier->set.relation) {
@@ -45680,14 +45689,6 @@ const char* parse_set_expr(
             break;
         }
     } while (true);
-
-    if (id->set.mask & EcsCascade && !(id->set.mask & EcsSuperSet) && 
-        !(id->set.mask & EcsSubSet))
-    {
-        /* If cascade is used without specifying super or sub, assume
-         * super */
-        id->set.mask |= EcsSuperSet;
-    }
 
     if (id->set.mask & EcsSelf && id->set.min_depth != 0) {
         ecs_parser_error(name, expr, column, 

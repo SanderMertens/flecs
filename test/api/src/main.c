@@ -721,6 +721,9 @@ void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var(void);
 void Filter_filter_1_term_non_acyclic_superset(void);
 void Filter_filter_1_term_dont_inherit_default_set(void);
 void Filter_filter_1_term_dont_inherit_pair_default_set(void);
+void Filter_filter_1_term_cascade_implicit_isa(void);
+void Filter_filter_1_term_cascade_isa(void);
+void Filter_filter_1_term_cascade_childof(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
@@ -812,6 +815,8 @@ void Filter_filter_iter_any_match_tag_and_wildcard(void);
 void Filter_filter_iter_any_obj(void);
 void Filter_filter_iter_not_any(void);
 void Filter_filter_iter_not_any_obj(void);
+void Filter_filter_iter_cascade_isa(void);
+void Filter_filter_iter_cascade_childof(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -875,6 +880,8 @@ void Filter_set_this_to_self_isa_superset_match(void);
 void Filter_set_this_to_isa_superset_match(void);
 void Filter_set_this_to_childof_superset_match(void);
 void Filter_set_this_to_superset_w_self_filter_no_match(void);
+void Filter_set_this_to_isa_cascade(void);
+void Filter_set_this_to_childof_cascade(void);
 
 // Testsuite 'FilterStr'
 void FilterStr_one_term(void);
@@ -4436,6 +4443,18 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_1_term_dont_inherit_pair_default_set
     },
     {
+        "filter_1_term_cascade_implicit_isa",
+        Filter_filter_1_term_cascade_implicit_isa
+    },
+    {
+        "filter_1_term_cascade_isa",
+        Filter_filter_1_term_cascade_isa
+    },
+    {
+        "filter_1_term_cascade_childof",
+        Filter_filter_1_term_cascade_childof
+    },
+    {
         "filter_w_pair_id",
         Filter_filter_w_pair_id
     },
@@ -4800,6 +4819,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_not_any_obj
     },
     {
+        "filter_iter_cascade_isa",
+        Filter_filter_iter_cascade_isa
+    },
+    {
+        "filter_iter_cascade_childof",
+        Filter_filter_iter_cascade_childof
+    },
+    {
         "match_disabled",
         Filter_match_disabled
     },
@@ -5050,6 +5077,14 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_to_superset_w_self_filter_no_match",
         Filter_set_this_to_superset_w_self_filter_no_match
+    },
+    {
+        "set_this_to_isa_cascade",
+        Filter_set_this_to_isa_cascade
+    },
+    {
+        "set_this_to_childof_cascade",
+        Filter_set_this_to_childof_cascade
     }
 };
 
@@ -8467,7 +8502,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        170,
+        177,
         Filter_testcases
     },
     {
