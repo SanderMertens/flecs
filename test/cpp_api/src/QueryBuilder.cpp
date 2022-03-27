@@ -1436,11 +1436,12 @@ void QueryBuilder_20_terms() {
 
 uint64_t group_by_first_id(
     flecs::world_t *m_world,
-    flecs::type_t m_type,
+    flecs::table_t *m_table,
     flecs::entity_t id,
     void *ctx)
 {
-    flecs::vector<flecs::id_t> vec(const_cast<ecs_vector_t*>(m_type));
+    flecs::type_t type = ecs_table_get_type(m_table);
+    flecs::vector<flecs::id_t> vec(const_cast<ecs_vector_t*>(type));
 
     for(auto ColId : vec)
     {
@@ -1451,11 +1452,11 @@ uint64_t group_by_first_id(
 
 uint64_t group_by_first_id_negated(
     flecs::world_t *m_world,
-    flecs::type_t m_type,
+    flecs::table_t *m_table,
     flecs::entity_t id,
     void *ctx)
 {
-    return ~group_by_first_id(m_world, m_type, id, ctx);
+    return ~group_by_first_id(m_world, m_table, id, ctx);
 }
 
 void QueryBuilder_group_by_raw() {

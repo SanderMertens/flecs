@@ -15,7 +15,7 @@ void compute_group_id(
         ecs_table_t *table = match->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        match->group_id = query->group_by(query->world, table->type, 
+        match->group_id = query->group_by(query->world, table, 
             query->group_by_id, query->group_by_ctx);
     } else {
         match->group_id = 0;
@@ -619,11 +619,12 @@ void init_query_monitors(
 static
 uint64_t group_by_cascade(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_table_t *table,
     ecs_entity_t component,
     void *ctx)
 {
     uint64_t result = 0;
+    ecs_type_t type = ecs_table_get_type(table);
     int32_t i, count = ecs_vector_count(type);
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
     ecs_term_t *term = ctx;
@@ -640,8 +641,9 @@ uint64_t group_by_cascade(
     for (i = count - 1; i >= 0; i --) {
         /* Find relation & relation object in entity type */
         if (ECS_HAS_RELATION(array[i], relation)) {
-            ecs_type_t obj_type = ecs_get_type(world,     
-                ecs_pair_second(world, array[i]));
+            ecs_entity_t obj = ecs_pair_second(world, array[i]);
+            ecs_table_t *obj_table = ecs_get_table(world, obj);
+            ecs_type_t obj_type = ecs_table_get_type(obj_table);
             int32_t j, c_count = ecs_vector_count(obj_type);
             ecs_entity_t *c_array = ecs_vector_first(obj_type, ecs_entity_t);
 
@@ -653,7 +655,8 @@ uint64_t group_by_cascade(
                     result ++;
 
                     /* Recurse to test if the object has matching parents */
-                    result += group_by_cascade(world, obj_type, component, ctx);
+                    result += group_by_cascade(
+                        world, obj_table, component, ctx);
                     break;
                 }
             }

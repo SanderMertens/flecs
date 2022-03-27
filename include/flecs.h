@@ -166,6 +166,9 @@ typedef const ecs_vector_t* ecs_type_t;
 /** A world is the container for all ECS data and supporting features. */
 typedef struct ecs_world_t ecs_world_t;
 
+/** A table is where entities and components are stored */
+typedef struct ecs_table_t ecs_table_t;
+
 /** A term is a single element in a query */
 typedef struct ecs_term_t ecs_term_t;
 
@@ -299,7 +302,7 @@ typedef int (*ecs_order_by_action_t)(
 /** Callback used for ranking types */
 typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_table_t *table,
     ecs_id_t id,
     void *ctx);
 

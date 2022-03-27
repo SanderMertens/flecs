@@ -1663,10 +1663,11 @@ void Query_get_filter() {
 static
 uint64_t group_by_first_id(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_table_t *table,
     ecs_id_t id,
     void *ctx)
 {
+    ecs_type_t type = ecs_table_get_type(table);
     ecs_id_t *first = ecs_vector_first(type, ecs_id_t);
     if (!first) {
         return 0;

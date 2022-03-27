@@ -23,7 +23,7 @@ int compare_entity(
 static
 uint64_t group_by_phase(
     ecs_world_t *world,
-    ecs_type_t type,
+    ecs_table_t *table,
     ecs_entity_t pipeline,
     void *ctx) 
 {
@@ -33,7 +33,8 @@ uint64_t group_by_phase(
     ecs_assert(pt != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Find tag in system that belongs to pipeline */
-    ecs_entity_t *sys_comps = ecs_vector_first(type, ecs_entity_t);
+    ecs_type_t type = ecs_table_get_type(table);
+    ecs_id_t *sys_comps = ecs_vector_first(type, ecs_id_t);
     int32_t c, t, count = ecs_vector_count(type);
     
     ecs_type_t pipeline_type = NULL;
@@ -45,13 +46,13 @@ uint64_t group_by_phase(
         return 0;
     }
 
-    ecs_entity_t *tags = ecs_vector_first(pipeline_type, ecs_entity_t);
+    ecs_id_t *tags = ecs_vector_first(pipeline_type, ecs_id_t);
     int32_t tag_count = ecs_vector_count(pipeline_type);
 
-    ecs_entity_t result = 0;
+    ecs_id_t result = 0;
 
     for (c = 0; c < count; c ++) {
-        ecs_entity_t comp = sys_comps[c];
+        ecs_id_t comp = sys_comps[c];
         for (t = 0; t < tag_count; t ++) {
             if (comp == tags[t]) {
                 result = comp;
