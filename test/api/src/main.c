@@ -810,6 +810,8 @@ void Filter_filter_iter_any(void);
 void Filter_filter_iter_any_match_wildcard(void);
 void Filter_filter_iter_any_match_tag_and_wildcard(void);
 void Filter_filter_iter_any_obj(void);
+void Filter_filter_iter_not_any(void);
+void Filter_filter_iter_not_any_obj(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -4782,6 +4784,14 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_any_obj
     },
     {
+        "filter_iter_not_any",
+        Filter_filter_iter_not_any
+    },
+    {
+        "filter_iter_not_any_obj",
+        Filter_filter_iter_not_any_obj
+    },
+    {
         "match_disabled",
         Filter_match_disabled
     },
@@ -8417,7 +8427,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        160,
+        162,
         Filter_testcases
     },
     {

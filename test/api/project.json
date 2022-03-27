@@ -860,6 +860,8 @@
                 "filter_iter_any_match_wildcard",
                 "filter_iter_any_match_tag_and_wildcard",
                 "filter_iter_any_obj",
+                "filter_iter_not_any",
+                "filter_iter_not_any_obj",
                 "match_disabled",
                 "match_prefab",
                 "chain_term_iter",
