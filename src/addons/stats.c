@@ -64,7 +64,7 @@ void print_value(
     float value)
 {
     ecs_size_t len = ecs_os_strlen(name);
-    printf("%s: %*s %.2f\n", name, 32 - len, "", (double)value);
+    ecs_trace("%s: %*s %.2f", name, 32 - len, "", (double)value);
 }
 
 static
@@ -415,34 +415,34 @@ void ecs_dump_world_stats(
     world = ecs_get_world(world);    
     
     print_counter("Frame", t, &s->frame_count_total);
-    printf("-------------------------------------\n");
+    ecs_trace("-------------------------------------");
     print_counter("pipeline rebuilds", t, &s->pipeline_build_count_total);
     print_counter("systems invocations", t, &s->systems_ran_frame);
-    printf("\n");
+    ecs_trace("");
     print_value("target FPS", world->info.target_fps);
     print_value("time scale", world->info.time_scale);
-    printf("\n");
+    ecs_trace("");
     print_gauge("actual FPS", t, &s->fps);
     print_counter("frame time", t, &s->frame_time_total);
     print_counter("system time", t, &s->system_time_total);
     print_counter("merge time", t, &s->merge_time_total);
     print_counter("simulation time elapsed", t, &s->world_time_total);
-    printf("\n");
+    ecs_trace("");
     print_gauge("id count", t, &s->id_count);
     print_gauge("tag id count", t, &s->tag_id_count);
     print_gauge("component id count", t, &s->component_id_count);
     print_gauge("pair id count", t, &s->pair_id_count);
     print_gauge("wildcard id count", t, &s->wildcard_id_count);
     print_gauge("component count", t, &s->component_count);
-    printf("\n");
+    ecs_trace("");
     print_gauge("alive entity count", t, &s->entity_count);
     print_gauge("not alive entity count", t, &s->entity_not_alive_count);
-    printf("\n");
+    ecs_trace("");
     print_gauge("query count", t, &s->query_count);
     print_gauge("trigger count", t, &s->trigger_count);
     print_gauge("observer count", t, &s->observer_count);
     print_gauge("system count", t, &s->system_count);
-    printf("\n");
+    ecs_trace("");
     print_gauge("table count", t, &s->table_count);
     print_gauge("empty table count", t, &s->empty_table_count);
     print_gauge("tag table count", t, &s->tag_table_count);
@@ -450,12 +450,12 @@ void ecs_dump_world_stats(
     print_gauge("table storage count", t, &s->table_storage_count);
     print_gauge("table cache record count", t, &s->table_record_count);
     print_gauge("singleton table count", t, &s->singleton_table_count);
-    printf("\n");
+    ecs_trace("");
     print_counter("table create count", t, &s->table_create_count);
     print_counter("table delete count", t, &s->table_delete_count);
     print_counter("id create count", t, &s->id_create_count);
     print_counter("id delete count", t, &s->id_delete_count);
-    printf("\n");
+    ecs_trace("");
     print_counter("deferred new operations", t, &s->new_count);
     print_counter("deferred bulk_new operations", t, &s->bulk_new_count);
     print_counter("deferred delete operations", t, &s->delete_count);
@@ -464,7 +464,7 @@ void ecs_dump_world_stats(
     print_counter("deferred remove operations", t, &s->remove_count);
     print_counter("deferred set operations", t, &s->set_count);
     print_counter("discarded operations", t, &s->discard_count);
-    printf("\n");
+    ecs_trace("");
     
 error:
     return;

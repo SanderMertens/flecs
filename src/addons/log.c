@@ -182,8 +182,12 @@ void _ecs_logv(
     ecs_os_free(msg_nocolor);
     
     char *msg = ecs_strbuf_get(&msg_buf);
-    ecs_os_api.log_(level, file, line, msg);
-    ecs_os_free(msg);
+    if (msg) {
+        ecs_os_api.log_(level, file, line, msg);
+        ecs_os_free(msg);
+    } else {
+        ecs_os_api.log_(level, file, line, "");
+    }
 }
 
 void _ecs_log(
