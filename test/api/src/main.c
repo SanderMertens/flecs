@@ -180,6 +180,17 @@ void Add_add_entity(void);
 void Add_remove_entity(void);
 void Add_add_0_entity(void);
 void Add_remove_0_entity(void);
+void Add_invalid_add_wildcard(void);
+void Add_invalid_add_pair_w_wildcard(void);
+void Add_invalid_add_pair_w_wildcard_rel(void);
+void Add_invalid_add_pair_w_wildcard_obj(void);
+void Add_invalid_add_any(void);
+void Add_invalid_add_pair_w_any(void);
+void Add_invalid_add_pair_w_any_rel(void);
+void Add_invalid_add_pair_w_any_obj(void);
+void Add_invalid_pair_w_0(void);
+void Add_invalid_pair_w_0_rel(void);
+void Add_invalid_pair_w_0_obj(void);
 
 // Testsuite 'Switch'
 void Switch_get_case_empty(void);
@@ -2449,6 +2460,50 @@ bake_test_case Add_testcases[] = {
     {
         "remove_0_entity",
         Add_remove_0_entity
+    },
+    {
+        "invalid_add_wildcard",
+        Add_invalid_add_wildcard
+    },
+    {
+        "invalid_add_pair_w_wildcard",
+        Add_invalid_add_pair_w_wildcard
+    },
+    {
+        "invalid_add_pair_w_wildcard_rel",
+        Add_invalid_add_pair_w_wildcard_rel
+    },
+    {
+        "invalid_add_pair_w_wildcard_obj",
+        Add_invalid_add_pair_w_wildcard_obj
+    },
+    {
+        "invalid_add_any",
+        Add_invalid_add_any
+    },
+    {
+        "invalid_add_pair_w_any",
+        Add_invalid_add_pair_w_any
+    },
+    {
+        "invalid_add_pair_w_any_rel",
+        Add_invalid_add_pair_w_any_rel
+    },
+    {
+        "invalid_add_pair_w_any_obj",
+        Add_invalid_add_pair_w_any_obj
+    },
+    {
+        "invalid_pair_w_0",
+        Add_invalid_pair_w_0
+    },
+    {
+        "invalid_pair_w_0_rel",
+        Add_invalid_pair_w_0_rel
+    },
+    {
+        "invalid_pair_w_0_obj",
+        Add_invalid_pair_w_0_obj
     }
 };
 
@@ -8693,7 +8748,7 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        14,
+        25,
         Add_testcases
     },
     {

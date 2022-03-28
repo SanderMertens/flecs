@@ -194,7 +194,18 @@
                 "add_entity",
                 "remove_entity",
                 "add_0_entity",
-                "remove_0_entity"
+                "remove_0_entity",
+                "invalid_add_wildcard",
+                "invalid_add_pair_w_wildcard",
+                "invalid_add_pair_w_wildcard_rel",
+                "invalid_add_pair_w_wildcard_obj",
+                "invalid_add_any",
+                "invalid_add_pair_w_any",
+                "invalid_add_pair_w_any_rel",
+                "invalid_add_pair_w_any_obj",
+                "invalid_pair_w_0",
+                "invalid_pair_w_0_rel",
+                "invalid_pair_w_0_obj"
             ]
         }, {
             "id": "Switch",

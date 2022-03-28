@@ -2996,6 +2996,24 @@ FLECS_API
 bool ecs_id_is_wildcard(
     ecs_id_t id);
 
+/** Utility to check if id is valid.
+ * A valid id is an id that can be added to an entity. Invalid ids are:
+ * - ids that contain wildcards
+ * - ids that contain invalid entities
+ * - ids that are 0 or contain 0 entities
+ *
+ * Note that the same rules apply to removing from an entity, with the exception
+ * of wildcards.
+ *
+ * @param world The world.
+ * @param id The id.
+ * @return True if the id is valid.
+ */
+FLECS_API
+bool ecs_id_is_valid(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
 /** @} */
 
 

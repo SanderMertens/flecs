@@ -2775,7 +2775,7 @@ void ecs_add_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     add_id(world, entity, id);
 error:
     return;
@@ -2788,7 +2788,8 @@ void ecs_remove_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id) || ecs_id_is_wildcard(id), 
+        ECS_INVALID_PARAMETER, NULL);
     remove_id(world, entity, id);
 error:
     return;
@@ -2954,7 +2955,7 @@ void* ecs_get_mut_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     void *result;
@@ -3010,7 +3011,7 @@ void* ecs_emplace_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
     ecs_check(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -3043,7 +3044,7 @@ void ecs_modified_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -3149,7 +3150,7 @@ ecs_entity_t ecs_set_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!entity || ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Safe to cast away const: function won't modify if move arg is false */
     return assign_ptr_w_id(
@@ -3165,7 +3166,7 @@ ecs_entity_t ecs_get_case(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -3201,7 +3202,7 @@ void ecs_enable_component_w_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -3251,7 +3252,7 @@ bool ecs_is_component_enabled_w_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
@@ -3502,11 +3503,10 @@ bool ecs_is_valid(
     
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
-
-    /* When checking roles and/or pairs, the generation count may have been
-     * stripped away. Just test if the entity is 0 or not. */
-    if (ECS_HAS_ROLE(entity, PAIR)) {
-        return ECS_PAIR_FIRST(entity) != 0;
+    
+    /* Entity identifiers should not contain flag bits */
+    if (entity & ECS_ROLE_MASK) {
+        return false;
     }
 
     /* Entities should not contain data in dead zone bits */

@@ -641,7 +641,37 @@ bool ecs_id_is_wildcard(
         (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
             (ECS_PAIR_FIRST(id) == EcsWildcard) ||
             (ECS_PAIR_SECOND(id) == EcsWildcard)
+        )) ||
+        (id == EcsAny) || (ECS_HAS_ROLE(id, PAIR) && (
+            (ECS_PAIR_FIRST(id) == EcsAny) ||
+            (ECS_PAIR_SECOND(id) == EcsAny)
         ));
+}
+
+bool ecs_id_is_valid(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (!id) {
+        return false;
+    }
+    if (ecs_id_is_wildcard(id)) {
+        return false;
+    }
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        if (!ECS_PAIR_FIRST(id)) {
+            return false;
+        }
+        if (!ECS_PAIR_SECOND(id)) {
+            return false;
+        }
+    } else if (id & ECS_ROLE_MASK) {
+        if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool ecs_term_id_is_set(
