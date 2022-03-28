@@ -116,7 +116,8 @@ void Event_emit_event_case_for_case_id(void);
 void Event_emit_event_case_for_case_id_wildcard(void);
 void Event_emit_event_switch_for_case_id(void);
 void Event_emit_table_event(void);
-void Event_emit_staged(void);
+void Event_emit_staged_from_world(void);
+void Event_emit_staged_from_stage(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -2213,8 +2214,12 @@ bake_test_case Event_testcases[] = {
         Event_emit_table_event
     },
     {
-        "emit_staged",
-        Event_emit_staged
+        "emit_staged_from_world",
+        Event_emit_staged_from_world
+    },
+    {
+        "emit_staged_from_stage",
+        Event_emit_staged_from_stage
     }
 };
 
@@ -8667,7 +8672,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        12,
+        13,
         Event_testcases
     },
     {

@@ -341,7 +341,7 @@ void init_iter(
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
 
-    int32_t index = ecs_search_relation(it->world, it->table, 0, 
+    int32_t index = ecs_search_relation(it->real_world, it->table, 0, 
         it->event_id, EcsIsA, 0, 0, it->subjects, 0, 0, 0);
     
     if (index == -1) {
@@ -358,7 +358,7 @@ void init_iter(
 
     it->term_count = 1;
     it->terms = &term;
-    flecs_iter_populate_data(it->world, it, it->table, it->offset, 
+    flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
 }
 

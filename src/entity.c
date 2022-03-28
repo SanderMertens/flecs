@@ -283,7 +283,7 @@ void notify(
     ecs_ids_t *ids,
     ecs_entity_t relation)
 {
-    ecs_emit(world, &(ecs_event_desc_t) {
+    flecs_emit(world, world, &(ecs_event_desc_t) {
         .event = event,
         .ids = ids,
         .table = table,

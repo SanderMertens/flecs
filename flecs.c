@@ -1519,6 +1519,11 @@ void flecs_resume_readonly(
     ecs_world_t *world,
     ecs_suspend_readonly_state_t *state);
 
+void flecs_emit( 
+    ecs_world_t *world,
+    ecs_world_t *stage,
+    ecs_event_desc_t *desc);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Stage API
 ////////////////////////////////////////////////////////////////////////////////
@@ -4852,7 +4857,7 @@ void notify(
     ecs_ids_t *ids,
     ecs_entity_t relation)
 {
-    ecs_emit(world, &(ecs_event_desc_t) {
+    flecs_emit(world, world, &(ecs_event_desc_t) {
         .event = event,
         .ids = ids,
         .table = table,
@@ -35912,7 +35917,7 @@ void flecs_process_pending_tables(
 
                 int32_t table_count = ecs_table_count(table);
 
-                ecs_emit(world, &(ecs_event_desc_t) {
+                flecs_emit(world, world, &(ecs_event_desc_t) {
                     .event = table_count
                         ? EcsOnTableFill 
                         : EcsOnTableEmpty
@@ -36207,8 +36212,9 @@ void notify_subset(
     }
 }
 
-void ecs_emit(
+void flecs_emit(
     ecs_world_t *world,
+    ecs_world_t *stage,
     ecs_event_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -36232,7 +36238,7 @@ void ecs_emit(
     }
 
     ecs_iter_t it = {
-        .world = world,
+        .world = stage,
         .real_world = world,
         .table = table,
         .type = table->type,
@@ -36279,6 +36285,14 @@ void ecs_emit(
     
 error:
     return;
+}
+
+void ecs_emit(
+    ecs_world_t *stage,
+    ecs_event_desc_t *desc)
+{
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
+    flecs_emit(world, stage, desc);
 }
 
 
@@ -46335,7 +46349,7 @@ void init_iter(
     ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
         ECS_INTERNAL_ERROR, NULL);
 
-    int32_t index = ecs_search_relation(it->world, it->table, 0, 
+    int32_t index = ecs_search_relation(it->real_world, it->table, 0, 
         it->event_id, EcsIsA, 0, 0, it->subjects, 0, 0, 0);
     
     if (index == -1) {
@@ -46352,7 +46366,7 @@ void init_iter(
 
     it->term_count = 1;
     it->terms = &term;
-    flecs_iter_populate_data(it->world, it, it->table, it->offset, 
+    flecs_iter_populate_data(it->real_world, it, it->table, it->offset, 
         it->count, it->ptrs, it->sizes);
 }
 

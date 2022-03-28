@@ -125,7 +125,8 @@
                 "emit_event_case_for_case_id_wildcard",
                 "emit_event_switch_for_case_id",
                 "emit_table_event",
-                "emit_staged"
+                "emit_staged_from_world",
+                "emit_staged_from_stage"
             ]
         }, {
             "id": "New",

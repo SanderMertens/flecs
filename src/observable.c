@@ -86,8 +86,9 @@ void notify_subset(
     }
 }
 
-void ecs_emit(
+void flecs_emit(
     ecs_world_t *world,
+    ecs_world_t *stage,
     ecs_event_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -111,7 +112,7 @@ void ecs_emit(
     }
 
     ecs_iter_t it = {
-        .world = world,
+        .world = stage,
         .real_world = world,
         .table = table,
         .type = table->type,
@@ -158,4 +159,12 @@ void ecs_emit(
     
 error:
     return;
+}
+
+void ecs_emit(
+    ecs_world_t *stage,
+    ecs_event_desc_t *desc)
+{
+    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
+    flecs_emit(world, stage, desc);
 }

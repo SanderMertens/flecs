@@ -366,3 +366,59 @@ void Event_evt_1_id_pair_rel_obj_entity() {
 
     test_int(count, 1);
 }
+
+void Event_emit_staged_from_world() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto e1 = ecs.entity().add<Tag>();
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id<Tag>()
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.staging_begin();
+
+    ecs.event(evt)
+        .id<Tag>()
+        .entity(e1)
+        .emit();
+
+    ecs.staging_end();
+
+    test_int(count, 1);
+}
+
+void Event_emit_staged_from_stage() {
+    flecs::world ecs;
+
+    auto evt = ecs.entity();
+    auto e1 = ecs.entity().add<Tag>();
+
+    int32_t count = 0;
+
+    ecs.trigger()
+        .event(evt)
+        .id<Tag>()
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.staging_begin();
+
+    ecs.get_stage(0).event(evt)
+        .id<Tag>()
+        .entity(e1)
+        .emit();
+
+    ecs.staging_end();
+
+    test_int(count, 1);
+}

@@ -402,7 +402,9 @@
                 "evt_implicit_typed_ctx",
                 "evt_1_id_pair_rel_id_obj_id_entity",
                 "evt_1_id_pair_rel_obj_id_entity",
-                "evt_1_id_pair_rel_obj_entity"
+                "evt_1_id_pair_rel_obj_entity",
+                "emit_staged_from_world",
+                "emit_staged_from_stage"
             ]
         }, {
             "id": "Trigger",
