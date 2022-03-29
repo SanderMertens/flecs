@@ -18,10 +18,9 @@
 #define TOK_BRACKET_OPEN '['
 #define TOK_BRACKET_CLOSE ']'
 #define TOK_WILDCARD '*'
-#define TOK_SINGLETON '$'
+#define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
-#define TOK_AS_ENTITY '\\'
 
 #define TOK_SELF "self"
 #define TOK_SUPERSET "super"
@@ -152,7 +151,7 @@ bool valid_identifier_start_char(
     char ch)
 {
     if (ch && (isalpha(ch) || (ch == '.') || (ch == '_') || (ch == '*') ||
-        (ch == '0') || (ch == TOK_AS_ENTITY) || isdigit(ch))) 
+        (ch == '0') || (ch == TOK_VARIABLE) || isdigit(ch))) 
     {
         return true;
     }
@@ -302,18 +301,13 @@ int parse_identifier(
     const char *token,
     ecs_term_id_t *out)
 {
-    char ch = token[0];
-
     const char *tptr = token;
-    if (ch == TOK_AS_ENTITY) {
+    if (tptr[0] == TOK_VARIABLE && tptr[1]) {
+        out->var = EcsVarIsVariable;
         tptr ++;
     }
 
     out->name = ecs_os_strdup(tptr);
-
-    if (ch == TOK_AS_ENTITY) {
-        out->var = EcsVarIsEntity;
-    }
 
     return 0;
 }
@@ -731,23 +725,6 @@ const char* parse_term(
         /* Next token must be a predicate */
         goto parse_predicate;
 
-    /* If next token is a singleton, assign identifier to pred and subject */
-    } else if (ptr[0] == TOK_SINGLETON) {
-        ptr ++;
-        if (valid_token_start_char(ptr[0])) {
-            ptr = ecs_parse_identifier(name, expr, ptr, token);
-            if (!ptr) {
-                goto error;
-            }
-
-            goto parse_singleton;
-
-        } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected identifier after singleton operator");
-            goto error;
-        }
-
     /* Pair with implicit subject */
     } else if (ptr[0] == TOK_PAREN_OPEN) {
         goto parse_pair;
@@ -901,16 +878,6 @@ parse_pair_object:
     }
 
     ptr = ecs_parse_whitespace(ptr);
-    goto parse_done; 
-
-parse_singleton:
-    if (parse_identifier(token, &term.pred)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", token); 
-        goto error; 
-    }
-
-    parse_identifier(token, &term.subj);
     goto parse_done;
 
 parse_done:

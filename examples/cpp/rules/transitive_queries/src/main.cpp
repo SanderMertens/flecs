@@ -95,11 +95,11 @@ int main(int, char *[]) {
     // until it found something that is a country.
     // 
     // The equivalent of this query in the DSL is:
-    //   Person, (LocatedIn, _Location), Country(_Location)
+    //   Person, (LocatedIn, $Location), Country($Location)
     auto r = ecs.rule_builder()
         .term<Person>()
-        .term<LocatedIn>().obj("_Location")
-        .term<Country>().subj("_Location")
+        .term<LocatedIn>().obj().var("Location")
+        .term<Country>().subj().var("Location")
         .build();
     
     // Lookup the index of the variable. This will let us quickly lookup its

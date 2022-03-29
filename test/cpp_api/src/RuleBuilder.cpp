@@ -206,7 +206,7 @@ void RuleBuilder_pair_term_w_var() {
         .add<Likes, Pears>();
 
     auto r = ecs.rule_builder()
-        .term<Likes>().obj("_Food")
+        .term<Likes>().obj().var("Food")
         .build();
 
     int food_var = r.find_var("Food");
@@ -249,8 +249,8 @@ void RuleBuilder_2_pair_terms_w_var() {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.rule_builder()
-        .term<Eats>().obj("_Food")
-        .term<Likes>().obj("_Person")
+        .term<Eats>().obj().var("Food")
+        .term<Likes>().obj().var("Person")
         .build();
 
     int food_var = r.find_var("Food");
@@ -298,7 +298,7 @@ void RuleBuilder_set_var() {
         .add<Likes>(Pears);
 
     auto r = ecs.rule_builder()
-        .term<Likes>().obj("_Food")
+        .term<Likes>().obj().var("Food")
         .build();
 
     int food_var = r.find_var("Food");
@@ -337,8 +337,8 @@ void RuleBuilder_set_2_vars() {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.rule_builder()
-        .term<Eats>().obj("_Food")
-        .term<Likes>().obj("_Person")
+        .term<Eats>().obj().var("Food")
+        .term<Likes>().obj().var("Person")
         .build();
 
     int food_var = r.find_var("Food");
@@ -377,7 +377,7 @@ void RuleBuilder_set_var_by_name() {
         .add<Likes>(Pears);
 
     auto r = ecs.rule_builder()
-        .term<Likes>().obj("_Food")
+        .term<Likes>().obj().var("Food")
         .build();
 
     int count = 0;
@@ -411,8 +411,8 @@ void RuleBuilder_set_2_vars_by_name() {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.rule_builder()
-        .term<Eats>().obj("_Food")
-        .term<Likes>().obj("_Person")
+        .term<Eats>().obj().var("Food")
+        .term<Likes>().obj().var("Person")
         .build();
 
     int food_var = r.find_var("Food");
@@ -445,7 +445,7 @@ void RuleBuilder_expr_w_var() {
     auto e = ecs.entity().add(rel, obj);
 
     auto r = ecs.rule_builder()
-        .term("(Rel, _X)")
+        .term("(Rel, $X)")
         .build();
 
     int x_var = r.find_var("X");

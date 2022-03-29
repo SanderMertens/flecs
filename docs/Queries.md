@@ -721,16 +721,18 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
 ```
 
 ### Singleton
-A singleton in Flecs is a component or tag that has been added to itself. In the query langauge this can be written down as a term with a predicate that references itself as the subject:
+Singletons are a feature that make it easy to work with components for which there is only a single instance in the world. A typical example is a `Game` component, which could contain information that is global to a game, like simulation speed.
+
+In the query language, a singleton can be queried for by providing the `$` symbol as subject:
+
+```
+Game($)
+```
+
+In Flecs singletons are implemented as components that are added to themselves. The above query is short for:
 
 ```
 Game(Game)
-```
-
-Since this is such a common pattern, the query DSL provides a shortcut for singletons with the singleton operator (`$`). This term is an example of how it is used, and is equivalent to `Game(Game)`:
-
-```
-$Game
 ```
 
 This example shows how to add a singleton with the query builder:
@@ -747,7 +749,7 @@ This example shows how to add a singleton with the query descriptor. Note that t
 // Game(Game)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {ecs_id(Game), .subj.entity = ecs_id(Game)}
+    { ecs_id(Game), .subj.entity = ecs_id(Game) }
   }
 });
 ```
@@ -894,15 +896,15 @@ Now suppose we want to know whether the object matched by the wildcard (`*`) is 
 But that does not work, as this query would return all Likes relationships * all Colleague relationships. To constrain the query to only return `Likes` relationships for objects that are also colleagues, we can use a variable:
 
 ```
-(Likes, X), (Colleague, X)
+(Likes, $X), (Colleague, $X)
 ```
 
-A variable is an identifier that is local to the query. It does not need to be defined in advance. By default, identifiers with a single uppercase character or identifiers that start with a _ are treated as variables, where identifiers with a double _ are treated as anonymous variables.
+A variable is an identifier that is local to the query and does not need to be defined in advance. In the query DSL identifiers that start with a `$` are interpreted as a variable.
 
 Variables can occur in multiple places. For example, this query returns all the relationships the `This` entity has with each object it likes as `R`:
 
 ```
-(Likes, X), (R, X)
+(Likes, $X), ($R, $X)
 ```
 
 A useful application for variables is ensuring that an entity has a component referenced by a relationship. Consider an application that has an `ExpiryTimer` relationship that removes a component after a certain time has expired. This logic only needs to be executed when the entity actually has the component to remove. 
@@ -910,13 +912,13 @@ A useful application for variables is ensuring that an entity has a component re
 With variables this can be ensured:
 
 ```
-(ExpiryTimer, C), C
+(ExpiryTimer, $C), $C
 ```
 
 Variables allow queries to arbitrarily traverse the entity relationship graph. For example, the following query tests whether there exist entities that like objects that like their enemies:
 
 ```
-(Likes, _Friend), Likes(_Friend, _Enemy), (Enemy, _Enemy)
+(Likes, $Friend), Likes($Friend, $Enemy), (Enemy, $Enemy)
 ```
 
 This example shows how to use variables in the C++ API:
@@ -924,8 +926,8 @@ This example shows how to use variables in the C++ API:
 ```cpp
 // (Likes, X), (Colleague, X)
 auto qb = world.query_builder<>()
-  .term(Likes).object("X")
-  .term(Colleague).object("X");
+  .term(Likes).obj().var("X")
+  .term(Colleague).obj().var("X");
 ```
 
 This example shows how to use wildcards in the query descriptor:
@@ -934,8 +936,8 @@ This example shows how to use wildcards in the query descriptor:
 // (Likes, X), (Colleague, X)
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_decs_t){
   .filter.terms = {
-    {.pred.entity = Likes, .obj.name = "X"}
-    {.pred.entity = Colleague, .obj.name = "X"}
+    {.pred.entity = Likes, .obj.name = "X", .var = EcsVarIsVariable }
+    {.pred.entity = Colleague, .obj.name = "X", .var = EcsVarIsVariable }
   }
 });
 ```

@@ -84,16 +84,6 @@ int finalize_term_var(
     ecs_term_id_t *identifier,
     const char *name)
 {
-    if (identifier->var == EcsVarDefault) {
-        const char *var = ecs_identifier_is_var(identifier->name);
-        if (var) {
-            char *var_dup = ecs_os_strdup(var);
-            ecs_os_free(identifier->name);
-            identifier->name = var_dup;
-            identifier->var = EcsVarIsVariable;
-        }
-    }
-
     if (identifier->var == EcsVarDefault && identifier->set.mask != EcsNothing){
         identifier->var = EcsVarIsEntity;
     }
@@ -221,7 +211,7 @@ static
 bool entity_is_var(
     ecs_entity_t e)
 {
-    if (e == EcsThis || e == EcsWildcard || e == EcsAny) {
+    if (e == EcsThis || e == EcsWildcard || e == EcsAny || e == EcsVariable) {
         return true;
     }
     return false;
@@ -292,10 +282,21 @@ int finalize_term_identifiers(
     {
         term->subj.entity = EcsThis;
     }
-    
+
     if (entity_is_var(term->pred.entity)) {
         term->pred.var = EcsVarIsVariable;
     }
+
+    /* If EcsVariable is used by itself, assign to predicate (singleton) */
+    if (term->subj.entity == EcsVariable) {
+        term->subj.entity = term->pred.entity;
+        term->subj.var = term->pred.var;
+    }
+    if (term->obj.entity == EcsVariable) {
+        term->obj.entity = term->pred.entity;
+        term->obj.var = term->pred.var;
+    }
+    
     if (entity_is_var(term->subj.entity)) {
         term->subj.var = EcsVarIsVariable;
     }

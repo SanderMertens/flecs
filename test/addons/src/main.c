@@ -60,8 +60,6 @@ void Parser_variable_multi_char(void);
 void Parser_variable_multi_char_w_underscore(void);
 void Parser_variable_multi_char_w_number(void);
 void Parser_variable_multi_char_not_allcaps(void);
-void Parser_escaped_all_caps_single_char(void);
-void Parser_escaped_all_caps_multi_char(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
@@ -1111,14 +1109,6 @@ bake_test_case Parser_testcases[] = {
     {
         "variable_multi_char_not_allcaps",
         Parser_variable_multi_char_not_allcaps
-    },
-    {
-        "escaped_all_caps_single_char",
-        Parser_escaped_all_caps_single_char
-    },
-    {
-        "escaped_all_caps_multi_char",
-        Parser_escaped_all_caps_multi_char
     },
     {
         "component_not",
@@ -4355,7 +4345,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        157,
+        155,
         Parser_testcases
     },
     {

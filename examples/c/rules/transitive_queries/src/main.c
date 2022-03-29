@@ -96,12 +96,18 @@ int main(int argc, char *argv[]) {
     // until it found something that is a country.
     // 
     // The equivalent of this query in the DSL is:
-    //   Person, (LocatedIn, _Location), Country(_Location)
+    //   Person, (LocatedIn, $Location), Country($Location)
     ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t) {
         .terms = {
             { .id = Person },
-            { .pred.entity = LocatedIn, .obj.name = (char*)"_Location" },
-            { .pred.entity = Country, .subj.name = (char*)"_Location" },
+            { 
+                .pred.entity = LocatedIn, 
+                .obj = { .name = (char*)"Location", .var = EcsVarIsVariable },
+            },
+            {
+                .pred.entity = Country, 
+                .subj = { .name = (char*)"Location", .var = EcsVarIsVariable },
+            },
         }
     });
 

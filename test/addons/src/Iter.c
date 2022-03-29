@@ -1253,7 +1253,7 @@ void Iter_worker_iter_w_singleton() {
     ecs_entity_t e3 = ecs_new(world, Position);
     ecs_entity_t e4 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, $Singleton");
+    ecs_query_t *q = ecs_query_new(world, "Position, Singleton($)");
 
     ecs_iter_t it_1 = ecs_query_iter(world, q);
     ecs_iter_t wit_1 = ecs_worker_iter(&it_1, 0, 2);
@@ -1292,7 +1292,7 @@ void Iter_worker_iter_w_singleton_instanced() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter = {
-            .expr = "Position, $Singleton",
+            .expr = "Position, Singleton($)",
             .instanced = true
         }
     });
@@ -1328,7 +1328,7 @@ void Iter_paged_iter_w_singleton() {
     ecs_entity_t e3 = ecs_new(world, Position);
     ecs_entity_t e4 = ecs_new(world, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, $Singleton");
+    ecs_query_t *q = ecs_query_new(world, "Position, Singleton($)");
 
     ecs_iter_t it_1 = ecs_query_iter(world, q);
     ecs_iter_t pit_1 = ecs_page_iter(&it_1, 0, 2);
@@ -1367,7 +1367,7 @@ void Iter_paged_iter_w_singleton_instanced() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .filter = {
-            .expr = "Position, $Singleton",
+            .expr = "Position, Singleton($)",
             .instanced = true
         }
     });

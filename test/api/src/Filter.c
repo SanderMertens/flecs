@@ -359,7 +359,11 @@ void Filter_filter_1_term_same_subj_obj_var() {
 
     ecs_filter_t f;
     int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+        .terms = {{ 
+            .pred.entity = Rel, 
+            .subj = { .name = "X", .var = EcsVarIsVariable },
+            .obj = { .name = "X", .var = EcsVarIsVariable }
+        }}
     });
     test_assert(r == 0);
 
@@ -392,7 +396,11 @@ void Filter_filter_1_term_acyclic_same_subj_obj_var() {
 
     ecs_filter_t f;
     int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+        .terms = {{ 
+            .pred.entity = Rel, 
+            .subj = { .name = "X", .var = EcsVarIsVariable },
+            .obj = { .name = "X", .var = EcsVarIsVariable }
+        }}
     });
     test_assert(r != 0);
 
@@ -406,7 +414,11 @@ void Filter_filter_1_term_acyclic_reflexive_same_subj_obj_var() {
 
     ecs_filter_t f;
     int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ .pred.entity = Rel, .subj.name = "_X", .obj.name = "_X" }}
+        .terms = {{ 
+            .pred.entity = Rel, 
+            .subj = { .name = "X", .var = EcsVarIsVariable },
+            .obj = { .name = "X", .var = EcsVarIsVariable }
+        }}
     });
     test_assert(r == 0);
 
@@ -5494,7 +5506,7 @@ void Filter_filter_instanced_w_singleton() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Position, $Velocity",
+        .expr = "Position, Velocity($)",
         .instanced = true
     }));
 
@@ -5691,7 +5703,7 @@ void Filter_filter_no_instancing_w_singleton() {
 
     ecs_filter_t f;
     test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
-        .expr = "Position, $Velocity"
+        .expr = "Position, Velocity($)"
     }));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
