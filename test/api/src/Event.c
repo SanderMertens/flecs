@@ -497,7 +497,6 @@ void Event_emit_staged_from_world() {
     ecs_fini(world);
 }
 
-
 void Event_emit_staged_from_stage() {
     ecs_world_t *world = ecs_init();
 
@@ -516,6 +515,79 @@ void Event_emit_staged_from_stage() {
     });
     ecs_staging_begin(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_emit(stage, &(ecs_event_desc_t) {
+        .event = evt,
+        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .table = table,
+        .observable = world
+    });
+    ecs_staging_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.system == s);
+    test_assert(ctx.event == evt);
+    test_assert(ctx.event_id == id);
+    test_int(ctx.count, 1);
+    test_assert(ctx.e[0] == e);
+
+    ecs_fini(world);
+}
+
+void Event_emit_staged_from_world_observer() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t evt = ecs_new_id(world);
+    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    Probe ctx = {0};
+
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ id }},
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx
+    });
+    ecs_staging_begin(world);
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = evt,
+        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .table = table,
+        .observable = world
+    });
+    ecs_staging_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.system == s);
+    test_assert(ctx.event == evt);
+    test_assert(ctx.event_id == id);
+    test_int(ctx.count, 1);
+    test_assert(ctx.e[0] == e);
+
+    ecs_fini(world);
+}
+
+void Event_emit_staged_from_stage_observer() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t evt = ecs_new_id(world);
+    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    Probe ctx = {0};
+
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t) {
+        .filter.terms = {{ id }},
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx
+    });
+
+    ecs_staging_begin(world);
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
     ecs_emit(stage, &(ecs_event_desc_t) {
         .event = evt,
         .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},

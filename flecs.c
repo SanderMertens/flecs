@@ -38994,7 +38994,7 @@ done:
 static
 bool observer_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
-    ecs_world_t *world = it->world;
+    ecs_world_t *world = it->real_world;
 
     ecs_assert(o->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 

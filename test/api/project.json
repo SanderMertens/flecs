@@ -126,7 +126,9 @@
                 "emit_event_switch_for_case_id",
                 "emit_table_event",
                 "emit_staged_from_world",
-                "emit_staged_from_stage"
+                "emit_staged_from_stage",
+                "emit_staged_from_world_observer",
+                "emit_staged_from_stage_observer"
             ]
         }, {
             "id": "New",
