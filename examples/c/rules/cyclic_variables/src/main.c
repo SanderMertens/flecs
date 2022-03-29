@@ -24,12 +24,12 @@ int main(int argc, char *argv[]) {
     // relationship- that is they must both like each other.
     //
     // The equivalent query in the DSL is:
-    //   Likes(_X, _Y), Likes(_Y, _X)
+    //   Likes($X, $Y), Likes($Y, $X)
     //
     // This is also an example of a query where all subjects are variables. By
     // default queries use the builtin "This" variable as subject, which is what
     // populates the entities array in the query result (accessed by the
-    // iter::entity function). 
+    // iter::entity function).
     //
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
@@ -38,12 +38,14 @@ int main(int argc, char *argv[]) {
         .terms = {
             { 
                 .pred.entity = Likes, 
-                .subj.name = (char*)"_X", .obj.name = (char*)"_Y" 
+                .subj = { .name = (char*)"X", .var = EcsVarIsVariable },
+                .obj = { .name = (char*)"Y", .var = EcsVarIsVariable }
             },
             { 
                 .pred.entity = Likes, 
-                .subj.name = (char*)"_Y", .obj.name = (char*)"_X" 
-            },
+                .subj = { .name = (char*)"Y", .var = EcsVarIsVariable },
+                .obj = { .name = (char*)"X", .var = EcsVarIsVariable }
+            }
         }
     });
 

@@ -24,7 +24,7 @@ int main(int, char *[]) {
     // relationship- that is they must both like each other.
     //
     // The equivalent query in the DSL is:
-    //   Likes(_X, _Y), Likes(_Y, _X)
+    //   Likes($X, $Y), Likes($Y, $X)
     //
     // This is also an example of a query where all subjects are variables. By
     // default queries use the builtin "This" variable as subject, which is what
@@ -34,8 +34,8 @@ int main(int, char *[]) {
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
     auto r = ecs.rule_builder()
-        .term<Likes>().subj("_X").obj("_Y")
-        .term<Likes>().subj("_Y").obj("_X")
+        .term<Likes>().subj().var("X").obj().var("Y")
+        .term<Likes>().subj().var("Y").obj().var("X")
         .build();
 
     // Lookup the index of the variables. This will let us quickly lookup their

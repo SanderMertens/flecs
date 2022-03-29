@@ -76,7 +76,7 @@ void Singleton_singleton_system() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, IncSingleton, EcsOnUpdate, $Position);
+    ECS_SYSTEM(world, IncSingleton, EcsOnUpdate, Position($));
 
     ecs_singleton_set(world, Position, {10, 20});
 

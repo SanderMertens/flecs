@@ -65,14 +65,14 @@ int main(int, char *[]) {
 
     // Create a rule to find all RangedUnits for a platoon/player. The 
     // equivalent query in the query DSL would look like this:
-    //   (Platoon, _Platoon), Player(_Platoon, _Player)
+    //   (Platoon, $Platoon), Player($Platoon, $Player)
     //
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
     auto r = ecs.rule_builder<RangedUnit>()
-        .term<Platoon>().obj("_Platoon")
-        .term<Player>().subj("_Platoon").obj("_Player")
+        .term<Platoon>().obj().var("Platoon")
+        .term<Player>().subj().var("Platoon").obj().var("Player")
         .build();
 
     // If we would iterate this rule it would return all ranged units for all

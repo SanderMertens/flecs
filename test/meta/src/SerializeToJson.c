@@ -2201,7 +2201,7 @@ void SerializeToJson_serialize_iterator_w_var() {
     ecs_add_pair(world, e2, Rel, ObjB);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(Rel, _X)"
+        .expr = "(Rel, $X)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -2260,7 +2260,7 @@ void SerializeToJson_serialize_iterator_w_2_vars() {
     ecs_add_pair(world, e2, RelY, ObjD);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(RelX, _X), (RelY, _Y)"
+        .expr = "(RelX, $X), (RelY, $Y)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -2905,7 +2905,7 @@ void SerializeToJson_serialize_iterator_w_var_labels() {
     ecs_doc_set_name(world, ObjA, "Object A");
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(Rel, _X)"
+        .expr = "(Rel, $X)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -2970,7 +2970,7 @@ void SerializeToJson_serialize_iterator_w_var_component() {
     ecs_set(world, Obj, T, {10});
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(Rel, _X), T(_X)"
+        .expr = "(Rel, $X), T($X)"
     });
 
     ecs_iter_t it = ecs_rule_iter(world, r);
@@ -3420,7 +3420,7 @@ void SerializeToJson_serialize_iterator_component_from_var() {
 
     ecs_set(world, e1, Position, {10, 20});
 
-    ecs_rule_t *r = ecs_rule_new(world, "Position(_E)");
+    ecs_rule_t *r = ecs_rule_new(world, "Position($E)");
     ecs_iter_t it = ecs_rule_iter(world, r);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
@@ -3610,7 +3610,7 @@ void SerializeToJson_serialize_paged_iterator_w_vars() {
     ecs_new_w_pair(world, Rel, ObjB);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "(Rel, _Var)"
+        .expr = "(Rel, $Var)"
     });
 
     int32_t var = ecs_rule_find_var(r, "Var");

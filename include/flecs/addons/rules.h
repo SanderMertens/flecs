@@ -41,26 +41,21 @@ extern "C" {
  * But this doesn't work, as term 1 returns entities with missions, and term 2
  * returns all combat missions for all entities. Query variables make it 
  * possible to apply CombatMission to the found mission:
- *   (Mission, _M), CombatMission(_M)
+ *   (Mission, $M), CombatMission($M)
  * 
  * By using the same variable ('M') we ensure that CombatMission is applied to
  * the mission found in the current result.
  * 
  * Variables can be used in each part of the term (predicate, subject, object).
  * This is a valid query:
- *   Likes(_X, _Y), Likes(_Y, _X)
+ *   Likes($X, $Y), Likes($Y, $X)
  * 
  * This is also a valid query:
  *   _Component, Serializable(_Component)
  * 
- * In the query expression syntax, variables are prefixed with a _. When using
- * the descriptor, do this:
- *   desc.terms[0].obj.name = "_X";
- * 
- * or
- * 
- *   desc.terms[0].obj.name = "X";
- *   desc.terms[0].obj.var = EcsVarIsVariable;
+ * In the query expression syntax, variables are prefixed with a $. When using
+ * the descriptor, specify the variable kind:
+ *   desc.terms[0].obj = { .name = "X", .var = EcsVarIsVariable }
  * 
  * Different terms with the same variable name are automatically correlated by
  * the query engine.

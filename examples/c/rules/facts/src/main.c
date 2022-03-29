@@ -39,6 +39,9 @@ int main(int argc, char *argv[]) {
     // rule is not a fact, but we can use it to check facts by populating both
     // of its variables.
     //
+    // The equivalent of this query in the DSL is:
+    //   Likes($X, $Y), Likes($Y, $X)
+    //
     // Instead of using variables we could have created a rule that referred the
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
@@ -48,11 +51,13 @@ int main(int argc, char *argv[]) {
         .terms = {
             { 
                 .pred.entity = Likes, 
-                .subj.name = (char*)"_X", .obj.name = (char*)"_Y" 
+                .subj = { .name = (char*)"X", .var = EcsVarIsVariable },
+                .obj = { .name = (char*)"Y", .var = EcsVarIsVariable }
             },
             { 
                 .pred.entity = Likes, 
-                .subj.name = (char*)"_Y", .obj.name = (char*)"_X" 
+                .subj = { .name = (char*)"Y", .var = EcsVarIsVariable },
+                .obj = { .name = (char*)"X", .var = EcsVarIsVariable }
             }
         }
     });

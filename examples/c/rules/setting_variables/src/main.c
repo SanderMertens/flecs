@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     // Create a rule to find all RangedUnits for a platoon/player. The 
     // equivalent query in the query DSL would look like this:
-    //   (Platoon, _Platoon), Player(_Platoon, _Player)
+    //   (Platoon, $Platoon), Player($Platoon, $Player)
     //
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
@@ -71,11 +71,14 @@ int main(int argc, char *argv[]) {
     ecs_rule_t *r = ecs_rule_init(ecs, &(ecs_filter_desc_t) {
         .terms = {
             { .pred.entity = RangedUnit },
-            { .pred.entity = Platoon, .obj.name = (char*)"_Platoon" },
+            {
+                .pred.entity = Platoon, 
+                .obj = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
+            },
             { 
                 .pred.entity = Player, 
-                .subj.name = (char*)"_Platoon", 
-                .obj.name = (char*)"_Player" 
+                .subj = { .name = (char*)"Platoon", .var = EcsVarIsVariable },
+                .obj = { .name = (char*)"Player", .var = EcsVarIsVariable },
             }
         }
     });

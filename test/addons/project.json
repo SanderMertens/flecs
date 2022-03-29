@@ -65,8 +65,6 @@
                 "variable_multi_char_w_underscore",
                 "variable_multi_char_w_number",
                 "variable_multi_char_not_allcaps",
-                "escaped_all_caps_single_char",
-                "escaped_all_caps_multi_char",
                 "component_not",
                 "pair_implicit_subject_not",
                 "pair_explicit_subject_not",

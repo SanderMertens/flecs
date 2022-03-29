@@ -437,7 +437,7 @@ void Query_query_only_from_singleton() {
 
     ecs_singleton_add(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "$Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag($)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -477,7 +477,7 @@ void Query_query_only_from_singleton_match_after() {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "$Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag($)");
     test_assert(q != NULL);
     
     ecs_singleton_add(world, Tag);
@@ -546,7 +546,7 @@ void Query_query_w_from_singleton() {
 
     ecs_entity_t e2 = ecs_new(world, TagA);
 
-    ecs_query_t *q = ecs_query_new(world, "TagA, $TagB");
+    ecs_query_t *q = ecs_query_new(world, "TagA, TagB($)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -597,7 +597,7 @@ void Query_query_w_from_singleton_match_after() {
 
     ecs_entity_t e2 = ecs_new(world, TagA);
 
-    ecs_query_t *q = ecs_query_new(world, "TagA, $TagB");
+    ecs_query_t *q = ecs_query_new(world, "TagA, TagB($)");
     test_assert(q != NULL);
 
     ecs_singleton_add(world, TagB);
@@ -2429,7 +2429,7 @@ void Query_only_from_singleton() {
 
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
-    ecs_query_t *q = ecs_query_new(world, "$e");
+    ecs_query_t *q = ecs_query_new(world, "e($)");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
@@ -2471,7 +2471,7 @@ void Query_only_not_from_singleton() {
 
     ecs_entity_t e = ecs_set_name(world, 0, "e");
 
-    ecs_query_t *q = ecs_query_new(world, "!$e");
+    ecs_query_t *q = ecs_query_new(world, "!e($)");
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
     test_assert(ecs_term_source(&it, 1) == e);
@@ -3432,7 +3432,7 @@ void Query_no_instancing_w_singleton() {
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, $Velocity");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity($)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);

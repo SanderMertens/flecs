@@ -15,7 +15,7 @@ void TransitiveRules_trans_X_X() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _X)"
+        .expr = "LocatedIn($X, $X)"
     });
     test_assert(r == NULL);
 
@@ -33,7 +33,7 @@ void TransitiveRules_trans_reflexive_X_X() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _X)"
+        .expr = "LocatedIn($X, $X)"
     });
     test_assert(r != NULL);
 
@@ -67,7 +67,7 @@ void TransitiveRules_trans_reflexive_X_X_2() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _X)"
+        .expr = "LocatedIn($X, $X)"
     });
     test_assert(r != NULL);
 
@@ -109,7 +109,7 @@ void TransitiveRules_trans_reflexive_X_Y() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
     test_assert(r != NULL);
 
@@ -152,7 +152,7 @@ void TransitiveRules_trans_X_Y_2_levels() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
     test_assert(r != NULL);
 
@@ -221,7 +221,7 @@ void TransitiveRules_trans_X_Y_2_levels_nonfinal() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
     test_assert(r != NULL);
 
@@ -290,7 +290,7 @@ void TransitiveRules_trans_pred_This_X__pred_X() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "(LocatedIn, _X), Location(_X)"
+        .expr = "(LocatedIn, $X), Location($X)"
     });
     test_assert(r != NULL);
 
@@ -328,7 +328,7 @@ void TransitiveRules_trans_constrained_x_y() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, _Y), Location(_X), Location(_Y)"
+        .expr = "LocatedIn($X, $Y), Location($X), Location($Y)"
     });
     test_assert(r != NULL);
 
@@ -373,7 +373,7 @@ void TransitiveRules_trans_entity_X_non_inclusive() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(Earth, _X)"
+        .expr = "LocatedIn(Earth, $X)"
     });
     test_assert(r != NULL);
 
@@ -406,7 +406,7 @@ void TransitiveRules_trans_X_entity_non_inclusive() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(_X, Universe)"
+        .expr = "LocatedIn($X, Universe)"
     });
     test_assert(r != NULL);
 
@@ -460,7 +460,7 @@ void TransitiveRules_trans_this_x_after_tag_this() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Planet(This), LocatedIn(This, _X)"
+        .expr = "Planet(This), LocatedIn(This, $X)"
     });
     test_assert(r != NULL);
 
@@ -496,7 +496,7 @@ void TransitiveRules_trans_this_x_before_tag_this() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(This, _X), Planet(This)"
+        .expr = "LocatedIn(This, $X), Planet(This)"
     });
     test_assert(r != NULL);
 
@@ -533,7 +533,7 @@ void TransitiveRules_trans_this_x_after_tag_this_2_lvls() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Continent(This), LocatedIn(This, _X)"
+        .expr = "Continent(This), LocatedIn(This, $X)"
     });
     test_assert(r != NULL);
 
@@ -581,7 +581,7 @@ void TransitiveRules_trans_this_x_before_tag_this_2_lvls() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "LocatedIn(This, _X), Continent(This)"
+        .expr = "LocatedIn(This, $X), Continent(This)"
     });
     test_assert(r != NULL);
 
@@ -636,7 +636,7 @@ void TransitiveRules_transitive_not_w_var() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "City(_X), !LocatedIn(_X, UnitedStates)"
+        .expr = "City($X), !LocatedIn($X, UnitedStates)"
     });
     test_assert(r != NULL);
 
@@ -776,7 +776,7 @@ void TransitiveRules_transitive_w_optional_nonfinal_w_var() {
     test_int(ecs_plecs_from_str(world, NULL, ruleset), 0);
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = "Foo(_X), ?Likes(_X, _Y)"
+        .expr = "Foo($X), ?Likes($X, $Y)"
     });
     test_assert(r != NULL);
 
@@ -828,7 +828,7 @@ void TransitiveRules_rule_iter_set_transitive_variable() {
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "LocatedIn(SanFrancisco, _X)"
+        .expr = "LocatedIn(SanFrancisco, $X)"
     });
 
     test_assert(r != NULL);
@@ -899,7 +899,7 @@ void TransitiveRules_rule_iter_set_transitive_self_variable() {
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "LocatedIn(SanFrancisco, _X)"
+        .expr = "LocatedIn(SanFrancisco, $X)"
     });
 
     test_assert(r != NULL);
@@ -935,7 +935,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_one() {
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
 
     test_assert(r != NULL);
@@ -999,7 +999,7 @@ void TransitiveRules_rule_iter_set_transitive_2_variables_set_both() {
     ECS_ENTITY(world, Soma, (LocatedIn, SanFrancisco));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
 
     test_assert(r != NULL);
@@ -1063,7 +1063,7 @@ void TransitiveRules_rule_iter_set_transitive_self_2_variables_set_both() {
     ECS_ENTITY(world, SanFrancisco, (LocatedIn, UnitedStates));
 
     ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t) {
-        .expr = "LocatedIn(_X, _Y)"
+        .expr = "LocatedIn($X, $Y)"
     });
 
     test_assert(r != NULL);

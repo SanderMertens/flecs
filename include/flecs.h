@@ -1060,8 +1060,11 @@ FLECS_API extern const ecs_entity_t EcsWildcard;
 /* Any entity ("_"). Matches any id, returns only the first. */
 FLECS_API extern const ecs_entity_t EcsAny;
 
-/* This entity (".", "This"). Used in expressions to indicate This entity */
+/* This entity ("."). Used in expressions to indicate This variable */
 FLECS_API extern const ecs_entity_t EcsThis;
+
+/* Variable entity ("$"). Used in expressions to prefix variable names */
+FLECS_API extern const ecs_entity_t EcsVariable;
 
 /* Marks a relationship as transitive. 
  * Behavior: 

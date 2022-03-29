@@ -39,12 +39,16 @@ int main(int, char *[]) {
     // Create a rule that checks if two entities like each other. By itself this
     // rule is not a fact, but we can use it to check facts by populating both
     // of its variables.
+    //
+    // The equivalent query in the DSL is:
+    //  Likes($X, $Y), Likes($Y, $X)
+    //
     // Instead of using variables we could have created a rule that referred the
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
     auto friends = ecs.rule_builder()
-        .term<Likes>().subj("_X").obj("_Y")
-        .term<Likes>().subj("_Y").obj("_X")
+        .term<Likes>().subj().var("X").obj().var("Y")
+        .term<Likes>().subj().var("Y").obj().var("X")
         .build();
 
     int x_var = friends.find_var("X");
