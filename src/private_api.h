@@ -99,18 +99,15 @@ void flecs_eval_component_monitors(
 
 void flecs_monitor_mark_dirty(
     ecs_world_t *world,
-    ecs_entity_t relation,
     ecs_entity_t id);
 
 void flecs_monitor_register(
     ecs_world_t *world,
-    ecs_entity_t relation,
     ecs_entity_t id,
     ecs_query_t *query);
 
 void flecs_monitor_unregister(
     ecs_world_t *world,
-    ecs_entity_t relation,
     ecs_entity_t id,
     ecs_query_t *query);
 
@@ -635,11 +632,6 @@ bool flecs_filter_match_table(
     bool first,
     int32_t skip_term,
     ecs_flags32_t iter_flags);
-
-bool flecs_query_match(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    const ecs_query_t *query);
 
 void flecs_query_notify(
     ecs_world_t *world,
