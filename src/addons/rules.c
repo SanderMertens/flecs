@@ -3789,8 +3789,8 @@ bool eval_with(
                 /* If the object is not a wildcard, it has been reified. Get the
                  * value from either the register or as a literal */
                 if (!filter.obj_wildcard) {
-                    obj = ecs_entity_t_lo(filter.mask);
-                    if (subj == obj) {
+                    obj = ECS_PAIR_SECOND(filter.mask);
+                    if (ecs_strip_generation(subj) == obj) {
                         return true;
                     }
                 }

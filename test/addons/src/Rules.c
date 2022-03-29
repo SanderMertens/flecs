@@ -690,6 +690,43 @@ void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
     ecs_fini(world);
 }
 
+void Rules_reflexive_pair_recycled_subj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Transitive, Reflexive, Final);
+    ECS_ENTITY(world, Tag, Final);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_delete(world, e);
+    ecs_entity_t e_2 = ecs_new(world, Tag);
+    test_assert(e != e_2);
+    test_assert(ecs_strip_generation(e) == ecs_strip_generation(e_2));
+
+    ecs_entity_t f = ecs_new_id(world);
+    ecs_delete(world, f);
+    ecs_entity_t f_2 = ecs_new(world, Tag);
+    test_assert(f != f_2);
+    test_assert(ecs_strip_generation(f) == ecs_strip_generation(f_2));
+
+    ecs_set_name(world, e_2, "e");
+    ecs_add_pair(world, e_2, Rel, f_2);
+
+    ecs_rule_t *r = ecs_rule_new(world, "Tag(e), Rel(e, e)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_uint(it.subjects[0], e_2);
+    test_uint(it.subjects[1], e_2);
+    test_uint(ecs_term_id(&it, 2), ecs_pair(Rel, e_2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 static
 void test_1_comp(const char *expr) {
     ecs_world_t *world = ecs_init();

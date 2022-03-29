@@ -439,6 +439,7 @@ void Rules_pair_recycled_pred_obj(void);
 void Rules_pair_recycled_matched_obj(void);
 void Rules_pair_recycled_matched_obj_2_terms(void);
 void Rules_pair_recycled_matched_pred_2_terms(void);
+void Rules_reflexive_pair_recycled_subj(void);
 void Rules_recycled_var(void);
 void Rules_superset_from_recycled(void);
 void Rules_superset_from_recycled_w_var(void);
@@ -2599,6 +2600,10 @@ bake_test_case Rules_testcases[] = {
         Rules_pair_recycled_matched_pred_2_terms
     },
     {
+        "reflexive_pair_recycled_subj",
+        Rules_reflexive_pair_recycled_subj
+    },
+    {
         "recycled_var",
         Rules_recycled_var
     },
@@ -4385,7 +4390,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        159,
+        160,
         Rules_testcases
     },
     {
