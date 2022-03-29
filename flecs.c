@@ -39406,6 +39406,7 @@ void populate_iterator(
                 ECS_INTERNAL_ERROR, NULL);
 
             ecs_entity_t e = reg->entity;
+            ecs_assert(ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
             ecs_record_t *record = ecs_eis_get(world, e);
             offset = ECS_RECORD_TO_ROW(record->row);
 
@@ -39559,6 +39560,8 @@ void rule_iter_set_initial_state(
                 ecs_entity_t e = it_var->entity;
 
                 if (e) {
+                    ecs_assert(ecs_is_valid(it->world, e), 
+                        ECS_INTERNAL_ERROR, NULL);
                     reg_set_entity(rule, regs, i, e);
                     if (other_var != -1) {
                         reg_set_entity(rule, regs, other_var, e);
