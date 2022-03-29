@@ -490,6 +490,8 @@ void OnDelete_on_delete_object_mixed(void);
 void OnDelete_on_delete_id_remove_no_instances(void);
 void OnDelete_on_delete_id_delete_no_instances(void);
 void OnDelete_on_delete_id_throw_no_instances(void);
+void OnDelete_on_delete_cyclic_self(void);
+void OnDelete_on_delete_nonempty_cyclic_self(void);
 void OnDelete_on_delete_cyclic_id_default(void);
 void OnDelete_on_delete_cyclic_id_remove(void);
 void OnDelete_on_delete_cyclic_id_remove_both(void);
@@ -3629,6 +3631,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_id_throw_no_instances",
         OnDelete_on_delete_id_throw_no_instances
+    },
+    {
+        "on_delete_cyclic_self",
+        OnDelete_on_delete_cyclic_self
+    },
+    {
+        "on_delete_nonempty_cyclic_self",
+        OnDelete_on_delete_nonempty_cyclic_self
     },
     {
         "on_delete_cyclic_id_default",
@@ -8825,7 +8835,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        73,
+        75,
         OnDelete_testcases
     },
     {

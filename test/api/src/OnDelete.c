@@ -337,6 +337,38 @@ void OnDelete_on_delete_id_throw_no_instances() {
     ecs_delete(world, c);
 }
 
+void OnDelete_on_delete_cyclic_self() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t r = ecs_new_id(world);
+
+    ecs_add_pair(world, e, r, e);
+    test_assert(ecs_has_pair(world, e, r, e));
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void OnDelete_on_delete_nonempty_cyclic_self() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t r = ecs_new_id(world);
+
+    ecs_add_pair(world, e, r, e);
+    test_assert(ecs_has_pair(world, e, r, e));
+
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
 void OnDelete_on_delete_cyclic_id_default() {
     ecs_world_t *world = ecs_init();
 
