@@ -760,6 +760,68 @@ void OnDelete_on_delete_cyclic_storage_table() {
     ecs_fini(world);
 }
 
+void OnDelete_on_delete_cyclic_storage_table_2() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_set(world, rel_1, EcsComponent, {1, 1});
+
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+
+    ecs_add_pair(world, obj_a, rel_1, obj_b);
+
+    ecs_add(world, obj_b, Tag);
+    ecs_add_pair(world, obj_b, rel_1, obj_a);
+    ecs_add_pair(world, obj_b, rel_1, obj_b);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, rel_1, obj_a);
+    ecs_add_pair(world, e, rel_1, obj_b);
+
+    ecs_remove_pair(world, e, rel_1, obj_b);
+
+    ecs_delete(world, obj_a);
+
+    test_bool(false, ecs_is_alive(world, obj_a));
+    test_bool(false, ecs_is_alive(world, obj_b));
+    test_bool(false, ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void OnDelete_on_delete_cyclic_storage_table_3() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t rel_1 = ecs_new_w_pair(world, EcsOnDeleteObject, EcsDelete);
+    ecs_set(world, rel_1, EcsComponent, {1, 1});
+
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+
+    ecs_add_pair(world, obj_a, rel_1, obj_b);
+
+    ecs_add(world, obj_b, Tag);
+    ecs_add_pair(world, obj_b, rel_1, obj_a);
+    ecs_add_pair(world, obj_b, rel_1, obj_b);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, rel_1, obj_a);
+    ecs_add_pair(world, e, rel_1, obj_b);
+
+    ecs_delete(world, obj_a);
+
+    test_bool(false, ecs_is_alive(world, obj_a));
+    test_bool(false, ecs_is_alive(world, obj_b));
+    test_bool(false, ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
 void OnDelete_on_delete_cyclic_set_empty() {
     ecs_world_t *world = ecs_init();
 

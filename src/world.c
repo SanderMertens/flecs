@@ -1300,13 +1300,17 @@ bool free_id_record(
     flecs_table_cache_empty_iter(&idr->cache, &cache_it);
 
     const ecs_table_record_t *tr;
+    int32_t unreleased_count = 0;
     while ((tr = flecs_table_cache_next(&cache_it, ecs_table_record_t))) {
         if (!flecs_table_release(world, tr->hdr.table)) {
             /* Releasing the table did not free it, which means that something
              * is keeping the table alive. Cleanup of the id record will happen
              * when the last reference(s) to the table are released */
-            return false;
+            unreleased_count ++;
         }
+    }
+    if (unreleased_count) {
+        return false;
     }
 
     /* If all tables were deleted for this id record, the last deleted table

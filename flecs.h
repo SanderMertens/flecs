@@ -37,12 +37,12 @@
 /* Flecs debugging enables asserts, which are used for input parameter checking
  * and cheap (constant time) sanity checks. There are lots of asserts in every
  * part of the code, so this will slow down code. */
+#if !defined(FLECS_DEBUG) && !defined(FLECS_NDEBUG) 
+#if defined(NDEBUG)
+#define FLECS_NDEBUG
+#else
 #define FLECS_DEBUG
-#if defined(NDEBUG) || defined(FLECS_NDEBUG)
-#undef FLECS_DEBUG
 #endif
-#ifndef FLECS_DEBUG
-#define FLECS_NDEBUG /* Either FLECS_DEBUG or FLECS_NDEBUG must be defined */
 #endif
 
 /* FLECS_SANITIZE enables expensive checks that can detect issues early. This
