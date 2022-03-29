@@ -430,6 +430,31 @@ void Query_query_only_from_entity() {
     ecs_fini(world);
 }
 
+void Query_query_only_from_entity_no_match() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(e)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_add(world, e, Tag);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 0);
+    test_uint(ecs_term_source(&it, 1), e);
+    test_uint(ecs_term_id(&it, 1), Tag);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_only_from_singleton() {
     ecs_world_t *world = ecs_mini();
 
@@ -492,6 +517,26 @@ void Query_query_only_from_singleton_match_after() {
     ecs_fini(world);
 }
 
+void Query_query_only_from_singleton_component_match_after() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Position($)");
+    test_assert(q != NULL);
+    
+    ecs_singleton_add(world, Position);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 0);
+    test_uint(ecs_term_source(&it, 1), ecs_id(Position));
+    test_uint(ecs_term_id(&it, 1), ecs_id(Position));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_only_from_nothing() {
     ecs_world_t *world = ecs_mini();
 
@@ -504,6 +549,249 @@ void Query_query_only_from_nothing() {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 0);
     test_uint(ecs_term_id(&it, 1), Tag);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_only_from_entity_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Ent, Position);
+
+    ecs_set(world, Ent, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_only_from_entity_no_match_optional() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, Ent, 0);
+
+    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+    test_bool(ecs_term_is_set(&it, 1), false);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_w_singleton_tag_non_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Singleton($)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(4, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[2]);
+    test_uint(e4, it.entities[3]);
+    test_uint(0, it.subjects[0]);
+    test_uint(Singleton, it.subjects[1]);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_int(p[2].x, 30);
+    test_int(p[2].y, 40);
+    test_int(p[3].x, 40);
+    test_int(p[3].y, 50);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_w_singleton_tag_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Singleton);
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_add(world, Singleton);
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) { .filter = {
+        .expr = "Position, Singleton($)",
+        .instanced = true
+    }});
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(4, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[2]);
+    test_uint(e4, it.entities[3]);
+    test_uint(0, it.subjects[0]);
+    test_uint(Singleton, it.subjects[1]);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_int(p[2].x, 30);
+    test_int(p[2].y, 40);
+    test_int(p[3].x, 40);
+    test_int(p[3].y, 50);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_w_singleton_component_non_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity($)");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    Position *p;
+    Velocity *v;
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, it.subjects[0]);
+    test_uint(ecs_id(Velocity), it.subjects[1]);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    v = ecs_term(&it, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+    test_bool(true, ecs_query_next(&it));
+
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(0, it.subjects[0]);
+    test_uint(ecs_id(Velocity), it.subjects[1]);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 20);
+    test_int(p[0].y, 30);
+    v = ecs_term(&it, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+    test_bool(true, ecs_query_next(&it));
+
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(0, it.subjects[0]);
+    test_uint(ecs_id(Velocity), it.subjects[1]);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    v = ecs_term(&it, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+    test_bool(true, ecs_query_next(&it));
+
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(0, it.subjects[0]);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 40);
+    test_int(p[0].y, 50);
+    v = ecs_term(&it, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+    test_uint(ecs_id(Velocity), it.subjects[1]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_w_singleton_component_instanced() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) { .filter = {
+        .expr = "Position, Velocity($)",
+        .instanced = true
+    }});
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(4, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[2]);
+    test_uint(e4, it.entities[3]);
+    test_uint(0, it.subjects[0]);
+    test_uint(ecs_id(Velocity), it.subjects[1]);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_int(p[2].x, 30);
+    test_int(p[2].y, 40);
+    test_int(p[3].x, 40);
+    test_int(p[3].y, 50);
+
+    Velocity *v = ecs_term(&it, Velocity, 2);
+    test_int(v[0].x, 1);
+    test_int(v[0].y, 2);
+
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1643,7 +1931,7 @@ void Query_subquery_unmatch() {
     ecs_remove(world, parent, Position);
 
     /* Force rematching */
-    ecs_progress(world, 0);
+    ecs_force_aperiodic(world);
 
     /* Test if tables have been unmatched */
     it = ecs_query_iter(world, q);
@@ -1658,7 +1946,7 @@ void Query_subquery_unmatch() {
 }
 
 void Query_subquery_rematch() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1719,7 +2007,7 @@ void Query_subquery_rematch() {
     ecs_remove(world, parent, Position);
 
     /* Force unmatching */
-    ecs_progress(world, 0);
+    ecs_force_aperiodic(world);
 
     /* Test if tables have been unmatched */
     it = ecs_query_iter(world, q);
@@ -1732,22 +2020,22 @@ void Query_subquery_rematch() {
     ecs_add(world, parent, Position);    
 
     /* Force rematching */
-    ecs_progress(world, 0);
+    ecs_force_aperiodic(world);
 
     /* Test if tables have been rematched */
     it = ecs_query_iter(world, q);
     test_int(it.table_count, 2);
 
     it = ecs_query_iter(world, sq);
-    test_int(it.table_count, 1);    
+    test_int(it.table_count, 1);
 
-     ecs_query_fini(sq);
+    ecs_query_fini(sq);
 
     ecs_fini(world);
 }
 
 void Query_subquery_rematch_w_parent_optional() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1781,7 +2069,7 @@ void Query_subquery_rematch_w_parent_optional() {
 
     /* Trigger rematch */
     ecs_add(world, parent, Position);
-    ecs_progress(world, 0);
+    ecs_force_aperiodic(world);
 
     /* Tables should be matched */
     it = ecs_query_iter(world, q);
@@ -1796,7 +2084,7 @@ void Query_subquery_rematch_w_parent_optional() {
 }
 
 void Query_subquery_rematch_w_sub_optional() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1831,7 +2119,7 @@ void Query_subquery_rematch_w_sub_optional() {
 
     /* Trigger rematch */
     ecs_add(world, parent, Position);
-    ecs_progress(world, 0);
+    ecs_force_aperiodic(world);
 
     /* Tables should be matched */
     it = ecs_query_iter(world, q);
@@ -3251,55 +3539,6 @@ void Query_iter_type_set() {
     ecs_fini(world);
 }
 
-void Query_only_optional_from_entity() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, Ent, Position);
-
-    ecs_set(world, Ent, Position, {10, 20});
-
-    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 0);
-
-    test_bool(ecs_term_is_set(&it, 1), true);
-    
-    Position *ptr = ecs_term(&it, Position, 1);
-    test_assert(ptr != NULL);
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
-
-    test_assert(!ecs_query_next(&it));
-
-    ecs_fini(world);
-}
-
-void Query_only_optional_from_entity_no_match() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_ENTITY(world, Ent, 0);
-
-    ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 0);
-
-    test_bool(ecs_term_is_set(&it, 1), false);
-
-    test_assert(!ecs_query_next(&it));
-
-    ecs_fini(world);
-}
-
 void Query_filter_term() {
     ecs_world_t *world = ecs_mini();
 
@@ -4404,6 +4643,432 @@ void Query_two_pair_wildcards_one_not_any() {
     test_uint(ecs_term_id(&it, 1), Foo);
     test_uint(ecs_term_id(&it, 2), ecs_pair(RelA, ObjB));
 
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_rematch() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_1);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], base_1);
+    test_uint(it.entities[1], base_2);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 30);
+    test_int(p[1].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_uint(it.subjects[0], base_1);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, inst, EcsIsA, base_1);
+    ecs_add_pair(world, inst, EcsIsA, base_2);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], base_1);
+    test_uint(it.entities[1], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 30);
+    test_int(p[1].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_uint(it.subjects[0], base_2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_rematch() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base_1);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_uint(it.subjects[0], base_1);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_add_pair(world, inst, EcsChildOf, base_2);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_uint(it.subjects[0], base_2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_unmatch() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_1);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], base_1);
+    test_uint(it.entities[1], base_2);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 30);
+    test_int(p[1].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_uint(it.subjects[0], base_1);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove(world, base_1, Position);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_unmatch() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base_1);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_uint(it.subjects[0], base_1);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove(world, base_1, Position);
+
+    it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_rematch_2_lvls() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, base_1);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], base_1);
+    test_uint(it.entities[1], base_2);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 30);
+    test_int(p[1].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], base_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, base, EcsIsA, base_1);
+    ecs_add_pair(world, base, EcsIsA, base_2);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], base_1);
+    test_uint(it.entities[1], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 30);
+    test_int(p[1].y, 40);
+    test_uint(it.subjects[0], 0);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_rematch_2_lvls() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, base_1);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], base_1);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_add_pair(world, base, EcsChildOf, base_2);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+    test_uint(it.subjects[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_cascade_rematch_2_lvls() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_add_pair(world, e_3, EcsChildOf, e_2);
+
+    ecs_add_pair(world, e_2, EcsChildOf, e_1);
+    ecs_add_pair(world, e_1, EcsChildOf, e_0);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(cascade(ChildOf))");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.subjects[0], e_0);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.subjects[0], e_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_3);
+    test_uint(it.subjects[0], e_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, e_1, EcsChildOf, EcsWildcard);
+    ecs_remove_pair(world, e_2, EcsChildOf, EcsWildcard);
+    ecs_remove_pair(world, e_3, EcsChildOf, EcsWildcard);
+
+    ecs_add_pair(world, e_0, EcsChildOf, e_1);
+    ecs_add_pair(world, e_1, EcsChildOf, e_2);
+    ecs_add_pair(world, e_2, EcsChildOf, e_3);
+
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.subjects[0], e_3);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 70);
+    test_int(p[0].y, 80);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.subjects[0], e_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_0);
+    test_uint(it.subjects[0], e_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_childof_rematch_from_isa() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, base_1);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_1);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, base, EcsIsA, base_1);
+    ecs_add_pair(world, base, EcsIsA, base_2);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], inst);
+    test_uint(it.subjects[0], base_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);

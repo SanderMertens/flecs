@@ -177,7 +177,7 @@ ecs_entity_t ecs_run_intern(
     ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);
-    } else {
+    } else if (system_data->query->filter.term_count) {
         if (it == &qit) {
             while (ecs_query_next(&qit)) {
                 action(&qit);
@@ -187,6 +187,8 @@ ecs_entity_t ecs_run_intern(
                 action(it);
             }
         }
+    } else {
+        action(&qit);
     }
 
     if (measure_time) {
@@ -420,7 +422,7 @@ ecs_entity_t ecs_system_init(
          * OnDemand systems get enabled. */
         if (ecs_query_table_count(query)) {
             ecs_system_activate(world, result, true, system);
-        } else {
+        } else if (query->filter.term_count) {
             /* If system isn't matched with any tables, mark it as inactive. This
              * causes it to be ignored by the main loop. When the system matches
              * with a table it will be activated. */

@@ -844,7 +844,6 @@ static
 void update_component_monitor_w_array(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t relation,
     ecs_ids_t *entities)
 {
     if (!entities) {
@@ -855,34 +854,11 @@ void update_component_monitor_w_array(
     for (i = 0; i < entities->count; i ++) {
         ecs_entity_t id = entities->array[i];
         if (ECS_HAS_ROLE(id, PAIR)) {
-            ecs_entity_t rel = ECS_PAIR_FIRST(id);
-            
-            /* If a relationship has changed, check if it could have impacted
-             * the shape of the graph for that relationship. If so, mark the
-             * relationship as dirty */        
-            if (rel != relation && flecs_get_id_record(
-                world, ecs_pair(rel, entity))) 
-            {
-                update_component_monitor_w_array(world, entity, rel, entities);
-            }
+            flecs_monitor_mark_dirty(world, 
+                ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         }
-        
-        if (ECS_HAS_RELATION(id, EcsIsA)) {
-            /* If an IsA relationship is added to a monitored entity (can
-             * be either a parent or a base) component monitors need to be
-             * evaluated for the components of the prefab. */
-            ecs_entity_t base = ecs_pair_second(world, id);
-            ecs_type_t type = ecs_get_type(world, base);
-            ecs_ids_t base_entities = flecs_type_to_ids(type);
 
-            /* This evaluates the component monitor for all components of the
-             * base entity. If the base entity contains IsA relationships
-             * these will be evaluated recursively as well. */
-            update_component_monitor_w_array(
-                world, entity, relation, &base_entities);               
-        } else {
-            flecs_monitor_mark_dirty(world, relation, id);
-        }
+        flecs_monitor_mark_dirty(world, id);
     }
 }
 
@@ -893,8 +869,8 @@ void update_component_monitors(
     ecs_ids_t *added,
     ecs_ids_t *removed)
 {
-    update_component_monitor_w_array(world, entity, 0, added);
-    update_component_monitor_w_array(world, entity, 0, removed);
+    update_component_monitor_w_array(world, entity, added);
+    update_component_monitor_w_array(world, entity, removed);
 }
 
 static

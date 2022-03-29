@@ -85,7 +85,7 @@ void ecs_table_cache_insert(
     ecs_table_cache_hdr_t *result)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!table || (ecs_table_cache_get(cache, table) == NULL), 
+    ecs_assert(ecs_table_cache_get(cache, table) == NULL, 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -117,8 +117,13 @@ void* ecs_table_cache_get(
     const ecs_table_t *table)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_map_get_ptr(&cache->index, ecs_table_cache_hdr_t*, table->id);
+    if (table) {
+        return ecs_map_get_ptr(&cache->index, ecs_table_cache_hdr_t*, table->id);
+    } else {
+        ecs_table_cache_hdr_t *elem = cache->tables.first;
+        ecs_assert(!elem || elem->table == NULL, ECS_INTERNAL_ERROR, NULL);
+        return elem;
+    }
 }
 
 void* ecs_table_cache_remove(

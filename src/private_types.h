@@ -292,6 +292,7 @@ typedef struct ecs_query_table_t {
     ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_table_match_t *first;  /* List with matches for table */
     ecs_query_table_match_t *last;   /* Last discovered match for table */
+    int32_t rematch_count;           /* Track whether table was rematched */
 } ecs_query_table_t;
 
 /** Points to the beginning & ending of a query group */
@@ -301,15 +302,10 @@ typedef struct ecs_query_table_list_t {
     int32_t count;
 } ecs_query_table_list_t;
 
-#define EcsQueryNeedsTables (1)      /* Query needs matching with tables */ 
-#define EcsQueryMatchDisabled (16)   /* Does query match disabled */
-#define EcsQueryMatchPrefab (32)     /* Does query match prefabs */
 #define EcsQueryHasRefs (64)         /* Does query have references */
-#define EcsQueryHasTraits (128)      /* Does query have pairs */
 #define EcsQueryIsSubquery (256)     /* Is query a subquery */
 #define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
 #define EcsQueryHasOutColumns (1024) /* Does query have out columns */
-#define EcsQueryHasOptional (2048)   /* Does query have optional columns */
 #define EcsQueryHasMonitor (4096)    /* Does query track changes */
 
 /* Query event type for notifying queries of world events */
@@ -369,7 +365,8 @@ struct ecs_query_t {
     uint64_t id;                /* Id of query in query storage */
     int32_t cascade_by;         /* Identify cascade column */
     int32_t match_count;        /* How often have tables been (un)matched */
-    int32_t prev_match_count;   /* Used to track if sorting is needed */
+    int32_t prev_match_count;   /* Track if sorting is needed */
+    int32_t rematch_count;      /* Track which tables were added during rematch */
     bool constraints_satisfied; /* Are all term constraints satisfied */
 
     /* Mixins */
@@ -475,15 +472,9 @@ typedef struct ecs_monitor_t {
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;         /* map<id, ecs_monitor_t> */
+    ecs_map_t monitors;          /* map<relation_id, ecs_monitor_t> */
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
-
-/* Relation monitors. TODO: implement generic monitor mechanism */
-typedef struct ecs_relation_monitor_t {
-    ecs_map_t monitor_sets;     /* map<relation_id, ecs_monitor_set_t> */
-    bool is_dirty;               /* Should monitor sets be evaluated? */
-} ecs_relation_monitor_t;
 
 /* Payload for table index which returns all tables for a given component, with
  * the column of the component in the table. */
@@ -590,15 +581,8 @@ struct ecs_world_t {
     ecs_sparse_t *pending_tables;  /* sparse<table_id, ecs_table_t*> */
     
 
-    /* Keep track of components that were added/removed to/from monitored
-     * entities. Monitored entities are entities that are directly referenced by
-     * a query, either explicitly (e.g. Position(Foo)) or implicitly 
-     * (Position(supser)).
-     * When these entities change type, queries may have to be rematched.
-     * Queries register themselves as component monitors for specific components
-     * and when these components change they are rematched. The component 
-     * monitors are evaluated during a merge. */
-    ecs_relation_monitor_t monitors;
+    /* Used to track when cache needs to be updated */
+    ecs_monitor_set_t monitors;    /* map<id, ecs_monitor_t> */
 
 
     /* -- Systems -- */

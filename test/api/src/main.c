@@ -945,10 +945,18 @@ void Query_component_query_existing_table(void);
 void Query_component_query_new_table(void);
 void Query_component_query_existing_empty_table(void);
 void Query_query_only_from_entity(void);
+void Query_query_only_from_entity_no_match(void);
 void Query_query_only_from_singleton(void);
 void Query_query_only_from_entity_match_after(void);
 void Query_query_only_from_singleton_match_after(void);
+void Query_query_only_from_singleton_component_match_after(void);
 void Query_query_only_from_nothing(void);
+void Query_query_only_from_entity_optional(void);
+void Query_query_only_from_entity_no_match_optional(void);
+void Query_query_w_singleton_tag_non_instanced(void);
+void Query_query_w_singleton_tag_instanced(void);
+void Query_query_w_singleton_component_non_instanced(void);
+void Query_query_w_singleton_component_instanced(void);
 void Query_query_w_from_entity(void);
 void Query_query_w_from_singleton(void);
 void Query_query_w_from_entity_match_after(void);
@@ -1013,8 +1021,6 @@ void Query_query_iter_20_tags(void);
 void Query_query_iter_10_components(void);
 void Query_query_iter_20_components(void);
 void Query_iter_type_set(void);
-void Query_only_optional_from_entity(void);
-void Query_only_optional_from_entity_no_match(void);
 void Query_filter_term(void);
 void Query_2_terms_1_filter(void);
 void Query_3_terms_2_filter(void);
@@ -1050,6 +1056,14 @@ void Query_parent(void);
 void Query_existing_isa_cascade(void);
 void Query_new_isa_cascade(void);
 void Query_childof_cascade(void);
+void Query_isa_rematch(void);
+void Query_childof_rematch(void);
+void Query_isa_unmatch(void);
+void Query_childof_unmatch(void);
+void Query_isa_rematch_2_lvls(void);
+void Query_childof_rematch_2_lvls(void);
+void Query_cascade_rematch_2_lvls(void);
+void Query_childof_rematch_from_isa(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -1069,9 +1083,13 @@ void Iter_worker_iter_w_shared_comp(void);
 void Iter_paged_iter_w_task_query(void);
 void Iter_worker_iter_w_task_query(void);
 void Iter_worker_iter_w_singleton(void);
+void Iter_worker_iter_w_singleton_component(void);
 void Iter_worker_iter_w_singleton_instanced(void);
+void Iter_worker_iter_w_singleton_component_instanced(void);
 void Iter_paged_iter_w_singleton(void);
+void Iter_paged_iter_w_singleton_component(void);
 void Iter_paged_iter_w_singleton_instanced(void);
+void Iter_paged_iter_w_singleton_component_instanced(void);
 void Iter_iter_1_term_no_alloc(void);
 void Iter_iter_cache_size_terms_no_alloc(void);
 void Iter_iter_lt_cache_size_terms_alloc(void);
@@ -5425,6 +5443,10 @@ bake_test_case Query_testcases[] = {
         Query_query_only_from_entity
     },
     {
+        "query_only_from_entity_no_match",
+        Query_query_only_from_entity_no_match
+    },
+    {
         "query_only_from_singleton",
         Query_query_only_from_singleton
     },
@@ -5437,8 +5459,36 @@ bake_test_case Query_testcases[] = {
         Query_query_only_from_singleton_match_after
     },
     {
+        "query_only_from_singleton_component_match_after",
+        Query_query_only_from_singleton_component_match_after
+    },
+    {
         "query_only_from_nothing",
         Query_query_only_from_nothing
+    },
+    {
+        "query_only_from_entity_optional",
+        Query_query_only_from_entity_optional
+    },
+    {
+        "query_only_from_entity_no_match_optional",
+        Query_query_only_from_entity_no_match_optional
+    },
+    {
+        "query_w_singleton_tag_non_instanced",
+        Query_query_w_singleton_tag_non_instanced
+    },
+    {
+        "query_w_singleton_tag_instanced",
+        Query_query_w_singleton_tag_instanced
+    },
+    {
+        "query_w_singleton_component_non_instanced",
+        Query_query_w_singleton_component_non_instanced
+    },
+    {
+        "query_w_singleton_component_instanced",
+        Query_query_w_singleton_component_instanced
     },
     {
         "query_w_from_entity",
@@ -5697,14 +5747,6 @@ bake_test_case Query_testcases[] = {
         Query_iter_type_set
     },
     {
-        "only_optional_from_entity",
-        Query_only_optional_from_entity
-    },
-    {
-        "only_optional_from_entity_no_match",
-        Query_only_optional_from_entity_no_match
-    },
-    {
         "filter_term",
         Query_filter_term
     },
@@ -5843,6 +5885,38 @@ bake_test_case Query_testcases[] = {
     {
         "childof_cascade",
         Query_childof_cascade
+    },
+    {
+        "isa_rematch",
+        Query_isa_rematch
+    },
+    {
+        "childof_rematch",
+        Query_childof_rematch
+    },
+    {
+        "isa_unmatch",
+        Query_isa_unmatch
+    },
+    {
+        "childof_unmatch",
+        Query_childof_unmatch
+    },
+    {
+        "isa_rematch_2_lvls",
+        Query_isa_rematch_2_lvls
+    },
+    {
+        "childof_rematch_2_lvls",
+        Query_childof_rematch_2_lvls
+    },
+    {
+        "cascade_rematch_2_lvls",
+        Query_cascade_rematch_2_lvls
+    },
+    {
+        "childof_rematch_from_isa",
+        Query_childof_rematch_from_isa
     }
 };
 
@@ -5916,16 +5990,32 @@ bake_test_case Iter_testcases[] = {
         Iter_worker_iter_w_singleton
     },
     {
+        "worker_iter_w_singleton_component",
+        Iter_worker_iter_w_singleton_component
+    },
+    {
         "worker_iter_w_singleton_instanced",
         Iter_worker_iter_w_singleton_instanced
+    },
+    {
+        "worker_iter_w_singleton_component_instanced",
+        Iter_worker_iter_w_singleton_component_instanced
     },
     {
         "paged_iter_w_singleton",
         Iter_paged_iter_w_singleton
     },
     {
+        "paged_iter_w_singleton_component",
+        Iter_paged_iter_w_singleton_component
+    },
+    {
         "paged_iter_w_singleton_instanced",
         Iter_paged_iter_w_singleton_instanced
+    },
+    {
+        "paged_iter_w_singleton_component_instanced",
+        Iter_paged_iter_w_singleton_component_instanced
     },
     {
         "iter_1_term_no_alloc",
@@ -9023,14 +9113,14 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        120,
+        134,
         Query_testcases
     },
     {
         "Iter",
         NULL,
         NULL,
-        23,
+        27,
         Iter_testcases
     },
     {
