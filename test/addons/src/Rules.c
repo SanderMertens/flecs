@@ -602,6 +602,94 @@ void Rules_superset_from_recycled_2_lvls_w_var() {
     ecs_fini(world);
 }
 
+void Rules_superset_from_recycled_2_lvls_2_tbls_w_var() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Transitive, Final);
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t obj_a = ecs_new_id(world);
+    ecs_entity_t obj_b = ecs_new_id(world);
+    ecs_entity_t obj_c = ecs_new_id(world);
+    ecs_entity_t obj_d = ecs_new_id(world);
+    ecs_delete(world, obj_b);
+    ecs_entity_t obj_b_2 = ecs_new_id(world);
+    ecs_delete(world, obj_c);
+    ecs_entity_t obj_c_2 = ecs_new_id(world);
+    ecs_delete(world, obj_d);
+    ecs_entity_t obj_d_2 = ecs_new_id(world);
+    test_assert(obj_b != obj_b_2);
+    test_assert(obj_c != obj_c_2);
+    test_assert(obj_d != obj_d_2);
+    test_assert(ecs_strip_generation(obj_b) == ecs_strip_generation(obj_b_2));
+    test_assert(ecs_strip_generation(obj_c) == ecs_strip_generation(obj_c_2));
+    test_assert(ecs_strip_generation(obj_d) == ecs_strip_generation(obj_d_2));
+
+    ecs_add(world, obj_b_2, Tag); /* make sure it's not an empty table */
+    ecs_add(world, obj_c_2, Tag);
+    ecs_add(world, obj_d_2, Tag);
+    ecs_add(world, obj_c_2, TagB);
+
+    ecs_add_pair(world, obj_a, Rel, obj_b_2);
+    ecs_add_pair(world, obj_b_2, Rel, obj_d_2);
+    ecs_add_pair(world, obj_c_2, Rel, obj_d_2);
+
+    ecs_rule_t *r = ecs_rule_new(world, "(Rel, _X)");
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    int x_var = ecs_rule_find_var(r, "X");
+    test_assert(x_var != -1);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(obj_a, it.entities[0]);
+    test_uint(ecs_pair(Rel, obj_b_2), ecs_term_id(&it, 1));
+
+    ecs_entity_t x = ecs_iter_get_var(&it, x_var);
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_assert(x == obj_b_2);
+    
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(obj_a, it.entities[0]);
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+
+    x = ecs_iter_get_var(&it, x_var);
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_assert(x == obj_d_2);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(obj_b_2, it.entities[0]);
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+
+    x = ecs_iter_get_var(&it, x_var);
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_assert(x == obj_d_2);
+    
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(obj_c_2, it.entities[0]);
+    test_uint(ecs_pair(Rel, obj_d_2), ecs_term_id(&it, 1));
+
+    x = ecs_iter_get_var(&it, x_var);
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_assert(x == obj_d_2);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 static
 void test_1_comp(const char *expr) {
     ecs_world_t *world = ecs_init();

@@ -20889,8 +20889,8 @@ bool eval_superset(
     table = frame->table;
     int32_t column = frame->column;
 
-    ecs_entity_t col_entity = rule_get_column(table->type, column);
-    ecs_entity_t col_obj = ecs_entity_t_lo(col_entity);
+    ecs_id_t col_id = rule_get_column(table->type, column);
+    ecs_entity_t col_obj = ecs_pair_second(world, col_id);
     ecs_table_t *next_table = table_from_entity(world, col_obj).table;
 
     if (next_table) {
@@ -20909,8 +20909,8 @@ bool eval_superset(
         if (column != -1) {
             op_ctx->sp = sp;
             frame->column = column;
-            col_entity = rule_get_column(table->type, column);
-            col_obj = ecs_entity_t_lo(col_entity);
+            col_id = rule_get_column(table->type, column);
+            col_obj = ecs_pair_second(world, col_id);
             reg_set_entity(rule, regs, r, col_obj);
             return true;        
         }

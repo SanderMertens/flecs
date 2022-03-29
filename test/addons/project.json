@@ -458,6 +458,7 @@
                 "superset_from_recycled",
                 "superset_from_recycled_w_var",
                 "superset_from_recycled_2_lvls_w_var",
+                "superset_from_recycled_2_lvls_2_tbls_w_var",
                 "1_comp",
                 "2_comp",
                 "1_comp_explicit_subject",

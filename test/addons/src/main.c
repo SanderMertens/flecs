@@ -443,6 +443,7 @@ void Rules_recycled_var(void);
 void Rules_superset_from_recycled(void);
 void Rules_superset_from_recycled_w_var(void);
 void Rules_superset_from_recycled_2_lvls_w_var(void);
+void Rules_superset_from_recycled_2_lvls_2_tbls_w_var(void);
 void Rules_1_comp(void);
 void Rules_2_comp(void);
 void Rules_1_comp_explicit_subject(void);
@@ -2614,6 +2615,10 @@ bake_test_case Rules_testcases[] = {
         Rules_superset_from_recycled_2_lvls_w_var
     },
     {
+        "superset_from_recycled_2_lvls_2_tbls_w_var",
+        Rules_superset_from_recycled_2_lvls_2_tbls_w_var
+    },
+    {
         "1_comp",
         Rules_1_comp
     },
@@ -4380,7 +4385,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        158,
+        159,
         Rules_testcases
     },
     {
