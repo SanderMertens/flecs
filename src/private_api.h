@@ -509,7 +509,7 @@ void flecs_table_set_size(
     int32_t count);
 
 /* Shrink table to contents */
-void flecs_table_shrink(
+bool flecs_table_shrink(
     ecs_world_t *world,
     ecs_table_t *table);
 

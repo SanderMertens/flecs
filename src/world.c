@@ -2157,8 +2157,9 @@ int32_t ecs_delete_empty_tables(
                     delete_count ++;
                 }
             } else if (clear_generation && (gen > clear_generation)) {
-                flecs_table_shrink(world, table);
-                clear_count ++;
+                if (flecs_table_shrink(world, table)) {
+                    clear_count ++;
+                }
             }
         }
     }

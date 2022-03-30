@@ -1650,7 +1650,7 @@ void flecs_table_set_size(
     }
 }
 
-void flecs_table_shrink(
+bool flecs_table_shrink(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -1658,9 +1658,11 @@ void flecs_table_shrink(
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
     (void)world;
 
+
     check_table_sanity(table);
 
     ecs_data_t *data = &table->storage;
+    bool has_payload = data->entities != NULL;
     ecs_vector_reclaim(&data->entities, ecs_entity_t);
     ecs_vector_reclaim(&data->record_ptrs, ecs_record_t*);
 
@@ -1673,6 +1675,8 @@ void flecs_table_shrink(
     }
 
     table->alloc_count ++;
+
+    return has_payload;
 }
 
 int32_t flecs_table_data_count(
