@@ -740,9 +740,10 @@ void flecs_table_free(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
-            expr, table->id);
+            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d // %p", 
+            expr, table->id, table);
         ecs_os_free(expr);
+        ecs_log_push_2();
     }
 
     world->info.empty_table_count -= (ecs_table_count(table) == 0);
@@ -780,7 +781,7 @@ void flecs_table_free(
     world->info.table_record_count -= table->record_count;
     world->info.table_storage_count -= table->storage_count;
     world->info.table_delete_total ++;
-    
+
     if (!table->storage_count) {
         world->info.tag_table_count --;
     } else {
@@ -792,6 +793,8 @@ void flecs_table_free(
         flecs_table_free_type(table);
         flecs_sparse_remove(&world->store.tables, table->id);
     }
+
+    ecs_log_pop_2();
 }
 
 void flecs_table_claim(

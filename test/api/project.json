@@ -1646,7 +1646,10 @@
                 "delete_empty_tables_after_init",
                 "delete_1000_empty_tables",
                 "delete_empty_tables_for_id",
-                "user_after_delete_empty"
+                "user_after_delete_empty",
+                "user_after_clear_empty",
+                "user_after_delete_empty_w_component",
+                "user_after_clear_empty_w_component"
             ]
         }, {
             "id": "WorldInfo",

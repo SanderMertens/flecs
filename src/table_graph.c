@@ -231,7 +231,7 @@ void disconnect_edge(
 
     /* If edge id is low, clear it from fast lookup array */
     if (id < ECS_HI_COMPONENT_ID) {
-        edge->from = NULL;
+        ecs_os_memset_t(edge, 0, ecs_graph_edge_t);
     } else {
         graph_edge_free(world, edge);
     }

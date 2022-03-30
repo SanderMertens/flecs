@@ -1570,6 +1570,9 @@ void World_delete_empty_tables_after_init(void);
 void World_delete_1000_empty_tables(void);
 void World_delete_empty_tables_for_id(void);
 void World_user_after_delete_empty(void);
+void World_user_after_clear_empty(void);
+void World_user_after_delete_empty_w_component(void);
+void World_user_after_clear_empty_w_component(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -7840,6 +7843,18 @@ bake_test_case World_testcases[] = {
     {
         "user_after_delete_empty",
         World_user_after_delete_empty
+    },
+    {
+        "user_after_clear_empty",
+        World_user_after_clear_empty
+    },
+    {
+        "user_after_delete_empty_w_component",
+        World_user_after_delete_empty_w_component
+    },
+    {
+        "user_after_clear_empty_w_component",
+        World_user_after_clear_empty_w_component
     }
 };
 
@@ -9020,7 +9035,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        41,
+        44,
         World_testcases
     },
     {
