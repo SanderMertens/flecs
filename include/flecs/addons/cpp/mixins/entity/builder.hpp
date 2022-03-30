@@ -24,10 +24,10 @@ struct entity_builder : entity_view {
     /** Add an entity to an entity.
      * Add an entity to the entity. This is typically used for tagging.
      *
-     * @param entity The entity to add.
+     * @param component The component to add.
      */
-    Self& add(entity_t entity) {
-        ecs_add_id(this->m_world, this->m_id, entity);
+    Self& add(id_t component) {
+        ecs_add_id(this->m_world, this->m_id, component);
         return to_base();
     }
 
@@ -80,6 +80,82 @@ struct entity_builder : entity_view {
         const auto& et = enum_type<O>(this->m_world);
         flecs::entity_t object = et.entity(constant);
         return this->add<R>(object);
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @tparam T The component to add.
+     * @param cond The condition to evaluate.
+     */
+    template <typename T>
+    Self& add_if(bool cond) {
+        if (cond) {
+            return this->add<T>();
+        } else {
+            return this->remove<T>();
+        }
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @param cond The condition to evaluate.
+     * @param component The component to add.
+     */
+    Self& add_if(bool cond, flecs::id_t component) {
+        if (cond) {
+            return this->add(component);
+        } else {
+            return this->remove(component);
+        }
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @tparam R The relation type
+     * @tparam O The object type.
+     * @param cond The condition to evaluate.
+     */
+    template <typename R, typename O>
+    Self& add_if(bool cond) {
+        if (cond) {
+            return this->add<R, O>();
+        } else {
+            return this->remove<R, O>();
+        }
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @tparam R The relation type
+     * @param cond The condition to evaluate.
+     * @param object The relation object.
+     */
+    template <typename R>
+    Self& add_if(bool cond, flecs::entity_t object) {
+        if (cond) {
+            return this->add<R>(object);
+        } else {
+            return this->remove<R>(object);
+        }
+    }
+
+    /** Conditional add.
+     * This operation adds if condition is true, removes if condition is false.
+     * 
+     * @param cond The condition to evaluate.
+     * @param relation The relation.
+     * @param object The relation object.
+     */
+    Self& add_if(bool cond, flecs::entity_t relation, flecs::entity_t object) {
+        if (cond) {
+            return this->add(relation, object);
+        } else {
+            return this->remove(relation, object);
+        }
     }
 
     /** Shortcut for add(IsA, obj).

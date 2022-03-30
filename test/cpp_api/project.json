@@ -193,7 +193,17 @@
                 "entity_w_type",
                 "entity_w_nested_type",
                 "entity_w_type_defer",
-                "entity_array"
+                "entity_array",
+                "add_if_true_T",
+                "add_if_false_T",
+                "add_if_true_id",
+                "add_if_false_id",
+                "add_if_true_R_O",
+                "add_if_false_R_O",
+                "add_if_true_R_o",
+                "add_if_false_R_o",
+                "add_if_true_r_o",
+                "add_if_false_r_o"
             ]
         }, {
             "id": "Pairs",

@@ -188,6 +188,16 @@ void Entity_entity_w_type(void);
 void Entity_entity_w_nested_type(void);
 void Entity_entity_w_type_defer(void);
 void Entity_entity_array(void);
+void Entity_add_if_true_T(void);
+void Entity_add_if_false_T(void);
+void Entity_add_if_true_id(void);
+void Entity_add_if_false_id(void);
+void Entity_add_if_true_R_O(void);
+void Entity_add_if_false_R_O(void);
+void Entity_add_if_true_R_o(void);
+void Entity_add_if_false_R_o(void);
+void Entity_add_if_true_r_o(void);
+void Entity_add_if_false_r_o(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1607,6 +1617,46 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_array",
         Entity_entity_array
+    },
+    {
+        "add_if_true_T",
+        Entity_add_if_true_T
+    },
+    {
+        "add_if_false_T",
+        Entity_add_if_false_T
+    },
+    {
+        "add_if_true_id",
+        Entity_add_if_true_id
+    },
+    {
+        "add_if_false_id",
+        Entity_add_if_false_id
+    },
+    {
+        "add_if_true_R_O",
+        Entity_add_if_true_R_O
+    },
+    {
+        "add_if_false_R_O",
+        Entity_add_if_false_R_O
+    },
+    {
+        "add_if_true_R_o",
+        Entity_add_if_true_R_o
+    },
+    {
+        "add_if_false_R_o",
+        Entity_add_if_false_R_o
+    },
+    {
+        "add_if_true_r_o",
+        Entity_add_if_true_r_o
+    },
+    {
+        "add_if_false_r_o",
+        Entity_add_if_false_r_o
     }
 };
 
@@ -4289,7 +4339,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        179,
+        189,
         Entity_testcases
     },
     {

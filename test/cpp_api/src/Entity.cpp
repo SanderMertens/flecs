@@ -3288,3 +3288,132 @@ void Entity_entity_w_type_defer() {
     test_str(e.symbol(), "Tag");
     test_assert(ecs.id<Tag>() == e);
 }
+
+void Entity_add_if_true_T() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    e.add_if<Tag>(true);
+    test_assert( e.has<Tag>());
+}
+
+void Entity_add_if_false_T() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+
+    e.add_if<Tag>(false);
+    test_assert( !e.has<Tag>());
+
+    e.add<Tag>();
+    test_assert( e.has<Tag>());
+    e.add_if<Tag>(false);
+    test_assert( !e.has<Tag>());
+}
+
+void Entity_add_if_true_id() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto t = ecs.entity();
+
+    e.add_if(true, t);
+    test_assert( e.has(t));
+}
+
+void Entity_add_if_false_id() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto t = ecs.entity();
+
+    e.add_if(false, t);
+    test_assert( !e.has(t));
+    e.add(t);
+    test_assert( e.has(t));
+    e.add_if(false, t);
+    test_assert( !e.has(t));
+}
+
+void Entity_add_if_true_R_O() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    auto e = ecs.entity();
+
+    e.add_if<Rel, Obj>(true);
+    test_assert( (e.has<Rel, Obj>()) );
+}
+
+void Entity_add_if_false_R_O() {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    auto e = ecs.entity();
+
+    e.add_if<Rel, Obj>(false);
+    test_assert( (!e.has<Rel, Obj>()));
+    e.add<Rel, Obj>();
+    test_assert( (e.has<Rel, Obj>()));
+    e.add_if<Rel, Obj>(false);
+    test_assert( (!e.has<Rel, Obj>()));
+}
+
+void Entity_add_if_true_R_o() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    auto e = ecs.entity();
+    auto o = ecs.entity();
+
+    e.add_if<Rel>(true, o);
+    test_assert( e.has<Rel>(o));
+}
+
+void Entity_add_if_false_R_o() {
+    flecs::world ecs;
+
+    struct Rel { };
+
+    auto e = ecs.entity();
+    auto o = ecs.entity();
+
+    e.add_if<Rel>(false, o);
+    test_assert( !e.has<Rel>(o));
+    e.add<Rel>(o);
+    test_assert( e.has<Rel>(o));
+    e.add_if<Rel>(false, o);
+    test_assert( !e.has<Rel>(o));
+}
+
+void Entity_add_if_true_r_o() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto r = ecs.entity();
+    auto o = ecs.entity();
+
+    e.add_if(true, r, o);
+    test_assert( e.has(r, o));
+}
+
+void Entity_add_if_false_r_o() {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    auto r = ecs.entity();
+    auto o = ecs.entity();
+
+    e.add_if(false, r, o);
+    test_assert( !e.has(r, o));
+    e.add(r, o);
+    test_assert( e.has(r, o));
+    e.add_if(false, r, o);
+    test_assert( !e.has(r, o));
+}
