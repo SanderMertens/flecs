@@ -1641,7 +1641,12 @@
                 "ensure_empty_root",
                 "register_alias_twice_same_entity",
                 "register_alias_twice_different_entity",
-                "redefine_component"
+                "redefine_component",
+                "delete_empty_tables_after_mini",
+                "delete_empty_tables_after_init",
+                "delete_1000_empty_tables",
+                "delete_empty_tables_for_id",
+                "user_after_delete_empty"
             ]
         }, {
             "id": "WorldInfo",

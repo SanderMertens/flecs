@@ -1923,6 +1923,10 @@ void flecs_table_set_empty(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
+    if (ecs_table_count(table)) {
+        table->generation = 0;
+    }
+
     flecs_sparse_set_generation(world->pending_tables, (uint32_t)table->id);
     flecs_sparse_ensure(world->pending_tables, ecs_table_t*, 
         (uint32_t)table->id)[0] = table;
@@ -2102,4 +2106,66 @@ void ecs_force_aperiodic(
 {
     flecs_process_pending_tables(world);
     flecs_eval_component_monitors(world);
+}
+
+int32_t ecs_delete_empty_tables(
+    ecs_world_t *world,
+    ecs_id_t id,
+    uint16_t clear_generation,
+    uint16_t delete_generation,
+    int32_t min_id_count,
+    double time_budget_seconds)
+{
+    ecs_time_t start = {0}, cur = {0};
+    int32_t delete_count = 0;
+    bool time_budget = false;
+
+    ecs_time_measure(&start);
+    if (time_budget_seconds != 0) {
+        time_budget = true;
+    }
+
+    if (!id) {
+        id = EcsAny; /* Iterate all empty tables */
+    }
+
+    ecs_table_cache_iter_t it;
+    if (flecs_empty_table_iter(world, id, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            if (time_budget) {
+                cur = start;
+                if (ecs_time_measure(&cur) > time_budget_seconds) {
+                    goto done;
+                }
+            }
+
+            ecs_table_t *table = tr->hdr.table;
+            ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, NULL);
+            if (table->refcount > 1) {
+                /* Don't delete claimed tables */
+                continue;
+            }
+
+            if (ecs_vector_count(table->type) < min_id_count) {
+                continue;
+            }
+
+            uint16_t gen = ++ table->generation;
+            if (delete_generation && (gen > delete_generation)) {
+                if (flecs_table_release(world, table)) {
+                    delete_count ++;
+                }
+            } else if (clear_generation && (gen > clear_generation)) {
+                flecs_table_clear_data(world, table, &table->storage);
+            }
+        }
+    }
+
+done:
+    if (delete_count) {
+        ecs_dbg_1("#[red]deleted#[normal] %d empty tables in %.2fs", 
+            delete_count, ecs_time_measure(&start));
+    }
+    return delete_count;
 }

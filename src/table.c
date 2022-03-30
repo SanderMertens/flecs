@@ -186,12 +186,12 @@ void init_storage_table(
         ecs_table_t *storage_table = flecs_table_find_or_create(world, 
             &storage_ids);
         table->storage_table = storage_table;
-        table->storage_count = storage_ids.count;
+        table->storage_count = flecs_ito(uint16_t, storage_ids.count);
         table->storage_ids = ecs_vector_first(storage_table->type, ecs_id_t);
         storage_table->refcount ++;
     } else if (storage_ids.count) {
         table->storage_table = table;
-        table->storage_count = count;
+        table->storage_count = flecs_ito(uint16_t, count);
         table->storage_ids = ecs_vector_first(type, ecs_id_t);
     }
 

@@ -459,7 +459,8 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
-    int32_t storage_count;           /* Number of (non-zero sized) components */
+    uint16_t storage_count;          /* Number of (non-zero sized) components */
+    uint16_t generation;             /* Used for table cleanup */
     
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_table_t *storage_table;      /* Table w/type without tags */
@@ -468,7 +469,7 @@ struct ecs_table_t {
                                       *  - 0..count(T):         type -> storage_type
                                       *  - count(T)..count(S):  storage_type -> type
                                       */
-                                     
+
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t *type_info;      /* Cached pointers to type info */
@@ -481,9 +482,9 @@ struct ecs_table_t {
     int16_t bs_column_offset;
 
     int32_t alloc_count;             /* Increases when columns are reallocd */
-    int32_t lock;
     int32_t refcount;
-    int32_t record_count;
+    int16_t lock;
+    uint16_t record_count;
 };
 
 /** Must appear as first member in payload of table cache */
@@ -2309,12 +2310,12 @@ void init_storage_table(
         ecs_table_t *storage_table = flecs_table_find_or_create(world, 
             &storage_ids);
         table->storage_table = storage_table;
-        table->storage_count = storage_ids.count;
+        table->storage_count = flecs_ito(uint16_t, storage_ids.count);
         table->storage_ids = ecs_vector_first(storage_table->type, ecs_id_t);
         storage_table->refcount ++;
     } else if (storage_ids.count) {
         table->storage_table = table;
-        table->storage_count = count;
+        table->storage_count = flecs_ito(uint16_t, count);
         table->storage_ids = ecs_vector_first(type, ecs_id_t);
     }
 
@@ -31449,6 +31450,7 @@ void send_reply(
     if (written != hdrs_len) {
         ecs_err("failed to write HTTP response headers to '%s:%s': %s",
             conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
+        ecs_os_free(content);
         return;
     }
 
@@ -31460,6 +31462,8 @@ void send_reply(
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
     }
+
+    ecs_os_free(content);
 }
 
 static
@@ -35924,6 +35928,10 @@ void flecs_table_set_empty(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
+    if (ecs_table_count(table)) {
+        table->generation = 0;
+    }
+
     flecs_sparse_set_generation(world->pending_tables, (uint32_t)table->id);
     flecs_sparse_ensure(world->pending_tables, ecs_table_t*, 
         (uint32_t)table->id)[0] = table;
@@ -36103,6 +36111,68 @@ void ecs_force_aperiodic(
 {
     flecs_process_pending_tables(world);
     flecs_eval_component_monitors(world);
+}
+
+int32_t ecs_delete_empty_tables(
+    ecs_world_t *world,
+    ecs_id_t id,
+    uint16_t clear_generation,
+    uint16_t delete_generation,
+    int32_t min_id_count,
+    double time_budget_seconds)
+{
+    ecs_time_t start = {0}, cur = {0};
+    int32_t delete_count = 0;
+    bool time_budget = false;
+
+    ecs_time_measure(&start);
+    if (time_budget_seconds != 0) {
+        time_budget = true;
+    }
+
+    if (!id) {
+        id = EcsAny; /* Iterate all empty tables */
+    }
+
+    ecs_table_cache_iter_t it;
+    if (flecs_empty_table_iter(world, id, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            if (time_budget) {
+                cur = start;
+                if (ecs_time_measure(&cur) > time_budget_seconds) {
+                    goto done;
+                }
+            }
+
+            ecs_table_t *table = tr->hdr.table;
+            ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, NULL);
+            if (table->refcount > 1) {
+                /* Don't delete claimed tables */
+                continue;
+            }
+
+            if (ecs_vector_count(table->type) < min_id_count) {
+                continue;
+            }
+
+            uint16_t gen = ++ table->generation;
+            if (delete_generation && (gen > delete_generation)) {
+                if (flecs_table_release(world, table)) {
+                    delete_count ++;
+                }
+            } else if (clear_generation && (gen > clear_generation)) {
+                flecs_table_clear_data(world, table, &table->storage);
+            }
+        }
+    }
+
+done:
+    if (delete_count) {
+        ecs_dbg_1("#[red]deleted#[normal] %d empty tables in %.2fs", 
+            delete_count, ecs_time_measure(&start));
+    }
+    return delete_count;
 }
 
 
@@ -43759,7 +43829,7 @@ void flecs_table_records_register(
     }
 
     table->records = ecs_os_calloc_n(ecs_table_record_t, record_count);
-    table->record_count = record_count;
+    table->record_count = flecs_ito(uint16_t, record_count);
 
     /* First initialize records for regular (non-wildcard) ids. Make sure that
      * these table records line up with ids in table type. */
@@ -43978,6 +44048,7 @@ void init_table(
     table->alloc_count = 0;
     table->lock = 0;
     table->refcount = 1;
+    table->generation = 0;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);

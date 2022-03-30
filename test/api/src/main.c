@@ -1565,6 +1565,11 @@ void World_ensure_empty_root(void);
 void World_register_alias_twice_same_entity(void);
 void World_register_alias_twice_different_entity(void);
 void World_redefine_component(void);
+void World_delete_empty_tables_after_mini(void);
+void World_delete_empty_tables_after_init(void);
+void World_delete_1000_empty_tables(void);
+void World_delete_empty_tables_for_id(void);
+void World_user_after_delete_empty(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -7815,6 +7820,26 @@ bake_test_case World_testcases[] = {
     {
         "redefine_component",
         World_redefine_component
+    },
+    {
+        "delete_empty_tables_after_mini",
+        World_delete_empty_tables_after_mini
+    },
+    {
+        "delete_empty_tables_after_init",
+        World_delete_empty_tables_after_init
+    },
+    {
+        "delete_1000_empty_tables",
+        World_delete_1000_empty_tables
+    },
+    {
+        "delete_empty_tables_for_id",
+        World_delete_empty_tables_for_id
+    },
+    {
+        "user_after_delete_empty",
+        World_user_after_delete_empty
     }
 };
 
@@ -8995,7 +9020,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        36,
+        41,
         World_testcases
     },
     {

@@ -382,7 +382,7 @@ void flecs_table_records_register(
     }
 
     table->records = ecs_os_calloc_n(ecs_table_record_t, record_count);
-    table->record_count = record_count;
+    table->record_count = flecs_ito(uint16_t, record_count);
 
     /* First initialize records for regular (non-wildcard) ids. Make sure that
      * these table records line up with ids in table type. */
@@ -601,6 +601,7 @@ void init_table(
     table->alloc_count = 0;
     table->lock = 0;
     table->refcount = 1;
+    table->generation = 0;
 
     /* Ensure the component ids for the table exist */
     ensure_columns(world, table);

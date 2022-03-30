@@ -187,7 +187,8 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_type_t type;                 /* Identifies table type in type_index */
     ecs_flags32_t flags;             /* Flags for testing table properties */
-    int32_t storage_count;           /* Number of (non-zero sized) components */
+    uint16_t storage_count;          /* Number of (non-zero sized) components */
+    uint16_t generation;             /* Used for table cleanup */
     
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_table_t *storage_table;      /* Table w/type without tags */
@@ -196,7 +197,7 @@ struct ecs_table_t {
                                       *  - 0..count(T):         type -> storage_type
                                       *  - count(T)..count(S):  storage_type -> type
                                       */
-                                     
+
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
     ecs_type_info_t *type_info;      /* Cached pointers to type info */
@@ -209,9 +210,9 @@ struct ecs_table_t {
     int16_t bs_column_offset;
 
     int32_t alloc_count;             /* Increases when columns are reallocd */
-    int32_t lock;
     int32_t refcount;
-    int32_t record_count;
+    int16_t lock;
+    uint16_t record_count;
 };
 
 /** Must appear as first member in payload of table cache */
