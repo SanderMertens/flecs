@@ -1510,3 +1510,23 @@ void World_set_lookup_path() {
 
     ecs.set_lookup_path(old_path);
 }
+
+void World_run_post_frame() {
+    flecs::world ecs;
+
+    int ctx = 10;
+
+    ecs.system()
+        .iter([&](flecs::iter& it) {
+            it.world().run_post_frame([](flecs::world_t *w, void *ctx) {
+                int *i = static_cast<int*>(ctx);
+                test_int(*i, 10);
+                i[0] ++;
+            }, &ctx);
+        });
+    test_int(ctx, 10);
+
+    ecs.progress();
+
+    test_int(ctx, 11);
+}

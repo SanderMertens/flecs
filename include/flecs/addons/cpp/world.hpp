@@ -821,6 +821,11 @@ struct world {
     flecs::entity ensure(flecs::entity_t e) const;
 #endif
 
+    /* Run callback after completing frame */
+    void run_post_frame(ecs_fini_action_t action, void *ctx) {
+        ecs_run_post_frame(m_world, action, ctx);
+    }
+
 #   include "mixins/id/mixin.inl"
 #   include "mixins/component/mixin.inl"
 #   include "mixins/entity/mixin.inl"

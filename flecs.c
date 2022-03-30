@@ -31450,7 +31450,6 @@ void send_reply(
     if (written != hdrs_len) {
         ecs_err("failed to write HTTP response headers to '%s:%s': %s",
             conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
-        ecs_os_free(content);
         return;
     }
 
@@ -31462,8 +31461,6 @@ void send_reply(
                 conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
         }
     }
-
-    ecs_os_free(content);
 }
 
 static

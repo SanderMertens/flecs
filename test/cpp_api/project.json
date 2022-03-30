@@ -903,7 +903,8 @@
                 "register_nested_from_scope",
                 "register_w_root_name",
                 "register_nested_w_root_name",
-                "set_lookup_path"
+                "set_lookup_path",
+                "run_post_frame"
             ]
         }, {
             "id": "Singleton",
