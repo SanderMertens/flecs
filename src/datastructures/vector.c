@@ -294,10 +294,15 @@ void _ecs_vector_reclaim(
     int32_t count = vector->count;
 
     if (count < size) {
-        size = count;
-        vector = resize(vector, offset, size * elem_size);
-        vector->size = size;
-        *array_inout = vector;
+        if (count) {
+            size = count;
+            vector = resize(vector, offset, size * elem_size);
+            vector->size = size;
+            *array_inout = vector;
+        } else {
+            ecs_vector_free(vector);
+            *array_inout = NULL;
+        }
     }
 }
 

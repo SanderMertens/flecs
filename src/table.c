@@ -45,6 +45,8 @@ void check_table_sanity(ecs_table_t *table) {
             }
         }
 
+        ecs_assert(table->storage.columns != NULL, ECS_INTERNAL_ERROR, NULL);
+
         for (i = 0; i < storage_count; i ++) {
             ecs_type_info_t *ti = &table->type_info[i];
             ecs_column_t *column = &table->storage.columns[i];
@@ -1012,6 +1014,7 @@ void* grow_column(
     int32_t dst_size,
     bool construct)
 {
+    ecs_assert(column != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_vector_t *vec = column->data;
@@ -1634,6 +1637,7 @@ void flecs_table_set_size(
     ecs_data_t *data,
     int32_t size)
 {
+    ecs_assert(table != NULL, ECS_LOCKED_STORAGE, NULL);
     ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
 
     check_table_sanity(table);
@@ -1644,6 +1648,31 @@ void flecs_table_set_size(
         grow_data(world, table, data, 0, size, NULL);
         check_table_sanity(table);
     }
+}
+
+void flecs_table_shrink(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_assert(table != NULL, ECS_LOCKED_STORAGE, NULL);
+    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, NULL);
+    (void)world;
+
+    check_table_sanity(table);
+
+    ecs_data_t *data = &table->storage;
+    ecs_vector_reclaim(&data->entities, ecs_entity_t);
+    ecs_vector_reclaim(&data->record_ptrs, ecs_record_t*);
+
+    int32_t i, count = table->storage_count;
+    ecs_type_info_t *type_info = table->type_info;
+    for (i = 0; i < count; i ++) {
+        ecs_column_t *column = &data->columns[i];
+        ecs_type_info_t *ti = &type_info[i];
+        ecs_vector_reclaim_t(&column->data, ti->size, ti->alignment);
+    }
+
+    table->alloc_count ++;
 }
 
 int32_t flecs_table_data_count(

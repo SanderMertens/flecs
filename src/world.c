@@ -2117,7 +2117,7 @@ int32_t ecs_delete_empty_tables(
     double time_budget_seconds)
 {
     ecs_time_t start = {0}, cur = {0};
-    int32_t delete_count = 0;
+    int32_t delete_count = 0, clear_count = 0;
     bool time_budget = false;
 
     ecs_time_measure(&start);
@@ -2157,7 +2157,8 @@ int32_t ecs_delete_empty_tables(
                     delete_count ++;
                 }
             } else if (clear_generation && (gen > clear_generation)) {
-                flecs_table_clear_data(world, table, &table->storage);
+                flecs_table_shrink(world, table);
+                clear_count ++;
             }
         }
     }
@@ -2166,6 +2167,10 @@ done:
     if (delete_count) {
         ecs_dbg_1("#[red]deleted#[normal] %d empty tables in %.2fs", 
             delete_count, ecs_time_measure(&start));
+    }
+    if (clear_count) {
+        ecs_dbg_1("#[red]cleared#[normal] %d empty tables in %.2fs", 
+            clear_count, ecs_time_measure(&start));
     }
     return delete_count;
 }

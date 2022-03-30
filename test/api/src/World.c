@@ -1206,9 +1206,9 @@ void World_user_after_delete_empty() {
 
     ecs_remove(world, e, TagA);
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, TagA, 0, 1, 0, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
     test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, TagA, 0, 1, 0, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
     test_assert(deleted != 0);
     ecs_add(world, e, TagA);
 
@@ -1230,9 +1230,9 @@ void World_user_after_clear_empty() {
 
     ecs_remove(world, e, TagA);
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, TagA, 0, 0, 1, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
     test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, TagA, 0, 0, 1, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
     test_assert(deleted == 0);
     ecs_add(world, e, TagA);
 
@@ -1259,13 +1259,13 @@ void World_user_after_delete_empty_w_component() {
     test_assert( !ecs_has(world, e, Velocity));
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, ecs_id(Velocity), 0, 1, 0, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, ecs_id(Velocity), 0, 1, 0, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 0, 1, 0, 0);
     test_assert(deleted != 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
@@ -1296,13 +1296,57 @@ void World_user_after_clear_empty_w_component() {
     test_assert( !ecs_has(world, e, Velocity));
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, ecs_id(Velocity), 0, 0, 1, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, ecs_id(Velocity), 0, 0, 1, 0);
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
+    test_assert(deleted == 0);
+    test_bool(true, ecs_is_alive(world, ecs_id(Position)));
+    test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
+    test_assert( ecs_has(world, e, Position));
+    
+    ecs_add(world, e, Velocity);
+
+    test_assert( ecs_has(world, e, Position));
+    test_assert( ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void World_user_after_clear_empty_w_component_w_lifecycle() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_component_actions(world, Position, { 
+        .ctor = ecs_default_ctor 
+    });
+    ecs_set_component_actions(world, Velocity, { 
+        .ctor = ecs_default_ctor 
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    test_assert( ecs_has(world, e, Position));
+
+    ecs_remove(world, e, Velocity);
+    test_assert( ecs_has(world, e, Position));
+    test_assert( !ecs_has(world, e, Velocity));
+
+    int32_t deleted;
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
+    test_assert(deleted == 0);
+    test_bool(true, ecs_is_alive(world, ecs_id(Position)));
+    test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
+    test_assert( ecs_has(world, e, Position));
+
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));

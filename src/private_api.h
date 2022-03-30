@@ -508,6 +508,11 @@ void flecs_table_set_size(
     ecs_data_t *data,
     int32_t count);
 
+/* Shrink table to contents */
+void flecs_table_shrink(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Get dirty state for table columns */
 int32_t* flecs_table_get_dirty_state(
     ecs_table_t *table);

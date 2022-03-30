@@ -291,6 +291,9 @@ void _ecs_vector_reclaim(
 #define ecs_vector_reclaim(vector, T)\
     _ecs_vector_reclaim(vector, ECS_VECTOR_T(T))
 
+#define ecs_vector_reclaim_t(vector, size, alignment)\
+    _ecs_vector_reclaim(vector, ECS_VECTOR_U(size, alignment))
+
 /** Grow size of vector with provided number of elements. */
 FLECS_API
 int32_t _ecs_vector_grow(
