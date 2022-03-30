@@ -9787,6 +9787,9 @@ void _ecs_vector_reclaim(
     int16_t offset)
 {
     ecs_vector_t *vector = *array_inout;
+    if (!vector) {
+        return;
+    }
 
     ecs_dbg_assert(vector->elem_size == elem_size, ECS_INTERNAL_ERROR, NULL);
     

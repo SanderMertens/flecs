@@ -1194,7 +1194,7 @@ void World_delete_empty_tables_for_id() {
     ecs_fini(world);
 }
 
-void World_user_after_delete_empty() {
+void World_use_after_delete_empty() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1218,7 +1218,7 @@ void World_user_after_delete_empty() {
     ecs_fini(world);
 }
 
-void World_user_after_clear_empty() {
+void World_use_after_clear_empty() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1242,7 +1242,7 @@ void World_user_after_clear_empty() {
     ecs_fini(world);
 }
 
-void World_user_after_delete_empty_w_component() {
+void World_use_after_delete_empty_w_component() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1279,7 +1279,7 @@ void World_user_after_delete_empty_w_component() {
     ecs_fini(world);
 }
 
-void World_user_after_clear_empty_w_component() {
+void World_use_after_clear_empty_w_component() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1316,7 +1316,7 @@ void World_user_after_clear_empty_w_component() {
     ecs_fini(world);
 }
 
-void World_user_after_clear_empty_w_component_w_lifecycle() {
+void World_use_after_clear_empty_w_component_w_lifecycle() {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1356,6 +1356,29 @@ void World_user_after_clear_empty_w_component_w_lifecycle() {
 
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void World_use_after_clear_unused() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, Type, TagA, TagB);
+
+    int32_t deleted;
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
+    test_assert(deleted == 0);
+    deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
+    test_assert(deleted == 0);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+
+    test_assert(ecs_has(world, e, TagA));
+    test_assert(ecs_has(world, e, TagB));
 
     ecs_fini(world);
 }

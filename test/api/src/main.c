@@ -1569,11 +1569,12 @@ void World_delete_empty_tables_after_mini(void);
 void World_delete_empty_tables_after_init(void);
 void World_delete_1000_empty_tables(void);
 void World_delete_empty_tables_for_id(void);
-void World_user_after_delete_empty(void);
-void World_user_after_clear_empty(void);
-void World_user_after_delete_empty_w_component(void);
-void World_user_after_clear_empty_w_component(void);
-void World_user_after_clear_empty_w_component_w_lifecycle(void);
+void World_use_after_delete_empty(void);
+void World_use_after_clear_empty(void);
+void World_use_after_delete_empty_w_component(void);
+void World_use_after_clear_empty_w_component(void);
+void World_use_after_clear_empty_w_component_w_lifecycle(void);
+void World_use_after_clear_unused(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -7842,24 +7843,28 @@ bake_test_case World_testcases[] = {
         World_delete_empty_tables_for_id
     },
     {
-        "user_after_delete_empty",
-        World_user_after_delete_empty
+        "use_after_delete_empty",
+        World_use_after_delete_empty
     },
     {
-        "user_after_clear_empty",
-        World_user_after_clear_empty
+        "use_after_clear_empty",
+        World_use_after_clear_empty
     },
     {
-        "user_after_delete_empty_w_component",
-        World_user_after_delete_empty_w_component
+        "use_after_delete_empty_w_component",
+        World_use_after_delete_empty_w_component
     },
     {
-        "user_after_clear_empty_w_component",
-        World_user_after_clear_empty_w_component
+        "use_after_clear_empty_w_component",
+        World_use_after_clear_empty_w_component
     },
     {
-        "user_after_clear_empty_w_component_w_lifecycle",
-        World_user_after_clear_empty_w_component_w_lifecycle
+        "use_after_clear_empty_w_component_w_lifecycle",
+        World_use_after_clear_empty_w_component_w_lifecycle
+    },
+    {
+        "use_after_clear_unused",
+        World_use_after_clear_unused
     }
 };
 
@@ -9040,7 +9045,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        45,
+        46,
         World_testcases
     },
     {
