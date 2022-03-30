@@ -8142,19 +8142,19 @@ void _ecs_parser_errorv(
 #endif // FLECS_NO_DEPRECATED_WARNINGS
 
 /* If no tracing verbosity is defined, pick default based on build config */
-#if !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+#if !(defined(FLECS_LOG_0) || defined(FLECS_LOG_1) || defined(FLECS_LOG_2) || defined(FLECS_LOG_3))
 #if !defined(FLECS_NDEBUG)
-#define ECS_TRACE_3 /* Enable all tracing in debug mode. May slow things down */
+#define FLECS_LOG_3 /* Enable all tracing in debug mode. May slow things down */
 #else
-#define ECS_TRACE_0 /* Only enable infrequent tracing in release mode */
+#define FLECS_LOG_0 /* Only enable infrequent tracing in release mode */
 #endif // !defined(FLECS_NDEBUG)
-#endif // !(defined(ECS_TRACE_0) || defined(ECS_TRACE_1) || defined(ECS_TRACE_2) || defined(ECS_TRACE_3))
+#endif // !(defined(FLECS_LOG_0) || defined(FLECS_LOG_1) || defined(FLECS_LOG_2) || defined(FLECS_LOG_3))
 
 
 /* Define/undefine macro's based on compiled-in tracing level. This can optimize
  * out tracing statements from a build, which improves performance. */
 
-#if defined(ECS_TRACE_3) /* All debug tracing enabled */
+#if defined(FLECS_LOG_3) /* All debug tracing enabled */
 #define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...) ecs_log(3, __VA_ARGS__);
@@ -8171,11 +8171,11 @@ void _ecs_parser_errorv(
 #define ecs_should_log_2() ecs_should_log(2)
 #define ecs_should_log_3() ecs_should_log(3)
 
-#define ECS_TRACE_2
-#define ECS_TRACE_1
-#define ECS_TRACE_0
+#define FLECS_LOG_2
+#define FLECS_LOG_1
+#define FLECS_LOG_0
 
-#elif defined(ECS_TRACE_2) /* Level 2 and below debug tracing enabled */
+#elif defined(FLECS_LOG_2) /* Level 2 and below debug tracing enabled */
 #define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...)
@@ -8192,10 +8192,10 @@ void _ecs_parser_errorv(
 #define ecs_should_log_2() ecs_should_log(2)
 #define ecs_should_log_3() false
 
-#define ECS_TRACE_1
-#define ECS_TRACE_0
+#define FLECS_LOG_1
+#define FLECS_LOG_0
 
-#elif defined(ECS_TRACE_1) /* Level 1 debug tracing enabled */
+#elif defined(FLECS_LOG_1) /* Level 1 debug tracing enabled */
 #define ecs_dbg_1(...) ecs_log(1, __VA_ARGS__);
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
@@ -8212,9 +8212,9 @@ void _ecs_parser_errorv(
 #define ecs_should_log_2() false
 #define ecs_should_log_3() false
 
-#define ECS_TRACE_0
+#define FLECS_LOG_0
 
-#elif defined(ECS_TRACE_0) /* No debug tracing enabled */
+#elif defined(FLECS_LOG_0) /* No debug tracing enabled */
 #define ecs_dbg_1(...)
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
@@ -8246,7 +8246,7 @@ void _ecs_parser_errorv(
 #define ecs_log_pop_2()
 #define ecs_log_pop_3()
 
-#endif // defined(ECS_TRACE_3)
+#endif // defined(FLECS_LOG_3)
 
 /* Default debug tracing is at level 1 */
 #define ecs_dbg ecs_dbg_1
@@ -8338,12 +8338,12 @@ void _ecs_parser_errorv(
  * This will enable builtin tracing. For tracing to work, it will have to be
  * compiled in which requires defining one of the following macro's:
  *
- * ECS_TRACE_0 - All tracing is disabled
- * ECS_TRACE_1 - Enable tracing level 1
- * ECS_TRACE_2 - Enable tracing level 2 and below
- * ECS_TRACE_3 - Enable tracing level 3 and below
+ * FLECS_LOG_0 - All tracing is disabled
+ * FLECS_LOG_1 - Enable tracing level 1
+ * FLECS_LOG_2 - Enable tracing level 2 and below
+ * FLECS_LOG_3 - Enable tracing level 3 and below
  *
- * If no tracing level is defined and this is a debug build, ECS_TRACE_3 will
+ * If no tracing level is defined and this is a debug build, FLECS_LOG_3 will
  * have been automatically defined.
  *
  * The provided level corresponds with the tracing level. If -1 is provided as

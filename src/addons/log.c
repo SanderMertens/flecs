@@ -347,17 +347,17 @@ void _ecs_deprecated(
 }
 
 bool ecs_should_log(int32_t level) {
-#   if !defined(ECS_TRACE_3)
+#   if !defined(FLECS_LOG_3)
     if (level == 3) {
         return false;
     }
 #   endif
-#   if !defined(ECS_TRACE_2)
+#   if !defined(FLECS_LOG_2)
     if (level == 2) {
         return false;
     }
 #   endif
-#   if !defined(ECS_TRACE_1)
+#   if !defined(FLECS_LOG_1)
     if (level == 1) {
         return false;
     }
