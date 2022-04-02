@@ -1378,6 +1378,7 @@ bool flecs_n_term_match_table(
     }
 
     if (oper == EcsAndFrom) {
+        id_out[0] = type_id;
         return true;
     } else
     if (oper == EcsOrFrom) {
