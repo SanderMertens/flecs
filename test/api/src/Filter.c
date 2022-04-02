@@ -6802,6 +6802,7 @@ void Filter_and_term() {
 
     /* Not matched */
     ecs_new_w_id(world, TagA);
+    ecs_new_w_id(world, TagB);
 
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
@@ -6814,7 +6815,8 @@ void Filter_and_term() {
     
     test_bool(ecs_filter_next(&it), true);
     test_int(it.count, 1);
-    test_int(it.entities[0], e);
+    test_uint(it.entities[0], e);
+    test_uint(it.ids[0], TypeX);
     test_assert(it.table == table);
 
     test_bool(ecs_filter_next(&it), false);
