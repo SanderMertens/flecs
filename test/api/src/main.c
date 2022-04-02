@@ -818,7 +818,10 @@ void Filter_term_iter_any_obj(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
-void Filter_filter_iter_3_tags_2_or(void);
+void Filter_filter_iter_only_2_or(void);
+void Filter_filter_iter_only_3_or(void);
+void Filter_filter_iter_2_or(void);
+void Filter_filter_iter_3_or(void);
 void Filter_filter_iter_1_component(void);
 void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_pair_id(void);
@@ -969,6 +972,10 @@ void Query_query_w_new_switch_and_case(void);
 void Query_query_for_case_existing(void);
 void Query_query_for_case_new(void);
 void Query_query_for_switch_filter_term(void);
+void Query_query_only_2_or(void);
+void Query_query_only_3_or(void);
+void Query_query_2_or(void);
+void Query_query_3_or(void);
 void Query_query_changed_after_new(void);
 void Query_query_changed_after_delete(void);
 void Query_query_changed_after_add(void);
@@ -4945,8 +4952,20 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_tags_1_not
     },
     {
-        "filter_iter_3_tags_2_or",
-        Filter_filter_iter_3_tags_2_or
+        "filter_iter_only_2_or",
+        Filter_filter_iter_only_2_or
+    },
+    {
+        "filter_iter_only_3_or",
+        Filter_filter_iter_only_3_or
+    },
+    {
+        "filter_iter_2_or",
+        Filter_filter_iter_2_or
+    },
+    {
+        "filter_iter_3_or",
+        Filter_filter_iter_3_or
     },
     {
         "filter_iter_1_component",
@@ -5537,6 +5556,22 @@ bake_test_case Query_testcases[] = {
     {
         "query_for_switch_filter_term",
         Query_query_for_switch_filter_term
+    },
+    {
+        "query_only_2_or",
+        Query_query_only_2_or
+    },
+    {
+        "query_only_3_or",
+        Query_query_only_3_or
+    },
+    {
+        "query_2_or",
+        Query_query_2_or
+    },
+    {
+        "query_3_or",
+        Query_query_3_or
     },
     {
         "query_changed_after_new",
@@ -9099,7 +9134,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        177,
+        180,
         Filter_testcases
     },
     {
@@ -9113,7 +9148,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        134,
+        138,
         Query_testcases
     },
     {

@@ -2567,6 +2567,7 @@ typedef struct ecs_filter_iter_t {
     ecs_iter_kind_t kind; 
     ecs_term_iter_t term_iter;
     int32_t matches_left;
+    int32_t pivot_term;
 } ecs_filter_iter_t;
 
 /** Query-iterator specific data */
