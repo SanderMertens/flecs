@@ -6,6 +6,8 @@ void Iter(ecs_iter_t *it) {
     Velocity *v = NULL;
     Mass *m = NULL;
 
+    printf(" -- %s\n", ecs_iter_str(it));
+
     if (it->term_count >= 2) {
         if (ecs_term_size(it, 2) == sizeof(Velocity)) {
             v = ecs_term(it, Velocity, 2);

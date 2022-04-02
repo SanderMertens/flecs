@@ -24864,6 +24864,11 @@ bool flecs_filter_match_table(
 
         if (is_or) {
             or_result |= result;
+            if (result) {
+                /* If Or term matched, skip following Or terms */
+                for (; i < count && terms[i].oper == EcsOr; i ++) { }
+                i -- ;
+            }
         } else if (!result) {
             return false;
         }
@@ -25375,6 +25380,7 @@ ecs_iter_t ecs_filter_iter(
         iter->kind = EcsIterEvalTables;
 
         pivot_term = ecs_filter_pivot_term(world, filter);
+        iter->pivot_term = pivot_term;
 
         if (pivot_term == -2) {
             /* One or more terms have no matching results */
@@ -25395,6 +25401,7 @@ ecs_iter_t ecs_filter_iter(
         } else {
             iter->kind = EcsIterEvalNone;
         }
+        iter->pivot_term = -1;
     }
 
     if (filter->terms == filter->term_cache) {
@@ -25506,7 +25513,7 @@ bool ecs_filter_next_instanced(
     } else if (kind == EcsIterEvalTables || kind == EcsIterEvalCondition) {
         ecs_term_iter_t *term_iter = &iter->term_iter;
         ecs_term_t *term = &term_iter->term;
-        int32_t pivot_term = term->index;
+        int32_t pivot_term = iter->pivot_term;
         bool first;
 
         /* Check if the This variable has been set on the iterator. If set,
@@ -25581,10 +25588,12 @@ bool ecs_filter_next_instanced(
                     term_iter->match_count = 1;
 
                     table = term_iter->table;
+
                     if (pivot_term != -1) {
-                        it->ids[pivot_term] = term_iter->id;
-                        it->subjects[pivot_term] = term_iter->subject;
-                        it->columns[pivot_term] = term_iter->column;
+                        int32_t index = term->index;
+                        it->ids[index] = term_iter->id;
+                        it->subjects[index] = term_iter->subject;
+                        it->columns[index] = term_iter->column;
                     }
                 } else {
                     /* Progress iterator to next match for table, if any */
@@ -45842,7 +45851,7 @@ ecs_entity_t ecs_run_intern(
     ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);
-    } else {
+    } else if (system_data->query->filter.term_count) {
         if (it == &qit) {
             while (ecs_query_next(&qit)) {
                 action(&qit);
@@ -45852,6 +45861,8 @@ ecs_entity_t ecs_run_intern(
                 action(it);
             }
         }
+    } else {
+        action(&qit);
     }
 
     if (measure_time) {
@@ -46085,7 +46096,7 @@ ecs_entity_t ecs_system_init(
          * OnDemand systems get enabled. */
         if (ecs_query_table_count(query)) {
             ecs_system_activate(world, result, true, system);
-        } else {
+        } else if (query->filter.term_count) {
             /* If system isn't matched with any tables, mark it as inactive. This
              * causes it to be ignored by the main loop. When the system matches
              * with a table it will be activated. */
