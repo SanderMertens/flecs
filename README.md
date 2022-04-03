@@ -15,7 +15,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Automatic component registration that works out of the box across shared libraries/DLLs
 - Run games on multiple CPU cores with a fast lockless scheduler and command queue
 - First open source ECS with full support for [entity relationships](https://flecs.docsforge.com/master/relations-manual/)!
-- Compiles warning-free on 8 compilers on all major platforms, with [CI](https://github.com/SanderMertens/flecs/actions) running more than 3000 tests
+- Compiles warning-free on 8 compilers on all major platforms, with [CI](https://github.com/SanderMertens/flecs/actions) running more than 4000 tests
 - No need to reinvent the wheel with fast native [hierarchy](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation), [prefab](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation) and [reflection](https://flecs.docsforge.com/master/api-meta/) implementations
 - [A web-based dashboard (click to try!)](https://flecs.dev/explorer) for exploring entities, running queries & learning Flecs:
 
