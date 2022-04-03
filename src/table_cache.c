@@ -85,7 +85,7 @@ void ecs_table_cache_insert(
     ecs_table_cache_hdr_t *result)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_table_cache_get(cache, table) == NULL, 
+    ecs_assert(ecs_table_cache_get(cache, table) == NULL,
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 

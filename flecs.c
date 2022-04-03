@@ -5445,7 +5445,6 @@ void delete_entity(
 static
 void update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_ids_t *entities)
 {
     if (!entities) {
@@ -5467,12 +5466,11 @@ void update_component_monitor_w_array(
 static
 void update_component_monitors(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_ids_t *added,
     ecs_ids_t *removed)
 {
-    update_component_monitor_w_array(world, entity, added);
-    update_component_monitor_w_array(world, entity, removed);
+    update_component_monitor_w_array(world, added);
+    update_component_monitor_w_array(world, removed);
 }
 
 static
@@ -5532,7 +5530,7 @@ void commit(
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
     if (info->row_flags) {
-        update_component_monitors(world, entity, &diff->added, &diff->removed);
+        update_component_monitors(world, &diff->added, &diff->removed);
     }
 
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
@@ -7310,7 +7308,7 @@ void ecs_delete(
 
             if (r->table) {
                 ecs_ids_t to_remove = flecs_type_to_ids(r->table->type);
-                update_component_monitors(world, entity, NULL, &to_remove);
+                update_component_monitors(world, NULL, &to_remove);
             }
         }
 
@@ -16133,6 +16131,7 @@ uint64_t group_by_cascade(
     ecs_term_t *term = ctx;
     ecs_entity_t rel = term->subj.set.relation;
     int32_t depth = 0;
+
     if (-1 != ecs_search_relation_last(
         world, table, 0, id, rel, 0, 0, 0, 0, &depth, 0))
     {
@@ -16211,6 +16210,8 @@ void set_table_match(
     ecs_table_t *table,
     ecs_iter_t *it)
 {
+    (void)qt;
+    
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
 
@@ -16327,14 +16328,16 @@ bool match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
+    if (!ecs_map_is_initialized(&query->cache.index)) {
+        return false;
+    }
+
     ecs_query_table_t *qt = NULL;
     int var_id = ecs_filter_find_this_var(&query->filter);
     if (var_id == -1) {
         /* If query doesn't match with This term, it can't match with tables */
         return false;
     }
-
-    ecs_log_push_2();
 
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
@@ -16353,8 +16356,6 @@ bool match_table(
         ecs_query_table_match_t *qm = add_table_match(query, qt, table);
         set_table_match(world, query, qt, qm, table, &it);
     }
-
-    ecs_log_pop_2();
 
     return qt != NULL;
 }
@@ -17331,8 +17332,6 @@ ecs_query_t* ecs_query_init(
         }
     }
 
-    ecs_table_cache_init(&result->cache);
-
     result->world = world;
     result->iterable.init = query_iter_init;
     result->system = desc->system;
@@ -17381,7 +17380,7 @@ ecs_query_t* ecs_query_init(
         ecs_os_free(filter_expr);
     }
 
-    ecs_log_push_1();
+    ecs_table_cache_init(&result->cache);
 
     if (!desc->parent) {
         match_tables(world, result);
@@ -17396,8 +17395,6 @@ ecs_query_t* ecs_query_init(
     }
 
     result->constraints_satisfied = satisfy_constraints(world, &result->filter);
-
-    ecs_log_pop_1();
 
     return result;
 error:
@@ -20142,7 +20139,7 @@ void ecs_table_cache_insert(
     ecs_table_cache_hdr_t *result)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_table_cache_get(cache, table) == NULL, 
+    ecs_assert(ecs_table_cache_get(cache, table) == NULL,
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -24639,7 +24636,9 @@ bool flecs_n_term_match_table(
     }
 
     if (oper == EcsAndFrom) {
-        id_out[0] = type_id;
+        if (id_out) {
+            id_out[0] = type_id;
+        }
         return true;
     } else
     if (oper == EcsOrFrom) {
@@ -24899,15 +24898,40 @@ void term_iter_init_no_data(
 }
 
 static
+void term_iter_init_w_idr(
+    ecs_term_iter_t *iter, 
+    ecs_id_record_t *idr, 
+    bool empty_tables)
+{
+    if (idr) {
+        if (empty_tables) {
+            if ((empty_tables = flecs_table_cache_empty_iter(
+                &idr->cache, &iter->it))) 
+            {
+                iter->empty_tables = true;
+            }
+        }
+
+        if (!empty_tables) {
+            flecs_table_cache_iter(&idr->cache, &iter->it);
+        }
+    } else {
+        term_iter_init_no_data(iter);
+    }
+
+    iter->index = 0;
+}
+
+static
 void term_iter_init_wildcard(
     const ecs_world_t *world,
-    ecs_term_iter_t *iter)
+    ecs_term_iter_t *iter,
+    bool empty_tables)
 {
     iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = flecs_get_id_record(world, EcsAny);
-    iter->cur = iter->self_index;
-    flecs_table_cache_iter(&iter->self_index->cache, &iter->it);
-    iter->index = 0;
+    ecs_id_record_t *idr = iter->cur = iter->self_index;
+    term_iter_init_w_idr(iter, idr, empty_tables);
 }
 
 static
@@ -24931,8 +24955,6 @@ void term_iter_init(
             ecs_pair(subj->set.relation, EcsWildcard));
     }
 
-    iter->index = 0;
-
     ecs_id_record_t *idr;
     if (iter->self_index) {
         idr = iter->cur = iter->self_index;
@@ -24940,21 +24962,7 @@ void term_iter_init(
         idr = iter->cur = iter->set_index;
     }
 
-    if (idr) {
-        if (empty_tables) {
-            if ((empty_tables = flecs_table_cache_empty_iter(
-                &idr->cache, &iter->it))) 
-            {
-                iter->empty_tables = true;
-            }
-        }
-
-        if (!empty_tables) {
-            flecs_table_cache_iter(&idr->cache, &iter->it);
-        }
-    } else {
-        term_iter_init_no_data(iter);
-    }
+    term_iter_init_w_idr(iter, idr, empty_tables);
 }
 
 ecs_iter_t ecs_term_iter(
@@ -25389,7 +25397,8 @@ ecs_iter_t ecs_filter_iter(
         } else if (pivot_term == -1) {
             /* No terms meet the criteria to be a pivot term, evaluate filter
              * against all tables */
-            term_iter_init_wildcard(world, &iter->term_iter);
+            term_iter_init_wildcard(world, &iter->term_iter, 
+                filter->match_empty_tables);
         } else {
             ecs_assert(pivot_term >= 0, ECS_INTERNAL_ERROR, NULL);
             term_iter_init(world, &terms[pivot_term], &iter->term_iter,
