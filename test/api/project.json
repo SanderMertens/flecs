@@ -1133,7 +1133,8 @@
                 "isa_rematch_2_lvls",
                 "childof_rematch_2_lvls",
                 "cascade_rematch_2_lvls",
-                "childof_rematch_from_isa"
+                "childof_rematch_from_isa",
+                "match_query_expr_from_scope"
             ]
         }, {
             "id": "Iter",

@@ -5570,3 +5570,34 @@ void Query_childof_rematch_from_isa() {
 
     ecs_fini(world);
 }
+
+void Query_match_query_expr_from_scope() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo"
+    });
+
+    ecs_entity_t bar = ecs_entity_init(world, &(ecs_entity_desc_t) {
+        .name = "Foo.Bar"
+    });
+
+    ecs_set_scope(world, foo);
+
+    ecs_query_t *q = ecs_query_new(world, "Bar");
+    test_assert(q != NULL);
+
+    ecs_set_scope(world, 0);
+
+    ecs_entity_t e = ecs_new_w_id(world, bar);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(bar, ecs_term_id(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

@@ -95,7 +95,7 @@ int finalize_term_var(
     if (identifier->var != EcsVarIsVariable) {
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
-        } else {
+        } else if (!identifier->entity) {
             ecs_entity_t e = ecs_lookup_symbol(world, identifier->name, true);
             if (!e) {
                 term_error(world, term, name,
