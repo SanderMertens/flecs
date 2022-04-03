@@ -1378,7 +1378,9 @@ bool flecs_n_term_match_table(
     }
 
     if (oper == EcsAndFrom) {
-        id_out[0] = type_id;
+        if (id_out) {
+            id_out[0] = type_id;
+        }
         return true;
     } else
     if (oper == EcsOrFrom) {
@@ -1638,15 +1640,40 @@ void term_iter_init_no_data(
 }
 
 static
+void term_iter_init_w_idr(
+    ecs_term_iter_t *iter, 
+    ecs_id_record_t *idr, 
+    bool empty_tables)
+{
+    if (idr) {
+        if (empty_tables) {
+            if ((empty_tables = flecs_table_cache_empty_iter(
+                &idr->cache, &iter->it))) 
+            {
+                iter->empty_tables = true;
+            }
+        }
+
+        if (!empty_tables) {
+            flecs_table_cache_iter(&idr->cache, &iter->it);
+        }
+    } else {
+        term_iter_init_no_data(iter);
+    }
+
+    iter->index = 0;
+}
+
+static
 void term_iter_init_wildcard(
     const ecs_world_t *world,
-    ecs_term_iter_t *iter)
+    ecs_term_iter_t *iter,
+    bool empty_tables)
 {
     iter->term = (ecs_term_t){ .index = -1 };
     iter->self_index = flecs_get_id_record(world, EcsAny);
-    iter->cur = iter->self_index;
-    flecs_table_cache_iter(&iter->self_index->cache, &iter->it);
-    iter->index = 0;
+    ecs_id_record_t *idr = iter->cur = iter->self_index;
+    term_iter_init_w_idr(iter, idr, empty_tables);
 }
 
 static
@@ -1670,8 +1697,6 @@ void term_iter_init(
             ecs_pair(subj->set.relation, EcsWildcard));
     }
 
-    iter->index = 0;
-
     ecs_id_record_t *idr;
     if (iter->self_index) {
         idr = iter->cur = iter->self_index;
@@ -1679,21 +1704,7 @@ void term_iter_init(
         idr = iter->cur = iter->set_index;
     }
 
-    if (idr) {
-        if (empty_tables) {
-            if ((empty_tables = flecs_table_cache_empty_iter(
-                &idr->cache, &iter->it))) 
-            {
-                iter->empty_tables = true;
-            }
-        }
-
-        if (!empty_tables) {
-            flecs_table_cache_iter(&idr->cache, &iter->it);
-        }
-    } else {
-        term_iter_init_no_data(iter);
-    }
+    term_iter_init_w_idr(iter, idr, empty_tables);
 }
 
 ecs_iter_t ecs_term_iter(
@@ -2128,7 +2139,8 @@ ecs_iter_t ecs_filter_iter(
         } else if (pivot_term == -1) {
             /* No terms meet the criteria to be a pivot term, evaluate filter
              * against all tables */
-            term_iter_init_wildcard(world, &iter->term_iter);
+            term_iter_init_wildcard(world, &iter->term_iter, 
+                filter->match_empty_tables);
         } else {
             ecs_assert(pivot_term >= 0, ECS_INTERNAL_ERROR, NULL);
             term_iter_init(world, &terms[pivot_term], &iter->term_iter,

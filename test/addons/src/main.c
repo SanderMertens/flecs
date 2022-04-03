@@ -686,13 +686,11 @@ void SystemCascade_cascade_depth_2(void);
 void SystemCascade_cascade_depth_2_new_syntax(void);
 void SystemCascade_add_after_match(void);
 void SystemCascade_adopt_after_match(void);
-void SystemCascade_rematch_w_empty_table(void);
 void SystemCascade_query_w_only_cascade(void);
 void SystemCascade_custom_relation_cascade_depth_1(void);
 void SystemCascade_custom_relation_cascade_depth_2(void);
 void SystemCascade_custom_relation_add_after_match(void);
 void SystemCascade_custom_relation_adopt_after_match(void);
-void SystemCascade_custom_relation_rematch_w_empty_table(void);
 
 // Testsuite 'SystemManual'
 void SystemManual_setup(void);
@@ -3566,10 +3564,6 @@ bake_test_case SystemCascade_testcases[] = {
         SystemCascade_adopt_after_match
     },
     {
-        "rematch_w_empty_table",
-        SystemCascade_rematch_w_empty_table
-    },
-    {
         "query_w_only_cascade",
         SystemCascade_query_w_only_cascade
     },
@@ -3588,10 +3582,6 @@ bake_test_case SystemCascade_testcases[] = {
     {
         "custom_relation_adopt_after_match",
         SystemCascade_custom_relation_adopt_after_match
-    },
-    {
-        "custom_relation_rematch_w_empty_table",
-        SystemCascade_custom_relation_rematch_w_empty_table
     }
 };
 
@@ -4408,7 +4398,7 @@ static bake_test_suite suites[] = {
         "SystemCascade",
         NULL,
         NULL,
-        12,
+        10,
         SystemCascade_testcases
     },
     {

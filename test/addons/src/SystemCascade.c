@@ -415,51 +415,10 @@ void SystemCascade_adopt_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_rematch_w_empty_table() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Velocity");
-    test_assert(q != NULL);
-
-    ecs_entity_t parent = ecs_new(world, Position);
-    ecs_add(world, parent, Velocity);
-
-    ecs_entity_t child = ecs_new(world, Velocity);
-    ecs_add_pair(world, child, EcsChildOf, parent);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], parent);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], child);
-    test_assert(!ecs_query_next(&it));
-
-    // Change parent, trigger rematch
-    ecs_remove(world, parent, Position);
-
-    it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], parent);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], child);
-    test_assert(!ecs_query_next(&it));    
-
-    ecs_fini(world);
-}
-
 void SystemCascade_query_w_only_cascade() {
     ecs_world_t *world = ecs_mini();
 
-    ecs_query_t *q = ecs_query_new(world, "?Name(parent|cascade)");;
+    ecs_query_t *q = ecs_query_new(world, "?Name(parent|cascade)");
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -782,48 +741,6 @@ void SystemCascade_custom_relation_adopt_after_match() {
     test_assert(p != NULL);
     test_int(p->x, 2);
     test_int(p->y, 4);
-
-    ecs_fini(world);
-}
-
-void SystemCascade_custom_relation_rematch_w_empty_table() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, Rel, Acyclic);
-
-    ecs_query_t *q = ecs_query_new(world, "?Position(cascade(Rel)), Velocity");
-    test_assert(q != NULL);
-
-    ecs_entity_t parent = ecs_new(world, Position);
-    ecs_add(world, parent, Velocity);
-
-    ecs_entity_t child = ecs_new(world, Velocity);
-    ecs_add_pair(world, child, Rel, parent);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], parent);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], child);
-    test_assert(!ecs_query_next(&it));
-
-    // Change parent, trigger rematch
-    ecs_remove(world, parent, Position);
-
-    it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], parent);
-
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_int(it.entities[0], child);
-    test_assert(!ecs_query_next(&it));    
 
     ecs_fini(world);
 }

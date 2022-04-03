@@ -943,10 +943,14 @@ void Query_wildcard_query_new_table(void);
 void Query_wildcard_query_existing_table_2_results_p_table(void);
 void Query_wildcard_query_new_table_2_results_p_table(void);
 void Query_simple_query_existing_empty_table(void);
+void Query_simple_query_existing_empty_type(void);
 void Query_simple_query_new_empty_table(void);
 void Query_component_query_existing_table(void);
 void Query_component_query_new_table(void);
 void Query_component_query_existing_empty_table(void);
+void Query_2_component_query_existing_empty_table(void);
+void Query_2_component_query_existing_empty_type(void);
+void Query_only_optional(void);
 void Query_query_only_from_entity(void);
 void Query_query_only_from_entity_no_match(void);
 void Query_query_only_from_singleton(void);
@@ -976,6 +980,10 @@ void Query_query_only_2_or(void);
 void Query_query_only_3_or(void);
 void Query_query_2_or(void);
 void Query_query_3_or(void);
+void Query_query_and_type(void);
+void Query_query_or_type(void);
+void Query_query_and_type_match_after(void);
+void Query_query_or_type_match_after(void);
 void Query_query_changed_after_new(void);
 void Query_query_changed_after_delete(void);
 void Query_query_changed_after_add(void);
@@ -5442,6 +5450,10 @@ bake_test_case Query_testcases[] = {
         Query_simple_query_existing_empty_table
     },
     {
+        "simple_query_existing_empty_type",
+        Query_simple_query_existing_empty_type
+    },
+    {
         "simple_query_new_empty_table",
         Query_simple_query_new_empty_table
     },
@@ -5456,6 +5468,18 @@ bake_test_case Query_testcases[] = {
     {
         "component_query_existing_empty_table",
         Query_component_query_existing_empty_table
+    },
+    {
+        "2_component_query_existing_empty_table",
+        Query_2_component_query_existing_empty_table
+    },
+    {
+        "2_component_query_existing_empty_type",
+        Query_2_component_query_existing_empty_type
+    },
+    {
+        "only_optional",
+        Query_only_optional
     },
     {
         "query_only_from_entity",
@@ -5572,6 +5596,22 @@ bake_test_case Query_testcases[] = {
     {
         "query_3_or",
         Query_query_3_or
+    },
+    {
+        "query_and_type",
+        Query_query_and_type
+    },
+    {
+        "query_or_type",
+        Query_query_or_type
+    },
+    {
+        "query_and_type_match_after",
+        Query_query_and_type_match_after
+    },
+    {
+        "query_or_type_match_after",
+        Query_query_or_type_match_after
     },
     {
         "query_changed_after_new",
@@ -9148,7 +9188,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        138,
+        146,
         Query_testcases
     },
     {

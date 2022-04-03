@@ -1977,7 +1977,8 @@ void SystemPeriodic_or_type() {
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_entity_t e2 = ecs_new(world, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_add(world, e3, Velocity);
 
     Probe ctx = {0};
     ecs_set_context(world, &ctx);
@@ -1993,9 +1994,9 @@ void SystemPeriodic_or_type() {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], MyType);
-    test_int(ctx.c[1][0], MyType);
-    test_int(ctx.c[2][0], MyType);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[1][0], ecs_id(Velocity));
+    test_int(ctx.c[2][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);

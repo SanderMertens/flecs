@@ -623,6 +623,7 @@ uint64_t group_by_cascade(
     ecs_term_t *term = ctx;
     ecs_entity_t rel = term->subj.set.relation;
     int32_t depth = 0;
+
     if (-1 != ecs_search_relation_last(
         world, table, 0, id, rel, 0, 0, 0, 0, &depth, 0))
     {
@@ -701,6 +702,8 @@ void set_table_match(
     ecs_table_t *table,
     ecs_iter_t *it)
 {
+    (void)qt;
+    
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
 
@@ -817,14 +820,16 @@ bool match_table(
     ecs_query_t *query,
     ecs_table_t *table)
 {
+    if (!ecs_map_is_initialized(&query->cache.index)) {
+        return false;
+    }
+
     ecs_query_table_t *qt = NULL;
     int var_id = ecs_filter_find_this_var(&query->filter);
     if (var_id == -1) {
         /* If query doesn't match with This term, it can't match with tables */
         return false;
     }
-
-    ecs_log_push_2();
 
     ecs_iter_t it = ecs_filter_iter(world, &query->filter);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
@@ -843,8 +848,6 @@ bool match_table(
         ecs_query_table_match_t *qm = add_table_match(query, qt, table);
         set_table_match(world, query, qt, qm, table, &it);
     }
-
-    ecs_log_pop_2();
 
     return qt != NULL;
 }
@@ -1821,8 +1824,6 @@ ecs_query_t* ecs_query_init(
         }
     }
 
-    ecs_table_cache_init(&result->cache);
-
     result->world = world;
     result->iterable.init = query_iter_init;
     result->system = desc->system;
@@ -1871,7 +1872,7 @@ ecs_query_t* ecs_query_init(
         ecs_os_free(filter_expr);
     }
 
-    ecs_log_push_1();
+    ecs_table_cache_init(&result->cache);
 
     if (!desc->parent) {
         match_tables(world, result);
@@ -1886,8 +1887,6 @@ ecs_query_t* ecs_query_init(
     }
 
     result->constraints_satisfied = satisfy_constraints(world, &result->filter);
-
-    ecs_log_pop_1();
 
     return result;
 error:

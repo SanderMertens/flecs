@@ -709,13 +709,11 @@
                 "cascade_depth_2_new_syntax",
                 "add_after_match",
                 "adopt_after_match",
-                "rematch_w_empty_table",
                 "query_w_only_cascade",
                 "custom_relation_cascade_depth_1",
                 "custom_relation_cascade_depth_2",
                 "custom_relation_add_after_match",
-                "custom_relation_adopt_after_match",
-                "custom_relation_rematch_w_empty_table"
+                "custom_relation_adopt_after_match"
             ]
         }, {
             "id": "SystemManual",

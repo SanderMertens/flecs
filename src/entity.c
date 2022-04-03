@@ -843,7 +843,6 @@ void delete_entity(
 static
 void update_component_monitor_w_array(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_ids_t *entities)
 {
     if (!entities) {
@@ -865,12 +864,11 @@ void update_component_monitor_w_array(
 static
 void update_component_monitors(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_ids_t *added,
     ecs_ids_t *removed)
 {
-    update_component_monitor_w_array(world, entity, added);
-    update_component_monitor_w_array(world, entity, removed);
+    update_component_monitor_w_array(world, added);
+    update_component_monitor_w_array(world, removed);
 }
 
 static
@@ -930,7 +928,7 @@ void commit(
      * update the matched tables when the application adds or removes a 
      * component from, for example, a container. */
     if (info->row_flags) {
-        update_component_monitors(world, entity, &diff->added, &diff->removed);
+        update_component_monitors(world, &diff->added, &diff->removed);
     }
 
     if ((!src_table || !src_table->type) && world->range_check_enabled) {
@@ -2708,7 +2706,7 @@ void ecs_delete(
 
             if (r->table) {
                 ecs_ids_t to_remove = flecs_type_to_ids(r->table->type);
-                update_component_monitors(world, entity, NULL, &to_remove);
+                update_component_monitors(world, NULL, &to_remove);
             }
         }
 
