@@ -472,7 +472,7 @@ typedef struct ecs_monitor_t {
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;          /* map<relation_id, ecs_monitor_t> */
+    ecs_map_t monitors;          /* map<id, ecs_monitor_t> */
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 

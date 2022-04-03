@@ -744,7 +744,7 @@ typedef struct ecs_monitor_t {
 
 /* Component monitors */
 typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;          /* map<relation_id, ecs_monitor_t> */
+    ecs_map_t monitors;          /* map<id, ecs_monitor_t> */
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
@@ -38363,7 +38363,7 @@ int32_t ecs_filter_pivot_term(
 
     ecs_term_t *terms = filter->terms;
     int32_t i, term_count = filter->term_count;
-    int32_t pivot_term = -1, min_count = -1;
+    int32_t pivot_term = -1, min_count = -1, self_pivot_term = -1;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -38389,7 +38389,14 @@ int32_t ecs_filter_pivot_term(
         if (min_count == -1 || table_count < min_count) {
             min_count = table_count;
             pivot_term = i;
+            if (term->subj.set.mask == EcsSelf) {
+                self_pivot_term = i;
+            }
         }
+    }
+
+    if (self_pivot_term != -1) {
+        pivot_term = self_pivot_term;
     }
 
     return pivot_term;
