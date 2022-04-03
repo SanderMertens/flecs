@@ -640,8 +640,11 @@ ecs_vector_t* add_ref(
     ecs_vector_t *references,
     ecs_term_t *term,
     ecs_entity_t component,
-    ecs_entity_t entity)
-{    
+    ecs_entity_t entity,
+    ecs_size_t size)
+{
+    ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->subj;
 
@@ -651,18 +654,15 @@ ecs_vector_t* add_ref(
     
     *ref = (ecs_ref_t){0};
     ref->entity = entity;
-    ref->component = component;
 
-    const EcsComponent *c_info = flecs_component_from_id(world, component);
-    if (c_info) {
-        if (c_info->size && subj->entity != 0) {
-            if (entity) {
-                ecs_get_ref_id(world, ref, entity, component);
-            }
-
-            query->flags |= EcsQueryHasRefs;
-        }
+    if (size) {
+        ref->component = component;
+        ecs_get_ref_id(world, ref, entity, component);
+    } else {
+        ref->component = 0;
     }
+
+    query->flags |= EcsQueryHasRefs;
 
     return references;
 }
@@ -765,10 +765,10 @@ void set_table_match(
             if (it->sizes) {
                 size = it->sizes[i];
             }
-            if (src && size) {
+            if (src) {
                 ecs_term_t *term = &filter->terms[i];
                 ecs_id_t id = it->ids[i];
-                refs = add_ref(world, query, refs, term, id, src);
+                refs = add_ref(world, query, refs, term, id, src, size);
 
                 /* Use column index to bind term and ref */
                 if (qm->columns[i] != 0) {

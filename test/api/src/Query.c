@@ -5571,6 +5571,166 @@ void Query_childof_rematch_from_isa() {
     ecs_fini(world);
 }
 
+void Query_rematch_optional_ref() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, ?Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t child = ecs_new(world, Tag);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(Tag, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_uint(0, it.subjects[0]);
+    test_uint(parent, it.subjects[1]);
+    Position *p = ecs_term(&it, Position, 2);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove(world, parent, Position);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(Tag, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_uint(0, it.subjects[0]);
+    test_uint(0, it.subjects[1]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_rematch_optional_ref_w_2_refs() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, Velocity(parent), ?Position(parent)");
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, parent, Velocity, {1, 2});
+    ecs_entity_t child = ecs_new(world, Tag);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(Tag, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_term_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 3));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 3));
+    test_uint(0, it.subjects[0]);
+    test_uint(parent, it.subjects[1]);
+    Velocity *v = ecs_term(&it, Velocity, 2);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    Position *p = ecs_term(&it, Position, 3);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove(world, parent, Position);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(Tag, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_term_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 3));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_term_is_set(&it, 3));
+    test_uint(0, it.subjects[0]);
+    test_uint(parent, it.subjects[1]);
+    test_uint(0, it.subjects[2]);
+    v = ecs_term(&it, Velocity, 2);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_rematch_optional_ref_tag_w_ref_component() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?Position(parent), TagB(parent)");
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_add(world, parent, TagB);
+
+    ecs_entity_t child = ecs_new(world, TagA);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(TagA, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(true, ecs_term_is_set(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 3));
+    test_uint(0, it.subjects[0]);
+    test_uint(parent, it.subjects[1]);
+    test_uint(parent, it.subjects[2]);
+    Position *p = ecs_term(&it, Position, 2);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove(world, parent, Position);
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(TagA, ecs_term_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(true, ecs_term_is_set(&it, 3));
+    test_uint(0, it.subjects[0]);
+    test_uint(0, it.subjects[1]);
+    test_uint(parent, it.subjects[2]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_match_query_expr_from_scope() {
     ecs_world_t *world = ecs_mini();
 

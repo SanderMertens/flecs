@@ -132,7 +132,7 @@ bool flecs_iter_populate_term_data(
     ecs_size_t size = 0;
     ecs_size_t align;
     int32_t row;
-    
+
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
         goto no_data;
@@ -157,15 +157,21 @@ bool flecs_iter_populate_term_data(
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
-            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_id(
-                world, ref, ref->entity, ref->component);
+            if (ptr_out) {
+                ptr_out[0] = (void*)ecs_get_ref_id(
+                    world, ref, ref->entity, ref->component);
+            }
+
+            if (!ref->component) {
+                is_shared = false;
+            }
 
             /* If cached references were provided, the code that populated
              * the iterator also had a chance to cache sizes, so size array
              * should already have been assigned. This saves us from having
              * to do additional lookups to find the component size. */
             ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
-            return true;
+            return is_shared;
         } else {
             ecs_entity_t subj = it->subjects[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);

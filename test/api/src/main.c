@@ -1079,6 +1079,9 @@ void Query_isa_rematch_2_lvls(void);
 void Query_childof_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls(void);
 void Query_childof_rematch_from_isa(void);
+void Query_rematch_optional_ref(void);
+void Query_rematch_optional_ref_w_2_refs(void);
+void Query_rematch_optional_ref_tag_w_ref_component(void);
 void Query_match_query_expr_from_scope(void);
 
 // Testsuite 'Iter'
@@ -5995,6 +5998,18 @@ bake_test_case Query_testcases[] = {
         Query_childof_rematch_from_isa
     },
     {
+        "rematch_optional_ref",
+        Query_rematch_optional_ref
+    },
+    {
+        "rematch_optional_ref_w_2_refs",
+        Query_rematch_optional_ref_w_2_refs
+    },
+    {
+        "rematch_optional_ref_tag_w_ref_component",
+        Query_rematch_optional_ref_tag_w_ref_component
+    },
+    {
         "match_query_expr_from_scope",
         Query_match_query_expr_from_scope
     }
@@ -9193,7 +9208,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        147,
+        150,
         Query_testcases
     },
     {

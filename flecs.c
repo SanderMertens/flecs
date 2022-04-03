@@ -40798,8 +40798,11 @@ ecs_vector_t* add_ref(
     ecs_vector_t *references,
     ecs_term_t *term,
     ecs_entity_t component,
-    ecs_entity_t entity)
-{    
+    ecs_entity_t entity,
+    ecs_size_t size)
+{
+    ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_ref_t *ref = ecs_vector_add(&references, ecs_ref_t);
     ecs_term_id_t *subj = &term->subj;
 
@@ -40809,18 +40812,15 @@ ecs_vector_t* add_ref(
     
     *ref = (ecs_ref_t){0};
     ref->entity = entity;
-    ref->component = component;
 
-    const EcsComponent *c_info = flecs_component_from_id(world, component);
-    if (c_info) {
-        if (c_info->size && subj->entity != 0) {
-            if (entity) {
-                ecs_get_ref_id(world, ref, entity, component);
-            }
-
-            query->flags |= EcsQueryHasRefs;
-        }
+    if (size) {
+        ref->component = component;
+        ecs_get_ref_id(world, ref, entity, component);
+    } else {
+        ref->component = 0;
     }
+
+    query->flags |= EcsQueryHasRefs;
 
     return references;
 }
@@ -40923,10 +40923,10 @@ void set_table_match(
             if (it->sizes) {
                 size = it->sizes[i];
             }
-            if (src && size) {
+            if (src) {
                 ecs_term_t *term = &filter->terms[i];
                 ecs_id_t id = it->ids[i];
-                refs = add_ref(world, query, refs, term, id, src);
+                refs = add_ref(world, query, refs, term, id, src, size);
 
                 /* Use column index to bind term and ref */
                 if (qm->columns[i] != 0) {
@@ -44446,7 +44446,7 @@ bool flecs_iter_populate_term_data(
     ecs_size_t size = 0;
     ecs_size_t align;
     int32_t row;
-    
+
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
         goto no_data;
@@ -44471,15 +44471,21 @@ bool flecs_iter_populate_term_data(
         if (it->references) {
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
-            if (ptr_out) ptr_out[0] = (void*)ecs_get_ref_id(
-                world, ref, ref->entity, ref->component);
+            if (ptr_out) {
+                ptr_out[0] = (void*)ecs_get_ref_id(
+                    world, ref, ref->entity, ref->component);
+            }
+
+            if (!ref->component) {
+                is_shared = false;
+            }
 
             /* If cached references were provided, the code that populated
              * the iterator also had a chance to cache sizes, so size array
              * should already have been assigned. This saves us from having
              * to do additional lookups to find the component size. */
             ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
-            return true;
+            return is_shared;
         } else {
             ecs_entity_t subj = it->subjects[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
