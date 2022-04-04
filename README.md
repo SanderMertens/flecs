@@ -182,6 +182,7 @@ Module      | Description
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
 - [Lua](https://github.com/flecs-hub/flecs-lua)
 - [Zig](https://github.com/prime31/zig-flecs)
+- [C#](https://github.com/bottlenoselabs/flecs-cs)
 
 ## Links
 - [Discord](https://discord.gg/BEzP5Rgrrp)
