@@ -4924,6 +4924,105 @@ void Filter_filter_iter_cascade_childof() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_superset_2_rel_instances() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsAcyclic);
+
+    ecs_entity_t b1 = ecs_new(world, TagA);
+    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_add(world, b1, TagB);
+    ecs_add(world, b2, TagB);
+    ecs_add(world, b1, TagC);
+    ecs_add(world, b2, TagC);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, b1);
+    ecs_add_pair(world, e, Rel, b2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagC, .subj.set = { .mask = EcsSuperSet, .relation = Rel }}
+        }
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.subjects[0], b1);
+    test_uint(it.ids[0], TagC);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.subjects[0], b2);
+    test_uint(it.ids[0], TagC);
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_fini(world);
+}
+
+void Filter_filter_iter_2_terms_superset_2_rel_instances() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsAcyclic);
+
+    ecs_entity_t b1 = ecs_new(world, TagA);
+    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_add(world, b1, TagB);
+    ecs_add(world, b2, TagB);
+    ecs_add(world, b1, TagC);
+    ecs_add(world, b2, TagC);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, TagA);
+    ecs_add_pair(world, e, Rel, b1);
+    ecs_add_pair(world, e, Rel, b2);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            {TagA},
+            {TagC, .subj.set = { .mask = EcsSuperSet, .relation = Rel }}
+        }
+    }));
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.subjects[0], 0);
+    test_uint(it.subjects[1], b1);
+    test_uint(it.ids[0], TagA);
+    test_uint(it.ids[1], TagC);
+
+    test_bool(true, ecs_filter_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.subjects[0], 0);
+    test_uint(it.subjects[1], b2);
+    test_uint(it.ids[0], TagA);
+    test_uint(it.ids[1], TagC);
+
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_fini(world);
+}
+
+
 void Filter_match_disabled() {
     ecs_world_t *world = ecs_mini();
 

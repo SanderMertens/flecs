@@ -1461,6 +1461,7 @@ bool flecs_term_match_table(
     /* Find location, source and id of match in table type */
     ecs_table_record_t *tr = 0;
     bool is_any = is_any_pair(id);
+
     column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source, id_out, 0, &tr);
@@ -2401,7 +2402,14 @@ bool ecs_filter_next_instanced(
                 }
 
                 /* Progress first term to next match (must be at least one) */
-                it->columns[i] ++;
+                int32_t column = it->columns[i];
+                if (column < 0) {
+                    /* If this term was matched on a non-This entity, reconvert
+                     * the column back to a positive value */
+                    column = -column;
+                }
+
+                it->columns[i] = column + 1;
                 flecs_term_match_table(world, &filter->terms[i], table, 
                     table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
                     &it->match_indices[i], false, it->flags);

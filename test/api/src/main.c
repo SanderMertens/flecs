@@ -103,6 +103,7 @@ void Search_search_last_lvl_1(void);
 void Search_search_last_lvl_2(void);
 void Search_search_last_lvl_3(void);
 void Search_search_last_lvl_3_root_without_id(void);
+void Search_search_relation_at_offset(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -857,6 +858,8 @@ void Filter_filter_iter_not_any(void);
 void Filter_filter_iter_not_any_obj(void);
 void Filter_filter_iter_cascade_isa(void);
 void Filter_filter_iter_cascade_childof(void);
+void Filter_filter_iter_superset_2_rel_instances(void);
+void Filter_filter_iter_2_terms_superset_2_rel_instances(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -2244,6 +2247,10 @@ bake_test_case Search_testcases[] = {
     {
         "search_last_lvl_3_root_without_id",
         Search_search_last_lvl_3_root_without_id
+    },
+    {
+        "search_relation_at_offset",
+        Search_search_relation_at_offset
     }
 };
 
@@ -5122,6 +5129,14 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_cascade_childof",
         Filter_filter_iter_cascade_childof
+    },
+    {
+        "filter_iter_superset_2_rel_instances",
+        Filter_filter_iter_superset_2_rel_instances
+    },
+    {
+        "filter_iter_2_terms_superset_2_rel_instances",
+        Filter_filter_iter_2_terms_superset_2_rel_instances
     },
     {
         "match_disabled",
@@ -9060,7 +9075,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        17,
+        18,
         Search_testcases
     },
     {
@@ -9214,7 +9229,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        180,
+        182,
         Filter_testcases
     },
     {

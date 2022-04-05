@@ -109,7 +109,8 @@
                 "search_last_lvl_1",
                 "search_last_lvl_2",
                 "search_last_lvl_3",
-                "search_last_lvl_3_root_without_id"
+                "search_last_lvl_3_root_without_id",
+                "search_relation_at_offset"
             ]
         }, {
             "id": "Event",
@@ -908,6 +909,8 @@
                 "filter_iter_not_any_obj",
                 "filter_iter_cascade_isa",
                 "filter_iter_cascade_childof",
+                "filter_iter_superset_2_rel_instances",
+                "filter_iter_2_terms_superset_2_rel_instances",
                 "match_disabled",
                 "match_prefab",
                 "chain_term_iter",

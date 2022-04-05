@@ -37760,6 +37760,7 @@ bool flecs_term_match_table(
     /* Find location, source and id of match in table type */
     ecs_table_record_t *tr = 0;
     bool is_any = is_any_pair(id);
+
     column = ecs_search_relation(world, match_table,
         column, actual_match_id(id), subj->set.relation, subj->set.min_depth, 
         subj->set.max_depth, &source, id_out, 0, &tr);
@@ -38700,7 +38701,14 @@ bool ecs_filter_next_instanced(
                 }
 
                 /* Progress first term to next match (must be at least one) */
-                it->columns[i] ++;
+                int32_t column = it->columns[i];
+                if (column < 0) {
+                    /* If this term was matched on a non-This entity, reconvert
+                     * the column back to a positive value */
+                    column = -column;
+                }
+
+                it->columns[i] = column + 1;
                 flecs_term_match_table(world, &filter->terms[i], table, 
                     table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
                     &it->match_indices[i], false, it->flags);
@@ -38858,8 +38866,12 @@ int32_t type_search_relation(
         }
 
         ecs_id_t id_r;
-        ecs_table_record_t *tr_r;
-        int32_t r, r_column = type_search(table, idr_r, ids, &id_r, &tr_r);
+        int32_t r, r_column;
+        if (offset) {
+            r_column = type_offset_search(offset, rel, ids, count, &id_r);
+        } else {
+            r_column = type_search(table, idr_r, ids, &id_r, 0);
+        }
         while (r_column != -1) {
             ecs_entity_t obj = ECS_PAIR_SECOND(id_r);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
@@ -38869,7 +38881,7 @@ int32_t type_search_relation(
 
             ecs_table_t *obj_table = rec->table;
             if (obj_table) {
-                r = type_search_relation(world, obj_table, offset, id, idr, 
+                r = type_search_relation(world, obj_table, 0, id, idr, 
                     rel, idr_r, min_depth - 1, max_depth - 1, subject_out, 
                     id_out, depth_out, tr_out);
                 if (r != -1) {
@@ -38879,11 +38891,11 @@ int32_t type_search_relation(
                     if (depth_out) {
                         depth_out[0] ++;
                     }
-                    return r;
+                    return r_column;
                 }
 
                 if (!is_a) {
-                    r = type_search_relation(world, obj_table, offset, id, idr, 
+                    r = type_search_relation(world, obj_table, 0, id, idr, 
                         ecs_pair(EcsIsA, EcsWildcard), world->idr_isa_wildcard, 
                             1, INT_MAX, subject_out, id_out, depth_out, tr_out);
                     if (r != -1) {
@@ -38893,7 +38905,7 @@ int32_t type_search_relation(
                         if (depth_out) {
                             depth_out[0] ++;
                         }
-                        return r;
+                        return r_column;
                     }
                 }
             }
@@ -39091,8 +39103,15 @@ bool observer_run(ecs_iter_t *it) {
     /* Populate the column for the term that triggered. This will allow the
      * matching algorithm to pick the right column in case the term is a
      * wildcard matching multiple columns. */
-    user_it.columns[0] = 0;    
-    user_it.columns[pivot_term] = it->columns[0];
+    user_it.columns[0] = 0;
+
+    /* Normalize id */
+    int32_t column = it->columns[0];
+    if (column < 0) {
+        column = -column;
+    }
+
+    user_it.columns[pivot_term] = column;
 
     if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
         user_it.columns, user_it.subjects, NULL, NULL, false, -1, 
@@ -45959,12 +45978,6 @@ void notify_set_base_triggers(
         if (!ECS_BIT_IS_SET(it->flags, EcsIterTableOnly)) {
             if (!it->subjects[0]) {
                 it->subjects[0] = obj;
-            }
-
-            if (column != -1) {
-                it->columns[0] = -(column + 1);
-            } else {
-                it->columns[0] = 0;
             }
         }
 

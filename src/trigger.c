@@ -515,12 +515,6 @@ void notify_set_base_triggers(
             if (!it->subjects[0]) {
                 it->subjects[0] = obj;
             }
-
-            if (column != -1) {
-                it->columns[0] = -(column + 1);
-            } else {
-                it->columns[0] = 0;
-            }
         }
 
         ECS_BIT_COND(it->flags, EcsIterIsFilter, 
