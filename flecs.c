@@ -7869,6 +7869,18 @@ bool ecs_has_id(
         }
 
         int32_t index = flecs_table_switch_from_case(world, table, id);
+        if (index == -1) {
+            /* If table has IsA relationship, traverse */
+            if (table->flags & EcsTableHasIsA) {
+                int32_t oi = 0;
+                ecs_entity_t b = 0;
+                while ((b = ecs_get_object(world, entity, EcsIsA, oi ++))) {
+                    return ecs_has_id(world, b, id);
+                }
+            }
+            return false;
+        }
+
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
         
         ecs_data_t *data = info.data;
@@ -43606,7 +43618,9 @@ int32_t flecs_table_switch_from_case(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int32_t i, count = table->sw_column_count;
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!count) {
+        return -1;
+    }
 
     add = add & ECS_COMPONENT_MASK;
 

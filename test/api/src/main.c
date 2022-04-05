@@ -236,6 +236,8 @@ void Switch_switch_w_bitset_query_2_elems(void);
 void Switch_switch_w_bitset_query_2_elems_skip(void);
 void Switch_switch_w_bitset_query_elems_interleaved(void);
 void Switch_switch_w_bitset_query_elems_interleaved_2_types(void);
+void Switch_has_case_no_switch_empty_entity(void);
+void Switch_has_case_no_switch(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -1582,6 +1584,7 @@ void Prefab_dont_copy_children_for_non_prefab_base(void);
 void Prefab_get_component_pair_from_base(void);
 void Prefab_get_component_pair_from_prefab_base(void);
 void Prefab_override_dont_inherit(void);
+void Prefab_prefab_w_switch(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -2751,6 +2754,14 @@ bake_test_case Switch_testcases[] = {
     {
         "switch_w_bitset_query_elems_interleaved_2_types",
         Switch_switch_w_bitset_query_elems_interleaved_2_types
+    },
+    {
+        "has_case_no_switch_empty_entity",
+        Switch_has_case_no_switch_empty_entity
+    },
+    {
+        "has_case_no_switch",
+        Switch_has_case_no_switch
     }
 };
 
@@ -7958,6 +7969,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "override_dont_inherit",
         Prefab_override_dont_inherit
+    },
+    {
+        "prefab_w_switch",
+        Prefab_prefab_w_switch
     }
 };
 
@@ -9115,7 +9130,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        40,
+        42,
         Switch_testcases
     },
     {
@@ -9318,7 +9333,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        96,
+        97,
         Prefab_testcases
     },
     {

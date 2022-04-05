@@ -784,7 +784,9 @@ int32_t flecs_table_switch_from_case(
     ecs_entity_t *array = ecs_vector_first(type, ecs_entity_t);
 
     int32_t i, count = table->sw_column_count;
-    ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!count) {
+        return -1;
+    }
 
     add = add & ECS_COMPONENT_MASK;
 

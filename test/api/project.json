@@ -252,7 +252,9 @@
                 "switch_w_bitset_query_2_elems",
                 "switch_w_bitset_query_2_elems_skip",
                 "switch_w_bitset_query_elems_interleaved",
-                "switch_w_bitset_query_elems_interleaved_2_types"
+                "switch_w_bitset_query_elems_interleaved_2_types",
+                "has_case_no_switch_empty_entity",
+                "has_case_no_switch"
             ]
         }, {
             "id": "EnabledComponents",
@@ -1656,7 +1658,8 @@
                 "dont_copy_children_for_non_prefab_base",
                 "get_component_pair_from_base",
                 "get_component_pair_from_prefab_base",
-                "override_dont_inherit"
+                "override_dont_inherit",
+                "prefab_w_switch"
             ]
         }, {
             "id": "World",

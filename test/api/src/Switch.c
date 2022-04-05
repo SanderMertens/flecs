@@ -1675,3 +1675,43 @@ void Switch_switch_w_bitset_query_elems_interleaved_2_types() {
 
     ecs_fini(world);
 }
+
+void Switch_has_case_no_switch_empty_entity() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+
+    ECS_TYPE(world, Type, Walking, Running, Jumping);
+
+    ecs_entity_t e = ecs_new_id(world);
+    test_assert(e != 0);
+
+    test_assert( !ecs_has_id(world, e, ECS_SWITCH | Walking));
+    test_assert( !ecs_has_id(world, e, ECS_CASE | Running));
+    test_assert( !ecs_has_id(world, e, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
+
+void Switch_has_case_no_switch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+    
+    ECS_TAG(world, Tag);
+
+    ECS_TYPE(world, Type, Walking, Running, Jumping);
+
+    ecs_entity_t e = ecs_new(world, Tag);
+    test_assert(e != 0);
+
+    test_assert( !ecs_has_id(world, e, ECS_SWITCH | Walking));
+    test_assert( !ecs_has_id(world, e, ECS_CASE | Running));
+    test_assert( !ecs_has_id(world, e, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}

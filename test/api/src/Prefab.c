@@ -3392,3 +3392,24 @@ void Prefab_override_dont_inherit() {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_w_switch() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Walking, Running);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_add_id(world, p, ECS_SWITCH | Movement);
+    ecs_add_id(world, p, ECS_CASE | Running);
+
+    test_assert( ecs_has_id(world, p, ECS_CASE | Running));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert( ecs_has_id(world, i, ECS_SWITCH | Movement));
+    test_assert( ecs_has_id(world, i, ECS_CASE | Running));
+    test_assert( !ecs_has_id(world, i, ECS_CASE | Walking));
+
+    ecs_fini(world);
+}
