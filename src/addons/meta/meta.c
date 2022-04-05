@@ -293,12 +293,14 @@ void set_struct_member(
     const char *name,
     ecs_entity_t type,
     int32_t count,
+    int32_t offset,
     ecs_entity_t unit)
 {
     member->member = entity;
     member->type = type;
     member->count = count;
     member->unit = unit;
+    member->offset = offset;
 
     if (!count) {
         member->count = 1;
@@ -373,7 +375,7 @@ int add_member_to_struct(
     for (i = 0; i < count; i ++) {
         if (members[i].member == member) {
             set_struct_member(
-                &members[i], member, name, m->type, m->count, unit);
+                &members[i], member, name, m->type, m->count, m->offset, unit);
             break;
         }
     }
@@ -382,52 +384,70 @@ int add_member_to_struct(
     if (i == count) {
         ecs_member_t *elem = ecs_vector_add(&s->members, ecs_member_t);
         elem->name = NULL;
-        set_struct_member(elem, member, name, m->type, m->count, unit);
+        set_struct_member(elem, member, name, m->type, 
+            m->count, m->offset, unit);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vector_first(s->members, ecs_member_t);
         count ++;
     }
 
+    bool explicit_offset = false;
+    if (m->offset) {
+        explicit_offset = true;
+    }
+
     /* Compute member offsets and size & alignment of struct */
     ecs_size_t size = 0;
     ecs_size_t alignment = 0;
 
-    for (i = 0; i < count; i ++) {
-        ecs_member_t *elem = &members[i];
+    if (!explicit_offset) {
+        for (i = 0; i < count; i ++) {
+            ecs_member_t *elem = &members[i];
 
-        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get component of member type to get its size & alignment */
-        const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
-        if (!mbr_comp) {
-            char *path = ecs_get_fullpath(world, member);
-            ecs_err("member '%s' is not a type", path);
-            ecs_os_free(path);
-            return -1;
+            /* Get component of member type to get its size & alignment */
+            const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
+            if (!mbr_comp) {
+                char *path = ecs_get_fullpath(world, member);
+                ecs_err("member '%s' is not a type", path);
+                ecs_os_free(path);
+                return -1;
+            }
+
+            ecs_size_t member_size = mbr_comp->size;
+            ecs_size_t member_alignment = mbr_comp->alignment;
+
+            if (!member_size || !member_alignment) {
+                char *path = ecs_get_fullpath(world, member);
+                ecs_err("member '%s' has 0 size/alignment");
+                ecs_os_free(path);
+                return -1;
+            }
+
+            member_size *= elem->count;
+            size = ECS_ALIGN(size, member_alignment);
+            elem->size = member_size;
+            elem->offset = size;
+
+            size += member_size;
+
+            if (member_alignment > alignment) {
+                alignment = member_alignment;
+            }
         }
-
-        ecs_size_t member_size = mbr_comp->size;
-        ecs_size_t member_alignment = mbr_comp->alignment;
-
-        if (!member_size || !member_alignment) {
-            char *path = ecs_get_fullpath(world, member);
-            ecs_err("member '%s' has 0 size/alignment");
-            ecs_os_free(path);
-            return -1;
-        }
-
-        member_size *= elem->count;
-        size = ECS_ALIGN(size, member_alignment);
-        elem->size = member_size;
-        elem->offset = size;
-
-        size += member_size;
-
-        if (member_alignment > alignment) {
-            alignment = member_alignment;
-        }
+    } else {
+        /* If members have explicit offsets, we can't rely on computed 
+         * size/alignment values. Grab size of just added member instead. It
+         * doesn't matter if the size doesn't correspond to the actual struct
+         * size. The init_type function compares computed size with actual
+         * (component) size to determine if the type is partial. */
+        const EcsComponent *cptr = ecs_get(world, m->type, EcsComponent);
+        ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        size = cptr->size;
+        alignment = cptr->alignment;
     }
 
     if (size == 0) {

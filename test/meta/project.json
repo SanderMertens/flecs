@@ -102,7 +102,9 @@
                 "i32_bool_bool_bool",
                 "i32_i64",
                 "i32_i64_i32",
-                "incomplete_member"
+                "incomplete_member",
+                "partial_type",
+                "partial_type_custom_offset"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -408,6 +410,7 @@
                 "struct_w_array_type_struct",
                 "struct_w_2_array_type_i32_i32",
                 "struct_w_2_array_type_struct",
+                "struct_partial",
                 "escape_simple_string",
                 "escape_newline",
                 "escape_2_newlines",
@@ -487,6 +490,7 @@
                 "struct_struct_i32_i32_array_3",
                 "struct_w_array_type_i32_i32",
                 "struct_w_2_array_type_i32_i32",
+                "struct_partial",
                 "serialize_entity_empty",
                 "serialize_entity_w_name",
                 "serialize_entity_w_name_1_tag",

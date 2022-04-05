@@ -176,6 +176,7 @@ typedef struct EcsMember {
     ecs_entity_t type;
     int32_t count;
     ecs_entity_t unit;
+    int32_t offset;
 } EcsMember;
 
 /* Element type of members vector in EcsStruct */

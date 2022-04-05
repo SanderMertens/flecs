@@ -991,6 +991,27 @@ void SerializeToJson_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
+void SerializeToJson_struct_partial() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"y", ecs_id(ecs_i32_t), .offset = offsetof(Position, y)}
+        }
+    });
+
+    Position value = {10, 20};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"y\":20}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_empty() {
     ecs_world_t *world = ecs_init();
 
@@ -3638,3 +3659,4 @@ void SerializeToJson_serialize_paged_iterator_w_vars() {
 
     ecs_fini(world);
 }
+

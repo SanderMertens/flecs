@@ -395,3 +395,63 @@ void StructTypes_incomplete_member() {
 
     ecs_fini(world);
 }
+
+void StructTypes_partial_type() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {{ .name = "x", .type = ecs_id(ecs_f32_t) }}
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    const EcsComponent *cptr = ecs_get(world, s, EcsComponent);
+    test_assert(cptr != NULL);
+    test_int(cptr->size, sizeof(Position));
+    test_int(cptr->alignment, ECS_ALIGNOF(Position));
+
+    const EcsMetaType *mptr = ecs_get(world, s, EcsMetaType);
+    test_assert(mptr != NULL);
+    test_bool(mptr->partial, true);
+    test_bool(mptr->existing, true);
+
+    meta_test_struct(world, s, Position);
+    meta_test_member(world, s, Position, x, ecs_id(ecs_f32_t), 1);
+
+    ecs_fini(world);
+}
+
+void StructTypes_partial_type_custom_offset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {{ 
+            .name = "y", 
+            .type = ecs_id(ecs_f32_t), 
+            .offset = offsetof(Position, y) 
+        }}
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    const EcsComponent *cptr = ecs_get(world, s, EcsComponent);
+    test_assert(cptr != NULL);
+    test_int(cptr->size, sizeof(Position));
+    test_int(cptr->alignment, ECS_ALIGNOF(Position));
+
+    const EcsMetaType *mptr = ecs_get(world, s, EcsMetaType);
+    test_assert(mptr != NULL);
+    test_bool(mptr->partial, true);
+    test_bool(mptr->existing, true);
+
+    meta_test_struct(world, s, Position);
+    meta_test_member(world, s, Position, y, ecs_id(ecs_f32_t), 1);
+
+    ecs_fini(world);
+}

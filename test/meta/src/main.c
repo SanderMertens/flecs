@@ -92,6 +92,8 @@ void StructTypes_i32_bool_bool_bool(void);
 void StructTypes_i32_i64(void);
 void StructTypes_i32_i64_i32(void);
 void StructTypes_incomplete_member(void);
+void StructTypes_partial_type(void);
+void StructTypes_partial_type_custom_offset(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -381,6 +383,7 @@ void SerializeToExpr_struct_w_array_type_i32_i32(void);
 void SerializeToExpr_struct_w_array_type_struct(void);
 void SerializeToExpr_struct_w_2_array_type_i32_i32(void);
 void SerializeToExpr_struct_w_2_array_type_struct(void);
+void SerializeToExpr_struct_partial(void);
 void SerializeToExpr_escape_simple_string(void);
 void SerializeToExpr_escape_newline(void);
 void SerializeToExpr_escape_2_newlines(void);
@@ -456,6 +459,7 @@ void SerializeToJson_struct_struct_i32_array_3(void);
 void SerializeToJson_struct_struct_i32_i32_array_3(void);
 void SerializeToJson_struct_w_array_type_i32_i32(void);
 void SerializeToJson_struct_w_2_array_type_i32_i32(void);
+void SerializeToJson_struct_partial(void);
 void SerializeToJson_serialize_entity_empty(void);
 void SerializeToJson_serialize_entity_w_name(void);
 void SerializeToJson_serialize_entity_w_name_1_tag(void);
@@ -881,6 +885,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "incomplete_member",
         StructTypes_incomplete_member
+    },
+    {
+        "partial_type",
+        StructTypes_partial_type
+    },
+    {
+        "partial_type_custom_offset",
+        StructTypes_partial_type_custom_offset
     }
 };
 
@@ -1999,6 +2011,10 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_struct_w_2_array_type_struct
     },
     {
+        "struct_partial",
+        SerializeToExpr_struct_partial
+    },
+    {
         "escape_simple_string",
         SerializeToExpr_escape_simple_string
     },
@@ -2287,6 +2303,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_w_2_array_type_i32_i32",
         SerializeToJson_struct_w_2_array_type_i32_i32
+    },
+    {
+        "struct_partial",
+        SerializeToJson_struct_partial
     },
     {
         "serialize_entity_empty",
@@ -2734,7 +2754,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        12,
+        14,
         StructTypes_testcases
     },
     {
@@ -2790,7 +2810,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        44,
+        45,
         SerializeToExpr_testcases
     },
     {
@@ -2804,7 +2824,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        98,
+        99,
         SerializeToJson_testcases
     },
     {

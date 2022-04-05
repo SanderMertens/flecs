@@ -1096,66 +1096,6 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_simple_string() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "Hello World");
-    test_str(str, "Hello World");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeToExpr_escape_newline() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "\n");
-    test_str(str, "\\n");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeToExpr_escape_2_newlines() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "\n\n");
-    test_str(str, "\\n\\n");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeToExpr_escape_string_w_trailing_newline() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "Hello World\n");
-    test_str(str, "Hello World\\n");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeToExpr_escape_string_w_2_trailing_newlines() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "Hello World\n\n");
-    test_str(str, "Hello World\\n\\n");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeToExpr_escape_string_w_delim() {
-    ecs_world_t *world = ecs_init();
-
-    char *str = ecs_astresc('"', "\"Hello World\"");
-    test_str(str, "\\\"Hello World\\\"");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void SerializeToExpr_struct_w_array_type_i32_i32() {
     typedef int32_t N1[2];
 
@@ -1322,6 +1262,87 @@ void SerializeToExpr_struct_w_2_array_type_struct() {
     test_assert(expr != NULL);
     test_str(expr, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}], n_2: [{x: 50, y: 60}, {x: 70, y: 80}]}");
     ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_struct_partial() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.entity = ecs_id(Position),
+        .members = {
+            {"y", ecs_id(ecs_i32_t), .offset = offsetof(Position, y)}
+        }
+    });
+
+    Position value = {10, 20};
+    char *expr = ecs_ptr_to_expr(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{y: 20}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_simple_string() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World");
+    test_str(str, "Hello World");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_newline() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\n");
+    test_str(str, "\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_2_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\n\n");
+    test_str(str, "\\n\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_trailing_newline() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World\n");
+    test_str(str, "Hello World\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_2_trailing_newlines() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "Hello World\n\n");
+    test_str(str, "Hello World\\n\\n");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_escape_string_w_delim() {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_astresc('"', "\"Hello World\"");
+    test_str(str, "\\\"Hello World\\\"");
+    ecs_os_free(str);
 
     ecs_fini(world);
 }

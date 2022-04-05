@@ -167,6 +167,7 @@ ecs_entity_t ecs_struct_init(
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 
             .count = m_desc->count,
+            .offset = m_desc->offset,
             .unit = m_desc->unit
         });
     }
