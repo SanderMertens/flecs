@@ -976,6 +976,7 @@ void Query_query_w_new_switch_and_case(void);
 void Query_query_for_case_existing(void);
 void Query_query_for_case_new(void);
 void Query_query_for_switch_filter_term(void);
+void Query_query_for_case_w_0_case(void);
 void Query_query_switch_from_nothing(void);
 void Query_query_case_from_nothing(void);
 void Query_query_disabled_from_nothing(void);
@@ -5589,6 +5590,10 @@ bake_test_case Query_testcases[] = {
         Query_query_for_switch_filter_term
     },
     {
+        "query_for_case_w_0_case",
+        Query_query_for_case_w_0_case
+    },
+    {
         "query_switch_from_nothing",
         Query_query_switch_from_nothing
     },
@@ -9223,7 +9228,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        153,
+        154,
         Query_testcases
     },
     {

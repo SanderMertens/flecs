@@ -1245,6 +1245,35 @@ void Query_query_for_switch_filter_term() {
     ecs_fini(world);
 }
 
+void Query_query_for_case_w_0_case() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Walking, Running);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag, CASE | (Movement, Walking)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
+    ecs_add_id(world, e2, ECS_CASE | Walking);
+
+    ecs_add_id(world, e1, Tag);
+    ecs_add_id(world, e2, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_term_id(&it, 1), Tag);
+    test_uint(ecs_term_id(&it, 2), ecs_case(Movement, Walking));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_switch_from_nothing() {
     ecs_world_t *world = ecs_mini();
 
