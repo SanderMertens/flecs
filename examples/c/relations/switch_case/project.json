@@ -1,0 +1,10 @@
+{
+    "id": "switch_case",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
