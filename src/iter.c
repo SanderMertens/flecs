@@ -189,15 +189,14 @@ bool flecs_iter_populate_term_data(
             ecs_table_record_t *tr;
 
             if (!s_table || !(tr = flecs_get_table_record(world, s_table, id))){
-                /* The entity has no components or the id is not a component */
-                
+                /* The entity has no components or the id is not a component */                
                 ecs_id_t term_id = it->terms[t].id;
                 if (ECS_HAS_ROLE(term_id, SWITCH) || ECS_HAS_ROLE(term_id, CASE)) {
-                    /* Edge case: if this is a switch. Find switch column in
+                    /* Edge case: if this is a switch. find switch column in
                      * actual table, as its not in the storage table */
                     tr = flecs_get_table_record(world, table, id);
                     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    column = tr->column;
+                    column = tr->column + 1;
                     goto has_switch;
                 } else {
                     goto no_data;
@@ -253,7 +252,7 @@ has_data:
 
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
-        * identifiers. Will be replaced in the future with pluggable storage */
+         * identifiers. Will be replaced in the future with pluggable storage */
         ecs_switch_t *sw = table->storage.sw_columns[
             (column - 1) - table->sw_column_offset].data;
         vec = flecs_switch_values(sw);

@@ -931,6 +931,7 @@
                 "filter_iter_2_terms_filter_all_w_out",
                 "filter_iter_switch_term_filter",
                 "filter_iter_2_terms_switch_term_filter",
+                "filter_iter_switch_superset",
                 "filter_instanced_w_singleton",
                 "filter_instanced_w_base",
                 "filter_no_instancing_w_singleton",

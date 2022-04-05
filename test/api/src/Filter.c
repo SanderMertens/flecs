@@ -6861,6 +6861,42 @@ void Filter_match_switch_w_case_2_terms() {
     ecs_fini(world);
 }
 
+void Filter_filter_iter_switch_superset() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TYPE(world, TypeX, TagA, TagB);
+
+    ecs_entity_t b = ecs_new_w_id(world, ECS_SWITCH | TypeX);
+    ecs_add_id(world, b, ECS_CASE | TagA);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
+
+    ecs_filter_t f;
+    ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {
+            { ECS_SWITCH | TypeX, .subj.set.mask = EcsSuperSet }
+        }
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    
+    test_bool(ecs_filter_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e);
+    test_int(it.subjects[0], b);
+    test_uint(it.ids[0], ECS_SWITCH | TypeX);
+
+    ecs_entity_t *cases = ecs_term(&it, ecs_entity_t, 1);
+    test_assert(cases != NULL);
+    test_uint(cases[0], TagA);
+
+    test_bool(ecs_filter_next(&it), false);
+
+    ecs_fini(world);
+}
+
 void Filter_match_case_no_case() {
     ecs_world_t *world = ecs_init();
 
