@@ -706,6 +706,7 @@ void set_table_match(
     
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
+    ecs_term_t *terms = filter->terms;
 
     /* Reset resources in case this is an existing record */
     if (qm->sparse_columns) {
@@ -728,8 +729,8 @@ void set_table_match(
 
     /* Initialize switch/case terms */
     for (i = 0; i < term_count; i ++) {
-        ecs_id_t id = query->filter.terms[i].id;
-        if (ECS_HAS_ROLE(id, CASE)) {
+        ecs_id_t id = terms[i].id;
+        if (ECS_HAS_ROLE(id, CASE) && terms[i].subj.set.mask != EcsNothing) {
             flecs_switch_term_t *sc = ecs_vector_add(
                 &qm->sparse_columns, flecs_switch_term_t);
             sc->signature_column_index = i;
@@ -743,14 +744,16 @@ void set_table_match(
     if (table) {
         if (table->flags & EcsTableHasDisabled) {
             for (i = 0; i < term_count; i ++) {
-                ecs_id_t id = it->ids[i];
-                ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
-                int32_t bs_index = ecs_search(world, table, bs_id, 0);
-                if (bs_index != -1) {
-                    flecs_bitset_term_t *bc = ecs_vector_add(
-                        &qm->bitset_columns, flecs_bitset_term_t);
-                    bc->column_index = bs_index;
-                    bc->bs_column = NULL;
+                if (terms[i].subj.set.mask != EcsNothing) {
+                    ecs_id_t id = it->ids[i];
+                    ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
+                    int32_t bs_index = ecs_search(world, table, bs_id, 0);
+                    if (bs_index != -1) {
+                        flecs_bitset_term_t *bc = ecs_vector_add(
+                            &qm->bitset_columns, flecs_bitset_term_t);
+                        bc->column_index = bs_index;
+                        bc->bs_column = NULL;
+                    }
                 }
             }
         }
@@ -766,7 +769,7 @@ void set_table_match(
                 size = it->sizes[i];
             }
             if (src) {
-                ecs_term_t *term = &filter->terms[i];
+                ecs_term_t *term = &terms[i];
                 ecs_id_t id = it->ids[i];
                 refs = add_ref(world, query, refs, term, id, src, size);
 

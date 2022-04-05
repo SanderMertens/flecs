@@ -1245,6 +1245,99 @@ void Query_query_for_switch_filter_term() {
     ecs_fini(world);
 }
 
+void Query_query_switch_from_nothing() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Walking, Running);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
+        .terms = {
+            {Tag},
+            {ECS_SWITCH | Movement, .subj.set.mask = EcsNothing}
+        }
+    }});
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(ecs_term_id(&it, 1), Tag);
+    test_uint(ecs_term_id(&it, 2), ECS_SWITCH | Movement);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_case_from_nothing() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TYPE(world, Movement, Walking, Running);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
+        .terms = {
+            {Tag},
+            {ecs_case(Movement, Walking), .subj.set.mask = EcsNothing}
+        }
+    }});
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(ecs_term_id(&it, 1), Tag);
+    test_uint(ecs_term_id(&it, 2), ecs_case(Movement, Walking));
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_disabled_from_nothing() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
+        .terms = {
+            {TagA},
+            {TagB, .subj.set.mask = EcsNothing}
+        }
+    }});
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_add_id(world, e1, ECS_DISABLED | TagB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(ecs_term_id(&it, 1), TagA);
+    test_uint(ecs_term_id(&it, 2), TagB);
+    test_bool(true, ecs_term_is_set(&it, 1));
+    test_bool(false, ecs_term_is_set(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_only_2_or() {
     ecs_world_t *world = ecs_mini();
 
