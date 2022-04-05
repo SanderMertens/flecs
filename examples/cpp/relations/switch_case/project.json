@@ -1,0 +1,11 @@
+{
+    "id": "switch_case",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
