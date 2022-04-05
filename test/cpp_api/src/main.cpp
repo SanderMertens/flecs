@@ -284,6 +284,7 @@ void Enum_enum_w_2_worlds(void);
 void Enum_add_enum_constant_w_tag(void);
 void Enum_remove_enum_constant_w_tag(void);
 void Enum_set_enum_constant_w_tag(void);
+void Enum_enum_w_incorrect_size(void);
 
 // Testsuite 'Switch'
 void Switch_add_case(void);
@@ -1991,6 +1992,10 @@ bake_test_case Enum_testcases[] = {
     {
         "set_enum_constant_w_tag",
         Enum_set_enum_constant_w_tag
+    },
+    {
+        "enum_w_incorrect_size",
+        Enum_enum_w_incorrect_size
     }
 };
 
@@ -4353,7 +4358,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        23,
+        24,
         Enum_testcases
     },
     {

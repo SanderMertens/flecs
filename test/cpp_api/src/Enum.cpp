@@ -22,6 +22,10 @@ enum ConstantsWithNum {
     Num3,
 };
 
+enum class EnumIncorrectType : uint8_t {
+    A, B
+};
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -608,4 +612,13 @@ void Enum_set_enum_constant_w_tag() {
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
+}
+
+void Enum_enum_w_incorrect_size() {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+    ecs.component<EnumIncorrectType>();
 }

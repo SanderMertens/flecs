@@ -394,6 +394,13 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
     ecs_set_scope(world, prev);
 
+    #ifdef FLECS_DEBUG
+    const EcsComponent *cptr = ecs_get(world, parent, EcsComponent);
+    ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, "enum is not a component");
+    ecs_assert(cptr->size == ECS_SIZEOF(int32_t), ECS_UNSUPPORTED,
+        "enum component must have 32bit size");
+    #endif
+
     ecs_set_id(world, id, parent, sizeof(int), &value);
 
     flecs_resume_readonly(world, &readonly_state);
