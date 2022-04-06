@@ -218,3 +218,41 @@ void Meta_unit_w_over() {
     test_assert(unit != nullptr);
     test_str(unit->symbol, "pU1/U0");
 }
+
+void Meta_partial_struct() {
+    flecs::world ecs;
+
+    auto c = ecs.component<Position>()
+        .member<float>("x");
+    test_assert(c != 0);
+
+    const flecs::Component *ptr = c.get<flecs::Component>();
+    test_int(ptr->size, 8);
+    test_int(ptr->alignment, 4);
+    
+    auto xe = c.lookup("x");
+    test_assert(xe != 0);
+    test_assert( xe.has<flecs::Member>() );
+    const flecs::Member *x = xe.get<flecs::Member>();
+    test_uint(x->type, flecs::F32);
+    test_uint(x->offset, 0);
+}
+
+void Meta_partial_struct_custom_offset() {
+    flecs::world ecs;
+
+    auto c = ecs.component<Position>()
+        .member<float>("y", 1, offsetof(Position, y));
+    test_assert(c != 0);
+
+    const flecs::Component *ptr = c.get<flecs::Component>();
+    test_int(ptr->size, 8);
+    test_int(ptr->alignment, 4);
+    
+    auto xe = c.lookup("y");
+    test_assert(xe != 0);
+    test_assert( xe.has<flecs::Member>() );
+    const flecs::Member *x = xe.get<flecs::Member>();
+    test_uint(x->type, flecs::F32);
+    test_uint(x->offset, 4);
+}

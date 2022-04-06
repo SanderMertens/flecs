@@ -19354,7 +19354,7 @@ struct untyped_component : entity {
 #   ifdef FLECS_META
 
 /** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0) {
+untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
@@ -19366,13 +19366,14 @@ untyped_component& member(flecs::entity_t type_id, const char *name, int32_t cou
     Member m = {};
     m.type = type_id;
     m.count = count;
+    m.offset = static_cast<int32_t>(offset);
     e.set<Member>(m);
 
     return *this;
 }
 
 /** Add member with unit. */
-untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0) {
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
@@ -19385,6 +19386,7 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
     m.type = type_id;
     m.unit = unit;
     m.count = count;
+    m.offset = static_cast<int32_t>(offset);
     e.set<Member>(m);
 
     return *this;
@@ -19392,24 +19394,24 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
 
 /** Add member. */
 template <typename MemberType>
-untyped_component& member(const char *name, int32_t count = 0) {
+untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
     flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
-    return member(type_id, name, count);
+    return member(type_id, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType>
-untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0) {
+untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
-    return member(type_id, unit, name, count);
+    return member(type_id, unit, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
-untyped_component& member(const char *name, int32_t count = 0) {
+untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
     flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
     flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
-    return member(type_id, unit_id, name, count);
+    return member(type_id, unit_id, name, count, offset);
 }
 
 /** Add constant. */

@@ -955,6 +955,8 @@
                 "struct",
                 "nested_struct",
                 "struct_w_portable_type",
+                "partial_struct",
+                "partial_struct_custom_offset",
                 "units",
                 "unit_w_quantity",
                 "unit_w_prefix",

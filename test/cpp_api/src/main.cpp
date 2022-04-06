@@ -897,6 +897,8 @@ void Misc_app_run_target_fps(void);
 void Meta_struct(void);
 void Meta_nested_struct(void);
 void Meta_struct_w_portable_type(void);
+void Meta_partial_struct(void);
+void Meta_partial_struct_custom_offset(void);
 void Meta_units(void);
 void Meta_unit_w_quantity(void);
 void Meta_unit_w_prefix(void);
@@ -4322,6 +4324,14 @@ bake_test_case Meta_testcases[] = {
         Meta_struct_w_portable_type
     },
     {
+        "partial_struct",
+        Meta_partial_struct
+    },
+    {
+        "partial_struct_custom_offset",
+        Meta_partial_struct_custom_offset
+    },
+    {
         "units",
         Meta_units
     },
@@ -4526,7 +4536,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        7,
+        9,
         Meta_testcases
     }
 };
