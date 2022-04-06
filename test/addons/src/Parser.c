@@ -4375,3 +4375,19 @@ void Parser_auto_object_variable_w_subj() {
 
     ecs_fini(world);
 }
+
+void Parser_invalid_variable_only() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Pred);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_assert(0 != ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "$"
+    }));
+
+    ecs_fini(world);
+}

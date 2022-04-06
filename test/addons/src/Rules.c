@@ -6594,3 +6594,14 @@ void Rules_table_subj_as_obj_in_not() {
 
   ecs_fini(world);
 }
+
+void Rules_invalid_variable_only() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_mini();
+
+    ecs_rule_t *r = ecs_rule_new(world, "$");
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}

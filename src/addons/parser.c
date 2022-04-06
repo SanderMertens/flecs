@@ -956,21 +956,23 @@ char* ecs_parse_term(
     }
 
     /* Check for $() notation */
-    if (!ecs_os_strcmp(term->pred.name, "$")) {
-        ecs_os_free(term->pred.name);
-        
-        term->pred = term->subj;
+    if (term->pred.name && !ecs_os_strcmp(term->pred.name, "$")) {
+        if (term->subj.name) {
+            ecs_os_free(term->pred.name);
+            
+            term->pred = term->subj;
 
-        if (term->obj.name) {
-            term->subj = term->obj;       
-        } else {
-            term->subj.entity = EcsThis;
-            term->subj.name = NULL;
-            term->subj.var = EcsVarIsVariable;
+            if (term->obj.name) {
+                term->subj = term->obj;       
+            } else {
+                term->subj.entity = EcsThis;
+                term->subj.name = NULL;
+                term->subj.var = EcsVarIsVariable;
+            }
+
+            term->obj.name = ecs_os_strdup(term->pred.name);
+            term->obj.var = EcsVarIsVariable;
         }
-
-        term->obj.name = ecs_os_strdup(term->pred.name);
-        term->obj.var = EcsVarIsVariable;
     }
 
     /* Post-parse consistency checks */

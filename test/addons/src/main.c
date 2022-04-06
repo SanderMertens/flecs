@@ -178,6 +178,7 @@ void Parser_this_subj_no_name(void);
 void Parser_this_obj_no_name(void);
 void Parser_auto_object_variable(void);
 void Parser_auto_object_variable_w_subj(void);
+void Parser_invalid_variable_only(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -591,6 +592,7 @@ void Rules_test_this_w_wildcard_w_2_isa(void);
 void Rules_rule_w_inout_filter(void);
 void Rules_variable_order(void);
 void Rules_table_subj_as_obj_in_not(void);
+void Rules_invalid_variable_only(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -1584,6 +1586,10 @@ bake_test_case Parser_testcases[] = {
     {
         "auto_object_variable_w_subj",
         Parser_auto_object_variable_w_subj
+    },
+    {
+        "invalid_variable_only",
+        Parser_invalid_variable_only
     }
 };
 
@@ -3207,6 +3213,10 @@ bake_test_case Rules_testcases[] = {
     {
         "table_subj_as_obj_in_not",
         Rules_table_subj_as_obj_in_not
+    },
+    {
+        "invalid_variable_only",
+        Rules_invalid_variable_only
     }
 };
 
@@ -4360,7 +4370,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        169,
+        170,
         Parser_testcases
     },
     {
@@ -4395,7 +4405,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        161,
+        162,
         Rules_testcases
     },
     {
