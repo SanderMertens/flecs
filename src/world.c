@@ -1151,6 +1151,7 @@ ecs_id_record_t* new_id_record(
 
             ecs_check( !oneof || ecs_has_pair(world, obj, EcsChildOf, oneof),
                 ECS_CONSTRAINT_VIOLATED, NULL);
+            (void)oneof;
         }
 
     } else {

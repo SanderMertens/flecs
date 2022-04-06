@@ -179,6 +179,10 @@ void Parser_this_obj_no_name(void);
 void Parser_auto_object_variable(void);
 void Parser_auto_object_variable_w_subj(void);
 void Parser_invalid_variable_only(void);
+void Parser_oneof_self_pred_w_relative_obj(void);
+void Parser_oneof_other_pred_w_relative_obj(void);
+void Parser_oneof_self_pred_w_invalid_obj(void);
+void Parser_oneof_other_pred_w_invalid_obj(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -1590,6 +1594,22 @@ bake_test_case Parser_testcases[] = {
     {
         "invalid_variable_only",
         Parser_invalid_variable_only
+    },
+    {
+        "oneof_self_pred_w_relative_obj",
+        Parser_oneof_self_pred_w_relative_obj
+    },
+    {
+        "oneof_other_pred_w_relative_obj",
+        Parser_oneof_other_pred_w_relative_obj
+    },
+    {
+        "oneof_self_pred_w_invalid_obj",
+        Parser_oneof_self_pred_w_invalid_obj
+    },
+    {
+        "oneof_other_pred_w_invalid_obj",
+        Parser_oneof_other_pred_w_invalid_obj
     }
 };
 
@@ -4370,7 +4390,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        170,
+        174,
         Parser_testcases
     },
     {

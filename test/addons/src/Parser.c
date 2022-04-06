@@ -4391,3 +4391,89 @@ void Parser_invalid_variable_only() {
 
     ecs_fini(world);
 }
+
+void Parser_oneof_self_pred_w_relative_obj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+
+    test_assert( ecs_lookup_child(world, 0, "Obj") == 0 ); // sanity check
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Rel, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], Obj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_other_pred_w_relative_obj() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, Obj, (ChildOf, Parent));
+
+    test_assert( ecs_lookup_child(world, 0, "Obj") == 0 ); // sanity check
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], Rel, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], Obj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_self_pred_w_invalid_obj() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_TAG(world, Obj);
+
+    test_assert( ecs_lookup_child(world, 0, "Obj") != 0 ); // sanity check
+
+    ecs_filter_t f;
+    test_assert(0 != ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, Obj)"
+    }));
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_other_pred_w_invalid_obj() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_TAG(world, Obj);
+
+    test_assert( ecs_lookup_child(world, 0, "Obj") != 0 ); // sanity check
+
+    ecs_filter_t f;
+    test_assert(0 != ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .expr = "(Rel, Obj)"
+    }));
+ 
+    ecs_fini(world);
+}

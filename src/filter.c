@@ -126,7 +126,35 @@ int finalize_term_var(
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
         } else if (identifier->name) {
+            ecs_entity_t oneof = 0;
+            ecs_entity_t pred = 0;
+            if (term->pred.var == EcsVarIsEntity) {
+                pred = term->pred.entity;
+                if (pred) {
+                    if (ecs_has_id(world, pred, EcsOneOf)) {
+                        oneof = pred;
+                    } else {
+                        oneof = ecs_get_object(world, pred, EcsOneOf, 0);
+                    }
+                }
+            }
+
             ecs_entity_t e = ecs_lookup_symbol(world, identifier->name, true);
+            if (oneof && identifier != &term->pred) {
+                if (!e) {
+                    e = ecs_lookup_child(world, oneof, identifier->name);
+                } else if (e) {
+                    if (!ecs_has_pair(world, e, EcsChildOf, oneof)) {
+                        char *rel_str = ecs_get_fullpath(world, pred);
+                        term_error(world, term, name, 
+                            "invalid object '%s' for relation %s",
+                            identifier->name, rel_str);
+                        ecs_os_free(rel_str);
+                        return -1;
+                    }
+                }
+            }
+
             if (!e) {
                 term_error(world, term, name,
                     "unresolved identifier '%s'", identifier->name);

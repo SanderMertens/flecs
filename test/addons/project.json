@@ -183,7 +183,11 @@
                 "this_obj_no_name",
                 "auto_object_variable",
                 "auto_object_variable_w_subj",
-                "invalid_variable_only"
+                "invalid_variable_only",
+                "oneof_self_pred_w_relative_obj",
+                "oneof_other_pred_w_relative_obj",
+                "oneof_self_pred_w_invalid_obj",
+                "oneof_other_pred_w_invalid_obj"
             ]
         }, {
             "id": "Plecs",
