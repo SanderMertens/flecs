@@ -8737,7 +8737,9 @@ bool flecs_defer_flush(
                         op->is._1.value, true, false);
                     break;
                 case EcsOpModified:
-                    ecs_modified_id(world, e, op->id);
+                    if (ecs_has_id(world, e, op->id)) {
+                        ecs_modified_id(world, e, op->id);
+                    }
                     break;
                 case EcsOpDelete: {
                     ecs_delete(world, e);
