@@ -164,6 +164,16 @@ void Parser_case_w_missing_obj(void);
 void Parser_not_alive_pred(void);
 void Parser_not_alive_subj(void);
 void Parser_not_alive_obj(void);
+void Parser_this_subj_var_kind(void);
+void Parser_this_obj_var_kind(void);
+void Parser_this_subj_obj_var_kind(void);
+void Parser_var_w_name(void);
+void Parser_entity_pred_no_name(void);
+void Parser_entity_subj_no_name(void);
+void Parser_entity_obj_no_name(void);
+void Parser_this_pred_no_name(void);
+void Parser_this_subj_no_name(void);
+void Parser_this_obj_no_name(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -387,16 +397,6 @@ void SystemMisc_redefine_null_signature(void);
 void SystemMisc_redefine_0_signature(void);
 void SystemMisc_one_named_column_of_two(void);
 void SystemMisc_two_named_columns_of_two(void);
-void SystemMisc_redeclare_system_same_expr(void);
-void SystemMisc_redeclare_system_null_expr(void);
-void SystemMisc_redeclare_system_0_expr(void);
-void SystemMisc_redeclare_system_different_expr(void);
-void SystemMisc_redeclare_system_null_and_expr(void);
-void SystemMisc_redeclare_system_expr_and_null(void);
-void SystemMisc_redeclare_system_expr_and_0(void);
-void SystemMisc_redeclare_system_0_and_expr(void);
-void SystemMisc_redeclare_system_0_and_null(void);
-void SystemMisc_redeclare_system_null_and_0(void);
 void SystemMisc_redeclare_system_explicit_id(void);
 void SystemMisc_redeclare_system_explicit_id_null_expr(void);
 void SystemMisc_redeclare_system_explicit_id_no_name(void);
@@ -1523,6 +1523,46 @@ bake_test_case Parser_testcases[] = {
     {
         "not_alive_obj",
         Parser_not_alive_obj
+    },
+    {
+        "this_subj_var_kind",
+        Parser_this_subj_var_kind
+    },
+    {
+        "this_obj_var_kind",
+        Parser_this_obj_var_kind
+    },
+    {
+        "this_subj_obj_var_kind",
+        Parser_this_subj_obj_var_kind
+    },
+    {
+        "var_w_name",
+        Parser_var_w_name
+    },
+    {
+        "entity_pred_no_name",
+        Parser_entity_pred_no_name
+    },
+    {
+        "entity_subj_no_name",
+        Parser_entity_subj_no_name
+    },
+    {
+        "entity_obj_no_name",
+        Parser_entity_obj_no_name
+    },
+    {
+        "this_pred_no_name",
+        Parser_this_pred_no_name
+    },
+    {
+        "this_subj_no_name",
+        Parser_this_subj_no_name
+    },
+    {
+        "this_obj_no_name",
+        Parser_this_obj_no_name
     }
 };
 
@@ -2391,46 +2431,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "two_named_columns_of_two",
         SystemMisc_two_named_columns_of_two
-    },
-    {
-        "redeclare_system_same_expr",
-        SystemMisc_redeclare_system_same_expr
-    },
-    {
-        "redeclare_system_null_expr",
-        SystemMisc_redeclare_system_null_expr
-    },
-    {
-        "redeclare_system_0_expr",
-        SystemMisc_redeclare_system_0_expr
-    },
-    {
-        "redeclare_system_different_expr",
-        SystemMisc_redeclare_system_different_expr
-    },
-    {
-        "redeclare_system_null_and_expr",
-        SystemMisc_redeclare_system_null_and_expr
-    },
-    {
-        "redeclare_system_expr_and_null",
-        SystemMisc_redeclare_system_expr_and_null
-    },
-    {
-        "redeclare_system_expr_and_0",
-        SystemMisc_redeclare_system_expr_and_0
-    },
-    {
-        "redeclare_system_0_and_expr",
-        SystemMisc_redeclare_system_0_and_expr
-    },
-    {
-        "redeclare_system_0_and_null",
-        SystemMisc_redeclare_system_0_and_null
-    },
-    {
-        "redeclare_system_null_and_0",
-        SystemMisc_redeclare_system_null_and_0
     },
     {
         "redeclare_system_explicit_id",
@@ -4335,7 +4335,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        155,
+        165,
         Parser_testcases
     },
     {
@@ -4363,7 +4363,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        79,
+        69,
         SystemMisc_testcases
     },
     {

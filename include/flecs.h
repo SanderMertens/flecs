@@ -477,7 +477,6 @@ struct ecs_filter_t {
     bool match_empty_tables;   /* See ecs_filter_desc_t */
     
     char *name;                /* Name of filter (optional) */
-    char *expr;                /* Expression of filter (if provided) */
     char *variable_names[1];   /* Array with variable names */
 
     ecs_iterable_t iterable;   /* Iterable mixin */

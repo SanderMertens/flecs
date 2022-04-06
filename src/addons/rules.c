@@ -369,10 +369,12 @@ void rule_error(
     const char *fmt,
     ...)
 {
+    char *fstr = ecs_filter_str(rule->world, &rule->filter);
     va_list valist;
     va_start(valist, fmt);
-    ecs_parser_errorv(rule->filter.name, rule->filter.expr, -1, fmt, valist);
+    ecs_parser_errorv(rule->filter.name, fstr, -1, fmt, valist);
     va_end(valist);
+    ecs_os_free(fstr);
 }
 
 static
@@ -959,9 +961,10 @@ ecs_rule_pair_t term_to_pair(
                 rule, EcsRuleVarKindEntity, term_id_var_name(&term->obj));
 
             /* Variables should have been declared */
-            ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(var != NULL, ECS_INTERNAL_ERROR, 
+                term_id_var_name(&term->obj));
             ecs_assert(var->kind == EcsRuleVarKindEntity, ECS_INTERNAL_ERROR, 
-                NULL);
+                term_id_var_name(&term->obj));
 
             result.obj.reg = var->id;
             result.reg_mask |= RULE_PAIR_OBJECT;
