@@ -1885,6 +1885,8 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    
     ecs_id_record_t **idr_ptr = ecs_map_ensure(&world->id_index, 
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
@@ -1901,6 +1903,8 @@ void flecs_register_for_id_record(
     const ecs_table_t *table,
     ecs_table_record_t *tr)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
     ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 
@@ -1922,6 +1926,8 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
         ecs_strip_generation(id));
 }
@@ -1930,6 +1936,8 @@ ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1945,6 +1953,8 @@ ecs_hashmap_t* flecs_get_id_name_index(
     const ecs_world_t *world,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_id_record_t *idr = flecs_get_id_record(world, id);
     if (!idr) {
         return NULL;
@@ -1958,6 +1968,8 @@ ecs_table_record_t* flecs_get_table_record(
     const ecs_table_t *table,
     ecs_id_t id)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_id_record_t* idr = flecs_get_id_record(world, id);
     if (!idr) {
         return NULL;
@@ -1971,6 +1983,8 @@ void flecs_remove_id_record(
     ecs_id_t id,
     ecs_id_record_t *idr)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     /* Free id record resources */
     if (free_id_record(world, id, idr)) {
         /* Remove record from world index */

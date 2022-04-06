@@ -264,6 +264,7 @@ ecs_entity_t ecs_lookup_child(
     const char *name)
 {
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    world = ecs_get_world(world);
 
     if (is_number(name)) {
         return name_to_id(world, name);
