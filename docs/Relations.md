@@ -967,6 +967,71 @@ auto Pears = world.entity();
 auto e = world.entity().add(Loves, Pears);
 ```
 
+### OneOf property
+The `OneOf` property enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to either indicate that the target needs to be a child of the relation (common for enum relationships), or of another entity. 
+
+The following example shows how to constrain the relationship target to a child of the relation:
+
+```c
+ecs_entity_t Food = ecs_new_id(world);
+
+// Enforce that target of relationship is child of Food
+ecs_add_id(world, Food, EcsOneOf);
+
+ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
+ecs_entity_t Fork = ecs_new_id(world);
+
+// This is ok, Apples is a child of Food
+ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
+
+// This is not ok, Fork is not a child of Food
+ecs_entity_t b = ecs_new_w_pair(world, Food, Fork);
+```
+```cpp
+// Enforce that target of relationship is child of Food
+auto Food = world.entity().add(flecs::OneOf);
+auto Apples = world.entity().child_of(Food);
+auto Fork = world.entity();
+
+// This is ok, Apples is a child of Food
+auto a = world.entity().add(Food, Apples);
+
+// This is not ok, Fork is not a child of Food
+auto b = world.entity().add(Food, Fork);
+```
+
+The following example shows how `OneOf` can be used to enforce that the relationship target is the child of an entity other than the relation:
+
+```c
+ecs_entity_t Food = ecs_new_id(world);
+ecs_entity_t Eats = ecs_new_id(world);
+
+// Enforce that target of relationship is child of Food
+ecs_add_pair(world, Eats, EcsOneOf, Food);
+
+ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
+ecs_entity_t Fork = ecs_new_id(world);
+
+// This is ok, Apples is a child of Food
+ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
+
+// This is not ok, Fork is not a child of Food
+ecs_entity_t b = ecs_new_w_pair(world, Eats, Fork);
+```
+```cpp
+// Enforce that target of relationship is child of Food
+auto Food = world.entity();
+auto Eats = world.entity().add(flecs::OneOf, Food);
+auto Apples = world.entity().child_of(Food);
+auto Fork = world.entity();
+
+// This is ok, Apples is a child of Food
+auto a = world.entity().add(Eats, Apples);
+
+// This is not ok, Fork is not a child of Food
+auto b = world.entity().add(Eats, Fork);
+```
+
 ## Relation performance
 A relation that does not have any data has the same performance as a regular tag. A relation that does have data has the same performance as a component.
 
