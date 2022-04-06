@@ -1224,6 +1224,11 @@ void Pairs_inherit_exclusive(void);
 void Pairs_dont_inherit(void);
 void Pairs_has_wildcard_w_pair(void);
 void Pairs_has_pair_wildcard_w_tag(void);
+void Pairs_oneof_self(void);
+void Pairs_oneof_other(void);
+void Pairs_oneof_self_constraint_violated(void);
+void Pairs_oneof_other_constraint_violated(void);
+void Pairs_oneof_other_rel_parent_constraint_violated(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6587,6 +6592,26 @@ bake_test_case Pairs_testcases[] = {
     {
         "has_pair_wildcard_w_tag",
         Pairs_has_pair_wildcard_w_tag
+    },
+    {
+        "oneof_self",
+        Pairs_oneof_self
+    },
+    {
+        "oneof_other",
+        Pairs_oneof_other
+    },
+    {
+        "oneof_self_constraint_violated",
+        Pairs_oneof_self_constraint_violated
+    },
+    {
+        "oneof_other_constraint_violated",
+        Pairs_oneof_other_constraint_violated
+    },
+    {
+        "oneof_other_rel_parent_constraint_violated",
+        Pairs_oneof_other_rel_parent_constraint_violated
     }
 };
 
@@ -9327,7 +9352,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        93,
+        98,
         Pairs_testcases
     },
     {

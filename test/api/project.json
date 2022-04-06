@@ -1282,7 +1282,12 @@
                 "inherit_exclusive",
                 "dont_inherit",
                 "has_wildcard_w_pair",
-                "has_pair_wildcard_w_tag"
+                "has_pair_wildcard_w_tag",
+                "oneof_self",
+                "oneof_other",
+                "oneof_self_constraint_violated",
+                "oneof_other_constraint_violated",
+                "oneof_other_rel_parent_constraint_violated"
             ]
         }, {
            "id": "Trigger",

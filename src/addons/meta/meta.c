@@ -719,6 +719,7 @@ void add_enum(ecs_iter_t *it) {
         }
 
         ecs_add_id(world, e, EcsExclusive);
+        ecs_add_id(world, e, EcsOneOf);
         ecs_add_id(world, e, EcsTag);
     }
 }

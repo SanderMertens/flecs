@@ -66,6 +66,7 @@ const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 20;
 const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 21;
 const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 23;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;
@@ -1138,6 +1139,20 @@ ecs_id_record_t* new_id_record(
         if (idr_r) {
             idr->flags = (idr_r->flags & ~ECS_TYPE_INFO_INITIALIZED);
         }
+
+        /* Check constraints */
+        if (obj && !ecs_id_is_wildcard(obj)) {
+            ecs_entity_t oneof = 0;
+            if (ecs_has_id(world, rel, EcsOneOf)) {
+                oneof = rel;
+            } else {
+                oneof = ecs_get_object(world, rel, EcsOneOf, 0);
+            }
+
+            ecs_check( !oneof || ecs_has_pair(world, obj, EcsChildOf, oneof),
+                ECS_CONSTRAINT_VIOLATED, NULL);
+        }
+
     } else {
         rel = id & ECS_COMPONENT_MASK;
         rel = ecs_get_alive(world, rel);
@@ -1183,6 +1198,8 @@ ecs_id_record_t* new_id_record(
     }
 
     return idr;
+error:
+    return NULL;
 }
 
 
@@ -1906,6 +1923,10 @@ void flecs_register_for_id_record(
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    if (!idr) {
+        return;
+    }
+
     ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 
     /* When id record is used by table, make sure type info is initialized */

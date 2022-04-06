@@ -2651,3 +2651,88 @@ void Pairs_has_pair_wildcard_w_tag() {
 
     ecs_fini(world);
 }
+
+void Pairs_oneof_self() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, ObjA, (ChildOf, Rel));
+    ECS_ENTITY(world, ObjB, (ChildOf, Rel));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert(ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_add_pair(world, e, Rel, ObjB);
+    test_assert(ecs_has_pair(world, e, Rel, ObjB));
+
+    ecs_fini(world);
+}
+
+void Pairs_oneof_other() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, ObjA);
+    test_assert(ecs_has_pair(world, e, Rel, ObjA));
+
+    ecs_add_pair(world, e, Rel, ObjB);
+    test_assert(ecs_has_pair(world, e, Rel, ObjB));
+
+    ecs_fini(world);
+}
+
+void Pairs_oneof_self_constraint_violated() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, ObjA, (ChildOf, Rel));
+    ECS_ENTITY(world, ObjB, (ChildOf, Rel));
+    ECS_TAG(world, ObjC);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    test_expect_abort();
+    ecs_add_pair(world, e, Rel, ObjC);
+}
+
+void Pairs_oneof_other_constraint_violated() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ECS_TAG(world, ObjC);
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    test_expect_abort();
+    ecs_add_pair(world, e, Rel, ObjC);
+}
+
+void Pairs_oneof_other_rel_parent_constraint_violated() {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjC, (ChildOf, Rel));
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    test_expect_abort();
+    ecs_add_pair(world, e, Rel, ObjC);
+}
