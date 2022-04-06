@@ -22,18 +22,18 @@ It depends. The C++ API is slightly easier to work with as it reduces the amount
 Yes. The Flecs C++ API has been written in C++11 to balance portability with modern C++ features, but applications can utilize modern C++ standards.
 
 ### Which platforms are supported by Flecs?
-Flecs is regularly validated on the following platforms:
-- Ubuntu Precise, x64 (gcc)
-- Ubuntu Xenial, x64 (gcc)
-- Ubuntu Xenial, x64 (clang)
-- Ubuntu Xenial, arm (gcc)
-- Ubuntu Bionic, x64 (gcc)
-- Ubuntu Bionic, x64 (clang)
-- MacOS 10.14, x64 (clang)
-- MacOS 10.10, x64 (clang)
-- Windows 10, x64 (msvc, visual studio 2019)
+Flecs is supported and validated on Windows, Linux and macOS and compiles warning free with gcc, clang and msvc. For a full list of tested platforms and compilers, see https://github.com/SanderMertens/flecs/actions/workflows/ci.yml
 
-Additionally, Flecs has been used with emscripten and on iOS.
+Additionally Flecs can be compiled as a wasm image: [https://flecs.dev/city](https://flecs.dev/city).
+
+### How do I compile Flecs as a static library?
+For the specifics on how to compile the source as a static library, check the documentation of your build system or IDE. When compiling flecs as a static library, make sure to define the `flecs_STATIC` macro while compiling the static library. You can do this in code by adding this line to the top of the flecs header:
+
+```c
+#define flecs_STATIC
+```
+
+Alternatively you can define `flecs_STATIC` in the build configuratuin of your project.
 
 ### Where can I ask questions about Flecs?
 You can ask questions on the [Discord channel](https://discord.gg/trycKxA), or by creating an issue in the repository.
