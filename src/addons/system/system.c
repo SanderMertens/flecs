@@ -366,7 +366,6 @@ ecs_entity_t ecs_system_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!world->is_readonly, ECS_INVALID_WHILE_ITERATING, NULL);
 
-    ecs_entity_t existing = desc->entity.entity;
     ecs_entity_t result = ecs_entity_init(world, &desc->entity);
     if (!result) {
         return 0;
@@ -467,35 +466,6 @@ ecs_entity_t ecs_system_init(
 
         ecs_defer_end(world);            
     } else {
-        const char *expr_desc = desc->query.filter.expr;
-        const char *expr_sys = system->query->filter.expr;
-
-        /* Only check expression if it's set */
-        if (expr_desc) {
-            if (expr_sys && !strcmp(expr_sys, "0")) expr_sys = NULL;
-            if (expr_desc && !strcmp(expr_desc, "0")) expr_desc = NULL;
-
-            if (expr_sys && expr_desc) {
-                if (strcmp(expr_sys, expr_desc)) {
-                    ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
-                }
-            } else {
-                if (expr_sys != expr_desc) {
-                    ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
-                }
-            }
-
-        /* If expr_desc is not set, and this is an existing system, don't throw
-         * an error because we could be updating existing parameters of the
-         * system such as the context or system callback. However, if no
-         * entity handle was provided, we have to assume that the application is
-         * trying to redeclare the system. */
-        } else if (!existing) {
-            if (expr_sys) {
-                ecs_abort(ECS_ALREADY_DEFINED, desc->entity.name);
-            }
-        }
-
         if (desc->run) {
             system->run = desc->run;
         }

@@ -459,4 +459,6 @@ void RuleBuilder_expr_w_var() {
     });
 
     test_int(count, 1);
+
+    r.destruct();
 }

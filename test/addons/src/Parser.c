@@ -3974,3 +3974,297 @@ void Parser_not_alive_obj() {
 
     ecs_fini(world);
 }
+
+void Parser_this_subj_var_kind() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA, TagB(This)"
+    }));
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].pred.var, EcsVarIsEntity);
+    test_int(terms[0].subj.var, EcsVarIsVariable);
+
+    test_pred(terms[1], TagB, EcsSelf|EcsSubSet);
+    test_subj(terms[1], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+    test_int(terms[1].pred.var, EcsVarIsEntity);
+    test_int(terms[1].subj.var, EcsVarIsVariable);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_this_obj_var_kind() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA, TagB(Subj, This)"
+    }));
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].pred.var, EcsVarIsEntity);
+    test_int(terms[0].subj.var, EcsVarIsVariable);
+
+    test_pred(terms[1], TagB, EcsSelf|EcsSubSet);
+    test_subj(terms[1], Subj, EcsSelf|EcsSuperSet);
+    test_obj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+    test_int(terms[1].pred.var, EcsVarIsEntity);
+    test_int(terms[1].subj.var, EcsVarIsEntity);
+    test_int(terms[1].obj.var, EcsVarIsVariable);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_this_subj_obj_var_kind() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA, TagB(This, This)"
+    }));
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].pred.var, EcsVarIsEntity);
+    test_int(terms[0].subj.var, EcsVarIsVariable);
+
+    test_pred(terms[1], TagB, EcsSelf|EcsSubSet);
+    test_subj(terms[1], EcsThis, EcsSelf|EcsSuperSet);
+    test_obj(terms[1], EcsThis, EcsSelf);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+    test_int(terms[1].pred.var, EcsVarIsEntity);
+    test_int(terms[1].subj.var, EcsVarIsVariable);
+    test_int(terms[1].obj.var, EcsVarIsVariable);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_var_w_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA($Var)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], 0, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    
+    test_str(terms[0].subj.name, "Var");
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_entity_pred_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].pred.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_entity_subj_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA(Subj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].subj.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_entity_obj_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA(Subj, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], Obj, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].obj.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_this_pred_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "This"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], EcsThis, EcsSelf);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].pred.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_this_subj_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA(This)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], EcsThis, EcsSelf|EcsSuperSet);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].subj.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_this_obj_no_name() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    test_int(0, ecs_filter_init(world, &f, &(ecs_filter_desc_t){
+        .expr = "TagA(Subj, This)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_pred(terms[0], TagA, EcsSelf|EcsSubSet);
+    test_subj(terms[0], Subj, EcsSelf|EcsSuperSet);
+    test_obj(terms[0], EcsThis, EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_str(terms[0].obj.name, NULL);
+
+    test_legacy(f);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

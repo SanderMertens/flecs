@@ -78,6 +78,36 @@ int finalize_term_set(
 }
 
 static
+void finalize_term_id_resources(
+    ecs_term_t *term,
+    ecs_term_id_t *id)
+{
+    if (id->entity) {
+        if (term->move) {
+            ecs_os_free(id->name);
+        }
+        id->name = NULL;
+    } else if (id->name) {
+        if (!term->move) {
+            id->name = ecs_os_strdup(id->name);
+        }
+    }
+}
+
+static
+void finalize_term_resources(
+    ecs_term_t *term)
+{
+    finalize_term_id_resources(term, &term->pred);
+    finalize_term_id_resources(term, &term->subj);
+    finalize_term_id_resources(term, &term->obj);
+    if (term->name) {
+        term->name = ecs_os_strdup(term->name);
+    }
+    term->move = false;
+}
+
+static
 int finalize_term_var(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -95,11 +125,16 @@ int finalize_term_var(
     if (identifier->var != EcsVarIsVariable) {
         if (ecs_identifier_is_0(identifier->name)) {
             identifier->entity = 0;
-        } else if (!identifier->entity) {
+        } else if (identifier->name) {
             ecs_entity_t e = ecs_lookup_symbol(world, identifier->name, true);
             if (!e) {
                 term_error(world, term, name,
                     "unresolved identifier '%s'", identifier->name);
+                return -1;
+            }
+
+            if (identifier->entity && identifier->entity != e) {
+                term_error(world, term, name, "name/entity mismatch");
                 return -1;
             }
 
@@ -303,6 +338,8 @@ int finalize_term_identifiers(
     if (entity_is_var(term->obj.entity)) {
         term->obj.var = EcsVarIsVariable;
     }
+
+    finalize_term_resources(term);
 
     return 0;
 }
@@ -918,7 +955,6 @@ int ecs_filter_init(
     /* Temporarily set the fields to the values provided in desc, until the
      * filter has been validated. */
     f.name = (char*)name;
-    f.expr = (char*)expr;
     f.filter = desc->filter;
     f.instanced = desc->instanced;
     f.match_empty_tables = desc->match_empty_tables;
@@ -995,7 +1031,7 @@ int ecs_filter_init(
     /* Copy term resources. */
     if (term_count) {
         ecs_term_t *dst_terms = terms;
-        if (!f.expr) {
+        if (!expr) {
             if (term_count <= ECS_TERM_CACHE_SIZE) {
                 dst_terms = f.term_cache;
                 f.term_cache_used = true;
@@ -1004,9 +1040,10 @@ int ecs_filter_init(
             }
         }
 
-        for (i = 0; i < term_count; i ++) {
-            dst_terms[i] = ecs_term_move(&terms[i]);
+        if (terms != dst_terms) {
+            ecs_os_memcpy_n(dst_terms, terms, ecs_term_t, term_count);
         }
+
         f.terms = dst_terms;
     } else {
         f.terms = NULL;
@@ -1023,7 +1060,6 @@ int ecs_filter_init(
     }
 
     filter_out->name = ecs_os_strdup(desc->name);
-    filter_out->expr = ecs_os_strdup(desc->expr);
     filter_out->variable_names[0] = (char*)".";
 
     ecs_assert(!filter_out->term_cache_used || 
@@ -1036,13 +1072,9 @@ int ecs_filter_init(
 
     return 0;
 error:
-    /* NULL members that point to non-owned resources */
-    if (!f.expr) {
-        f.terms = NULL;
+    if (f.name == desc->name) {
+        f.name = NULL;
     }
-
-    f.name = NULL;
-    f.expr = NULL;
 
     ecs_filter_fini(&f);
 
@@ -1108,11 +1140,9 @@ void ecs_filter_fini(
     }
 
     ecs_os_free(filter->name);
-    ecs_os_free(filter->expr);
 
     filter->terms = NULL;
     filter->name = NULL;
-    filter->expr = NULL;
 }
 
 static
