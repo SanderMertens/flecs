@@ -24083,7 +24083,8 @@ void FlecsMetaImport(
         .members = {
             {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
             {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
-            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)}
+            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
+            {.name = (char*)"offset", .type = ecs_id(ecs_i32_t)}
         }
     });
 
