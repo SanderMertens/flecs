@@ -540,23 +540,37 @@ error:
 }
 
 static
-ecs_rule_var_t* ensure_term_id_variable(
+int ensure_term_id_variable(
     ecs_rule_t *rule,
+    ecs_term_t *term,
     ecs_term_id_t *term_id)
 {
     if (term_id->var == EcsVarIsVariable) {
         if (term_id->entity == EcsAny) {
             /* Any variables aren't translated to rule variables since their
              * result isn't stored. */
-            return NULL;
+            return 0;
         }
 
         const char *name = term_id_var_name(term_id);
+
+        /* If this is a Not term, it should not introduce new variables. It may
+         * however create entity variables if there already was an existing
+         * table variable */
+        if (term->oper == EcsNot) {
+            if (!find_variable(rule, EcsRuleVarKindUnknown, name)) {
+                rule_error(rule, "variable in '%s' only appears in Not term",
+                    name);
+                return -1;
+            }
+        }
+
         ecs_rule_var_t *var = ensure_variable(rule, EcsRuleVarKindEntity, name);
         ecs_os_strset(&term_id->name, var->name);
-        return var;
+        return 0;
     }
-    return NULL;
+
+    return 0;
 }
 
 static
@@ -1112,10 +1126,6 @@ bool skip_term(ecs_term_t *term) {
     if (term->subj.set.mask & EcsNothing) {
         return true;
     }
-    if (term->oper == EcsNot) {
-        return true;
-    }
-
     return false;
 }
 
@@ -1371,7 +1381,7 @@ int compare_variable(
  * with an entity type if required. This is used later to decide whether the
  * rule needs to insert an each instruction. */
 static
-void ensure_all_variables(
+int ensure_all_variables(
     ecs_rule_t *rule)
 {
     ecs_term_t *terms = rule->filter.terms;
@@ -1385,7 +1395,9 @@ void ensure_all_variables(
 
         /* If predicate is a variable, make sure it has been registered */
         if (term->pred.var == EcsVarIsVariable) {
-            ensure_term_id_variable(rule, &term->pred);
+            if (ensure_term_id_variable(rule, term, &term->pred) != 0) {
+                return -1;
+            }
         }
 
         /* If subject is a variable and it is not This, make sure it is 
@@ -1393,15 +1405,21 @@ void ensure_all_variables(
          * correctly return all permutations */
         if (term->subj.var == EcsVarIsVariable) {
             if (term->subj.entity != EcsThis) {
-                ensure_term_id_variable(rule, &term->subj);
+                if (ensure_term_id_variable(rule, term, &term->subj) != 0) {
+                    return -1;
+                }
             }
         }
 
         /* If object is a variable, make sure it has been registered */
         if (obj_is_set(term) && (term->obj.var == EcsVarIsVariable)) {
-            ensure_term_id_variable(rule, &term->obj);
+            if (ensure_term_id_variable(rule, term, &term->obj) != 0) {
+                return -1;
+            }
         }
-    }    
+    }
+
+    return 0;   
 }
 
 /* Scan for variables, put them in optimal dependency order. */
@@ -1455,7 +1473,9 @@ int scan_variables(
 
     rule->subj_var_count = rule->var_count;
 
-    ensure_all_variables(rule);
+    if (ensure_all_variables(rule) != 0) {
+        goto error;
+    }
 
     /* Variables in a term with a literal subject have depth 0 */
     for (i = 0; i < term_count; i ++) {
@@ -2524,7 +2544,7 @@ void compile_program(
             continue;
         }
 
-        if (term->oper == EcsOptional) {
+        if (term->oper == EcsOptional || term->oper == EcsNot) {
             continue;
         }
 
@@ -2549,7 +2569,7 @@ void compile_program(
                 continue;
             }
 
-            if (term->oper == EcsOptional) {
+            if (term->oper == EcsOptional || term->oper == EcsNot) {
                 continue;
             }
 

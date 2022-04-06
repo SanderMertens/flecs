@@ -586,6 +586,7 @@ void Rules_test_this_w_wildcard_w_isa_2_lvls(void);
 void Rules_test_this_w_wildcard_w_2_isa(void);
 void Rules_rule_w_inout_filter(void);
 void Rules_variable_order(void);
+void Rules_table_subj_as_obj_in_not(void);
 
 // Testsuite 'TransitiveRules'
 void TransitiveRules_trans_X_X(void);
@@ -3182,6 +3183,10 @@ bake_test_case Rules_testcases[] = {
     {
         "variable_order",
         Rules_variable_order
+    },
+    {
+        "table_subj_as_obj_in_not",
+        Rules_table_subj_as_obj_in_not
     }
 };
 
@@ -4370,7 +4375,7 @@ static bake_test_suite suites[] = {
         "Rules",
         NULL,
         NULL,
-        160,
+        161,
         Rules_testcases
     },
     {
