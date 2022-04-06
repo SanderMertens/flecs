@@ -65,6 +65,8 @@
                 "variable_multi_char_w_underscore",
                 "variable_multi_char_w_number",
                 "variable_multi_char_not_allcaps",
+                "pred_var",
+                "obj_var",
                 "component_not",
                 "pair_implicit_subject_not",
                 "pair_explicit_subject_not",
@@ -179,7 +181,8 @@
                 "this_pred_no_name",
                 "this_subj_no_name",
                 "this_obj_no_name",
-                "only_singleton"
+                "auto_object_variable",
+                "auto_object_variable_w_subj"
             ]
         }, {
             "id": "Plecs",

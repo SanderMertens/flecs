@@ -848,6 +848,16 @@ char * ecs_ftoa(
     char * buf, 
     int precision);
 
+/* Create allocated string from format */
+char* ecs_vasprintf(
+    const char *fmt,
+    va_list args);
+
+/* Create allocated string from format */
+char* ecs_asprintf(
+    const char *fmt,
+    ...);
+
 uint64_t flecs_string_hash(
     const void *ptr);
 

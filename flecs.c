@@ -2088,6 +2088,16 @@ char * ecs_ftoa(
     char * buf, 
     int precision);
 
+/* Create allocated string from format */
+char* ecs_vasprintf(
+    const char *fmt,
+    va_list args);
+
+/* Create allocated string from format */
+char* ecs_asprintf(
+    const char *fmt,
+    ...);
+
 uint64_t flecs_string_hash(
     const void *ptr);
 
@@ -13399,8 +13409,7 @@ void* _flecs_hashmap_next(
 #include <stdio.h>
 #include <ctype.h>
 
-static
-char *ecs_vasprintf(
+char* ecs_vasprintf(
     const char *fmt,
     va_list args)
 {
@@ -13426,6 +13435,17 @@ char *ecs_vasprintf(
 
     ecs_os_vsprintf(result, fmt, args);
 
+    return result;
+}
+
+char* ecs_asprintf(
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *result = ecs_vasprintf(fmt, args);
+    va_end(args);
     return result;
 }
 
@@ -33030,6 +33050,24 @@ char* ecs_parse_term(
     ptr = parse_term(world, name, ptr, term);
     if (!ptr) {
         goto error;
+    }
+
+    /* Check for $() notation */
+    if (!ecs_os_strcmp(term->pred.name, "$")) {
+        ecs_os_free(term->pred.name);
+        
+        term->pred = term->subj;
+
+        if (term->obj.name) {
+            term->subj = term->obj;       
+        } else {
+            term->subj.entity = EcsThis;
+            term->subj.name = NULL;
+            term->subj.var = EcsVarIsVariable;
+        }
+
+        term->obj.name = ecs_os_strdup(term->pred.name);
+        term->obj.var = EcsVarIsVariable;
     }
 
     /* Post-parse consistency checks */

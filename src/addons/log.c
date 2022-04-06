@@ -5,8 +5,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-static
-char *ecs_vasprintf(
+char* ecs_vasprintf(
     const char *fmt,
     va_list args)
 {
@@ -32,6 +31,17 @@ char *ecs_vasprintf(
 
     ecs_os_vsprintf(result, fmt, args);
 
+    return result;
+}
+
+char* ecs_asprintf(
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *result = ecs_vasprintf(fmt, args);
+    va_end(args);
     return result;
 }
 

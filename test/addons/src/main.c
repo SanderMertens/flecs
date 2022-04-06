@@ -60,6 +60,8 @@ void Parser_variable_multi_char(void);
 void Parser_variable_multi_char_w_underscore(void);
 void Parser_variable_multi_char_w_number(void);
 void Parser_variable_multi_char_not_allcaps(void);
+void Parser_pred_var(void);
+void Parser_obj_var(void);
 void Parser_component_not(void);
 void Parser_pair_implicit_subject_not(void);
 void Parser_pair_explicit_subject_not(void);
@@ -174,6 +176,8 @@ void Parser_entity_obj_no_name(void);
 void Parser_this_pred_no_name(void);
 void Parser_this_subj_no_name(void);
 void Parser_this_obj_no_name(void);
+void Parser_auto_object_variable(void);
+void Parser_auto_object_variable_w_subj(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -1110,6 +1114,14 @@ bake_test_case Parser_testcases[] = {
         Parser_variable_multi_char_not_allcaps
     },
     {
+        "pred_var",
+        Parser_pred_var
+    },
+    {
+        "obj_var",
+        Parser_obj_var
+    },
+    {
         "component_not",
         Parser_component_not
     },
@@ -1564,6 +1576,14 @@ bake_test_case Parser_testcases[] = {
     {
         "this_obj_no_name",
         Parser_this_obj_no_name
+    },
+    {
+        "auto_object_variable",
+        Parser_auto_object_variable
+    },
+    {
+        "auto_object_variable_w_subj",
+        Parser_auto_object_variable_w_subj
     }
 };
 
@@ -4340,7 +4360,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        165,
+        169,
         Parser_testcases
     },
     {
