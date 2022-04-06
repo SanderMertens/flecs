@@ -18048,11 +18048,13 @@ const char *term_id_var_name(
             return "*";
         } else if (term_id->entity == EcsAny) {
             return "_";
+        } else if (term_id->entity == EcsVariable) {
+            return "$";
         } else {
             ecs_check(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
         }
     }
-    
+
 error:
     return NULL;
 }
@@ -35925,7 +35927,7 @@ ecs_id_record_t* flecs_ensure_id_record(
     ecs_id_t id)
 {
     ecs_poly_assert(world, ecs_world_t);
-    
+
     ecs_id_record_t **idr_ptr = ecs_map_ensure(&world->id_index, 
         ecs_id_record_t*, ecs_strip_generation(id));
     ecs_id_record_t *idr = idr_ptr[0];
@@ -36036,6 +36038,8 @@ void flecs_clear_id_record(
     ecs_id_t id,
     ecs_id_record_t *idr)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    
     if (world->is_fini) {
         return;
     }
@@ -36106,6 +36110,8 @@ ecs_id_record_t* flecs_empty_table_iter(
 void ecs_force_aperiodic(
     ecs_world_t *world)
 {
+    ecs_poly_assert(world, ecs_world_t);
+    
     flecs_process_pending_tables(world);
     flecs_eval_component_monitors(world);
 }
@@ -36118,6 +36124,8 @@ int32_t ecs_delete_empty_tables(
     int32_t min_id_count,
     double time_budget_seconds)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_time_t start = {0}, cur = {0};
     int32_t delete_count = 0, clear_count = 0;
     bool time_budget = false;
@@ -36669,6 +36677,12 @@ int finalize_term_identifiers(
 
     if (entity_is_var(term->pred.entity)) {
         term->pred.var = EcsVarIsVariable;
+    }
+
+    if (term->pred.entity == EcsVariable) {
+        term_error(world, term, name, 
+            "invalid usage of Variable ($) as predicate");
+        return -1;
     }
 
     /* If EcsVariable is used by itself, assign to predicate (singleton) */

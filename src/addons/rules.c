@@ -530,11 +530,13 @@ const char *term_id_var_name(
             return "*";
         } else if (term_id->entity == EcsAny) {
             return "_";
+        } else if (term_id->entity == EcsVariable) {
+            return "$";
         } else {
             ecs_check(term_id->name != NULL, ECS_INVALID_PARAMETER, NULL);
         }
     }
-    
+
 error:
     return NULL;
 }

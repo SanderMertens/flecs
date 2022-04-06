@@ -178,7 +178,8 @@
                 "entity_obj_no_name",
                 "this_pred_no_name",
                 "this_subj_no_name",
-                "this_obj_no_name"
+                "this_obj_no_name",
+                "only_singleton"
             ]
         }, {
             "id": "Plecs",

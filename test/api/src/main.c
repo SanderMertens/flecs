@@ -764,6 +764,9 @@ void Filter_filter_1_term_dont_inherit_pair_default_set(void);
 void Filter_filter_1_term_cascade_implicit_isa(void);
 void Filter_filter_1_term_cascade_isa(void);
 void Filter_filter_1_term_cascade_childof(void);
+void Filter_filter_1_variable_as_pred_only(void);
+void Filter_filter_1_variable_as_pred_w_subj(void);
+void Filter_filter_1_variable_as_pred_w_pair(void);
 void Filter_filter_w_pair_id(void);
 void Filter_filter_w_pred_obj(void);
 void Filter_filter_move(void);
@@ -4764,6 +4767,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_1_term_cascade_childof",
         Filter_filter_1_term_cascade_childof
+    },
+    {
+        "filter_1_variable_as_pred_only",
+        Filter_filter_1_variable_as_pred_only
+    },
+    {
+        "filter_1_variable_as_pred_w_subj",
+        Filter_filter_1_variable_as_pred_w_subj
+    },
+    {
+        "filter_1_variable_as_pred_w_pair",
+        Filter_filter_1_variable_as_pred_w_pair
     },
     {
         "filter_w_pair_id",
@@ -9284,7 +9299,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        183,
+        186,
         Filter_testcases
     },
     {

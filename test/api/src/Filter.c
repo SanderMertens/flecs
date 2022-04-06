@@ -617,6 +617,57 @@ void Filter_filter_1_term_cascade_childof() {
     ecs_fini(world);
 }
 
+void Filter_filter_1_variable_as_pred_only() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = EcsVariable }}
+    });
+    test_assert(r != 0);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_variable_as_pred_w_subj() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Subj);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ .id = EcsVariable, .subj.entity = Subj }}
+    });
+    test_assert(r != 0);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_1_variable_as_pred_w_pair() {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Subj);
+    ECS_TAG(world, Obj);
+
+    ecs_filter_t f;
+    int r = ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
+        .terms = {{ 
+            .pred.entity = EcsVariable, 
+            .subj.entity = Subj, 
+            .obj.entity = Obj 
+        }}
+    });
+    test_assert(r != 0);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_w_pair_id() {
     ecs_world_t *world = ecs_mini();
 

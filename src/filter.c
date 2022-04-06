@@ -322,6 +322,12 @@ int finalize_term_identifiers(
         term->pred.var = EcsVarIsVariable;
     }
 
+    if (term->pred.entity == EcsVariable) {
+        term_error(world, term, name, 
+            "invalid usage of Variable ($) as predicate");
+        return -1;
+    }
+
     /* If EcsVariable is used by itself, assign to predicate (singleton) */
     if (term->subj.entity == EcsVariable) {
         term->subj.entity = term->pred.entity;
