@@ -606,11 +606,11 @@ Serialize the ["type_info"](#type_info_1) member.
 ```json
 {
   "ids": ["Position", "Jedi"],
+  "type_info": [{
+      "x": ["float"],
+      "y": ["float"]
+  }, 0],
   "results": [{
-    "type_info": [{
-        "x": ["float"],
-        "y": ["float"]
-    }, 0]
   }]
 }
 ```
