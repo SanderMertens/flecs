@@ -4123,3 +4123,77 @@ void Trigger_create_triggers_in_trigger() {
 
     ecs_fini(world);
 }
+
+static
+void Trigger_w_nonzero_value(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_term(it, Position, 1);
+    test_assert(p != NULL);
+}
+
+void Trigger_trigger_on_add_superset_w_component() {
+	ecs_world_t *world = ecs_mini();
+
+	ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+	ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+		.term.id = ecs_id(Position),
+		.events = {EcsOnAdd},
+		.callback = Trigger_w_nonzero_value,
+        .ctx = &ctx
+	});
+
+	ecs_entity_t b = ecs_new(world, 0);
+	ecs_set(world, b, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], b);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+	
+	ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, b);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], i);
+    test_int(ctx.s[0][0], b);
+
+    ecs_fini(world);
+}
+
+void Trigger_trigger_on_set_superset_w_component() {
+	ecs_world_t *world = ecs_mini();
+
+	ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+	ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+		.term.id = ecs_id(Position),
+		.events = {EcsOnSet},
+		.callback = Trigger_w_value,
+        .ctx = &ctx
+	});
+
+	ecs_entity_t b = ecs_new(world, 0);
+	ecs_set(world, b, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], b);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+	
+	ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, b);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], i);
+    test_int(ctx.s[0][0], b);
+
+    ecs_fini(world);
+}

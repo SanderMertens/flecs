@@ -1321,6 +1321,8 @@ void Trigger_trigger_superset_wildcard(void);
 void Trigger_remove_wildcard_1_id(void);
 void Trigger_remove_wildcard_2_ids(void);
 void Trigger_create_triggers_in_trigger(void);
+void Trigger_trigger_on_add_superset_w_component(void);
+void Trigger_trigger_on_set_superset_w_component(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -6964,6 +6966,14 @@ bake_test_case Trigger_testcases[] = {
     {
         "create_triggers_in_trigger",
         Trigger_create_triggers_in_trigger
+    },
+    {
+        "trigger_on_add_superset_w_component",
+        Trigger_trigger_on_add_superset_w_component
+    },
+    {
+        "trigger_on_set_superset_w_component",
+        Trigger_trigger_on_set_superset_w_component
     }
 };
 
@@ -9304,7 +9314,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        98,
+        100,
         Trigger_testcases
     },
     {
