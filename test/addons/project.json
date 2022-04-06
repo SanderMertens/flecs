@@ -600,7 +600,8 @@
                 "test_this_w_wildcard_w_isa_2_lvls",
                 "test_this_w_wildcard_w_2_isa",
                 "rule_w_inout_filter",
-                "variable_order"
+                "variable_order",
+                "table_subj_as_obj_in_not"
             ]
         }, {
             "id": "TransitiveRules",

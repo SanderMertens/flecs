@@ -6563,3 +6563,34 @@ void Rules_variable_order() {
 
     ecs_fini(world);
 }
+
+void Rules_table_subj_as_obj_in_not() {
+  ecs_world_t *world = ecs_mini();
+
+  ECS_ENTITY(world, Trait, Final);
+  ECS_ENTITY(world, Subj, Final);
+
+  ecs_rule_t *r = ecs_rule_new(world, "Trait, !Trait(Subj, This)");
+  test_assert(r != NULL);
+
+  ecs_entity_t e1 = ecs_new(world, Trait);
+  ecs_entity_t e2 = ecs_new(world, Trait);
+  ecs_entity_t e3 = ecs_new(world, Trait);
+
+  ecs_add_pair(world, Subj, Trait, e2);
+
+  ecs_iter_t it = ecs_rule_iter(world, r);
+  test_bool(true, ecs_rule_next(&it));
+  test_int(it.count, 1);
+  test_uint(it.entities[0], e1);
+
+  test_bool(true, ecs_rule_next(&it));
+  test_int(it.count, 1);
+  test_uint(it.entities[0], e3);
+
+  test_bool(false, ecs_rule_next(&it));
+
+  ecs_rule_fini(r);
+
+  ecs_fini(world);
+}
