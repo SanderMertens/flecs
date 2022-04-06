@@ -956,7 +956,7 @@ char* ecs_parse_term(
     }
 
     /* Check for $() notation */
-    if (term->pred.name && !ecs_os_strcmp(term->pred.name, "$")) {
+    if (!ecs_os_strcmp(term->pred.name, "$")) {
         if (term->subj.name) {
             ecs_os_free(term->pred.name);
             
