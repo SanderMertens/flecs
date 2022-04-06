@@ -1844,7 +1844,8 @@
                 "defer_enable",
                 "defer_disable",
                 "defer_delete_with",
-                "defer_remove_all"
+                "defer_remove_all",
+                "deferred_modified_after_remove"
             ]
         }, {
             "id": "SingleThreadStaging",
