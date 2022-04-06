@@ -354,11 +354,12 @@ void Type_entity_case_str() {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Foo, 0);
+    ECS_ENTITY(world, Bar, 0);
 
-    ecs_entity_t e = ECS_CASE | Foo;
+    ecs_entity_t e = ecs_case(Foo, Bar);
 
     char *str = ecs_id_str(world, e);
-    test_str(str, "CASE|Foo");
+    test_str(str, "CASE|(Foo,Bar)");
     ecs_os_free(str);
 
     ecs_fini(world);

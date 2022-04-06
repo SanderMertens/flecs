@@ -3894,7 +3894,7 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
 

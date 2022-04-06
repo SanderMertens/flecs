@@ -989,7 +989,11 @@
                 "two_terms_w_inout",
                 "three_terms_w_or",
                 "three_terms_w_or_inout",
-                "four_terms_three_w_or_inout"
+                "four_terms_three_w_or_inout",
+                "switch",
+                "case",
+                "switch_from_entity",
+                "case_from_entity"
             ]
         }, {
             "id": "Query",

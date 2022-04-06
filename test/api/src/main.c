@@ -937,6 +937,10 @@ void FilterStr_two_terms_w_inout(void);
 void FilterStr_three_terms_w_or(void);
 void FilterStr_three_terms_w_or_inout(void);
 void FilterStr_four_terms_three_w_or_inout(void);
+void FilterStr_switch(void);
+void FilterStr_case(void);
+void FilterStr_switch_from_entity(void);
+void FilterStr_case_from_entity(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -5444,6 +5448,22 @@ bake_test_case FilterStr_testcases[] = {
     {
         "four_terms_three_w_or_inout",
         FilterStr_four_terms_three_w_or_inout
+    },
+    {
+        "switch",
+        FilterStr_switch
+    },
+    {
+        "case",
+        FilterStr_case
+    },
+    {
+        "switch_from_entity",
+        FilterStr_switch_from_entity
+    },
+    {
+        "case_from_entity",
+        FilterStr_case_from_entity
     }
 };
 
@@ -9256,7 +9276,7 @@ static bake_test_suite suites[] = {
         "FilterStr",
         NULL,
         NULL,
-        7,
+        11,
         FilterStr_testcases
     },
     {

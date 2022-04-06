@@ -8486,7 +8486,7 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
+    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
@@ -37524,11 +37524,6 @@ void term_str_w_strbuf(
     bool subj_set = ecs_term_id_is_set(subj);
     bool obj_set = ecs_term_id_is_set(obj);
 
-    if (term->role && term->role != ECS_PAIR) {
-        ecs_strbuf_appendstr(buf, ecs_role_str(term->role));
-        ecs_strbuf_appendstr(buf, " ");
-    }
-
     if (term->oper == EcsNot) {
         ecs_strbuf_appendstr(buf, "!");
     } else if (term->oper == EcsOptional) {
@@ -37538,7 +37533,8 @@ void term_str_w_strbuf(
     if (!subj_set) {
         filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "()");
-    } else if (subj_set && subj->entity == EcsThis && subj->set.mask == def_subj_mask)
+    } else if (subj_set && subj->entity == EcsThis && 
+        subj->set.mask == def_subj_mask)
     {
         if (term->id) {
             char *str = ecs_id_str(world, term->id);
@@ -37548,6 +37544,11 @@ void term_str_w_strbuf(
             filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);   
         }
     } else {
+        if (term->role && term->role != ECS_PAIR) {
+            ecs_strbuf_appendstr(buf, ecs_role_str(term->role));
+            ecs_strbuf_appendch(buf, '|');
+        }
+
         filter_str_add_id(world, buf, &term->pred, false, def_pred_mask);
         ecs_strbuf_appendstr(buf, "(");
         filter_str_add_id(world, buf, &term->subj, true, def_subj_mask);
