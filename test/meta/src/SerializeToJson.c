@@ -482,6 +482,29 @@ void SerializeToJson_struct_double_large() {
         }
     });
 
+    T value = {60000};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"6e4\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_double_large_e() {
+    typedef struct {
+        ecs_f64_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t) {
+        .entity.name = "T",
+        .members = {
+            {"x", ecs_id(ecs_f64_t)}
+        }
+    });
+
     T value = {5.9722e24};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);

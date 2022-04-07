@@ -12050,16 +12050,20 @@ int ecs_strbuf_ftoa(
 
         /* Make sure that exp starts after first character */
         c = p1[0];
-        p1[0] = '.';
 
-        do {
-            char t = (++p1)[0];
-            p1[0] = c;
-            c = t;
-            exp ++;
-        } while (c);
+        if (c) {
+            p1[0] = '.';
+            do {
+                char t = (++p1)[0];
+                p1[0] = c;
+                c = t;
+                exp ++;
+            } while (c);
+            ptr = p1 + 1;
+        } else {
+            ptr = p1;
+        }
 
-        ptr = p1 + 1;
 
         ptr[0] = 'e';
         ptr = strbuf_itoa(ptr + 1, exp);
