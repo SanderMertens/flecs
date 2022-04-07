@@ -49,11 +49,24 @@ ecs_entity_t plecs_lookup(
     const ecs_world_t *world,
     const char *path,
     plecs_state_t *state,
+    ecs_entity_t rel,
     bool is_subject)
 {
     ecs_entity_t e = 0;
 
     if (!is_subject) {
+        ecs_entity_t oneof = 0;
+        if (rel) {
+            if (ecs_has_id(world, rel, EcsOneOf)) {
+                oneof = rel;
+            } else {
+                oneof = ecs_get_object(world, rel, EcsOneOf, 0);
+            }
+            if (oneof) {
+                return ecs_lookup_path_w_sep(
+                    world, oneof, path, NULL, NULL, false);
+            }
+        }
         int using_scope = state->using_frame - 1;
         for (; using_scope >= 0; using_scope--) {
             e = ecs_lookup_path_w_sep(
@@ -79,7 +92,7 @@ ecs_entity_t plecs_lookup_action(
     const char *path,
     void *ctx)
 {
-    return plecs_lookup(world, path, ctx, false);
+    return plecs_lookup(world, path, ctx, 0, false);
 }
 #endif
 
@@ -148,14 +161,25 @@ ecs_entity_t ensure_entity(
     ecs_world_t *world,
     plecs_state_t *state,
     const char *path,
+    ecs_entity_t rel,
     bool is_subject)
 {
     if (!path) {
         return 0;
     }
 
-    ecs_entity_t e = plecs_lookup(world, path, state, is_subject);
+    ecs_entity_t e = plecs_lookup(world, path, state, rel, is_subject);
     if (!e) {
+        if (rel && flecs_get_oneof(world, rel)) {
+            /* If relationship has oneof and entity was not found, don't proceed
+             * with creating an entity as this can cause asserts later on */
+            char *relstr = ecs_get_fullpath(world, rel);
+            ecs_parser_error(state->name, 0, 0, 
+                "invalid identifier '%s' for relation '%s'", path, relstr);
+            ecs_os_free(relstr);
+            return 0;
+        }
+
         if (!is_subject) {
             /* If this is not a subject create an existing empty id, which 
              * ensures that scope & with are not applied */
@@ -271,13 +295,16 @@ int create_term(
 
     bool pred_as_subj = pred_is_subj(term, state);
 
-    ecs_entity_t pred = ensure_entity(world, state, pred_name, pred_as_subj); 
-    ecs_entity_t subj = ensure_entity(world, state, subj_name, true);
+    ecs_entity_t pred = ensure_entity(world, state, pred_name, 0, pred_as_subj); 
+    ecs_entity_t subj = ensure_entity(world, state, subj_name, pred, true);
     ecs_entity_t obj = 0;
 
     if (ecs_term_id_is_set(&term->obj)) {
-        obj = ensure_entity(world, state, obj_name, 
+        obj = ensure_entity(world, state, obj_name, pred,
             state->assign_stmt == false);
+        if (!obj) {
+            return -1;
+        }
     }
 
     if (state->assign_stmt || state->isa_stmt) {
@@ -731,9 +758,9 @@ const char *parse_plecs_term(
         const char *tptr = ecs_parse_fluff(ptr + 1, NULL);
         if (tptr[0] == '{') {
             ecs_entity_t pred = plecs_lookup(
-                world, term.pred.name, state, false);
+                world, term.pred.name, state, 0, false);
             ecs_entity_t obj = plecs_lookup(
-                world, term.obj.name, state, false);
+                world, term.obj.name, state, pred, false);
             ecs_id_t id = 0;
             if (pred && obj) {
                 id = ecs_pair(pred, obj);

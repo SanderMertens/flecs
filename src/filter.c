@@ -131,11 +131,7 @@ int finalize_term_var(
             if (term->pred.var == EcsVarIsEntity) {
                 pred = term->pred.entity;
                 if (pred) {
-                    if (ecs_has_id(world, pred, EcsOneOf)) {
-                        oneof = pred;
-                    } else {
-                        oneof = ecs_get_object(world, pred, EcsOneOf, 0);
-                    }
+                    oneof = flecs_get_oneof(world, pred);
                 }
             }
 

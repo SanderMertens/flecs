@@ -1112,6 +1112,17 @@ void fini_stages(
     ecs_set_stages(world, 0);
 }
 
+ecs_entity_t flecs_get_oneof(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ecs_has_id(world, e, EcsOneOf)) {
+        return e;
+    } else {
+        return ecs_get_object(world, e, EcsOneOf, 0);
+    }
+}
+
 static
 ecs_id_record_t* new_id_record(
     ecs_world_t *world,
@@ -1142,13 +1153,7 @@ ecs_id_record_t* new_id_record(
 
         /* Check constraints */
         if (obj && !ecs_id_is_wildcard(obj)) {
-            ecs_entity_t oneof = 0;
-            if (ecs_has_id(world, rel, EcsOneOf)) {
-                oneof = rel;
-            } else {
-                oneof = ecs_get_object(world, rel, EcsOneOf, 0);
-            }
-
+            ecs_entity_t oneof = flecs_get_oneof(world, rel);
             ecs_check( !oneof || ecs_has_pair(world, obj, EcsChildOf, oneof),
                 ECS_CONSTRAINT_VIOLATED, NULL);
             (void)oneof;

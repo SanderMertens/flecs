@@ -316,6 +316,8 @@ void Plecs_inherit_from_multiple(void);
 void Plecs_assign_pair_component(void);
 void Plecs_assign_pair_component_in_scope(void);
 void Plecs_set_entity_names(void);
+void Plecs_oneof(void);
+void Plecs_invalid_oneof(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -2137,6 +2139,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "set_entity_names",
         Plecs_set_entity_names
+    },
+    {
+        "oneof",
+        Plecs_oneof
+    },
+    {
+        "invalid_oneof",
+        Plecs_invalid_oneof
     }
 };
 
@@ -4397,7 +4407,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        131,
+        133,
         Plecs_testcases
     },
     {

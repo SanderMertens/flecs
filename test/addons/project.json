@@ -322,7 +322,9 @@
                 "inherit_from_multiple",
                 "assign_pair_component",
                 "assign_pair_component_in_scope",
-                "set_entity_names"
+                "set_entity_names",
+                "oneof",
+                "invalid_oneof"
             ]
         }, {
             "id": "Doc",

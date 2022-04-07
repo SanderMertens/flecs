@@ -3621,3 +3621,60 @@ void Plecs_set_entity_names() {
 
     ecs_fini(world);
 }
+
+void Plecs_oneof() {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Enum(Color) {"
+    LINE "  flecs.meta.Constant(Red)"
+    LINE "  flecs.meta.Constant(Green)"
+    LINE "  flecs.meta.Constant(Blue)"
+    LINE "}"
+    LINE "e = (Color, Green)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t color = ecs_lookup_fullpath(world, "Color");
+    ecs_entity_t green = ecs_lookup_fullpath(world, "Color.Green");
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+
+    test_assert(color != 0);
+    test_assert(green != 0);
+    test_assert(e != 0);
+    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
+
+    test_assert( ecs_has_id(world, color, EcsOneOf));
+    test_assert( ecs_has_id(world, green, EcsConstant));
+    test_assert( ecs_has_id(world, e, ecs_pair(color, green)));
+
+    ecs_fini(world);
+}
+
+void Plecs_invalid_oneof() {
+    ecs_log_set_level(-4);
+    
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "flecs.meta.Enum(Color) {"
+    LINE "  flecs.meta.Constant(Red)"
+    LINE "  flecs.meta.Constant(Green)"
+    LINE "  flecs.meta.Constant(Blue)"
+    LINE "}"
+    LINE "e = (Color, Foo)";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_entity_t color = ecs_lookup_fullpath(world, "Color");
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+
+    test_assert(color != 0);
+    test_assert(foo == 0);
+    test_assert(e != 0);
+
+    test_assert( !ecs_has_pair(world, e, color, EcsWildcard));
+
+    ecs_fini(world);
+}
