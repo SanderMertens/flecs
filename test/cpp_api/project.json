@@ -682,7 +682,8 @@
                 "10_terms",
                 "20_terms",
                 "name_arg",
-                "create_w_no_template_args"
+                "create_w_no_template_args",
+                "write_annotation"
             ]  
         }, {
             "id": "Observer",

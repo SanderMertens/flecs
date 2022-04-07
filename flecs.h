@@ -20485,6 +20485,38 @@ struct term_builder_i : term_id_builder_i<Base> {
         return *this;
     }
 
+    /** Scheduler annotation to indicate system uses add<T> */
+    Base& add() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
+        m_term->subj.set.mask = flecs::Nothing;
+        return *this;
+    }
+
+    /** Scheduler annotation to indicate sytem uses add<T>, remove<T> or set<T> */
+    Base& write() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->inout = static_cast<ecs_inout_kind_t>(flecs::Out);
+        m_term->subj.set.mask = flecs::Nothing;
+        return *this;
+    }
+
+    /** Scheduler annotation to indicate sytem uses get<T> */
+    Base& read() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->inout = static_cast<ecs_inout_kind_t>(flecs::In);
+        m_term->subj.set.mask = flecs::Nothing;
+        return *this;
+    }
+
+    /** Scheduler annotation to indicate sytem uses get_mut<T> */
+    Base& read_write() {
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);
+        m_term->inout = static_cast<ecs_inout_kind_t>(flecs::InOut);
+        m_term->subj.set.mask = flecs::Nothing;
+        return *this;
+    }
+
     /** Set operator of term. */
     Base& oper(flecs::oper_kind_t oper) {
         ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, NULL);

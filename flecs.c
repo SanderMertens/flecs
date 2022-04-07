@@ -472,7 +472,7 @@ struct ecs_table_t {
 
     ecs_graph_node_t node;           /* Graph node */
     ecs_data_t storage;              /* Component storage */
-    ecs_type_info_t *type_info;      /* Cached pointers to type info */
+    ecs_type_info_t *type_info;      /* Cached type info */
 
     int32_t *dirty_state;            /* Keep track of changes in columns */
     
@@ -482,9 +482,9 @@ struct ecs_table_t {
     int16_t bs_column_offset;
 
     int32_t alloc_count;             /* Increases when columns are reallocd */
-    int32_t refcount;
-    int16_t lock;
-    uint16_t record_count;
+    int32_t refcount;                /* Increased when used as storage table */
+    int16_t lock;                    /* Prevents modifications */
+    uint16_t record_count;           /* Table record count including wildcards */
 };
 
 /** Must appear as first member in payload of table cache */

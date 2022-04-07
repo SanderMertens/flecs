@@ -478,3 +478,39 @@ void SystemBuilder_create_w_no_template_args() {
     s.run();
     test_int(count, 1);
 }
+
+void SystemBuilder_write_annotation() {
+    flecs::world ecs;
+
+    struct TagA { };
+    struct TagB { };
+
+    auto e1 = ecs.entity().add<TagA>();
+
+    int32_t a_count = 0, b_count = 0;
+
+    ecs.system<TagA>()
+        .term<TagB>().write()
+        .each([&](flecs::entity e, TagA) {
+            a_count ++;
+            test_assert(e == e1);
+            e.add<TagB>();
+        });
+    
+    ecs.system<TagB>()
+        .each([&](flecs::entity e, TagB) {
+            b_count ++;
+            test_assert(e == e1);
+            test_assert(e.has<TagB>());
+        });
+
+    test_int(a_count, 0);
+    test_int(b_count, 0);
+    
+    ecs.progress();
+    
+    test_int(a_count, 1);
+    test_int(b_count, 1);
+
+    test_assert(e1.has<TagB>());
+}

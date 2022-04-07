@@ -649,6 +649,7 @@ void SystemBuilder_10_terms(void);
 void SystemBuilder_20_terms(void);
 void SystemBuilder_name_arg(void);
 void SystemBuilder_create_w_no_template_args(void);
+void SystemBuilder_write_annotation(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -3394,6 +3395,10 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "create_w_no_template_args",
         SystemBuilder_create_w_no_template_args
+    },
+    {
+        "write_annotation",
+        SystemBuilder_write_annotation
     }
 };
 
@@ -4452,7 +4457,7 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        20,
+        21,
         SystemBuilder_testcases
     },
     {
