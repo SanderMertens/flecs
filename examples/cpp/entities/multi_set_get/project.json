@@ -1,0 +1,11 @@
+{
+    "id": "multi_set_get",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "language": "c++"
+    }
+}
