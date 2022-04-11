@@ -1,8 +1,8 @@
-#ifndef RELATIONS_H
-#define RELATIONS_H
+#ifndef BASICS_H
+#define BASICS_H
 
 /* This generated file contains includes for project dependencies */
-#include "relations/bake_config.h"
+#include "basics/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {
