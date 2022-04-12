@@ -1199,6 +1199,8 @@ ecs_id_record_t* new_id_record(
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
     ecs_table_cache_init(&idr->cache);
 
+    bool is_wildcard = ecs_id_is_wildcard(id);
+
     ecs_entity_t rel = 0, obj = 0;
     if (ECS_HAS_ROLE(id, PAIR)) {
         rel = ecs_pair_first(world, id);
@@ -1211,13 +1213,6 @@ ecs_id_record_t* new_id_record(
             obj = ecs_get_alive(world, obj);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
         }
-        
-        /* If id is a pair, inherit flags from relation id record */
-        ecs_id_record_t *idr_r = flecs_get_id_record(
-            world, ECS_PAIR_FIRST(id));
-        if (idr_r) {
-            idr->flags = (idr_r->flags & ~ECS_TYPE_INFO_INITIALIZED);
-        }
 
         /* Check constraints */
         if (obj && !ecs_id_is_wildcard(obj)) {
@@ -1227,12 +1222,25 @@ ecs_id_record_t* new_id_record(
             (void)oneof;
         }
 
-        /* If pair is not a wildcard, append it to wildcard lists. These allow
-         * for quickly enumerating all relations for an object, or all objecs
-         * for a relation. */
-        if (!ecs_id_is_wildcard(id)) {
+        if (!is_wildcard) {
+            /* If pair is not a wildcard, append it to wildcard lists. These 
+             * allow for quickly enumerating all relations for an object, or all 
+             * objecs for a relation. */
             insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
             insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
+
+            /* Inherit flags from (relation, *) record */
+            ecs_id_record_t *idr_r = flecs_get_id_record(
+                world, ecs_pair(rel, EcsWildcard));
+            if (idr_r) {
+                idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
+            }
+        } else {
+            /* Inherit flags from (relation) record */
+            ecs_id_record_t *idr_r = flecs_get_id_record(world, rel);
+            if (idr_r) {
+                idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
+            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -1265,7 +1273,7 @@ ecs_id_record_t* new_id_record(
     /* Update counters */
     world->info.id_create_total ++;
 
-    if (!ecs_id_is_wildcard(id)) {
+    if (!is_wildcard) {
         world->info.id_count ++;
 
         /* if id is component, attaching type info will update counters */
@@ -2024,7 +2032,7 @@ void flecs_register_for_id_record(
     ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 
     /* When id record is used by table, make sure type info is initialized */
-    if (!(idr->flags & ECS_TYPE_INFO_INITIALIZED)) {
+    if (!(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED)) {
         ecs_entity_t type = ecs_get_typeid(world, id);
         if (type) {
             idr->type_info = flecs_get_type_info(world, type);
@@ -2033,7 +2041,7 @@ void flecs_register_for_id_record(
             world->info.tag_id_count --;
             world->info.component_id_count ++;
         }
-        idr->flags |= ECS_TYPE_INFO_INITIALIZED;
+        idr->flags |= ECS_ID_TYPE_INFO_INITIALIZED;
     }
 }
 

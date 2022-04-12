@@ -172,7 +172,7 @@ void init_storage_table(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_TYPE_INFO_INITIALIZED, 
+        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
             ECS_INTERNAL_ERROR, NULL);
 
         if (idr->type_info == NULL) {
@@ -262,7 +262,7 @@ void init_type_info(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_TYPE_INFO_INITIALIZED, 
+        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
             ECS_INTERNAL_ERROR, NULL);
         
         /* All ids in the storage table must be components with type info */
@@ -742,8 +742,8 @@ void flecs_table_free(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d // %p", 
-            expr, table->id, table);
+            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
+            expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
     }

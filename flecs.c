@@ -2300,7 +2300,7 @@ void init_storage_table(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_TYPE_INFO_INITIALIZED, 
+        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
             ECS_INTERNAL_ERROR, NULL);
 
         if (idr->type_info == NULL) {
@@ -2390,7 +2390,7 @@ void init_type_info(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_TYPE_INFO_INITIALIZED, 
+        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
             ECS_INTERNAL_ERROR, NULL);
         
         /* All ids in the storage table must be components with type info */
@@ -2870,8 +2870,8 @@ void flecs_table_free(
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, table->type);
         ecs_dbg_2(
-            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d // %p", 
-            expr, table->id, table);
+            "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
+            expr, table->id);
         ecs_os_free(expr);
         ecs_log_push_2();
     }
@@ -7052,7 +7052,7 @@ void on_delete_object_action(
     ecs_entity_t action)
 {
     ecs_table_cache_iter_t it;
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idrr, *idr = flecs_get_id_record(world, id);
 
     if (idr) {
         bool deleted;
@@ -7069,7 +7069,7 @@ void on_delete_object_action(
 
             /* First move entities to tables without the id (action = Remove) or
              * delete entities with id (action = Delete) */
-            const ecs_table_record_t *tr;
+            const ecs_table_record_t *trr, *tr;
             if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                 do {
                     ecs_table_t *table = tr->hdr.table;
@@ -7085,27 +7085,14 @@ void on_delete_object_action(
                      * could happen if store contains cyclic relationships */
                     flecs_table_claim(world, table);
 
-                    /* If store contains cyclic relationships it's possible that
-                     * a table we were about to cleanup already got emptied */
-                    ecs_id_t *rel_id = ecs_vector_get(
-                        table->type, ecs_id_t, tr->column);
-                    ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
-                    /* delete_object_action should be invoked for pairs */
-                    ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
-
                     /* Initialize with original value in case action = 0 */
                     ecs_entity_t cur_action = action;
 
                     /* Find delete action for relation */
                     if (!cur_action) {
-                        ecs_id_record_t *idrr = flecs_get_id_record(
-                            world, rel);
-                        if (idrr) {
-                            cur_action = 
-                                ECS_ID_ON_DELETE_OBJECT(idrr->flags);
-                        }
+                        trr = &table->records[tr->column];
+                        idrr = (ecs_id_record_t*)trr->hdr.cache;
+                        cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
                     }
 
                     if (!cur_action || cur_action == EcsRemove) {
@@ -35325,6 +35312,8 @@ ecs_id_record_t* new_id_record(
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
     ecs_table_cache_init(&idr->cache);
 
+    bool is_wildcard = ecs_id_is_wildcard(id);
+
     ecs_entity_t rel = 0, obj = 0;
     if (ECS_HAS_ROLE(id, PAIR)) {
         rel = ecs_pair_first(world, id);
@@ -35337,13 +35326,6 @@ ecs_id_record_t* new_id_record(
             obj = ecs_get_alive(world, obj);
             ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
         }
-        
-        /* If id is a pair, inherit flags from relation id record */
-        ecs_id_record_t *idr_r = flecs_get_id_record(
-            world, ECS_PAIR_FIRST(id));
-        if (idr_r) {
-            idr->flags = (idr_r->flags & ~ECS_TYPE_INFO_INITIALIZED);
-        }
 
         /* Check constraints */
         if (obj && !ecs_id_is_wildcard(obj)) {
@@ -35353,12 +35335,25 @@ ecs_id_record_t* new_id_record(
             (void)oneof;
         }
 
-        /* If pair is not a wildcard, append it to wildcard lists. These allow
-         * for quickly enumerating all relations for an object, or all objecs
-         * for a relation. */
-        if (!ecs_id_is_wildcard(id)) {
+        if (!is_wildcard) {
+            /* If pair is not a wildcard, append it to wildcard lists. These 
+             * allow for quickly enumerating all relations for an object, or all 
+             * objecs for a relation. */
             insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
             insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
+
+            /* Inherit flags from (relation, *) record */
+            ecs_id_record_t *idr_r = flecs_get_id_record(
+                world, ecs_pair(rel, EcsWildcard));
+            if (idr_r) {
+                idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
+            }
+        } else {
+            /* Inherit flags from (relation) record */
+            ecs_id_record_t *idr_r = flecs_get_id_record(world, rel);
+            if (idr_r) {
+                idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
+            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -35391,7 +35386,7 @@ ecs_id_record_t* new_id_record(
     /* Update counters */
     world->info.id_create_total ++;
 
-    if (!ecs_id_is_wildcard(id)) {
+    if (!is_wildcard) {
         world->info.id_count ++;
 
         /* if id is component, attaching type info will update counters */
@@ -36150,7 +36145,7 @@ void flecs_register_for_id_record(
     ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 
     /* When id record is used by table, make sure type info is initialized */
-    if (!(idr->flags & ECS_TYPE_INFO_INITIALIZED)) {
+    if (!(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED)) {
         ecs_entity_t type = ecs_get_typeid(world, id);
         if (type) {
             idr->type_info = flecs_get_type_info(world, type);
@@ -36159,7 +36154,7 @@ void flecs_register_for_id_record(
             world->info.tag_id_count --;
             world->info.component_id_count ++;
         }
-        idr->flags |= ECS_TYPE_INFO_INITIALIZED;
+        idr->flags |= ECS_ID_TYPE_INFO_INITIALIZED;
     }
 }
 
@@ -47133,19 +47128,23 @@ void register_on_delete_object(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDeleteObject);
+        ecs_id_t pair = ecs_pair(e, EcsWildcard);
 
         if (event == EcsOnAdd) {
-            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+            ecs_id_record_t *idr = flecs_ensure_id_record(world, pair);
+            do {
+                idr->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+            } while ((idr = idr->first.next));
+            flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
         } else {
-            ecs_id_record_t *r = flecs_get_id_record(world, e);
-            if (r) {
-                r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            ecs_id_record_t *idr = flecs_get_id_record(world, pair);
+            if (!idr) {
+                continue;
             }
+            do {
+                idr->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            } while ((idr = idr->first.next));
         }
-
-        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
 }
 
