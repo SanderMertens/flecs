@@ -230,18 +230,20 @@ void register_on_delete_object(ecs_iter_t *it) {
 
 static
 void register_acyclic(ecs_iter_t *it) {
-    register_id_flag_for_relation(it, EcsAcyclic, ECS_ID_ACYCLIC, 0, 0);
+    register_id_flag_for_relation(it, EcsAcyclic, ECS_ID_ACYCLIC, 
+        ~ECS_ID_ACYCLIC, 0);
 }
 
 static
 void register_exclusive(ecs_iter_t *it) {
-    register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 0, 0);
+    register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 
+        ~ECS_ID_EXCLUSIVE, 0);
 }
 
 static
 void register_dont_inherit(ecs_iter_t *it) {
     register_id_flag_for_relation(it, EcsDontInherit, 
-        ECS_ID_DONT_INHERIT, 0, 0);
+        ECS_ID_DONT_INHERIT, ~ECS_ID_DONT_INHERIT, 0);
 }
 
 static
@@ -499,6 +501,7 @@ ecs_table_t* bootstrap_component_table(
         ecs_pair(EcsChildOf, EcsWildcard));
     childof_idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE;
     childof_idr->flags |= ECS_ID_DONT_INHERIT;
+    childof_idr->flags |= ECS_ID_ACYCLIC;
 
     ecs_id_record_t *ident_idr = flecs_ensure_id_record(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
@@ -678,22 +681,10 @@ void flecs_bootstrap(
     bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
     bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
 
-    /* Transitive relations are always Acyclic */
-    ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
-
-    /* Transitive relations */
-    ecs_add_id(world, EcsIsA, EcsTransitive);
-    ecs_add_id(world, EcsIsA, EcsReflexive);
-
     /* Tag relations (relations that should never have data) */
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
-
-    /* Acyclic relations */
-    ecs_add_id(world, EcsIsA, EcsAcyclic);
-    ecs_add_id(world, EcsChildOf, EcsAcyclic);
-    ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
@@ -706,10 +697,9 @@ void flecs_bootstrap(
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = on_event_iterable_init });
 
-    /* Removal of ChildOf objects (parents) deletes the subject (child) */
-    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete); 
-
-    /* ChildOf, Identifier, Disabled and Prefab should never be inherited */
+    /* Sync properties of ChildOf and Identifier with bootstrapped flags */
+    ecs_add_pair(world, EcsChildOf, EcsOnDeleteObject, EcsDelete);
+    ecs_add_id(world, EcsChildOf, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsDontInherit);
 
@@ -789,10 +779,22 @@ void flecs_bootstrap(
         .term = {.id = ecs_id(EcsComponent), .subj.set.mask = EcsSelf },
         .events = {EcsOnSet},
         .callback = on_set_component
-    });  
+    });
 
+    /* Acyclic components */
+    ecs_add_id(world, EcsIsA, EcsAcyclic);
+    ecs_add_id(world, EcsWith, EcsAcyclic);
+
+    /* DontInherit components */
     ecs_add_id(world, EcsDisabled, EcsDontInherit);
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
+
+    /* Transitive relations are always Acyclic */
+    ecs_add_pair(world, EcsTransitive, EcsWith, EcsAcyclic);
+
+    /* Transitive relations */
+    ecs_add_id(world, EcsIsA, EcsTransitive);
+    ecs_add_id(world, EcsIsA, EcsReflexive);
 
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
