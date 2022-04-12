@@ -1235,12 +1235,6 @@ ecs_id_record_t* new_id_record(
             if (idr_r) {
                 idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
             }
-        } else {
-            /* Inherit flags from (relation) record */
-            ecs_id_record_t *idr_r = flecs_get_id_record(world, rel);
-            if (idr_r) {
-                idr->flags |= (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
-            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
