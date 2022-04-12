@@ -607,6 +607,7 @@ void FilterBuilder_20_terms(void);
 void FilterBuilder_term_after_arg(void);
 void FilterBuilder_name_arg(void);
 void FilterBuilder_const_in_term(void);
+void FilterBuilder_const_optional(void);
 void FilterBuilder_create_w_no_template_args(void);
 void FilterBuilder_2_terms_w_expr(void);
 void FilterBuilder_assert_on_multiple_expr_calls(void);
@@ -3239,6 +3240,10 @@ bake_test_case FilterBuilder_testcases[] = {
         FilterBuilder_const_in_term
     },
     {
+        "const_optional",
+        FilterBuilder_const_optional
+    },
+    {
         "create_w_no_template_args",
         FilterBuilder_create_w_no_template_args
     },
@@ -4443,7 +4448,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        69,
+        70,
         FilterBuilder_testcases
     },
     {

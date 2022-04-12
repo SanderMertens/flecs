@@ -1660,6 +1660,27 @@ void FilterBuilder_const_in_term() {
     test_int(count, 1);
 }
 
+void FilterBuilder_const_optional() {
+    flecs::world ecs;
+	
+	ecs.entity().set<Position>({10, 20}).add<TagA>();
+    ecs.entity().add<TagA>();
+
+    auto f = ecs.filter_builder<TagA, const Position*>().build();
+	
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        if (it.is_set(2))
+        {
+            auto p = it.term<const Position>(2);
+            test_assert(it.is_readonly(2));
+        }
+        count++;
+	});
+	
+    test_int(count, 2);
+}
+
 void FilterBuilder_create_w_no_template_args() {
     flecs::world ecs;
 
