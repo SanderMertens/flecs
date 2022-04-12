@@ -485,6 +485,11 @@ typedef struct ecs_table_record_t {
     int32_t count;
 } ecs_table_record_t;
 
+/* Linked list of id records */
+typedef struct ecs_id_record_elem_t {
+    struct ecs_id_record_t *prev, *next;
+} ecs_id_record_elem_t;
+
 /* Payload for id index which contains all datastructures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id. Must be first member. */
@@ -498,6 +503,10 @@ struct ecs_id_record_t {
 
     /* Cached pointer to type info for id */
     const ecs_type_info_t *type_info;
+
+    /* Lists for all id records that match a pair wildcard */
+    ecs_id_record_elem_t first;
+    ecs_id_record_elem_t second;
 };
 
 typedef struct ecs_store_t {
