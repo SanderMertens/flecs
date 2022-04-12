@@ -1374,9 +1374,7 @@ void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,
     uint32_t flag)
-{    
-    (void)world;
-
+{
     ecs_record_t *record = ecs_eis_get(world, entity);
     if (!record) {
         ecs_record_t new_record = {.row = flag, .table = NULL};
@@ -4030,7 +4028,8 @@ bool remove_invalid(
             ecs_entity_t obj = ecs_pair_second(world, id);
             if (!obj || !is_entity_valid(world, obj)) {
                 /* Check the relation's policy for deleted objects */
-                ecs_id_record_t *idr = flecs_get_id_record(world, rel);
+                ecs_id_record_t *idr = flecs_get_id_record(world, 
+                    ecs_pair(rel, EcsWildcard));
                 if (idr) {
                     ecs_entity_t action = ECS_ID_ON_DELETE_OBJECT(idr->flags);
                     if (action == EcsDelete) {

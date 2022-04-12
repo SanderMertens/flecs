@@ -138,12 +138,12 @@ void assert_relation_unused(
     if (world->is_fini) {
         return;
     }
-    if (flecs_get_id_record(world, ecs_pair(rel, EcsWildcard)) != NULL) {
+    if (ecs_id_in_use(world, ecs_pair(rel, EcsWildcard))) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
-            "cannot change property '%s' to relation '%s': already in use",
+            "cannot change property '%s' for relation '%s': already in use",
             p_str, r_str);
         
         ecs_os_free(r_str);
@@ -152,6 +152,43 @@ void assert_relation_unused(
 
 error:
     return;
+}
+
+static
+void register_id_flag_for_relation(
+    ecs_iter_t *it,
+    ecs_entity_t prop,
+    ecs_flags32_t flag,
+    ecs_flags32_t not_flag,
+    ecs_flags32_t entity_flag)
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t event = it->event;
+    
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        assert_relation_unused(world, e, prop);
+
+        if (event == EcsOnAdd) {
+            ecs_id_record_t *idr = flecs_ensure_id_record(world, e);
+            idr->flags |= flag;
+            idr = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
+            do {
+                idr->flags |= flag;
+            } while ((idr = idr->first.next));
+            if (entity_flag) flecs_add_flag(world, e, entity_flag);
+        } else if (event == EcsOnRemove) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, e);
+            if (idr) idr->flags &= ~not_flag;
+            idr = flecs_get_id_record(world, ecs_pair(e, EcsWildcard));
+            if (idr) {
+                do {
+                    idr->flags &= ~not_flag;
+                } while ((idr = idr->first.next));
+            }
+        }
+    }
 }
 
 static
@@ -164,7 +201,7 @@ void register_final(ecs_iter_t *it) {
         if (flecs_get_id_record(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_fullpath(world, e);
             ecs_throw(ECS_ID_IN_USE,
-                "cannot change property 'Final' to '%s': already inherited from",
+                "cannot change property 'Final' for '%s': already inherited from",
                     e_str);
             ecs_os_free(e_str);
         error:
@@ -175,86 +212,36 @@ void register_final(ecs_iter_t *it) {
 
 static
 void register_on_delete(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    ecs_entity_t event = it->event;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        assert_relation_unused(world, e, EcsOnDelete);
-
-        if (event == EcsOnAdd) {
-            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            r->flags |= ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id));
-        } else {
-            ecs_id_record_t *r = flecs_get_id_record(world, e);
-            if (r) {
-                r->flags &= ~ECS_ID_ON_DELETE_MASK;
-            }
-        }
-
-        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
-    }
+    register_id_flag_for_relation(it, EcsOnDelete, 
+        ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
+        ECS_ID_ON_DELETE_MASK,
+        ECS_FLAG_OBSERVED_ID);
 }
 
 static
 void register_on_delete_object(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
     ecs_id_t id = ecs_term_id(it, 1);
-    ecs_entity_t event = it->event;
+    register_id_flag_for_relation(it, EcsOnDeleteObject, 
+        ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
+        ECS_ID_ON_DELETE_OBJECT_MASK,
+        ECS_FLAG_OBSERVED_ID);  
+}
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        assert_relation_unused(world, e, EcsOnDeleteObject);
-        ecs_id_t pair = ecs_pair(e, EcsWildcard);
-
-        if (event == EcsOnAdd) {
-            ecs_id_record_t *idr = flecs_ensure_id_record(world, pair);
-            do {
-                idr->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
-            } while ((idr = idr->first.next));
-            flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
-        } else {
-            ecs_id_record_t *idr = flecs_get_id_record(world, pair);
-            if (!idr) {
-                continue;
-            }
-            do {
-                idr->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
-            } while ((idr = idr->first.next));
-        }
-    }    
+static
+void register_acyclic(ecs_iter_t *it) {
+    register_id_flag_for_relation(it, EcsAcyclic, ECS_ID_ACYCLIC, 0, 0);
 }
 
 static
 void register_exclusive(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        assert_relation_unused(world, e, EcsExclusive);
-
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        r->flags |= ECS_ID_EXCLUSIVE;
-    } 
+    register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 0, 0);
 }
 
 static
 void register_dont_inherit(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        assert_relation_unused(world, e, EcsDontInherit);
-
-        ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-        r->flags |= ECS_ID_DONT_INHERIT;
-    } 
+    register_id_flag_for_relation(it, EcsDontInherit, 
+        ECS_ID_DONT_INHERIT, 0, 0);
 }
 
 static
@@ -508,12 +495,13 @@ ecs_table_t* bootstrap_component_table(
 
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
-    ecs_id_record_t *childof_idr = flecs_ensure_id_record(world, EcsChildOf);
+    ecs_id_record_t *childof_idr = flecs_ensure_id_record(world, 
+        ecs_pair(EcsChildOf, EcsWildcard));
     childof_idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE;
     childof_idr->flags |= ECS_ID_DONT_INHERIT;
 
     ecs_id_record_t *ident_idr = flecs_ensure_id_record(
-        world, ecs_id(EcsIdentifier));
+        world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
     ident_idr->flags |= ECS_ID_DONT_INHERIT;
 
     ecs_id_t entities[] = {
@@ -755,6 +743,12 @@ void flecs_bootstrap(
         .term = {.id = ecs_pair(EcsOnDeleteObject, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_on_delete_object
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = register_acyclic
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
