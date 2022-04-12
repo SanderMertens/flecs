@@ -2437,7 +2437,7 @@ void on_delete_object_action(
     ecs_entity_t action)
 {
     ecs_table_cache_iter_t it;
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idrr, *idr = flecs_get_id_record(world, id);
 
     if (idr) {
         bool deleted;
@@ -2454,7 +2454,7 @@ void on_delete_object_action(
 
             /* First move entities to tables without the id (action = Remove) or
              * delete entities with id (action = Delete) */
-            const ecs_table_record_t *tr;
+            const ecs_table_record_t *trr, *tr;
             if ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                 do {
                     ecs_table_t *table = tr->hdr.table;
@@ -2470,27 +2470,14 @@ void on_delete_object_action(
                      * could happen if store contains cyclic relationships */
                     flecs_table_claim(world, table);
 
-                    /* If store contains cyclic relationships it's possible that
-                     * a table we were about to cleanup already got emptied */
-                    ecs_id_t *rel_id = ecs_vector_get(
-                        table->type, ecs_id_t, tr->column);
-                    ecs_assert(rel_id != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                    ecs_entity_t rel = ECS_PAIR_FIRST(*rel_id);
-                    /* delete_object_action should be invoked for pairs */
-                    ecs_assert(rel != 0, ECS_INTERNAL_ERROR,  NULL);
-
                     /* Initialize with original value in case action = 0 */
                     ecs_entity_t cur_action = action;
 
                     /* Find delete action for relation */
                     if (!cur_action) {
-                        ecs_id_record_t *idrr = flecs_get_id_record(
-                            world, rel);
-                        if (idrr) {
-                            cur_action = 
-                                ECS_ID_ON_DELETE_OBJECT(idrr->flags);
-                        }
+                        trr = &table->records[tr->column];
+                        idrr = (ecs_id_record_t*)trr->hdr.cache;
+                        cur_action = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
                     }
 
                     if (!cur_action || cur_action == EcsRemove) {

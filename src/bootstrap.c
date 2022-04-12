@@ -209,19 +209,23 @@ void register_on_delete_object(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         assert_relation_unused(world, e, EcsOnDeleteObject);
+        ecs_id_t pair = ecs_pair(e, EcsWildcard);
 
         if (event == EcsOnAdd) {
-            ecs_id_record_t *r = flecs_ensure_id_record(world, e);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            r->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+            ecs_id_record_t *idr = flecs_ensure_id_record(world, pair);
+            do {
+                idr->flags |= ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id));
+            } while ((idr = idr->first.next));
+            flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
         } else {
-            ecs_id_record_t *r = flecs_get_id_record(world, e);
-            if (r) {
-                r->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            ecs_id_record_t *idr = flecs_get_id_record(world, pair);
+            if (!idr) {
+                continue;
             }
+            do {
+                idr->flags &= ~ECS_ID_ON_DELETE_OBJECT_MASK;
+            } while ((idr = idr->first.next));
         }
-
-        flecs_add_flag(world, e, ECS_FLAG_OBSERVED_ID);
     }    
 }
 
