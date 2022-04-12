@@ -294,8 +294,8 @@ void WorldInfo_id_tag_component_count() {
     test_delta(&prev_2, cur, component_id_count, 0);
 
     ecs_add(world, e, Position);
-    test_delta(&prev_1, cur, tag_id_count, -1);
-    test_delta(&prev_2, cur, component_id_count, 1);
+    test_delta(&prev_1, cur, tag_id_count, 0);
+    test_delta(&prev_2, cur, component_id_count, 0);
 
     ecs_delete(world, c_1);
     test_delta(&prev_1, cur, tag_id_count, -1);

@@ -146,6 +146,11 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+void flecs_set_type_info_for_id_record(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    const ecs_type_info_t *ti);
+
 ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_world_t *world,
     ecs_id_t id);

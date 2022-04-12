@@ -1395,6 +1395,11 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+void flecs_set_type_info_for_id_record(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    const ecs_type_info_t *ti);
+
 ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_world_t *world,
     ecs_id_t id);
@@ -2300,9 +2305,6 @@ void init_storage_table(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
-            ECS_INTERNAL_ERROR, NULL);
-
         if (idr->type_info == NULL) {
             ecs_assert(ecs_get_typeid(world, ids[i]) == 0, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -2390,8 +2392,6 @@ void init_type_info(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
-            ECS_INTERNAL_ERROR, NULL);
         
         /* All ids in the storage table must be components with type info */
         const ecs_type_info_t *ti = idr->type_info;
@@ -35345,13 +35345,24 @@ ecs_id_record_t* new_id_record(
             ecs_id_record_t *idr_r = flecs_get_id_record(
                 world, ecs_pair(rel, EcsWildcard));
             if (idr_r) {
-                idr->flags = (idr_r->flags & ~ECS_ID_TYPE_INFO_INITIALIZED);
+                idr->flags = idr_r->flags;
             }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
         rel = ecs_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    /* Initialize type info if id is not a tag */
+    if (!is_wildcard) {
+        if (!(idr->flags & ECS_ID_TAG)) {
+            const ecs_type_info_t *ti = flecs_get_type_info(world, rel);
+            if (!ti && obj) {
+                ti = flecs_get_type_info(world, obj);
+            }
+            idr->type_info = ti;
+        }
     }
 
     /* Mark entities that are used as component/pair ids. When a tracked
@@ -35382,8 +35393,11 @@ ecs_id_record_t* new_id_record(
     if (!is_wildcard) {
         world->info.id_count ++;
 
-        /* if id is component, attaching type info will update counters */
-        world->info.tag_id_count ++;
+        if (idr->type_info) {
+            world->info.component_id_count ++;
+        } else {
+            world->info.tag_id_count ++;
+        }
 
         if (ECS_HAS_ROLE(id, PAIR)) {
             world->info.pair_id_count ++;
@@ -36122,35 +36136,6 @@ ecs_id_record_t* flecs_ensure_id_record(
     return idr;
 }
 
-void flecs_register_for_id_record(
-    ecs_world_t *world,
-    ecs_id_t id,
-    const ecs_table_t *table,
-    ecs_table_record_t *tr)
-{
-    ecs_poly_assert(world, ecs_world_t);
-
-    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
-    if (!idr) {
-        return;
-    }
-
-    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
-
-    /* When id record is used by table, make sure type info is initialized */
-    if (!(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED)) {
-        ecs_entity_t type = ecs_get_typeid(world, id);
-        if (type) {
-            idr->type_info = flecs_get_type_info(world, type);
-            ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            world->info.tag_id_count --;
-            world->info.component_id_count ++;
-        }
-        idr->flags |= ECS_ID_TYPE_INFO_INITIALIZED;
-    }
-}
-
 ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id)
@@ -36159,6 +36144,55 @@ ecs_id_record_t* flecs_get_id_record(
 
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
         ecs_strip_generation(id));
+}
+
+void flecs_remove_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_id_record_t *idr)
+{
+    ecs_poly_assert(world, ecs_world_t);
+
+    /* Free id record resources */
+    if (free_id_record(world, id, idr)) {
+        /* Remove record from world index */
+        ecs_map_remove(&world->id_index, ecs_strip_generation(id));
+    }
+}
+
+void flecs_clear_id_record(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_id_record_t *idr)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    
+    if (world->is_fini) {
+        return;
+    }
+
+    ecs_table_cache_fini_delete_all(world, &idr->cache);
+
+    flecs_remove_id_record(world, id, idr);
+}
+
+void flecs_set_type_info_for_id_record(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    const ecs_type_info_t *ti)
+{
+    if (ti) {
+        if (!idr->type_info) {
+            world->info.tag_id_count --;
+            world->info.component_id_count ++;
+        }
+    } else {
+        if (idr->type_info) {
+            world->info.tag_id_count ++;
+            world->info.component_id_count --;
+        }
+    }
+    idr->type_info = ti;
 }
 
 ecs_hashmap_t* flecs_ensure_id_name_index(
@@ -36207,34 +36241,20 @@ ecs_table_record_t* flecs_get_table_record(
     return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
-void flecs_remove_id_record(
+void flecs_register_for_id_record(
     ecs_world_t *world,
     ecs_id_t id,
-    ecs_id_record_t *idr)
+    const ecs_table_t *table,
+    ecs_table_record_t *tr)
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    /* Free id record resources */
-    if (free_id_record(world, id, idr)) {
-        /* Remove record from world index */
-        ecs_map_remove(&world->id_index, ecs_strip_generation(id));
-    }
-}
-
-void flecs_clear_id_record(
-    ecs_world_t *world,
-    ecs_id_t id,
-    ecs_id_record_t *idr)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    
-    if (world->is_fini) {
+    ecs_id_record_t *idr = flecs_ensure_id_record(world, id);
+    if (!idr) {
         return;
     }
 
-    ecs_table_cache_fini_delete_all(world, &idr->cache);
-
-    flecs_remove_id_record(world, id, idr);
+    ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
 }
 
 bool ecs_id_in_use(
@@ -47149,6 +47169,27 @@ void register_acyclic(ecs_iter_t *it) {
 }
 
 static
+void register_tag(ecs_iter_t *it) {
+    register_id_flag_for_relation(it, EcsTag, ECS_ID_TAG, ~ECS_ID_TAG, 0);
+
+    /* Ensure that all id records for tag have type info set to NULL */
+    ecs_world_t *world = it->real_world;
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        if (it->event == EcsOnAdd) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, 
+                ecs_pair(e, EcsWildcard));
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            do {
+                idr->type_info = NULL;
+            } while ((idr = idr->first.next));
+        }
+    }
+}
+
+static
 void register_exclusive(ecs_iter_t *it) {
     register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 
         ~ECS_ID_EXCLUSIVE, 0);
@@ -47215,9 +47256,39 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_type_info_t *ti = flecs_ensure_type_info(world, e);
-        ti->size = c[i].size;
-        ti->alignment = c[i].alignment;
+        assert_relation_unused(world, e, ecs_id(EcsComponent));
+
+        ecs_type_info_t *ti = NULL;
+        if (c[i].size) {
+            ti = flecs_ensure_type_info(world, e);
+            ti->size = c[i].size;
+            ti->alignment = c[i].alignment;
+        }
+
+        /* Set type info for id record of component */
+        ecs_id_record_t *idr = flecs_ensure_id_record(world, e);
+        idr->type_info = ti;
+
+        /* All id records with component as relation inherit type info */
+        idr = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
+        do {
+            if (ti) {
+                flecs_set_type_info_for_id_record(world, idr, ti);
+            } else if (idr->type_info) {
+                if (idr->type_info->component == e) {
+                    flecs_set_type_info_for_id_record(world, idr, NULL);
+                }
+            }
+        } while ((idr = idr->first.next));
+
+        /* All non-tag id records with component as object inherit type info,
+         * if relation doesn't have type info */
+        idr = flecs_ensure_id_record(world, ecs_pair(EcsWildcard, e));
+        do {
+            if (!(idr->flags & ECS_ID_TAG) && !idr->type_info) {
+                flecs_set_type_info_for_id_record(world, idr, ti);
+            }
+        } while ((idr = idr->first.next));
     }
 }
 
@@ -47653,6 +47724,12 @@ void flecs_bootstrap(
         .term = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_acyclic
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsTag, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = register_tag
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){

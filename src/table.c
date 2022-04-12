@@ -172,9 +172,6 @@ void init_storage_table(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
-            ECS_INTERNAL_ERROR, NULL);
-
         if (idr->type_info == NULL) {
             ecs_assert(ecs_get_typeid(world, ids[i]) == 0, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -262,8 +259,6 @@ void init_type_info(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        ecs_assert(idr->flags & ECS_ID_TYPE_INFO_INITIALIZED, 
-            ECS_INTERNAL_ERROR, NULL);
         
         /* All ids in the storage table must be components with type info */
         const ecs_type_info_t *ti = idr->type_info;

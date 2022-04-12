@@ -200,8 +200,8 @@ typedef int32_t ecs_size_t;
 
 #define ECS_ID_EXCLUSIVE                 (1u << 6)
 #define ECS_ID_DONT_INHERIT              (1u << 7)
-#define ECS_ID_TYPE_INFO_INITIALIZED     (1u << 8)
-#define ECS_ID_ACYCLIC                   (1u << 9)
+#define ECS_ID_ACYCLIC                   (1u << 8)
+#define ECS_ID_TAG                       (1u << 9)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \

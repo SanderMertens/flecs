@@ -235,6 +235,27 @@ void register_acyclic(ecs_iter_t *it) {
 }
 
 static
+void register_tag(ecs_iter_t *it) {
+    register_id_flag_for_relation(it, EcsTag, ECS_ID_TAG, ~ECS_ID_TAG, 0);
+
+    /* Ensure that all id records for tag have type info set to NULL */
+    ecs_world_t *world = it->real_world;
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        if (it->event == EcsOnAdd) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, 
+                ecs_pair(e, EcsWildcard));
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            do {
+                idr->type_info = NULL;
+            } while ((idr = idr->first.next));
+        }
+    }
+}
+
+static
 void register_exclusive(ecs_iter_t *it) {
     register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 
         ~ECS_ID_EXCLUSIVE, 0);
@@ -301,9 +322,39 @@ void on_set_component(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_type_info_t *ti = flecs_ensure_type_info(world, e);
-        ti->size = c[i].size;
-        ti->alignment = c[i].alignment;
+        assert_relation_unused(world, e, ecs_id(EcsComponent));
+
+        ecs_type_info_t *ti = NULL;
+        if (c[i].size) {
+            ti = flecs_ensure_type_info(world, e);
+            ti->size = c[i].size;
+            ti->alignment = c[i].alignment;
+        }
+
+        /* Set type info for id record of component */
+        ecs_id_record_t *idr = flecs_ensure_id_record(world, e);
+        idr->type_info = ti;
+
+        /* All id records with component as relation inherit type info */
+        idr = flecs_ensure_id_record(world, ecs_pair(e, EcsWildcard));
+        do {
+            if (ti) {
+                flecs_set_type_info_for_id_record(world, idr, ti);
+            } else if (idr->type_info) {
+                if (idr->type_info->component == e) {
+                    flecs_set_type_info_for_id_record(world, idr, NULL);
+                }
+            }
+        } while ((idr = idr->first.next));
+
+        /* All non-tag id records with component as object inherit type info,
+         * if relation doesn't have type info */
+        idr = flecs_ensure_id_record(world, ecs_pair(EcsWildcard, e));
+        do {
+            if (!(idr->flags & ECS_ID_TAG) && !idr->type_info) {
+                flecs_set_type_info_for_id_record(world, idr, ti);
+            }
+        } while ((idr = idr->first.next));
     }
 }
 
@@ -739,6 +790,12 @@ void flecs_bootstrap(
         .term = {.id = EcsAcyclic, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = register_acyclic
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsTag, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = register_tag
     });
 
     ecs_trigger_init(world, &(ecs_trigger_desc_t){
