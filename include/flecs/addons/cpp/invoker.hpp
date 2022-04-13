@@ -248,10 +248,15 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
         for (auto row : it) {
             func( (ColumnType< remove_reference_t<Components> >(comps, row)
                 .get_row())...);
         }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
     template <template<typename X, typename = int> class ColumnType, 
@@ -313,7 +318,12 @@ private:
         size_t, Terms&, Args...) 
     {
         flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
         func(it);
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
     template <typename... Targs, if_t<!IterOnly &&
@@ -424,7 +434,11 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
             return false;
         }
 
+        ECS_TABLE_LOCK(world, table);
+
         invoke_callback(func, 0, ptrs);
+
+        ECS_TABLE_UNLOCK(world, table);
 
         return true;
     }
@@ -447,6 +461,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         flecs::world w(world);
 
         PtrArray ptrs;
+        ecs_table_t *table = NULL;
 
         // When not deferred take the fast path.
         if (!w.is_deferred()) {
@@ -455,7 +470,6 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
             // Find table for entity
             ecs_record_t *r = ecs_record_find(world, id);
-            ecs_table_t *table = NULL;
             if (r) {
                 table = r->table;
             }
@@ -486,12 +500,18 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
                 ecs_abort(ECS_INTERNAL_ERROR, NULL);
             }
 
+            ECS_TABLE_LOCK(world, table);
+
         // When deferred, obtain pointers with regular get_mut
         } else {
             get_mut_ptrs(world, id, ptrs);
         }
 
         invoke_callback(func, 0, ptrs);
+
+        if (!w.is_deferred()) {
+            ECS_TABLE_UNLOCK(world, table);
+        }
 
         // Call modified on each component
         DummyArray dummy_after ({

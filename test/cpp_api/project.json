@@ -972,6 +972,22 @@
                 "unit_w_prefix",
                 "unit_w_over"
             ]
+        }, {
+            "id": "TableLock",
+            "testcases": [
+                "each",
+                "each_locked",
+                "each_without_entity",
+                "each_without_entity_locked",
+                "iter",
+                "iter_locked",
+                "iter_without_components",
+                "iter_without_components_locked",
+                "multi_get",
+                "multi_get_locked",
+                "multi_set",
+                "multi_set_locked"
+            ]
         }]
     }
 }

@@ -914,6 +914,20 @@ void Meta_unit_w_quantity(void);
 void Meta_unit_w_prefix(void);
 void Meta_unit_w_over(void);
 
+// Testsuite 'TableLock'
+void TableLock_each(void);
+void TableLock_each_locked(void);
+void TableLock_each_without_entity(void);
+void TableLock_each_without_entity_locked(void);
+void TableLock_iter(void);
+void TableLock_iter_locked(void);
+void TableLock_iter_without_components(void);
+void TableLock_iter_without_components_locked(void);
+void TableLock_multi_get(void);
+void TableLock_multi_get_locked(void);
+void TableLock_multi_set(void);
+void TableLock_multi_set_locked(void);
+
 bake_test_case Entity_testcases[] = {
     {
         "new",
@@ -4399,6 +4413,57 @@ bake_test_case Meta_testcases[] = {
     }
 };
 
+bake_test_case TableLock_testcases[] = {
+    {
+        "each",
+        TableLock_each
+    },
+    {
+        "each_locked",
+        TableLock_each_locked
+    },
+    {
+        "each_without_entity",
+        TableLock_each_without_entity
+    },
+    {
+        "each_without_entity_locked",
+        TableLock_each_without_entity_locked
+    },
+    {
+        "iter",
+        TableLock_iter
+    },
+    {
+        "iter_locked",
+        TableLock_iter_locked
+    },
+    {
+        "iter_without_components",
+        TableLock_iter_without_components
+    },
+    {
+        "iter_without_components_locked",
+        TableLock_iter_without_components_locked
+    },
+    {
+        "multi_get",
+        TableLock_multi_get
+    },
+    {
+        "multi_get_locked",
+        TableLock_multi_get_locked
+    },
+    {
+        "multi_set",
+        TableLock_multi_set
+    },
+    {
+        "multi_set_locked",
+        TableLock_multi_set_locked
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Entity",
@@ -4588,9 +4653,16 @@ static bake_test_suite suites[] = {
         NULL,
         9,
         Meta_testcases
+    },
+    {
+        "TableLock",
+        NULL,
+        NULL,
+        12,
+        TableLock_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 27);
+    return bake_test_run("cpp_api", argc, argv, suites, 28);
 }
