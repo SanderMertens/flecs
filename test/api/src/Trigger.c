@@ -510,6 +510,73 @@ void Trigger_on_add_pair_wildcard() {
     ecs_fini(world);
 }
 
+void Trigger_on_add_any() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    Probe ctx_any = {0};
+    ecs_entity_t t_any = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = EcsAny,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_any
+    });
+
+    Probe ctx_wc = {0};
+    ecs_entity_t t_wc = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = EcsWildcard,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_wc
+    });
+
+    Probe ctx_wc_pair = {0};
+    ecs_entity_t t_wc_pair = ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term.id = ecs_pair(EcsWildcard, EcsWildcard),
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx_wc_pair
+    });
+
+    ecs_os_zeromem(&ctx_any);
+    ecs_os_zeromem(&ctx_wc);
+    ecs_os_zeromem(&ctx_wc_pair);
+
+    ecs_new(world, Tag);
+    test_int(ctx_any.invoked, 1);
+    test_int(ctx_any.count, 1);
+    test_int(ctx_any.system, t_any);
+    test_int(ctx_any.event, EcsOnAdd);
+    test_int(ctx_any.event_id, Tag);
+    test_int(ctx_wc.invoked, 1);
+    test_int(ctx_wc.count, 1);
+    test_int(ctx_wc.system, t_wc);
+    test_int(ctx_wc.event, EcsOnAdd);
+    test_int(ctx_wc.event_id, Tag);
+    test_int(ctx_wc_pair.invoked, 0);
+    ecs_os_zeromem(&ctx_any);
+    ecs_os_zeromem(&ctx_wc);
+    ecs_os_zeromem(&ctx_wc_pair);
+
+    ecs_new_w_pair(world, Rel, Obj);
+    test_int(ctx_any.invoked, 1);
+    test_int(ctx_any.count, 1);
+    test_int(ctx_any.system, t_any);
+    test_int(ctx_any.event, EcsOnAdd);
+    test_int(ctx_any.event_id, ecs_pair(Rel, Obj));
+    test_int(ctx_wc.invoked, 0);
+    test_int(ctx_wc_pair.invoked, 1);
+    test_int(ctx_wc_pair.count, 1);
+    test_int(ctx_wc_pair.system, t_wc_pair);
+    test_int(ctx_wc_pair.event, EcsOnAdd);
+    test_int(ctx_wc_pair.event_id, ecs_pair(Rel, Obj));
+
+    ecs_fini(world);
+}
+
 void Trigger_on_remove_tag() {
     ecs_world_t *world = ecs_init();
 

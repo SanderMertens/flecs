@@ -1552,3 +1552,56 @@ void Pipeline_no_staging_system_create_query() {
 
     ecs_fini(world);
 }
+
+ECS_DECLARE(TagA);
+ECS_DECLARE(TagB);
+
+static int set_singleton_invoked = 0;
+static int match_singleton_invoked = 0;
+static int match_all_invoked = 0;
+
+static void set_singleton(ecs_iter_t *it) {
+    ecs_singleton_add(it->world, TagB);
+    set_singleton_invoked ++;
+}
+
+static void match_singleton(ecs_iter_t *it) {
+    match_singleton_invoked ++;
+}
+
+static void match_all(ecs_iter_t *it) {
+    match_all_invoked ++;
+}
+
+void Pipeline_match_all_after_pipeline_rebuild() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG_DEFINE(world, TagA);
+    ECS_TAG_DEFINE(world, TagB);
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .add = {EcsOnUpdate} },
+        .query.filter.expr = "[out] TagB()",
+        .callback = set_singleton
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .add = {EcsOnUpdate} },
+        .query.filter.expr = "TagB",
+        .callback = match_singleton
+    });
+
+    ecs_system_init(world, &(ecs_system_desc_t){
+        .entity = { .add = {EcsOnUpdate} },
+        .query.filter.expr = "?TagA",
+        .callback = match_all
+    });
+
+    ecs_progress(world, 0);
+
+    test_int(set_singleton_invoked, 1);
+    test_int(match_singleton_invoked, 1);
+    test_assert(match_all_invoked >= 1);
+
+    ecs_fini(world);
+}

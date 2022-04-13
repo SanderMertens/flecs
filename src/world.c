@@ -2025,7 +2025,7 @@ void flecs_process_pending_tables(
                 };
 
                 int32_t table_count = ecs_table_count(table);
-
+                
                 flecs_emit(world, world, &(ecs_event_desc_t) {
                     .event = table_count
                         ? EcsOnTableFill 

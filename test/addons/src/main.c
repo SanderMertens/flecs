@@ -364,6 +364,7 @@ void Pipeline_no_staging_system_create_query(void);
 void Pipeline_single_threaded_pipeline_change(void);
 void Pipeline_multi_threaded_pipeline_change(void);
 void Pipeline_activate_after_add(void);
+void Pipeline_match_all_after_pipeline_rebuild(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -2317,6 +2318,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "activate_after_add",
         Pipeline_activate_after_add
+    },
+    {
+        "match_all_after_pipeline_rebuild",
+        Pipeline_match_all_after_pipeline_rebuild
     }
 };
 
@@ -4421,7 +4426,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         Pipeline_setup,
         NULL,
-        36,
+        37,
         Pipeline_testcases
     },
     {

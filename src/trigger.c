@@ -756,6 +756,8 @@ void flecs_triggers_notify(
                 notify_triggers_for_id(world, evt, EcsWildcard, it, &iter_set);
             }
 
+            notify_triggers_for_id(world, evt, EcsAny, it, &iter_set);
+
             if (iter_set) {
                 ecs_iter_fini(it);
             }

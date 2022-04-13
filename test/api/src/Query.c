@@ -522,6 +522,315 @@ void Query_only_optional() {
     ecs_fini(world);
 }
 
+void Query_only_optional_new_empty_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query_new(world, "?TagA");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (ecs_term_is_set(&it, 1)) {
+            test_assert(count == 0);
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    total_count = 0;
+
+    ecs_remove(world, e, TagA);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 1));
+        test_assert(it.count > 0);
+        total_count ++;
+    }
+
+    test_assert(total_count == (prev_total_count - 1));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_only_optional_new_empty_non_empty_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_query_t *q = ecs_query_new(world, "?TagA");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (ecs_term_is_set(&it, 1)) {
+            test_assert(count == 0);
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    count = 0; total_count = 0;
+
+    ecs_remove(world, e, TagA);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 1));
+        test_assert(it.count > 0);
+        total_count ++;
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+    }
+
+    test_int(count, 1);
+    test_assert(total_count == prev_total_count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_only_optional_new_unset_tables() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    ecs_query_t *q = ecs_query_new(world, "?TagC");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 1));
+        test_assert(it.count > 0);
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    count = 0; total_count = 0;
+
+    ecs_remove(world, e, TagA);
+    table = ecs_get_table(world, e);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 1));
+        test_assert(it.count > 0);
+        total_count ++;
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+    }
+
+    test_int(count, 1);
+    test_assert(total_count == prev_total_count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_singleton_w_optional_new_empty_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Singleton);
+    ECS_TAG(world, TagA);
+
+    ecs_singleton_add(world, Singleton);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query_new(world, "Singleton($), ?TagA");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (ecs_term_is_set(&it, 2)) {
+            test_assert(count == 0);
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    total_count = 0;
+
+    ecs_remove(world, e, TagA);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 2));
+        test_assert(it.count > 0);
+        total_count ++;
+    }
+
+    test_assert(total_count == (prev_total_count - 1));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_singleton_w_optional_new_empty_non_empty_table() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Singleton);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_singleton_add(world, Singleton);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+
+    ecs_query_t *q = ecs_query_new(world, "Singleton($), ?TagA");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (ecs_term_is_set(&it, 2)) {
+            test_assert(count == 0);
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    count = 0; total_count = 0;
+
+    ecs_remove(world, e, TagA);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 2));
+        test_assert(it.count > 0);
+        total_count ++;
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+    }
+
+    test_int(count, 1);
+    test_assert(total_count == prev_total_count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Query_singleton_w_optional_new_unset_tables() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Singleton);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_singleton_add(world, Singleton);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_table_t *table = ecs_get_table(world, e);
+
+    ecs_query_t *q = ecs_query_new(world, "Singleton($), ?TagC");
+    test_assert(q != NULL);
+
+    int32_t count = 0, total_count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 2));
+        test_assert(it.count > 0);
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+        total_count ++;
+    }
+
+    test_int(count, 1);
+    test_assert(total_count >= count);
+
+    int32_t prev_total_count = total_count;
+    count = 0; total_count = 0;
+
+    ecs_remove(world, e, TagA);
+    table = ecs_get_table(world, e);
+
+    it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(!ecs_term_is_set(&it, 2));
+        test_assert(it.count > 0);
+        total_count ++;
+        if (it.entities[0] == e) {
+            test_assert(table == it.table);
+            count ++;
+        }
+    }
+
+    test_int(count, 1);
+    test_assert(total_count == prev_total_count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Query_query_only_from_entity() {
     ecs_world_t *world = ecs_mini();
 

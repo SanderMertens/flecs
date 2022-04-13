@@ -275,6 +275,15 @@ ecs_entity_t ecs_observer_init(
             .last_event_id = &observer->last_event_id
         };
 
+        bool optional_only = true;
+        for (i = 0; i < filter->term_count; i ++) {
+            if (filter->terms[i].oper != EcsOptional) {
+                if (filter->terms[i].subj.entity == EcsThis) {
+                    optional_only = false;
+                }
+            }
+        }
+
         for (i = 0; i < filter->term_count; i ++) {
             tdesc.term = filter->terms[i];
             ecs_oper_kind_t oper = tdesc.term.oper;
@@ -315,6 +324,7 @@ ecs_entity_t ecs_observer_init(
                     tdesc.term.pred.name = NULL;
                     tdesc.term.pred.entity = ti_ids[ti];
                     tdesc.term.id = ti_ids[ti];
+
                     ecs_entity_t t = ecs_vector_add(&observer->triggers, 
                         ecs_entity_t)[0] = ecs_trigger_init(world, &tdesc);
                     if (!t) {
@@ -324,10 +334,23 @@ ecs_entity_t ecs_observer_init(
                 continue;
             }
 
+            /* If observer only contains optional terms, match everything */
+            if (optional_only) {
+                tdesc.term.id = EcsAny;
+                tdesc.term.pred.entity = EcsAny;
+                tdesc.term.subj.entity = EcsThis;
+                tdesc.term.subj.var = EcsVarIsVariable;
+                tdesc.term.obj.entity = 0;
+            }
+
             ecs_entity_t t = ecs_vector_add(&observer->triggers, ecs_entity_t)
                 [0] = ecs_trigger_init(world, &tdesc);
             if (!t) {
                 goto error;
+            }
+
+            if (optional_only) {
+                break;
             }
         }
 

@@ -514,8 +514,6 @@ bool ecs_staging_begin(
      * allowed to enqueue commands from stages */
     world->is_readonly = true;
 
-    ecs_dbg_3("staging: begin");
-
     return is_readonly;
 }
 

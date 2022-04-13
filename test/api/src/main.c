@@ -970,6 +970,12 @@ void Query_component_query_existing_empty_table(void);
 void Query_2_component_query_existing_empty_table(void);
 void Query_2_component_query_existing_empty_type(void);
 void Query_only_optional(void);
+void Query_only_optional_new_empty_table(void);
+void Query_only_optional_new_empty_non_empty_table(void);
+void Query_only_optional_new_unset_tables(void);
+void Query_singleton_w_optional_new_empty_table(void);
+void Query_singleton_w_optional_new_empty_non_empty_table(void);
+void Query_singleton_w_optional_new_unset_tables(void);
 void Query_query_only_from_entity(void);
 void Query_query_only_from_entity_no_match(void);
 void Query_query_only_from_singleton(void);
@@ -1248,6 +1254,7 @@ void Trigger_on_add_pair(void);
 void Trigger_on_add_pair_obj_wildcard(void);
 void Trigger_on_add_pair_pred_wildcard(void);
 void Trigger_on_add_pair_wildcard(void);
+void Trigger_on_add_any(void);
 void Trigger_on_remove_tag(void);
 void Trigger_on_remove_component(void);
 void Trigger_on_remove_wildcard(void);
@@ -5596,6 +5603,30 @@ bake_test_case Query_testcases[] = {
         Query_only_optional
     },
     {
+        "only_optional_new_empty_table",
+        Query_only_optional_new_empty_table
+    },
+    {
+        "only_optional_new_empty_non_empty_table",
+        Query_only_optional_new_empty_non_empty_table
+    },
+    {
+        "only_optional_new_unset_tables",
+        Query_only_optional_new_unset_tables
+    },
+    {
+        "singleton_w_optional_new_empty_table",
+        Query_singleton_w_optional_new_empty_table
+    },
+    {
+        "singleton_w_optional_new_empty_non_empty_table",
+        Query_singleton_w_optional_new_empty_non_empty_table
+    },
+    {
+        "singleton_w_optional_new_unset_tables",
+        Query_singleton_w_optional_new_unset_tables
+    },
+    {
         "query_only_from_entity",
         Query_query_only_from_entity
     },
@@ -6691,6 +6722,10 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_pair_wildcard",
         Trigger_on_add_pair_wildcard
+    },
+    {
+        "on_add_any",
+        Trigger_on_add_any
     },
     {
         "on_remove_tag",
@@ -9378,7 +9413,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        154,
+        160,
         Query_testcases
     },
     {
@@ -9399,7 +9434,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        100,
+        101,
         Trigger_testcases
     },
     {
