@@ -1954,3 +1954,49 @@ void DeferredActions_merge_cleanup_ops_before_delete() {
 
     ecs_fini(world);
 }
+
+void DeferredActions_merge_nested_cleanup_ops_before_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Counter);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = update_counter
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(Counter),
+        .events = {EcsOnRemove},
+        .callback = remove_counter
+    });
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_set(world, parent, Counter, {0});
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, child, Tag);
+    test_int(update_counter_invoked, 1);
+    ecs_set(world, child, Counter, {0});
+
+    ecs_entity_t grand_child = ecs_new_w_pair(world, EcsChildOf, child);
+    ecs_add(world, grand_child, Tag);
+    test_int(update_counter_invoked, 2);
+
+    const Counter *ptr = ecs_get(world, parent, Counter);
+    test_assert(ptr != NULL);
+    test_assert(ptr->value == 1);
+
+    ptr = ecs_get(world, child, Counter);
+    test_assert(ptr != NULL);
+    test_assert(ptr->value == 1);
+
+    ecs_delete(world, parent);
+
+    test_int(update_counter_invoked, 4);
+    test_int(remove_counter_invoked, 2);
+
+    ecs_fini(world);
+}

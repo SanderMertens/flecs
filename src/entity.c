@@ -2491,6 +2491,10 @@ void on_delete_object_action(
                         throw_invalid_delete(world, id);
                     }
 
+                    /* Merge operations before proceeding */
+                    ecs_defer_end(world);
+                    ecs_defer_begin(world);
+
                     ecs_log_pop_3();
 
                     /* It is possible that the current record has been moved to
@@ -2678,7 +2682,7 @@ void ecs_delete(
              * deleted entity (as a component, or as part of a relation) */
             on_delete_any_w_entity(world, entity, 0, info.row_flags);
 
-            /* Merge operations before deleting parent */
+            /* Merge operations before deleting entity */
             ecs_defer_end(world);
             ecs_defer_begin(world);
 
