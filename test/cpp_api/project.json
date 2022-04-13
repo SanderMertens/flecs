@@ -865,6 +865,7 @@
                 "implicit_register_after_reset_register_w_custom_name",
                 "register_after_reset_register_w_custom_name",
                 "register_builtin_after_reset",
+                "register_meta_after_reset",
                 "count",
                 "count_id",
                 "count_pair",
