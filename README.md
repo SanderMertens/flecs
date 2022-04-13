@@ -19,7 +19,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - No need to reinvent the wheel with fast native [hierarchy](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation), [prefab](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation) and [reflection](https://flecs.docsforge.com/master/api-meta/) implementations
 - [A web-based dashboard (click to try!)](https://flecs.dev/explorer) for exploring entities, running queries & learning Flecs:
 
-<img width="995" alt="Screen Shot 2021-11-07 at 10 20 51 PM" src="https://user-images.githubusercontent.com/9919222/140693729-12b9c7bb-3147-4040-9c15-d830e9bc1080.png">
+<img width="1110" alt="Screen Shot 2022-04-13 at 11 43 43 AM" src="https://user-images.githubusercontent.com/9919222/163149399-e817368a-ac28-4315-98d9-a393faaee377.png">
 
 **You're looking at Flecs v3! While v3 stability is good, API changes can still happen.**
 
