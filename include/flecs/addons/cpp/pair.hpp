@@ -40,7 +40,7 @@ struct pair : _::pair_base {
     }
 
     type& operator*() {
-        return &ref_;
+        return ref_;
     }
 
     const type& operator*() const {

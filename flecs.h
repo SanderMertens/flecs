@@ -12540,6 +12540,9 @@ using std::is_volatile;
 using std::is_same;
 using std::is_enum;
 
+// Determine constness even if T is a pointer type
+template <typename T>
+using is_const_p = is_const< remove_pointer_t<T> >;
 
 // Apply cv modifiers from source type to destination type
 // (from: https://stackoverflow.com/questions/52559336/add-const-to-type-if-template-arg-is-const)
@@ -14231,7 +14234,7 @@ struct pair : _::pair_base {
     }
 
     type& operator*() {
-        return &ref_;
+        return ref_;
     }
 
     const type& operator*() const {
@@ -14285,7 +14288,7 @@ using actual_type_t = typename actual_type<T>::type;
 // Get type without const, *, &
 template<typename T>
 struct base_type {
-    using type = remove_pointer_t< decay_t< actual_type_t<T> > >;
+    using type = decay_t< remove_pointer_t< actual_type_t<T> > >;
 };
 
 template <typename T>
@@ -20151,7 +20154,7 @@ inline flecs::type world::type(const char *name) const {
 namespace flecs {
 namespace _ {
 
-    template <typename T, if_t< is_const<T>::value > = 0>
+    template <typename T, if_t< is_const_p<T>::value > = 0>
     static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::In;
     }
@@ -20162,7 +20165,7 @@ namespace _ {
     }
 
     template <typename T, if_not_t< 
-        is_const<T>::value || is_reference<T>::value > = 0>
+        is_const_p<T>::value || is_reference<T>::value > = 0>
     static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::InOutDefault;
     }

@@ -259,6 +259,10 @@ void Pairs_get_object_for_type_base(void);
 void Pairs_get_object_for_id_self(void);
 void Pairs_get_object_for_id_base(void);
 void Pairs_get_object_for_id_not_found(void);
+void Pairs_deref_pair(void);
+void Pairs_deref_const_pair(void);
+void Pairs_deref_pair_obj(void);
+void Pairs_deref_const_pair_obj(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -1901,6 +1905,22 @@ bake_test_case Pairs_testcases[] = {
     {
         "get_object_for_id_not_found",
         Pairs_get_object_for_id_not_found
+    },
+    {
+        "deref_pair",
+        Pairs_deref_pair
+    },
+    {
+        "deref_const_pair",
+        Pairs_deref_const_pair
+    },
+    {
+        "deref_pair_obj",
+        Pairs_deref_pair_obj
+    },
+    {
+        "deref_const_pair_obj",
+        Pairs_deref_const_pair_obj
     }
 };
 
@@ -4371,7 +4391,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        59,
+        63,
         Pairs_testcases
     },
     {

@@ -1119,3 +1119,59 @@ void Pairs_get_object_for_id_not_found() {
     auto obj = self.get_object_for(flecs::IsA, tag);
     test_assert(obj == 0);
 }
+
+void Pairs_deref_pair() {
+    flecs::world ecs;
+
+    Position v = {10, 20};
+
+    flecs::pair<Position, Tag> p(v);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Position pos = *p;
+    test_int(pos.x, 10);
+    test_int(pos.y, 20);
+}
+
+void Pairs_deref_const_pair() {
+    flecs::world ecs;
+
+    Position v = {10, 20};
+
+    const flecs::pair<Position, Tag> p(v);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Position pos = *p;
+    test_int(pos.x, 10);
+    test_int(pos.y, 20);
+}
+
+void Pairs_deref_pair_obj() {
+    flecs::world ecs;
+
+    Position v = {10, 20};
+
+    flecs::pair<Tag, Position> p(v);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Position pos = *p;
+    test_int(pos.x, 10);
+    test_int(pos.y, 20);
+}
+
+void Pairs_deref_const_pair_obj() {
+    flecs::world ecs;
+
+    Position v = {10, 20};
+
+    const flecs::pair<Tag, Position> p(v);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Position pos = *p;
+    test_int(pos.x, 10);
+    test_int(pos.y, 20);
+}

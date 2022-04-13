@@ -266,7 +266,11 @@
                 "get_object_for_type_base",
                 "get_object_for_id_self",
                 "get_object_for_id_base",
-                "get_object_for_id_not_found"
+                "get_object_for_id_not_found",
+                "deref_pair",
+                "deref_const_pair",
+                "deref_pair_obj",
+                "deref_const_pair_obj"
             ]
         }, {
             "id": "Enum",
