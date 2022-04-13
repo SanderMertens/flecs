@@ -708,6 +708,12 @@ void ComponentLifecycle_on_add_after_set(void);
 void ComponentLifecycle_on_remove_after_remove(void);
 void ComponentLifecycle_on_remove_after_clear(void);
 void ComponentLifecycle_on_remove_after_delete(void);
+void ComponentLifecycle_free_component_new_id_while_fini(void);
+void ComponentLifecycle_dtor_component_new_id_while_fini(void);
+void ComponentLifecycle_free_component_new_pair_id_while_fini(void);
+void ComponentLifecycle_dtor_component_new_pair_id_while_fini(void);
+void ComponentLifecycle_free_component_new_obj_pair_id_while_fini(void);
+void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -4558,6 +4564,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_remove_after_delete",
         ComponentLifecycle_on_remove_after_delete
+    },
+    {
+        "free_component_new_id_while_fini",
+        ComponentLifecycle_free_component_new_id_while_fini
+    },
+    {
+        "dtor_component_new_id_while_fini",
+        ComponentLifecycle_dtor_component_new_id_while_fini
+    },
+    {
+        "free_component_new_pair_id_while_fini",
+        ComponentLifecycle_free_component_new_pair_id_while_fini
+    },
+    {
+        "dtor_component_new_pair_id_while_fini",
+        ComponentLifecycle_dtor_component_new_pair_id_while_fini
+    },
+    {
+        "free_component_new_obj_pair_id_while_fini",
+        ComponentLifecycle_free_component_new_obj_pair_id_while_fini
+    },
+    {
+        "dtor_component_new_obj_pair_id_while_fini",
+        ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini
     }
 };
 
@@ -9310,7 +9340,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        56,
+        62,
         ComponentLifecycle_testcases
     },
     {

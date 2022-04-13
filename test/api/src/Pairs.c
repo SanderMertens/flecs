@@ -942,7 +942,7 @@ void Pairs_get_typeid_w_recycled_rel() {
     ecs_delete(world, dummy); // force recycle
 
     // don't use ECS_COMPONENT, because it will try to get low ids first
-    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {4});
+    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {1, 1});
     test_assert(pos != 0);
     test_assert((uint32_t)pos != pos); // ensure recycled
 
@@ -964,7 +964,7 @@ void Pairs_get_typeid_w_recycled_obj() {
     ecs_delete(world, dummy); // force recycle
 
     // don't use ECS_COMPONENT, because it will try to get low ids first
-    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {4});
+    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {1, 1});
     test_assert(pos != 0);
     test_assert((uint32_t)pos != pos); // ensure recycled
 

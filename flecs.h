@@ -4167,7 +4167,7 @@ FLECS_API
 void ecs_set_component_actions_w_id(
     ecs_world_t *world,
     ecs_id_t id,
-    EcsComponentLifecycle *actions);
+    const EcsComponentLifecycle *actions);
 
 /** Set a world context.
  * This operation allows an application to register custom data with a world
@@ -5084,6 +5084,20 @@ ecs_table_t* ecs_get_storage_table(
     ecs_entity_t entity);
 
 /** Get the type for an id.
+ * This function returnsthe type information for an id. The specified id can be
+ * any valid id. For the rules on how type information is determined based on
+ * id, see ecs_get_typeid.
+ * 
+ * @param world The world.
+ * @param id The id.
+ * @return The type information of the id.
+ */
+FLECS_API
+const ecs_type_info_t* ecs_get_type_info(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+/** Get the type for an id.
  * This operation returns the component id for an id, if the id is associated
  * with a type. For a regular component with a non-zero size (an entity with the
  * EcsComponent component) the operation will return the entity itself.
@@ -5100,7 +5114,7 @@ ecs_table_t* ecs_get_storage_table(
  *
  * @param world The world.
  * @param id The id.
- * @return The typeid of the entity.
+ * @return The type id of the id.
  */
 FLECS_API
 ecs_entity_t ecs_get_typeid(

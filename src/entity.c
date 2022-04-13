@@ -3672,63 +3672,46 @@ ecs_type_t ecs_get_type(
     return NULL;
 }
 
-ecs_entity_t ecs_get_typeid(
+const ecs_type_info_t* ecs_get_type_info(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    /* Hardcode components used in bootstrap */
-    if (id == ecs_id(EcsComponent)) {
-        return id;
-    } else if (id == ecs_id(EcsIdentifier)) {
-        return id;
-    } else if (ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
-        return ecs_id(EcsIdentifier);
-    } else if (ECS_PAIR_FIRST(id) == EcsChildOf) {
-        return 0;
-    } else if (ECS_PAIR_FIRST(id) == EcsOnDelete) {
-        return 0;
-    }
+    world = ecs_get_world(world);
 
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        /* Make sure we're not working with a stage */
-        world = ecs_get_world(world);
-
-        ecs_entity_t rel = ecs_get_alive(world, ECS_PAIR_FIRST(id));
-
-        /* If relation is marked as a tag, it never has data. Return relation */
-        if (ecs_has_id(world, rel, EcsTag)) {
-            return 0;
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr && ECS_HAS_ROLE(id, PAIR)) {
+        idr = flecs_get_id_record(world, 
+            ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
+        if (!idr || !idr->type_info) {
+            idr = NULL;
         }
-
-        const EcsComponent *ptr = ecs_get(world, rel, EcsComponent);
-        if (ptr && ptr->size != 0) {
-            return rel;
-        }
-        
-        ecs_entity_t obj = ECS_PAIR_SECOND(id);
-        if (obj) {
-            obj = ecs_get_alive(world, obj);
-            ptr = ecs_get(world, obj, EcsComponent);
-            
-            if (ptr && ptr->size != 0) {
-                return obj;
+        if (!idr) {
+            idr = flecs_get_id_record(world, 
+                ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
+            if (!idr || !idr->type_info) {
+                idr = NULL;
             }
         }
-
-        /* Neither relation nor object have data */
-        return 0;
-    } else if (id & ECS_ROLE_MASK) {
-        return 0;
-    } else {
-        const EcsComponent *ptr = ecs_get(world, id, EcsComponent);
-        if (!ptr || !ptr->size) {
-            return 0;
-        }
     }
 
-    return id;
+    if (idr) {
+        return idr->type_info;
+    }
+error:
+    return NULL;
+}
+
+ecs_entity_t ecs_get_typeid(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti) {
+        return ti->component;
+    }
 error:
     return 0;
 }
@@ -3969,10 +3952,9 @@ void free_value(
     void *value,
     int32_t count)
 {
-    ecs_entity_t real_id = ecs_get_typeid(world, id);
-    const ecs_type_info_t *ti = flecs_get_type_info(world, real_id);
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_xtor_t dtor = ti->lifecycle.dtor;
-    
     if (dtor) {
         ecs_size_t size = ti->size;
         void *ptr;

@@ -85,14 +85,16 @@ ecs_type_info_t* flecs_ensure_type_info(
     ecs_world_t *world,
     ecs_entity_t component);
 
-void flecs_init_type_info(
+bool flecs_init_type_info_id(
     ecs_world_t *world,
     ecs_entity_t component,
     ecs_size_t size,
-    ecs_size_t alignment);
+    ecs_size_t alignment,
+    const EcsComponentLifecycle *li);
 
-#define flecs_init_type_info_t(world, T)\
-    flecs_init_type_info(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T))
+#define flecs_init_type_info(world, T, ...)\
+    flecs_init_type_info_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
+        &(EcsComponentLifecycle)__VA_ARGS__)
 
 void flecs_eval_component_monitors(
     ecs_world_t *world);
@@ -146,7 +148,7 @@ ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
-void flecs_set_type_info_for_id_record(
+bool flecs_set_type_info_for_id_record(
     ecs_world_t *world,
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti);
