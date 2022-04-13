@@ -754,7 +754,13 @@
                 "on_add_after_set",
                 "on_remove_after_remove",
                 "on_remove_after_clear",
-                "on_remove_after_delete"
+                "on_remove_after_delete",
+                "free_component_new_id_while_fini",
+                "dtor_component_new_id_while_fini",
+                "free_component_new_pair_id_while_fini",
+                "dtor_component_new_pair_id_while_fini",
+                "free_component_new_obj_pair_id_while_fini",
+                "dtor_component_new_obj_pair_id_while_fini"
             ]
         }, {
             "id": "Sorting",

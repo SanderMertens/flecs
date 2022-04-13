@@ -1418,6 +1418,7 @@ void other_type_dtor(
     other_dtor_invoked ++;
 }
 
+ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(String);
 ECS_COMPONENT_DECLARE(Entity);
 
@@ -2165,4 +2166,170 @@ void ComponentLifecycle_on_remove_after_delete() {
     test_int(on_remove_position, 3);
 
     ecs_fini(world);
+}
+
+static int on_remove_tag_set_position_invoked = 0;
+
+static
+void on_remove_tag_set_position(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Position, {10, 20});
+        on_remove_tag_set_position_invoked ++;
+    }
+}
+
+static
+void on_remove_tag_set_position_pair(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set_pair(it->world, it->entities[i], 
+            Position, ecs_new_id(it->world), {10, 20});
+        on_remove_tag_set_position_invoked ++;
+    }
+}
+
+static
+void on_remove_tag_set_position_obj_pair(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set_pair_object(it->world, it->entities[i], 
+            ecs_new_id(it->world), Position, {10, 20});
+        on_remove_tag_set_position_invoked ++;
+    }
+}
+
+void ComponentLifecycle_free_component_new_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position
+    });
+
+    ecs_new(world, Tag);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+}
+
+void ComponentLifecycle_dtor_component_new_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position
+    });
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_new(world, Tag);
+
+    test_int(dtor_position, 0);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+    test_int(dtor_position, 1);
+}
+
+void ComponentLifecycle_free_component_new_pair_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position_pair
+    });
+
+    ecs_new(world, Tag);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+}
+
+void ComponentLifecycle_dtor_component_new_pair_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position_pair
+    });
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_new(world, Tag);
+
+    test_int(dtor_position, 0);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+    test_int(dtor_position, 1);
+}
+
+void ComponentLifecycle_free_component_new_obj_pair_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position_obj_pair
+    });
+
+    ecs_new(world, Tag);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+}
+
+void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnRemove},
+        .callback = on_remove_tag_set_position_obj_pair
+    });
+
+    ecs_set(world, ecs_id(Position), EcsComponentLifecycle, {
+        .ctor = ecs_default_ctor,
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_new(world, Tag);
+
+    test_int(dtor_position, 0);
+
+    ecs_fini(world);
+
+    test_int(on_remove_tag_set_position_invoked, 1);
+    test_int(dtor_position, 1);
 }
