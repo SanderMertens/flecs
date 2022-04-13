@@ -277,6 +277,9 @@ void register_tag(ecs_iter_t *it) {
                 ecs_pair(e, EcsWildcard));
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             do {
+                if (idr->type_info != NULL) {
+                    assert_relation_unused(world, e, EcsTag);
+                }
                 idr->type_info = NULL;
             } while ((idr = idr->first.next));
         }

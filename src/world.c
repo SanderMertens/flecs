@@ -1737,6 +1737,8 @@ bool flecs_init_type_info_id(
     } else {
         ti = flecs_ensure_type_info(world, component);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        changed |= ti->size != size;
+        changed |= ti->alignment != alignment;
         ti->size = size;
         ti->alignment = alignment;
         if (li) {
@@ -1746,17 +1748,20 @@ bool flecs_init_type_info_id(
 
     /* Set type info for id record of component */
     ecs_id_record_t *idr = flecs_ensure_id_record(world, component);
-    idr->type_info = ti;
+    changed |= flecs_set_type_info_for_id_record(world, idr, ti);
+    bool is_tag = idr->flags & ECS_ID_TAG;
 
     /* All id records with component as relation inherit type info */
     idr = flecs_ensure_id_record(world, ecs_pair(component, EcsWildcard));
     do {
-        if (ti) {
+        if (is_tag) {
+            changed |= flecs_set_type_info_for_id_record(world, idr, NULL);
+        } else if (ti) {
             changed |= flecs_set_type_info_for_id_record(world, idr, ti);
-        } else if (idr->type_info) {
-            if (idr->type_info->component == component) {
-                changed |= flecs_set_type_info_for_id_record(world, idr, NULL);
-            }
+        } else if ((idr->type_info != NULL) && 
+            (idr->type_info->component == component))
+        {
+            changed |= flecs_set_type_info_for_id_record(world, idr, NULL);
         }
     } while ((idr = idr->first.next));
 
