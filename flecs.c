@@ -15834,7 +15834,8 @@ ecs_entity_t ecs_cpp_component_register(
     const char *name,
     const char *symbol,
     ecs_size_t size,
-    ecs_size_t alignment)
+    ecs_size_t alignment,
+    bool implicit_name)
 {
     (void)size;
     (void)alignment;
@@ -15891,7 +15892,7 @@ ecs_entity_t ecs_cpp_component_register(
 
     /* If no entity is found, lookup symbol to check if the component was
      * registered under a different name. */
-    } else {
+    } else if (!implicit_name) {
         ent = ecs_lookup_symbol(world, symbol, false);
         ecs_assert(ent == 0, ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
@@ -15910,14 +15911,23 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     size_t alignment,
     bool is_component)
 {
+    char *existing_name = NULL;
+    
     // If an explicit id is provided, it is possible that the symbol and
     // name differ from the actual type, as the application may alias
     // one type to another.
     if (!id) {
         if (!name) {
-            // If no name was provided, retrieve the name implicitly from
-            // the name_helper class.
-            name = ecs_cpp_trim_module(world, type_name);
+            // If no name was provided first check if a type with the provided
+            // symbol was already registered.
+            id = ecs_lookup_symbol(world, symbol, false);
+            if (id) {
+                existing_name = ecs_get_path_w_sep(world, 0, id, "::", "::");
+                name = existing_name;
+            } else {
+                // If type is not yet known, derive from type name
+                name = ecs_cpp_trim_module(world, type_name);
+            }            
         }
     } else {
         // If an explicit id is provided but it has no name, inherit
@@ -15950,6 +15960,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
 
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_free(existing_name);
 
     return entity;
 }

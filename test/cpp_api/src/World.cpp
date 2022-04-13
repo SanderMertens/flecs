@@ -409,6 +409,44 @@ void World_implicit_register_w_new_world() {
     }    
 }
 
+void World_implicit_register_after_reset_register_w_custom_name() {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<Position>("MyPosition");
+    test_str(c.name(), "MyPosition");
+
+    flecs::reset();
+
+    auto e = ecs.entity().add<Position>();
+    test_assert(e.has<Position>());
+    test_assert(e.has(c));
+}
+
+void World_register_after_reset_register_w_custom_name() {
+    flecs::world ecs;
+
+    flecs::entity c1 = ecs.component<Position>("MyPosition");
+    test_str(c1.name(), "MyPosition");
+
+    flecs::reset();
+
+    flecs::entity c2 = ecs.component<Position>();
+    test_str(c2.name(), "MyPosition");
+}
+
+void World_register_builtin_after_reset() {
+    flecs::world ecs;
+
+    auto c1 = ecs.component<flecs::Component>();
+    test_assert(c1 == ecs_id(EcsComponent));
+
+    flecs::reset();
+
+    auto c2 = ecs.component<flecs::Component>();
+    test_assert(c2 == ecs_id(EcsComponent));
+    test_assert(c1 == c2);
+}
+
 void World_count() {
     flecs::world ecs;
 

@@ -12242,7 +12242,8 @@ ecs_entity_t ecs_cpp_component_register(
     const char *name,
     const char *symbol,
     ecs_size_t size,
-    ecs_size_t alignment);
+    ecs_size_t alignment,
+    bool implicit_name);
 
 FLECS_API
 ecs_entity_t ecs_cpp_component_register_explicit(
@@ -19525,13 +19526,12 @@ struct component : untyped_component {
                 const char *last_elem = strrchr(n, ':');
                 if (last_elem) {
                     name = last_elem + 1;
-                    implicit_name = false;
                 }
             }
 
             /* Find or register component */
             id = ecs_cpp_component_register(world, id, n, _::symbol_name<T>(),
-                ECS_SIZEOF(T), ECS_ALIGNOF(T));
+                ECS_SIZEOF(T), ECS_ALIGNOF(T), implicit_name);
 
             /* Initialize static component data */
             id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);

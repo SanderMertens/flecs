@@ -810,6 +810,9 @@ void World_reimport_namespaced_module(void);
 void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
 void World_implicit_register_w_new_world(void);
+void World_implicit_register_after_reset_register_w_custom_name(void);
+void World_register_after_reset_register_w_custom_name(void);
+void World_register_builtin_after_reset(void);
 void World_count(void);
 void World_count_id(void);
 void World_count_pair(void);
@@ -4001,6 +4004,18 @@ bake_test_case World_testcases[] = {
         World_implicit_register_w_new_world
     },
     {
+        "implicit_register_after_reset_register_w_custom_name",
+        World_implicit_register_after_reset_register_w_custom_name
+    },
+    {
+        "register_after_reset_register_w_custom_name",
+        World_register_after_reset_register_w_custom_name
+    },
+    {
+        "register_builtin_after_reset",
+        World_register_builtin_after_reset
+    },
+    {
         "count",
         World_count
     },
@@ -4545,7 +4560,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        82,
+        85,
         World_testcases
     },
     {

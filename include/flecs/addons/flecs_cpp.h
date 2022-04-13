@@ -74,7 +74,8 @@ ecs_entity_t ecs_cpp_component_register(
     const char *name,
     const char *symbol,
     ecs_size_t size,
-    ecs_size_t alignment);
+    ecs_size_t alignment,
+    bool implicit_name);
 
 FLECS_API
 ecs_entity_t ecs_cpp_component_register_explicit(
