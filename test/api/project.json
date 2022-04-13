@@ -1859,7 +1859,8 @@
                 "defer_disable",
                 "defer_delete_with",
                 "defer_remove_all",
-                "deferred_modified_after_remove"
+                "deferred_modified_after_remove",
+                "merge_cleanup_ops_before_delete"
             ]
         }, {
             "id": "SingleThreadStaging",

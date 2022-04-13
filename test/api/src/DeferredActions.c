@@ -1877,3 +1877,80 @@ void DeferredActions_deferred_modified_after_remove() {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    int value;
+} Counter;
+
+ECS_COMPONENT_DECLARE(Counter);
+
+static int update_counter_invoked = 0;
+static int remove_counter_invoked = 0;
+
+static void update_counter(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        ecs_entity_t parent = ecs_get_object(world, e, EcsChildOf, 0);
+        test_assert(parent != 0);
+
+        Counter *ptr = ecs_get_mut(world, parent, Counter, 0);
+        test_assert(ptr != NULL);
+
+        if (it->event == EcsOnAdd) {
+            ptr->value ++;
+        } else if (it->event == EcsOnRemove) {
+            ptr->value --;
+        }
+
+        update_counter_invoked ++;
+    }
+}
+
+static void remove_counter(ecs_iter_t *it) {
+    Counter *ptr = ecs_term(it, Counter, 1);
+
+    for (int i = 0; i < it->count; i ++) {
+        test_int(ptr[i].value, 0);
+        remove_counter_invoked ++;
+    }
+}
+
+void DeferredActions_merge_cleanup_ops_before_delete() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Counter);
+    ECS_TAG(world, Tag);
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = Tag,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = update_counter
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term.id = ecs_id(Counter),
+        .events = {EcsOnRemove},
+        .callback = remove_counter
+    });
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_set(world, parent, Counter, {0});
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, child, Tag);
+
+    test_int(update_counter_invoked, 1);
+
+    const Counter *ptr = ecs_get(world, parent, Counter);
+    test_assert(ptr != NULL);
+    test_assert(ptr->value == 1);
+
+    ecs_delete(world, parent);
+
+    test_int(update_counter_invoked, 2);
+    test_int(remove_counter_invoked, 1);
+
+    ecs_fini(world);
+}

@@ -7295,6 +7295,10 @@ void ecs_delete(
              * deleted entity (as a component, or as part of a relation) */
             on_delete_any_w_entity(world, entity, 0, info.row_flags);
 
+            /* Merge operations before deleting parent */
+            ecs_defer_end(world);
+            ecs_defer_begin(world);
+
             /* Refetch data. In case of circular relations, the entity may have
              * moved to a different table. */
             set_info_from_record(&info, r);
