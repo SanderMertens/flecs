@@ -6,10 +6,6 @@
 #ifndef FLECS_TABLE_CACHE_H_
 #define FLECS_TABLE_CACHE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void ecs_table_cache_init(
     ecs_table_cache_t *cache);
 
@@ -45,8 +41,18 @@ void ecs_table_cache_fini_delete_all(
     ecs_world_t *world,
     ecs_table_cache_t *cache);
 
-#ifdef __cplusplus
-}
-#endif
+bool flecs_table_cache_iter(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+bool flecs_table_cache_empty_iter(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+ecs_table_cache_hdr_t* _flecs_table_cache_next(
+    ecs_table_cache_iter_t *it);
+
+#define flecs_table_cache_next(it, T)\
+    (ECS_CAST(T*, _flecs_table_cache_next(it)))
 
 #endif

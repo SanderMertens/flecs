@@ -10,10 +10,6 @@
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define ecs_eis_get(world, entity) flecs_sparse_get(ecs_eis(world), ecs_record_t, entity)
 #define ecs_eis_get_any(world, entity) flecs_sparse_get_any(ecs_eis(world), ecs_record_t, entity)
@@ -32,9 +28,5 @@ extern "C" {
 #define ecs_eis_copy(world) flecs_sparse_copy(ecs_eis(world))
 #define ecs_eis_free(world) flecs_sparse_free(ecs_eis(world))
 #define ecs_eis_memory(world, allocd, used) flecs_sparse_memory(ecs_eis(world), allocd, used)
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

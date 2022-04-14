@@ -1,5 +1,10 @@
-#ifndef FLECS_TYPES_PRIVATE_H
-#define FLECS_TYPES_PRIVATE_H
+/**
+ * @file private_api.h
+ * @brief Private types.
+ */
+
+#ifndef FLECS_PRIVATE_TYPES_H
+#define FLECS_PRIVATE_TYPES_H
 
 #ifndef __MACH__
 #ifndef _POSIX_C_SOURCE
@@ -484,30 +489,6 @@ typedef struct ecs_table_record_t {
     int32_t column;
     int32_t count;
 } ecs_table_record_t;
-
-/* Linked list of id records */
-typedef struct ecs_id_record_elem_t {
-    struct ecs_id_record_t *prev, *next;
-} ecs_id_record_elem_t;
-
-/* Payload for id index which contains all datastructures for an id. */
-struct ecs_id_record_t {
-    /* Cache with all tables that contain the id. Must be first member. */
-    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
-
-    /* Flags for id */
-    ecs_flags32_t flags;
-
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
-
-    /* Cached pointer to type info for id */
-    const ecs_type_info_t *type_info;
-
-    /* Lists for all id records that match a pair wildcard */
-    ecs_id_record_elem_t first;
-    ecs_id_record_elem_t second;
-};
 
 typedef struct ecs_store_t {
     /* Entity lookup */

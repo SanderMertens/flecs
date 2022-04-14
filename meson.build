@@ -55,6 +55,7 @@ flecs_src = files(
     'src/entity.c',
     'src/filter.c',
     'src/hierarchy.c',
+    'src/id_record.c',
     'src/iter.c',
     'src/misc.c',
     'src/observable.c',
