@@ -9,6 +9,8 @@ struct trigger final : entity
 {
     using entity::entity;
 
+    explicit trigger() : entity() { }
+
     trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
         : entity(world, ecs_trigger_init(world, desc)) 
     { 

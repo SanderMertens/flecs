@@ -21749,6 +21749,8 @@ struct trigger final : entity
 {
     using entity::entity;
 
+    explicit trigger() : entity() { }
+
     trigger(flecs::world_t *world, ecs_trigger_desc_t *desc) 
         : entity(world, ecs_trigger_init(world, desc)) 
     { 
@@ -21878,6 +21880,8 @@ namespace flecs
 struct observer final : entity
 {
     using entity::entity;
+
+    explicit observer() : entity() { }
 
     observer(flecs::world_t *world, ecs_observer_desc_t *desc) 
         : entity(world, ecs_observer_init(world, desc)) 
