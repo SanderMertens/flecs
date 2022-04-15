@@ -323,6 +323,20 @@ struct entity_builder : entity_view {
         return to_base();  
     }
 
+    /** Emplace value, add owned flag.
+     *
+     * @tparam T The component to set and for which to add the OVERRIDE flag
+     */    
+    template <typename T, typename ... Args>
+    Self& emplace_override(Args&&... args) {
+        this->override<T>();
+
+        flecs::emplace<T>(this->m_world, this->m_id, 
+            FLECS_FWD(args)...);
+
+        return to_base();  
+    }
+
     /** Add a switch to an entity by id.
      * The switch entity must be a type, that is it must have the EcsType
      * component. Entities created with flecs::type are valid here.

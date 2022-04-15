@@ -85,6 +85,7 @@ void Entity_set_deduced(void);
 void Entity_override(void);
 void Entity_set_override(void);
 void Entity_set_override_lvalue(void);
+void Entity_emplace_override(void);
 void Entity_implicit_name_to_char(void);
 void Entity_implicit_path_to_char(void);
 void Entity_implicit_type_str_to_char(void);
@@ -197,7 +198,6 @@ void Entity_add_if_false_R_O(void);
 void Entity_add_if_true_R_o(void);
 void Entity_add_if_false_R_o(void);
 void Entity_add_if_true_r_o(void);
-void Entity_add_if_false_r_o(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1239,6 +1239,10 @@ bake_test_case Entity_testcases[] = {
         Entity_set_override_lvalue
     },
     {
+        "emplace_override",
+        Entity_emplace_override
+    },
+    {
         "implicit_name_to_char",
         Entity_implicit_name_to_char
     },
@@ -1685,10 +1689,6 @@ bake_test_case Entity_testcases[] = {
     {
         "add_if_true_r_o",
         Entity_add_if_true_r_o
-    },
-    {
-        "add_if_false_r_o",
-        Entity_add_if_false_r_o
     }
 };
 

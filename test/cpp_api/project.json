@@ -91,6 +91,7 @@
                 "override",
                 "set_override",
                 "set_override_lvalue",
+                "emplace_override",
                 "implicit_name_to_char",
                 "implicit_path_to_char",
                 "implicit_type_str_to_char",
@@ -202,8 +203,7 @@
                 "add_if_false_R_O",
                 "add_if_true_R_o",
                 "add_if_false_R_o",
-                "add_if_true_r_o",
-                "add_if_false_r_o"
+                "add_if_true_r_o"
             ]
         }, {
             "id": "Pairs",

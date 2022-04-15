@@ -1303,6 +1303,17 @@ void Entity_set_override_lvalue() {
     test_int(p_base->y, 20);
 }
 
+void Entity_emplace_override() {
+    flecs::world world;
+
+    auto e = world.entity().emplace_override<NoDefaultCtor>(10);
+    test_assert(e.has<NoDefaultCtor>());
+
+    const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x_, 10);
+}
+
 void Entity_implicit_name_to_char() {
     flecs::world world;
 
