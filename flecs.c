@@ -48068,6 +48068,41 @@ ecs_entity_t ecs_new_from_path_w_sep(
 
 
 static
+void id_record_elem_insert(
+    ecs_id_record_t *list,
+    ecs_id_record_t *idr,
+    ecs_id_record_elem_t *first)
+{
+    ecs_id_record_elem_t *elem = ECS_OFFSET(idr, 
+        (uintptr_t)first - (uintptr_t)list);
+    ecs_id_record_t *cur = first->next;
+    elem->next = cur;
+    elem->prev = list;
+    if (cur) {
+        cur->first.prev = idr;
+    }
+    first->next = idr;
+}
+
+static
+void id_record_elem_remove(
+    ecs_id_record_t *idr,
+    ecs_id_record_elem_t *elem)
+{
+    ecs_id_record_t *prev = elem->prev;
+    ecs_id_record_t *next = elem->next;
+    ecs_assert(prev != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    uintptr_t elem_offset = (uintptr_t)elem - (uintptr_t)idr;
+    ecs_id_record_elem_t *prev_elem = ECS_OFFSET(prev, elem_offset);
+    ecs_id_record_elem_t *next_elem = ECS_OFFSET(next, elem_offset);
+    prev_elem->next = next;
+    if (next) {
+        next_elem->prev = prev;
+    }
+}
+
+static
 void insert_id_elem(
     ecs_world_t *world,
     ecs_id_record_t *idr,
@@ -48080,23 +48115,11 @@ void insert_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *cur = widr->first.next;
-        idr->first.next = cur;
-        idr->first.prev = widr;
-        if (cur) {
-            cur->first.prev = idr;
-        }
-        widr->first.next = idr;
+        id_record_elem_insert(widr, idr, &widr->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *cur = widr->second.next;
-        idr->second.next = cur;
-        idr->second.prev = widr;
-        if (cur) {
-            cur->second.prev = idr;
-        }
-        widr->second.next = idr;
+        id_record_elem_insert(widr, idr, &widr->second);
     }
 }
 
@@ -48115,23 +48138,11 @@ void remove_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *prev = idr->first.prev;
-        ecs_id_record_t *next = idr->first.next;
-        ecs_assert(prev != NULL, ECS_INTERNAL_ERROR, NULL);
-        prev->first.next = next;
-        if (next) {
-            next->first.prev = prev;
-        }
+        id_record_elem_remove(idr, &idr->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *prev = idr->second.prev;
-        ecs_id_record_t *next = idr->second.next;
-        ecs_assert(prev != NULL, ECS_INTERNAL_ERROR, NULL);
-        prev->second.next = next;
-        if (next) {
-            next->second.prev = prev;
-        }
+        id_record_elem_remove(idr, &idr->second);
     }
 }
 
