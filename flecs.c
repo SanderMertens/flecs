@@ -1005,7 +1005,7 @@ struct ecs_id_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
-    /* Cached pointer to type info for id */
+    /* Cached pointer to type info for id, if id contains data. */
     const ecs_type_info_t *type_info;
 
     /* Id of record */
@@ -1017,62 +1017,77 @@ struct ecs_id_record_t {
     ecs_id_record_elem_t second; /* (*, O) */
 };
 
+/* Get id record for id */
 ecs_id_record_t* flecs_get_id_record(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/* Ensure id record for id */
 ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id);
 
+/* Clear all tables in id record. */
 void flecs_clear_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
 
+/* Remove id record if empty. If id record only contains empty tables, they will
+ * be cleaned up. Id record removal may be deleted if one or more empty tables
+ * are referenced as storage table by other tables. */
 void flecs_remove_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_record_t *idr);
 
+/* Register table for id record */
 void flecs_register_for_id_record(
     ecs_world_t *world,
     ecs_id_t id,
     const ecs_table_t *table,
     ecs_table_record_t *tr);
 
+/* Set (component) type info for id record */
 bool flecs_set_type_info_for_id_record(
     ecs_world_t *world,
     ecs_id_record_t *idr,
     const ecs_type_info_t *ti);
 
+/* Ensure id record has name index */
 ecs_hashmap_t* flecs_ensure_id_name_index(
     ecs_world_t *world,
     ecs_id_t id);
 
+/* Get name index for id record */
 ecs_hashmap_t* flecs_get_id_name_index(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/* Find table record for id */
 ecs_table_record_t* flecs_get_table_record(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
 
+/* Find table record for id record */
 const ecs_table_record_t* flecs_id_record_table(
     ecs_id_record_t *idr,
     ecs_table_t *table);
 
+/* Return table iterator for id */
 ecs_id_record_t* flecs_table_iter(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_table_cache_iter_t *out);
 
+/* Return empty table iterator for id */
 ecs_id_record_t* flecs_empty_table_iter(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_table_cache_iter_t *out);
 
+/* Cleanup all id records in world */
 void flecs_fini_id_records(
     ecs_world_t *world);
 
