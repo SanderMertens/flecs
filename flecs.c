@@ -750,15 +750,6 @@ typedef struct ecs_monitor_set_t {
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
-/* Payload for table index which returns all tables for a given component, with
- * the column of the component in the table. */
-typedef struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;
-    ecs_id_t id;
-    int32_t column;
-    int32_t count;
-} ecs_table_record_t;
-
 typedef struct ecs_store_t {
     /* Entity lookup */
     ecs_sparse_t entity_index; /* sparse<entity, ecs_record_t> */
@@ -991,6 +982,13 @@ ecs_table_cache_hdr_t* _flecs_table_cache_next(
 #ifndef FLECS_ID_RECORD_H
 #define FLECS_ID_RECORD_H
 
+/* Payload for id cache */
+typedef struct ecs_table_record_t {
+    ecs_table_cache_hdr_t hdr;  /* Table cache header */
+    int32_t column;             /* First column where id occurs in table */
+    int32_t count;              /* Number of times id occurs in table */
+} ecs_table_record_t;
+
 /* Linked list of id records */
 typedef struct ecs_id_record_elem_t {
     struct ecs_id_record_t *prev, *next;
@@ -1010,9 +1008,13 @@ struct ecs_id_record_t {
     /* Cached pointer to type info for id */
     const ecs_type_info_t *type_info;
 
-    /* Lists for all id records that match a pair wildcard */
-    ecs_id_record_elem_t first;
-    ecs_id_record_elem_t second;
+    /* Id of record */
+    ecs_id_t id;
+
+    /* Lists for all id records that match a pair wildcard. The wildcard id
+     * record is at the head of the list. */
+    ecs_id_record_elem_t first;  /* (R, *) */
+    ecs_id_record_elem_t second; /* (*, O) */
 };
 
 ecs_id_record_t* flecs_get_id_record(
@@ -36053,10 +36055,10 @@ void notify_subset(
     while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
         ecs_table_t *table = tr->hdr.table;
         ecs_table_record_t *trr = &table->records[tr->column];
-        ecs_id_t id = trr->id;
+        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
+        ecs_id_t id = idrr->id;
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
-        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
         if (!(idrr->flags & ECS_ID_ACYCLIC)) {
             /* Only notify for acyclic relations */
             continue;
@@ -43080,7 +43082,6 @@ void register_table_for_id(
     flecs_register_for_id_record(world, id, table, tr);
     tr->column = column;
     tr->count = count;
-    tr->id = id;
     set_trigger_flags_for_id(world, table, id);
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 }
@@ -43255,7 +43256,7 @@ void flecs_table_records_unregister(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &table->records[i];
         ecs_table_cache_t *cache = tr->hdr.cache;
-        ecs_id_t id = tr->id;
+        ecs_id_t id = ((ecs_id_record_t*)cache)->id;
 
         ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
@@ -48126,6 +48127,8 @@ ecs_id_record_t* new_id_record(
 {
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
     ecs_table_cache_init(&idr->cache);
+
+    idr->id = id;
 
     bool is_wildcard = ecs_id_is_wildcard(id);
 

@@ -6,6 +6,13 @@
 #ifndef FLECS_ID_RECORD_H
 #define FLECS_ID_RECORD_H
 
+/* Payload for id cache */
+typedef struct ecs_table_record_t {
+    ecs_table_cache_hdr_t hdr;  /* Table cache header */
+    int32_t column;             /* First column where id occurs in table */
+    int32_t count;              /* Number of times id occurs in table */
+} ecs_table_record_t;
+
 /* Linked list of id records */
 typedef struct ecs_id_record_elem_t {
     struct ecs_id_record_t *prev, *next;
@@ -25,9 +32,13 @@ struct ecs_id_record_t {
     /* Cached pointer to type info for id */
     const ecs_type_info_t *type_info;
 
-    /* Lists for all id records that match a pair wildcard */
-    ecs_id_record_elem_t first;
-    ecs_id_record_elem_t second;
+    /* Id of record */
+    ecs_id_t id;
+
+    /* Lists for all id records that match a pair wildcard. The wildcard id
+     * record is at the head of the list. */
+    ecs_id_record_elem_t first;  /* (R, *) */
+    ecs_id_record_elem_t second; /* (*, O) */
 };
 
 ecs_id_record_t* flecs_get_id_record(

@@ -49,10 +49,10 @@ void notify_subset(
     while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
         ecs_table_t *table = tr->hdr.table;
         ecs_table_record_t *trr = &table->records[tr->column];
-        ecs_id_t id = trr->id;
+        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
+        ecs_id_t id = idrr->id;
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
-        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
         if (!(idrr->flags & ECS_ID_ACYCLIC)) {
             /* Only notify for acyclic relations */
             continue;

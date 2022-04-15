@@ -481,15 +481,6 @@ typedef struct ecs_monitor_set_t {
     bool is_dirty;               /* Should monitors be evaluated? */
 } ecs_monitor_set_t;
 
-/* Payload for table index which returns all tables for a given component, with
- * the column of the component in the table. */
-typedef struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;
-    ecs_id_t id;
-    int32_t column;
-    int32_t count;
-} ecs_table_record_t;
-
 typedef struct ecs_store_t {
     /* Entity lookup */
     ecs_sparse_t entity_index; /* sparse<entity, ecs_record_t> */

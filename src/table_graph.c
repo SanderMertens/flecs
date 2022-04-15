@@ -304,7 +304,6 @@ void register_table_for_id(
     flecs_register_for_id_record(world, id, table, tr);
     tr->column = column;
     tr->count = count;
-    tr->id = id;
     set_trigger_flags_for_id(world, table, id);
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 }
@@ -479,7 +478,7 @@ void flecs_table_records_unregister(
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &table->records[i];
         ecs_table_cache_t *cache = tr->hdr.cache;
-        ecs_id_t id = tr->id;
+        ecs_id_t id = ((ecs_id_record_t*)cache)->id;
 
         ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);

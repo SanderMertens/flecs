@@ -76,6 +76,8 @@ ecs_id_record_t* new_id_record(
     ecs_id_record_t *idr = ecs_os_calloc_t(ecs_id_record_t);
     ecs_table_cache_init(&idr->cache);
 
+    idr->id = id;
+
     bool is_wildcard = ecs_id_is_wildcard(id);
 
     ecs_entity_t rel = 0, obj = 0, role = id & ECS_ROLE_MASK;
