@@ -28,6 +28,9 @@ struct trigger final : entity
 };
 
 // Mixin implementation
+inline trigger world::trigger(flecs::entity e) const {
+    return flecs::trigger(m_world, e);
+}
 
 template <typename... Comps, typename... Args>
 inline trigger_builder<Comps...> world::trigger(Args &&... args) const {

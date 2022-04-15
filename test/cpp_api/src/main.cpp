@@ -348,7 +348,6 @@ void System_nested_system(void);
 void System_empty_signature(void);
 void System_iter_tag(void);
 void System_each_tag(void);
-void System_system_from_id(void);
 void System_set_interval(void);
 void System_order_by_type(void);
 void System_order_by_id(void);
@@ -383,6 +382,8 @@ void System_un_instanced_query_w_base_iter(void);
 void System_create_w_no_template_args(void);
 void System_system_w_type_kind(void);
 void System_system_w_type_kind_type_pipeline(void);
+void System_default_ctor(void);
+void System_entity_ctor(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -400,19 +401,6 @@ void Event_evt_1_id_pair_rel_obj_id_entity(void);
 void Event_evt_1_id_pair_rel_obj_entity(void);
 void Event_emit_staged_from_world(void);
 void Event_emit_staged_from_stage(void);
-
-// Testsuite 'Trigger'
-void Trigger_on_add(void);
-void Trigger_on_remove(void);
-void Trigger_on_add_tag_action(void);
-void Trigger_on_add_tag_iter(void);
-void Trigger_on_add_tag_each(void);
-void Trigger_trigger_w_self(void);
-void Trigger_on_add_id(void);
-void Trigger_on_add_id_arg(void);
-void Trigger_on_add_expr(void);
-void Trigger_create_w_no_template_args(void);
-void Trigger_yield_existing(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -656,6 +644,21 @@ void SystemBuilder_name_arg(void);
 void SystemBuilder_create_w_no_template_args(void);
 void SystemBuilder_write_annotation(void);
 
+// Testsuite 'Trigger'
+void Trigger_on_add(void);
+void Trigger_on_remove(void);
+void Trigger_on_add_tag_action(void);
+void Trigger_on_add_tag_iter(void);
+void Trigger_on_add_tag_each(void);
+void Trigger_trigger_w_self(void);
+void Trigger_on_add_id(void);
+void Trigger_on_add_id_arg(void);
+void Trigger_on_add_expr(void);
+void Trigger_create_w_no_template_args(void);
+void Trigger_yield_existing(void);
+void Trigger_default_ctor(void);
+void Trigger_entity_ctor(void);
+
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
 void Observer_2_terms_on_remove(void);
@@ -670,6 +673,8 @@ void Observer_2_entities_each(void);
 void Observer_create_w_no_template_args(void);
 void Observer_yield_existing(void);
 void Observer_yield_existing_2_terms(void);
+void Observer_default_ctor(void);
+void Observer_entity_ctor(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -2256,10 +2261,6 @@ bake_test_case System_testcases[] = {
         System_each_tag
     },
     {
-        "system_from_id",
-        System_system_from_id
-    },
-    {
         "set_interval",
         System_set_interval
     },
@@ -2394,6 +2395,14 @@ bake_test_case System_testcases[] = {
     {
         "system_w_type_kind_type_pipeline",
         System_system_w_type_kind_type_pipeline
+    },
+    {
+        "default_ctor",
+        System_default_ctor
+    },
+    {
+        "entity_ctor",
+        System_entity_ctor
     }
 };
 
@@ -2457,53 +2466,6 @@ bake_test_case Event_testcases[] = {
     {
         "emit_staged_from_stage",
         Event_emit_staged_from_stage
-    }
-};
-
-bake_test_case Trigger_testcases[] = {
-    {
-        "on_add",
-        Trigger_on_add
-    },
-    {
-        "on_remove",
-        Trigger_on_remove
-    },
-    {
-        "on_add_tag_action",
-        Trigger_on_add_tag_action
-    },
-    {
-        "on_add_tag_iter",
-        Trigger_on_add_tag_iter
-    },
-    {
-        "on_add_tag_each",
-        Trigger_on_add_tag_each
-    },
-    {
-        "trigger_w_self",
-        Trigger_trigger_w_self
-    },
-    {
-        "on_add_id",
-        Trigger_on_add_id
-    },
-    {
-        "on_add_id_arg",
-        Trigger_on_add_id_arg
-    },
-    {
-        "on_add_expr",
-        Trigger_on_add_expr
-    },
-    {
-        "create_w_no_template_args",
-        Trigger_create_w_no_template_args
-    },
-    {
-        "yield_existing",
-        Trigger_yield_existing
     }
 };
 
@@ -3445,6 +3407,61 @@ bake_test_case SystemBuilder_testcases[] = {
     }
 };
 
+bake_test_case Trigger_testcases[] = {
+    {
+        "on_add",
+        Trigger_on_add
+    },
+    {
+        "on_remove",
+        Trigger_on_remove
+    },
+    {
+        "on_add_tag_action",
+        Trigger_on_add_tag_action
+    },
+    {
+        "on_add_tag_iter",
+        Trigger_on_add_tag_iter
+    },
+    {
+        "on_add_tag_each",
+        Trigger_on_add_tag_each
+    },
+    {
+        "trigger_w_self",
+        Trigger_trigger_w_self
+    },
+    {
+        "on_add_id",
+        Trigger_on_add_id
+    },
+    {
+        "on_add_id_arg",
+        Trigger_on_add_id_arg
+    },
+    {
+        "on_add_expr",
+        Trigger_on_add_expr
+    },
+    {
+        "create_w_no_template_args",
+        Trigger_create_w_no_template_args
+    },
+    {
+        "yield_existing",
+        Trigger_yield_existing
+    },
+    {
+        "default_ctor",
+        Trigger_default_ctor
+    },
+    {
+        "entity_ctor",
+        Trigger_entity_ctor
+    }
+};
+
 bake_test_case Observer_testcases[] = {
     {
         "2_terms_on_add",
@@ -3497,6 +3514,14 @@ bake_test_case Observer_testcases[] = {
     {
         "yield_existing_2_terms",
         Observer_yield_existing_2_terms
+    },
+    {
+        "default_ctor",
+        Observer_default_ctor
+    },
+    {
+        "entity_ctor",
+        Observer_entity_ctor
     }
 };
 
@@ -4511,7 +4536,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        52,
+        53,
         System_testcases
     },
     {
@@ -4520,13 +4545,6 @@ static bake_test_suite suites[] = {
         NULL,
         15,
         Event_testcases
-    },
-    {
-        "Trigger",
-        NULL,
-        NULL,
-        11,
-        Trigger_testcases
     },
     {
         "Iterable",
@@ -4571,10 +4589,17 @@ static bake_test_suite suites[] = {
         SystemBuilder_testcases
     },
     {
-        "Observer",
+        "Trigger",
         NULL,
         NULL,
         13,
+        Trigger_testcases
+    },
+    {
+        "Observer",
+        NULL,
+        NULL,
+        15,
         Observer_testcases
     },
     {

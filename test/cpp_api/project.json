@@ -366,7 +366,6 @@
                 "empty_signature",
                 "iter_tag",
                 "each_tag",
-                "system_from_id",
                 "set_interval",
                 "order_by_type",
                 "order_by_id",
@@ -400,7 +399,9 @@
                 "un_instanced_query_w_base_iter",
                 "create_w_no_template_args",
                 "system_w_type_kind",
-                "system_w_type_kind_type_pipeline"
+                "system_w_type_kind_type_pipeline",
+                "default_ctor",
+                "entity_ctor"
             ]
         }, {
             "id": "Event",
@@ -420,21 +421,6 @@
                 "evt_1_id_pair_rel_obj_entity",
                 "emit_staged_from_world",
                 "emit_staged_from_stage"
-            ]
-        }, {
-            "id": "Trigger",
-            "testcases": [
-                "on_add",
-                "on_remove",
-                "on_add_tag_action",
-                "on_add_tag_iter",
-                "on_add_tag_each",
-                "trigger_w_self",
-                "on_add_id",
-                "on_add_id_arg",
-                "on_add_expr",
-                "create_w_no_template_args",
-                "yield_existing"
             ]
         }, {
             "id": "Iterable",
@@ -691,6 +677,23 @@
                 "write_annotation"
             ]  
         }, {
+            "id": "Trigger",
+            "testcases": [
+                "on_add",
+                "on_remove",
+                "on_add_tag_action",
+                "on_add_tag_iter",
+                "on_add_tag_each",
+                "trigger_w_self",
+                "on_add_id",
+                "on_add_id_arg",
+                "on_add_expr",
+                "create_w_no_template_args",
+                "yield_existing",
+                "default_ctor",
+                "entity_ctor"
+            ]
+        }, {
             "id": "Observer",
             "testcases": [
                 "2_terms_on_add",
@@ -705,7 +708,9 @@
                 "2_entities_each",
                 "create_w_no_template_args",
                 "yield_existing",
-                "yield_existing_2_terms"
+                "yield_existing_2_terms",
+                "default_ctor",
+                "entity_ctor"
             ]
         }, {
             "id": "Filter",

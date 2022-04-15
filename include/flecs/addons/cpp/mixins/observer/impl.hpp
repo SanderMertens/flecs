@@ -30,6 +30,9 @@ struct observer final : entity
 };
 
 // Mixin implementation
+inline observer world::observer(flecs::entity e) const {
+    return flecs::observer(m_world, e);
+}
 
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> world::observer(Args &&... args) const {

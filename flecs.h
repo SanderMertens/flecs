@@ -15653,6 +15653,14 @@ template <typename Func>
 void each(flecs::id_t term_id, Func&& func) const;
 
 
+/** Upcast entity to a trigger.
+ * The provided entity must be a trigger.
+ * 
+ * @param e The entity.
+ * @return A trigger object.
+ */
+flecs::trigger trigger(flecs::entity e) const;
+
 /** Create a new trigger.
  * 
  * @tparam Components The components to match on.
@@ -15662,6 +15670,14 @@ void each(flecs::id_t term_id, Func&& func) const;
 template <typename... Components, typename... Args>
 flecs::trigger_builder<Components...> trigger(Args &&... args) const;
 
+
+/** Upcast entity to an observer.
+ * The provided entity must be an observer.
+ * 
+ * @param e The entity.
+ * @return An observer object.
+ */
+flecs::observer observer(flecs::entity e) const;
 
 /** Create a new observer.
  * 
@@ -21752,6 +21768,9 @@ struct trigger final : entity
 };
 
 // Mixin implementation
+inline trigger world::trigger(flecs::entity e) const {
+    return flecs::trigger(m_world, e);
+}
 
 template <typename... Comps, typename... Args>
 inline trigger_builder<Comps...> world::trigger(Args &&... args) const {
@@ -21881,6 +21900,9 @@ struct observer final : entity
 };
 
 // Mixin implementation
+inline observer world::observer(flecs::entity e) const {
+    return flecs::observer(m_world, e);
+}
 
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> world::observer(Args &&... args) const {

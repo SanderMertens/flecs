@@ -516,22 +516,6 @@ void System_each_tag() {
     test_int(invoked, 1);
 }
 
-void System_system_from_id() {
-    flecs::world world;
-
-    uint32_t invoked = 0;
-
-    flecs::entity sys = world.system<>()
-        .iter([&](flecs::iter& it) {
-            invoked ++;
-        });
-
-    auto sys_from_id = world.system(sys);
-
-    sys_from_id.run();
-    test_int(invoked, 1);
-}
-
 void System_set_interval() {
     flecs::world world;
 
@@ -1045,28 +1029,6 @@ void System_update_rate_filter() {
         test_int(l1_count, frame_count / l1_mult);
         test_int(l2_count, frame_count / l2_mult);
     }      
-}
-
-void System_default_ctor() {
-    flecs::world world;
-
-    flecs::system sys_var;
-
-    int count = 0;
-    auto sys = world.system<Position>()
-        .each([&](flecs::entity e, Position& p) {
-            test_int(p.x, 10);
-            test_int(p.y, 20);
-            count ++;
-        });
-
-    world.entity().set<Position>({10, 20});
-
-    sys_var = sys;
-
-    sys_var.run();
-
-    test_int(count, 1);
 }
 
 void System_test_auto_defer_each() {
@@ -1789,4 +1751,42 @@ void System_system_w_type_kind_type_pipeline() {
     
     test_int(s1_count, 1);
     test_int(s2_count, 1);
+}
+
+void System_default_ctor() {
+    flecs::world world;
+
+    flecs::system sys_var;
+
+    int count = 0;
+    auto sys = world.system<Position>()
+        .each([&](flecs::entity e, Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    world.entity().set<Position>({10, 20});
+
+    sys_var = sys;
+
+    sys_var.run();
+
+    test_int(count, 1);
+}
+
+void System_entity_ctor() {
+    flecs::world world;
+
+    uint32_t invoked = 0;
+
+    flecs::entity sys = world.system<>()
+        .iter([&](flecs::iter& it) {
+            invoked ++;
+        });
+
+    auto sys_from_id = world.system(sys);
+
+    sys_from_id.run();
+    test_int(invoked, 1);
 }

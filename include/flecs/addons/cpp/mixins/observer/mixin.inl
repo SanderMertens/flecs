@@ -1,4 +1,12 @@
 
+/** Upcast entity to an observer.
+ * The provided entity must be an observer.
+ * 
+ * @param e The entity.
+ * @return An observer object.
+ */
+flecs::observer observer(flecs::entity e) const;
+
 /** Create a new observer.
  * 
  * @tparam Components The components to match on.

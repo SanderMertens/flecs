@@ -219,3 +219,38 @@ void Trigger_yield_existing() {
 
     test_int(count, 6);
 }
+
+void Trigger_default_ctor() {
+    flecs::world world;
+
+    struct TagA { };
+
+    flecs::trigger o;
+    test_assert(o == 0);
+
+    int32_t count = 0;
+    o = world.trigger<TagA>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, TagA) {
+            count ++;
+        });
+    
+    world.entity().add<TagA>();
+    
+    test_int(count, 1);
+}
+
+void Trigger_entity_ctor() {
+    flecs::world world;
+
+    struct TagA { };
+
+    flecs::trigger o = world.trigger<TagA>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, TagA) { });
+    
+    flecs::entity oe = o;
+
+    flecs::trigger eo = world.trigger(oe);
+    test_assert(eo == o);
+}

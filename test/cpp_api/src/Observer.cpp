@@ -406,3 +406,38 @@ void Observer_yield_existing_2_terms() {
 
     test_int(count, 6);
 }
+
+void Observer_default_ctor() {
+    flecs::world world;
+
+    struct TagA { };
+
+    flecs::observer o;
+    test_assert(o == 0);
+
+    int32_t count = 0;
+    o = world.observer<TagA>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, TagA) {
+            count ++;
+        });
+    
+    world.entity().add<TagA>();
+    
+    test_int(count, 1);
+}
+
+void Observer_entity_ctor() {
+    flecs::world world;
+
+    struct TagA { };
+
+    flecs::observer o = world.observer<TagA>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::entity e, TagA) { });
+    
+    flecs::entity oe = o;
+
+    flecs::observer eo = world.observer(oe);
+    test_assert(eo == o);
+}
