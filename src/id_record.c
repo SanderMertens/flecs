@@ -1,20 +1,29 @@
 #include "private_api.h"
 
 static
-void id_record_elem_insert(
-    ecs_id_record_t *list,
-    ecs_id_record_t *idr,
-    ecs_id_record_elem_t *first)
+ecs_id_record_elem_t* id_record_elem(
+    ecs_id_record_t *head,
+    ecs_id_record_elem_t *list,
+    ecs_id_record_t *idr)
 {
-    ecs_id_record_elem_t *elem = ECS_OFFSET(idr, 
-        (uintptr_t)first - (uintptr_t)list);
-    ecs_id_record_t *cur = first->next;
+    return ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head);
+}
+
+static
+void id_record_elem_insert(
+    ecs_id_record_t *head,
+    ecs_id_record_t *idr,
+    ecs_id_record_elem_t *elem)
+{
+    ecs_id_record_elem_t *head_elem = id_record_elem(idr, elem, head);
+    ecs_id_record_t *cur = head_elem->next;
     elem->next = cur;
-    elem->prev = list;
+    elem->prev = head;
     if (cur) {
-        cur->first.prev = idr;
+        ecs_id_record_elem_t *cur_elem = id_record_elem(idr, elem, cur);
+        cur_elem->prev = idr;
     }
-    first->next = idr;
+    head_elem->next = idr;
 }
 
 static
@@ -26,11 +35,10 @@ void id_record_elem_remove(
     ecs_id_record_t *next = elem->next;
     ecs_assert(prev != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    uintptr_t elem_offset = (uintptr_t)elem - (uintptr_t)idr;
-    ecs_id_record_elem_t *prev_elem = ECS_OFFSET(prev, elem_offset);
-    ecs_id_record_elem_t *next_elem = ECS_OFFSET(next, elem_offset);
+    ecs_id_record_elem_t *prev_elem = id_record_elem(idr, elem, prev);
     prev_elem->next = next;
     if (next) {
+        ecs_id_record_elem_t *next_elem = id_record_elem(idr, elem, next);
         next_elem->prev = prev;
     }
 }
@@ -48,11 +56,11 @@ void insert_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_insert(widr, idr, &widr->first);
+        id_record_elem_insert(widr, idr, &idr->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        id_record_elem_insert(widr, idr, &widr->second);
+        id_record_elem_insert(widr, idr, &idr->second);
     }
 }
 
