@@ -7622,10 +7622,12 @@ void* ecs_record_get_column(
         ecs_pair(ecs_id(relation), object),\
         sizeof(relation), &(relation)__VA_ARGS__)
 
-#define ecs_set_pair_object(world, subject, relation, object, ...)\
+#define ecs_set_pair_second(world, subject, relation, object, ...)\
     ecs_set_id(world, subject,\
         ecs_pair(relation, ecs_id(object)),\
         sizeof(object), &(object)__VA_ARGS__)
+
+#define ecs_set_pair_object ecs_set_pair_second
 
 #define ecs_set_override(world, entity, T, ...)\
     ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
@@ -7649,10 +7651,11 @@ void* ecs_record_get_column(
     (ECS_CAST(relation*, ecs_get_id(world, subject,\
         ecs_pair(ecs_id(relation), object))))
 
-#define ecs_get_pair_object(world, subject, relation, object)\
+#define ecs_get_pair_second(world, subject, relation, object)\
     (ECS_CAST(object*, ecs_get_id(world, subject,\
         ecs_pair(relation, ecs_id(object)))))
 
+#define ecs_get_pair_object ecs_get_pair_second
 
 /* -- Get mut & Modified -- */
 
@@ -7663,9 +7666,11 @@ void* ecs_record_get_column(
     (ECS_CAST(relation*, ecs_get_mut_id(world, subject,\
         ecs_pair(ecs_id(relation), object), is_added)))
 
-#define ecs_get_mut_pair_object(world, subject, relation, object, is_added)\
+#define ecs_get_mut_pair_second(world, subject, relation, object, is_added)\
     (ECS_CAST(object*, ecs_get_mut_id(world, subject,\
         ecs_pair(relation, ecs_id(object)), is_added)))
+
+#define ecs_get_mut_pair_object ecs_get_mut_pair_second
 
 #define ecs_modified(world, entity, component)\
     ecs_modified_id(world, entity, ecs_id(component))
