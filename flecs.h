@@ -13326,6 +13326,9 @@ struct id {
     /* Return id without role */
     flecs::entity remove_generation() const;    
 
+    /* Return component type of id */
+    flecs::entity type_id() const;
+
     /* Test if id has specified role */
     bool has_role(flecs::id_t role) const {
         return ((m_id & ECS_ROLE_MASK) == role);
@@ -19879,6 +19882,10 @@ inline flecs::entity id::remove_generation() const {
 
 inline flecs::world id::world() const {
     return flecs::world(m_world);
+}
+
+inline flecs::entity id::type_id() const {
+    return flecs::entity(m_world, ecs_get_typeid(m_world, m_id));
 }
 
 

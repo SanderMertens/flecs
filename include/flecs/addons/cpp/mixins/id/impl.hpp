@@ -61,6 +61,10 @@ inline flecs::world id::world() const {
     return flecs::world(m_world);
 }
 
+inline flecs::entity id::type_id() const {
+    return flecs::entity(m_world, ecs_get_typeid(m_world, m_id));
+}
+
 
 // Id mixin implementation
 
