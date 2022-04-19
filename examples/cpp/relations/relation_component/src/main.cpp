@@ -60,6 +60,17 @@ int main(int, char*[]) {
     std::cout << ecs.pair<Expires, Position>().type_id().path() << "\n";
     std::cout << ecs.pair<MustHave, Position>().type_id().path() << "\n";
 
+    // When querying for a relationship component, add the pair type as template
+    // argument to the builder:
+    auto q = ecs.query_builder<Requires>()
+        .arg(1).obj<Gigawatts>() // set second part of pair for first term
+        .build();
+    
+    // When iterating, always use the pair type:
+    q.each([](Requires& rq) {
+        std::cout << "requires " << rq.amount << " gigawatts\n";
+    });
+
     // Output:
     //  requires: 1.21
     //  requires: 1.21
@@ -68,4 +79,5 @@ int main(int, char*[]) {
     //  ::Requires
     //  ::Expires
     //  0
+    //  requires 1.21 gigawatts
 }

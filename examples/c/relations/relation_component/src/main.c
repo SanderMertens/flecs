@@ -34,13 +34,13 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e1 = ecs_new_id(ecs);
     ecs_set_pair(ecs, e1, Requires, Gigawatts, {1.21});
     const Requires *r = ecs_get_pair(ecs, e1, Requires, Gigawatts);
-    printf("requires: %f\n", r->amount);
+    printf("requires: %.2f\n", r->amount);
 
     // The component can be either the first or second part of a pair:
     ecs_entity_t e2 = ecs_new_id(ecs);
     ecs_set_pair_second(ecs, e2, Gigawatts, Requires, {1.21});
     r = ecs_get_pair_second(ecs, e2, Gigawatts, Requires);
-    printf("requires: %f\n", r->amount);
+    printf("requires: %.2f\n", r->amount);
 
     // Note that <Requires, Gigawatts> and <Gigawatts, Requires> are two 
     // different pairs, and can be added to an entity at the same time.
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t e3 = ecs_new_id(ecs);
     ecs_set_pair(ecs, e3, Expires, ecs_id(Position), {0.5});
     const Expires *e = ecs_get_pair(ecs, e3, Expires, ecs_id(Position));
-    printf("expires: %f\n", e->timeout);
+    printf("expires: %.1f\n", e->timeout);
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:
@@ -84,12 +84,29 @@ int main(int argc, char *argv[]) {
     printf("%s\n", type_str);
     ecs_os_free(type_str);
 
+    // When querying for a relationship, provide both parts of the pair:
+    ecs_query_t *q = ecs_query_init(ecs, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_pair(ecs_id(Requires), Gigawatts) }
+        }
+    });
+
+    // When iterating, always use the pair type:
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    while (ecs_query_next(&it)) {
+        r = ecs_term(&it, Requires, 1);
+        for (int i = 0; i < it.count; i ++) {
+            printf("requires %.2f gigawatts\n", r[i].amount);
+        }
+    }
+
     // Output:
-    //  requires: 1.210000
-    //  requires: 1.210000
-    //  expires: 0.500000
+    //  requires: 1.21
+    //  requires: 1.21
+    //  expires: 0.5
     //  Requires
     //  Requires
     //  Expires
     //  0
+    //  requires 1.21 gigawatts
 }
