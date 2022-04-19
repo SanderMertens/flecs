@@ -248,6 +248,7 @@ typedef struct ecs_iter_private_t {
 #define EcsIterHasShared       (1u << 3u) /* Does result have shared terms */
 #define EcsIterTableOnly       (1u << 4u) /* Result only populates table */
 #define EcsIterEntityOptional  (1u << 5u) /* Treat terms with entity subject as optional */
+#define EcsIterNoResults       (1u << 6u) /* Iterator has no results */
 
 /** Iterator.
  */

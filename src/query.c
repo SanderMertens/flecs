@@ -1489,7 +1489,7 @@ void query_table_free(
 }
 
 static
-bool satisfy_constraints(
+bool satisfy_condition(
     ecs_world_t *world,
     const ecs_filter_t *filter)
 {
@@ -1619,11 +1619,7 @@ void rematch_tables(
                 unmatch_table(query, qt->hdr.table);
             }
         }
-    }  
-
-    /* Enable/disable system if constraints are (not) met. If the system is
-     * already dis/enabled this operation has no side effects. */
-    query->constraints_satisfied = satisfy_constraints(world, &query->filter);      
+    }    
 }
 
 static
@@ -1889,8 +1885,6 @@ ecs_query_t* ecs_query_init(
             world, result, desc->order_by_component, desc->order_by);
     }
 
-    result->constraints_satisfied = satisfy_constraints(world, &result->filter);
-
     return result;
 error:
     if (result) {
@@ -1988,19 +1982,31 @@ ecs_iter_t ecs_query_iter(
     ecs_check(!(query->flags & EcsQueryIsOrphaned),
         ECS_INVALID_PARAMETER, NULL);
 
-    query->constraints_satisfied = satisfy_constraints(query->world, &query->filter);
+    ecs_world_t *world = query->world;
+    ecs_poly_assert(world, ecs_world_t);
 
-    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage);
-
+    /* Process table events to ensure that the list of iterated tables doesn't
+     * contain empty tables. */
     flecs_process_pending_tables(world);
 
+    /* If query has order_by, apply sort */
     sort_tables(world, query);
 
+    /* If monitors changed, do query rematching */
     if (!world->is_readonly && query->flags & EcsQueryHasRefs) {
         flecs_eval_component_monitors(world);
     }
 
+    /* Check if non-This terms match. Checking this on iterator creation allows
+     * entities referred to by non-This terms to change without having to update
+     * the contents of the query cache. */
+    if (!satisfy_condition(query->world, &query->filter)) {
+        goto noresults;
+    }
+
     query->prev_match_count = query->match_count;
+
+    /* Prepare iterator */
 
     int32_t table_count;
     if (query->table_slices) {
@@ -2043,7 +2049,11 @@ ecs_iter_t ecs_query_iter(
 
     return result;
 error:
-    return (ecs_iter_t){ 0 };
+noresults:
+    return (ecs_iter_t) {
+        .flags = EcsIterNoResults,
+        .next = ecs_query_next
+    };
 }
 
 static
@@ -2433,19 +2443,19 @@ bool ecs_query_next_instanced(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
+    if (ECS_BIT_IS_SET(it->flags, EcsIterNoResults)) {
+        goto done;
+    }
+
+    ECS_BIT_SET(it->flags, EcsIterIsValid);
+
     ecs_query_iter_t *iter = &it->priv.iter.query;
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
     ecs_flags32_t flags = query->flags;
     (void)world;
 
-    ECS_BIT_SET(it->flags, EcsIterIsValid);
-
     ecs_poly_assert(world, ecs_world_t);
-
-    if (!query->constraints_satisfied) {
-        goto done;
-    }
 
     query_iter_cursor_t cur;
     ecs_query_table_node_t *node, *next, *prev;
