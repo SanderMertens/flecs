@@ -913,6 +913,10 @@ int ecs_filter_finalize(
             }
         } else {
             ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlyThis);
+
+            if (ecs_id_is_wildcard(term->id) || term->oper == EcsOr) {
+                ECS_BIT_SET(f->flags, EcsFilterVarIdsNoThis);
+            }
         }
 
         if (term->id == EcsPrefab) {
