@@ -760,7 +760,7 @@ void set_table_match(
     }
 
     /* Add references for non-This terms */
-    if (!filter->match_only_this) {
+    if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchOnlyThis)) {
         ecs_vector_t *refs = NULL;
         for (i = 0; i < term_count; i ++) {
             ecs_entity_t src = it->subjects[i];
@@ -2025,12 +2025,10 @@ ecs_iter_t ecs_query_iter(
     }
 
     ecs_flags32_t flags = 0;
-    if (query->filter.filter) {
-        ECS_BIT_SET(flags, EcsIterIsFilter);
-    }
-    if (query->filter.instanced) {
-        ECS_BIT_SET(flags, EcsIterIsInstanced);
-    }
+    ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
+        EcsFilterIsFilter));
+    ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
+        EcsFilterIsInstanced));
 
     ecs_iter_t result = {
         .real_world = world,

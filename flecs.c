@@ -20714,7 +20714,8 @@ ecs_iter_t ecs_rule_iter(
     result.terms = rule->filter.terms;
     result.next = ecs_rule_next;
     result.fini = ecs_rule_iter_free;
-    result.flags |= EcsIterIsFilter * (rule->filter.filter == true);
+    ECS_BIT_COND(result.flags, EcsIterIsFilter, 
+        ECS_BIT_IS_SET(rule->filter.flags, EcsFilterIsFilter));
 
     flecs_iter_init(&result, 
         flecs_iter_cache_ids |
@@ -28434,7 +28435,7 @@ ecs_entity_t ecs_system_init(
             system->binding_ctx = desc->binding_ctx;
         }
         if (desc->query.filter.instanced) {
-            system->query->filter.instanced = true;
+            ECS_BIT_SET(system->query->filter.flags, EcsFilterIsInstanced);
         }
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
@@ -37099,22 +37100,22 @@ int ecs_filter_finalize(
         prev_or = is_or;
 
         if (term->subj.entity == EcsThis) {
-            f->match_this = true;
+            ECS_BIT_SET(f->flags, EcsFilterMatchThis);
             if (term->subj.set.mask != EcsSelf) {
-                f->match_only_this = false;
+                ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlyThis);
             }
         } else {
-            f->match_only_this = false;
+            ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlyThis);
         }
 
         if (term->id == EcsPrefab) {
-            f->match_prefab = true;
+            ECS_BIT_SET(f->flags, EcsFilterMatchPrefab);
         }
         if (term->id == EcsDisabled) {
-            f->match_disabled = true;
+            ECS_BIT_SET(f->flags, EcsFilterMatchDisabled);
         }
 
-        if (f->filter) {
+        if (ECS_BIT_IS_SET(f->flags, EcsFilterIsFilter)) {
             term->inout = EcsInOutFilter;
         }
 
@@ -37123,14 +37124,14 @@ int ecs_filter_finalize(
         }
 
         if (term->oper != EcsNot || term->subj.entity != EcsThis) {
-            f->match_anything = false;
+            ECS_BIT_CLEAR(f->flags, EcsFilterMatchAnything);
         }
     }
 
     f->term_count_actual = actual_count;
 
     if (filter_terms == term_count) {
-        f->filter = true;
+        ECS_BIT_SET(f->flags, EcsFilterIsFilter);
     }
 
     return 0;
@@ -37177,10 +37178,10 @@ int ecs_filter_init(
     /* Temporarily set the fields to the values provided in desc, until the
      * filter has been validated. */
     f.name = (char*)name;
-    f.filter = desc->filter;
-    f.instanced = desc->instanced;
-    f.match_empty_tables = desc->match_empty_tables;
-    f.match_anything = true;
+    ECS_BIT_COND(f.flags, EcsFilterIsFilter, desc->filter);
+    ECS_BIT_COND(f.flags, EcsFilterIsInstanced, desc->instanced);
+    ECS_BIT_COND(f.flags, EcsFilterMatchEmptyTables, desc->match_empty_tables);
+    ECS_BIT_SET(f.flags, EcsFilterMatchAnything);
 
     if (terms) {
         term_count = desc->terms_buffer_count;
@@ -37538,7 +37539,7 @@ int32_t ecs_filter_find_this_var(
 {
     ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    if (filter->match_this) {
+    if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         /* Filters currently only support the This variable at index 0. Only
          * return 0 if filter actually has terms for the This variable. */
         return 0;
@@ -38369,7 +38370,10 @@ ecs_iter_t ecs_filter_iter(
     
     flecs_process_pending_tables(world);
 
-    bool instanced = filter ? filter->instanced : false;
+    bool instanced = false;
+    if (filter) {
+        instanced = ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced);
+    }
 
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
@@ -38384,7 +38388,7 @@ ecs_iter_t ecs_filter_iter(
     filter = init_filter_iter(world, &it, filter);
 
     /* Find term that represents smallest superset */
-    if (filter->match_this) {
+    if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         ecs_term_t *terms = filter->terms;
         int32_t pivot_term = -1;
         ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -38401,14 +38405,14 @@ ecs_iter_t ecs_filter_iter(
             /* No terms meet the criteria to be a pivot term, evaluate filter
              * against all tables */
             term_iter_init_wildcard(world, &iter->term_iter, 
-                filter->match_empty_tables);
+                ECS_BIT_IS_SET(filter->flags, EcsFilterMatchEmptyTables));
         } else {
             ecs_assert(pivot_term >= 0, ECS_INTERNAL_ERROR, NULL);
             term_iter_init(world, &terms[pivot_term], &iter->term_iter,
-                filter->match_empty_tables);
+                ECS_BIT_IS_SET(filter->flags, EcsFilterMatchEmptyTables));
         }
     } else {
-        if (!filter->match_anything) {
+        if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchAnything)) {
             iter->kind = EcsIterEvalCondition;
             term_iter_init_no_data(&iter->term_iter);
         } else {
@@ -38424,11 +38428,11 @@ ecs_iter_t ecs_filter_iter(
         iter->filter.terms = NULL;
     }
 
-    if (filter->filter) {
+    if (ECS_BIT_IS_SET(filter->flags, EcsFilterIsFilter)) {
         ECS_BIT_SET(it.flags, EcsIterIsFilter);
     }
 
-    if (filter->match_this) {
+    if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         /* Make space for one variable if the filter has terms for This var */ 
         it.variable_count = 1;
 
@@ -38579,7 +38583,10 @@ bool ecs_filter_next_instanced(
                     } else {
                         /* Find new match, starting with the leading term */
                         if (!term_iter_next(world, term_iter, 
-                            filter->match_prefab, filter->match_disabled)) 
+                            ECS_BIT_IS_SET(filter->flags, 
+                                EcsFilterMatchPrefab), 
+                            ECS_BIT_IS_SET(filter->flags, 
+                                EcsFilterMatchDisabled))) 
                         {
                             goto done;
                         }
@@ -39026,7 +39033,9 @@ bool observer_run(ecs_iter_t *it) {
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual;
     user_it.terms = o->filter.terms;
-    user_it.flags = o->filter.filter ? EcsIterIsFilter : 0;
+    user_it.flags = 0;
+    ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
+        ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
@@ -39279,8 +39288,8 @@ ecs_entity_t ecs_observer_init(
             .callback = observer_run_callback,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
-            .match_prefab = observer->filter.match_prefab,
-            .match_disabled = observer->filter.match_disabled,
+            .match_prefab = ECS_BIT_IS_SET(filter->flags, EcsFilterMatchPrefab),
+            .match_disabled = ECS_BIT_IS_SET(filter->flags, EcsFilterMatchDisabled),
             .last_event_id = &observer->last_event_id
         };
 
@@ -40921,7 +40930,7 @@ void set_table_match(
     }
 
     /* Add references for non-This terms */
-    if (!filter->match_only_this) {
+    if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchOnlyThis)) {
         ecs_vector_t *refs = NULL;
         for (i = 0; i < term_count; i ++) {
             ecs_entity_t src = it->subjects[i];
@@ -42186,12 +42195,10 @@ ecs_iter_t ecs_query_iter(
     }
 
     ecs_flags32_t flags = 0;
-    if (query->filter.filter) {
-        ECS_BIT_SET(flags, EcsIterIsFilter);
-    }
-    if (query->filter.instanced) {
-        ECS_BIT_SET(flags, EcsIterIsInstanced);
-    }
+    ECS_BIT_COND(flags, EcsIterIsFilter, ECS_BIT_IS_SET(query->filter.flags, 
+        EcsFilterIsFilter));
+    ECS_BIT_COND(flags, EcsIterIsInstanced, ECS_BIT_IS_SET(query->filter.flags, 
+        EcsFilterIsInstanced));
 
     ecs_iter_t result = {
         .real_world = world,

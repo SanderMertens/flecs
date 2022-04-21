@@ -455,6 +455,16 @@ struct ecs_term_t {
                                  * into the destination term. */
 };
 
+/* Bits for filter flags */
+#define EcsFilterMatchThis        (1u << 1u) /* Has terms that match This */
+#define EcsFilterMatchOnlyThis    (1u << 2u) /* Has only terms that match This */
+#define EcsFilterMatchPrefab      (1u << 3u) /* Does filter match prefabs */
+#define EcsFilterMatchDisabled    (1u << 4u) /* Does filter match disabled entities */
+#define EcsFilterMatchEmptyTables (1u << 5u) /* Does filter return empty tables */
+#define EcsFilterMatchAnything    (1u << 6u) /* False if filter has no/only Not terms */
+#define EcsFilterIsFilter         (1u << 7u) /* When true, data fields won't be populated */
+#define EcsFilterIsInstanced      (1u << 8u) /* Is filter instanced (see ecs_filter_desc_t) */
+
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
@@ -466,15 +476,7 @@ struct ecs_filter_t {
     ecs_term_t term_cache[ECS_TERM_CACHE_SIZE]; /* Cache for small filters */
     bool term_cache_used;
 
-    bool match_this;           /* Has terms that match EcsThis */
-    bool match_only_this;      /* Has only terms that match EcsThis */
-    bool match_prefab;         /* Does filter match prefabs */
-    bool match_disabled;       /* Does filter match disabled entities */
-    bool match_anything;       /* False if filter has no/only Not terms */
-
-    bool filter;               /* When true, data fields won't be populated */
-    bool instanced;            /* See ecs_filter_desc_t */
-    bool match_empty_tables;   /* See ecs_filter_desc_t */
+    ecs_flags32_t flags;       /* Filter flags */
     
     char *name;                /* Name of filter (optional) */
     char *variable_names[1];   /* Array with variable names */

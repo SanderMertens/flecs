@@ -479,7 +479,7 @@ ecs_entity_t ecs_system_init(
             system->binding_ctx = desc->binding_ctx;
         }
         if (desc->query.filter.instanced) {
-            system->query->filter.instanced = true;
+            ECS_BIT_SET(system->query->filter.flags, EcsFilterIsInstanced);
         }
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;

@@ -5095,8 +5095,8 @@ void Filter_match_disabled() {
         .terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional }}
     });
 
-    test_bool(f_1.match_disabled, false);
-    test_bool(f_2.match_disabled, true);
+    test_bool(f_1.flags & EcsFilterMatchDisabled, false);
+    test_bool(f_2.flags & EcsFilterMatchDisabled, true);
 
     ecs_iter_t it = ecs_filter_iter(world, &f_1);
     test_assert(ecs_filter_next(&it));
@@ -5146,8 +5146,8 @@ void Filter_match_prefab() {
         .terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional }}
     });
 
-    test_bool(f_1.match_prefab, false);
-    test_bool(f_2.match_prefab, true);
+    test_bool(f_1.flags & EcsFilterMatchPrefab, false);
+    test_bool(f_2.flags & EcsFilterMatchPrefab, true);
 
     ecs_iter_t it = ecs_filter_iter(world, &f_1);
     test_assert(ecs_filter_next(&it));
@@ -5575,7 +5575,7 @@ void Filter_filter_iter_w_filter_term() {
         .terms = {{ .id = ecs_id(Position), .inout = EcsInOutFilter }}
     }), 0);
 
-    test_bool(f.filter, true);
+    test_bool(f.flags & EcsFilterIsFilter, true);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
@@ -6292,8 +6292,8 @@ void Filter_filter_no_this_tag() {
         .expr = "Tag(e)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6322,8 +6322,8 @@ void Filter_filter_no_this_component() {
         .expr = "Position(e)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6360,8 +6360,8 @@ void Filter_filter_no_this_tag_2_ents() {
         .expr = "TagA(e1), TagB(e2)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6395,8 +6395,8 @@ void Filter_filter_no_this_component_2_ents() {
         .expr = "Position(e1), Velocity(e2)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6440,8 +6440,8 @@ void Filter_filter_no_this_tag_2_ents_1_not() {
         .expr = "TagA(e1), TagB(e2), !TagA(e2)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6477,8 +6477,8 @@ void Filter_filter_no_this_component_2_ents_1_not() {
         .expr = "Position(e1), Velocity(e2), !Position(e2)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -6521,8 +6521,8 @@ void Filter_filter_no_this_component_1_not() {
         .expr = "!Position(e1)",
     }));
 
-    test_assert(!f.match_this);
-    test_assert(!f.match_anything);
+    test_assert(!(f.flags & EcsFilterMatchThis));
+    test_assert(!(f.flags & EcsFilterMatchAnything));
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
 
@@ -7582,7 +7582,7 @@ void Filter_set_this_to_table_no_match_no_data() {
         .terms = {{ TagA }}
     }));
 
-    test_bool(f.match_this, true);
+    test_bool(f.flags & EcsFilterMatchThis, true);
 
     int this_var_id = ecs_filter_find_this_var(&f);
     test_assert(this_var_id != -1);
@@ -7614,7 +7614,7 @@ void Filter_set_this_to_table_no_match() {
         .terms = {{ TagA }}
     }));
 
-    test_bool(f.match_this, true);
+    test_bool(f.flags & EcsFilterMatchThis, true);
 
     int this_var_id = ecs_filter_find_this_var(&f);
     test_assert(this_var_id != -1);
@@ -7649,7 +7649,7 @@ void Filter_set_this_to_table_2_terms_no_match() {
         .terms = {{ TagA }, { TagB }}
     }));
 
-    test_bool(f.match_this, true);
+    test_bool(f.flags & EcsFilterMatchThis, true);
 
     int this_var_id = ecs_filter_find_this_var(&f);
     test_assert(this_var_id != -1);

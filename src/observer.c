@@ -17,7 +17,9 @@ bool observer_run(ecs_iter_t *it) {
     ecs_iter_t user_it = *it;
     user_it.term_count = o->filter.term_count_actual;
     user_it.terms = o->filter.terms;
-    user_it.flags = o->filter.filter ? EcsIterIsFilter : 0;
+    user_it.flags = 0;
+    ECS_BIT_COND(user_it.flags, EcsIterIsFilter,    
+        ECS_BIT_IS_SET(o->filter.flags, EcsFilterIsFilter));
     user_it.ids = NULL;
     user_it.columns = NULL;
     user_it.subjects = NULL;
@@ -270,8 +272,8 @@ ecs_entity_t ecs_observer_init(
             .callback = observer_run_callback,
             .ctx = observer,
             .binding_ctx = desc->binding_ctx,
-            .match_prefab = observer->filter.match_prefab,
-            .match_disabled = observer->filter.match_disabled,
+            .match_prefab = ECS_BIT_IS_SET(filter->flags, EcsFilterMatchPrefab),
+            .match_disabled = ECS_BIT_IS_SET(filter->flags, EcsFilterMatchDisabled),
             .last_event_id = &observer->last_event_id
         };
 
