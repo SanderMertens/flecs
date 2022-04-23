@@ -1045,7 +1045,12 @@ bool ecs_worker_next_instanced(
 
     ecs_iter_t *chain_it = it->chain_it;
     ecs_worker_iter_t *iter = &it->priv.iter.worker;
-    int32_t res_count = iter->count, res_index = iter->index;
+    int32_t res_count = iter->count;
+    int32_t res_index = iter->index;
+    if (iter->count < res_count) {
+        uint64_t table_id = it->table ? it->table->id : 0;
+        res_index = (int32_t)((UINT64_C(11400714819323198485) * table_id + iter->index) % res_count);
+    }
     int32_t per_worker, instances_per_worker, first;
 
     do {
