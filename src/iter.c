@@ -1049,7 +1049,7 @@ bool ecs_worker_next_instanced(
     int32_t res_index = iter->index;
     if (iter->count < res_count) {
         uint64_t table_id = it->table ? it->table->id : 0;
-        res_index = (int32_t)((UINT64_C(11400714819323198485) * table_id + iter->index) % res_count);
+        res_index = ((int32_t)(UINT64_C(11400714819323198485) * table_id + (uint64_t)iter->index)) % res_count;
     }
     int32_t per_worker, instances_per_worker, first;
 
