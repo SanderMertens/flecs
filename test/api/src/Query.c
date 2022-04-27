@@ -1,4 +1,5 @@
 #include <api.h>
+#include <stdlib.h>
 
 void Query_simple_query_existing_table() {
     ecs_world_t *world = ecs_mini();
@@ -6236,6 +6237,47 @@ void Query_match_query_expr_from_scope() {
     test_uint(bar, ecs_term_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+
+void Query_query_long_or_w_ref() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+	ECS_TAG(world, A);
+	ECS_TAG(world, B);
+	ECS_TAG(world, C);
+	ECS_TAG(world, D);
+	ECS_TAG(world, E);
+	ECS_TAG(world, F);
+	ECS_TAG(world, G);
+	ECS_TAG(world, H);
+	ECS_TAG(world, I);
+	ECS_TAG(world, J);
+	ECS_TAG(world, K);
+	ECS_TAG(world, L);
+	ECS_TAG(world, M);
+	ECS_TAG(world, N);
+	ECS_TAG(world, O);
+	ECS_TAG(world, P);
+	ECS_TAG(world, Q);
+	ECS_TAG(world, R);
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_new(world, A);
+
+    ecs_query_t *q = ecs_query_new(world, 
+        "Position(e), A || B || C || D || E || F, G || H || I || J || K || L ||"
+        "M || N || O || P || Q || R");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
 
     ecs_fini(world);
 }

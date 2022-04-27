@@ -706,6 +706,7 @@ void set_table_match(
     
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
+    int32_t term_count_actual = filter->term_count_actual;
     ecs_term_t *terms = filter->terms;
 
     /* Reset resources in case this is an existing record */
@@ -722,21 +723,22 @@ void set_table_match(
         qm->references = NULL;
     }
 
-    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count);
-    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count);
-    ecs_os_memcpy_n(qm->subjects, it->subjects, ecs_entity_t, term_count);
-    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count);
+    ecs_os_memcpy_n(qm->columns, it->columns, int32_t, term_count_actual);
+    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, term_count_actual);
+    ecs_os_memcpy_n(qm->subjects, it->subjects, ecs_entity_t, term_count_actual);
+    ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
 
     /* Initialize switch/case terms */
     for (i = 0; i < term_count; i ++) {
         ecs_id_t id = terms[i].id;
         if (ECS_HAS_ROLE(id, CASE) && terms[i].subj.set.mask != EcsNothing) {
+            int32_t actual_index = terms[i].index;
             flecs_switch_term_t *sc = ecs_vector_add(
                 &qm->sparse_columns, flecs_switch_term_t);
-            sc->signature_column_index = i;
+            sc->signature_column_index = actual_index;
             sc->sw_case = ecs_pair_second(world, id);
             sc->sw_column = NULL;
-            qm->ids[i] = id;
+            qm->ids[actual_index] = id;
         }
     }
 
@@ -745,7 +747,8 @@ void set_table_match(
         if (table->flags & EcsTableHasDisabled) {
             for (i = 0; i < term_count; i ++) {
                 if (terms[i].subj.set.mask != EcsNothing) {
-                    ecs_id_t id = it->ids[i];
+                    int32_t actual_index = terms[i].index;
+                    ecs_id_t id = it->ids[actual_index];
                     ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
                     int32_t bs_index = ecs_search(world, table, bs_id, 0);
                     if (bs_index != -1) {
@@ -763,19 +766,26 @@ void set_table_match(
     if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchOnlyThis)) {
         ecs_vector_t *refs = NULL;
         for (i = 0; i < term_count; i ++) {
-            ecs_entity_t src = it->subjects[i];
+            int32_t actual_index = terms[i].index;
+            ecs_entity_t src = it->subjects[actual_index];
             ecs_size_t size = 0;
             if (it->sizes) {
-                size = it->sizes[i];
+                size = it->sizes[actual_index];
             }
             if (src) {
                 ecs_term_t *term = &terms[i];
-                ecs_id_t id = it->ids[i];
-                refs = add_ref(world, query, refs, term, id, src, size);
+                ecs_id_t id = it->ids[actual_index];
+                ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
-                /* Use column index to bind term and ref */
-                if (qm->columns[i] != 0) {
-                    qm->columns[i] = -ecs_vector_count(refs);
+                if (id) {
+                    ecs_assert(ecs_id_is_valid(world, id), 
+                        ECS_INTERNAL_ERROR, NULL);
+                    refs = add_ref(world, query, refs, term, id, src, size);
+
+                    /* Use column index to bind term and ref */
+                    if (qm->columns[actual_index] != 0) {
+                        qm->columns[actual_index] = -ecs_vector_count(refs);
+                    }
                 }
             }
         }
