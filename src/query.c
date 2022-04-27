@@ -1491,37 +1491,15 @@ void query_table_free(
 static
 bool satisfy_condition(
     ecs_world_t *world,
-    const ecs_filter_t *filter)
+    const ecs_query_t *query)
 {
-    ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->subj;
-        ecs_oper_kind_t oper = term->oper;
-
-        if (oper == EcsOptional) {
-            continue;
-        }
-
-        if (subj->entity != EcsThis && subj->entity) {
-            ecs_table_t *table = ecs_get_table(world, subj->entity);
-            if (!table) {
-                goto no_match;
-            }
-
-            if (!flecs_term_match_table(world, term, table, table->type, NULL, 
-                NULL, NULL, NULL, true, 0)) 
-            {
-                goto no_match;
-            }
-        }
+    if (!(query->filter.flags & EcsFilterMatchOnlyThis)) {
+        ecs_iter_t it = flecs_filter_iter_w_flags(
+            world, &query->filter, EcsIterIgnoreThis);
+        return ecs_iter_is_true(&it);
+    } else {
+        return true;
     }
-
-    return true;
-no_match:
-    return false;
 }
 
 static
@@ -2000,7 +1978,7 @@ ecs_iter_t ecs_query_iter(
     /* Check if non-This terms match. Checking this on iterator creation allows
      * entities referred to by non-This terms to change without having to update
      * the contents of the query cache. */
-    if (!satisfy_condition(query->world, &query->filter)) {
+    if (!satisfy_condition(query->world, query)) {
         goto noresults;
     }
 

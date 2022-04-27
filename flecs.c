@@ -2022,6 +2022,11 @@ bool flecs_filter_match_table(
     int32_t skip_term,
     ecs_flags32_t iter_flags);
 
+ecs_iter_t flecs_filter_iter_w_flags(
+    const ecs_world_t *stage,
+    const ecs_filter_t *filter,
+    ecs_flags32_t flags);
+
 void flecs_query_notify(
     ecs_world_t *world,
     ecs_query_t *query,
@@ -37848,6 +37853,11 @@ bool flecs_filter_match_table(
                 match_type = NULL;
             }
         } else {
+            if (ECS_BIT_IS_SET(iter_flags, EcsIterIgnoreThis)) {
+                or_result = true;
+                continue;
+            }
+            
             /* If filter contains This terms, table must be provided */
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         }
@@ -38364,9 +38374,10 @@ error:
     return -2;
 }
 
-ecs_iter_t ecs_filter_iter(
+ecs_iter_t flecs_filter_iter_w_flags(
     const ecs_world_t *stage,
-    const ecs_filter_t *filter)
+    const ecs_filter_t *filter,
+    ecs_flags32_t flags)
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -38384,7 +38395,7 @@ ecs_iter_t ecs_filter_iter(
         .world = (ecs_world_t*)stage,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
-        .flags = instanced ? EcsIterIsInstanced : 0
+        .flags = flags | (instanced ? EcsIterIsInstanced : 0)
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
@@ -38392,7 +38403,11 @@ ecs_iter_t ecs_filter_iter(
     filter = init_filter_iter(world, &it, filter);
 
     /* Find term that represents smallest superset */
-    if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
+    if (ECS_BIT_IS_SET(flags, EcsIterIgnoreThis)) {
+        iter->kind = EcsIterEvalCondition;
+        term_iter_init_no_data(&iter->term_iter);
+        iter->pivot_term = -1;
+    } else if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         ecs_term_t *terms = filter->terms;
         int32_t pivot_term = -1;
         ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -38449,6 +38464,13 @@ ecs_iter_t ecs_filter_iter(
     return it;
 error:
     return (ecs_iter_t){ 0 };
+}
+
+ecs_iter_t ecs_filter_iter(
+    const ecs_world_t *stage,
+    const ecs_filter_t *filter)
+{
+    return flecs_filter_iter_w_flags(stage, filter, 0);
 }
 
 ecs_iter_t ecs_filter_chain_iter(
@@ -41665,37 +41687,15 @@ void query_table_free(
 static
 bool satisfy_condition(
     ecs_world_t *world,
-    const ecs_filter_t *filter)
+    const ecs_query_t *query)
 {
-    ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
-
-    for (i = 0; i < count; i ++) {
-        ecs_term_t *term = &terms[i];
-        ecs_term_id_t *subj = &term->subj;
-        ecs_oper_kind_t oper = term->oper;
-
-        if (oper == EcsOptional) {
-            continue;
-        }
-
-        if (subj->entity != EcsThis && subj->entity) {
-            ecs_table_t *table = ecs_get_table(world, subj->entity);
-            if (!table) {
-                goto no_match;
-            }
-
-            if (!flecs_term_match_table(world, term, table, table->type, NULL, 
-                NULL, NULL, NULL, true, 0)) 
-            {
-                goto no_match;
-            }
-        }
+    if (!(query->filter.flags & EcsFilterMatchOnlyThis)) {
+        ecs_iter_t it = flecs_filter_iter_w_flags(
+            world, &query->filter, EcsIterIgnoreThis);
+        return ecs_iter_is_true(&it);
+    } else {
+        return true;
     }
-
-    return true;
-no_match:
-    return false;
 }
 
 static
@@ -42174,7 +42174,7 @@ ecs_iter_t ecs_query_iter(
     /* Check if non-This terms match. Checking this on iterator creation allows
      * entities referred to by non-This terms to change without having to update
      * the contents of the query cache. */
-    if (!satisfy_condition(query->world, &query->filter)) {
+    if (!satisfy_condition(query->world, query)) {
         goto noresults;
     }
 
@@ -45001,6 +45001,10 @@ bool ecs_iter_is_true(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
+
     bool result = ecs_iter_next(it);
     if (result) {
         ecs_iter_fini(it);

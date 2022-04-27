@@ -119,6 +119,11 @@ bool flecs_filter_match_table(
     int32_t skip_term,
     ecs_flags32_t iter_flags);
 
+ecs_iter_t flecs_filter_iter_w_flags(
+    const ecs_world_t *stage,
+    const ecs_filter_t *filter,
+    ecs_flags32_t flags);
+
 void flecs_query_notify(
     ecs_world_t *world,
     ecs_query_t *query,

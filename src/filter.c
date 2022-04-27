@@ -1655,6 +1655,11 @@ bool flecs_filter_match_table(
                 match_type = NULL;
             }
         } else {
+            if (ECS_BIT_IS_SET(iter_flags, EcsIterIgnoreThis)) {
+                or_result = true;
+                continue;
+            }
+            
             /* If filter contains This terms, table must be provided */
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         }
@@ -2171,9 +2176,10 @@ error:
     return -2;
 }
 
-ecs_iter_t ecs_filter_iter(
+ecs_iter_t flecs_filter_iter_w_flags(
     const ecs_world_t *stage,
-    const ecs_filter_t *filter)
+    const ecs_filter_t *filter,
+    ecs_flags32_t flags)
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -2191,7 +2197,7 @@ ecs_iter_t ecs_filter_iter(
         .world = (ecs_world_t*)stage,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
-        .flags = instanced ? EcsIterIsInstanced : 0
+        .flags = flags | (instanced ? EcsIterIsInstanced : 0)
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
@@ -2199,7 +2205,11 @@ ecs_iter_t ecs_filter_iter(
     filter = init_filter_iter(world, &it, filter);
 
     /* Find term that represents smallest superset */
-    if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
+    if (ECS_BIT_IS_SET(flags, EcsIterIgnoreThis)) {
+        iter->kind = EcsIterEvalCondition;
+        term_iter_init_no_data(&iter->term_iter);
+        iter->pivot_term = -1;
+    } else if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         ecs_term_t *terms = filter->terms;
         int32_t pivot_term = -1;
         ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -2256,6 +2266,13 @@ ecs_iter_t ecs_filter_iter(
     return it;
 error:
     return (ecs_iter_t){ 0 };
+}
+
+ecs_iter_t ecs_filter_iter(
+    const ecs_world_t *stage,
+    const ecs_filter_t *filter)
+{
+    return flecs_filter_iter_w_flags(stage, filter, 0);
 }
 
 ecs_iter_t ecs_filter_chain_iter(

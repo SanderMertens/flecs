@@ -2664,9 +2664,9 @@ typedef struct ecs_iter_private_t {
 #define EcsIterTableOnly       (1u << 4u) /* Result only populates table */
 #define EcsIterEntityOptional  (1u << 5u) /* Treat terms with entity subject as optional */
 #define EcsIterNoResults       (1u << 6u) /* Iterator has no results */
+#define EcsIterIgnoreThis      (1u << 7u) /* Only evaluate non-this terms */
 
-/** Iterator.
- */
+/** Iterator */
 struct ecs_iter_t {
     /* World */
     ecs_world_t *world;           /* The world */

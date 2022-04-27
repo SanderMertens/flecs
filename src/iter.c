@@ -659,6 +659,10 @@ bool ecs_iter_is_true(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ECS_BIT_SET(it->flags, EcsIterIsFilter);
+    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
+
     bool result = ecs_iter_next(it);
     if (result) {
         ecs_iter_fini(it);
