@@ -1024,6 +1024,53 @@ void Query_query_only_from_entity_no_match_optional() {
     ecs_fini(world);
 }
 
+void Query_query_only_from_entity_or() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, Ent, Position);
+
+    ecs_set(world, Ent, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query_new(world, "Position(Ent) || Velocity(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    
+    Position *ptr = ecs_term(&it, Position, 1);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_only_from_entity_no_match_or() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_ENTITY(world, Ent, Mass);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(Ent) || Velocity(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_w_singleton_tag_non_instanced() {
     ecs_world_t *world = ecs_init();
 

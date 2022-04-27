@@ -2187,36 +2187,31 @@ ecs_iter_t flecs_filter_iter_w_flags(
     
     flecs_process_pending_tables(world);
 
-    bool instanced = false;
-    if (filter) {
-        instanced = ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced);
-    }
-
     ecs_iter_t it = {
         .real_world = (ecs_world_t*)world,
         .world = (ecs_world_t*)stage,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
-        .flags = flags | (instanced ? EcsIterIsInstanced : 0)
+        .flags = flags
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
+    iter->pivot_term = -1;
 
     filter = init_filter_iter(world, &it, filter);
+    ECS_BIT_COND(it.flags, EcsIterIsInstanced, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterIsInstanced));
 
     /* Find term that represents smallest superset */
     if (ECS_BIT_IS_SET(flags, EcsIterIgnoreThis)) {
-        iter->kind = EcsIterEvalCondition;
         term_iter_init_no_data(&iter->term_iter);
-        iter->pivot_term = -1;
     } else if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         ecs_term_t *terms = filter->terms;
         int32_t pivot_term = -1;
         ecs_check(terms != NULL, ECS_INVALID_PARAMETER, NULL);
 
-        iter->kind = EcsIterEvalTables;
-
         pivot_term = ecs_filter_pivot_term(world, filter);
+        iter->kind = EcsIterEvalTables;
         iter->pivot_term = pivot_term;
 
         if (pivot_term == -2) {
@@ -2234,12 +2229,10 @@ ecs_iter_t flecs_filter_iter_w_flags(
         }
     } else {
         if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchAnything)) {
-            iter->kind = EcsIterEvalCondition;
             term_iter_init_no_data(&iter->term_iter);
         } else {
             iter->kind = EcsIterEvalNone;
         }
-        iter->pivot_term = -1;
     }
 
     if (filter->terms == filter->term_cache) {
@@ -2249,9 +2242,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
         iter->filter.terms = NULL;
     }
 
-    if (ECS_BIT_IS_SET(filter->flags, EcsFilterIsFilter)) {
-        ECS_BIT_SET(it.flags, EcsIterIsFilter);
-    }
+    ECS_BIT_COND(it.flags, EcsIterIsFilter, 
+        ECS_BIT_IS_SET(filter->flags, EcsFilterIsFilter));
 
     if (ECS_BIT_IS_SET(filter->flags, EcsFilterMatchThis)) {
         /* Make space for one variable if the filter has terms for This var */ 

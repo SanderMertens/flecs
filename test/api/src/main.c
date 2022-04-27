@@ -985,6 +985,8 @@ void Query_query_only_from_singleton_component_match_after(void);
 void Query_query_only_from_nothing(void);
 void Query_query_only_from_entity_optional(void);
 void Query_query_only_from_entity_no_match_optional(void);
+void Query_query_only_from_entity_or(void);
+void Query_query_only_from_entity_no_match_or(void);
 void Query_query_w_singleton_tag_non_instanced(void);
 void Query_query_w_singleton_tag_instanced(void);
 void Query_query_w_singleton_component_non_instanced(void);
@@ -5663,6 +5665,14 @@ bake_test_case Query_testcases[] = {
         Query_query_only_from_entity_no_match_optional
     },
     {
+        "query_only_from_entity_or",
+        Query_query_only_from_entity_or
+    },
+    {
+        "query_only_from_entity_no_match_or",
+        Query_query_only_from_entity_no_match_or
+    },
+    {
         "query_w_singleton_tag_non_instanced",
         Query_query_w_singleton_tag_non_instanced
     },
@@ -9413,7 +9423,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        160,
+        162,
         Query_testcases
     },
     {
