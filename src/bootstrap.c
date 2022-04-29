@@ -496,8 +496,7 @@ void _bootstrap_component(
     ecs_record_t *record = ecs_eis_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, &table->storage, 
-        entity, record, false);
+    int32_t index = flecs_table_append(world, table, entity, record, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = ecs_vector_first(columns[0].data, EcsComponent);

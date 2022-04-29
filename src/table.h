@@ -45,7 +45,6 @@ int32_t flecs_table_data_count(
 int32_t flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     ecs_entity_t entity,
     ecs_record_t *record,
     bool construct);
@@ -54,7 +53,6 @@ int32_t flecs_table_append(
 void flecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t index,
     bool destruct);
 
@@ -83,10 +81,8 @@ void flecs_table_move(
     ecs_entity_t dst_entity,
     ecs_entity_t src_entity,
     ecs_table_t *new_table,
-    ecs_data_t *new_data,
     int32_t new_index,
     ecs_table_t *old_table,
-    ecs_data_t *old_data,
     int32_t old_index,
     bool construct);
 
