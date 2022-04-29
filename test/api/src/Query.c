@@ -6241,7 +6241,6 @@ void Query_match_query_expr_from_scope() {
     ecs_fini(world);
 }
 
-
 void Query_query_long_or_w_ref() {
     ecs_world_t *world = ecs_mini();
 
@@ -6269,7 +6268,7 @@ void Query_query_long_or_w_ref() {
     ecs_entity_t e = ecs_new_entity(world, "e");
     ecs_set(world, e, Position, {10, 20});
 
-    ecs_new(world, A);
+    ecs_entity_t e2 = ecs_new(world, A);
 
     ecs_query_t *q = ecs_query_new(world, 
         "Position(e), A || B || C || D || E || F, G || H || I || J || K || L ||"
@@ -6278,6 +6277,15 @@ void Query_query_long_or_w_ref() {
 
     ecs_iter_t it = ecs_query_iter(world, q);
 
+    test_bool(true, ecs_query_next(&it));
+    test_uint(ecs_id(Position), ecs_term_id(&it, 1));
+    test_uint(A, ecs_term_id(&it, 2));
+    test_uint(e2, it.entities[0]);
+    test_uint(e, it.subjects[0]);
+    test_uint(0, it.subjects[1]);
+
+    test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
 }
+
