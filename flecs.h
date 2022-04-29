@@ -2328,7 +2328,6 @@ struct ecs_term_t {
 #define EcsFilterMatchAnything    (1u << 6u) /* False if filter has no/only Not terms */
 #define EcsFilterIsFilter         (1u << 7u) /* When true, data fields won't be populated */
 #define EcsFilterIsInstanced      (1u << 8u) /* Is filter instanced (see ecs_filter_desc_t) */
-#define EcsFilterVarIdsNoThis     (1u << 9u) /* Does filter have non-This terms with variable ids */
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {

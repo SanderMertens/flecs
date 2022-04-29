@@ -1010,7 +1010,7 @@ void Query_query_only_from_entity_no_match_optional() {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, Ent, 0);
+    ecs_new_entity(world, "Ent");
 
     ecs_query_t *q = ecs_query_new(world, "?Position(Ent)");
     test_assert(q != NULL);
@@ -1031,8 +1031,7 @@ void Query_query_only_from_entity_or() {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, Ent, Position);
-
+    ecs_entity_t Ent = ecs_new_entity(world, "Ent");
     ecs_set(world, Ent, Position, {10, 20});
 
     ecs_query_t *q = ecs_query_new(world, "Position(Ent) || Velocity(Ent)");
@@ -1068,6 +1067,103 @@ void Query_query_only_from_entity_no_match_or() {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_only_from_entity_or_change() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t Ent = ecs_new_entity(world, "Ent");
+    ecs_set(world, Ent, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query_new(world, "Position(Ent) || Velocity(Ent)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_uint(ecs_id(Position), ecs_term_id(&it, 1));
+    test_uint(Ent, it.subjects[0]);
+    Position *p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_remove(world, Ent, Position);
+    ecs_set(world, Ent, Velocity, {1, 2});
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_uint(ecs_id(Velocity), ecs_term_id(&it, 1));
+    test_uint(Ent, it.subjects[0]);
+    Velocity *v = ecs_term(&it, Velocity, 1);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_from_entity_or_change() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t Ent = ecs_new_entity(world, "Ent");
+    ecs_set(world, Ent, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(Ent) || Velocity(Ent), Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_uint(ecs_id(Position), ecs_term_id(&it, 1));
+    test_uint(Tag, ecs_term_id(&it, 2));
+    test_uint(e, it.entities[0]);
+    test_uint(Ent, it.subjects[0]);
+    test_uint(0, it.subjects[1]);
+    Position *p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_remove(world, Ent, Position);
+    ecs_set(world, Ent, Velocity, {1, 2});
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+
+    test_bool(ecs_term_is_set(&it, 1), true);
+    test_uint(ecs_id(Velocity), ecs_term_id(&it, 1));
+    test_uint(Tag, ecs_term_id(&it, 2));
+    test_uint(e, it.entities[0]);
+    test_uint(Ent, it.subjects[0]);
+    test_uint(0, it.subjects[1]);
+    Velocity *v = ecs_term(&it, Velocity, 1);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    test_assert(!ecs_query_next(&it));
 
     ecs_fini(world);
 }
@@ -6288,4 +6384,3 @@ void Query_query_long_or_w_ref() {
 
     ecs_fini(world);
 }
-

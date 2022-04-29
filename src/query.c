@@ -697,13 +697,10 @@ static
 void set_table_match(
     ecs_world_t *world,
     ecs_query_t *query,
-    ecs_query_table_t *qt,
     ecs_query_table_match_t *qm,
     ecs_table_t *table,
     ecs_iter_t *it)
-{
-    (void)qt;
-    
+{    
     ecs_filter_t *filter = &query->filter;
     int32_t i, term_count = filter->term_count;
     int32_t term_count_actual = filter->term_count_actual;
@@ -762,10 +759,16 @@ void set_table_match(
         }
     }
 
-    /* Add references for non-This terms */
+    /* Add references for substituted terms */
     if (!ECS_BIT_IS_SET(filter->flags, EcsFilterMatchOnlyThis)) {
         ecs_vector_t *refs = NULL;
         for (i = 0; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+            if (term->subj.entity != EcsThis) {
+                /* non-This terms are set during iteration */
+                continue;
+            }
+
             int32_t actual_index = terms[i].index;
             ecs_entity_t src = it->subjects[actual_index];
             ecs_size_t size = 0;
@@ -773,7 +776,6 @@ void set_table_match(
                 size = it->sizes[actual_index];
             }
             if (src) {
-                ecs_term_t *term = &terms[i];
                 ecs_id_t id = it->ids[actual_index];
                 ecs_assert(ecs_is_valid(world, src), ECS_INTERNAL_ERROR, NULL);
 
@@ -796,8 +798,6 @@ void set_table_match(
             ecs_vector_free(refs);
         }
     }
-
-    ecs_assert(table == qt->hdr.table, ECS_INTERNAL_ERROR, NULL);
 }
 
 /** Populate query cache with tables */
@@ -823,7 +823,7 @@ void match_tables(
         }
 
         ecs_query_table_match_t *qm = add_table_match(query, qt, table);
-        set_table_match(world, query, qt, qm, table, &it);
+        set_table_match(world, query, qm, table, &it);
     }
 }
 
@@ -859,7 +859,7 @@ bool match_table(
         }
 
         ecs_query_table_match_t *qm = add_table_match(query, qt, table);
-        set_table_match(world, query, qt, qm, table, &it);
+        set_table_match(world, query, qm, table, &it);
     }
 
     return qt != NULL;
@@ -1499,20 +1499,6 @@ void query_table_free(
 }
 
 static
-bool satisfy_condition(
-    ecs_world_t *world,
-    const ecs_query_t *query)
-{
-    if (!(query->filter.flags & EcsFilterMatchOnlyThis)) {
-        ecs_iter_t it = flecs_filter_iter_w_flags(
-            world, &query->filter, EcsIterIgnoreThis);
-        return ecs_iter_is_true(&it);
-    } else {
-        return true;
-    }
-}
-
-static
 void unmatch_table(
     ecs_query_t *query,
     ecs_table_t *table)
@@ -1577,7 +1563,7 @@ void rematch_tables(
             qm = add_table_match(query, qt, table);
         }
 
-        set_table_match(world, query, qt, qm, table, &it);
+        set_table_match(world, query, qm, table, &it);
 
         if (table && ecs_table_count(table) && query->group_by) {
             /* If grouping is enabled, make sure match is in the right place */
@@ -1985,13 +1971,6 @@ ecs_iter_t ecs_query_iter(
         flecs_eval_component_monitors(world);
     }
 
-    /* Check if non-This terms match. Checking this on iterator creation allows
-     * entities referred to by non-This terms to change without having to update
-     * the contents of the query cache. */
-    if (!satisfy_condition(query->world, query)) {
-        goto noresults;
-    }
-
     query->prev_match_count = query->match_count;
 
     /* Prepare iterator */
@@ -2029,9 +2008,37 @@ ecs_iter_t ecs_query_iter(
         .next = ecs_query_next,
     };
 
-    /* Query populates the iterator with arrays from the cache, ensure they
-     * don't get overwritten by flecs_iter_validate */
-    flecs_iter_init(&result, flecs_iter_cache_ptrs);
+    ecs_filter_t *filter = &query->filter;
+    if (filter->flags & EcsFilterMatchOnlyThis) {
+        /* When the query only matches This terms, we can reuse the storage from
+         * the cache to populate the iterator */
+        flecs_iter_init(&result, flecs_iter_cache_ptrs);
+    } else {
+        /* Check if non-This terms (like singleton terms) still match */
+        ecs_iter_t fit = flecs_filter_iter_w_flags(
+            world, &query->filter, EcsIterIgnoreThis);
+        if (!ecs_filter_next(&fit)) {
+            /* No match, so return nothing */
+            ecs_iter_fini(&fit);
+            ecs_iter_fini(&result);
+            goto noresults;
+        }
+
+        /* Initialize iterator with private storage for ids, ptrs, sizes and 
+         * columns so we have a place to store the non-This data */
+        flecs_iter_init(&result, flecs_iter_cache_ptrs | flecs_iter_cache_ids |
+            flecs_iter_cache_columns | flecs_iter_cache_sizes);
+
+        /* Copy the data */
+        int32_t term_count = filter->term_count_actual;
+        if (result.ptrs) {
+            ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
+        }
+        ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, term_count);
+        ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, term_count);
+        ecs_os_memcpy_n(result.columns, fit.columns, int32_t, term_count);
+        ecs_iter_fini(&fit);
+    }
 
     return result;
 error:
@@ -2439,9 +2446,11 @@ bool ecs_query_next_instanced(
     ecs_query_t *query = iter->query;
     ecs_world_t *world = query->world;
     ecs_flags32_t flags = query->flags;
-    (void)world;
+    const ecs_filter_t *filter = &query->filter;
+    bool only_this = filter->flags & EcsFilterMatchOnlyThis;
 
     ecs_poly_assert(world, ecs_world_t);
+    (void)world;
 
     query_iter_cursor_t cur;
     ecs_query_table_node_t *node, *next, *prev;
@@ -2528,10 +2537,28 @@ bool ecs_query_next_instanced(
             cur.first = 0;
         }
 
-        it->ids = match->ids;
-        it->columns = match->columns;
+        if (only_this) {
+            /* If query has only This terms, reuse cache storage */
+            it->ids = match->ids;
+            it->columns = match->columns;
+            it->sizes = match->sizes;
+        } else {
+            /* If query has non-This terms make sure not to overwrite them */
+            int32_t t, term_count = filter->term_count;
+            for (t = 0; t < term_count; t ++) {
+                ecs_term_t *term = &filter->terms[t];
+                if (term->subj.entity != EcsThis) {
+                    continue;
+                }
+                
+                int32_t actual_index = term->index;
+                it->ids[actual_index] = match->ids[actual_index];
+                it->columns[actual_index] = match->columns[actual_index];
+                it->sizes[actual_index] = match->sizes[actual_index];
+            }
+        }
+
         it->subjects = match->subjects;
-        it->sizes = match->sizes;
         it->references = match->references;
         it->instance_count = 0;
 
