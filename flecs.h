@@ -2497,13 +2497,10 @@ typedef struct ecs_var_t {
 
 /** Cached reference. */
 struct ecs_ref_t {
-    ecs_entity_t entity;    /* Entity of the reference */
-    ecs_entity_t component; /* Component of the reference */
-    void *table;            /* Last known table */
-    uint32_t row;           /* Last known location in table */
-    int32_t alloc_count;    /* Last known alloc count of table */
-    ecs_record_t *record;   /* Pointer to record, if in main stage */
-    const void *ptr;        /* Cached ptr */
+    ecs_entity_t entity;    /* Entity */
+    ecs_entity_t id;        /* Component id */
+    struct ecs_table_record_t *tr; /* Table record for component */
+    ecs_record_t *record;   /* Entity index record */
 };
 
 /** Array of entity ids that, other than a type, can live on the stack */
@@ -2669,7 +2666,7 @@ typedef struct ecs_iter_private_t {
 struct ecs_iter_t {
     /* World */
     ecs_world_t *world;           /* The world */
-    ecs_world_t *real_world;      /* Actual world. This differs from world when in staged mode */
+    ecs_world_t *real_world;      /* Actual world. This differs from world when in readonly mode */
 
     /* Matched data */
     ecs_entity_t *entities;       /* Entity identifiers */
@@ -4797,23 +4794,34 @@ const void* ecs_get_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-
-/** Get an immutable reference to a component.
- * This operation is similar to ecs_get_id but it stores temporary
- * information in a `ecs_ref_t` value which allows subsequent lookups to be
- * faster.
+/** Create a ref.
+ * A ref is a handle to an entity + component which caches a small amount of
+ * data to reduce overhead of repeatedly accessing the component. Use 
+ * ecs_ref_get to get the component data.
  *
  * @param world The world.
- * @param ref Pointer to a ecs_ref_t value. Must be initialized.
  * @param entity The entity.
- * @param id The id of the component to get.
+ * @param id The id of the component.
+ * @return The reference.
+ */
+FLECS_API
+ecs_ref_t ecs_ref_init_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get component from ref.
+ * Get component pointer from ref. The ref must be created with ecs_ref_init.
+ * 
+ * @param world The world.
+ * @param ref The ref.
+ * @param id The component id.
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-const void* ecs_get_ref_id(
+const void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
-    ecs_entity_t entity,
     ecs_id_t id);
 
 /** Get case for switch.
@@ -7641,11 +7649,7 @@ void* ecs_record_get_column(
 #define ecs_emplace(world, entity, T)\
     (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
 
-
 /* -- Get -- */
-
-#define ecs_get_ref(world, ref, entity, T)\
-    (ECS_CAST(const T*, ecs_get_ref_id(world, ref, entity, ecs_id(T))))
 
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
@@ -7659,6 +7663,14 @@ void* ecs_record_get_column(
         ecs_pair(relation, ecs_id(object)))))
 
 #define ecs_get_pair_object ecs_get_pair_second
+
+/* -- Ref -- */
+
+#define ecs_ref_init(world, entity, T)\
+    ecs_ref_init_id(world, entity, ecs_id(T))
+
+#define ecs_ref_get(world, ref, T)\
+    (ECS_CAST(const T*, ecs_ref_get_id(world, ref, ecs_id(T))))
 
 /* -- Get mut & Modified -- */
 
@@ -16508,12 +16520,10 @@ template <typename T>
 struct ref {
     ref()
         : m_world( nullptr )
-        , m_entity( 0 )
         , m_ref() { }
 
     ref(world_t *world, entity_t entity) 
         : m_world( world )
-        , m_entity( entity )
         , m_ref() 
     {
         auto comp_id = _::cpp_type<T>::id(world);
@@ -16521,13 +16531,12 @@ struct ref {
         ecs_assert(_::cpp_type<T>::size() != 0, 
                 ECS_INVALID_PARAMETER, NULL);
 
-        ecs_get_ref_id(
-            m_world, &m_ref, m_entity, comp_id);
+        m_ref = ecs_ref_init_id(m_world, entity, comp_id);
     }
 
     const T* operator->() {
-        const T* result = static_cast<const T*>(ecs_get_ref_id(
-            m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world)));
+        const T* result = static_cast<const T*>(ecs_ref_get_id(
+            m_world, &m_ref, _::cpp_type<T>::id(m_world)));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -16535,19 +16544,14 @@ struct ref {
     }
 
     const T* get() {
-        if (m_entity) {
-            ecs_get_ref_id(
-                m_world, &m_ref, m_entity, _::cpp_type<T>::id(m_world));    
-        }
-
-        return static_cast<const T*>(m_ref.ptr);
+        return static_cast<const T*>(ecs_ref_get_id(
+            m_world, &m_ref, _::cpp_type<T>::id(m_world)));
     }
 
     flecs::entity entity() const;
 
 private:
     world_t *m_world;
-    entity_t m_entity;
     flecs::ref_t m_ref;
 };
 
@@ -19941,7 +19945,7 @@ namespace flecs {
 
 template <typename T>
 flecs::entity ref<T>::entity() const {
-    return flecs::entity(m_world, m_entity);
+    return flecs::entity(m_world, m_ref.entity);
 }
 
 template <typename Self>

@@ -4,7 +4,7 @@ namespace flecs {
 
 template <typename T>
 flecs::entity ref<T>::entity() const {
-    return flecs::entity(m_world, m_entity);
+    return flecs::entity(m_world, m_ref.entity);
 }
 
 template <typename Self>

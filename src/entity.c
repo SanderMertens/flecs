@@ -1,4 +1,3 @@
-
 #include "private_api.h"
 #include <ctype.h>
 
@@ -2858,62 +2857,6 @@ error:
     return NULL;
 }
 
-const void* ecs_get_ref_id(
-    const ecs_world_t *world,
-    ecs_ref_t *ref,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!entity || !ref->entity || entity == ref->entity, 
-        ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!id || !ref->component || id == ref->component, 
-        ECS_INVALID_PARAMETER, NULL);
-    ecs_record_t *record = ref->record;
-
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
-
-    entity |= ref->entity;
-
-    if (!record) {
-        record = ecs_eis_get(world, entity);
-    }
-
-    if (!record || !record->table) {
-        goto error;
-    }
-
-    ecs_table_t *table = record->table;
-
-    if (ref->record == record &&
-        ref->table == table &&
-        ref->row == record->row &&
-        ref->alloc_count == table->alloc_count)
-    {
-        return ref->ptr;
-    }
-
-    id |= ref->component;
-
-    uint32_t row = record->row;
-    ref->entity = entity;
-    ref->component = id;
-    ref->table = table;
-    ref->row = row;
-    ref->alloc_count = table->alloc_count;
-
-    if (table && id) {
-        ref->ptr = get_component(world, table, ECS_RECORD_TO_ROW(row), id);
-    }
-
-    ref->record = record;
-    return ref->ptr;
-error:
-    return NULL;
-}
-
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -2967,6 +2910,70 @@ void* ecs_get_mut_id(
     }
 
     return result;
+error:
+    return NULL;
+}
+
+ecs_ref_t ecs_ref_init_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    
+    world = ecs_get_world(world);
+
+    ecs_record_t *record = ecs_eis_get(world, entity);
+    ecs_check(record != NULL, ECS_INVALID_PARAMETER,
+        "cannot create ref for empty entity");
+
+    ecs_ref_t result = {
+        .entity = entity,
+        .id = id,
+        .record = record
+    };
+
+    ecs_table_t *table = record->table;
+    if (table) {
+        result.tr = flecs_get_table_record(world, table, id);
+    }
+
+    return result;
+error:
+    return (ecs_ref_t){0};
+}
+
+const void* ecs_ref_get_id(
+    const ecs_world_t *world,
+    ecs_ref_t *ref,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id == ref->id, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_record_t *r = ref->record;
+    ecs_table_t *table = r->table;
+    if (!table) {
+        return NULL;
+    }
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    ecs_check(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_record_t *tr = ref->tr;
+    if (!tr || tr->hdr.table != table) {
+        tr = ref->tr = flecs_get_table_record(world, table, id);
+        if (!tr) {
+            return NULL;
+        }
+    }
+
+    return get_component_w_index(table, tr->column, row);
 error:
     return NULL;
 }

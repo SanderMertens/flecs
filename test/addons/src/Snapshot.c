@@ -588,8 +588,8 @@ void Snapshot_snapshot_get_ref_after_restore() {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -606,7 +606,7 @@ void Snapshot_snapshot_get_ref_after_restore() {
     ecs_snapshot_restore(world, s);
 
     test_assert(ecs_has(world, e, Position));
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);

@@ -652,14 +652,13 @@ ecs_vector_t* add_ref(
         ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
     }
     
-    *ref = (ecs_ref_t){0};
-    ref->entity = entity;
-
     if (size) {
-        ref->component = component;
-        ecs_get_ref_id(world, ref, entity, component);
+        *ref = ecs_ref_init_id(world, entity, component);
     } else {
-        ref->component = 0;
+        *ref = (ecs_ref_t){
+            .entity = entity,
+            .id = 0
+        };
     }
 
     query->flags |= EcsQueryHasRefs;

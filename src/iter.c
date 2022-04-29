@@ -158,11 +158,14 @@ bool flecs_iter_populate_term_data(
             /* Iterator provides cached references for non-This terms */
             ecs_ref_t *ref = &it->references[-column - 1];
             if (ptr_out) {
-                ptr_out[0] = (void*)ecs_get_ref_id(
-                    world, ref, ref->entity, ref->component);
+                if (ref->id) {
+                    ptr_out[0] = (void*)ecs_ref_get_id(world, ref, ref->id);
+                } else {
+                    ptr_out[0] = NULL;
+                }
             }
 
-            if (!ref->component) {
+            if (!ref->id) {
                 is_shared = false;
             }
 

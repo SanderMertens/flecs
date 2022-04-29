@@ -11,8 +11,8 @@ void Reference_get_ref() {
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -28,15 +28,15 @@ void Reference_get_ref_after_add() {
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     ecs_add(world, e, Velocity);
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -53,15 +53,15 @@ void Reference_get_ref_after_remove() {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     ecs_add(world, e, Velocity);
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     ecs_remove(world, e, Velocity);
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -77,15 +77,15 @@ void Reference_get_ref_after_delete() {
     ecs_entity_t dummy = ecs_new(world, Position);
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     ecs_delete(world, dummy);
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -100,8 +100,8 @@ void Reference_get_ref_after_realloc() {
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -112,7 +112,7 @@ void Reference_get_ref_after_realloc() {
         ecs_new(world, Position);
     }
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -127,8 +127,8 @@ void Reference_get_ref_staged() {
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -137,14 +137,14 @@ void Reference_get_ref_staged() {
 
     ecs_set(world, e, Position, {30, 40});
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     ecs_defer_end(world);
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
@@ -159,8 +159,8 @@ void Reference_get_ref_after_new_in_stage() {
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -171,14 +171,14 @@ void Reference_get_ref_after_new_in_stage() {
 
     ecs_set(world, e, Position, {30, 40});
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     ecs_defer_end(world);
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
@@ -195,8 +195,8 @@ void Reference_get_ref_monitored() {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     ecs_new_w_pair(world, EcsChildOf, e);
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -212,8 +212,8 @@ void Reference_get_nonexisting() {
 
     ecs_entity_t e = ecs_new(world, Position);
     
-    ecs_ref_t ref = {0};
-    const Velocity *p = ecs_get_ref(world, &ref, e, Velocity);
+    ecs_ref_t ref = ecs_ref_init(world, e, Velocity);
+    const Velocity *p = ecs_ref_get(world, &ref, Velocity);
     test_assert(p == NULL);
 
     ecs_fini(world);
@@ -236,8 +236,8 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
     ECS_ENTITY(world, e2, Position);
     ecs_set(world, e, Position, {10, 20});
     
-    ecs_ref_t ref = {0};
-    const Position *p = ecs_get_ref(world, &ref, e, Position);
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -246,7 +246,7 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
         ECS_ENTITY(world, e, Position);
     }
 
-    p = ecs_get_ref(world, &ref, e, Position);
+    p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
