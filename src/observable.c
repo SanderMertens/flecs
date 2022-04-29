@@ -73,9 +73,9 @@ void notify_subset(
             ecs_pair(rel, EcsWildcard));
 
         ecs_entity_t *entities = ecs_vector_first(
-            table->storage.entities, ecs_entity_t);
+            table->data.entities, ecs_entity_t);
         ecs_record_t **records = ecs_vector_first(
-            table->storage.record_ptrs, ecs_record_t*);
+            table->data.record_ptrs, ecs_record_t*);
 
         for (e = 0; e < entity_count; e ++) {
             uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
@@ -140,7 +140,7 @@ void flecs_emit(
 
     if (count && !desc->table_event) {
         ecs_record_t **recs = ecs_vector_get(
-            table->storage.record_ptrs, ecs_record_t*, row);
+            table->data.record_ptrs, ecs_record_t*, row);
 
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = recs[i];
@@ -153,7 +153,7 @@ void flecs_emit(
             uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
             if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
                 notify_subset(world, &it, observable, ecs_vector_first(
-                    table->storage.entities, ecs_entity_t)[row + i], 
+                    table->data.entities, ecs_entity_t)[row + i], 
                         event, ids);
             }
         }

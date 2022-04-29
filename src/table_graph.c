@@ -791,7 +791,7 @@ int32_t flecs_table_switch_from_case(
 
     ecs_sw_column_t *sw_columns = NULL;
 
-    if ((sw_columns = table->storage.sw_columns)) {
+    if ((sw_columns = table->data.sw_columns)) {
         /* Fast path, we can get the switch type from the column data */
         for (i = 0; i < count; i ++) {
             ecs_table_t *sw_type = sw_columns[i].type;

@@ -210,7 +210,7 @@ bool flecs_iter_populate_term_data(
              * which gives us the pointer and size */
             column = tr->column;
             ecs_type_info_t *ti = &table->type_info[column];
-            ecs_column_t *s = &table->storage.columns[column];
+            ecs_column_t *s = &table->data.columns[column];
             size = ti->size;
             align = ti->alignment;
             vec = s->data;
@@ -236,7 +236,7 @@ bool flecs_iter_populate_term_data(
         }
 
         ecs_type_info_t *ti = &table->type_info[storage_column];
-        ecs_column_t *s = &table->storage.columns[storage_column];
+        ecs_column_t *s = &table->data.columns[storage_column];
         size = ti->size;
         align = ti->alignment;
         vec = s->data;
@@ -256,7 +256,7 @@ has_data:
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_switch_t *sw = table->storage.sw_columns[
+        ecs_switch_t *sw = table->data.sw_columns[
             (column - 1) - table->sw_column_offset].data;
         vec = flecs_switch_values(sw);
         size = ECS_SIZEOF(ecs_entity_t);
@@ -294,7 +294,7 @@ void flecs_iter_populate_data(
         }
         if (count) {
             it->entities = ecs_vector_get(
-                table->storage.entities, ecs_entity_t, offset);
+                table->data.entities, ecs_entity_t, offset);
         } else {
             it->entities = NULL;
         }
@@ -526,7 +526,7 @@ void* ecs_iter_column_w_size(
     ecs_check(!size || (ecs_size_t)size == ti->size, 
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_column_t *column = &table->storage.columns[storage_index];
+    ecs_column_t *column = &table->data.columns[storage_index];
     int32_t alignment = ti->alignment;
     return ecs_vector_get_t(column->data, flecs_uto(int32_t, size), alignment,
          it->offset);
@@ -691,7 +691,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_vector_get(table->storage.entities, ecs_entity_t, 
+                e = ecs_vector_get(table->data.entities, ecs_entity_t, 
                     var->range.offset)[0];
             }
         }
@@ -854,7 +854,7 @@ void ecs_iter_set_var_as_range(
     if (range->count == 1) {
         ecs_table_t *table = range->table;
         var->entity = ecs_vector_get(
-            table->storage.entities, ecs_entity_t, range->offset)[0];
+            table->data.entities, ecs_entity_t, range->offset)[0];
     } else {
         var->entity = 0;
     }

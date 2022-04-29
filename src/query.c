@@ -943,7 +943,7 @@ void sort_table(
     int32_t column_index,
     ecs_order_by_action_t compare)
 {
-    ecs_data_t *data = &table->storage;
+    ecs_data_t *data = &table->data;
     if (!data->entities) {
         /* Nothing to sort */
         return;
@@ -1024,7 +1024,7 @@ void build_sorted_table_range(
     for (cur = list->first; cur != end; cur = cur->next) {
         ecs_query_table_match_t *match = cur->match;
         ecs_table_t *table = match->table;
-        ecs_data_t *data = &table->storage;
+        ecs_data_t *data = &table->data;
         ecs_vector_t *entities;
 
         ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
@@ -2077,7 +2077,7 @@ int find_smallest_column(
             ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
 
             /* Get the sparse column */
-            ecs_data_t *data = &table->storage;
+            ecs_data_t *data = &table->data;
             sc = sparse_column->sw_column = 
                 &data->sw_columns[table_column_index - 1];
         }
@@ -2254,7 +2254,7 @@ int bitset_column_next(
         if (!bs_column) {
             int32_t index = column->column_index;
             ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
-            bs_column = &table->storage.bs_columns[index - bs_offset];
+            bs_column = &table->data.bs_columns[index - bs_offset];
             columns[i].bs_column = bs_column;
         }
         

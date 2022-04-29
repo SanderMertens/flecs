@@ -88,7 +88,7 @@ void snapshot_table(
     
     l->table = table;
     l->type = ecs_vector_copy(table->type, ecs_id_t);
-    l->data = duplicate_data(table, &table->storage);
+    l->data = duplicate_data(table, &table->data);
 }
 
 static
@@ -229,7 +229,7 @@ void restore_unfiltered(
                     world, world_table, snapshot_table->data);
             } else {
                 flecs_table_clear_data(
-                    world, world_table, &world_table->storage);
+                    world, world_table, &world_table->data);
                 flecs_table_init_data(world, world_table);
             }
         
@@ -242,7 +242,7 @@ void restore_unfiltered(
              * restored in a different table. Therefore first clear the data
              * from the table (which doesn't invoke triggers), and then delete
              * the table. */
-            flecs_table_clear_data(world, world_table, &world_table->storage);
+            flecs_table_clear_data(world, world_table, &world_table->data);
             flecs_delete_table(world, world_table);
         
         /* If there is no world & snapshot table, nothing needs to be done */
@@ -317,7 +317,7 @@ void restore_filtered(
         int32_t old_count = ecs_table_count(snapshot_table->table);
         int32_t new_count = flecs_table_data_count(snapshot_table->data);
 
-        flecs_table_merge(world, table, table, &table->storage, snapshot_table->data);
+        flecs_table_merge(world, table, table, &table->data, snapshot_table->data);
 
         /* Run OnSet systems for merged entities */
         if (new_count) {

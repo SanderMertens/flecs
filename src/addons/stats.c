@@ -192,7 +192,7 @@ void ecs_get_world_stats(
          * itself in the table type. */
         if (entity_count == 1) {
             ecs_entity_t *entities = ecs_vector_first(
-                table->storage.entities, ecs_entity_t);
+                table->data.entities, ecs_entity_t);
             if (ecs_search(world, table, entities[0], 0)) {
                 singleton_table_count ++;
             }
