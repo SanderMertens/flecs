@@ -173,8 +173,6 @@ void set_info_from_record(
         return;
     }
 
-    info->data = &table->data;
-
     ecs_assert(ecs_vector_count(table->data.entities) > info->row, 
         ECS_INTERNAL_ERROR, NULL);
 }
@@ -735,8 +733,6 @@ int32_t new_entity(
             world, new_table, NULL, new_row, 1, diff, notify_on_set);       
     }
 
-    info->data = new_data;
-
     return new_row;
 }
 
@@ -751,8 +747,7 @@ int32_t move_entity(
     ecs_table_diff_t *diff,
     bool construct,
     bool notify_on_set)
-{    
-    ecs_data_t *dst_data = &dst_table->data;
+{
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != dst_table, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -790,7 +785,6 @@ int32_t move_entity(
         }
     }
 
-    info->data = dst_data;
     return dst_row;
 error:
     return -1;
@@ -1301,7 +1295,6 @@ bool flecs_get_info(
 {
     info->table = NULL;
     info->record = NULL;
-    info->data = NULL;
     info->row_flags = 0;
 
     if (entity & ECS_ROLE) {
@@ -3134,9 +3127,7 @@ ecs_entity_t ecs_get_case(
     index -= table->sw_column_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* Data cannot be NULl, since entity is stored in the table */
-    ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_switch_t *sw = info.data->sw_columns[index].data;  
+    ecs_switch_t *sw = table->data.sw_columns[index].data;  
     return flecs_switch_get(sw, info.row);  
 error:
     return 0;
@@ -3184,8 +3175,7 @@ void ecs_enable_component_w_id(
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Data cannot be NULl, since entity is stored in the table */
-    ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &info.data->bs_columns[index].data;
+    ecs_bitset_t *bs = &table->data.bs_columns[index].data;
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, info.row, enable);
@@ -3221,10 +3211,7 @@ bool ecs_is_component_enabled_w_id(
 
     index -= table->bs_column_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    /* Data cannot be NULl, since entity is stored in the table */
-    ecs_assert(info.data != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &info.data->bs_columns[index].data;  
+    ecs_bitset_t *bs = &table->data.bs_columns[index].data;  
 
     return flecs_bitset_get(bs, info.row);
 error:
@@ -3264,9 +3251,7 @@ bool ecs_has_id(
         }
 
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
-        
-        ecs_data_t *data = info.data;
-        ecs_switch_t *sw = data->sw_columns[index].data;
+        ecs_switch_t *sw = table->data.sw_columns[index].data;
         ecs_entity_t value = flecs_switch_get(sw, info.row);
 
         return value == (id & ECS_COMPONENT_MASK);

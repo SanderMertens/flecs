@@ -501,7 +501,6 @@ typedef struct ecs_store_t {
 typedef struct ecs_entity_info_t {
     ecs_record_t *record;       /* Main stage record in entity index */
     ecs_table_t *table;         /* Table. Not set if entity is empty */
-    ecs_data_t *data;           /* Stage-specific table columns */
     int32_t row;                /* Row in table */
     uint32_t row_flags;         /* Row flags (used to track observables) */
 } ecs_entity_info_t;
