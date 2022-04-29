@@ -497,14 +497,6 @@ typedef struct ecs_store_t {
     ecs_graph_edge_hdr_t *first_free;
 } ecs_store_t;
 
-/** Supporting type to store looked up or derived entity data */
-typedef struct ecs_entity_info_t {
-    ecs_record_t *record;       /* Main stage record in entity index */
-    ecs_table_t *table;         /* Table. Not set if entity is empty */
-    int32_t row;                /* Row in table */
-    uint32_t row_flags;         /* Row flags (used to track observables) */
-} ecs_entity_info_t;
-
 /** Supporting type to store looked up component data in specific table */
 typedef struct ecs_column_info_t {
     ecs_entity_t id;

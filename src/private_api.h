@@ -61,12 +61,6 @@ void flecs_add_flag(
     ecs_entity_t entity,
     uint32_t flag);
 
-/* Obtain entity info */
-bool flecs_get_info(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_info_t *info);
-
 ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e);
