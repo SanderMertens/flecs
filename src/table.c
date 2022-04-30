@@ -1181,7 +1181,6 @@ int32_t flecs_table_append(
      * arrays will realloc */
     ecs_data_t *data = &table->data;
     int32_t count = ecs_vector_count(data->entities);
-    int32_t size = ecs_vector_size(data->entities);
     int32_t column_count = table->storage_count;
     ecs_column_t *columns = table->data.columns;
     
@@ -1219,7 +1218,7 @@ int32_t flecs_table_append(
     /* Reobtain size to ensure that the columns have the same size as the 
      * entities and record vectors. This keeps reasoning about when allocations
      * occur easier. */
-    size = ecs_vector_size(data->entities);
+    int32_t size = ecs_vector_size(data->entities);
 
     /* Grow component arrays with 1 element */
     int32_t i;
