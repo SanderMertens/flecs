@@ -575,6 +575,53 @@ void Set_get_mut_w_remove_in_on_add() {
     ecs_get_mut(world, e, Position, &added);
 }
 
+static
+void OnAddRealloc(ecs_iter_t *it) {
+    ecs_entity_t *entities = it->ctx;
+
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        ecs_set(it->world, entities[i], Velocity, {i, i * 2});
+    }
+}
+
+void Set_get_mut_w_realloc_in_on_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_entity_t *entities = ecs_os_malloc_n(ecs_entity_t, 1000);
+    for (int i = 0; i < 1000; i ++) {
+        entities[i] = ecs_new(world, Position);
+    }
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .callback = OnAddRealloc,
+        .events = {EcsOnAdd},
+        .term.id = ecs_id(Position),
+        .ctx = entities
+    });
+
+    ecs_entity_t e = ecs_new(world, Velocity);
+    const Position *ptr = ecs_get_mut(world, e, Position, 0);
+    test_assert(ptr == ecs_get(world, e, Position));
+
+    for (int i = 0; i < 1000; i ++) {
+        test_assert( ecs_has(world, entities[i], Velocity));
+        const Velocity *vptr = ecs_get(world, entities[i], Velocity);
+        test_assert(vptr != NULL);
+        test_int(vptr->x, i);
+        test_int(vptr->y, i * 2);
+        test_assert(ecs_get_table(world, e) == 
+            ecs_get_table(world, entities[i]));
+    }
+
+    ecs_fini(world);
+
+    ecs_os_free(entities);
+}
+
 void Set_emplace() {
     ecs_world_t *world = ecs_init();
 

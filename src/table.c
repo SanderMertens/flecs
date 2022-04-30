@@ -1146,8 +1146,6 @@ int32_t grow_data(
         flecs_table_set_empty(world, table);
     }
 
-    table->alloc_count ++;
-
     /* Return index of first added entity */
     return cur_count;
 }
@@ -1190,11 +1188,7 @@ int32_t flecs_table_append(
     /* Grow buffer with entity ids, set new element to new entity */
     ecs_entity_t *e = ecs_vector_add(&data->entities, ecs_entity_t);
     ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
-    *e = entity;    
-
-    /* Keep track of alloc count. This allows references to check if cached
-     * pointers need to be updated. */  
-    table->alloc_count += (count == size);
+    *e = entity;
 
     /* Add record ptr to array with record ptrs */
     ecs_record_t **r = ecs_vector_add(&data->record_ptrs, ecs_record_t*);
@@ -1653,8 +1647,6 @@ bool flecs_table_shrink(
         ecs_vector_reclaim_t(&column->data, ti->size, ti->alignment);
     }
 
-    table->alloc_count ++;
-
     return has_payload;
 }
 
@@ -2060,8 +2052,6 @@ void flecs_table_merge(
             src_data, dst_data);
     }
 
-    dst_table->alloc_count ++;
-
     if (src_count) {
         if (!dst_count) {
             flecs_table_set_empty(world, dst_table);
@@ -2102,8 +2092,6 @@ void flecs_table_replace_data(
     } else if (prev_count && !count) {
         flecs_table_set_empty(world, table);
     }
-
-    table->alloc_count ++;
 
     check_table_sanity(table);
 }

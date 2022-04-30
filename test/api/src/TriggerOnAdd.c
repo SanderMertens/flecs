@@ -761,32 +761,19 @@ void TriggerOnAdd_get_sys_context_from_param() {
 }
 
 void TriggerOnAdd_remove_added_component_in_on_add_w_set() {
+    install_test_abort();
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
     ECS_TRIGGER(world, Remove_from_current, EcsOnAdd, Position);
 
     IterData ctx = {.component = ecs_id(Position)};
     ecs_set_context(world, &ctx);
 
-    ecs_entity_t e1 = ecs_new(world, Velocity);
-    ecs_entity_t e2 = ecs_new(world, Velocity);
-    ecs_entity_t e3 = ecs_new(world, Velocity);
+    test_expect_abort();
 
-    e1 = ecs_set(world, e1, Position, {10, 20});
-    e2 = ecs_set(world, e2, Position, {11, 21});
-    e3 = ecs_set(world, e3, Position, {12, 22});
-
-    test_assert( !ecs_has(world, e1, Position));
-    test_assert( !ecs_has(world, e2, Position));
-    test_assert( !ecs_has(world, e3, Position));
-
-    test_assert( ecs_has(world, e1, Velocity));
-    test_assert( ecs_has(world, e2, Velocity));
-    test_assert( ecs_has(world, e3, Velocity));
-
-    ecs_fini(world);
+    ecs_set(world, 0, Position, {0, 0});
 }
 
 void Add_3_to_current(ecs_iter_t *it) {

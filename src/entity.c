@@ -1085,39 +1085,42 @@ void *get_mutable(
     ecs_record_t *r,
     bool *is_added)
 {
+    void *dst = NULL;
+
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check((id & ECS_COMPONENT_MASK) == id || 
         ECS_HAS_ROLE(id, PAIR), ECS_INVALID_PARAMETER, NULL);
 
-    void *dst = NULL;
     if (r->table) {
-        get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+        dst = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
     }
 
     if (!dst) {
-        ecs_table_t *table = r->table;
+        /* If entity didn't have component yet, add it */
         add_id_w_record(world, entity, r, id, true);
+
+        /* Flush commands so the pointer we're fetching is stable */
+        ecs_defer_end(world);
+        ecs_defer_begin(world);
 
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(r->table->storage_table != NULL, ECS_INTERNAL_ERROR, NULL);
         dst = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
 
         if (is_added) {
-            *is_added = table != r->table;
-        }
-
-        return dst;
-    } else {
-        if (is_added) {
-            *is_added = false;
+            *is_added = true;
         }
 
         return dst;
     }
+    
+    if (is_added) {
+        *is_added = false;
+    }
 error:
-    return NULL;
+    return dst;
 }
 
 /* -- Private functions -- */
@@ -2774,31 +2777,7 @@ void* ecs_get_mut_id(
     result = get_mutable(world, entity, id, r, is_added);
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    /* Store table so we can quickly check if returned pointer is still valid */
-    ecs_table_t *table = r->table;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Keep track of alloc count of table, since even if the entity has not
-     * moved, other entities could have been added to the table which could
-     * reallocate arrays. Also store the row, as the entity could have 
-     * reallocated. */
-    int32_t alloc_count = table->alloc_count;
-    uint32_t row = r->row;
-    
     flecs_defer_flush(world, stage);
-
-    /* Ensure that after flushing, the pointer is still valid. Flushing may
-     * trigger callbacks, which could do anything with the entity */
-    if (table != r->table || 
-        alloc_count != r->table->alloc_count ||
-        row != r->row) 
-    {
-        /* A trigger has removed the component we just added. This is not
-         * allowed, an application should always be able to assume that
-         * get_mut returns a valid pointer. */
-        ecs_assert(r->table != NULL, ECS_INVALID_OPERATION, NULL);
-        result = get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
-    }
 
     return result;
 error:
@@ -2934,7 +2913,7 @@ error:
 }
 
 static
-ecs_entity_t assign_ptr_w_id(
+ecs_entity_t set_ptr_w_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -3016,7 +2995,7 @@ ecs_entity_t ecs_set_id(
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     /* Safe to cast away const: function won't modify if move arg is false */
-    return assign_ptr_w_id(
+    return set_ptr_w_id(
         world, entity, id, size, (void*)ptr, false, true);
 error:
     return 0;
@@ -3997,12 +3976,12 @@ bool flecs_defer_flush(
                     ecs_clone(world, e, op->id, op->is._1.clone_value);
                     break;
                 case EcsOpSet:
-                    assign_ptr_w_id(world, e, 
+                    set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, true);
                     break;
                 case EcsOpMut:
-                    assign_ptr_w_id(world, e, 
+                    set_ptr_w_id(world, e, 
                         op->id, flecs_itosize(op->is._1.size), 
                         op->is._1.value, true, false);
                     break;

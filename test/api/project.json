@@ -621,6 +621,7 @@
                 "modified_no_component",
                 "get_mut_w_add_in_on_add",
                 "get_mut_w_remove_in_on_add",
+                "get_mut_w_realloc_in_on_add",
                 "emplace",
                 "emplace_existing",
                 "emplace_w_move"

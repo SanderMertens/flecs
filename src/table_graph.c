@@ -597,7 +597,6 @@ void init_table(
     table->type_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
-    table->alloc_count = 0;
     table->lock = 0;
     table->refcount = 1;
     table->generation = 0;
