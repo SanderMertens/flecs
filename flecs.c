@@ -463,9 +463,10 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     uint16_t storage_count;          /* Number of components (excluding tags) */
     uint16_t generation;             /* Used for table cleanup */
-    
+
     struct ecs_table_record_t *records; /* Array with table records */
-    ecs_table_t *storage_table;      /* Table w/type without tags */
+    ecs_table_t *storage_table;      /* Table without tags */
+    ecs_table_t *acyclic_table;      /* Table with only acyclic relations */
     ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
     int32_t *storage_map;            /* Map type <-> data type
                                       *  - 0..count(T):         type -> data_type
@@ -2321,21 +2322,26 @@ void init_storage_table(
     ecs_table_record_t *records = table->records;
 
     ecs_id_t array[ECS_ID_CACHE_SIZE];
+    ecs_id_t acyclic_array[ECS_ID_CACHE_SIZE];
     ecs_ids_t storage_ids = { .array = array };
+    ecs_ids_t acyclic_ids = { .array = acyclic_array };
     if (count > ECS_ID_CACHE_SIZE) {
         storage_ids.array = ecs_os_malloc_n(ecs_id_t, count);
+        acyclic_ids.array = ecs_os_malloc_n(ecs_id_t, count);
     }
 
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        if (idr->type_info == NULL) {
-            ecs_assert(ecs_get_typeid(world, ids[i]) == 0, 
-                ECS_INTERNAL_ERROR, NULL);
-            continue; /* not a component */
+        ecs_id_t id = ids[i];
+
+        if (idr->flags & ECS_ID_ACYCLIC && !ecs_id_is_wildcard(id)) {
+            acyclic_ids.array[acyclic_ids.count ++] = id;
         }
 
-        storage_ids.array[storage_ids.count ++] = ids[i];
+        if (idr->type_info != NULL) {
+            storage_ids.array[storage_ids.count ++] = id;
+        }
     }
     
     if (storage_ids.count && storage_ids.count != count) {
@@ -2351,8 +2357,16 @@ void init_storage_table(
         table->storage_ids = ecs_vector_first(type, ecs_id_t);
     }
 
+    if (acyclic_ids.count && acyclic_ids.count != count) {
+        table->acyclic_table = flecs_table_find_or_create(world, &acyclic_ids);
+        table->acyclic_table->refcount ++;
+    } else {
+        table->acyclic_table = table;
+    }
+
     if (storage_ids.array != array) {
         ecs_os_free(storage_ids.array);
+        ecs_os_free(acyclic_ids.array);
     }
 
     if (!table->storage_map) {
@@ -2928,6 +2942,11 @@ void flecs_table_free(
         }
     } else if (storage_table) {
         flecs_table_release(world, storage_table);
+    }
+
+    ecs_table_t *acyclic_table = table->acyclic_table;
+    if (acyclic_table && acyclic_table != table) {
+        flecs_table_release(world, acyclic_table);
     }
 
     /* Update counters */
@@ -43275,8 +43294,6 @@ ecs_table_t *create_table(
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = type;
 
-    init_table(world, result);
-
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, result->type);
         ecs_dbg_2(
@@ -43296,6 +43313,8 @@ ecs_table_t *create_table(
         .count = ecs_vector_count(result->type)
     };
     *(ecs_ids_t*)table_elem.key = key;
+
+    init_table(world, result);
 
     flecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,

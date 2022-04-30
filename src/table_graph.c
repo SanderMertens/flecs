@@ -624,8 +624,6 @@ ecs_table_t *create_table(
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = type;
 
-    init_table(world, result);
-
     if (ecs_should_log_2()) {
         char *expr = ecs_type_str(world, result->type);
         ecs_dbg_2(
@@ -645,6 +643,8 @@ ecs_table_t *create_table(
         .count = ecs_vector_count(result->type)
     };
     *(ecs_ids_t*)table_elem.key = key;
+
+    init_table(world, result);
 
     flecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,

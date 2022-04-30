@@ -194,9 +194,10 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     uint16_t storage_count;          /* Number of components (excluding tags) */
     uint16_t generation;             /* Used for table cleanup */
-    
+
     struct ecs_table_record_t *records; /* Array with table records */
-    ecs_table_t *storage_table;      /* Table w/type without tags */
+    ecs_table_t *storage_table;      /* Table without tags */
+    ecs_table_t *acyclic_table;      /* Table with only acyclic relations */
     ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
     int32_t *storage_map;            /* Map type <-> data type
                                       *  - 0..count(T):         type -> data_type
