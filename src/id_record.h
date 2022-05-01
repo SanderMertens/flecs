@@ -37,8 +37,9 @@ struct ecs_id_record_t {
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
-    ecs_id_record_elem_t first;  /* (R, *) */
-    ecs_id_record_elem_t second; /* (*, O) */
+    ecs_id_record_elem_t first;   /* (R, *) */
+    ecs_id_record_elem_t second;  /* (*, O) */
+    ecs_id_record_elem_t acyclic; /* (*, O) with only acyclic relations */
 };
 
 /* Get id record for id */

@@ -61,6 +61,10 @@ void insert_id_elem(
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_insert(widr, idr, &idr->second);
+
+        if (idr->flags & ECS_ID_ACYCLIC) {
+            id_record_elem_insert(widr, idr, &idr->acyclic);
+        }
     }
 }
 
@@ -84,6 +88,10 @@ void remove_id_elem(
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_remove(idr, &idr->second);
+
+        if (idr->flags & ECS_ID_ACYCLIC) {
+            id_record_elem_remove(idr, &idr->acyclic);
+        }
     }
 }
 
@@ -121,18 +129,18 @@ ecs_id_record_t* new_id_record(
         }
 
         if (!is_wildcard) {
-            /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relations for an object, or all 
-             * objecs for a relation. */
-            insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
-            insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
-
             /* Inherit flags from (relation, *) record */
             ecs_id_record_t *idr_r = flecs_get_id_record(
                 world, ecs_pair(rel, EcsWildcard));
             if (idr_r) {
                 idr->flags = idr_r->flags;
             }
+
+            /* If pair is not a wildcard, append it to wildcard lists. These 
+             * allow for quickly enumerating all relations for an object, or all 
+             * objecs for a relation. */
+            insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
+            insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;

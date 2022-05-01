@@ -1003,8 +1003,9 @@ struct ecs_id_record_t {
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
-    ecs_id_record_elem_t first;  /* (R, *) */
-    ecs_id_record_elem_t second; /* (*, O) */
+    ecs_id_record_elem_t first;   /* (R, *) */
+    ecs_id_record_elem_t second;  /* (*, O) */
+    ecs_id_record_elem_t acyclic; /* (*, O) with only acyclic relations */
 };
 
 /* Get id record for id */
@@ -35898,50 +35899,55 @@ void notify_subset(
     ecs_ids_t *ids)
 {
     ecs_id_t pair = ecs_pair(EcsWildcard, entity);
-    ecs_table_cache_iter_t idt;
-    ecs_id_record_t *idr = flecs_table_iter(world, pair, &idt);
+    ecs_id_record_t *idr = flecs_get_id_record(world, pair);
     if (!idr) {
         return;
     }
 
-    const ecs_table_record_t *tr;
-    while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
-        ecs_table_t *table = tr->hdr.table;
-        ecs_table_record_t *trr = &table->records[tr->column];
-        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
-        ecs_id_t id = idrr->id;
-        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+    /* Iterate acyclic relations */
+    ecs_id_record_t *cur = idr;
+    while ((cur = cur->acyclic.next)) {
+        flecs_process_pending_tables(world);
 
-        if (!(idrr->flags & ECS_ID_ACYCLIC)) {
-            /* Only notify for acyclic relations */
-            continue;
+        ecs_table_cache_iter_t idt;
+        if (!flecs_table_cache_iter(&cur->cache, &idt)) {
+            return;
         }
 
-        int32_t e, entity_count = ecs_table_count(table);
-        it->table = table;
-        it->type = table->type;
-        it->other_table = NULL;
-        it->offset = 0;
-        it->count = entity_count;
+        const ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            ecs_table_record_t *trr = &table->records[tr->column];
+            ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
+            ecs_id_t id = idrr->id;
+            ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
-        /* Treat as new event as this could trigger observers again for
-         * different tables. */
-        world->event_id ++;
+            int32_t e, entity_count = ecs_table_count(table);
+            it->table = table;
+            it->type = table->type;
+            it->other_table = NULL;
+            it->offset = 0;
+            it->count = entity_count;
 
-        flecs_set_triggers_notify(it, observable, ids, event,
-            ecs_pair(rel, EcsWildcard));
+            /* Treat as new event as this could trigger observers again for
+            * different tables. */
+            world->event_id ++;
 
-        ecs_entity_t *entities = ecs_vector_first(
-            table->data.entities, ecs_entity_t);
-        ecs_record_t **records = ecs_vector_first(
-            table->data.record_ptrs, ecs_record_t*);
+            flecs_set_triggers_notify(it, observable, ids, event,
+                ecs_pair(rel, EcsWildcard));
 
-        for (e = 0; e < entity_count; e ++) {
-            uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
-            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
-                /* Only notify for entities that are used in pairs with
-                 * acyclic relations */
-                notify_subset(world, it, observable, entities[e], event, ids);
+            ecs_entity_t *entities = ecs_vector_first(
+                table->data.entities, ecs_entity_t);
+            ecs_record_t **records = ecs_vector_first(
+                table->data.record_ptrs, ecs_record_t*);
+
+            for (e = 0; e < entity_count; e ++) {
+                uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
+                if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                    /* Only notify for entities that are used in pairs with
+                    * acyclic relations */
+                    notify_subset(world, it, observable, entities[e], event, ids);
+                }
             }
         }
     }
@@ -48010,6 +48016,10 @@ void insert_id_elem(
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_insert(widr, idr, &idr->second);
+
+        if (idr->flags & ECS_ID_ACYCLIC) {
+            id_record_elem_insert(widr, idr, &idr->acyclic);
+        }
     }
 }
 
@@ -48033,6 +48043,10 @@ void remove_id_elem(
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_remove(idr, &idr->second);
+
+        if (idr->flags & ECS_ID_ACYCLIC) {
+            id_record_elem_remove(idr, &idr->acyclic);
+        }
     }
 }
 
@@ -48070,18 +48084,18 @@ ecs_id_record_t* new_id_record(
         }
 
         if (!is_wildcard) {
-            /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relations for an object, or all 
-             * objecs for a relation. */
-            insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
-            insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
-
             /* Inherit flags from (relation, *) record */
             ecs_id_record_t *idr_r = flecs_get_id_record(
                 world, ecs_pair(rel, EcsWildcard));
             if (idr_r) {
                 idr->flags = idr_r->flags;
             }
+
+            /* If pair is not a wildcard, append it to wildcard lists. These 
+             * allow for quickly enumerating all relations for an object, or all 
+             * objecs for a relation. */
+            insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard));
+            insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj));
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
