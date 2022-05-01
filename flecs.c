@@ -35914,13 +35914,10 @@ void notify_subset(
             return;
         }
 
+        ecs_entity_t rel = ECS_PAIR_FIRST(cur->id);
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            ecs_table_record_t *trr = &table->records[tr->column];
-            ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
-            ecs_id_t id = idrr->id;
-            ecs_entity_t rel = ECS_PAIR_FIRST(id);
 
             int32_t e, entity_count = ecs_table_count(table);
             it->table = table;
