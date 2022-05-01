@@ -476,6 +476,7 @@
                 "get_ref_after_new_in_stage",
                 "get_ref_monitored",
                 "get_ref_w_low_id_tag",
+                "get_ref_w_low_id_tag_after_add",
                 "get_nonexisting"
             ]
         }, {

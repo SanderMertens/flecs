@@ -279,3 +279,34 @@ void Reference_get_ref_w_low_id_tag() {
 
     ecs_fini(world);
 }
+
+void Reference_get_ref_w_low_id_tag_after_add() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_component_init(world, &(ecs_component_desc_t) {
+        .size = 0,
+        .alignment = 0
+    });
+
+    ecs_entity_t id = ecs_new_low_id(world);
+
+    ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t) {
+        .size = 4,
+        .alignment = 4
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, tag);
+    ecs_add_id(world, e, comp);
+
+    test_assert(ecs_get_id(world, e, comp) != NULL);
+
+    ecs_ref_t ref = ecs_ref_init_id(world, e, comp);
+
+    ecs_add_id(world, e, id);
+
+    test_assert(ecs_ref_get_id(world, &ref, comp) == 
+        ecs_get_id(world, e, comp));
+
+    ecs_fini(world);
+}

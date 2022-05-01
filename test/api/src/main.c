@@ -443,6 +443,7 @@ void Reference_get_ref_staged(void);
 void Reference_get_ref_after_new_in_stage(void);
 void Reference_get_ref_monitored(void);
 void Reference_get_ref_w_low_id_tag(void);
+void Reference_get_ref_w_low_id_tag_after_add(void);
 void Reference_get_nonexisting(void);
 
 // Testsuite 'Delete'
@@ -3567,6 +3568,10 @@ bake_test_case Reference_testcases[] = {
     {
         "get_ref_w_low_id_tag",
         Reference_get_ref_w_low_id_tag
+    },
+    {
+        "get_ref_w_low_id_tag_after_add",
+        Reference_get_ref_w_low_id_tag_after_add
     },
     {
         "get_nonexisting",
@@ -9371,7 +9376,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        11,
+        12,
         Reference_testcases
     },
     {
