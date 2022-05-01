@@ -2806,7 +2806,7 @@ ecs_ref_t ecs_ref_init_id(
 
     ecs_table_t *table = record->table;
     if (table) {
-        result.tr = flecs_get_table_record(world, table, id);
+        result.tr = flecs_get_table_record(world, table->storage_table, id);
     }
 
     return result;
@@ -2837,7 +2837,7 @@ const void* ecs_ref_get_id(
 
     ecs_table_record_t *tr = ref->tr;
     if (!tr || tr->hdr.table != table) {
-        tr = ref->tr = flecs_get_table_record(world, table, id);
+        tr = ref->tr = flecs_get_table_record(world, table->storage_table, id);
         if (!tr) {
             return NULL;
         }

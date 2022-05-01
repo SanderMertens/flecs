@@ -442,6 +442,7 @@ void Reference_get_ref_after_realloc_w_lifecycle(void);
 void Reference_get_ref_staged(void);
 void Reference_get_ref_after_new_in_stage(void);
 void Reference_get_ref_monitored(void);
+void Reference_get_ref_w_low_id_tag(void);
 void Reference_get_nonexisting(void);
 
 // Testsuite 'Delete'
@@ -3562,6 +3563,10 @@ bake_test_case Reference_testcases[] = {
     {
         "get_ref_monitored",
         Reference_get_ref_monitored
+    },
+    {
+        "get_ref_w_low_id_tag",
+        Reference_get_ref_w_low_id_tag
     },
     {
         "get_nonexisting",
@@ -9366,7 +9371,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        10,
+        11,
         Reference_testcases
     },
     {
