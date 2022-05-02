@@ -1605,3 +1605,18 @@ void Pipeline_match_all_after_pipeline_rebuild() {
 
     ecs_fini(world);
 }
+
+void Pipeline_empty_pipeline() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsPipeline);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_int(info->frame_count_total, 0);
+
+    ecs_progress(world, 0);
+
+    test_int(info->frame_count_total, 1);
+
+    ecs_fini(world);
+}

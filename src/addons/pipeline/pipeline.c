@@ -367,45 +367,54 @@ bool build_pipeline(
     op = ecs_vector_first(ops, ecs_pipeline_op_t);
     int32_t i, ran_since_merge = 0, op_index = 0;
 
-    ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!op) {
+        ecs_dbg("#[green]pipeline#[reset] is empty");
+        return true;
+    } else {
 
-    /* Add schedule to debug tracing */
-    ecs_dbg("#[green]pipeline#[reset] rebuild:");
-    ecs_log_push_1();
+        ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
-        op->multi_threaded, !op->no_staging);
-    ecs_log_push_1();
-    
-    it = ecs_query_iter(world, pq->query);
-    while (ecs_query_next(&it)) {
-        EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
-        for (i = 0; i < it.count; i ++) {
-            if (ecs_should_log_1()) {
-                char *path = ecs_get_fullpath(world, it.entities[i]);
-                ecs_dbg("#[green]system#[reset] %s", path);
-                ecs_os_free(path);
-            }
+        /* Add schedule to debug tracing */
+        ecs_dbg("#[green]pipeline#[reset] rebuild:");
+        ecs_log_push_1();
 
-            ran_since_merge ++;
-            if (ran_since_merge == op[op_index].count) {
-                ecs_dbg("#[magenta]merge#[reset]");
-                ecs_log_pop_1();
-                ran_since_merge = 0;
-                op_index ++;
-                if (op_index < ecs_vector_count(ops)) {
-                    ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:",
-                        op[op_index].multi_threaded, !op[op_index].no_staging);
+        ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
+            op->multi_threaded, !op->no_staging);
+        ecs_log_push_1();
+        
+        it = ecs_query_iter(world, pq->query);
+        while (ecs_query_next(&it)) {
+            EcsSystem *sys = ecs_term(&it, EcsSystem, 1);
+            for (i = 0; i < it.count; i ++) {
+                if (ecs_should_log_1()) {
+                    char *path = ecs_get_fullpath(world, it.entities[i]);
+                    ecs_dbg("#[green]system#[reset] %s", path);
+                    ecs_os_free(path);
                 }
-                ecs_log_push_1();
-            }
 
-            if (sys[i].last_frame == (world->info.frame_count_total + 1)) {
-                last_system = it.entities[i];
+                ran_since_merge ++;
+                if (ran_since_merge == op[op_index].count) {
+                    ecs_dbg("#[magenta]merge#[reset]");
+                    ecs_log_pop_1();
+                    ran_since_merge = 0;
+                    op_index ++;
+                    if (op_index < ecs_vector_count(ops)) {
+                        ecs_dbg(
+                            "#[green]schedule#[reset]: "
+                            "threading: %d, staging: %d:",
+                            op[op_index].multi_threaded, 
+                            !op[op_index].no_staging);
+                    }
+                    ecs_log_push_1();
+                }
 
-                /* Can't break from loop yet. It's possible that previously
-                 * inactive systems that ran before the last ran system are now
-                 * active. */
+                if (sys[i].last_frame == (world->info.frame_count_total + 1)) {
+                    last_system = it.entities[i];
+
+                    /* Can't break from loop yet. It's possible that previously
+                    * inactive systems that ran before the last ran system are 
+                    * now active. */
+                }
             }
         }
     }
