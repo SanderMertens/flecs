@@ -15921,7 +15921,7 @@ int32_t ecs_cpp_reset_count_inc(void) {
 
 
 #ifdef FLECS_OS_API_IMPL
-#ifdef ECS_TARGET_MSVC
+#ifdef ECS_TARGET_WINDOWS
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
