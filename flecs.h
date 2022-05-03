@@ -15750,7 +15750,7 @@ flecs::type type(const char *name = nullptr) const;
  * @return Module entity.
  */
 template <typename Module>
-flecs::entity module() const;
+flecs::entity module(const char *name = nullptr) const;
 
 /** Import a module.
  * 
@@ -22007,8 +22007,11 @@ flecs::entity import(world& world) {
 }
 
 template <typename Module>
-inline flecs::entity world::module() const {
+inline flecs::entity world::module(const char *name) const {
     flecs::id_t result = _::cpp_type<Module>::id(m_world);
+    if (name) {
+        ecs_add_path_w_sep(m_world, result, 0, name, "::", "::");
+    }
     ecs_set_scope(m_world, result);
     return flecs::entity(m_world, result);
 }

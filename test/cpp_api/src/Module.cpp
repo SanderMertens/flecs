@@ -31,6 +31,14 @@ public:
     }
 };
 
+class NamedModule {
+public:
+    NamedModule(flecs::world& world) {
+        world.module<ns::NamedModule>("::my_scope::NamedModule");
+        flecs::component<Position>(world, "Position");
+    }
+};
+
 }
 
 void Module_import() {
@@ -171,4 +179,16 @@ void Module_dtor_on_fini() {
     }
 
     test_int(module_dtor_invoked, 1);
+}
+
+void Module_register_w_root_name() {
+    flecs::world ecs;
+
+    auto m = ecs.import<ns::NamedModule>();
+
+    auto m_lookup = ecs.lookup("::my_scope::NamedModule");
+    test_assert(m != 0);
+    test_assert(m == m_lookup);
+
+    test_assert(ecs.lookup("::ns::NamedModule") == 0);
 }
