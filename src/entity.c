@@ -597,7 +597,7 @@ void components_override(
         }
 
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        if (idr->flags & ECS_ID_DONT_INHERIT) {
+        if (idr->flags & EcsIdDontInherit) {
             continue;
         }
 
@@ -1269,7 +1269,7 @@ uint32_t flecs_row_to_record(
     uint32_t row, 
     bool is_watched) 
 {
-    return row | (ECS_FLAG_OBSERVED * is_watched);
+    return row | (EcsEntityObserved * is_watched);
 }
 
 ecs_ids_t flecs_type_to_ids(
@@ -2058,7 +2058,7 @@ ecs_entity_t ecs_component_init(
     }
 
     /* Ensure components cannot be deleted */
-    ecs_add_pair(world, result, EcsOnDelete, EcsThrow);
+    ecs_add_pair(world, result, EcsOnDelete, EcsPanic);
 
     flecs_resume_readonly(world, &readonly_state);
     
@@ -2393,7 +2393,7 @@ void on_delete_object_action(
                         /* Delete actions can cause cyclic cleanup, which 
                          * requires special attention */
                         deleted = true;
-                    } else if (cur_action == EcsThrow) {
+                    } else if (cur_action == EcsPanic) {
                         throw_invalid_delete(world, id);
                     }
 
@@ -2460,7 +2460,7 @@ void on_delete_id_action(
             action = ECS_ID_ON_DELETE(idr->flags);
         }
 
-        if (action == EcsThrow) {
+        if (action == EcsPanic) {
             throw_invalid_delete(world, id);
         }
 
@@ -2521,11 +2521,11 @@ void on_delete_any_w_entity(
     uint32_t flags)
 {
     /* Make sure any references to the entity are cleaned up */
-    if (flags & ECS_FLAG_OBSERVED_ID) {
+    if (flags & EcsEntityObservedId) {
         on_delete_action(world, e, action);
         on_delete_action(world, ecs_pair(e, EcsWildcard), action);
     }
-    if (flags & ECS_FLAG_OBSERVED_OBJECT) {
+    if (flags & EcsEntityObservedObject) {
         on_delete_action(world, ecs_pair(EcsWildcard, e), action);
     }
 }
@@ -3891,7 +3891,7 @@ bool remove_invalid(
                         /* Entity should be deleted, don't bother checking
                          * other ids */
                         return false;
-                    } else if (action == EcsThrow) {
+                    } else if (action == EcsPanic) {
                         /* If policy is throw this object should not have
                          * been deleted */
                         throw_invalid_delete(world, id);

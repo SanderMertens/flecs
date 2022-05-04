@@ -1367,7 +1367,7 @@ void process_signature(
         if (subj->entity && subj->entity != EcsThis && 
             subj->set.mask == EcsSelf) 
         {
-            flecs_add_flag(world, term->subj.entity, ECS_FLAG_OBSERVED);
+            flecs_add_flag(world, term->subj.entity, EcsEntityObserved);
         }
     }
 

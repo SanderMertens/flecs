@@ -1,21 +1,21 @@
 #include <api.h>
 
 void OnDelete_on_delete_flags() {
-    ecs_flags32_t f_remove = ECS_ID_ON_DELETE_REMOVE;
-    ecs_flags32_t f_delete = ECS_ID_ON_DELETE_DELETE;
-    ecs_flags32_t f_throw = ECS_ID_ON_DELETE_THROW;
+    ecs_flags32_t f_remove = EcsIdOnDeleteRemove;
+    ecs_flags32_t f_delete = EcsIdOnDeleteDelete;
+    ecs_flags32_t f_throw = EcsIdOnDeletePanic;
 
-    ecs_flags32_t f_obj_remove = ECS_ID_ON_DELETE_OBJECT_REMOVE;
-    ecs_flags32_t f_obj_delete = ECS_ID_ON_DELETE_OBJECT_DELETE;
-    ecs_flags32_t f_obj_throw = ECS_ID_ON_DELETE_OBJECT_THROW;
+    ecs_flags32_t f_obj_remove = EcsIdOnDeleteObjectRemove;
+    ecs_flags32_t f_obj_delete = EcsIdOnDeleteObjectDelete;
+    ecs_flags32_t f_obj_throw = EcsIdOnDeleteObjectPanic;
 
     test_int(ECS_ID_ON_DELETE(f_remove), EcsRemove);
     test_int(ECS_ID_ON_DELETE(f_delete), EcsDelete);
-    test_int(ECS_ID_ON_DELETE(f_throw), EcsThrow);
+    test_int(ECS_ID_ON_DELETE(f_throw), EcsPanic);
 
     test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_remove), EcsRemove);
     test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_delete), EcsDelete);
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_throw), EcsThrow);
+    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_throw), EcsPanic);
 
     test_int(ECS_ID_ON_DELETE(f_obj_remove), 0);
     test_int(ECS_ID_ON_DELETE(f_obj_delete), 0);
@@ -27,11 +27,11 @@ void OnDelete_on_delete_flags() {
 
     test_int(ECS_ID_ON_DELETE_FLAG(EcsRemove), f_remove);
     test_int(ECS_ID_ON_DELETE_FLAG(EcsDelete), f_delete);
-    test_int(ECS_ID_ON_DELETE_FLAG(EcsThrow), f_throw);
+    test_int(ECS_ID_ON_DELETE_FLAG(EcsPanic), f_throw);
 
     test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsRemove), f_obj_remove);
     test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsDelete), f_obj_delete);
-    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsThrow), f_obj_throw);
+    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsPanic), f_obj_throw);
 }
 
 void OnDelete_on_delete_id_default() {
@@ -256,7 +256,7 @@ void OnDelete_on_delete_id_throw() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t c = ecs_new_id(world);
-    ecs_add_pair(world, c, EcsOnDelete, EcsThrow);
+    ecs_add_pair(world, c, EcsOnDelete, EcsPanic);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, c);
@@ -273,7 +273,7 @@ void OnDelete_on_delete_relation_throw() {
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDelete, EcsThrow);
+    ecs_add_pair(world, r, EcsOnDelete, EcsPanic);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, r, o);
@@ -290,7 +290,7 @@ void OnDelete_on_delete_object_throw() {
 
     ecs_entity_t r = ecs_new_id(world);
     ecs_entity_t o = ecs_new_id(world);
-    ecs_add_pair(world, r, EcsOnDeleteObject, EcsThrow);
+    ecs_add_pair(world, r, EcsOnDeleteObject, EcsPanic);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, r, o);
@@ -331,7 +331,7 @@ void OnDelete_on_delete_id_throw_no_instances() {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t c = ecs_new_id(world);
-    ecs_add_pair(world, c, EcsOnDelete, EcsThrow);
+    ecs_add_pair(world, c, EcsOnDelete, EcsPanic);
 
     test_expect_abort();
     ecs_delete(world, c);
@@ -2139,11 +2139,11 @@ void OnDelete_remove_on_delete_action() {
 
     ECS_COMPONENT(world, Position);
 
-    test_assert( ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsThrow));
+    test_assert( ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic));
 
     ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsWildcard);
 
-    test_assert( !ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsThrow));
+    test_assert( !ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic));
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert( ecs_has(world, e, Position));

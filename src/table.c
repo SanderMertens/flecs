@@ -177,7 +177,7 @@ void init_storage_table(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         ecs_id_t id = ids[i];
 
-        if (idr->flags & ECS_ID_ACYCLIC && !ecs_id_is_wildcard(id)) {
+        if (idr->flags & EcsIdAcyclic && !ecs_id_is_wildcard(id)) {
             acyclic_ids.array[acyclic_ids.count ++] = id;
         }
 

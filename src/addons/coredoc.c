@@ -66,7 +66,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsRemove, "Remove relation cleanup property");
     ecs_doc_set_brief(world, EcsDelete, "Delete relation cleanup property");
-    ecs_doc_set_brief(world, EcsThrow, "Throw relation cleanup property");
+    ecs_doc_set_brief(world, EcsPanic, "Panic relation cleanup property");
     ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relation");
     ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relation");
     ecs_doc_set_brief(world, EcsOnAdd, "Builtin OnAdd event");
@@ -87,7 +87,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_link(world, EcsOnDeleteObject, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsThrow, URL_ROOT "#cleanup-properties");
+    ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");
     ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relation");
     ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relation"); 
     

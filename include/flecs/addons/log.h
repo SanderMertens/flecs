@@ -357,7 +357,7 @@ void _ecs_parser_errorv(
 #endif
 #endif // FLECS_NDEBUG
 
-/** Throw
+/** Panic
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_throw(error_code, ...) ecs_dummy_check

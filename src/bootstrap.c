@@ -243,8 +243,8 @@ void register_on_delete(ecs_iter_t *it) {
     ecs_id_t id = ecs_term_id(it, 1);
     register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
-        ECS_ID_ON_DELETE_MASK,
-        ECS_FLAG_OBSERVED_ID);
+        EcsIdOnDeleteMask,
+        EcsEntityObservedId);
 }
 
 static
@@ -252,19 +252,19 @@ void register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_term_id(it, 1);
     register_id_flag_for_relation(it, EcsOnDeleteObject, 
         ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
-        ECS_ID_ON_DELETE_OBJECT_MASK,
-        ECS_FLAG_OBSERVED_ID);  
+        EcsIdOnDeleteObjectMask,
+        EcsEntityObservedId);  
 }
 
 static
 void register_acyclic(ecs_iter_t *it) {
-    register_id_flag_for_relation(it, EcsAcyclic, ECS_ID_ACYCLIC, 
-        ECS_ID_ACYCLIC, 0);
+    register_id_flag_for_relation(it, EcsAcyclic, EcsIdAcyclic, 
+        EcsIdAcyclic, 0);
 }
 
 static
 void register_tag(ecs_iter_t *it) {
-    register_id_flag_for_relation(it, EcsTag, ECS_ID_TAG, ~ECS_ID_TAG, 0);
+    register_id_flag_for_relation(it, EcsTag, EcsIdTag, ~EcsIdTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -288,14 +288,14 @@ void register_tag(ecs_iter_t *it) {
 
 static
 void register_exclusive(ecs_iter_t *it) {
-    register_id_flag_for_relation(it, EcsExclusive, ECS_ID_EXCLUSIVE, 
-        ECS_ID_EXCLUSIVE, 0);
+    register_id_flag_for_relation(it, EcsExclusive, EcsIdExclusive, 
+        EcsIdExclusive, 0);
 }
 
 static
 void register_dont_inherit(ecs_iter_t *it) {
     register_id_flag_for_relation(it, EcsDontInherit, 
-        ECS_ID_DONT_INHERIT, ECS_ID_DONT_INHERIT, 0);
+        EcsIdDontInherit, EcsIdDontInherit, 0);
 }
 
 static
@@ -542,22 +542,22 @@ ecs_table_t* bootstrap_component_table(
     ecs_ensure(world, EcsChildOf);
     ecs_ensure(world, EcsFlecsCore);
     ecs_ensure(world, EcsOnDelete);
-    ecs_ensure(world, EcsThrow);
+    ecs_ensure(world, EcsPanic);
     ecs_ensure(world, EcsWildcard);
     ecs_ensure(world, EcsAny);
 
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
     ecs_id_record_t *idr = flecs_ensure_id_record(world, EcsChildOf);
-    idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE | ECS_ID_DONT_INHERIT |
-        ECS_ID_ACYCLIC | ECS_ID_TAG;
+    idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
+        EcsIdAcyclic | EcsIdTag;
     idr = flecs_ensure_id_record(world, ecs_pair(EcsChildOf, EcsWildcard));
-    idr->flags |= ECS_ID_ON_DELETE_OBJECT_DELETE | ECS_ID_DONT_INHERIT |
-        ECS_ID_ACYCLIC | ECS_ID_TAG;
+    idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
+        EcsIdAcyclic | EcsIdTag;
 
     idr = flecs_ensure_id_record(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
-    idr->flags |= ECS_ID_DONT_INHERIT;
+    idr->flags |= EcsIdDontInherit;
 
     ecs_id_t entities[] = {
         ecs_id(EcsComponent), 
@@ -565,7 +565,7 @@ ecs_table_t* bootstrap_component_table(
         ecs_pair(ecs_id(EcsIdentifier), EcsName),
         ecs_pair(ecs_id(EcsIdentifier), EcsSymbol),
         ecs_pair(EcsChildOf, EcsFlecsCore),
-        ecs_pair(EcsOnDelete, EcsThrow)
+        ecs_pair(EcsOnDelete, EcsPanic)
     };
     
     ecs_ids_t array = {
@@ -732,7 +732,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsOnDeleteObject);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
-    flecs_bootstrap_tag(world, EcsThrow);
+    flecs_bootstrap_tag(world, EcsPanic);
 
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 

@@ -455,16 +455,6 @@ struct ecs_term_t {
                                  * into the destination term. */
 };
 
-/* Bits for filter flags */
-#define EcsFilterMatchThis        (1u << 1u) /* Has terms that match This */
-#define EcsFilterMatchOnlyThis    (1u << 2u) /* Has only terms that match This */
-#define EcsFilterMatchPrefab      (1u << 3u) /* Does filter match prefabs */
-#define EcsFilterMatchDisabled    (1u << 4u) /* Does filter match disabled entities */
-#define EcsFilterMatchEmptyTables (1u << 5u) /* Does filter return empty tables */
-#define EcsFilterMatchAnything    (1u << 6u) /* False if filter has no/only Not terms */
-#define EcsFilterIsFilter         (1u << 7u) /* When true, data fields won't be populated */
-#define EcsFilterIsInstanced      (1u << 8u) /* Is filter instanced (see ecs_filter_desc_t) */
-
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
@@ -1241,7 +1231,7 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /* Specifies that whenever a component/relation/object of relation is deleted an
  * error should be thrown. Must be combined with EcsOnDelete or 
  * EcsOnDeleteObject. */
-FLECS_API extern const ecs_entity_t EcsThrow;
+FLECS_API extern const ecs_entity_t EcsPanic;
 
 /* Used like (EcsDefaultChildComponent, Component). When added to an entity,
  * this informs serialization formats which component to use when a value is

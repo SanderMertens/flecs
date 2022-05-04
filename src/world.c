@@ -96,7 +96,7 @@ const ecs_entity_t EcsOnDeleteObject =        ECS_HI_COMPONENT_ID + 43;
 /* Actions */
 const ecs_entity_t EcsRemove =                ECS_HI_COMPONENT_ID + 50;
 const ecs_entity_t EcsDelete =                ECS_HI_COMPONENT_ID + 51;
-const ecs_entity_t EcsThrow =                 ECS_HI_COMPONENT_ID + 52;
+const ecs_entity_t EcsPanic =                 ECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
 const ecs_entity_t EcsDefaultChildComponent = ECS_HI_COMPONENT_ID + 55;
@@ -1464,7 +1464,7 @@ bool flecs_init_type_info_id(
     /* Set type info for id record of component */
     ecs_id_record_t *idr = flecs_ensure_id_record(world, component);
     changed |= flecs_set_type_info_for_id_record(world, idr, ti);
-    bool is_tag = idr->flags & ECS_ID_TAG;
+    bool is_tag = idr->flags & EcsIdTag;
 
     /* All id records with component as relation inherit type info */
     idr = flecs_ensure_id_record(world, ecs_pair(component, EcsWildcard));
@@ -1484,7 +1484,7 @@ bool flecs_init_type_info_id(
      * if relation doesn't have type info */
     idr = flecs_ensure_id_record(world, ecs_pair(EcsWildcard, component));
     do {
-        if (!(idr->flags & ECS_ID_TAG) && !idr->type_info) {
+        if (!(idr->flags & EcsIdTag) && !idr->type_info) {
             changed |= flecs_set_type_info_for_id_record(world, idr, ti);
         }
     } while ((idr = idr->first.next));

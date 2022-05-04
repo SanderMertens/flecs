@@ -62,7 +62,7 @@ void insert_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_insert(widr, idr, &idr->second);
 
-        if (idr->flags & ECS_ID_ACYCLIC) {
+        if (idr->flags & EcsIdAcyclic) {
             id_record_elem_insert(widr, idr, &idr->acyclic);
         }
     }
@@ -89,7 +89,7 @@ void remove_id_elem(
             ECS_INTERNAL_ERROR, NULL);
         id_record_elem_remove(idr, &idr->second);
 
-        if (idr->flags & ECS_ID_ACYCLIC) {
+        if (idr->flags & EcsIdAcyclic) {
             id_record_elem_remove(idr, &idr->acyclic);
         }
     }
@@ -150,7 +150,7 @@ ecs_id_record_t* new_id_record(
 
     /* Initialize type info if id is not a tag */
     if (!is_wildcard && (!role || (role == ECS_PAIR))) {
-        if (!(idr->flags & ECS_ID_TAG)) {
+        if (!(idr->flags & EcsIdTag)) {
             const ecs_type_info_t *ti = flecs_get_type_info(world, rel);
             if (!ti && obj) {
                 ti = flecs_get_type_info(world, obj);
@@ -164,14 +164,14 @@ ecs_id_record_t* new_id_record(
      * won't contain any tables with deleted ids. */
 
     /* Flag for OnDelete policies */
-    flecs_add_flag(world, rel, ECS_FLAG_OBSERVED_ID);
+    flecs_add_flag(world, rel, EcsEntityObservedId);
     if (obj) {
         /* Flag for OnDeleteObject policies */
-        flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_OBJECT);
+        flecs_add_flag(world, obj, EcsEntityObservedObject);
         if (ecs_has_id(world, rel, EcsAcyclic)) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
-            flecs_add_flag(world, obj, ECS_FLAG_OBSERVED_ACYCLIC);
+            flecs_add_flag(world, obj, EcsEntityObservedAcyclic);
         }
     }
 

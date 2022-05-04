@@ -106,12 +106,12 @@ int main(int argc, char *argv[]) {
 
 
 // Position's components:
-// ecs_type_str: EcsComponent,(Identifier,Name),(Identifier,Symbol),(OnDelete,Throw)
+// ecs_type_str: EcsComponent,(Identifier,Name),(Identifier,Symbol),(OnDelete,Panic)
 
 // 0: Component
 // 1: (Identifier,Name)
 // 2: (Identifier,Symbol)
-// 3: (OnDelete,Throw)
+// 3: (OnDelete,Panic)
 
 // 0: entity: Component
 // 1: role: PAIR, rel: Identifier, obj: Identifier

@@ -612,7 +612,7 @@ ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsRemove);
 ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsDelete);
 
 // When Alice is deleted, throw an error (assert)
-ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsThrow);
+ecs_add_pair(world, Likes, EcsOnDeleteObject, EcsPanic);
 ```
 ```cpp
 auto Likes = world.entity();
@@ -628,7 +628,7 @@ Likes.add(flecs::OnDeleteObject, flecs::Remove)
 Likes.add(flecs::OnDeleteObject, flecs::Delete);
 
 // When Alice is deleted, throw an error (assert)
-Likes.add(flecs::OnDeleteObject, flecs::Throw);
+Likes.add(flecs::OnDeleteObject, flecs::Panic);
 ```
 
 An application may also specify what cleanup action should be performed if the relation itself is deleted with the `OnDelete` policy:
@@ -647,7 +647,7 @@ ecs_add_pair(world, Likes, EcsOnDelete, EcsRemove);
 ecs_add_pair(world, Likes, EcsOnDelete, EcsDelete);
 
 // When Likes is deleted, throw an error (assert)
-ecs_add_pair(world, Likes, EcsOnDelete, EcsThrow);
+ecs_add_pair(world, Likes, EcsOnDelete, EcsPanic);
 ```
 ```cpp
 auto Likes = world.entity();
@@ -663,10 +663,10 @@ Likes.add(flecs::OnDelete, flecs::Remove)
 Likes.add(flecs::OnDelete, flecs::Delete);
 
 // When Likes is deleted, throw an error (assert)
-Likes.add(flecs::OnDelete, flecs::Throw);
+Likes.add(flecs::OnDelete, flecs::Panic);
 ```
 
-To prevent accidentally deleting a component, components are created by default with the `(OnDelete, Throw)` policy.
+To prevent accidentally deleting a component, components are created by default with the `(OnDelete, Panic)` policy.
 
 ### Tag property
 A relation can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relation or object are components. For some relations however, even if the object is a component, no data should be added to the relation. Consider the following example:

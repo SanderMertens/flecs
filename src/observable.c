@@ -80,7 +80,7 @@ void notify_subset(
 
             for (e = 0; e < entity_count; e ++) {
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[e]->row);
-                if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+                if (flags & EcsEntityObservedAcyclic) {
                     /* Only notify for entities that are used in pairs with
                     * acyclic relations */
                     notify_subset(world, it, observable, entities[e], event, ids);
@@ -153,7 +153,7 @@ void flecs_emit(
             }
 
             uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(recs[i]->row);
-            if (flags & ECS_FLAG_OBSERVED_ACYCLIC) {
+            if (flags & EcsEntityObservedAcyclic) {
                 notify_subset(world, &it, observable, ecs_vector_first(
                     table->data.entities, ecs_entity_t)[row + i], 
                         event, ids);

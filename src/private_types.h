@@ -120,31 +120,6 @@ struct ecs_data_t {
     ecs_bs_column_t *bs_columns; /* Bitset columns */
 };
 
-/** Flags for quickly checking for special properties of a table. */
-#define EcsTableHasBuiltins         1u    /* Does table have builtin components */
-#define EcsTableIsPrefab            2u    /* Does the table store prefabs */
-#define EcsTableHasIsA              4u    /* Does the table have IsA relation */
-#define EcsTableHasChildOf          8u    /* Does the table type ChildOf relation */
-#define EcsTableHasPairs            16u   /* Does the table type have pairs */
-#define EcsTableHasModule           32u   /* Does the table have module data */
-#define EcsTableIsDisabled          128u  /* Does the table type has EcsDisabled */
-#define EcsTableHasCtors            256u
-#define EcsTableHasDtors            512u
-#define EcsTableHasCopy             1024u
-#define EcsTableHasMove             2048u
-#define EcsTableHasOnAdd            4096u
-#define EcsTableHasOnRemove         8192u
-#define EcsTableHasOnSet            16384u
-#define EcsTableHasUnSet            32768u
-#define EcsTableHasSwitch           65536u
-#define EcsTableHasDisabled         131072u
-
-/* Composite constants */
-#define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch | EcsTableHasDisabled)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
-
 /** Cache of added/removed components for non-trivial edges between tables */
 typedef struct ecs_table_diff_t {
     ecs_ids_t added;         /* Components added between tables */
@@ -306,12 +281,6 @@ typedef struct ecs_query_table_list_t {
     ecs_query_table_node_t *last;
     int32_t count;
 } ecs_query_table_list_t;
-
-#define EcsQueryHasRefs (64)         /* Does query have references */
-#define EcsQueryIsSubquery (256)     /* Is query a subquery */
-#define EcsQueryIsOrphaned (512)     /* Is subquery orphaned */
-#define EcsQueryHasOutColumns (1024) /* Does query have out columns */
-#define EcsQueryHasMonitor (4096)    /* Does query track changes */
 
 /* Query event type for notifying queries of world events */
 typedef enum ecs_query_eventkind_t {

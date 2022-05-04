@@ -51,10 +51,10 @@ bool type_can_inherit_id(
     const ecs_id_record_t *idr,
     ecs_id_t id)
 {
-    if (idr->flags & ECS_ID_DONT_INHERIT) {
+    if (idr->flags & EcsIdDontInherit) {
         return false;
     }
-    if (idr->flags & ECS_ID_EXCLUSIVE) {
+    if (idr->flags & EcsIdExclusive) {
         if (ECS_HAS_ROLE(id, PAIR)) {
             ecs_entity_t er = ECS_PAIR_FIRST(id);
             if (flecs_get_table_record(

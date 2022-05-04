@@ -91,14 +91,14 @@ int main(int, char *[]) {
 // 
 // 
 // Position's components:
-// Component, (Identifier,Name), (Identifier,Symbol), (OnDelete,Throw)
+// Component, (Identifier,Name), (Identifier,Symbol), (OnDelete,Panic)
 // 
 // 0: Component
 // 1: (Identifier,Name)
 // 2: (Identifier,Symbol)
-// 3: (OnDelete,Throw)
+// 3: (OnDelete,Panic)
 // 
 // 0: entity: Component
 // 1: role: PAIR, rel: Identifier, obj: Name
 // 2: role: PAIR, rel: Identifier, obj: Symbol
-// 3: role: PAIR, rel: OnDelete, obj: Throw
+// 3: role: PAIR, rel: OnDelete, obj: Panic

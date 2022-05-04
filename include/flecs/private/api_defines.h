@@ -10,6 +10,8 @@
 #ifndef FLECS_API_DEFINES_H
 #define FLECS_API_DEFINES_H
 
+#include "api_flags.h"
+
 #if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
 #define ECS_TARGET_WINDOWS
 #elif defined(__ANDROID__)
@@ -152,10 +154,6 @@ typedef int32_t ecs_size_t;
 
 #define ECS_ROW_MASK                  (0x0FFFFFFFu)
 #define ECS_ROW_FLAGS_MASK            (~ECS_ROW_MASK)
-#define ECS_FLAG_OBSERVED             (1u << 31)
-#define ECS_FLAG_OBSERVED_ID          (1u << 30)
-#define ECS_FLAG_OBSERVED_OBJECT      (1u << 29)
-#define ECS_FLAG_OBSERVED_ACYCLIC     (1u << 28)
 #define ECS_RECORD_TO_ROW(v)          (ECS_CAST(int32_t, (ECS_CAST(uint32_t, v) & ECS_ROW_MASK)))
 #define ECS_RECORD_TO_ROW_FLAGS(v)    (ECS_CAST(uint32_t, v) & ECS_ROW_FLAGS_MASK)
 #define ECS_ROW_TO_RECORD(row, flags) (ECS_CAST(uint32_t, (ECS_CAST(uint32_t, row) | (flags))))
@@ -179,37 +177,6 @@ typedef int32_t ecs_size_t;
 #define ECS_HAS(id, has_id)(\
     (id == has_id) ||\
     (ECS_HAS_PAIR_OBJECT(id, ECS_PAIR_FIRST(has_id), ECS_PAIR_SECOND(has_id))))
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Flags for quickly querying properties of component/relation id
-////////////////////////////////////////////////////////////////////////////////
-
-#define ECS_ID_ON_DELETE_REMOVE          (1u << 0)
-#define ECS_ID_ON_DELETE_DELETE          (1u << 1)
-#define ECS_ID_ON_DELETE_THROW           (1u << 2)
-#define ECS_ID_ON_DELETE_MASK\
-    (ECS_ID_ON_DELETE_THROW|ECS_ID_ON_DELETE_REMOVE|ECS_ID_ON_DELETE_DELETE)
-
-#define ECS_ID_ON_DELETE_OBJECT_REMOVE   (1u << 3)
-#define ECS_ID_ON_DELETE_OBJECT_DELETE   (1u << 4)
-#define ECS_ID_ON_DELETE_OBJECT_THROW    (1u << 5)
-#define ECS_ID_ON_DELETE_OBJECT_MASK\
-    (ECS_ID_ON_DELETE_OBJECT_THROW|ECS_ID_ON_DELETE_OBJECT_REMOVE|\
-        ECS_ID_ON_DELETE_OBJECT_DELETE)
-
-#define ECS_ID_EXCLUSIVE                 (1u << 6)
-#define ECS_ID_DONT_INHERIT              (1u << 7)
-#define ECS_ID_ACYCLIC                   (1u << 8)
-#define ECS_ID_TAG                       (1u << 9)
-
-/* Utilities for converting from flags to delete policies and vice versa */
-#define ECS_ID_ON_DELETE(flags) \
-    ((ecs_entity_t[]){0, EcsRemove, EcsDelete, 0, EcsThrow}\
-        [((flags) & ECS_ID_ON_DELETE_MASK)])
-#define ECS_ID_ON_DELETE_OBJECT(flags) ECS_ID_ON_DELETE(flags >> 3)
-#define ECS_ID_ON_DELETE_FLAG(id) (1u << ((id) - EcsRemove))
-#define ECS_ID_ON_DELETE_OBJECT_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
 
 
 ////////////////////////////////////////////////////////////////////////////////
