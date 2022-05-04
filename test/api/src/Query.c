@@ -6107,6 +6107,88 @@ void Query_cascade_rematch_2_lvls() {
     ecs_fini(world);
 }
 
+void Query_cascade_rematch_2_lvls_2_relations() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Rel, EcsAcyclic);
+
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    
+    ecs_add_pair(world, e_3, Rel, e_2);
+    ecs_add_pair(world, e_2, Rel, e_1);
+    ecs_add_pair(world, e_1, Rel, e_0);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(cascade(Rel))");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.subjects[0], e_0);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.subjects[0], e_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_3);
+    test_uint(it.subjects[0], e_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, e_1, Rel, EcsWildcard);
+    ecs_remove_pair(world, e_2, Rel, EcsWildcard);
+    ecs_remove_pair(world, e_3, Rel, EcsWildcard);
+
+    ecs_add_pair(world, e_0, Rel, e_1);
+    ecs_add_pair(world, e_1, Rel, e_2);
+    ecs_add_pair(world, e_2, Rel, e_3);
+
+
+    it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.subjects[0], e_3);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 70);
+    test_int(p[0].y, 80);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.subjects[0], e_2);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_0);
+    test_uint(it.subjects[0], e_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_childof_rematch_from_isa() {
     ecs_world_t *world = ecs_mini();
 

@@ -1169,6 +1169,7 @@
                 "isa_rematch_2_lvls",
                 "childof_rematch_2_lvls",
                 "cascade_rematch_2_lvls",
+                "cascade_rematch_2_lvls_2_relations",
                 "childof_rematch_from_isa",
                 "rematch_optional_ref",
                 "rematch_optional_ref_w_2_refs",

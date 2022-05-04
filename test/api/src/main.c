@@ -1114,6 +1114,7 @@ void Query_childof_unmatch(void);
 void Query_isa_rematch_2_lvls(void);
 void Query_childof_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls(void);
+void Query_cascade_rematch_2_lvls_2_relations(void);
 void Query_childof_rematch_from_isa(void);
 void Query_rematch_optional_ref(void);
 void Query_rematch_optional_ref_w_2_refs(void);
@@ -6187,6 +6188,10 @@ bake_test_case Query_testcases[] = {
         Query_cascade_rematch_2_lvls
     },
     {
+        "cascade_rematch_2_lvls_2_relations",
+        Query_cascade_rematch_2_lvls_2_relations
+    },
+    {
         "childof_rematch_from_isa",
         Query_childof_rematch_from_isa
     },
@@ -9453,7 +9458,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        165,
+        166,
         Query_testcases
     },
     {
