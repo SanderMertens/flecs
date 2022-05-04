@@ -31460,6 +31460,7 @@ void init_connection(
     char *remote_host = conn->pub.host;
     char *remote_port = conn->pub.port;
 
+<<<<<<< HEAD
     /* Fetch name & port info */
     if (http_getnameinfo((struct sockaddr*) remote_addr, remote_addr_len,
         remote_host, ECS_SIZEOF(conn->pub.host),
@@ -31468,6 +31469,45 @@ void init_connection(
     {
         ecs_os_strcpy(remote_host, "unknown");
         ecs_os_strcpy(remote_port, "unknown");
+=======
+const char* ecs_strerror(
+    int32_t error_code)
+{
+    switch (error_code) {
+    ECS_ERR_STR(ECS_INVALID_PARAMETER);
+    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
+    ECS_ERR_STR(ECS_INTERNAL_ERROR);
+    ECS_ERR_STR(ECS_ALREADY_DEFINED);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
+    ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
+    ECS_ERR_STR(ECS_NAME_IN_USE);
+    ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_OPERATION_FAILED);
+    ECS_ERR_STR(ECS_INVALID_CONVERSION);
+    ECS_ERR_STR(ECS_MODULE_UNDEFINED);
+    ECS_ERR_STR(ECS_MISSING_SYMBOL);
+    ECS_ERR_STR(ECS_ALREADY_IN_USE);
+    ECS_ERR_STR(ECS_CYCLE_DETECTED);
+    ECS_ERR_STR(ECS_COLUMN_INDEX_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_COLUMN_IS_NOT_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_IS_SHARED);
+    ECS_ERR_STR(ECS_COLUMN_TYPE_MISMATCH);
+    ECS_ERR_STR(ECS_INVALID_WHILE_ITERATING);
+    ECS_ERR_STR(ECS_INVALID_FROM_WORKER);
+    ECS_ERR_STR(ECS_OUT_OF_RANGE);
+    ECS_ERR_STR(ECS_MISSING_OS_API);
+    ECS_ERR_STR(ECS_UNSUPPORTED);
+    ECS_ERR_STR(ECS_COLUMN_ACCESS_VIOLATION);
+    ECS_ERR_STR(ECS_COMPONENT_NOT_REGISTERED);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ID);
+    ECS_ERR_STR(ECS_TYPE_INVALID_CASE);
+    ECS_ERR_STR(ECS_INCONSISTENT_NAME);
+    ECS_ERR_STR(ECS_INCONSISTENT_COMPONENT_ACTION);
+    ECS_ERR_STR(ECS_INVALID_OPERATION);
+    ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
+    ECS_ERR_STR(ECS_LOCKED_STORAGE);
+    ECS_ERR_STR(ECS_ID_IN_USE);
+>>>>>>> fce2c596... #124 add basic cycle check to path_append
     }
 
     ecs_dbg_2("http: connection established from '%s:%s'", 
@@ -46657,6 +46697,7 @@ void register_id_flag_for_relation(
         ecs_entity_t e = it->entities[i];
         bool changed = false;
 
+<<<<<<< HEAD
         if (event == EcsOnAdd) {
             ecs_id_record_t *idr = flecs_ensure_id_record(world, e);
             changed |= set_id_flag(idr, flag);
@@ -46673,6 +46714,15 @@ void register_id_flag_for_relation(
                 do {
                     changed |= unset_id_flag(idr, not_flag);
                 } while ((idr = idr->first.next));
+=======
+    if (ecs_is_valid(world, child)) {
+        cur = ecs_get_object(world, child, EcsChildOf, 0);
+        if (cur) {
+            ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
+            if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
+                path_append(world, parent, cur, sep, prefix, buf);
+                ecs_strbuf_appendstr(buf, sep);
+>>>>>>> fce2c596... #124 add basic cycle check to path_append
             }
         }
 

@@ -444,6 +444,7 @@ int ecs_log_last_error(void);
 #define ECS_OPERATION_FAILED (10)
 #define ECS_INVALID_CONVERSION (11)
 #define ECS_ID_IN_USE (12)
+#define ECS_CYCLE_DETECTED (13)
 
 #define ECS_INCONSISTENT_NAME (20)
 #define ECS_NAME_IN_USE (21)

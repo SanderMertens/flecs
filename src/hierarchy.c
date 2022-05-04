@@ -22,6 +22,7 @@ bool path_append(
     if (ecs_is_valid(world, child)) {
         cur = ecs_get_object(world, child, EcsChildOf, 0);
         if (cur) {
+            ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
             if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
                 path_append(world, parent, cur, sep, prefix, buf);
                 ecs_strbuf_appendstr(buf, sep);
