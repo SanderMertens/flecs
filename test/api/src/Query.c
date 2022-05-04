@@ -4990,8 +4990,8 @@ void Query_add_singleton_after_query() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
         .filter.terms = {
-			{ TagA },
-			{ TagB, .subj.entity = TagB }
+            { TagA },
+            { TagB, .subj.entity = TagB }
         }
     });
     test_assert(q != NULL);
@@ -5028,8 +5028,8 @@ void Query_query_w_component_from_parent_from_non_this() {
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
         .filter.terms = {
-			{ TagA },
-			{ TagB, .subj.entity = child, .subj.set = {
+            { TagA },
+            { TagB, .subj.entity = child, .subj.set = {
                 .relation = EcsChildOf,
                 .mask = EcsSuperSet }
             }
@@ -5208,6 +5208,58 @@ void Query_childof_superset() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_uint(it.subjects[0], base);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_superset_2_relations() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, R, EcsAcyclic);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+
+    ecs_add_pair(world, e_3, R, e_2);
+    ecs_add_pair(world, e_2, R, e_1);
+    ecs_add_pair(world, e_1, R, e_0);
+
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_add(world, t, Position);
+    ecs_add_pair(world, t, R, e_2);
+    ecs_add_pair(world, t, R, e_1);
+    ecs_delete(world, t);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(super(R))");
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_3);
+    test_uint(it.subjects[0], e_2);
+    Position *p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.subjects[0], e_1);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.subjects[0], e_0);
+    p = ecs_term(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -6110,20 +6162,25 @@ void Query_cascade_rematch_2_lvls() {
 void Query_cascade_rematch_2_lvls_2_relations() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, R, EcsAcyclic);
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, EcsAcyclic);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
     ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
     ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
     ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
-    
-    ecs_add_pair(world, e_3, Rel, e_2);
-    ecs_add_pair(world, e_2, Rel, e_1);
-    ecs_add_pair(world, e_1, Rel, e_0);
 
-    ecs_query_t *q = ecs_query_new(world, "Position(cascade(Rel))");
-    test_assert(q != NULL);
+    ecs_add_pair(world, e_3, R, e_2);
+    ecs_add_pair(world, e_2, R, e_1);
+    ecs_add_pair(world, e_1, R, e_0);
+
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_add(world, t, Position);
+    ecs_add_pair(world, t, R, e_2);
+    ecs_add_pair(world, t, R, e_1);
+    ecs_delete(world, t);
+
+    ecs_query_t *q = ecs_query_new(world, "Position(cascade(R))");
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
@@ -6149,41 +6206,6 @@ void Query_cascade_rematch_2_lvls_2_relations() {
     p = ecs_term(&it, Position, 1);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
-    test_bool(false, ecs_query_next(&it));
-
-    ecs_remove_pair(world, e_1, Rel, EcsWildcard);
-    ecs_remove_pair(world, e_2, Rel, EcsWildcard);
-    ecs_remove_pair(world, e_3, Rel, EcsWildcard);
-
-    ecs_add_pair(world, e_0, Rel, e_1);
-    ecs_add_pair(world, e_1, Rel, e_2);
-    ecs_add_pair(world, e_2, Rel, e_3);
-
-
-    it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e_2);
-    test_uint(it.subjects[0], e_3);
-    p = ecs_term(&it, Position, 1);
-    test_int(p[0].x, 70);
-    test_int(p[0].y, 80);
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e_1);
-    test_uint(it.subjects[0], e_2);
-    p = ecs_term(&it, Position, 1);
-    test_int(p[0].x, 50);
-    test_int(p[0].y, 60);
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e_0);
-    test_uint(it.subjects[0], e_1);
-    p = ecs_term(&it, Position, 1);
-    test_int(p[0].x, 30);
-    test_int(p[0].y, 40);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -6424,24 +6446,24 @@ void Query_query_long_or_w_ref() {
 
     ECS_COMPONENT(world, Position);
 
-	ECS_TAG(world, A);
-	ECS_TAG(world, B);
-	ECS_TAG(world, C);
-	ECS_TAG(world, D);
-	ECS_TAG(world, E);
-	ECS_TAG(world, F);
-	ECS_TAG(world, G);
-	ECS_TAG(world, H);
-	ECS_TAG(world, I);
-	ECS_TAG(world, J);
-	ECS_TAG(world, K);
-	ECS_TAG(world, L);
-	ECS_TAG(world, M);
-	ECS_TAG(world, N);
-	ECS_TAG(world, O);
-	ECS_TAG(world, P);
-	ECS_TAG(world, Q);
-	ECS_TAG(world, R);
+    ECS_TAG(world, A);
+    ECS_TAG(world, B);
+    ECS_TAG(world, C);
+    ECS_TAG(world, D);
+    ECS_TAG(world, E);
+    ECS_TAG(world, F);
+    ECS_TAG(world, G);
+    ECS_TAG(world, H);
+    ECS_TAG(world, I);
+    ECS_TAG(world, J);
+    ECS_TAG(world, K);
+    ECS_TAG(world, L);
+    ECS_TAG(world, M);
+    ECS_TAG(world, N);
+    ECS_TAG(world, O);
+    ECS_TAG(world, P);
+    ECS_TAG(world, Q);
+    ECS_TAG(world, R);
 
     ecs_entity_t e = ecs_new_entity(world, "e");
     ecs_set(world, e, Position, {10, 20});

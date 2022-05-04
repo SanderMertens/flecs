@@ -1972,6 +1972,11 @@ bool term_iter_next(
             {
                 continue;
             }
+
+            /* The tr->count field refers to the number of relation instances,
+             * not to the number of matches. Superset terms can only yield a
+             * single match. */
+            iter->match_count = 1;
         }
 
         break;
@@ -2476,6 +2481,9 @@ bool ecs_filter_next_instanced(
                         break;
                     }
                 }
+
+                /* If matches_left > 0 we should've found at least one match */
+                ecs_assert(i >= 0, ECS_INTERNAL_ERROR, NULL);
 
                 /* Progress first term to next match (must be at least one) */
                 int32_t column = it->columns[i];

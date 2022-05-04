@@ -873,7 +873,9 @@ void Filter_filter_iter_not_any_obj(void);
 void Filter_filter_iter_cascade_isa(void);
 void Filter_filter_iter_cascade_childof(void);
 void Filter_filter_iter_superset_2_rel_instances(void);
+void Filter_filter_iter_superset_2_rel_instances_match_2nd(void);
 void Filter_filter_iter_2_terms_superset_2_rel_instances(void);
+void Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd(void);
 void Filter_match_disabled(void);
 void Filter_match_prefab(void);
 void Filter_chain_term_iter(void);
@@ -1103,6 +1105,7 @@ void Query_implicit_new_isa_superset(void);
 void Query_isa_superset(void);
 void Query_isa_self_superset(void);
 void Query_childof_superset(void);
+void Query_superset_2_relations(void);
 void Query_parent(void);
 void Query_existing_isa_cascade(void);
 void Query_new_isa_cascade(void);
@@ -5234,8 +5237,16 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_superset_2_rel_instances
     },
     {
+        "filter_iter_superset_2_rel_instances_match_2nd",
+        Filter_filter_iter_superset_2_rel_instances_match_2nd
+    },
+    {
         "filter_iter_2_terms_superset_2_rel_instances",
         Filter_filter_iter_2_terms_superset_2_rel_instances
+    },
+    {
+        "filter_iter_2_terms_superset_2_rel_instances_match_2nd",
+        Filter_filter_iter_2_terms_superset_2_rel_instances_match_2nd
     },
     {
         "match_disabled",
@@ -6142,6 +6153,10 @@ bake_test_case Query_testcases[] = {
     {
         "childof_superset",
         Query_childof_superset
+    },
+    {
+        "superset_2_relations",
+        Query_superset_2_relations
     },
     {
         "parent",
@@ -9444,7 +9459,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        186,
+        188,
         Filter_testcases
     },
     {
@@ -9458,7 +9473,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        166,
+        167,
         Query_testcases
     },
     {
