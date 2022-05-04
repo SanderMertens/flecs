@@ -518,6 +518,7 @@ void OnDelete_on_delete_cyclic_storage_table(void);
 void OnDelete_on_delete_cyclic_storage_table_2(void);
 void OnDelete_on_delete_cyclic_storage_table_3(void);
 void OnDelete_on_delete_cyclic_set_empty(void);
+void OnDelete_2_acyclic_relations_w_cycle(void);
 void OnDelete_on_delete_remove_2_comps(void);
 void OnDelete_on_delete_remove_2_comps_to_existing_table(void);
 void OnDelete_on_delete_delete_recursive(void);
@@ -3859,6 +3860,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "on_delete_cyclic_set_empty",
         OnDelete_on_delete_cyclic_set_empty
+    },
+    {
+        "2_acyclic_relations_w_cycle",
+        OnDelete_2_acyclic_relations_w_cycle
     },
     {
         "on_delete_remove_2_comps",
@@ -9415,7 +9420,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        77,
+        78,
         OnDelete_testcases
     },
     {
