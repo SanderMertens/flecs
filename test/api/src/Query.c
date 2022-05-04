@@ -6488,3 +6488,15 @@ void Query_query_long_or_w_ref() {
 
     ecs_fini(world);
 }
+
+void Query_0_query() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query_new(world, "0");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

@@ -17746,12 +17746,14 @@ ecs_iter_t ecs_query_iter(
 
         /* Copy the data */
         int32_t term_count = filter->term_count_actual;
-        if (result.ptrs) {
-            ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
+        if (term_count) {
+            if (result.ptrs) {
+                ecs_os_memcpy_n(result.ptrs, fit.ptrs, void*, term_count);
+            }
+            ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, term_count);
+            ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, term_count);
+            ecs_os_memcpy_n(result.columns, fit.columns, int32_t, term_count);
         }
-        ecs_os_memcpy_n(result.ids, fit.ids, ecs_id_t, term_count);
-        ecs_os_memcpy_n(result.sizes, fit.sizes, ecs_size_t, term_count);
-        ecs_os_memcpy_n(result.columns, fit.columns, int32_t, term_count);
         ecs_iter_fini(&fit);
     }
 

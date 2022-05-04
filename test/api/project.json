@@ -1178,7 +1178,8 @@
                 "rematch_optional_ref_w_2_refs",
                 "rematch_optional_ref_tag_w_ref_component",
                 "match_query_expr_from_scope",
-                "query_long_or_w_ref"
+                "query_long_or_w_ref",
+                "0_query"
             ]
         }, {
             "id": "Iter",

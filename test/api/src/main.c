@@ -1124,6 +1124,7 @@ void Query_rematch_optional_ref_w_2_refs(void);
 void Query_rematch_optional_ref_tag_w_ref_component(void);
 void Query_match_query_expr_from_scope(void);
 void Query_query_long_or_w_ref(void);
+void Query_0_query(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -6229,6 +6230,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_long_or_w_ref",
         Query_query_long_or_w_ref
+    },
+    {
+        "0_query",
+        Query_0_query
     }
 };
 
@@ -9473,7 +9478,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        167,
+        168,
         Query_testcases
     },
     {
