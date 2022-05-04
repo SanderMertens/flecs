@@ -3003,7 +3003,7 @@ void Query_subquery_unmatch() {
     ecs_remove(world, parent, Position);
 
     /* Force rematching */
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Test if tables have been unmatched */
     it = ecs_query_iter(world, q);
@@ -3079,7 +3079,7 @@ void Query_subquery_rematch() {
     ecs_remove(world, parent, Position);
 
     /* Force unmatching */
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Test if tables have been unmatched */
     it = ecs_query_iter(world, q);
@@ -3092,7 +3092,7 @@ void Query_subquery_rematch() {
     ecs_add(world, parent, Position);    
 
     /* Force rematching */
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Test if tables have been rematched */
     it = ecs_query_iter(world, q);
@@ -3141,7 +3141,7 @@ void Query_subquery_rematch_w_parent_optional() {
 
     /* Trigger rematch */
     ecs_add(world, parent, Position);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Tables should be matched */
     it = ecs_query_iter(world, q);
@@ -3191,7 +3191,7 @@ void Query_subquery_rematch_w_sub_optional() {
 
     /* Trigger rematch */
     ecs_add(world, parent, Position);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Tables should be matched */
     it = ecs_query_iter(world, q);

@@ -101,7 +101,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    ecs_force_aperiodic((ecs_world_t*)world);
+    ecs_run_aperiodic((ecs_world_t*)world, 0);
 
     result->world = (ecs_world_t*)world;
 
@@ -336,7 +336,7 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     
     if (snapshot->entity_index) {
         /* Unfiltered snapshots have a copy of the entity index which is

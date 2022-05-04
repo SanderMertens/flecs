@@ -1764,7 +1764,7 @@ ecs_query_t* ecs_query_init(
      * in the right empty/non-empty list. This ensures the query won't miss
      * empty/non-empty events for tables that are currently out of sync, but
      * change back to being in sync before processing pending events. */
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
     result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);

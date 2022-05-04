@@ -139,7 +139,7 @@ void SystemManual_activate_status() {
 
     reset_status();
     ecs_new(world, Position);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     test_bool(system_status_action_invoked, true);
     test_assert(enable_status == EcsSystemStatusNone);

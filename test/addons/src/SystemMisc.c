@@ -609,7 +609,7 @@ void SystemMisc_status_activate_after_new() {
     /* Add entity with Position. Should activate system. */
     reset_status();
     ecs_new(world, Position);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemStatusNone);
@@ -642,7 +642,7 @@ void SystemMisc_status_deactivate_after_delete() {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Setting the status action should have triggered the enabled status since
      * the system is already enabled. The system should be active since it has
@@ -654,7 +654,7 @@ void SystemMisc_status_deactivate_after_delete() {
     /* Delete the entity. Should trigger the Deactivated status */
     reset_status();
     ecs_delete(world, e);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     test_assert(system_status_action_invoked == true);
     test_assert(enable_status == EcsSystemStatusNone);
@@ -892,13 +892,13 @@ void SystemMisc_system_readeactivate() {
     test_assert( ecs_has_id(world, Dummy, EcsInactive));
 
     ecs_entity_t e = ecs_new(world, Position);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* System should be active, one entity is matched */
     test_assert( !ecs_has_id(world, Dummy, EcsInactive));
 
     ecs_delete(world, e);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* System is not automatically deactivated */
     test_assert( !ecs_has_id(world, Dummy, EcsInactive));
@@ -933,14 +933,14 @@ void SystemMisc_system_readeactivate_w_2_systems() {
 
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_new(world, Mass);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* Systems should be active, one entity is matched */
     test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
     test_assert( !ecs_has_id(world, Dummy2, EcsInactive));
 
     ecs_delete(world, e1);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     /* System is not automatically deactivated */
     test_assert( !ecs_has_id(world, Dummy1, EcsInactive));
@@ -1499,7 +1499,7 @@ void SystemMisc_deactivate_after_disable() {
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Tag);
 
     ecs_entity_t e = ecs_new_w_id(world, Tag);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     
     test_assert(!ecs_has_id(world, Dummy, EcsInactive));
 
@@ -1508,7 +1508,7 @@ void SystemMisc_deactivate_after_disable() {
     test_assert(ecs_has_id(world, Dummy, EcsDisabled));
 
     ecs_delete(world, e);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     test_assert(!ecs_has_id(world, Dummy, EcsInactive));
     test_assert(ecs_has_id(world, Dummy, EcsDisabled));

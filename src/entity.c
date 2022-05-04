@@ -2350,7 +2350,7 @@ void on_delete_object_action(
             deleted = false;
 
             /* Make sure records are in the right list (empty/non-empty) */
-            ecs_force_aperiodic(world);
+            ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
             if (!flecs_table_cache_iter(&idr->cache, &it)) {
                 continue;

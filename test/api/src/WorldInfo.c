@@ -52,15 +52,15 @@ void WorldInfo_empty_table_count() {
     ecs_entity_t e = ecs_new_id(world);
 
     ecs_add_id(world, e, c);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     test_delta(&prev, cur, empty_table_count, 0);
 
     ecs_delete(world, e);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     test_delta(&prev, cur, empty_table_count, 1);
 
     ecs_delete(world, c);
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     test_delta(&prev, cur, empty_table_count, -1);
 
     ecs_fini(world);

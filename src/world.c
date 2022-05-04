@@ -254,7 +254,7 @@ void flecs_resume_readonly(
     if (state->is_readonly || state->is_deferred) {
         ecs_dbg_3("resuming readonly mode");
         
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, 0);
 
         /* Restore readonly state / defer count */
         world->is_readonly = state->is_readonly;
@@ -1611,7 +1611,7 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->info.world_time_total += world->info.delta_time;
 
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     return world->info.delta_time;
 error:
@@ -1789,13 +1789,18 @@ bool ecs_id_in_use(
         (ecs_table_cache_empty_count(&idr->cache) != 0);
 }
 
-void ecs_force_aperiodic(
-    ecs_world_t *world)
+void ecs_run_aperiodic(
+    ecs_world_t *world,
+    ecs_flags32_t flags)
 {
     ecs_poly_assert(world, ecs_world_t);
     
-    flecs_process_pending_tables(world);
-    flecs_eval_component_monitors(world);
+    if (!flags || (flags & EcsAperiodicEmptyTableEvents)) {
+        flecs_process_pending_tables(world);
+    }
+    if (!flags || (flags & EcsAperiodicComponentMonitors)) {
+        flecs_eval_component_monitors(world);
+    }
 }
 
 int32_t ecs_delete_empty_tables(

@@ -221,7 +221,7 @@ bool free_id_record(
     /* Force the empty table administration to be consistent if the non-empty
      * list of the id record has elements */
     if (ecs_table_cache_count(&idr->cache)) {
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
     }
 
     /* If there are still tables in the non-empty list they're really not empty.

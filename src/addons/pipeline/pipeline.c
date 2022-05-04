@@ -484,7 +484,7 @@ bool ecs_pipeline_update(
      * notify appropriate queries so caches are up to date. This includes the
      * pipeline query. */
     if (start_of_frame) {
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, 0);
     }
 
     bool added = false;

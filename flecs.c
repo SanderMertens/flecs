@@ -6947,7 +6947,7 @@ void on_delete_object_action(
             deleted = false;
 
             /* Make sure records are in the right list (empty/non-empty) */
-            ecs_force_aperiodic(world);
+            ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
             if (!flecs_table_cache_iter(&idr->cache, &it)) {
                 continue;
@@ -14735,7 +14735,7 @@ bool ecs_pipeline_update(
      * notify appropriate queries so caches are up to date. This includes the
      * pipeline query. */
     if (start_of_frame) {
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, 0);
     }
 
     bool added = false;
@@ -27443,7 +27443,7 @@ ecs_snapshot_t* snapshot_create(
     ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    ecs_force_aperiodic((ecs_world_t*)world);
+    ecs_run_aperiodic((ecs_world_t*)world, 0);
 
     result->world = (ecs_world_t*)world;
 
@@ -27678,7 +27678,7 @@ void ecs_snapshot_restore(
     ecs_world_t *world,
     ecs_snapshot_t *snapshot)
 {
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
     
     if (snapshot->entity_index) {
         /* Unfiltered snapshots have a copy of the entity index which is
@@ -34223,7 +34223,7 @@ void flecs_resume_readonly(
     if (state->is_readonly || state->is_deferred) {
         ecs_dbg_3("resuming readonly mode");
         
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, 0);
 
         /* Restore readonly state / defer count */
         world->is_readonly = state->is_readonly;
@@ -35580,7 +35580,7 @@ FLECS_FLOAT ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->info.world_time_total += world->info.delta_time;
 
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, 0);
 
     return world->info.delta_time;
 error:
@@ -35758,13 +35758,18 @@ bool ecs_id_in_use(
         (ecs_table_cache_empty_count(&idr->cache) != 0);
 }
 
-void ecs_force_aperiodic(
-    ecs_world_t *world)
+void ecs_run_aperiodic(
+    ecs_world_t *world,
+    ecs_flags32_t flags)
 {
     ecs_poly_assert(world, ecs_world_t);
     
-    flecs_process_pending_tables(world);
-    flecs_eval_component_monitors(world);
+    if (!flags || (flags & EcsAperiodicEmptyTableEvents)) {
+        flecs_process_pending_tables(world);
+    }
+    if (!flags || (flags & EcsAperiodicComponentMonitors)) {
+        flecs_eval_component_monitors(world);
+    }
 }
 
 int32_t ecs_delete_empty_tables(
@@ -41770,7 +41775,7 @@ ecs_query_t* ecs_query_init(
      * in the right empty/non-empty list. This ensures the query won't miss
      * empty/non-empty events for tables that are currently out of sync, but
      * change back to being in sync before processing pending events. */
-    ecs_force_aperiodic(world);
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
 
     result = flecs_sparse_add(world->queries, ecs_query_t);
     ecs_poly_init(result, ecs_query_t);
@@ -48161,7 +48166,7 @@ bool free_id_record(
     /* Force the empty table administration to be consistent if the non-empty
      * list of the id record has elements */
     if (ecs_table_cache_count(&idr->cache)) {
-        ecs_force_aperiodic(world);
+        ecs_run_aperiodic(world, EcsAperiodicEmptyTableEvents);
     }
 
     /* If there are still tables in the non-empty list they're really not empty.

@@ -1598,13 +1598,17 @@ int32_t ecs_get_threads(
  * such as delayed triggering of events, which can be inconvenient when for
  * example running a test suite.
  * 
- * This operation forces runs all aperiodic actions to run.
+ * The flags parameter specifies which aperiodic actions to run. Specify 0 to
+ * run all actions. Supported flags start with 'EcsAperiodic'. Flags identify
+ * internal mechanisms and may change unannounced.
  * 
  * @param world The world.
+ * @param flags The flags specifying which actions to run.
  */
 FLECS_API
-void ecs_force_aperiodic(
-    ecs_world_t *world);
+void ecs_run_aperiodic(
+    ecs_world_t *world,
+    ecs_flags32_t flags);
 
 /** Cleanup empty tables.
  * This operation cleans up empty tables that meet certain conditions. Having

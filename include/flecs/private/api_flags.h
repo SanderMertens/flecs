@@ -118,6 +118,14 @@ extern "C" {
 #define EcsQueryHasOutColumns          (1u << 4u)  /* Does query have out columns */
 #define EcsQueryHasMonitor             (1u << 5u)  /* Does query track changes */
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Aperiodic action flags (used by ecs_run_aperiodic)
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsAperiodicEmptyTableEvents   (1u << 1u)  /* Process pending empty table events */
+#define EcsAperiodicComponentMonitors  (1u << 2u)  /* Process component monitors */
+
 #ifdef __cplusplus
 }
 #endif
