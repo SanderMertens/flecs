@@ -4602,9 +4602,10 @@ void Query_iter_type_set() {
     test_assert(ecs_query_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e);
-    test_assert(it.type != NULL);
-    test_int(ecs_vector_count(it.type), 1);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[0], ecs_id(Position));
+    test_assert(it.table != NULL);
+    ecs_type_t type = ecs_table_get_type(it.table);
+    test_int(ecs_vector_count(type), 1);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], ecs_id(Position));
 
     test_assert(!ecs_query_next(&it));
 

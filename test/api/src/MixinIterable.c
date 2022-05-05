@@ -30,7 +30,6 @@ void test_no_chain(
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
     test_int(ecs_term_source(&it, 1), 0);
     test_assert(it.table != NULL);
-    test_assert(ecs_table_get_type(it.table) == it.type);
 
     Position *ptr = ecs_term(&it, Position, 1);
     test_assert(ptr != NULL);
@@ -45,7 +44,6 @@ void test_no_chain(
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
     test_int(ecs_term_source(&it, 1), 0);
     test_assert(it.table != NULL);
-    test_assert(ecs_table_get_type(it.table) == it.type);
 
     ptr = ecs_term(&it, Position, 1);
     test_assert(ptr != NULL);
@@ -78,7 +76,6 @@ void test_w_chain(
     test_int(ecs_term_id(it, 1), Tag);
     test_int(ecs_term_source(it, 1), 0);
     test_assert(it->table != NULL);
-    test_assert(ecs_table_get_type(it->table) == it->type);
 
     ecs_iter_t *chain_it = it->chain_it;
     test_assert(chain_it != NULL);

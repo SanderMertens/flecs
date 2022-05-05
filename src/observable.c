@@ -61,7 +61,6 @@ void notify_subset(
 
             int32_t e, entity_count = ecs_table_count(table);
             it->table = table;
-            it->type = table->type;
             it->other_table = NULL;
             it->offset = 0;
             it->count = entity_count;
@@ -119,7 +118,6 @@ void flecs_emit(
         .world = stage,
         .real_world = world,
         .table = table,
-        .type = table->type,
         .term_count = 1,
         .other_table = desc->other_table,
         .offset = row,

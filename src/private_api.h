@@ -91,7 +91,6 @@ bool flecs_term_match_table(
     ecs_world_t *world,
     const ecs_term_t *term,
     const ecs_table_t *table,
-    ecs_type_t type,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,

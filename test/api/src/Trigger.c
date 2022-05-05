@@ -2526,10 +2526,10 @@ void Trigger_trigger_w_index() {
     ecs_fini(world);
 }
 
-static ecs_type_t trigger_type;
+static ecs_table_t *trigger_table;
 
 void TypeTrigger(ecs_iter_t *it) {
-    trigger_type = it->type;
+    trigger_table = it->table;
 }
 
 void Trigger_iter_type_set() {
@@ -2548,10 +2548,10 @@ void Trigger_iter_type_set() {
 
     ecs_new(world, Tag);
 
-    test_assert(trigger_type != NULL);
-    test_assert(trigger_type != NULL);
-    test_int(ecs_vector_count(trigger_type), 1);
-    test_int(ecs_vector_first(trigger_type, ecs_id_t)[0], Tag);
+    test_assert(trigger_table != NULL);
+    ecs_type_t type = ecs_table_get_type(trigger_table);
+    test_int(ecs_vector_count(type), 1);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], Tag);
     
     ecs_fini(world);
 }

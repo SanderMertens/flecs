@@ -249,7 +249,6 @@ struct ecs_iter_t {
     void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
     ecs_size_t *sizes;            /* Component sizes */
     ecs_table_t *table;           /* Current table */
-    ecs_type_t type;              /* Current type */
     ecs_table_t *other_table;     /* Prev or next table when adding/removing */
     ecs_id_t *ids;                /* (Component) ids */
     ecs_var_t *variables;      /* Values of variables (if any) */

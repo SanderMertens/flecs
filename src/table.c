@@ -406,7 +406,6 @@ void on_component_callback(
     it.world = world;
     it.real_world = world;
     it.table = table;
-    it.type = table->type;
     it.ptrs[0] = ptr;
     it.sizes[0] = size;
     it.ids[0] = id;

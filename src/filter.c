@@ -1405,7 +1405,6 @@ bool flecs_n_term_match_table(
     ecs_world_t *world,
     const ecs_term_t *term,
     const ecs_table_t *table,
-    ecs_type_t type,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -1428,7 +1427,7 @@ bool flecs_n_term_match_table(
 
     for (i = 0; i < count; i ++) {
         temp.id = ids[i];
-        bool result = flecs_term_match_table(world, &temp, table, type, id_out, 
+        bool result = flecs_term_match_table(world, &temp, table, id_out, 
             0, subject_out, match_index_out, first, iter_flags);
         if (!result && oper == EcsAndFrom) {
             return false;
@@ -1456,7 +1455,6 @@ bool flecs_term_match_table(
     ecs_world_t *world,
     const ecs_term_t *term,
     const ecs_table_t *table,
-    ecs_type_t type,
     ecs_id_t *id_out,
     int32_t *column_out,
     ecs_entity_t *subject_out,
@@ -1467,7 +1465,6 @@ bool flecs_term_match_table(
     const ecs_term_id_t *subj = &term->subj;
     ecs_oper_kind_t oper = term->oper;
     const ecs_table_t *match_table = table;
-    ecs_type_t match_type = type;
     ecs_id_t id = term->id;
 
     ecs_entity_t subj_entity = subj->entity;
@@ -1477,7 +1474,7 @@ bool flecs_term_match_table(
     }
 
     if (oper == EcsAndFrom || oper == EcsOrFrom) {
-        return flecs_n_term_match_table(world, term, table, type, id_out, column_out, 
+        return flecs_n_term_match_table(world, term, table, id_out, column_out, 
             subject_out, match_index_out, first, iter_flags);
     }
 
@@ -1490,7 +1487,6 @@ bool flecs_term_match_table(
 
         match_table = ecs_get_table(world, subj_entity);
         if (match_table) {
-            match_type = match_table->type;
         } else if (oper != EcsOptional) {
             return false;
         }
@@ -1499,7 +1495,7 @@ bool flecs_term_match_table(
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (!match_type) {
+    if (!match_table) {
         return false;
     }
 
@@ -1597,11 +1593,6 @@ bool flecs_filter_match_table(
     ecs_assert(!filter->term_cache_used || filter->terms == filter->term_cache,
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t type = NULL;
-    if (table) {
-        type = table->type;
-    }
-
     ecs_term_t *terms = filter->terms;
     int32_t i, count = filter->term_count;
 
@@ -1621,7 +1612,6 @@ bool flecs_filter_match_table(
         ecs_term_id_t *subj = &term->subj;
         ecs_oper_kind_t oper = term->oper;
         const ecs_table_t *match_table = table;
-        ecs_type_t match_type = type;
         int32_t t_i = term->index;
 
         if (!is_or && oper == EcsOr) {
@@ -1645,11 +1635,6 @@ bool flecs_filter_match_table(
 
         if (subj_entity != EcsThis) {
             match_table = ecs_get_table(world, subj_entity);
-            if (match_table) {
-                match_type = match_table->type;
-            } else {
-                match_type = NULL;
-            }
         } else {
             if (ECS_BIT_IS_SET(iter_flags, EcsIterIgnoreThis)) {
                 or_result = true;
@@ -1662,8 +1647,7 @@ bool flecs_filter_match_table(
 
         int32_t match_index = 0;
 
-        bool result = flecs_term_match_table(world, term, match_table, 
-            match_type,
+        bool result = flecs_term_match_table(world, term, match_table,
             ids ? &ids[t_i] : NULL, 
             columns ? &columns[t_i] : NULL, 
             subjects ? &subjects[t_i] : NULL, 
@@ -2065,7 +2049,7 @@ bool ecs_term_next(
             }
 
             table = chain_it->table;
-            match = flecs_term_match_table(world, term, table, table->type,
+            match = flecs_term_match_table(world, term, table,
                 it->ids, it->columns, it->subjects, it->match_indices, true,
                 it->flags);
         } while (!match);
@@ -2495,15 +2479,14 @@ bool ecs_filter_next_instanced(
 
                 it->columns[i] = column + 1;
                 flecs_term_match_table(world, &filter->terms[i], table, 
-                    table->type, &it->ids[i], &it->columns[i], &it->subjects[i],
+                    &it->ids[i], &it->columns[i], &it->subjects[i],
                     &it->match_indices[i], false, it->flags);
 
                 /* Reset remaining terms (if any) to first match */
                 for (j = i + 1; j < count; j ++) {
                     flecs_term_match_table(world, &filter->terms[j], table, 
-                        table->type, &it->ids[j], &it->columns[j], 
-                        &it->subjects[j], &it->match_indices[j], true, 
-                        it->flags);
+                        &it->ids[j], &it->columns[j], &it->subjects[j], 
+                        &it->match_indices[j], true, it->flags);
                 }
             }
 

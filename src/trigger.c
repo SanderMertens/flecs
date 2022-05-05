@@ -594,8 +594,8 @@ void notify_set_triggers(
             it->count = 1;
         }
 
-        if (flecs_term_match_table(world, &t->term, it->table, it->type, 
-            it->ids, it->columns, it->subjects, NULL, true, it->flags))
+        if (flecs_term_match_table(world, &t->term, it->table, it->ids, 
+            it->columns, it->subjects, NULL, true, it->flags))
         {
             if (!it->subjects[0]) {
                 /* Do not match owned components */

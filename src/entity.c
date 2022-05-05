@@ -1237,7 +1237,6 @@ void flecs_notify_on_set(
                 it.world = world;
                 it.real_world = world;
                 it.table = table;
-                it.type = table->type;
                 it.ptrs[0] = ptr;
                 it.sizes[0] = size;
                 it.ids[0] = id;
@@ -3799,6 +3798,13 @@ char* ecs_type_str(
     }
 
     return ecs_strbuf_get(&buf);
+}
+
+char* ecs_table_str(
+    const ecs_world_t *world,
+    ecs_table_t *table)
+{
+    return ecs_type_str(world, table->type);
 }
 
 static

@@ -288,7 +288,6 @@ void flecs_iter_populate_data(
     it->count = count;
 
     if (table) {
-        it->type = it->table->type;
         if (!count) {
             count = it->count = ecs_table_count(table);
         }

@@ -2495,17 +2495,19 @@ void Filter_term_iter_type_set() {
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
-    test_assert(it.type != NULL);
-    test_int(ecs_vector_count(it.type), 1);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+    test_assert(it.table != NULL);
+    ecs_type_t type = ecs_table_get_type(it.table);
+    test_int(ecs_vector_count(type), 1);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_2);
-    test_assert(it.type != NULL);
-    test_int(ecs_vector_count(it.type), 2);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[1], TagB);
+    test_assert(it.table != NULL);
+    type = ecs_table_get_type(it.table);
+    test_int(ecs_vector_count(type), 2);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
+    test_int(ecs_vector_first(type, ecs_id_t)[1], TagB);
 
     test_assert(!ecs_term_next(&it));
 
@@ -3586,17 +3588,19 @@ void Filter_filter_iter_type_set() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
-    test_assert(it.type != NULL);
-    test_int(ecs_vector_count(it.type), 1);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
+    test_assert(it.table != NULL);
+    ecs_type_t type = ecs_table_get_type(it.table);
+    test_int(ecs_vector_count(type), 1);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_2);
-    test_assert(it.type != NULL);
-    test_int(ecs_vector_count(it.type), 2);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[0], TagA);
-    test_int(ecs_vector_first(it.type, ecs_id_t)[1], TagB);
+    test_assert(it.table != NULL);
+    type = ecs_table_get_type(it.table);
+    test_int(ecs_vector_count(type), 2);
+    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
+    test_int(ecs_vector_first(type, ecs_id_t)[1], TagB);
 
     test_assert(!ecs_filter_next(&it));
 
@@ -4927,7 +4931,6 @@ void Filter_filter_iter_cascade_isa() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
 
@@ -4964,7 +4967,6 @@ void Filter_filter_iter_cascade_childof() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
 
@@ -5476,7 +5478,6 @@ void Filter_chain_term_iter_w_term_iter() {
     test_int(ecs_term_source(&it, 1), 0);
     test_assert(it.table != NULL);
     test_assert(it.chain_it != NULL);
-    test_assert(ecs_table_get_type(it.table) == it.type);
 
     test_assert(!ecs_term_next(&it));
 
@@ -5512,7 +5513,6 @@ void Filter_chain_filter_iter_w_term_iter() {
     test_int(ecs_term_source(&it, 1), 0);
     test_assert(it.table != NULL);
     test_assert(it.chain_it != NULL);
-    test_assert(ecs_table_get_type(it.table) == it.type);
 
     test_assert(!ecs_term_next(&it));
 
@@ -5544,7 +5544,6 @@ void Filter_chain_w_term_iter_component() {
     test_int(ecs_term_id(&it, 1), ecs_id(Position));
     test_int(ecs_term_source(&it, 1), 0);
     test_assert(it.table != NULL);
-    test_assert(ecs_table_get_type(it.table) == it.type);
 
     Position *ptr = ecs_term(&it, Position, 1);
     test_assert(ptr != NULL);
@@ -7761,7 +7760,6 @@ void Filter_set_this_to_empty_table() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -7800,7 +7798,6 @@ void Filter_set_this_to_empty_table_w_component() {
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 0);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), ecs_id(Position));
     test_uint(ecs_term_size(&it, 1), sizeof(Position));
     test_assert(ecs_term(&it, Position, 1) == NULL);
@@ -7839,7 +7836,6 @@ void Filter_set_this_to_implicit_isa_superset_match() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -7877,7 +7873,6 @@ void Filter_set_this_to_self_isa_superset_match() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -7915,7 +7910,6 @@ void Filter_set_this_to_isa_superset_match() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -7959,7 +7953,6 @@ void Filter_set_this_to_childof_superset_match() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -8026,7 +8019,6 @@ void Filter_set_this_to_isa_cascade() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
@@ -8070,7 +8062,6 @@ void Filter_set_this_to_childof_cascade() {
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);
     test_assert(it.table == t1);
-    test_assert(it.type == ecs_table_get_type(t1));
     test_uint(ecs_term_id(&it, 1), TagA);
     test_uint(ecs_term_size(&it, 1), 0);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);

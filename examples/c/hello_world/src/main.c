@@ -14,7 +14,7 @@ void Move(ecs_iter_t *it) {
     Velocity *v = ecs_term(it, Velocity, 2);
 
     /* Print the set of components for the iterated over entities */
-    char *type_str = ecs_type_str(it->world, it->type);
+    char *type_str = ecs_table_str(it->world, it->table);
     printf("Move entities with [%s]\n", type_str);
     ecs_os_free(type_str);
 
