@@ -878,6 +878,28 @@ void Query_query_only_from_entity_no_match() {
     ecs_fini(world);
 }
 
+void Query_query_only_from_entity_no_match_iter_alloc() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, A);
+    ECS_TAG(world, B);
+    ECS_TAG(world, C);
+    ECS_TAG(world, D);
+    ECS_TAG(world, E);
+
+    test_assert(ECS_TERM_CACHE_SIZE <= 4); /* make sure to test iter alloc */
+
+    ecs_new_entity(world, "e");
+
+    ecs_query_t *q = ecs_query_new(world, "A(e), B(e), C(e), D(e), E(e)");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_only_from_singleton() {
     ecs_world_t *world = ecs_mini();
 

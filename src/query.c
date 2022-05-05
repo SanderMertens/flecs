@@ -2018,7 +2018,6 @@ ecs_iter_t ecs_query_iter(
             world, &query->filter, EcsIterIgnoreThis);
         if (!ecs_filter_next(&fit)) {
             /* No match, so return nothing */
-            ecs_iter_fini(&fit);
             ecs_iter_fini(&result);
             goto noresults;
         }

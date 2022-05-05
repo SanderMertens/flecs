@@ -1039,6 +1039,7 @@
                 "singleton_w_optional_new_unset_tables",
                 "query_only_from_entity",
                 "query_only_from_entity_no_match",
+                "query_only_from_entity_no_match_iter_alloc",
                 "query_only_from_singleton",
                 "query_only_from_entity_match_after",
                 "query_only_from_singleton_match_after",

@@ -984,6 +984,7 @@ void Query_singleton_w_optional_new_empty_non_empty_table(void);
 void Query_singleton_w_optional_new_unset_tables(void);
 void Query_query_only_from_entity(void);
 void Query_query_only_from_entity_no_match(void);
+void Query_query_only_from_entity_no_match_iter_alloc(void);
 void Query_query_only_from_singleton(void);
 void Query_query_only_from_entity_match_after(void);
 void Query_query_only_from_singleton_match_after(void);
@@ -5673,6 +5674,10 @@ bake_test_case Query_testcases[] = {
         Query_query_only_from_entity_no_match
     },
     {
+        "query_only_from_entity_no_match_iter_alloc",
+        Query_query_only_from_entity_no_match_iter_alloc
+    },
+    {
         "query_only_from_singleton",
         Query_query_only_from_singleton
     },
@@ -9483,7 +9488,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        168,
+        169,
         Query_testcases
     },
     {
