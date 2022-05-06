@@ -8,15 +8,23 @@
 
 Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
 
-- Fast native [C99 API](https://flecs.docsforge.com/master/api-c/) that can be used with most game engines and scripting languages
-- Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't rely on STL types
-- Entire framework builds in less than 5 seconds.
-- Cache friendly archetype/SoA storage that can process millions of entities every frame
+- Fast zero dependency [C99 API](https://flecs.docsforge.com/master/api-c/)
+- Modern type-safe [C++11 API](https://flecs.docsforge.com/master/api-cpp/) that doesn't use STL containers
+- Minimal ECS core with optional [addons](#addons)
+- Entire codebase builds in less than 5 seconds.
+- Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
+- Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
+- Supports entities with hundreds of components and applications with tens of thousands of archetypes
 - Automatic component registration that works out of the box across shared libraries/DLLs
-- Run games on multiple CPU cores with a fast lockless scheduler and command queue
-- First open source ECS with full support for [entity relationships](https://flecs.docsforge.com/master/relations-manual/)!
+- First open source ECS with full support for [Entity Relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)!
+- Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
+- Run games on multiple CPU cores with a fast lockless scheduler
 - Compiles warning-free on 8 compilers on all major platforms, with [CI](https://github.com/SanderMertens/flecs/actions) running more than 4000 tests
-- No need to reinvent the wheel with fast native [hierarchy](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation), [prefab](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation) and [reflection](https://flecs.docsforge.com/master/api-meta/) implementations
+- Fast native support for [hierarchies](https://flecs.docsforge.com/master/relations-manual/#the-childof-relation) and [prefabs](https://flecs.docsforge.com/master/relations-manual/#the-isa-relation)
+- Integrated [reflection framework](https://flecs.docsforge.com/master/api-meta/) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
+- [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
+- Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/rules/component_inheritance)
+- [Statistics addon](https://flecs.docsforge.com/master/api-stats/) for profiling ECS performance
 - [A web-based dashboard (click to try!)](https://flecs.dev/explorer) for exploring entities, running queries & learning Flecs:
 
 <img width="1110" alt="Screen Shot 2022-04-13 at 11 43 43 AM" src="https://user-images.githubusercontent.com/9919222/163149399-e817368a-ac28-4315-98d9-a393faaee377.png">
@@ -28,14 +36,14 @@ Last v3 release: [Flecs v3.0.1-alpha](https://github.com/SanderMertens/flecs/rel
 Last v2 release: [Flecs v2.4.8](https://github.com/SanderMertens/flecs/releases/tag/v2.4.8).
 
 ## What is an Entity Component System?
-ECS is a new way of organizing code and gameplay data that lets you build game worlds that are larger, more complex and are easier to extend. ECS is different in how it dynamically binds simulation logic ('systems') with game data ('components'). 
+ECS is a new way of organizing code and data that lets you build games that are larger, more complex and are easier to extend.
 
-Something is typically called an ECS when it:
+Something is called an ECS when it:
 - Has _entities_, that uniquely identify objects in a game
 - Has _components_, which are datatypes that can be added to entities
 - Has _systems_ which are functions that run for all entities matching a component _query_
 
-A simple example of this would be a game with two components, `Position` and `Velocity`, and a `Move` system that finds all entities with both components, and adds `Velocity` to `Position`.
+For example, a game has a `Move` _system_ that has a _query_ with two _components_, `Position, Velocity`. When the system is ran it is dynamically matched with all _entities_ that have at least these two components.
 
 For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-faq)!
 
@@ -47,18 +55,6 @@ For more info on ECS, check the [ECS FAQ](https://github.com/SanderMertens/ecs-f
 - [Manual](docs/Manual.md) ([docsforge](https://flecs.docsforge.com/master/manual/))
 - [Query Manual](docs/Queries.md) ([docsforge](https://flecs.docsforge.com/master/query-manual/))
 - [Relations Manual](docs/Relations.md) ([docsforge](https://flecs.docsforge.com/master/relations-manual/))
-
-Here is some awesome content provided by the community :heart: :
-- [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
-- [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
-- [Bringing Flecs to UE4](https://bebylon.dev/blog/ecs-flecs-ue4/)
-- [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
-- [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
-- [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
-- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320) 
-- [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
-- [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
-- [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
 ## Show me the code!
 C99 example:
@@ -121,6 +117,18 @@ int main(int argc, char *argv[]) {
   while (ecs.progress()) { }
 }
 ```
+## Community content
+Examples and tutorials contributed by the community :heart:
+- [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
+- [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
+- [Bringing Flecs to UE4](https://bebylon.dev/blog/ecs-flecs-ue4/)
+- [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
+- [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
+- [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
+- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320) 
+- [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
+- [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
+- [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
 
 ## Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
