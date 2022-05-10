@@ -705,15 +705,21 @@ bool ecs_id_is_pair(
 bool ecs_id_is_wildcard(
     ecs_id_t id)
 {
-    return
-        (id == EcsWildcard) || (ECS_HAS_ROLE(id, PAIR) && (
-            (ECS_PAIR_FIRST(id) == EcsWildcard) ||
-            (ECS_PAIR_SECOND(id) == EcsWildcard)
-        )) ||
-        (id == EcsAny) || (ECS_HAS_ROLE(id, PAIR) && (
-            (ECS_PAIR_FIRST(id) == EcsAny) ||
-            (ECS_PAIR_SECOND(id) == EcsAny)
-        ));
+    if ((id == EcsWildcard) || (id == EcsAny)) {
+        return true;
+    }
+
+    ecs_id_t role = id & ECS_ROLE_MASK;
+    bool is_pair = (role == ECS_PAIR) || (role == ECS_CASE);
+    if (!is_pair) {
+        return false;
+    }
+
+    ecs_entity_t first = ECS_PAIR_FIRST(id);
+    ecs_entity_t second = ECS_PAIR_SECOND(id);
+
+    return (first == EcsWildcard) || (second == EcsWildcard) ||
+           (first == EcsAny) || (second == EcsAny);
 }
 
 bool ecs_id_is_valid(

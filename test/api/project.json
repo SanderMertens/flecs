@@ -12,6 +12,28 @@
     },
     "test": {
         "testsuites": [{
+            "id": "Id",
+            "testcases": [
+                "0_is_wildcard",
+                "wildcard_is_wildcard",
+                "any_is_wildcard",
+                "entity_is_wildcard",
+                "pair_is_wildcard",
+                "pair_w_rel_wildcard_is_wildcard",
+                "pair_w_obj_wildcard_is_wildcard",
+                "pair_w_wildcard_wildcard_is_wildcard",
+                "pair_w_rel_any_is_wildcard",
+                "pair_w_obj_any_is_wildcard",
+                "pair_w_any_any_is_wildcard",
+                "case_is_wildcard",
+                "case_w_rel_wildcard_is_wildcard",
+                "case_w_obj_wildcard_is_wildcard",
+                "case_w_wildcard_wildcard_is_wildcard",
+                "case_w_rel_any_is_wildcard",
+                "case_w_obj_any_is_wildcard",
+                "case_w_any_any_is_wildcard"
+            ]
+        }, {
             "id": "Entity",
             "testcases": [
                 "init_id",

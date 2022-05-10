@@ -8,6 +8,26 @@
 
 #include <api.h>
 
+// Testsuite 'Id'
+void Id_0_is_wildcard(void);
+void Id_wildcard_is_wildcard(void);
+void Id_any_is_wildcard(void);
+void Id_entity_is_wildcard(void);
+void Id_pair_is_wildcard(void);
+void Id_pair_w_rel_wildcard_is_wildcard(void);
+void Id_pair_w_obj_wildcard_is_wildcard(void);
+void Id_pair_w_wildcard_wildcard_is_wildcard(void);
+void Id_pair_w_rel_any_is_wildcard(void);
+void Id_pair_w_obj_any_is_wildcard(void);
+void Id_pair_w_any_any_is_wildcard(void);
+void Id_case_is_wildcard(void);
+void Id_case_w_rel_wildcard_is_wildcard(void);
+void Id_case_w_obj_wildcard_is_wildcard(void);
+void Id_case_w_wildcard_wildcard_is_wildcard(void);
+void Id_case_w_rel_any_is_wildcard(void);
+void Id_case_w_obj_any_is_wildcard(void);
+void Id_case_w_any_any_is_wildcard(void);
+
 // Testsuite 'Entity'
 void Entity_init_id(void);
 void Entity_init_id_name(void);
@@ -1924,6 +1944,81 @@ void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
 void Error_last_error(void);
+
+bake_test_case Id_testcases[] = {
+    {
+        "0_is_wildcard",
+        Id_0_is_wildcard
+    },
+    {
+        "wildcard_is_wildcard",
+        Id_wildcard_is_wildcard
+    },
+    {
+        "any_is_wildcard",
+        Id_any_is_wildcard
+    },
+    {
+        "entity_is_wildcard",
+        Id_entity_is_wildcard
+    },
+    {
+        "pair_is_wildcard",
+        Id_pair_is_wildcard
+    },
+    {
+        "pair_w_rel_wildcard_is_wildcard",
+        Id_pair_w_rel_wildcard_is_wildcard
+    },
+    {
+        "pair_w_obj_wildcard_is_wildcard",
+        Id_pair_w_obj_wildcard_is_wildcard
+    },
+    {
+        "pair_w_wildcard_wildcard_is_wildcard",
+        Id_pair_w_wildcard_wildcard_is_wildcard
+    },
+    {
+        "pair_w_rel_any_is_wildcard",
+        Id_pair_w_rel_any_is_wildcard
+    },
+    {
+        "pair_w_obj_any_is_wildcard",
+        Id_pair_w_obj_any_is_wildcard
+    },
+    {
+        "pair_w_any_any_is_wildcard",
+        Id_pair_w_any_any_is_wildcard
+    },
+    {
+        "case_is_wildcard",
+        Id_case_is_wildcard
+    },
+    {
+        "case_w_rel_wildcard_is_wildcard",
+        Id_case_w_rel_wildcard_is_wildcard
+    },
+    {
+        "case_w_obj_wildcard_is_wildcard",
+        Id_case_w_obj_wildcard_is_wildcard
+    },
+    {
+        "case_w_wildcard_wildcard_is_wildcard",
+        Id_case_w_wildcard_wildcard_is_wildcard
+    },
+    {
+        "case_w_rel_any_is_wildcard",
+        Id_case_w_rel_any_is_wildcard
+    },
+    {
+        "case_w_obj_any_is_wildcard",
+        Id_case_w_obj_any_is_wildcard
+    },
+    {
+        "case_w_any_any_is_wildcard",
+        Id_case_w_any_any_is_wildcard
+    }
+};
 
 bake_test_case Entity_testcases[] = {
     {
@@ -9310,6 +9405,13 @@ bake_test_case Error_testcases[] = {
 
 static bake_test_suite suites[] = {
     {
+        "Id",
+        NULL,
+        NULL,
+        18,
+        Id_testcases
+    },
+    {
         "Entity",
         NULL,
         NULL,
@@ -9627,5 +9729,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 45);
+    return bake_test_run("api", argc, argv, suites, 46);
 }
