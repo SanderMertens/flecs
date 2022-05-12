@@ -108,6 +108,11 @@ protected:
 
 template<typename ... Components>
 struct query final : query_base, iterable<Components...> {
+public:
+    flecs::world world() const {
+        return flecs::world(m_world);
+    }
+    
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
@@ -121,10 +126,6 @@ private:
 
     ecs_iter_next_action_t next_each_action() const override {
         return ecs_query_next_instanced;
-    }
-    
-    flecs::world world() const {
-        return flecs::world(m_world);
     }
 
 public:
