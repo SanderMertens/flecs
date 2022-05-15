@@ -98,7 +98,7 @@ struct query_base {
         char *result = ecs_filter_str(m_world, f);
         return flecs::string(result);
     }
-    
+
     operator query<>() const;
 
 protected:
@@ -121,10 +121,6 @@ private:
 
     ecs_iter_next_action_t next_each_action() const override {
         return ecs_query_next_instanced;
-    }
-    
-    flecs::world world() const {
-        return flecs::world(m_world);
     }
 
 public:
