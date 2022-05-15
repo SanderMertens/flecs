@@ -4420,7 +4420,7 @@ void Trigger_on_set_self_superset_from_child_of_prefab() {
 
 void Trigger_on_set_self_from_child_base_of_prefab() {
     test_quarantine("15 May 2022");
-    
+
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4491,6 +4491,99 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab() {
     test_int(ctx.count, 1);
     test_int(ctx.e[0], inst_child);
     test_int(ctx.s[0][0], base_child_base);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_auto_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_superset_auto_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf | EcsSuperSet
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_superset_auto_override() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSuperSet
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], base);
 
     ecs_fini(world);
 }
