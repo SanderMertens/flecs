@@ -1379,6 +1379,10 @@ void Trigger_on_add_superset_w_component(void);
 void Trigger_on_set_superset_w_component(void);
 void Trigger_on_add_base_superset_w_owned(void);
 void Trigger_on_add_base_self_superset_w_owned(void);
+void Trigger_on_set_self_from_child_of_prefab(void);
+void Trigger_on_set_self_superset_from_child_of_prefab(void);
+void Trigger_on_set_self_from_child_base_of_prefab(void);
+void Trigger_on_set_self_superset_from_child_base_of_prefab(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -7253,6 +7257,22 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_add_base_self_superset_w_owned",
         Trigger_on_add_base_self_superset_w_owned
+    },
+    {
+        "on_set_self_from_child_of_prefab",
+        Trigger_on_set_self_from_child_of_prefab
+    },
+    {
+        "on_set_self_superset_from_child_of_prefab",
+        Trigger_on_set_self_superset_from_child_of_prefab
+    },
+    {
+        "on_set_self_from_child_base_of_prefab",
+        Trigger_on_set_self_from_child_base_of_prefab
+    },
+    {
+        "on_set_self_superset_from_child_base_of_prefab",
+        Trigger_on_set_self_superset_from_child_base_of_prefab
     }
 };
 
@@ -9616,7 +9636,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        103,
+        107,
         Trigger_testcases
     },
     {

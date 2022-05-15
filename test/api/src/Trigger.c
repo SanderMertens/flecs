@@ -4345,3 +4345,152 @@ void Trigger_on_add_base_self_superset_w_owned() {
 
     ecs_fini(world);
 }
+
+void Trigger_on_set_self_from_child_of_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_add_id(world, base_child, EcsPrefab);
+    ecs_add_pair(world, base_child, EcsChildOf, base);
+    ecs_set(world, base_child, Position, {10, 20});
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Position));
+    test_assert(ecs_owns(world, inst_child, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst_child);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_superset_from_child_of_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_add_id(world, base_child, EcsPrefab);
+    ecs_add_pair(world, base_child, EcsChildOf, base);
+    ecs_set(world, base_child, Position, {10, 20});
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf | EcsSuperSet
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Position));
+    test_assert(ecs_owns(world, inst_child, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst_child);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_from_child_base_of_prefab() {
+    test_quarantine("15 May 2022");
+    
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child_base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, base_child_base, EcsPrefab);
+    ecs_set(world, base_child_base, Position, {10, 20});
+
+    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_add_pair(world, base_child, EcsChildOf, base);
+    ecs_add_pair(world, base_child, EcsIsA, base_child_base);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Position));
+    test_assert(!ecs_owns(world, inst_child, Position));
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_superset_from_child_base_of_prefab() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child_base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, base_child_base, EcsPrefab);
+    ecs_set(world, base_child_base, Position, {10, 20});
+
+    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_add_pair(world, base_child, EcsChildOf, base);
+    ecs_add_pair(world, base_child, EcsIsA, base_child_base);
+
+    Probe ctx = {0};
+    ecs_trigger_init(world, &(ecs_trigger_desc_t) {
+        .term = {
+            .id = ecs_id(Position),
+            .subj.set.mask = EcsSelf | EcsSuperSet
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "Child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Position));
+    test_assert(!ecs_owns(world, inst_child, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst_child);
+    test_int(ctx.s[0][0], base_child_base);
+
+    ecs_fini(world);
+}
