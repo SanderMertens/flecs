@@ -735,6 +735,7 @@ void Refs_ref_after_add(void);
 void Refs_ref_after_remove(void);
 void Refs_ref_after_set(void);
 void Refs_ref_before_set(void);
+void Refs_non_const_ref(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -3747,6 +3748,10 @@ bake_test_case Refs_testcases[] = {
     {
         "ref_before_set",
         Refs_ref_before_set
+    },
+    {
+        "non_const_ref",
+        Refs_non_const_ref
     }
 };
 
@@ -4620,7 +4625,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        6,
+        7,
         Refs_testcases
     },
     {

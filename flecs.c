@@ -7953,7 +7953,7 @@ error:
     return (ecs_ref_t){0};
 }
 
-const void* ecs_ref_get_id(
+void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_id_t id)

@@ -73,3 +73,13 @@ void Refs_ref_before_set() {
     test_assert(ref->x == 10);
     test_assert(ref->y == 20);
 }
+
+void Refs_non_const_ref() {
+    flecs::world world;
+
+    auto e = world.entity().set<Position>({10, 20});
+    auto ref = e.get_ref<Position>();
+    ref->x ++;
+
+    test_int(e.get<Position>()->x, 11);
+}

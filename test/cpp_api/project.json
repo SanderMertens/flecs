@@ -776,7 +776,8 @@
                 "ref_after_add",
                 "ref_after_remove",
                 "ref_after_set",
-                "ref_before_set"
+                "ref_before_set",
+                "non_const_ref"
             ]
         }, {
             "id": "Module",

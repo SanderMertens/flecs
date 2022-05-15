@@ -2036,7 +2036,7 @@ ecs_ref_t ecs_ref_init_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-const void* ecs_ref_get_id(
+void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_id_t id);
