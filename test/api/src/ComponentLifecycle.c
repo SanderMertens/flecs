@@ -1,5 +1,9 @@
 #include <api.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(String);
+static ECS_COMPONENT_DECLARE(Entity);
+
 void ComponentLifecycle_setup() {
     ecs_log_set_level(-3);
 }
@@ -1417,10 +1421,6 @@ void other_type_dtor(
 
     other_dtor_invoked ++;
 }
-
-ECS_COMPONENT_DECLARE(Position);
-ECS_COMPONENT_DECLARE(String);
-ECS_COMPONENT_DECLARE(Entity);
 
 static
 void other_comp_dtor(

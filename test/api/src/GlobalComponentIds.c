@@ -1,9 +1,9 @@
 #include <api.h>
 
-ECS_DECLARE(MyTag);
-ECS_DECLARE(MyEntity);
-ECS_COMPONENT_DECLARE(Position);
-ECS_COMPONENT_DECLARE(Velocity);
+static ECS_DECLARE(MyTag);
+static ECS_DECLARE(MyEntity);
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
 
 static
 ecs_entity_t create_entity(ecs_world_t *world) {

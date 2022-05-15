@@ -514,8 +514,8 @@ void Set_modified_no_component() {
     ecs_fini(world);
 }
 
-extern ECS_COMPONENT_DECLARE(Position);
-extern ECS_COMPONENT_DECLARE(Velocity);
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
 
 static
 void OnAdd(ecs_iter_t *it) {

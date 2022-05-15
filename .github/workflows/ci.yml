@@ -89,6 +89,8 @@ jobs:
             cxx: g++-9
           - cc: gcc-10
             cxx: g++-10
+          - cc: gcc-11
+            cxx: g++-11
           - cc: clang-8
             cxx: clang++-8
           - cc: clang-9
