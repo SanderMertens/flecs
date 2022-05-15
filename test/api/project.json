@@ -1438,8 +1438,10 @@
                "remove_wildcard_1_id",
                "remove_wildcard_2_ids",
                "create_triggers_in_trigger",
-               "trigger_on_add_superset_w_component",
-               "trigger_on_set_superset_w_component"
+               "on_add_superset_w_component",
+               "on_set_superset_w_component",
+               "on_add_base_superset_w_owned",
+               "on_add_base_self_superset_w_owned"
            ]
         }, {
             "id": "Observer",
