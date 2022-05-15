@@ -1524,6 +1524,7 @@ void TriggerOnSet_on_set_after_override_w_new(void);
 void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
 void TriggerOnSet_on_set_after_snapshot_restore(void);
+void TriggerOnSet_on_set_after_remove_override(void);
 void TriggerOnSet_emplace(void);
 void TriggerOnSet_un_set_tag_w_remove(void);
 void TriggerOnSet_un_set_tag_w_clear(void);
@@ -7803,6 +7804,10 @@ bake_test_case TriggerOnSet_testcases[] = {
         TriggerOnSet_on_set_after_snapshot_restore
     },
     {
+        "on_set_after_remove_override",
+        TriggerOnSet_on_set_after_remove_override
+    },
+    {
         "emplace",
         TriggerOnSet_emplace
     },
@@ -9636,7 +9641,7 @@ static bake_test_suite suites[] = {
         "TriggerOnSet",
         NULL,
         NULL,
-        15,
+        16,
         TriggerOnSet_testcases
     },
     {

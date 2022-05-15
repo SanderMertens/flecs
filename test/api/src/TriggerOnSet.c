@@ -1,6 +1,11 @@
 #include <api.h>
 
 static
+void Trigger(ecs_iter_t *it) {
+    probe_iter(it);
+}
+
+static
 void OnSet(ecs_iter_t *it) {
     Position *p = ecs_term(it, Position, 1);
 
@@ -640,6 +645,37 @@ void TriggerOnSet_un_set_tag_w_delete() {
 
     ecs_delete(world, e);
     test_int(dummy_called, 0);
+
+    ecs_fini(world);
+}
+
+void TriggerOnSet_on_set_after_remove_override() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_ENTITY(world, Base, Position);
+    ECS_TRIGGER(world, Trigger, EcsOnSet, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_context(world, &ctx);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, e, EcsIsA, Base);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, Trigger);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
 }
