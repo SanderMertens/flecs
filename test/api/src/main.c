@@ -1120,6 +1120,9 @@ void Query_implicit_new_isa_superset(void);
 void Query_isa_superset(void);
 void Query_isa_superset_2_lvls(void);
 void Query_isa_superset_3_lvls(void);
+void Query_isa_superset_2_lvls_owned(void);
+void Query_isa_superset_3_lvls_owned(void);
+void Query_isa_superset_owned_empty_table_after_match(void);
 void Query_isa_self_superset(void);
 void Query_childof_superset(void);
 void Query_superset_2_relations(void);
@@ -6228,6 +6231,18 @@ bake_test_case Query_testcases[] = {
         Query_isa_superset_3_lvls
     },
     {
+        "isa_superset_2_lvls_owned",
+        Query_isa_superset_2_lvls_owned
+    },
+    {
+        "isa_superset_3_lvls_owned",
+        Query_isa_superset_3_lvls_owned
+    },
+    {
+        "isa_superset_owned_empty_table_after_match",
+        Query_isa_superset_owned_empty_table_after_match
+    },
+    {
         "isa_self_superset",
         Query_isa_self_superset
     },
@@ -9565,7 +9580,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        164,
+        167,
         Query_testcases
     },
     {
