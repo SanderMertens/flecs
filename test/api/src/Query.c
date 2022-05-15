@@ -5189,6 +5189,68 @@ void Query_isa_superset() {
     ecs_fini(world);
 }
 
+void Query_isa_superset_2_lvls() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], base);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], base);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_isa_superset_3_lvls() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag(super)");
+    test_assert(q != NULL);
+
+    ecs_entity_t base = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(it.subjects[0], base);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(it.subjects[0], base);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(it.subjects[0], base);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_isa_self_superset() {
     ecs_world_t *world = ecs_mini();
 

@@ -1106,13 +1106,6 @@ void Query_add_singleton_after_query(void);
 void Query_query_w_component_from_parent_from_non_this(void);
 void Query_create_query_while_pending(void);
 void Query_empty_query(void);
-void Query_isa_superset(void);
-void Query_isa_self_superset(void);
-void Query_childof_superset(void);
-void Query_parent(void);
-void Query_existing_isa_cascade(void);
-void Query_new_isa_cascade(void);
-void Query_childof_cascade(void);
 void Query_parent_cascade(void);
 void Query_existing_custom_rel_cascade(void);
 void Query_new_custom_rel_cascade(void);
@@ -1125,6 +1118,8 @@ void Query_two_pair_wildcards_one_not_any(void);
 void Query_implicit_existing_isa_superset(void);
 void Query_implicit_new_isa_superset(void);
 void Query_isa_superset(void);
+void Query_isa_superset_2_lvls(void);
+void Query_isa_superset_3_lvls(void);
 void Query_isa_self_superset(void);
 void Query_childof_superset(void);
 void Query_superset_2_relations(void);
@@ -6177,34 +6172,6 @@ bake_test_case Query_testcases[] = {
         Query_empty_query
     },
     {
-        "isa_superset",
-        Query_isa_superset
-    },
-    {
-        "isa_self_superset",
-        Query_isa_self_superset
-    },
-    {
-        "childof_superset",
-        Query_childof_superset
-    },
-    {
-        "parent",
-        Query_parent
-    },
-    {
-        "existing_isa_cascade",
-        Query_existing_isa_cascade
-    },
-    {
-        "new_isa_cascade",
-        Query_new_isa_cascade
-    },
-    {
-        "childof_cascade",
-        Query_childof_cascade
-    },
-    {
         "parent_cascade",
         Query_parent_cascade
     },
@@ -6251,6 +6218,14 @@ bake_test_case Query_testcases[] = {
     {
         "isa_superset",
         Query_isa_superset
+    },
+    {
+        "isa_superset_2_lvls",
+        Query_isa_superset_2_lvls
+    },
+    {
+        "isa_superset_3_lvls",
+        Query_isa_superset_3_lvls
     },
     {
         "isa_self_superset",
@@ -9590,7 +9565,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        169,
+        164,
         Query_testcases
     },
     {
