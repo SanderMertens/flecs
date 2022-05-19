@@ -1073,6 +1073,7 @@
                 "query_only_from_entity_no_match_or",
                 "query_only_from_entity_or_change",
                 "query_from_entity_or_change",
+                "query_from_entity_w_superset",
                 "query_w_singleton_tag_non_instanced",
                 "query_w_singleton_tag_instanced",
                 "query_w_singleton_component_non_instanced",

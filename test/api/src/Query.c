@@ -1190,6 +1190,40 @@ void Query_query_from_entity_or_change() {
     ecs_fini(world);
 }
 
+void Query_query_from_entity_w_superset() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t g = ecs_new_entity(world, "Game");
+    ecs_set(world, g, Position, {10, 20});
+    ecs_set(world, g, Velocity, {1, 2});
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Mass, {30});
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t) {
+        .filter.terms = {
+            { .id = ecs_id(Velocity), .subj.name = "Game" },
+            { .id = ecs_id(Mass), .subj.set.mask = EcsSuperSet }
+        }
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_w_singleton_tag_non_instanced() {
     ecs_world_t *world = ecs_init();
 

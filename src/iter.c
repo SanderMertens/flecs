@@ -155,26 +155,34 @@ bool flecs_iter_populate_term_data(
 
         /* Data is not from This */
         if (it->references) {
-            /* Iterator provides cached references for non-This terms */
-            ecs_ref_t *ref = &it->references[-column - 1];
-            if (ptr_out) {
-                if (ref->id) {
-                    ptr_out[0] = (void*)ecs_ref_get_id(world, ref, ref->id);
-                } else {
-                    ptr_out[0] = NULL;
+            /* The reference array is used only for components matched on a
+             * table (vs. individual entities). Remaining components should be
+             * assigned outside of this function */
+            if (it->terms[t].subj.entity == EcsThis) {
+
+                /* Iterator provides cached references for non-This terms */
+                ecs_ref_t *ref = &it->references[-column - 1];
+                if (ptr_out) {
+                    if (ref->id) {
+                        ptr_out[0] = (void*)ecs_ref_get_id(world, ref, ref->id);
+                    } else {
+                        ptr_out[0] = NULL;
+                    }
                 }
+
+                if (!ref->id) {
+                    is_shared = false;
+                }
+
+                /* If cached references were provided, the code that populated
+                * the iterator also had a chance to cache sizes, so size array
+                * should already have been assigned. This saves us from having
+                * to do additional lookups to find the component size. */
+                ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
+                return is_shared;
             }
 
-            if (!ref->id) {
-                is_shared = false;
-            }
-
-            /* If cached references were provided, the code that populated
-             * the iterator also had a chance to cache sizes, so size array
-             * should already have been assigned. This saves us from having
-             * to do additional lookups to find the component size. */
-            ecs_assert(size_out == NULL, ECS_INTERNAL_ERROR, NULL);
-            return is_shared;
+            return true;
         } else {
             ecs_entity_t subj = it->subjects[t];
             ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
