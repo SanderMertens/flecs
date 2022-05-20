@@ -24,7 +24,7 @@ void Event_table_1_id_w_trigger() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
@@ -60,7 +60,7 @@ void Event_table_2_ids_w_trigger() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
+        .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
         .observable = world
     });
@@ -85,7 +85,7 @@ void Event_table_2_ids_w_trigger() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
+        .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
         .observable = world
     });
@@ -119,7 +119,7 @@ void Event_table_1_id_w_observer() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
@@ -155,7 +155,7 @@ void Event_table_2_ids_w_observer() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
+        .ids = &(ecs_type_t){.count = 2, .array = (ecs_id_t[]){ id_a, id_b }},
         .table = table,
         .observable = world
     });
@@ -199,7 +199,7 @@ void Event_emit_event_for_empty_table() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ TagA }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ TagA }},
         .table = table,
         .observable = world
     });
@@ -234,7 +234,7 @@ void Event_emit_event_switch_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ Type }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ Type }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -243,7 +243,7 @@ void Event_emit_event_switch_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ECS_SWITCH | Type }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ECS_SWITCH | Type }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -278,7 +278,7 @@ void Event_emit_event_case_for_switch_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -311,7 +311,7 @@ void Event_emit_event_case_for_case_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ecs_case(Type, TagB) }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ecs_case(Type, TagB) }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -320,7 +320,7 @@ void Event_emit_event_case_for_case_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -353,7 +353,7 @@ void Event_emit_event_case_for_case_id_wildcard() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ecs_case(Type, TagB) }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ecs_case(Type, TagB) }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -362,7 +362,7 @@ void Event_emit_event_case_for_case_id_wildcard() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ecs_case(Type, TagA) }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -395,7 +395,7 @@ void Event_emit_event_switch_for_case_id() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ ECS_SWITCH | Type }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ ECS_SWITCH | Type }, .count = 1},
         .table = table,
         .observable = world
     });
@@ -439,7 +439,7 @@ void Event_emit_table_event() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
         .table = base_table,
         .observable = world,
         .table_event = false
@@ -450,7 +450,7 @@ void Event_emit_table_event() {
 
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
+        .ids = &(ecs_type_t){.array = (ecs_id_t[]){ TagA }, .count = 1},
         .table = base_table,
         .observable = world,
         .table_event = true
@@ -481,7 +481,7 @@ void Event_emit_staged_from_world() {
     ecs_staging_begin(world);
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
@@ -517,7 +517,7 @@ void Event_emit_staged_from_stage() {
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_emit(stage, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
@@ -552,7 +552,7 @@ void Event_emit_staged_from_world_observer() {
     ecs_staging_begin(world);
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });
@@ -590,7 +590,7 @@ void Event_emit_staged_from_stage_observer() {
 
     ecs_emit(stage, &(ecs_event_desc_t) {
         .event = evt,
-        .ids = &(ecs_ids_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
         .table = table,
         .observable = world
     });

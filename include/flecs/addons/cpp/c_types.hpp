@@ -6,7 +6,6 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using id_t = ecs_id_t;
-using ids_t = ecs_ids_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;

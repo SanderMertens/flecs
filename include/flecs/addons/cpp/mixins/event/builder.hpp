@@ -104,7 +104,7 @@ struct event_builder_base {
 protected:
     flecs::world_t *m_world;
     ecs_event_desc_t m_desc;
-    flecs::ids_t m_ids;
+    flecs::type_t m_ids;
     flecs::id_t m_ids_array[ECS_EVENT_DESC_ID_COUNT_MAX];
 
 private:

@@ -75,7 +75,7 @@ void Plecs_multiple_trailing_newlines() {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_str(ecs_get_name(world, foo), "Foo");
-    test_int(ecs_vector_count(ecs_get_type(world, foo)), 1);
+    test_int(ecs_get_type(world, foo)->count, 1);
 
     ecs_fini(world);
 }
@@ -102,7 +102,7 @@ void Plecs_entity() {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_str(ecs_get_name(world, foo), "Foo");
-    test_int(ecs_vector_count(ecs_get_type(world, foo)), 1);
+    test_int(ecs_get_type(world, foo)->count, 1);
 
     ecs_fini(world);
 }

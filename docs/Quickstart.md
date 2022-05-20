@@ -406,7 +406,7 @@ ecs_entity_t e = ecs_new_id(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
-ecs_type_t type = ecs_get_type(world, e);
+const ecs_type_t *type = ecs_get_type(world, e);
 char *type_str = ecs_type_str(world, type);
 printf("Type: %s\n", type_str); // output: 'Position,Velocity'
 ecs_os_free(type_str);
@@ -421,7 +421,7 @@ std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 
 A type can also be iterated by an application:
 ```c
-ecs_type_t type = ecs_get_type(world, e);
+const ecs_type_t *type = ecs_get_type(world, e);
 ecs_id_t *ids = ecs_vector_first(type);
 for (int i = 0; i < ecs_vector_count(type; i ++) {
     if (ids[i] == ecs_id(Position)) {

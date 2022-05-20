@@ -3583,7 +3583,7 @@ bool eval_subset(
     table_reg_set(rule, regs, r, table);
 
 yield:
-    set_term_vars(rule, regs, op->term, frame->table->type.array[0]);
+    set_term_vars(rule, regs, op->term, frame->table->type.array[frame->column]);
 
     return true;
 }

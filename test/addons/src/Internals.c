@@ -216,7 +216,7 @@ void Internals_create_65k_tables() {
         ecs_entity_t e = ecs_new_id(world);
         ecs_add_id(world, e, e);
         test_assert(ecs_has_id(world, e, e));
-        test_int(ecs_vector_count(ecs_get_type(world, e)), 1);
+        test_int(ecs_get_type(world, e)->count, 1);
     }
     
     ecs_fini(world);

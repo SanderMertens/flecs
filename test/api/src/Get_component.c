@@ -23,7 +23,7 @@ void Get_component_get_1_from_1() {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
+    test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Position));
     
     ecs_fini(world);
 }
@@ -37,7 +37,7 @@ void Get_component_get_1_from_2() {
     ECS_ENTITY(world, e, Position, Velocity);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
+    test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Position));
     
     ecs_fini(world);
 }
@@ -51,7 +51,7 @@ void Get_component_get_2_from_2() {
     ECS_ENTITY(world, e, Position, Velocity);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
+    test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
     
     ecs_fini(world);
 }
@@ -66,7 +66,7 @@ void Get_component_get_2_from_3() {
     ECS_ENTITY(world, e, Position, Velocity, Mass);
     test_assert(e != 0);
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
+    test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
     
     ecs_fini(world);
 }
@@ -77,7 +77,7 @@ void Test_main_stage(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));
+        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));
     }
 }
 
@@ -123,7 +123,7 @@ void Get_component_get_1_from_2_add_in_progress() {
 
     ecs_progress(world, 1);
     test_assert( ecs_has(world, e, Velocity));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
+    test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
 
     ecs_fini(world);
 }
@@ -135,7 +135,7 @@ void Add_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));
+        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));
         ecs_add(it->world, e, Velocity);
     }
 }
@@ -154,8 +154,8 @@ void Get_component_get_both_from_2_add_in_progress() {
     ecs_progress(world, 1);
     
     test_assert( ecs_has(world, e, Velocity));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Position));
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 1) == ecs_id(Velocity));
+    test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Position));
+    test_assert(ecs_get_type(world, e)->array[1] == ecs_id(Velocity));
 
     ecs_fini(world);
 }
@@ -167,7 +167,7 @@ void Add_remove_in_progress_test_main(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(*ecs_vector_get(ecs_get_type(it->world, e), ecs_entity_t, 0) == ecs_id(Position));        
+        test_assert(ecs_get_type(it->world, e)->array[0] == ecs_id(Position));        
         ecs_add(it->world, e, Velocity);
         ecs_remove(it->world, e, Position);
     }
@@ -189,8 +189,8 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
     test_assert( !ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
 
-    test_assert(*ecs_vector_get(ecs_get_type(world, e), ecs_entity_t, 0) == ecs_id(Velocity));
-    test_assert(ecs_vector_count(ecs_get_type(world, e)) == 1);
+    test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Velocity));
+    test_assert(ecs_get_type(world, e)->count == 1);
 
     ecs_fini(world);
 }

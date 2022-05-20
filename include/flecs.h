@@ -4074,7 +4074,7 @@ int32_t ecs_iter_find_column(
  * Note that this function can be used together with iter::type to 
  * dynamically iterate all data that the matched entities have. An application
  * can use the ecs_vector_count function to obtain the number of elements in a
- * type. All indices from 0..ecs_vector_count(type) are valid column indices.
+ * type. All indices from 0..type->count are valid column indices.
  *
  * Additionally, note that this provides unprotected access to the column data.
  * An iterator cannot know or prevent accessing columns that are not queried for

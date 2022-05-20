@@ -489,7 +489,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
             // If table is different, move entity straight to it
             if (table != next) {
-                ecs_ids_t ids;
+                ecs_type_t ids;
                 ids.array = added.ptr();
                 ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);

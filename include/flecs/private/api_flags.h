@@ -41,6 +41,7 @@ extern "C" {
 #define EcsIdDontInherit               (1u << 7)
 #define EcsIdAcyclic                   (1u << 8)
 #define EcsIdTag                       (1u << 9)
+#define EcsIdWith                      (1u << 10)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \

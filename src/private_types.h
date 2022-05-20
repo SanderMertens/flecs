@@ -457,7 +457,7 @@ typedef struct ecs_store_t {
     ecs_sparse_t tables;       /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
-    ecs_hashmap_t table_map;    /* hashmap<ecs_ids_t, ecs_table_t*> */
+    ecs_hashmap_t table_map;    /* hashmap<ecs_type_t, ecs_table_t*> */
 
     /* Root table */
     ecs_table_t root;

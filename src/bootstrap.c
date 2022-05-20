@@ -299,6 +299,11 @@ void register_dont_inherit(ecs_iter_t *it) {
 }
 
 static
+void register_with(ecs_iter_t *it) {
+    register_id_flag_for_relation(it, EcsWith, EcsIdWith, 0, 0);
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -553,7 +558,7 @@ ecs_table_t* bootstrap_component_table(
         EcsIdAcyclic | EcsIdTag;
     idr = flecs_ensure_id_record(world, ecs_pair(EcsChildOf, EcsWildcard));
     idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdDontInherit |
-        EcsIdAcyclic | EcsIdTag;
+        EcsIdAcyclic | EcsIdTag | EcsIdExclusive;
 
     idr = flecs_ensure_id_record(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
@@ -820,6 +825,12 @@ void flecs_bootstrap(
         .term = {.id = EcsDontInherit, .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_dont_inherit
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = ecs_pair(EcsWith, EcsWildcard), .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_with
     });
 
     /* Define trigger to make sure that adding a module to a child entity also

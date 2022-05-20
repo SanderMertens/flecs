@@ -50,41 +50,6 @@ extern "C" {
 /* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
-/* Utility macro's for creating vector on stack */
-#ifndef FLECS_NDEBUG
-#define ECS_VECTOR_VALUE(T, elem_count)\
-{\
-    .elem_size = (int32_t)(ECS_SIZEOF(T)),\
-    .count = elem_count,\
-    .size = elem_count\
-}
-#else
-#define ECS_VECTOR_VALUE(T, elem_count)\
-{\
-    .count = elem_count,\
-    .size = elem_count\
-}
-#endif
-
-#define ECS_VECTOR_DECL(name, T, elem_count)\
-struct {\
-    union {\
-        ecs_vector_t vector;\
-        uint64_t align;\
-    } header;\
-    T array[elem_count];\
-} __##name##_value = {\
-    .header.vector = ECS_VECTOR_VALUE(T, elem_count)\
-};\
-const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
-
-#define ECS_VECTOR_IMPL(name, T, elems, elem_count)\
-ecs_os_memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
-
-#define ECS_VECTOR_STACK(name, T, elems, elem_count)\
-ECS_VECTOR_DECL(name, T, elem_count);\
-ECS_VECTOR_IMPL(name, T, elems, elem_count)
-
 typedef struct ecs_vector_t ecs_vector_t;
 
 typedef int (*ecs_comparator_t)(

@@ -1371,10 +1371,10 @@ void type_dtor(
     test_assert(world != NULL);
     test_assert(e != 0);
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
 
-    test_int(ecs_vector_count(type), 3);
+    test_int(type->count, 3);
 
     dummy_dtor_invoked = 1;
 }
@@ -1413,9 +1413,9 @@ void other_type_dtor(
     test_assert(comp->other != 0);
     
     if (ecs_is_valid(world, comp->other)) {
-        ecs_type_t type = ecs_get_type(world, comp->other);
+        const ecs_type_t *type = ecs_get_type(world, comp->other);
         test_assert(type != NULL);
-        test_int(ecs_vector_count(type), 2);
+        test_int(type->count, 2);
         other_dtor_valid_entity ++;
     }
 

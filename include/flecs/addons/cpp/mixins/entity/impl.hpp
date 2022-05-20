@@ -120,14 +120,13 @@ inline flecs::type entity_view::type() const {
 
 template <typename Func>
 inline void entity_view::each(const Func& func) const {
-    const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+    const ecs_type_t *type = ecs_get_type(m_world, m_id);
     if (!type) {
         return;
     }
 
-    const ecs_id_t *ids = static_cast<ecs_id_t*>(
-        _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
-    int32_t count = ecs_vector_count(type);
+    const ecs_id_t *ids = type->array;
+    int32_t count = type->count;
 
     for (int i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -154,7 +153,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
         return;
     }
 
-    const ecs_vector_t *type = ecs_table_get_type(table);
+    const ecs_type_t *type = ecs_table_get_type(table);
     if (!type) {
         return;
     }
@@ -165,8 +164,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     }
 
     int32_t cur = 0;
-    id_t *ids = static_cast<ecs_id_t*>(
-        _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
+    id_t *ids = type->array;
     
     while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, 0)))
     {
