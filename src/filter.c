@@ -1426,8 +1426,8 @@ bool flecs_n_term_match_table(
     const EcsType *term_type = ecs_get(world, type_id, EcsType);
     ecs_check(term_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_t *ids = ecs_vector_first(term_type->normalized->type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(term_type->normalized->type);
+    ecs_id_t *ids = term_type->normalized->type.array;
+    int32_t i, count = term_type->normalized->type.count;
     ecs_term_t temp = *term;
     temp.oper = EcsAnd;
 
@@ -1907,8 +1907,7 @@ bool term_iter_next(
                     world, table, iter->last_column + 1, term->id, 0);
                 iter->column = iter->last_column + 1;
                 if (iter->last_column >= 0) {
-                    iter->id = ecs_vector_get(
-                        table->type, ecs_id_t, iter->last_column)[0];
+                    iter->id = table->type.array[iter->last_column];
                 }
             }
         }
@@ -1945,7 +1944,7 @@ bool term_iter_next(
             iter->cur_match = 0;
             iter->last_column = tr->column;
             iter->column = tr->column + 1;
-            iter->id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
+            iter->id = table->type.array[tr->column];
         }
 
         if (iter->cur == iter->set_index) {
@@ -1991,7 +1990,7 @@ bool term_iter_set_table(
             iter->match_count = tr->count;
             iter->last_column = tr->column;
             iter->column = tr->column + 1;
-            iter->id = ecs_vector_get(table->type, ecs_id_t, tr->column)[0];
+            iter->id = table->type.array[tr->column];
         }
     }
 

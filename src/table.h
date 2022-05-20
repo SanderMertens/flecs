@@ -6,10 +6,18 @@
 #ifndef FLECS_TABLE_H
 #define FLECS_TABLE_H
 
+/** Copy type. */
+ecs_type_t flecs_type_copy(
+    const ecs_type_t *src);
+
+/** Free type. */
+void flecs_type_free(
+    ecs_type_t *type);
+
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
-    const ecs_ids_t *type);
+    ecs_type_t *type);
 
 /* Initialize columns for data */
 void flecs_table_init_data(
@@ -170,10 +178,6 @@ void flecs_table_mark_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t component);
-
-const EcsComponent* flecs_component_from_id(
-    const ecs_world_t *world,
-    ecs_entity_t e);
 
 int32_t flecs_table_switch_from_case(
     const ecs_world_t *world,

@@ -33,21 +33,21 @@ uint64_t group_by_phase(
     ecs_assert(pt != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Find tag in system that belongs to pipeline */
-    ecs_type_t type = ecs_table_get_type(table);
-    ecs_id_t *sys_comps = ecs_vector_first(type, ecs_id_t);
-    int32_t c, t, count = ecs_vector_count(type);
+    const ecs_type_t *type = ecs_table_get_type(table);
+    ecs_id_t *sys_comps = type->array;
+    int32_t c, t, count = type->count;
     
-    ecs_type_t pipeline_type = NULL;
+    const ecs_type_t *pipeline_type = NULL;
     if (pt->normalized) {
-        pipeline_type = pt->normalized->type;
+        pipeline_type = &pt->normalized->type;
     }
 
-    if (!pipeline_type) {
+    if (!pipeline_type || !pipeline_type->count) {
         return 0;
     }
 
-    ecs_id_t *tags = ecs_vector_first(pipeline_type, ecs_id_t);
-    int32_t tag_count = ecs_vector_count(pipeline_type);
+    ecs_id_t *tags = pipeline_type->array;
+    int32_t tag_count = pipeline_type->count;
 
     ecs_id_t result = 0;
 
@@ -594,18 +594,18 @@ static
 void add_pipeline_tags_to_sig(
     ecs_world_t *world,
     ecs_term_t *terms,
-    ecs_type_t type)
+    const ecs_type_t *type)
 {
     (void)world;
     
-    int32_t i, count = ecs_vector_count(type);
-    ecs_entity_t *entities = ecs_vector_first(type, ecs_entity_t);
+    int32_t i, count = type->count;
+    ecs_id_t *ids = type->array;
 
     for (i = 0; i < count; i ++) {
         terms[i] = (ecs_term_t){
             .inout = EcsIn,
             .oper = EcsOr,
-            .pred.entity = entities[i],
+            .pred.entity = ids[i],
             .subj = {
                 .entity = EcsThis,
                 .set.mask = EcsSelf | EcsSuperSet
@@ -624,12 +624,12 @@ ecs_query_t* build_pipeline_query(
     const EcsType *type_ptr = ecs_get(world, pipeline, EcsType);
     ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_type_t type = NULL;
+    const ecs_type_t *type = NULL;
     if (type_ptr->normalized) {
-        type = type_ptr->normalized->type;
+        type = &type_ptr->normalized->type;
     }
 
-    int32_t type_count = ecs_vector_count(type);
+    int32_t type_count = type ? type->count : 0;
     int32_t term_count = 1;
 
     if (not_inactive) {
@@ -661,7 +661,9 @@ ecs_query_t* build_pipeline_query(
         };
     }
 
-    add_pipeline_tags_to_sig(world, &terms[term_count], type);
+    if (type) {
+        add_pipeline_tags_to_sig(world, &terms[term_count], type);
+    }
 
     ecs_query_t *result = ecs_query_init(world, &(ecs_query_desc_t){
         .filter = {

@@ -100,6 +100,7 @@ extern "C" {
 #define EcsTableHasUnSet               (1u << 15u)
 #define EcsTableHasSwitch              (1u << 16u)
 #define EcsTableHasDisabled            (1u << 17u)
+#define EcsTableHasOverrides           (1u << 18u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)

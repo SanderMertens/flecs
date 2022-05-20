@@ -1734,20 +1734,14 @@ void flecs_process_pending_tables(
                  * pending_tables list by going from empty->non-empty, but then
                  * became empty again. By the time we run this code, no changes
                  * in the administration would actually be made. */
-                ecs_ids_t ids = {
-                    .array = ecs_vector_first(table->type, ecs_id_t),
-                    .count = ecs_vector_count(table->type)
-                };
-
                 int32_t table_count = ecs_table_count(table);
-                
                 flecs_emit(world, world, &(ecs_event_desc_t) {
                     .event = table_count
                         ? EcsOnTableFill 
                         : EcsOnTableEmpty
                         ,
                     .table = table,
-                    .ids = &ids,
+                    .ids = &table->type,
                     .observable = world,
                     .table_event = true
                 });
@@ -1844,7 +1838,7 @@ int32_t ecs_delete_empty_tables(
                 continue;
             }
 
-            if (ecs_vector_count(table->type) < min_id_count) {
+            if (table->type.count < min_id_count) {
                 continue;
             }
 

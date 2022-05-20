@@ -36,7 +36,7 @@ void notify_subset(
     ecs_observable_t *observable,
     ecs_entity_t entity,
     ecs_entity_t event,
-    ecs_ids_t *ids)
+    const ecs_type_t *ids)
 {
     ecs_id_t pair = ecs_pair(EcsWildcard, entity);
     ecs_id_record_t *idr = flecs_get_id_record(world, pair);
@@ -103,7 +103,7 @@ void flecs_emit(
     ecs_check(desc->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_ids_t *ids = desc->ids;
+    const ecs_type_t *ids = desc->ids;
     ecs_entity_t event = desc->event;
     ecs_table_t *table = desc->table;
     int32_t row = desc->offset;

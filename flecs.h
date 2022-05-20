@@ -230,6 +230,7 @@ extern "C" {
 #define EcsTableHasUnSet               (1u << 15u)
 #define EcsTableHasSwitch              (1u << 16u)
 #define EcsTableHasDisabled            (1u << 17u)
+#define EcsTableHasOverrides           (1u << 18u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
@@ -2124,8 +2125,11 @@ typedef uint64_t ecs_id_t;
 /** An entity identifier. */
 typedef ecs_id_t ecs_entity_t;
 
-/** A vector containing component identifiers used to describe a type. */
-typedef const ecs_vector_t* ecs_type_t;
+/** An array with (component) ids */
+typedef struct {
+    ecs_id_t *array;
+    int32_t count;
+} ecs_type_t;
 
 /** A world is the container for all ECS data and supporting features. */
 typedef struct ecs_world_t ecs_world_t;
@@ -3690,7 +3694,7 @@ typedef struct EcsComponent {
  * This component allows for the creation of entities that represent a type, and
  * therefore the creation of named types. */
 typedef struct EcsType {
-    ecs_type_t type;        /* Preserved nested types */
+    const ecs_type_t *type;          /* Preserved nested types */
     ecs_table_t *normalized;  /* Table with union of type + nested AND types */
 } EcsType;
 
@@ -5149,7 +5153,7 @@ bool ecs_exists(
  * @return The type of the entity, NULL if the entity has no components.
  */
 FLECS_API
-ecs_type_t ecs_get_type(
+const ecs_type_t* ecs_get_type(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -5367,7 +5371,7 @@ void ecs_id_str_buf(
 FLECS_API
 char* ecs_type_str(
     const ecs_world_t *world,
-    ecs_type_t type);
+    const ecs_type_t* type);
 
 /** Convert table to string.
  * Same as ecs_type_str(world, ecs_table_get_type(table)). The result of this
@@ -6394,7 +6398,7 @@ typedef struct ecs_event_desc_t {
     /* Component ids. Only triggers with a matching component id will be 
      * notified. Observers are guaranteed to get notified once, even if they
      * match more than one id. */
-    ecs_ids_t *ids;
+    const ecs_type_t *ids;
 
     /* The table for which to notify. */
     ecs_table_t *table;
@@ -7403,7 +7407,7 @@ int32_t ecs_search_relation_last(
  * @return The type of the table.
  */
 FLECS_API
-ecs_type_t ecs_table_get_type(
+const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table);
 
 /** Get storage type for table.
@@ -7537,8 +7541,8 @@ bool ecs_commit(
     ecs_entity_t entity,
     ecs_record_t *record,
     ecs_table_t *table,
-    ecs_ids_t *added,
-    ecs_ids_t *removed);
+    const ecs_type_t *added,
+    const ecs_type_t *removed);
 
 /** Find record for entity. */
 FLECS_API
