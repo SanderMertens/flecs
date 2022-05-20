@@ -105,8 +105,8 @@ void init_storage_map(
     }
 
     ecs_type_t type = table->type;
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t t, ids_count = ecs_vector_count(type);
+    ecs_id_t *ids = type.array;
+    int32_t t, ids_count = type.count;
     ecs_id_t *storage_ids = table->storage_ids;
     int32_t s, storage_ids_count = table->storage_count;
 
@@ -159,14 +159,14 @@ void init_storage_table(
     }
 
     ecs_type_t type = table->type;
-    int32_t i, count = ecs_vector_count(type);
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    int32_t i, count = type.count;
+    ecs_id_t *ids = type.array;
     ecs_table_record_t *records = table->records;
 
     ecs_id_t array[ECS_ID_CACHE_SIZE];
     ecs_id_t acyclic_array[ECS_ID_CACHE_SIZE];
-    ecs_ids_t storage_ids = { .array = array };
-    ecs_ids_t acyclic_ids = { .array = acyclic_array };
+    ecs_type_t storage_ids = { .array = array };
+    ecs_type_t acyclic_ids = { .array = acyclic_array };
     if (count > ECS_ID_CACHE_SIZE) {
         storage_ids.array = ecs_os_malloc_n(ecs_id_t, count);
         acyclic_ids.array = ecs_os_malloc_n(ecs_id_t, count);
@@ -191,12 +191,12 @@ void init_storage_table(
             &storage_ids);
         table->storage_table = storage_table;
         table->storage_count = flecs_ito(uint16_t, storage_ids.count);
-        table->storage_ids = ecs_vector_first(storage_table->type, ecs_id_t);
+        table->storage_ids = storage_table->type.array;
         storage_table->refcount ++;
     } else if (storage_ids.count) {
         table->storage_table = table;
         table->storage_count = flecs_ito(uint16_t, count);
-        table->storage_ids = ecs_vector_first(type, ecs_id_t);
+        table->storage_ids = type.array;
     }
 
     if (acyclic_ids.count && acyclic_ids.count != count) {
@@ -266,7 +266,7 @@ void init_type_info(
     }
 
     ecs_table_record_t *records = table->records;
-    int32_t i, count = ecs_vector_count(table->type);
+    int32_t i, count = table->type.count;
     table->type_info = ecs_os_calloc_n(ecs_type_info_t, count);
 
     for (i = 0; i < count; i ++) {
@@ -304,7 +304,7 @@ void flecs_table_init_data(
     }
 
     if (sw_count) {
-        ecs_entity_t *ids = ecs_vector_first(table->type, ecs_entity_t);
+        ecs_entity_t *ids = table->type.array;
         int32_t sw_offset = table->sw_column_offset;
         storage->sw_columns = ecs_os_calloc_n(ecs_sw_column_t, sw_count);
 
@@ -318,8 +318,8 @@ void flecs_table_init_data(
             ecs_table_t *sw_table = switch_type->normalized;
             ecs_type_t sw_type = sw_table->type;
 
-            ecs_entity_t *sw_array = ecs_vector_first(sw_type, ecs_entity_t);
-            int32_t sw_array_count = ecs_vector_count(sw_type);
+            ecs_id_t *sw_array = sw_type.array;
+            int32_t sw_array_count = sw_type.count;
 
             ecs_switch_t *sw = flecs_switch_new(
                 sw_array[0], 
@@ -366,14 +366,9 @@ void run_on_remove(
 {
     int32_t count = ecs_vector_count(data->entities);
     if (count) {
-        ecs_ids_t removed = {
-            .array = ecs_vector_first(table->type, ecs_id_t),
-            .count = ecs_vector_count(table->type)
-        };
-
         ecs_table_diff_t diff = {
-            .removed = removed,
-            .un_set = removed
+            .removed = table->type,
+            .un_set = table->type
         };
         
         flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
@@ -747,7 +742,7 @@ void flecs_table_free(
     }
 
     if (ecs_should_log_2()) {
-        char *expr = ecs_type_str(world, table->type);
+        char *expr = ecs_type_str(world, &table->type);
         ecs_dbg_2(
             "#[green]table#[normal] [%s] #[red]deleted#[normal] with id %d", 
             expr, table->id);
@@ -764,8 +759,8 @@ void flecs_table_free(
 
     if (!is_root) {
         ecs_ids_t ids = {
-            .array = ecs_vector_first(table->type, ecs_id_t),
-            .count = ecs_vector_count(table->type)
+            .array = table->type.array,
+            .count = table->type.count
         };
 
         flecs_hashmap_remove(&world->store.table_map, &ids, ecs_table_t*);
@@ -843,7 +838,7 @@ bool flecs_table_release(
 void flecs_table_free_type(
     ecs_table_t *table)
 {
-    ecs_vector_free((ecs_vector_t*)table->type);
+    ecs_os_free(table->type.array);
 }
 
 /* Reset a table to its initial state. */
@@ -907,8 +902,8 @@ void move_switch_columns(
     int32_t offset_new = dst_table->sw_column_offset;
     int32_t offset_old = src_table->sw_column_offset;
 
-    ecs_id_t *dst_ids = ecs_vector_first(dst_type, ecs_id_t);
-    ecs_id_t *src_ids = ecs_vector_first(src_type, ecs_id_t);
+    ecs_id_t *dst_ids = dst_type.array;
+    ecs_id_t *src_ids = src_type.array;
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
         ecs_entity_t dst_id = dst_ids[i_new + offset_new];
@@ -973,12 +968,12 @@ void move_bitset_columns(
     int32_t offset_new = dst_table->bs_column_offset;
     int32_t offset_old = src_table->bs_column_offset;
 
-    ecs_entity_t *dst_components = ecs_vector_first(dst_type, ecs_entity_t);
-    ecs_entity_t *src_components = ecs_vector_first(src_type, ecs_entity_t);
+    ecs_id_t *dst_components = dst_type.array;
+    ecs_id_t *src_components = src_type.array;
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
-        ecs_entity_t dst_component = dst_components[i_new + offset_new];
-        ecs_entity_t src_component = src_components[i_old + offset_old];
+        ecs_id_t dst_component = dst_components[i_new + offset_new];
+        ecs_id_t src_component = src_components[i_old + offset_old];
 
         if (dst_component == src_component) {
             ecs_bitset_t *src_bs = &src_columns[i_old].data;
@@ -2202,11 +2197,11 @@ ecs_column_t* ecs_table_column_for_id(
     return NULL;
 }
 
-ecs_type_t ecs_table_get_type(
+const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table)
 {
     if (table) {
-        return table->type;
+        return &table->type;
     } else {
         return NULL;
     }
@@ -2223,8 +2218,7 @@ int32_t ecs_table_type_to_storage_index(
     int32_t index)
 {
     ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < ecs_vector_count(table->type), 
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
     int32_t *storage_map = table->storage_map;
     if (storage_map) {
         return storage_map[index];
@@ -2239,7 +2233,7 @@ int32_t ecs_table_storage_to_type_index(
 {
     ecs_check(index < table->storage_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table->storage_map != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t offset = ecs_vector_count(table->type);
+    int32_t offset = table->type.count;
     return table->storage_map[offset + index];
 error:
     return -1;

@@ -305,9 +305,10 @@ bool flecs_defer_set(
     if (stage->defer) {
         world->set_count ++;
         if (!size) {
-            const EcsComponent *cptr = flecs_component_from_id(world, id);
-            ecs_check(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
-            size = cptr->size;
+            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            ecs_check(idr != NULL && idr->type_info != NULL, 
+                ECS_INVALID_PARAMETER, NULL);
+            size = idr->type_info->size;
         }
 
         ecs_defer_op_t *op = new_defer_op(stage);

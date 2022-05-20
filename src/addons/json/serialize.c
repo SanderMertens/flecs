@@ -699,9 +699,14 @@ int append_type(
     ecs_entity_t inst,
     const ecs_entity_to_json_desc_t *desc) 
 {
-    ecs_type_t type = ecs_get_type(world, ent);
-    const ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(type);
+    const ecs_id_t *ids = NULL;
+    int32_t i, count = 0;
+
+    const ecs_type_t *type = ecs_get_type(world, ent);
+    if (type) {
+        ids = type->array;
+        count = type->count;
+    }
 
     flecs_json_member(buf, "ids");
     flecs_json_array_push(buf);
@@ -761,9 +766,13 @@ int append_base(
     ecs_entity_t inst,
     const ecs_entity_to_json_desc_t *desc) 
 {
-    ecs_type_t type = ecs_get_type(world, ent);
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(type);
+    const ecs_type_t *type = ecs_get_type(world, ent);
+    ecs_id_t *ids = NULL;
+    int32_t i, count = 0;
+    if (type) {
+        ids = type->array;
+        count = type->count;
+    }
 
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -837,9 +846,13 @@ int ecs_entity_to_json_buf(
     }
 #endif
 
-    ecs_type_t type = ecs_get_type(world, entity);
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(type);
+    const ecs_type_t *type = ecs_get_type(world, entity);
+    ecs_id_t *ids = NULL;
+    int32_t i, count = 0;
+    if (type) {
+        ids = type->array;
+        count = type->count;
+    }
 
     if (!desc || desc->serialize_base) {
         if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {

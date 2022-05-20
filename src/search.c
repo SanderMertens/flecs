@@ -84,8 +84,8 @@ int32_t type_search_relation(
     ecs_table_record_t **tr_out)
 {
     ecs_type_t type = table->type;
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t count = ecs_vector_count(type);
+    ecs_id_t *ids = type.array;
+    int32_t count = type.count;
 
     if (min_depth <= 0) {
         if (offset) {
@@ -227,7 +227,7 @@ int32_t ecs_search(
     }
 
     ecs_type_t type = table->type;
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    ecs_id_t *ids = type.array;
     return type_search(table, idr, ids, id_out, NULL);
 }
 
@@ -247,8 +247,8 @@ int32_t ecs_search_offset(
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_type_t type = table->type;
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t count = ecs_vector_count(type);
+    ecs_id_t *ids = type.array;
+    int32_t count = type.count;
     return type_offset_search(offset, id, ids, count, id_out);
 }
 

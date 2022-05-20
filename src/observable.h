@@ -15,13 +15,13 @@ void flecs_observable_fini(
 void flecs_triggers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
-    ecs_ids_t *ids,
+    const ecs_type_t *ids,
     ecs_entity_t event);
 
 void flecs_set_triggers_notify(
     ecs_iter_t *it,
     ecs_observable_t *observable,
-    ecs_ids_t *ids,
+    const ecs_type_t *ids,
     ecs_entity_t event,
     ecs_id_t set_id);
 

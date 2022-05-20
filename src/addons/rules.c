@@ -1080,8 +1080,8 @@ void reify_variables(
     (void)vars;
 
     ecs_var_t *regs = get_registers(it, op);
-    ecs_entity_t *elem = ecs_vector_get(type, ecs_entity_t, column);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column < type.count, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t *elem = &type.array[column];
 
     int32_t obj_var = filter->lo_var;
     int32_t pred_var = filter->hi_var;
@@ -3143,8 +3143,8 @@ int32_t find_next_same_var(
     (void)pattern;
     
     /* Keep scanning for an id where rel and obj are the same */
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(type);
+    ecs_id_t *ids = type.array;
+    int32_t i, count = type.count;
     for (i = column + 1; i < count; i ++) {
         ecs_id_t id = ids[i];
         if (!ECS_HAS_ROLE(id, PAIR)) {
@@ -3246,8 +3246,8 @@ ecs_id_t rule_get_column(
     ecs_type_t type,
     int32_t column)
 {
-    ecs_id_t *comp = ecs_vector_get(type, ecs_id_t, column);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column < type.count, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *comp = &type.array[column];
     return *comp;
 }
 
@@ -3583,8 +3583,7 @@ bool eval_subset(
     table_reg_set(rule, regs, r, table);
 
 yield:
-    set_term_vars(rule, regs, op->term, ecs_vector_get(frame->table->type,
-        ecs_id_t, frame->column)[0]);
+    set_term_vars(rule, regs, op->term, frame->table->type.array[0]);
 
     return true;
 }

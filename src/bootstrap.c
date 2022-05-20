@@ -559,7 +559,7 @@ ecs_table_t* bootstrap_component_table(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
     idr->flags |= EcsIdDontInherit;
 
-    ecs_id_t entities[] = {
+    ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
         EcsFinal,
         ecs_pair(ecs_id(EcsIdentifier), EcsName),
@@ -568,8 +568,8 @@ ecs_table_t* bootstrap_component_table(
         ecs_pair(EcsOnDelete, EcsPanic)
     };
     
-    ecs_ids_t array = {
-        .array = entities,
+    ecs_type_t array = {
+        .array = ids,
         .count = 6
     };
 

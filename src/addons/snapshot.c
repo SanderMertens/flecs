@@ -16,7 +16,7 @@ struct ecs_snapshot_t {
 /** Small footprint data structure for storing data associated with a table. */
 typedef struct ecs_table_leaf_t {
     ecs_table_t *table;
-    ecs_vector_t *type;
+    ecs_type_t type;
     ecs_data_t *data;
 } ecs_table_leaf_t;
 
@@ -87,7 +87,7 @@ void snapshot_table(
     ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
     
     l->table = table;
-    l->type = ecs_vector_copy(table->type, ecs_id_t);
+    l->type = flecs_type_copy(&table->type);
     l->data = duplicate_data(table, &table->data);
 }
 
@@ -207,12 +207,8 @@ void restore_unfiltered(
         /* If the world table no longer exists but the snapshot table does,
          * reinsert it */
         if (!world_table && snapshot_table) {
-            ecs_ids_t type = {
-                .array = ecs_vector_first(snapshot_table->type, ecs_id_t),
-                .count = ecs_vector_count(snapshot_table->type)
-            };
-
-            ecs_table_t *table = flecs_table_find_or_create(world, &type);
+            ecs_table_t *table = flecs_table_find_or_create(world, 
+                &snapshot_table->type);
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
             if (snapshot_table->data) {
@@ -250,7 +246,7 @@ void restore_unfiltered(
 
         if (snapshot_table) {
             ecs_os_free(snapshot_table->data);
-            ecs_os_free(snapshot_table->type);
+            flecs_type_free(&snapshot_table->type);
         }
     }
 
@@ -292,7 +288,7 @@ void restore_filtered(
 
         ecs_data_t *data = snapshot_table->data;
         if (!data) {
-            ecs_vector_free(snapshot_table->type);
+            flecs_type_free(&snapshot_table->type);
             continue;
         }
 
@@ -327,7 +323,7 @@ void restore_filtered(
 
         ecs_os_free(snapshot_table->data->columns);
         ecs_os_free(snapshot_table->data);
-        ecs_vector_free(snapshot_table->type);
+        flecs_type_free(&snapshot_table->type);
     }
 }
 
@@ -422,7 +418,7 @@ void ecs_snapshot_free(
                 flecs_table_clear_data(snapshot->world, table, data);
                 ecs_os_free(data);
             }
-            ecs_vector_free(snapshot_table->type);
+            flecs_type_free(&snapshot_table->type);
         }
     }    
 

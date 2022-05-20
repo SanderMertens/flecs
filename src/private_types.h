@@ -122,10 +122,10 @@ struct ecs_data_t {
 
 /** Cache of added/removed components for non-trivial edges between tables */
 typedef struct ecs_table_diff_t {
-    ecs_ids_t added;         /* Components added between tables */
-    ecs_ids_t removed;       /* Components removed between tables */
-    ecs_ids_t on_set;        /* OnSet from exposing/adding base components */
-    ecs_ids_t un_set;        /* UnSet from hiding/removing base components */
+    ecs_type_t added;         /* Components added between tables */
+    ecs_type_t removed;       /* Components removed between tables */
+    ecs_type_t on_set;        /* OnSet from exposing/adding base components */
+    ecs_type_t un_set;        /* UnSet from hiding/removing base components */
 } ecs_table_diff_t;
 
 /** Edge linked list (used to keep track of incoming edges) */

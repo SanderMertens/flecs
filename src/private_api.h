@@ -78,7 +78,7 @@ void flecs_notify_on_set(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_ids_t *ids,
+    ecs_type_t *type,
     bool owned);
 
 
@@ -212,10 +212,6 @@ uint32_t flecs_record_to_row(
 uint32_t flecs_row_to_record(
     uint32_t row, 
     bool is_watched);
-
-/* Convert type to entity array */
-ecs_ids_t flecs_type_to_ids(
-    ecs_type_t type); 
 
 /* Convert a symbol name to an entity name by removing the prefix */
 const char* flecs_name_from_symbol(
