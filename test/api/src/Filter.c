@@ -2496,18 +2496,18 @@ void Filter_term_iter_type_set() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
     test_assert(it.table != NULL);
-    ecs_type_t type = ecs_table_get_type(it.table);
-    test_int(ecs_vector_count(type), 1);
-    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
+    const ecs_type_t *type = ecs_table_get_type(it.table);
+    test_int(type->count, 1);
+    test_int(type->array[0], TagA);
 
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_2);
     test_assert(it.table != NULL);
     type = ecs_table_get_type(it.table);
-    test_int(ecs_vector_count(type), 2);
-    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
-    test_int(ecs_vector_first(type, ecs_id_t)[1], TagB);
+    test_int(type->count, 2);
+    test_int(type->array[0], TagA);
+    test_int(type->array[1], TagB);
 
     test_assert(!ecs_term_next(&it));
 
@@ -3589,18 +3589,18 @@ void Filter_filter_iter_type_set() {
     test_int(it.count, 1);
     test_int(it.entities[0], e_1);
     test_assert(it.table != NULL);
-    ecs_type_t type = ecs_table_get_type(it.table);
-    test_int(ecs_vector_count(type), 1);
-    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
+    const ecs_type_t *type = ecs_table_get_type(it.table);
+    test_int(type->count, 1);
+    test_int(type->array[0], TagA);
 
     test_assert(ecs_filter_next(&it));
     test_int(it.count, 1);
     test_int(it.entities[0], e_2);
     test_assert(it.table != NULL);
     type = ecs_table_get_type(it.table);
-    test_int(ecs_vector_count(type), 2);
-    test_int(ecs_vector_first(type, ecs_id_t)[0], TagA);
-    test_int(ecs_vector_first(type, ecs_id_t)[1], TagB);
+    test_int(type->count, 2);
+    test_int(type->array[0], TagA);
+    test_int(type->array[1], TagB);
 
     test_assert(!ecs_filter_next(&it));
 

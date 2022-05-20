@@ -906,7 +906,7 @@ static
 void new(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_ids_t *to_add)
+    ecs_type_t *to_add)
 {
     int32_t i, count = to_add->count;
     ecs_table_t *table = &world->store.root;
@@ -1451,7 +1451,7 @@ ecs_entity_t ecs_new_w_id(
     ecs_entity_t entity = ecs_new_id(world);
 
     ecs_id_t ids[3];
-    ecs_ids_t to_add = { .array = ids, .count = 0 };
+    ecs_type_t to_add = { .array = ids, .count = 0 };
 
     if (id) {
         ids[to_add.count ++] = id;

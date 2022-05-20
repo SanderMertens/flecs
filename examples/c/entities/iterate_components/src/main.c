@@ -7,7 +7,7 @@ typedef struct {
 
 void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
     // First get the entity's type, which is a vector of (component) ids.
-    ecs_type_t type = ecs_get_type(ecs, e);
+    const ecs_type_t *type = ecs_get_type(ecs, e);
 
     // 1. The easiest way to print the components is to use ecs_type_str
     char *type_str = ecs_type_str(ecs, type);
@@ -15,8 +15,8 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
     ecs_os_free(type_str);
 
     // 2. To print individual ids, iterate the type array with ecs_id_str
-    ecs_id_t *type_ids = ecs_vector_first(type, ecs_id_t);
-    int32_t i, count = ecs_vector_count(type);
+    ecs_id_t *type_ids = type->array;
+    int32_t i, count = type->count;
 
     for (i = 0; i < count; i ++) {
         ecs_id_t id = type_ids[i];

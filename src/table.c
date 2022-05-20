@@ -18,18 +18,18 @@ void check_table_sanity(ecs_table_t *table) {
     int32_t sw_count = table->sw_column_count;
     int32_t bs_offset = table->bs_column_offset;
     int32_t bs_count = table->bs_column_count;
-    int32_t type_count = ecs_vector_count(table->type);
-    ecs_id_t *ids = ecs_vector_first(table->type, ecs_id_t);
+    int32_t type_count = table->type.count;
+    ecs_id_t *ids = table->type.array;
 
     ecs_assert((sw_count + sw_offset) <= type_count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert((bs_count + bs_offset) <= type_count, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *storage_table = table->storage_table;
     if (storage_table) {
-        ecs_assert(table->storage_count == ecs_vector_count(storage_table->type),
+        ecs_assert(table->storage_count == storage_table->type.count,
             ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(table->storage_ids == ecs_vector_first(
-            storage_table->type, ecs_id_t), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table->storage_ids == storage_table->type.array, 
+            ECS_INTERNAL_ERROR, NULL);
 
         int32_t storage_count = table->storage_count;
         ecs_assert(type_count >= storage_count, ECS_INTERNAL_ERROR, NULL);
@@ -758,7 +758,7 @@ void flecs_table_free(
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {
-        ecs_ids_t ids = {
+        ecs_type_t ids = {
             .array = table->type.array,
             .count = table->type.count
         };

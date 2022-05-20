@@ -439,7 +439,7 @@ void OnDelete_on_delete_cyclic_id_remove_both() {
     ecs_delete(world, a);
     test_assert(!ecs_is_alive(world, a));
     test_assert(ecs_is_alive(world, b));
-    test_int(ecs_vector_count(ecs_get_type(world, b)), 1);
+    test_int(ecs_get_type(world, b)->count, 1);
 
     ecs_delete(world, b);
     test_assert(!ecs_is_alive(world, a));
@@ -545,7 +545,7 @@ void OnDelete_on_delete_cyclic_relation_remove_both() {
 
     test_assert(!ecs_is_alive(world, a));
     test_assert(ecs_is_alive(world, b));
-    test_int(ecs_vector_count(ecs_get_type(world, b)), 1);
+    test_int(ecs_get_type(world, b)->count, 1);
 
     ecs_delete(world, b);
     test_assert(!ecs_is_alive(world, a));
@@ -1128,7 +1128,7 @@ void OnDelete_remove_id_from_2_tables() {
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
     test_assert(ecs_get_type(world, e1) == NULL);
-    test_int(ecs_vector_count(ecs_get_type(world, e2)), 1);
+    test_int(ecs_get_type(world, e2)->count, 1);
     test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);
@@ -1155,7 +1155,7 @@ void OnDelete_remove_relation_from_2_tables() {
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
     test_assert(ecs_get_type(world, e1) == NULL);
-    test_int(ecs_vector_count(ecs_get_type(world, e2)), 1);
+    test_int(ecs_get_type(world, e2)->count, 1);
     test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);
@@ -1182,7 +1182,7 @@ void OnDelete_remove_object_from_2_tables() {
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
     test_assert(ecs_get_type(world, e1) == NULL);
-    test_int(ecs_vector_count(ecs_get_type(world, e2)), 1);
+    test_int(ecs_get_type(world, e2)->count, 1);
     test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);
@@ -1230,7 +1230,7 @@ void OnDelete_remove_id_and_relation_from_2_tables() {
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
     test_assert(ecs_get_type(world, e1) == NULL);
-    test_int(ecs_vector_count(ecs_get_type(world, e2)), 1);
+    test_int(ecs_get_type(world, e2)->count, 1);
     test_assert(ecs_has_id(world, e2, Tag));
 
     ecs_fini(world);

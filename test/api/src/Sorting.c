@@ -1523,11 +1523,11 @@ void Sorting_sort_isa_marked() {
     ecs_delete(world, root);
 
     test_assert(!ecs_is_alive(world, root));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e1)));
+    test_int(1, ecs_get_type(world, e1)->count);
     test_assert(ecs_has(world, e1, Tag));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e2)));
+    test_int(1, ecs_get_type(world, e2)->count);
     test_assert(ecs_has_pair(world, e2, EcsIsA, e1));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e3)));
+    test_int(1, ecs_get_type(world, e3)->count);
     test_assert(ecs_has(world, e3, Tag));
 
     ecs_fini(world);
@@ -1558,11 +1558,11 @@ void Sorting_sort_relation_marked() {
     ecs_delete(world, root);
 
     test_assert(!ecs_is_alive(world, root));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e1)));
+    test_int(1, ecs_get_type(world, e1)->count);
     test_assert(ecs_has(world, e1, Tag));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e2)));
+    test_int(1, ecs_get_type(world, e2)->count);
     test_assert(ecs_has_pair(world, e2, Rel, e1));
-    test_int(1, ecs_vector_count(ecs_get_type(world, e3)));
+    test_int(1, ecs_get_type(world, e3)->count);
     test_assert(ecs_has(world, e3, Tag));
 
     ecs_fini(world);

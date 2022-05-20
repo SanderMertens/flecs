@@ -2549,9 +2549,9 @@ void Trigger_iter_type_set() {
     ecs_new(world, Tag);
 
     test_assert(trigger_table != NULL);
-    ecs_type_t type = ecs_table_get_type(trigger_table);
-    test_int(ecs_vector_count(type), 1);
-    test_int(ecs_vector_first(type, ecs_id_t)[0], Tag);
+    const ecs_type_t *type = ecs_table_get_type(trigger_table);
+    test_int(type->count, 1);
+    test_int(type->array[0], Tag);
     
     ecs_fini(world);
 }

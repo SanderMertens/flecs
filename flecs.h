@@ -171,6 +171,7 @@ extern "C" {
 #define EcsIdDontInherit               (1u << 7)
 #define EcsIdAcyclic                   (1u << 8)
 #define EcsIdTag                       (1u << 9)
+#define EcsIdWith                      (1u << 10)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \
@@ -659,41 +660,6 @@ extern "C" {
 
 /* Compute the header size of the vector from a provided compile-time type */
 #define ECS_VECTOR_T(T) ECS_VECTOR_U(ECS_SIZEOF(T), ECS_ALIGNOF(T))
-
-/* Utility macro's for creating vector on stack */
-#ifndef FLECS_NDEBUG
-#define ECS_VECTOR_VALUE(T, elem_count)\
-{\
-    .elem_size = (int32_t)(ECS_SIZEOF(T)),\
-    .count = elem_count,\
-    .size = elem_count\
-}
-#else
-#define ECS_VECTOR_VALUE(T, elem_count)\
-{\
-    .count = elem_count,\
-    .size = elem_count\
-}
-#endif
-
-#define ECS_VECTOR_DECL(name, T, elem_count)\
-struct {\
-    union {\
-        ecs_vector_t vector;\
-        uint64_t align;\
-    } header;\
-    T array[elem_count];\
-} __##name##_value = {\
-    .header.vector = ECS_VECTOR_VALUE(T, elem_count)\
-};\
-const ecs_vector_t *name = (ecs_vector_t*)&__##name##_value
-
-#define ECS_VECTOR_IMPL(name, T, elems, elem_count)\
-ecs_os_memcpy(__##name##_value.array, elems, sizeof(T) * elem_count)
-
-#define ECS_VECTOR_STACK(name, T, elems, elem_count)\
-ECS_VECTOR_DECL(name, T, elem_count);\
-ECS_VECTOR_IMPL(name, T, elems, elem_count)
 
 typedef struct ecs_vector_t ecs_vector_t;
 
@@ -2596,13 +2562,6 @@ struct ecs_ref_t {
     struct ecs_table_record_t *tr; /* Table record for component */
     ecs_record_t *record;   /* Entity index record */
 };
-
-/** Array of entity ids that, other than a type, can live on the stack */
-typedef struct ecs_ids_t {
-    ecs_id_t *array;        /* An array with entity ids */
-    int32_t count;          /* The number of entities in the array */
-    int32_t size;           /* The size of the array */
-} ecs_ids_t;
 
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
@@ -6941,7 +6900,7 @@ int32_t ecs_iter_find_column(
  * Note that this function can be used together with iter::type to 
  * dynamically iterate all data that the matched entities have. An application
  * can use the ecs_vector_count function to obtain the number of elements in a
- * type. All indices from 0..ecs_vector_count(type) are valid column indices.
+ * type. All indices from 0..type->count are valid column indices.
  *
  * Additionally, note that this provides unprotected access to the column data.
  * An iterator cannot know or prevent accessing columns that are not queried for
@@ -12450,7 +12409,6 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using id_t = ecs_id_t;
-using ids_t = ecs_ids_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;
@@ -13656,7 +13614,7 @@ struct event_builder_base {
 protected:
     flecs::world_t *m_world;
     ecs_event_desc_t m_desc;
-    flecs::ids_t m_ids;
+    flecs::type_t m_ids;
     flecs::id_t m_ids_array[ECS_EVENT_DESC_ID_COUNT_MAX];
 
 private:
@@ -18905,7 +18863,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
             // If table is different, move entity straight to it
             if (table != next) {
-                ecs_ids_t ids;
+                ecs_type_t ids;
                 ids.array = added.ptr();
                 ids.count = static_cast<ecs_size_t>(elem);
                 ecs_commit(world, id, r, next, &ids, NULL);
@@ -19785,13 +19743,18 @@ struct type_base {
         : m_table( t ) { }
 
     Base& add(id_t id) {
+        flecs::world_t *world = this->world();
+
         if (!m_table) {
-            for (auto type_id : this->vector()) {
-                m_table = ecs_table_add_id(world(), m_table, type_id);
+            const ecs_type_t *type = ecs_table_get_type(m_table);
+            if (type) {
+                for (int i = 0; i < type->count; i ++) {
+                    m_table = ecs_table_add_id(world, m_table, type->array[i]);
+                }
             }
         }
 
-        m_table = ecs_table_add_id(world(), m_table, id);
+        m_table = ecs_table_add_id(world, m_table, id);
         sync_from_me();
         return *this;
     }
@@ -19853,7 +19816,7 @@ struct type_base {
         return flecs::string(str);
     }
 
-    type_t c_ptr() const {
+    const type_t* c_ptr() const {
         return ecs_table_get_type(m_table);
     }
 
@@ -19877,22 +19840,26 @@ struct type_base {
         ecs_enable(world(), id(), false);
     }
 
-    flecs::vector<flecs::id_t> vector() {
-        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(
-            ecs_table_get_type(m_table)));
-    }
-
     flecs::id get(int32_t index) {
+        const ecs_type_t *type = ecs_table_get_type(m_table);
+        if (!type || index >= type->count) {
+            ecs_abort(ECS_OUT_OF_RANGE, 0);
+            return flecs::id(world(), 0);
+        }
         const flecs::world_t *w = ecs_get_world(world());
-        return flecs::id(const_cast<flecs::world_t*>(w), vector().get(index));
+        return flecs::id(const_cast<flecs::world_t*>(w), type->array[index]);
     }
 
     size_t count() {
-        return vector().count();
+        const ecs_type_t *type = ecs_table_get_type(m_table);
+        if (!type) {
+            return 0;
+        }
+        return static_cast<size_t>(type->count);
     }
 
     /* Implicit conversion to type_t */
-    operator type_t() const { return ecs_table_get_type(m_table); }
+    operator const type_t*() const { return ecs_table_get_type(m_table); }
 
     operator Base&() { return *static_cast<Base*>(this); }
 
@@ -20162,14 +20129,13 @@ inline flecs::type entity_view::type() const {
 
 template <typename Func>
 inline void entity_view::each(const Func& func) const {
-    const ecs_vector_t *type = ecs_get_type(m_world, m_id);
+    const ecs_type_t *type = ecs_get_type(m_world, m_id);
     if (!type) {
         return;
     }
 
-    const ecs_id_t *ids = static_cast<ecs_id_t*>(
-        _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
-    int32_t count = ecs_vector_count(type);
+    const ecs_id_t *ids = type->array;
+    int32_t count = type->count;
 
     for (int i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -20196,7 +20162,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
         return;
     }
 
-    const ecs_vector_t *type = ecs_table_get_type(table);
+    const ecs_type_t *type = ecs_table_get_type(table);
     if (!type) {
         return;
     }
@@ -20207,8 +20173,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     }
 
     int32_t cur = 0;
-    id_t *ids = static_cast<ecs_id_t*>(
-        _ecs_vector_first(type, ECS_VECTOR_T(ecs_id_t)));
+    id_t *ids = type->array;
     
     while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, 0)))
     {

@@ -89,13 +89,6 @@ struct ecs_ref_t {
     ecs_record_t *record;   /* Entity index record */
 };
 
-/** Array of entity ids that, other than a type, can live on the stack */
-typedef struct ecs_ids_t {
-    ecs_id_t *array;        /* An array with entity ids */
-    int32_t count;          /* The number of entities in the array */
-    int32_t size;           /* The size of the array */
-} ecs_ids_t;
-
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
     int32_t offset;

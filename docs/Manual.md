@@ -500,7 +500,7 @@ After running this code, the type can be printed:
 
 ```c
 // Print the type of the entity
-ecs_type_t type = ecs_get_type(world, e);
+const ecs_type_t *type = ecs_get_type(world, e);
 char *str = ecs_type_str(world, type);
 ```
 

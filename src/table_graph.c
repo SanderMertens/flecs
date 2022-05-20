@@ -60,8 +60,8 @@ int flecs_type_find_insert(
         if (id == to_add) {
             return -1;
         }
-        if (to_add > id) {
-            return i + 1;
+        if (id > to_add) {
+            return i;
         }
     }
     return i;
@@ -78,15 +78,35 @@ int flecs_type_find(
 
     for (i = 0; i < count; i ++) {
         ecs_id_t cur = array[i];
-        if (id == cur) {
+        if (ecs_id_match(cur, id)) {
             return i;
         }
-        if (id > cur) {
+        if (cur > id) {
             return -1;
         }
     }
 
     return -1;
+}
+
+/* Count number of matching ids */
+static
+int flecs_type_count_matches(
+    const ecs_type_t *type,
+    ecs_id_t wildcard,
+    int32_t offset)
+{
+    ecs_id_t *array = type->array;
+    int32_t i = offset, count = type->count;
+
+    for (; i < count; i ++) {
+        ecs_id_t cur = array[i];
+        if (!ecs_id_match(cur, wildcard)) {
+            break;
+        }
+    }
+
+    return i - offset;
 }
 
 /* Create type from source type with id */
@@ -111,12 +131,44 @@ int flecs_type_new_with(
         ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
     }
 
-    int32_t remain = dst_count - at;
-    if (remain > 1) {
+    int32_t remain = src->count - at;
+    if (remain) {
         ecs_os_memcpy_n(&dst_array[at + 1], &src_array[at], ecs_id_t, remain);
     }
 
     dst_array[at] = with;
+
+    return 0;
+}
+
+/* Create type from source type without ids matching wildcard */
+static
+int flecs_type_new_filtered(
+    ecs_type_t *dst,
+    const ecs_type_t *src,
+    ecs_id_t wildcard,
+    int32_t at)
+{
+    *dst = flecs_type_copy(src);
+    ecs_id_t *dst_array = dst->array;
+    ecs_id_t *src_array = src->array;
+    if (at) {
+        ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
+    }
+
+    int32_t i = at + 1, w = at, count = src->count;
+    for (; i < count; i ++) {
+        ecs_id_t id = src_array[i];
+        if (!ecs_id_match(id, wildcard)) {
+            dst_array[w] = id;
+            w ++;
+        }
+    }
+
+    dst->count = w;
+    if (w != count) {
+        dst->array = ecs_os_realloc_n(dst->array, ecs_id_t, w);
+    }
 
     return 0;
 }
@@ -129,14 +181,37 @@ int flecs_type_new_without(
     ecs_id_t without)
 {
     ecs_id_t *src_array = src->array;
-    int32_t at = flecs_type_find(src, without);
+    int32_t count = 1, at = flecs_type_find(src, without);
     if (at == -1) {
         return -1;
     }
 
-    int32_t dst_count = src->count - 1;
-    ecs_id_t *dst_array = ecs_os_malloc_n(ecs_id_t, dst_count);
+    int32_t src_count = src->count;
+    if (src_count == 1) {
+        dst->array = NULL;
+        dst->count = 0;
+        return 0;
+    }
+
+    if (ecs_id_is_wildcard(without)) {
+        if (ECS_HAS_ROLE(without, PAIR)) {
+            ecs_entity_t r = ECS_PAIR_FIRST(without);
+            ecs_entity_t o = ECS_PAIR_SECOND(without);
+            if (r == EcsWildcard && o != EcsWildcard) {
+                return flecs_type_new_filtered(dst, src, without, at);
+            }
+        }
+        count += flecs_type_count_matches(src, without, at + 1);
+    }
+
+    int32_t dst_count = src_count - count;
     dst->count = dst_count;
+    if (!dst_count) {
+        dst->array = NULL;
+        return 0;
+    }
+
+    ecs_id_t *dst_array = ecs_os_malloc_n(ecs_id_t, dst_count);
     dst->array = dst_array;
 
     if (at) {
@@ -145,7 +220,8 @@ int flecs_type_new_without(
 
     int32_t remain = dst_count - at;
     if (remain) {
-        ecs_os_memcpy_n(&dst_array[at], &src_array[at + 1], ecs_id_t, remain);
+        ecs_os_memcpy_n(
+            &dst_array[at], &src_array[at + count], ecs_id_t, remain);
     }
 
     return 0;
@@ -169,23 +245,22 @@ void flecs_type_free(
     ecs_os_free(type->array);
 }
 
-/* Graph edge utilities */
-
-/* Ensure the ids used in the columns exist */
+/* Add to type */
 static
-int32_t ensure_columns(
-    ecs_world_t *world,
-    ecs_table_t *table)
+void flecs_type_add(
+    ecs_type_t *type,
+    ecs_id_t add)
 {
-    int32_t i, count = table->type.count;
-    ecs_id_t* ids = table->type.array;
-
-    for (i = 0; i < count; i++) {
-        ecs_ensure_id(world, ids[i]);
+    ecs_type_t new_type;
+    int res = flecs_type_new_with(&new_type, type, add);
+    if (res != -1) {
+        flecs_type_free(type);
+        type->array = new_type.array;
+        type->count = new_type.count;
     }
-
-    return count;
 }
+
+/* Graph edge utilities */
 
 static
 void table_diff_free(
@@ -678,7 +753,7 @@ void init_table(
     table->generation = 0;
 
     /* Ensure the component ids for the table exist */
-    ensure_columns(world, table);
+    // ensure_columns(world, table);
 
     init_node(&table->node);
     init_flags(world, table);
@@ -742,7 +817,8 @@ ecs_table_t *create_table(
 static
 ecs_table_t* find_or_create(
     ecs_world_t *world,
-    ecs_type_t *type)
+    ecs_type_t *type,
+    bool own_type)
 {    
     ecs_poly_assert(world, ecs_world_t);   
 
@@ -753,8 +829,11 @@ ecs_table_t* find_or_create(
 
     ecs_table_t *table;
     flecs_hashmap_result_t elem = flecs_hashmap_ensure(
-        &world->store.table_map, &type, ecs_table_t*);
+        &world->store.table_map, type, ecs_table_t*);
     if ((table = *(ecs_table_t**)elem.value)) {
+        if (own_type) {
+            flecs_type_free(type);
+        }
         return table;
     }
 
@@ -763,74 +842,12 @@ ecs_table_t* find_or_create(
     ecs_assert(!world->is_readonly, ECS_INTERNAL_ERROR, NULL);
 
     /* If we get here, the table has not been found, so create it. */
-    return create_table(world, type, elem);
-}
-
-static
-void add_id_to_ids(
-    ecs_vector_t **idv,
-    ecs_entity_t add,
-    ecs_entity_t r_exclusive)
-{
-    int32_t i, count = ecs_vector_count(idv[0]);
-    ecs_id_t *array = ecs_vector_first(idv[0], ecs_id_t);
-
-    for (i = 0; i < count; i ++) {
-        ecs_id_t e = array[i];
-
-        if (e == add) {
-            return;
-        }
-
-        if (r_exclusive && ECS_HAS_ROLE(e, PAIR)) {
-            if (ECS_PAIR_FIRST(e) == r_exclusive) {
-                array[i] = add; /* Replace */
-                return;
-            }
-        }
-
-        if (e >= add) {
-            if (e != add) {
-                ecs_id_t *ptr = ecs_vector_insert_at(idv, ecs_id_t, i);
-                ptr[0] = add;
-                return;
-            }
-        }
+    if (own_type) {
+        return create_table(world, type, elem);
     }
 
-    ecs_id_t *ptr = ecs_vector_add(idv, ecs_id_t);
-    ptr[0] = add;
-}
-
-static
-void remove_id_from_ids(
-    ecs_type_t type,
-    ecs_id_t remove,
-    ecs_type_t out)
-{
-    int32_t count = type.count;
-    ecs_id_t *array = type.array;
-    int32_t i, el = 0;
-
-    if (ecs_id_is_wildcard(remove)) {
-        for (i = 0; i < count; i ++) {
-            ecs_id_t id = array[i];
-            if (!ecs_id_match(id, remove)) {
-                out.array[el ++] = id;
-                ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
-            }
-        }
-    } else {
-        for (i = 0; i < count; i ++) {
-            ecs_id_t id = array[i];
-            if (id != remove) {
-                out.array[el ++] = id;
-                ecs_assert(el <= count, ECS_INTERNAL_ERROR, NULL);
-            }
-        }
-    }
-
-    out.count = el;
+    ecs_type_t copy = flecs_type_copy(type);
+    return create_table(world, &copy, elem);
 }
 
 int32_t flecs_table_switch_from_case(
@@ -1123,46 +1140,6 @@ void compute_table_diff(
 }
 
 static
-void add_with_ids_to_ids(
-    ecs_world_t *world,
-    ecs_vector_t **idv,
-    ecs_entity_t r,
-    ecs_entity_t o)
-{
-    /* Check if component/relation has With pairs, which contain ids
-     * that need to be added to the table. */
-    ecs_table_t *id_table = ecs_get_table(world, r);
-    if (!id_table) {
-        return;
-    }
-    
-    ecs_table_record_t *tr = flecs_get_table_record(world, id_table, 
-        ecs_pair(EcsWith, EcsWildcard));
-    if (tr) {
-        int32_t i, with_count = tr->count;
-        int32_t start = tr->column;
-        int32_t end = start + with_count;
-        ecs_id_t *id_ids = id_table->type.array;
-
-        for (i = start; i < end; i ++) {
-            ecs_assert(ECS_PAIR_FIRST(id_ids[i]) == EcsWith, 
-                ECS_INTERNAL_ERROR, NULL);
-            ecs_id_t id_r = ECS_PAIR_SECOND(id_ids[i]);
-            ecs_id_t id = id_r;
-            if (o) {
-                id = ecs_pair(id_r, o);
-            }
-
-            /* Always make sure vector has room for one more */
-            add_id_to_ids(idv, id, 0);
-
-            /* Add recursively in case id also has With pairs */
-            add_with_ids_to_ids(world, idv, id_r, o);
-        }
-    }
-}
-
-static
 void flecs_add_overrides_for_base(
     ecs_world_t *world,
     ecs_type_t *dst_type,
@@ -1183,14 +1160,7 @@ void flecs_add_overrides_for_base(
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
             if (ECS_HAS_ROLE(id, OVERRIDE)) {
-                ecs_id_t ov = id & ECS_COMPONENT_MASK;
-                ecs_type_t new_type;
-                int res = flecs_type_new_with(&new_type, dst_type, ov);
-                if (res != -1) {
-                    flecs_type_free(dst_type);
-                    dst_type->array = new_type.array;
-                    dst_type->count = new_type.count;
-                }
+                flecs_type_add(dst_type, id & ECS_COMPONENT_MASK);
             }
         }
     }
@@ -1207,22 +1177,65 @@ void flecs_add_overrides_for_base(
 }
 
 static
+void flecs_add_with_property(
+    ecs_world_t *world,
+    ecs_id_record_t *idr_with_wildcard,
+    ecs_type_t *dst_type,
+    ecs_entity_t r,
+    ecs_entity_t o)
+{
+    r = ecs_get_alive(world, r);
+
+    /* Check if component/relation has With pairs, which contain ids
+     * that need to be added to the table. */
+    ecs_table_t *table = ecs_get_table(world, r);
+    if (!table) {
+        return;
+    }
+    
+    const ecs_table_record_t *tr = flecs_id_record_table(
+        idr_with_wildcard, table);
+    if (tr) {
+        int32_t i = tr->column, end = i + tr->count;
+        ecs_id_t *ids = table->type.array;
+
+        for (; i < end; i ++) {
+            ecs_id_t id = ids[i];
+            ecs_assert(ECS_PAIR_FIRST(id) == EcsWith, ECS_INTERNAL_ERROR, NULL);
+            ecs_id_t ra = ECS_PAIR_SECOND(id);
+            ecs_id_t a = ra;
+            if (o) {
+                a = ecs_pair(ra, o);
+            }
+
+            flecs_type_add(dst_type, a);
+
+            flecs_add_with_property(world, idr_with_wildcard, dst_type, ra, o);
+        }
+    }
+
+}
+
+static
 ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
     ecs_entity_t with)
-{
+{    
     /* If table has one or more switches and this is a case, return self */
     if (ECS_HAS_ROLE(with, CASE)) {
         ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
             ECS_TYPE_INVALID_CASE, NULL);
         return node;
     } else {
-        ecs_entity_t r = 0;
+        ecs_ensure_id(world, with);
+        
+        ecs_id_record_t *idr = NULL;
+        ecs_entity_t r = 0, o = 0;
         if (ECS_HAS_ROLE(with, PAIR)) {
             r = ECS_PAIR_FIRST(with);
-            ecs_id_record_t *idr = flecs_get_id_record(
-                world, ecs_pair(r, EcsWildcard));
+            o = ECS_PAIR_SECOND(with);
+            idr = flecs_ensure_id_record(world, ecs_pair(r, EcsWildcard));
             if (idr->flags & EcsIdExclusive) {
                 /* Relationship is exclusive, check if table already has it */
                 const ecs_table_record_t *tr = flecs_id_record_table(idr, node);
@@ -1231,9 +1244,12 @@ ecs_table_t* flecs_find_table_with(
                      * a new id sequence with the existing id replaced */
                     ecs_type_t dst_type = flecs_type_copy(&node->type);
                     dst_type.array[tr->column] = with;
-                    return find_or_create(world, &dst_type);
+                    return find_or_create(world, &dst_type, true);
                 }
             }
+        } else {
+            idr = flecs_ensure_id_record(world, with);
+            r = with;
         }
 
         /* Create sequence with new id */
@@ -1248,7 +1264,14 @@ ecs_table_t* flecs_find_table_with(
             flecs_add_overrides_for_base(world, &dst_type, with);
         }
 
-        return find_or_create(world, &dst_type);
+        if (idr->flags & EcsIdWith) {
+            ecs_id_record_t *idr_with_wildcard = flecs_get_id_record(world,
+                ecs_pair(EcsWith, EcsWildcard));
+            /* If id has With property, add targets to type */
+            flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
+        }
+
+        return find_or_create(world, &dst_type, true);
     }
 }
 
@@ -1268,10 +1291,10 @@ ecs_table_t* flecs_find_table_without(
         ecs_type_t dst_type;
         int res = flecs_type_new_without(&dst_type, &node->type, without);
         if (res == -1) {
-            return node; /* Current table does not have */
+            return node; /* Current table does not have id */
         }
 
-        return find_or_create(world, &dst_type);
+        return find_or_create(world, &dst_type, true);
     }
 }
 
@@ -1489,7 +1512,7 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_type_t *type)
 {
     ecs_poly_assert(world, ecs_world_t);
-    return find_or_create(world, type);
+    return find_or_create(world, type, false);
 }
 
 void flecs_init_root_table(

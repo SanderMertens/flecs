@@ -33,13 +33,18 @@ struct type_base {
         : m_table( t ) { }
 
     Base& add(id_t id) {
+        flecs::world_t *world = this->world();
+
         if (!m_table) {
-            for (auto type_id : this->vector()) {
-                m_table = ecs_table_add_id(world(), m_table, type_id);
+            const ecs_type_t *type = ecs_table_get_type(m_table);
+            if (type) {
+                for (int i = 0; i < type->count; i ++) {
+                    m_table = ecs_table_add_id(world, m_table, type->array[i]);
+                }
             }
         }
 
-        m_table = ecs_table_add_id(world(), m_table, id);
+        m_table = ecs_table_add_id(world, m_table, id);
         sync_from_me();
         return *this;
     }
@@ -101,7 +106,7 @@ struct type_base {
         return flecs::string(str);
     }
 
-    type_t c_ptr() const {
+    const type_t* c_ptr() const {
         return ecs_table_get_type(m_table);
     }
 
@@ -125,22 +130,26 @@ struct type_base {
         ecs_enable(world(), id(), false);
     }
 
-    flecs::vector<flecs::id_t> vector() {
-        return flecs::vector<flecs::id_t>( const_cast<ecs_vector_t*>(
-            ecs_table_get_type(m_table)));
-    }
-
     flecs::id get(int32_t index) {
+        const ecs_type_t *type = ecs_table_get_type(m_table);
+        if (!type || index >= type->count) {
+            ecs_abort(ECS_OUT_OF_RANGE, 0);
+            return flecs::id(world(), 0);
+        }
         const flecs::world_t *w = ecs_get_world(world());
-        return flecs::id(const_cast<flecs::world_t*>(w), vector().get(index));
+        return flecs::id(const_cast<flecs::world_t*>(w), type->array[index]);
     }
 
     size_t count() {
-        return vector().count();
+        const ecs_type_t *type = ecs_table_get_type(m_table);
+        if (!type) {
+            return 0;
+        }
+        return static_cast<size_t>(type->count);
     }
 
     /* Implicit conversion to type_t */
-    operator type_t() const { return ecs_table_get_type(m_table); }
+    operator const type_t*() const { return ecs_table_get_type(m_table); }
 
     operator Base&() { return *static_cast<Base*>(this); }
 

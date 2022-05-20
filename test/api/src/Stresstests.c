@@ -300,9 +300,9 @@ void Stresstests_add_1k_tags() {
         test_assert(ecs_has_id(world, e, i + 1000));
     }
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 1000);
+    test_int(type->count, 1000);
 
     ecs_fini(world);
 }

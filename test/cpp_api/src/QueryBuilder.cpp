@@ -1440,14 +1440,8 @@ uint64_t group_by_first_id(
     flecs::entity_t id,
     void *ctx)
 {
-    flecs::type_t type = ecs_table_get_type(m_table);
-    flecs::vector<flecs::id_t> vec(const_cast<ecs_vector_t*>(type));
-
-    for(auto ColId : vec)
-    {
-        return ColId;
-    }
-    return 0;
+    const flecs::type_t *type = ecs_table_get_type(m_table);
+    return type->array[0];
 }
 
 uint64_t group_by_first_id_negated(

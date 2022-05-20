@@ -720,9 +720,9 @@ void Hierarchies_new_from_path_depth_0() {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "foo");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 1);
+    test_int(type->count, 1);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo");
@@ -738,9 +738,9 @@ void Hierarchies_new_from_path_depth_1() {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "bar");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 2);
+    test_int(type->count, 2);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar");
@@ -756,9 +756,9 @@ void Hierarchies_new_from_path_depth_2() {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "hello");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 2);
+    test_int(type->count, 2);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar.hello");
@@ -824,9 +824,9 @@ void Hierarchies_add_path_depth_0() {
     test_assert(e == id);
     test_str(ecs_get_name(world, e), "foo");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 1);
+    test_int(type->count, 1);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo");
@@ -846,9 +846,9 @@ void Hierarchies_add_path_depth_1() {
     test_assert(e == id);
     test_str(ecs_get_name(world, e), "bar");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 2);
+    test_int(type->count, 2);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar");
@@ -868,9 +868,9 @@ void Hierarchies_add_path_depth_2() {
     test_assert(e == id);
     test_str(ecs_get_name(world, e), "hello");
 
-    ecs_type_t type = ecs_get_type(world, e);
+    const ecs_type_t *type = ecs_get_type(world, e);
     test_assert(type != NULL);
-    test_int(ecs_vector_count(type), 2);
+    test_int(type->count, 2);
 
     char *path = ecs_get_fullpath(world, e);
     test_str(path, "foo.bar.hello");

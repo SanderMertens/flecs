@@ -83,11 +83,11 @@ const ecs_entity_t* bulk_new_w_type(
 {
     const EcsType *type_comp = ecs_get(world, type_ent, EcsType);
     test_assert(type_comp != NULL);
-    ecs_type_t type = ecs_table_get_type(type_comp->normalized);
+    const ecs_type_t *type = ecs_table_get_type(type_comp->normalized);
 
-    ecs_id_t *ids = ecs_vector_first(type, ecs_id_t);
+    ecs_id_t *ids = type->array;
     const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[0], count);
-    for (int i = 1; i < ecs_vector_count(type); i ++) {
+    for (int i = 1; i < type->count; i ++) {
         for (int e = 0; e < count; e ++) {
             ecs_add_id(world, result[e], ids[i]);
         }

@@ -1171,7 +1171,7 @@ void Query_iter_type() {
     auto q = ecs.query<Position>();
 
     q.iter([&](flecs::iter it) {
-        test_assert(it.type().vector().count() >= 1);
+        test_assert(it.type().count() >= 1);
         test_assert(it.type().has<Position>());
     });
 }

@@ -48,17 +48,13 @@ void Type_type_of_2_tostr() {
 void Type_type_of_2_tostr_no_id() {
     ecs_world_t *world = ecs_init();
 
-    ecs_vector_t *t = ecs_vector_new(ecs_id_t, 2);
-    ecs_vector_add(&t, ecs_id_t)[0] = 100;
-    ecs_vector_add(&t, ecs_id_t)[0] = 200;
+    ecs_type_t t = { .array = (ecs_id_t[]){ 100, 200 }, .count = 2 };
     
-    char *str = ecs_type_str(world, t);
+    char *str = ecs_type_str(world, &t);
     
     test_str(str, "100, 200");
 
     ecs_os_free(str);
-
-    ecs_vector_free(t);
 
     ecs_fini(world);
 }
@@ -137,11 +133,11 @@ void Type_get_type() {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    ecs_type_t t = ecs_get_type(world, e);
+    const ecs_type_t *t = ecs_get_type(world, e);
     test_assert(t != NULL);
-    test_int(ecs_vector_count(t), 1);
+    test_int(t->count, 1);
     
-    ecs_entity_t *type_array = ecs_vector_first(t, ecs_entity_t);
+    ecs_entity_t *type_array = t->array;
     test_assert(type_array != NULL);
     test_int(type_array[0], ecs_id(Position));
 
@@ -153,7 +149,7 @@ void Type_get_type_from_empty() {
 
     ecs_entity_t e = ecs_new(world, 0);
 
-    ecs_type_t t = ecs_get_type(world, e);
+    const ecs_type_t *t = ecs_get_type(world, e);
     test_assert(t == NULL);
 
     ecs_fini(world);
@@ -506,8 +502,8 @@ void Type_large_type_expr() {
 
     const EcsType *ptr = ecs_get(world, type_ent, EcsType);
     test_assert(ptr != NULL);
-    test_assert(ecs_vector_count(ptr->type) == 64);
-    test_assert(ecs_vector_count(ecs_table_get_type(ptr->normalized)) == 64);
+    test_assert(ptr->type->count == 64);
+    test_assert(ecs_table_get_type(ptr->normalized)->count == 64);
 
     for (i = 0; i < 64; i ++) {
         char buff[4] = { 'e' };
@@ -547,8 +543,8 @@ void Type_large_type_expr_limit() {
 
     const EcsType *ptr = ecs_get(world, type_ent, EcsType);
     test_assert(ptr != NULL);
-    test_assert(ecs_vector_count(ptr->type) == 32);
-    test_assert(ecs_vector_count(ecs_table_get_type(ptr->normalized)) == 32);
+    test_assert(ptr->type->count == 32);
+    test_assert(ecs_table_get_type(ptr->normalized)->count == 32);
 
     for (i = 0; i < 32; i ++) {
         char buff[4] = { 'e' };
