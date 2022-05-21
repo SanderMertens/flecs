@@ -527,7 +527,7 @@ void notify_set_base_triggers(
             if (s_column != -1) {
                 ecs_column_t *c = &obj_table->data.columns[s_column];
                 int32_t row = ECS_RECORD_TO_ROW(obj_record->row);
-                ecs_type_info_t *ti = &obj_table->type_info[s_column];
+                ecs_type_info_t *ti = obj_table->type_info[s_column];
                 void *ptr = ecs_vector_get_t(c->data, ti->size, ti->alignment, row);
                 it->ptrs[0] = ptr;
                 it->sizes[0] = ti->size;

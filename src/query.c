@@ -959,7 +959,7 @@ void sort_table(
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
-        ecs_type_info_t *ti = &table->type_info[column_index];
+        ecs_type_info_t *ti = table->type_info[column_index];
         ecs_column_t *column = &data->columns[column_index];
         size = ti->size;
         ptr = ecs_vector_first_t(column->data, size, ti->alignment);
@@ -1037,7 +1037,7 @@ void build_sorted_table_range(
         }
 
         if (index != -1) {
-            ecs_type_info_t *ti = &table->type_info[index];
+            ecs_type_info_t *ti = table->type_info[index];
             ecs_column_t *column = &data->columns[index];
             int32_t size = ti->size;
             int32_t align = ti->alignment;

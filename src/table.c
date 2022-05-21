@@ -267,7 +267,7 @@ void init_type_info(
 
     ecs_table_record_t *records = table->records;
     int32_t i, count = table->type.count;
-    table->type_info = ecs_os_calloc_n(ecs_type_info_t, count);
+    table->type_info = ecs_os_calloc_n(ecs_type_info_t*, count);
 
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
@@ -277,7 +277,7 @@ void init_type_info(
         const ecs_type_info_t *ti = idr->type_info;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
         table->flags |= type_info_flags(ti);
-        table->type_info[i] = *ti;
+        table->type_info[i] = (ecs_type_info_t*)ti;
     }
 }
 
@@ -522,7 +522,7 @@ void dtor_all_components(
         /* Run on_remove callbacks in bulk for improved performance */
         for (c = 0; c < ids_count; c++) {
             ecs_column_t *column = &data->columns[c];
-            ecs_type_info_t *ti = &table->type_info[c];
+            ecs_type_info_t *ti = table->type_info[c];
             ecs_iter_action_t on_remove = ti->lifecycle.on_remove;
             if (on_remove) {
                 on_component_callback(world, table, on_remove, EcsOnRemove, 
@@ -536,7 +536,7 @@ void dtor_all_components(
         for (i = row; i < end; i ++) {
             for (c = 0; c < ids_count; c++) {
                 ecs_column_t *column = &data->columns[c];
-                dtor_component(&table->type_info[c], column, i, 1);
+                dtor_component(table->type_info[c], column, i, 1);
             }
 
             /* Update entity index after invoking destructors so that entity can
@@ -1130,10 +1130,10 @@ int32_t grow_data(
     ecs_os_memset(r, 0, ECS_SIZEOF(ecs_record_t*) * to_add);
 
     /* Add elements to each column array */
-    ecs_type_info_t *type_info = table->type_info;
+    ecs_type_info_t **type_info = table->type_info;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
-        ecs_type_info_t *ti = &type_info[i];
+        ecs_type_info_t *ti = type_info[i];
         grow_column(column, ti, to_add, size, true);
         ecs_assert(ecs_vector_size(columns[i].data) == size, 
             ECS_INTERNAL_ERROR, NULL);
@@ -1164,14 +1164,14 @@ int32_t grow_data(
 
 static
 void fast_append(
-    ecs_type_info_t *type_info,
+    ecs_type_info_t **type_info,
     ecs_column_t *columns,
     int32_t count)
 {
     /* Add elements to each column array */
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_type_info_t *ti = &type_info[i];
+        ecs_type_info_t *ti = type_info[i];
         ecs_column_t *column = &columns[i];
         ecs_vector_add_t(&column->data, ti->size, ti->alignment);
     }
@@ -1210,7 +1210,7 @@ int32_t flecs_table_append(
     mark_table_dirty(world, table, 0);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_info_t *type_info = table->type_info;
+    ecs_type_info_t **type_info = table->type_info;
 
     /* Fast path: no switch columns, no lifecycle actions */
     if (!(table->flags & EcsTableIsComplex)) {
@@ -1236,7 +1236,7 @@ int32_t flecs_table_append(
     int32_t i;
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
-        ecs_type_info_t *ti = &type_info[i];        
+        ecs_type_info_t *ti = type_info[i];        
         grow_column(column, ti, 1, size, construct);
 
         ecs_iter_action_t on_add = ti->lifecycle.on_add;
@@ -1290,14 +1290,14 @@ void fast_delete_last(
 
 static
 void fast_delete(
-    ecs_type_info_t *type_info,
+    ecs_type_info_t **type_info,
     ecs_column_t *columns,
     int32_t column_count,
     int32_t index) 
 {
     int i;
     for (i = 0; i < column_count; i ++) {
-        ecs_type_info_t *ti = &type_info[i];
+        ecs_type_info_t *ti = type_info[i];
         ecs_column_t *column = &columns[i];
         ecs_vector_remove_t(column->data, ti->size, ti->alignment, index);
     }
@@ -1358,7 +1358,7 @@ void flecs_table_delete(
     }
 
     /* Destruct component data */
-    ecs_type_info_t *type_info = table->type_info;
+    ecs_type_info_t **type_info = table->type_info;
     ecs_column_t *columns = data->columns;
     int32_t column_count = table->storage_count;
     int32_t i;
@@ -1383,7 +1383,7 @@ void flecs_table_delete(
         /* If table has component destructors, invoke */
         if (destruct && (table->flags & EcsTableHasDtors)) {            
             for (i = 0; i < column_count; i ++) {
-                remove_component(world, table, &type_info[i], &columns[i], 
+                remove_component(world, table, type_info[i], &columns[i], 
                     &entity_to_delete, ids[i], index, 1);
             }
         }
@@ -1396,7 +1396,7 @@ void flecs_table_delete(
         if (destruct && (table->flags & (EcsTableHasDtors | EcsTableHasMove))) {
             for (i = 0; i < column_count; i ++) {
                 ecs_column_t *column = &columns[i];
-                ecs_type_info_t *ti = &type_info[i];
+                ecs_type_info_t *ti = type_info[i];
                 ecs_size_t size = ti->size;
                 ecs_size_t align = ti->alignment;
                 ecs_vector_t *vec = column->data;
@@ -1455,7 +1455,7 @@ void fast_move(
     ecs_column_t *src_columns = src_table->data.columns;
     ecs_column_t *dst_columns = dst_table->data.columns;
 
-    ecs_type_info_t *dst_type_info = dst_table->type_info;
+    ecs_type_info_t **dst_type_info = dst_table->type_info;
 
     for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
         ecs_id_t dst_id = dst_ids[i_new];
@@ -1464,7 +1464,7 @@ void fast_move(
         if (dst_id == src_id) {
             ecs_column_t *dst_column = &dst_columns[i_new];
             ecs_column_t *src_column = &src_columns[i_old];
-            ecs_type_info_t *ti = &dst_type_info[i_new];
+            ecs_type_info_t *ti = dst_type_info[i_new];
             int32_t size = ti->size;
             int32_t alignment = ti->alignment;
             void *dst = ecs_vector_get_t(
@@ -1515,8 +1515,8 @@ void flecs_table_move(
 
     bool same_entity = dst_entity == src_entity;
 
-    ecs_type_info_t *dst_type_info = dst_table->type_info;
-    ecs_type_info_t *src_type_info = src_table->type_info;
+    ecs_type_info_t **dst_type_info = dst_table->type_info;
+    ecs_type_info_t **src_type_info = src_table->type_info;
 
     int32_t i_new = 0, dst_column_count = dst_table->storage_count;
     int32_t i_old = 0, src_column_count = src_table->storage_count;
@@ -1533,7 +1533,7 @@ void flecs_table_move(
         if (dst_id == src_id) {
             ecs_column_t *dst_column = &dst_columns[i_new];
             ecs_column_t *src_column = &src_columns[i_old];
-            ecs_type_info_t *ti = &dst_type_info[i_new];
+            ecs_type_info_t *ti = dst_type_info[i_new];
             int32_t size = ti->size;
             int32_t alignment = ti->alignment;
 
@@ -1565,12 +1565,12 @@ void flecs_table_move(
         } else {
             if (dst_id < src_id) {
                 if (construct) {
-                    add_component(world, dst_table, &dst_type_info[i_new],
+                    add_component(world, dst_table, dst_type_info[i_new],
                         &dst_columns[i_new], &dst_entity, dst_id, 
                             dst_index, 1);
                 }
             } else {
-                remove_component(world, src_table, &src_type_info[i_old],
+                remove_component(world, src_table, src_type_info[i_old],
                     &src_columns[i_old], &src_entity, src_id, 
                         src_index, 1);
             }
@@ -1582,13 +1582,13 @@ void flecs_table_move(
 
     if (construct) {
         for (; (i_new < dst_column_count); i_new ++) {
-            add_component(world, dst_table, &dst_type_info[i_new],
+            add_component(world, dst_table, dst_type_info[i_new],
                 &dst_columns[i_new], &dst_entity, dst_ids[i_new], dst_index, 1);
         }
     }
 
     for (; (i_old < src_column_count); i_old ++) {
-        remove_component(world, src_table, &src_type_info[i_old],
+        remove_component(world, src_table, src_type_info[i_old],
             &src_columns[i_old], &src_entity, src_ids[i_old], 
                 src_index, 1);
     }
@@ -1651,10 +1651,10 @@ bool flecs_table_shrink(
     ecs_vector_reclaim(&data->record_ptrs, ecs_record_t*);
 
     int32_t i, count = table->storage_count;
-    ecs_type_info_t *type_info = table->type_info;
+    ecs_type_info_t **type_info = table->type_info;
     for (i = 0; i < count; i ++) {
         ecs_column_t *column = &data->columns[i];
-        ecs_type_info_t *ti = &type_info[i];
+        ecs_type_info_t *ti = type_info[i];
         ecs_vector_reclaim_t(&column->data, ti->size, ti->alignment);
     }
 
@@ -1762,12 +1762,12 @@ void flecs_table_swap(
         return;
     }
 
-    ecs_type_info_t *type_info = table->type_info;
+    ecs_type_info_t **type_info = table->type_info;
 
     /* Swap columns */
     int32_t i, column_count = table->storage_count;
     for (i = 0; i < column_count; i ++) {
-        ecs_type_info_t *ti = &type_info[i];
+        ecs_type_info_t *ti = type_info[i];
         int32_t size = ti->size;
         int32_t alignment = ti->alignment;
 
@@ -1884,8 +1884,8 @@ void merge_table_data(
     ecs_id_t *dst_ids = dst_table->storage_ids;
     ecs_id_t *src_ids = src_table->storage_ids;
 
-    ecs_type_info_t *dst_type_info = dst_table->type_info;
-    ecs_type_info_t *src_type_info = src_table->type_info;
+    ecs_type_info_t **dst_type_info = dst_table->type_info;
+    ecs_type_info_t **src_type_info = src_table->type_info;
 
     ecs_column_t *src_columns = src_data->columns;
     ecs_column_t *dst_columns = dst_data->columns;
@@ -1915,7 +1915,7 @@ void merge_table_data(
     for (; (i_new < dst_column_count) && (i_old < src_column_count); ) {
         ecs_id_t dst_id = dst_ids[i_new];
         ecs_id_t src_id = src_ids[i_old];
-        ecs_type_info_t *dst_ti = &dst_type_info[i_new];
+        ecs_type_info_t *dst_ti = dst_type_info[i_new];
         int32_t size = dst_ti->size;
         int32_t alignment = dst_ti->alignment;
         ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
@@ -1945,7 +1945,7 @@ void merge_table_data(
             ecs_column_t *column = &src_columns[i_old];
             
             /* Destruct old values */
-            dtor_component(&src_type_info[i_old], column, 0, src_count);
+            dtor_component(src_type_info[i_old], column, 0, src_count);
 
             /* Old column does not occur in new table, remove */
             ecs_vector_free(column->data);
@@ -1961,7 +1961,7 @@ void merge_table_data(
     /* Initialize remaining columns */
     for (; i_new < dst_column_count; i_new ++) {
         ecs_column_t *column = &dst_columns[i_new];
-        ecs_type_info_t *ti = &dst_type_info[i_new];
+        ecs_type_info_t *ti = dst_type_info[i_new];
         int32_t size = ti->size;
         int32_t alignment = ti->alignment;
         
@@ -1978,7 +1978,7 @@ void merge_table_data(
         ecs_column_t *column = &src_columns[i_old];
 
         /* Destruct old values */
-        dtor_component(&src_type_info[i_old], column, 0, src_count);
+        dtor_component(src_type_info[i_old], column, 0, src_count);
 
         /* Old column does not occur in new table, remove */
         ecs_vector_free(column->data);
@@ -2265,7 +2265,7 @@ void* ecs_record_get_column(
     ecs_table_t *table = r->table;
 
     ecs_check(column < table->storage_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_type_info_t *ti = &table->type_info[column];
+    ecs_type_info_t *ti = table->type_info[column];
     ecs_column_t *c = &table->data.columns[column];
     ecs_assert(c != NULL, ECS_INTERNAL_ERROR, NULL);
 

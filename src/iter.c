@@ -217,7 +217,7 @@ bool flecs_iter_populate_term_data(
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
             column = tr->column;
-            ecs_type_info_t *ti = &table->type_info[column];
+            ecs_type_info_t *ti = table->type_info[column];
             ecs_column_t *s = &table->data.columns[column];
             size = ti->size;
             align = ti->alignment;
@@ -243,7 +243,7 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
-        ecs_type_info_t *ti = &table->type_info[storage_column];
+        ecs_type_info_t *ti = table->type_info[storage_column];
         ecs_column_t *s = &table->data.columns[storage_column];
         size = ti->size;
         align = ti->alignment;
@@ -529,7 +529,7 @@ void* ecs_iter_column_w_size(
         return NULL;
     }
 
-    ecs_type_info_t *ti = &table->type_info[storage_index];
+    ecs_type_info_t *ti = table->type_info[storage_index];
     ecs_check(!size || (ecs_size_t)size == ti->size, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -554,7 +554,7 @@ size_t ecs_iter_column_size(
         return 0;
     }
 
-    ecs_type_info_t *ti = &table->type_info[storage_index];
+    ecs_type_info_t *ti = table->type_info[storage_index];
     return flecs_ito(size_t, ti->size);
 error:
     return 0;

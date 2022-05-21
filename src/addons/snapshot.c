@@ -46,7 +46,7 @@ ecs_data_t* duplicate_data(
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &result->columns[i];
-        ecs_type_info_t *ti = &table->type_info[i];
+        ecs_type_info_t *ti = table->type_info[i];
         int32_t size = ti->size;
         int32_t alignment = ti->alignment;
         ecs_copy_t copy = ti->lifecycle.copy;

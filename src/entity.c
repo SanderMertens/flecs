@@ -31,7 +31,7 @@ void* get_component_w_index(
 {
     ecs_check(column_index < table->storage_count, ECS_NOT_A_COMPONENT, NULL);
 
-    ecs_type_info_t *ti = &table->type_info[column_index];
+    ecs_type_info_t *ti = table->type_info[column_index];
     ecs_column_t *column = &table->data.columns[column_index];
 
     /* If size is 0, component does not have a value. This is likely caused by
@@ -343,7 +343,7 @@ void instantiate_children(
 
         int32_t storage_index = ecs_table_type_to_storage_index(child_table, i);
         if (storage_index != -1) {
-            ecs_type_info_t *ti = &child_table->type_info[storage_index];
+            ecs_type_info_t *ti = child_table->type_info[storage_index];
             ecs_column_t *column = &child_data->columns[storage_index];
             component_data[pos] = ecs_vector_first_t(
                 column->data, ti->size, ti->alignment);
@@ -995,7 +995,7 @@ const ecs_entity_t* new_w_data(
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
 
             int32_t index = tr->column;
-            ecs_type_info_t *ti = &table->type_info[index];
+            ecs_type_info_t *ti = table->type_info[index];
             ecs_column_t *column = &table->data.columns[index];
             int32_t size = ti->size;
             int32_t alignment = ti->alignment;
@@ -1252,7 +1252,7 @@ void flecs_notify_on_set(
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
             int32_t column = tr->column;
-            const ecs_type_info_t *ti = &table->type_info[column];
+            const ecs_type_info_t *ti = table->type_info[column];
             ecs_iter_action_t on_set = ti->lifecycle.on_set;
             if (on_set) {
                 ecs_column_t *c = &table->data.columns[column];
