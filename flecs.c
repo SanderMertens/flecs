@@ -2177,7 +2177,7 @@ void check_table_sanity(ecs_table_t *table) {
         ecs_assert(table->data.columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
         for (i = 0; i < storage_count; i ++) {
-            ecs_type_info_t *ti = &table->type_info[i];
+            ecs_type_info_t *ti = table->type_info[i];
             ecs_column_t *column = &table->data.columns[i];
 
             ecs_vector_assert_size(column->data, ti->size);
