@@ -752,9 +752,6 @@ void init_table(
     table->refcount = 1;
     table->generation = 0;
 
-    /* Ensure the component ids for the table exist */
-    // ensure_columns(world, table);
-
     init_node(&table->node);
     init_flags(world, table);
     flecs_table_records_register(world, table);

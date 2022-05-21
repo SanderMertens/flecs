@@ -441,7 +441,6 @@ struct ecs_table_t {
 
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_table_t *storage_table;      /* Table without tags */
-    ecs_table_t *acyclic_table;      /* Table with only acyclic relations */
     ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
     int32_t *storage_map;            /* Map type <-> data type
                                       *  - 0..count(T):         type -> data_type
@@ -2291,22 +2290,15 @@ void init_storage_table(
     ecs_table_record_t *records = table->records;
 
     ecs_id_t array[ECS_ID_CACHE_SIZE];
-    ecs_id_t acyclic_array[ECS_ID_CACHE_SIZE];
     ecs_type_t storage_ids = { .array = array };
-    ecs_type_t acyclic_ids = { .array = acyclic_array };
     if (count > ECS_ID_CACHE_SIZE) {
         storage_ids.array = ecs_os_malloc_n(ecs_id_t, count);
-        acyclic_ids.array = ecs_os_malloc_n(ecs_id_t, count);
     }
 
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         ecs_id_t id = ids[i];
-
-        if (idr->flags & EcsIdAcyclic && !ecs_id_is_wildcard(id)) {
-            acyclic_ids.array[acyclic_ids.count ++] = id;
-        }
 
         if (idr->type_info != NULL) {
             storage_ids.array[storage_ids.count ++] = id;
@@ -2326,16 +2318,8 @@ void init_storage_table(
         table->storage_ids = type.array;
     }
 
-    if (acyclic_ids.count && acyclic_ids.count != count) {
-        table->acyclic_table = flecs_table_find_or_create(world, &acyclic_ids);
-        table->acyclic_table->refcount ++;
-    } else {
-        table->acyclic_table = table;
-    }
-
     if (storage_ids.array != array) {
         ecs_os_free(storage_ids.array);
-        ecs_os_free(acyclic_ids.array);
     }
 
     if (!table->storage_map) {
@@ -2905,11 +2889,6 @@ void flecs_table_free(
         }
     } else if (storage_table) {
         flecs_table_release(world, storage_table);
-    }
-
-    ecs_table_t *acyclic_table = table->acyclic_table;
-    if (acyclic_table && acyclic_table != table) {
-        flecs_table_release(world, acyclic_table);
     }
 
     /* Update counters */
@@ -43437,9 +43416,6 @@ void init_table(
     table->lock = 0;
     table->refcount = 1;
     table->generation = 0;
-
-    /* Ensure the component ids for the table exist */
-    // ensure_columns(world, table);
 
     init_node(&table->node);
     init_flags(world, table);
