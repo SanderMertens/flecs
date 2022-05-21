@@ -35,6 +35,9 @@ struct ecs_id_record_t {
     /* Id of record */
     ecs_id_t id;
 
+    /* Parent id record. For pair records the parent is the (R, *) record. */
+    ecs_id_record_t *parent;
+    
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
