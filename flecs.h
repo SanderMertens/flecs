@@ -173,6 +173,13 @@ extern "C" {
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
 
+#define EcsIdHasOnAdd                  (1u << 15) /* Same values as table flags */
+#define EcsIdHasOnRemove               (1u << 16) 
+#define EcsIdHasOnSet                  (1u << 17)
+#define EcsIdHasUnSet                  (1u << 18)
+#define EcsIdEventMask\
+    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet)
+
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \
     ((ecs_entity_t[]){0, EcsRemove, EcsDelete, 0, EcsPanic}\
@@ -225,13 +232,14 @@ extern "C" {
 #define EcsTableHasDtors               (1u << 9u)
 #define EcsTableHasCopy                (1u << 10u)
 #define EcsTableHasMove                (1u << 11u)
-#define EcsTableHasOnAdd               (1u << 12u)
-#define EcsTableHasOnRemove            (1u << 13u)
-#define EcsTableHasOnSet               (1u << 14u)
-#define EcsTableHasUnSet               (1u << 15u)
-#define EcsTableHasSwitch              (1u << 16u)
-#define EcsTableHasDisabled            (1u << 17u)
-#define EcsTableHasOverrides           (1u << 18u)
+#define EcsTableHasSwitch              (1u << 12u)
+#define EcsTableHasDisabled            (1u << 13u)
+#define EcsTableHasOverrides           (1u << 14u)
+
+#define EcsTableHasOnAdd               (1u << 15u) /* Same values as id flags */
+#define EcsTableHasOnRemove            (1u << 16u)
+#define EcsTableHasOnSet               (1u << 17u)
+#define EcsTableHasUnSet               (1u << 18u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)

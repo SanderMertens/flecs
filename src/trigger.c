@@ -58,6 +58,25 @@ ecs_event_id_record_t* ensure_event_id_record(
 }
 
 static
+ecs_flags32_t id_flag_for_event(
+    ecs_entity_t e)
+{
+    if (e == EcsOnAdd) {
+        return EcsIdHasOnAdd;
+    }
+    if (e == EcsOnRemove) {
+        return EcsIdHasOnRemove;
+    }
+    if (e == EcsOnSet) {
+        return EcsIdHasOnSet;
+    }
+    if (e == EcsUnSet) {
+        return EcsIdHasUnSet;
+    }
+    return 0;
+}
+
+static
 void inc_trigger_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -76,12 +95,28 @@ void inc_trigger_count(
             .kind = EcsTableTriggersForId,
             .event = event
         });
+
+        ecs_flags32_t flags = id_flag_for_event(event);
+        if (flags) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            if (idr) {
+                idr->flags |= flags;
+            }
+        }
     } else if (result == 0) {
         /* Ditto, but the reverse */
         flecs_notify_tables(world, id, &(ecs_table_event_t){
             .kind = EcsTableNoTriggersForId,
             .event = event
         });
+
+        ecs_flags32_t flags = id_flag_for_event(event);
+        if (flags) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            if (idr) {
+                idr->flags &= ~flags;
+            }
+        }
 
         /* Remove admin for id for event */
         if (!ecs_map_is_initialized(&idt->triggers) && 

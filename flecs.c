@@ -43087,27 +43087,6 @@ typedef struct {
 } id_first_count_t;
 
 static
-void set_trigger_flags_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id)
-{
-    /* Set flags if triggers are registered for table */
-    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
-        table->flags |= EcsTableHasOnAdd;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
-        table->flags |= EcsTableHasOnRemove;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
-        table->flags |= EcsTableHasOnSet;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
-        table->flags |= EcsTableHasUnSet;
-    }
-}
-
-static
 void register_table_for_id(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -43119,7 +43098,10 @@ void register_table_for_id(
     flecs_register_for_id_record(world, id, table, tr);
     tr->column = column;
     tr->count = count;
-    set_trigger_flags_for_id(world, table, id);
+
+    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    table->flags |= idr->flags & EcsIdEventMask;
+
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 }
 
@@ -45469,6 +45451,25 @@ ecs_event_id_record_t* ensure_event_id_record(
 }
 
 static
+ecs_flags32_t id_flag_for_event(
+    ecs_entity_t e)
+{
+    if (e == EcsOnAdd) {
+        return EcsIdHasOnAdd;
+    }
+    if (e == EcsOnRemove) {
+        return EcsIdHasOnRemove;
+    }
+    if (e == EcsOnSet) {
+        return EcsIdHasOnSet;
+    }
+    if (e == EcsUnSet) {
+        return EcsIdHasUnSet;
+    }
+    return 0;
+}
+
+static
 void inc_trigger_count(
     ecs_world_t *world,
     ecs_entity_t event,
@@ -45487,12 +45488,28 @@ void inc_trigger_count(
             .kind = EcsTableTriggersForId,
             .event = event
         });
+
+        ecs_flags32_t flags = id_flag_for_event(event);
+        if (flags) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            if (idr) {
+                idr->flags |= flags;
+            }
+        }
     } else if (result == 0) {
         /* Ditto, but the reverse */
         flecs_notify_tables(world, id, &(ecs_table_event_t){
             .kind = EcsTableNoTriggersForId,
             .event = event
         });
+
+        ecs_flags32_t flags = id_flag_for_event(event);
+        if (flags) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, id);
+            if (idr) {
+                idr->flags &= ~flags;
+            }
+        }
 
         /* Remove admin for id for event */
         if (!ecs_map_is_initialized(&idt->triggers) && 
@@ -48222,6 +48239,20 @@ ecs_id_record_t* new_id_record(
              * propagating events or with super/subset queries */
             flecs_add_flag(world, obj, EcsEntityObservedAcyclic);
         }
+    }
+
+    /* Flags for events */
+    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
+        idr->flags |= EcsIdHasOnAdd;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
+        idr->flags |= EcsIdHasOnRemove;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
+        idr->flags |= EcsIdHasOnSet;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
+        idr->flags |= EcsIdHasUnSet;
     }
 
     if (ecs_should_log_1()) {

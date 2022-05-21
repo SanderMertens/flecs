@@ -177,6 +177,20 @@ ecs_id_record_t* new_id_record(
         }
     }
 
+    /* Flags for events */
+    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
+        idr->flags |= EcsIdHasOnAdd;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
+        idr->flags |= EcsIdHasOnRemove;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
+        idr->flags |= EcsIdHasOnSet;
+    }
+    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
+        idr->flags |= EcsIdHasUnSet;
+    }
+
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
         ecs_dbg_1("#[green]id#[normal] %s #[green]created", id_str);

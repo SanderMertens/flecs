@@ -419,27 +419,6 @@ typedef struct {
 } id_first_count_t;
 
 static
-void set_trigger_flags_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id)
-{
-    /* Set flags if triggers are registered for table */
-    if (flecs_check_triggers_for_event(world, id, EcsOnAdd)) {
-        table->flags |= EcsTableHasOnAdd;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnRemove)) {
-        table->flags |= EcsTableHasOnRemove;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsOnSet)) {
-        table->flags |= EcsTableHasOnSet;
-    }
-    if (flecs_check_triggers_for_event(world, id, EcsUnSet)) {
-        table->flags |= EcsTableHasUnSet;
-    }
-}
-
-static
 void register_table_for_id(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -451,7 +430,10 @@ void register_table_for_id(
     flecs_register_for_id_record(world, id, table, tr);
     tr->column = column;
     tr->count = count;
-    set_trigger_flags_for_id(world, table, id);
+
+    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    table->flags |= idr->flags & EcsIdEventMask;
+
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 }
 
