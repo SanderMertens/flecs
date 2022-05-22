@@ -63,7 +63,7 @@ void ecs_table_cache_init(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 0);
+    ecs_map_init(&cache->index, ecs_table_cache_hdr_t*, 4);
 }
 
 void ecs_table_cache_fini(
