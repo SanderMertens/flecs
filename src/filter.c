@@ -2097,10 +2097,6 @@ const ecs_filter_t* init_filter_iter(
             iter->filter.terms = iter->filter.term_cache;
         }
 
-        int filter_invalid = ecs_filter_finalize(world, &iter->filter);
-        ecs_assert(!filter_invalid, ECS_INTERNAL_ERROR, NULL);
-        (void)filter_invalid;
-
         ecs_assert(!filter->term_cache_used || 
             filter->terms == filter->term_cache, ECS_INTERNAL_ERROR, NULL);    
     } else {
