@@ -564,6 +564,9 @@ ecs_table_t* bootstrap_component_table(
         world, ecs_pair(ecs_id(EcsIdentifier), EcsWildcard));
     idr->flags |= EcsIdDontInherit;
 
+    world->idr_childof_0 = flecs_ensure_id_record(world, 
+        ecs_pair(EcsChildOf, 0));
+
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
         EcsFinal,
@@ -623,6 +626,7 @@ void flecs_bootstrap(
     ecs_set_name_prefix(world, "Ecs");
 
     ecs_ensure(world, EcsWildcard);
+    ecs_ensure(world, EcsAny);
 
     /* Bootstrap builtin components */
     flecs_init_type_info(world, EcsComponent, { 
@@ -652,6 +656,12 @@ void flecs_bootstrap(
     flecs_init_type_info(world, EcsType, { 0 });
     flecs_init_type_info(world, EcsQuery, { 0 });
     flecs_init_type_info(world, EcsIterable, { 0 });
+
+    /* Cache often used id records on world */
+    world->idr_wildcard = flecs_ensure_id_record(world, EcsWildcard);
+    world->idr_wildcard_wildcard = flecs_ensure_id_record(world, 
+        ecs_pair(EcsWildcard, EcsWildcard));
+    world->idr_any = flecs_ensure_id_record(world, EcsAny);
 
     /* Create table for initial components */
     ecs_table_t *table = bootstrap_component_table(world);

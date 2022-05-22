@@ -402,6 +402,254 @@ void flecs_table_init(
     ecs_table_t *from)
 {
     flecs_table_init_flags(world, table);
+
+    int32_t dst_i = 0, dst_count = table->type.count;
+    int32_t src_i = 0, src_count = 0;
+    ecs_id_t *dst_ids = table->type.array;
+    ecs_id_t *src_ids = NULL;
+    ecs_table_record_t *tr = NULL, *src_tr = NULL;
+    bool same_storage = true;
+    if (from) {
+        src_count = from->type.count;
+        src_ids = from->type.array;
+        src_tr = from->records;
+    }
+
+    /* We don't know in advance how large the records array will be, so use
+     * cached vector. This eliminates unnecessary allocations, and/or expensive
+     * iterations to determine how many records we need. */
+    ecs_vector_t *records = world->store.records;
+    ecs_vector_clear(records);
+    ecs_id_record_t *idr;
+
+    int32_t last_id = -1; /* Track last regular (non-pair) id */
+    int32_t first_pair = -1; /* Track the first pair in the table */
+    int32_t first_role = -1; /* Track first id with role */
+
+    /* The easy part: initialize a record for every id in the type */
+    for (; (dst_i < dst_count) && (src_i < src_count); ) {
+        ecs_id_t dst_id = dst_ids[dst_i];
+        ecs_id_t src_id = src_ids[src_i];
+        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
+
+        idr = NULL;
+
+        if (dst_id == src_id) {
+            idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
+        } else if (dst_id < src_id) {
+            idr = flecs_ensure_id_record(world, dst_id);
+        } else if (same_storage) {
+            idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
+            if (idr->type_info != NULL) {
+                same_storage = false;
+            }
+            idr = NULL;
+        }
+        if (idr) {
+            tr = ecs_vector_add(&records, ecs_table_record_t);
+            tr->hdr.cache = (ecs_table_cache_t*)idr;
+            tr->column = dst_i;
+            tr->count = 1;
+
+            if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
+                first_pair = dst_i;
+            }
+
+            if (idr->type_info != NULL) {
+                same_storage = false;
+            }
+        }
+
+        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
+            last_id = dst_i;
+        } else if (first_role == -1 && role != ECS_PAIR) {
+            first_role = dst_i;
+        }
+
+        dst_i += dst_id <= src_id;
+        src_i += dst_id >= src_id;
+    }
+
+    /* Add remaining ids that the "from" table didn't have */
+    for (; (dst_i < dst_count); dst_i ++) {
+        ecs_id_t dst_id = dst_ids[dst_i];
+        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
+
+        tr = ecs_vector_add(&records, ecs_table_record_t);
+        idr = flecs_ensure_id_record(world, dst_id);
+        tr->hdr.cache = (ecs_table_cache_t*)idr;
+        ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+        tr->column = dst_i;
+        tr->count = 1;
+        if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
+            first_pair = dst_i;
+        }
+        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
+            last_id = dst_i;
+        } else if (first_role == -1 && role != ECS_PAIR) {
+            first_role = dst_i;
+        }
+        if (idr->type_info != NULL) {
+            same_storage = false;
+        }
+    }
+
+    if (same_storage) {
+        for (; (src_i < src_count); src_i ++) {
+            idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
+            if (idr->type_info) {
+                same_storage = false;
+                break;
+            }
+        }
+    }
+
+    /* Add records for ids with roles (used by cleanup logic) */
+    if (first_role != -1) {
+        for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
+            ecs_id_t id = dst_ids[dst_i];
+            ecs_entity_t role = id & ECS_ROLE_MASK;
+            if (role != ECS_PAIR) {
+                id &= ECS_COMPONENT_MASK;
+                id = ecs_pair(id, EcsWildcard);
+                tr = ecs_vector_add(&records, ecs_table_record_t);
+                tr->hdr.cache = (ecs_table_cache_t*)flecs_ensure_id_record(
+                    world, id);
+                tr->column = dst_i;
+                tr->count = 1;
+            }
+        }
+    }
+
+    int32_t last_pair = -1;
+    int32_t first_tgt_wc = -1;
+    int32_t tgt_wc_count = 0;
+    bool has_childof = table->flags & EcsTableHasChildOf;
+    if (first_pair != -1) {
+        /* Add a (Relation, *) record for each relationship. */
+        ecs_entity_t r = 0;
+        for (dst_i = first_pair; dst_i < dst_count; dst_i ++) {
+            ecs_id_t dst_id = dst_ids[dst_i];
+            if (!ECS_HAS_ROLE(dst_id, PAIR)) {
+                break; /* no more pairs */
+            }
+            if (r != ECS_PAIR_FIRST(dst_id)) { /* New relation, new record */
+                tr = ecs_vector_get(records, ecs_table_record_t, dst_i);
+                idr = ((ecs_id_record_t*)tr->hdr.cache)->parent; /* (R, *) */
+                ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                tr = ecs_vector_add(&records, ecs_table_record_t);
+                tr->hdr.cache = (ecs_table_cache_t*)idr;
+                tr->column = dst_i;
+                tr->count = 0;
+                r = ECS_PAIR_FIRST(dst_id);
+            }
+
+            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+            tr->count ++;
+        }
+
+        last_pair = dst_i;
+
+        /* Add a (*, Target) record for each relationship target. Type
+         * ids are sorted relation-first, so we can't simply do a single linear 
+         * scan to find all occurrences for a target. */
+
+        /* We're going to insert records from the vector into the index that
+         * will get patched up later. To ensure the record pointers don't get
+         * invalidated we need to grow the vector so that it won't realloc as
+         * we're adding the next set of records */
+
+        int wildcard_count = 3; /* for *, _ and (*, *) */
+        wildcard_count += dst_count && !has_childof; /* for (ChildOf, 0) */
+        
+        ecs_vector_set_min_size(&records, ecs_table_record_t,   
+            ecs_vector_count(records) + wildcard_count +
+                (last_pair - first_pair));
+
+        for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
+            ecs_id_t dst_id = dst_ids[dst_i];
+            ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
+
+            /* To avoid a quadratic search, use the O(1) lookup that the index
+             * already provides. */
+            idr = flecs_ensure_id_record(world, tgt_id);
+            tr = (ecs_table_record_t*)flecs_id_record_table(idr, table);
+            if (!tr) {
+                tr = ecs_vector_add(&records, ecs_table_record_t);
+                tr->column = dst_i;
+                tr->count = 1;
+
+                ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+
+                if (first_tgt_wc == -1) {
+                    first_tgt_wc = ecs_vector_count(records) - 1;
+                }
+
+                tgt_wc_count ++;
+            } else {
+                tr->count ++;
+            }
+
+            ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+
+    /* Lastly, add records for all-wildcard ids */
+    if (last_id >= 0) {
+        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard;
+        tr->column = 0;
+        tr->count = last_id + 1;
+    }
+    if (last_pair - first_pair) {
+        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard_wildcard;
+        tr->column = first_pair;
+        tr->count = last_pair - first_pair;
+    }
+    if (dst_count) {
+        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr->hdr.cache = (ecs_table_cache_t*)world->idr_any;
+        tr->column = 0;
+        tr->count = 1;
+    }
+    if (dst_count && !has_childof) {
+        tr = ecs_vector_add(&records, ecs_table_record_t);
+        tr->hdr.cache = (ecs_table_cache_t*)world->idr_childof_0;
+        tr->column = 0;
+        tr->count = 1;
+    }
+
+    /* Now that all records have been added, copy them to array */
+    int32_t i, dst_record_count = ecs_vector_count(records);
+    ecs_table_record_t *dst_tr =  ecs_os_memdup_n( ecs_vector_first(records, 
+        ecs_table_record_t), ecs_table_record_t, dst_record_count);
+    table->record_count = flecs_ito(uint16_t, dst_record_count);
+    table->records = dst_tr;
+
+    /* Register & patch up records */
+    for (i = 0; i < dst_record_count; i ++) {
+        tr = &dst_tr[i];
+        idr = (ecs_id_record_t*)dst_tr[i].hdr.cache;
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (i >= first_tgt_wc && i < (first_tgt_wc + tgt_wc_count)) {
+            /* If this is a target wildcard record it has already been 
+             * registered, but the record is now at a different location in
+             * memory. Patch up the linked list with the new address */
+            ecs_table_cache_replace(&idr->cache, table, &tr->hdr);
+        } else {
+            /* Other records are not registered yet */
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
+        }
+
+        /* Initialize event flags */
+        table->flags |= idr->flags & EcsIdEventMask;
+    }
+
+    world->store.records = records;
 }
 
 static

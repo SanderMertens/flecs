@@ -112,6 +112,46 @@ void ecs_table_cache_insert(
         ECS_INTERNAL_ERROR, NULL);
 }
 
+void ecs_table_cache_replace(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *elem)
+{
+    ecs_table_cache_hdr_t **oldptr = ecs_map_get(&cache->index, 
+        ecs_table_cache_hdr_t*, table->id);
+    ecs_assert(oldptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_cache_hdr_t *old = *oldptr;
+    ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_cache_hdr_t *prev = old->prev, *next = old->next;
+    if (prev) {
+        ecs_assert(prev->next == old, ECS_INTERNAL_ERROR, NULL);
+        prev->next = elem;
+    }
+    if (next) {
+        ecs_assert(next->prev == old, ECS_INTERNAL_ERROR, NULL);
+        next->prev = elem;
+    }
+
+    if (cache->empty_tables.first == old) {
+        cache->empty_tables.first = elem;
+    }
+    if (cache->empty_tables.last == old) {
+        cache->empty_tables.last = elem;
+    }
+    if (cache->tables.first == old) {
+        cache->tables.first = elem;
+    }
+    if (cache->tables.last == old) {
+        cache->tables.last = elem;
+    }
+
+    *oldptr = elem;
+    elem->prev = prev;
+    elem->next = next;
+}
+
 void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
     const ecs_table_t *table)

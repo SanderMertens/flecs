@@ -463,6 +463,9 @@ typedef struct ecs_store_t {
 
     /* Table edge cache */
     ecs_graph_edge_hdr_t *first_free;
+
+    /* Records cache */
+    ecs_vector_t *records;
 } ecs_store_t;
 
 /** Supporting type to store looked up component data in specific table */
@@ -487,8 +490,12 @@ struct ecs_world_t {
     ecs_map_t id_index;          /* map<id, ecs_id_record_t*> */
     ecs_sparse_t *type_info;     /* sparse<type_id, type_info_t> */
 
-    /* Cached handle to (IsA, *) */
+    /* -- Cached handle to id records -- */
+    ecs_id_record_t *idr_wildcard;
+    ecs_id_record_t *idr_wildcard_wildcard;
+    ecs_id_record_t *idr_any;
     ecs_id_record_t *idr_isa_wildcard;
+    ecs_id_record_t *idr_childof_0;
 
     /* -- Mixins -- */
     ecs_world_t *self;
