@@ -536,19 +536,6 @@ void flecs_table_records_register(
                 id = ecs_pair(id, EcsWildcard);
                 register_table_for_id(world, table, id, i, 1, &table->records[r]);
                 r ++;
-
-                /* Keep track of how many switch/bitset columns there are */
-                if (role == ECS_SWITCH) {
-                    if (!table->sw_column_count) {
-                        table->sw_column_offset = flecs_ito(int16_t, i);
-                    }
-                    table->sw_column_count ++;
-                } else if (role == ECS_DISABLED) {
-                    if (!table->bs_column_count) {
-                        table->bs_column_offset = flecs_ito(int16_t, i);
-                    }
-                    table->bs_column_count ++;
-                }
             }
         }
     }
@@ -642,87 +629,6 @@ bool flecs_table_records_update_empty(
 }
 
 static
-void init_flags(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_id_t *ids = table->type.array;
-    int32_t count = table->type.count;
-
-    /* Iterate components to initialize table flags */
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-
-        /* As we're iterating over the table components, also set the table
-         * flags. These allow us to quickly determine if the table contains
-         * data that needs to be handled in a special way. */
-
-        if (id <= EcsLastInternalComponentId) {
-            table->flags |= EcsTableHasBuiltins;
-        }
-
-        if (id == EcsModule) {
-            table->flags |= EcsTableHasBuiltins;
-            table->flags |= EcsTableHasModule;
-        }
-
-        if (id == EcsPrefab) {
-            table->flags |= EcsTableIsPrefab;
-        }
-
-        /* If table contains disabled entities, mark it as disabled */
-        if (id == EcsDisabled) {
-            table->flags |= EcsTableIsDisabled;
-        }
-
-        /* Does the table have pairs */
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            table->flags |= EcsTableHasPairs;
-        }
-
-        /* Does table have IsA relations */
-        if (ECS_HAS_RELATION(id, EcsIsA)) {
-            table->flags |= EcsTableHasIsA;
-        }
-
-        /* Does table have ChildOf relations */
-        if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            table->flags |= EcsTableHasChildOf;
-        }
-
-        /* Does table have switch columns */
-        if (ECS_HAS_ROLE(id, SWITCH)) {
-            table->flags |= EcsTableHasSwitch;
-        }
-
-        /* Does table support component disabling */
-        if (ECS_HAS_ROLE(id, DISABLED)) {
-            table->flags |= EcsTableHasDisabled;
-        }
-
-        if (ECS_HAS_ROLE(id, OVERRIDE)) {
-            table->flags |= EcsTableHasOverrides;
-        }
-
-        if (ECS_HAS_RELATION(id, EcsChildOf)) {
-            ecs_poly_assert(world, ecs_world_t);
-            ecs_entity_t obj = ecs_pair_second(world, id);
-            ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
-
-            if (obj == EcsFlecs || obj == EcsFlecsCore || 
-                ecs_has_id(world, obj, EcsModule)) 
-            {
-                /* If table contains entities that are inside one of the builtin
-                 * modules, it contains builtin entities */
-                table->flags |= EcsTableHasBuiltins;
-                table->flags |= EcsTableHasModule;
-            }
-        }      
-    }
-}
-
-static
 void init_table(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -735,7 +641,9 @@ void init_table(
     table->generation = 0;
 
     init_node(&table->node);
-    init_flags(world, table);
+
+    flecs_table_init(world, table, NULL);
+
     flecs_table_records_register(world, table);
     flecs_table_init_data(world, table); 
 }

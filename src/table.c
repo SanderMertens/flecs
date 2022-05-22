@@ -325,6 +325,86 @@ void flecs_table_init_data(
 }
 
 static
+void flecs_table_init_flags(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_id_t *ids = table->type.array;
+    int32_t count = table->type.count;
+
+    /* Iterate components to initialize table flags */
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+
+        /* As we're iterating over the table components, also set the table
+         * flags. These allow us to quickly determine if the table contains
+         * data that needs to be handled in a special way. */
+
+        if (id <= EcsLastInternalComponentId) {
+            table->flags |= EcsTableHasBuiltins;
+        }
+
+        if (id == EcsModule) {
+            table->flags |= EcsTableHasBuiltins;
+            table->flags |= EcsTableHasModule;
+        } else if (id == EcsPrefab) {
+            table->flags |= EcsTableIsPrefab;
+        } else if (id == EcsDisabled) {
+            table->flags |= EcsTableIsDisabled;
+        } else {
+            ecs_entity_t role = id & ECS_ROLE_MASK;
+            if (role == ECS_PAIR) {
+                ecs_entity_t r = ECS_PAIR_FIRST(id);
+
+                table->flags |= EcsTableHasPairs;
+
+                if (r == EcsIsA) {
+                    table->flags |= EcsTableHasIsA;
+                } else if (r == EcsChildOf) {
+                    table->flags |= EcsTableHasChildOf;
+                    ecs_entity_t obj = ecs_pair_second(world, id);
+                    ecs_assert(obj != 0, ECS_INTERNAL_ERROR, NULL);
+
+                    if (obj == EcsFlecs || obj == EcsFlecsCore || 
+                        ecs_has_id(world, obj, EcsModule)) 
+                    {
+                        /* If table contains entities that are inside one of the 
+                         * builtin modules, it contains builtin entities */
+                        table->flags |= EcsTableHasBuiltins;
+                        table->flags |= EcsTableHasModule;
+                    }
+                }
+            } else if (role == ECS_SWITCH) {
+                table->flags |= EcsTableHasSwitch;
+
+                if (!table->sw_column_count) {
+                    table->sw_column_offset = flecs_ito(int16_t, i);
+                }
+                table->sw_column_count ++;
+            } else if (role == ECS_DISABLED) {
+                table->flags |= EcsTableHasDisabled;
+
+                if (!table->bs_column_count) {
+                    table->bs_column_offset = flecs_ito(int16_t, i);
+                }
+                table->bs_column_count ++;
+            } else if (role == ECS_OVERRIDE) {
+                table->flags |= EcsTableHasOverrides;
+            }
+        } 
+    }
+}
+
+void flecs_table_init(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *from)
+{
+    flecs_table_init_flags(world, table);
+}
+
+static
 void notify_trigger(
     ecs_world_t *world, 
     ecs_table_t *table, 

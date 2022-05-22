@@ -6,6 +6,12 @@
 #ifndef FLECS_TABLE_H
 #define FLECS_TABLE_H
 
+/* Init table */
+void flecs_table_init(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *from);
+
 /** Copy type. */
 ecs_type_t flecs_type_copy(
     const ecs_type_t *src);
