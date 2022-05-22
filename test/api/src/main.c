@@ -829,6 +829,7 @@ void Filter_term_w_superset_min_depth(void);
 void Filter_term_w_superset_max_depth(void);
 void Filter_term_w_superset_min_max_depth(void);
 void Filter_term_iter_component(void);
+void Filter_term_iter_w_pred(void);
 void Filter_term_iter_tag(void);
 void Filter_term_iter_pair(void);
 void Filter_term_iter_pair_w_rel_wildcard(void);
@@ -5086,6 +5087,10 @@ bake_test_case Filter_testcases[] = {
     {
         "term_iter_component",
         Filter_term_iter_component
+    },
+    {
+        "term_iter_w_pred",
+        Filter_term_iter_w_pred
     },
     {
         "term_iter_tag",
@@ -9621,7 +9626,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        188,
+        189,
         Filter_testcases
     },
     {

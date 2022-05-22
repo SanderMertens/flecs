@@ -1668,6 +1668,51 @@ void Filter_term_iter_component() {
     ecs_fini(world);
 }
 
+void Filter_term_iter_w_pred() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {3, 4});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {5, 6});
+
+    ecs_add(world, e_3, Tag);
+
+    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
+        .pred.entity = ecs_id(Position)
+    });
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 2);
+    test_int(it.entities[0], e_1);
+    test_int(it.entities[1], e_2);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+
+    Position *p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p[0].x, 1);
+    test_int(p[0].y, 2);
+
+    test_int(p[1].x, 3);
+    test_int(p[1].y, 4);
+
+    test_assert(ecs_term_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_term_id(&it, 1), ecs_id(Position));
+
+    p = ecs_term(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p[0].x, 5);
+    test_int(p[0].y, 6);
+
+    test_assert(!ecs_term_next(&it));
+
+    ecs_fini(world);
+}
+
 void Filter_term_iter_tag() {
     ecs_world_t *world = ecs_mini();
 

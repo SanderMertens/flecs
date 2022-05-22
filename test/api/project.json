@@ -882,6 +882,7 @@
                 "term_w_superset_max_depth",
                 "term_w_superset_min_max_depth",
                 "term_iter_component",
+                "term_iter_w_pred",
                 "term_iter_tag",
                 "term_iter_pair",
                 "term_iter_pair_w_rel_wildcard",
