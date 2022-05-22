@@ -418,25 +418,6 @@ typedef struct {
     int32_t count;
 } id_first_count_t;
 
-static
-void register_table_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column,
-    int32_t count,
-    ecs_table_record_t *tr)
-{
-    flecs_register_for_id_record(world, id, table, tr);
-    tr->column = column;
-    tr->count = count;
-
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    table->flags |= idr->flags & EcsIdEventMask;
-
-    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
-}
-
 void flecs_table_records_unregister(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -482,7 +463,8 @@ bool flecs_table_records_update_empty(
 static
 void init_table(
     ecs_world_t *world,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_table_t *prev)
 {
     table->type_info = NULL;
     table->flags = 0;
@@ -493,16 +475,15 @@ void init_table(
 
     init_node(&table->node);
 
-    flecs_table_init(world, table, NULL);
-
-    flecs_table_init_data(world, table); 
+    flecs_table_init(world, table, prev);
 }
 
 static
 ecs_table_t *create_table(
     ecs_world_t *world,
     ecs_type_t *type,
-    flecs_hashmap_result_t table_elem)
+    flecs_hashmap_result_t table_elem,
+    ecs_table_t *prev)
 {
     ecs_table_t *result = flecs_sparse_add(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -526,7 +507,7 @@ ecs_table_t *create_table(
     /* Set keyvalue to one that has the same lifecycle as the table */
     *(ecs_type_t*)table_elem.key = result->type;
 
-    init_table(world, result);
+    init_table(world, result, prev);
 
     flecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -555,7 +536,8 @@ static
 ecs_table_t* find_or_create(
     ecs_world_t *world,
     ecs_type_t *type,
-    bool own_type)
+    bool own_type,
+    ecs_table_t *prev)
 {    
     ecs_poly_assert(world, ecs_world_t);   
 
@@ -580,11 +562,11 @@ ecs_table_t* find_or_create(
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {
-        return create_table(world, type, elem);
+        return create_table(world, type, elem, prev);
     }
 
     ecs_type_t copy = flecs_type_copy(type);
-    return create_table(world, &copy, elem);
+    return create_table(world, &copy, elem, prev);
 }
 
 int32_t flecs_table_switch_from_case(
@@ -981,7 +963,7 @@ ecs_table_t* flecs_find_table_with(
                      * a new id sequence with the existing id replaced */
                     ecs_type_t dst_type = flecs_type_copy(&node->type);
                     dst_type.array[tr->column] = with;
-                    return find_or_create(world, &dst_type, true);
+                    return find_or_create(world, &dst_type, true, node);
                 }
             }
         } else {
@@ -1008,7 +990,7 @@ ecs_table_t* flecs_find_table_with(
             flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
         }
 
-        return find_or_create(world, &dst_type, true);
+        return find_or_create(world, &dst_type, true, node);
     }
 }
 
@@ -1031,7 +1013,7 @@ ecs_table_t* flecs_find_table_without(
             return node; /* Current table does not have id */
         }
 
-        return find_or_create(world, &dst_type, true);
+        return find_or_create(world, &dst_type, true, node);
     }
 }
 
@@ -1249,7 +1231,7 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_type_t *type)
 {
     ecs_poly_assert(world, ecs_world_t);
-    return find_or_create(world, type, false);
+    return find_or_create(world, type, false, NULL);
 }
 
 void flecs_init_root_table(
@@ -1259,7 +1241,7 @@ void flecs_init_root_table(
 
     world->store.root.type = (ecs_type_t){0};
 
-    init_table(world, &world->store.root);
+    init_table(world, &world->store.root, NULL);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
     uint64_t new_id = flecs_sparse_new_id(&world->store.tables);

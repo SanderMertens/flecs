@@ -2243,7 +2243,7 @@ void check_table_sanity(ecs_table_t *table) {
 #endif
 
 static
-void init_storage_map(
+void flecs_table_init_storage_map(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2297,7 +2297,7 @@ void init_storage_map(
 }
 
 static
-void init_storage_table(
+void flecs_table_init_storage_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -2325,7 +2325,7 @@ void init_storage_table(
             storage_ids.array[storage_ids.count ++] = id;
         }
     }
-    
+
     if (storage_ids.count && storage_ids.count != count) {
         ecs_table_t *storage_table = flecs_table_find_or_create(world, 
             &storage_ids);
@@ -2344,12 +2344,12 @@ void init_storage_table(
     }
 
     if (!table->storage_map) {
-        init_storage_map(table);
+        flecs_table_init_storage_map(table);
     }
 }
 
 static
-ecs_flags32_t type_info_flags(
+ecs_flags32_t flecs_type_info_flags(
     const ecs_type_info_t *ti) 
 {
     ecs_flags32_t flags = 0;
@@ -2377,7 +2377,7 @@ ecs_flags32_t type_info_flags(
 }
 
 static
-void init_type_info(
+void flecs_table_init_type_info(
     ecs_table_t *table)
 {
     ecs_table_t *storage_table = table->storage_table;
@@ -2408,7 +2408,7 @@ void init_type_info(
         /* All ids in the storage table must be components with type info */
         const ecs_type_info_t *ti = idr->type_info;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->flags |= type_info_flags(ti);
+        table->flags |= flecs_type_info_flags(ti);
         table->type_info[i] = (ecs_type_info_t*)ti;
     }
 }
@@ -2417,8 +2417,8 @@ void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    init_storage_table(world, table);
-    init_type_info(table);
+    flecs_table_init_storage_table(world, table);
+    flecs_table_init_type_info(table);
 
     int32_t sw_count = table->sw_column_count;
     int32_t bs_count = table->bs_column_count;
@@ -2555,7 +2555,6 @@ void flecs_table_init(
     ecs_id_t *dst_ids = table->type.array;
     ecs_id_t *src_ids = NULL;
     ecs_table_record_t *tr = NULL, *src_tr = NULL;
-    bool same_storage = true;
     if (from) {
         src_count = from->type.count;
         src_ids = from->type.array;
@@ -2573,11 +2572,24 @@ void flecs_table_init(
     int32_t first_pair = -1; /* Track the first pair in the table */
     int32_t first_role = -1; /* Track first id with role */
 
+    /* Scan to find boundaries of regular ids, pairs and roles */
+    for (dst_i = 0; dst_i < dst_count; dst_i ++) {
+        ecs_id_t dst_id = dst_ids[dst_i];
+        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
+        if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
+            first_pair = dst_i;
+        }
+        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
+            last_id = dst_i;
+        } else if (first_role == -1 && role != ECS_PAIR) {
+            first_role = dst_i;
+        }
+    }
+
     /* The easy part: initialize a record for every id in the type */
-    for (; (dst_i < dst_count) && (src_i < src_count); ) {
+    for (dst_i = 0; (dst_i < dst_count) && (src_i < src_count); ) {
         ecs_id_t dst_id = dst_ids[dst_i];
         ecs_id_t src_id = src_ids[src_i];
-        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
 
         idr = NULL;
 
@@ -2585,32 +2597,12 @@ void flecs_table_init(
             idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
         } else if (dst_id < src_id) {
             idr = flecs_ensure_id_record(world, dst_id);
-        } else if (same_storage) {
-            idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
-            if (idr->type_info != NULL) {
-                same_storage = false;
-            }
-            idr = NULL;
         }
         if (idr) {
             tr = ecs_vector_add(&records, ecs_table_record_t);
             tr->hdr.cache = (ecs_table_cache_t*)idr;
             tr->column = dst_i;
             tr->count = 1;
-
-            if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
-                first_pair = dst_i;
-            }
-
-            if (idr->type_info != NULL) {
-                same_storage = false;
-            }
-        }
-
-        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
-            last_id = dst_i;
-        } else if (first_role == -1 && role != ECS_PAIR) {
-            first_role = dst_i;
         }
 
         dst_i += dst_id <= src_id;
@@ -2620,35 +2612,12 @@ void flecs_table_init(
     /* Add remaining ids that the "from" table didn't have */
     for (; (dst_i < dst_count); dst_i ++) {
         ecs_id_t dst_id = dst_ids[dst_i];
-        ecs_entity_t role = dst_id & ECS_ROLE_MASK;
-
         tr = ecs_vector_add(&records, ecs_table_record_t);
         idr = flecs_ensure_id_record(world, dst_id);
         tr->hdr.cache = (ecs_table_cache_t*)idr;
         ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
         tr->column = dst_i;
         tr->count = 1;
-        if (first_pair == -1 && ECS_HAS_ROLE(dst_id, PAIR)) {
-            first_pair = dst_i;
-        }
-        if ((dst_id & ECS_COMPONENT_MASK) == dst_id) {
-            last_id = dst_i;
-        } else if (first_role == -1 && role != ECS_PAIR) {
-            first_role = dst_i;
-        }
-        if (idr->type_info != NULL) {
-            same_storage = false;
-        }
-    }
-
-    if (same_storage) {
-        for (; (src_i < src_count); src_i ++) {
-            idr = (ecs_id_record_t*)src_tr[src_i].hdr.cache;
-            if (idr->type_info) {
-                same_storage = false;
-                break;
-            }
-        }
     }
 
     /* Add records for ids with roles (used by cleanup logic) */
@@ -2797,6 +2766,8 @@ void flecs_table_init(
     }
 
     world->store.records = records;
+
+    flecs_table_init_data(world, table); 
 }
 
 static
@@ -43471,174 +43442,6 @@ typedef struct {
     int32_t count;
 } id_first_count_t;
 
-static
-void register_table_for_id(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    int32_t column,
-    int32_t count,
-    ecs_table_record_t *tr)
-{
-    flecs_register_for_id_record(world, id, table, tr);
-    tr->column = column;
-    tr->count = count;
-
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    table->flags |= idr->flags & EcsIdEventMask;
-
-    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
-}
-
-static
-void flecs_table_records_register(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_id_t *ids = table->type.array;
-    int32_t count = table->type.count;
-
-    if (!count) {
-        return;
-    }
-
-    /* Count number of unique ids, pairs, relations and objects so we can figure
-     * out how many table records are needed for this table. */
-    int32_t id_count = 0, pair_count = 0, type_flag_count = 0;
-    int32_t first_id = -1, first_pair = -1;
-    ecs_map_t relations = ECS_MAP_INIT(0), objects = ECS_MAP_INIT(0);
-    bool has_childof = false;
-
-    int32_t i;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        ecs_entity_t rel = 0, obj = 0;
-
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            id_first_count_t *r;
-
-            rel = ECS_PAIR_FIRST(id);
-            obj = ECS_PAIR_SECOND(id);
-
-            if (0 == pair_count ++) {
-                first_pair = i;
-            }
-
-            if (rel == EcsChildOf) {
-                has_childof = true;
-            }
-
-            if (!ecs_map_is_initialized(&relations)) {
-                ecs_map_init(&relations, id_first_count_t, count);
-                ecs_map_init(&objects, id_first_count_t, count);
-            }
-
-            r = ecs_map_ensure(&relations, id_first_count_t, rel);
-            if ((++r->count) == 1) {
-                r->first = i;
-            }
-
-            r = ecs_map_ensure(&objects, id_first_count_t, obj);
-            if ((++r->count) == 1) {
-                r->first = i;
-            }
-        } else {
-            rel = id & ECS_COMPONENT_MASK;
-            if (rel != id) {
-                type_flag_count ++;
-            }
-
-            if (0 == id_count ++) {
-                first_id = i;
-            }
-        }
-    }
-
-    int32_t record_count = count + type_flag_count + (id_count != 0) + 
-        (pair_count != 0) + ecs_map_count(&relations) + ecs_map_count(&objects) 
-            + 1 /* for any */;
-
-    if (!has_childof) {
-        record_count ++;
-    }
-
-    table->records = ecs_os_calloc_n(ecs_table_record_t, record_count);
-    table->record_count = flecs_ito(uint16_t, record_count);
-
-    /* First initialize records for regular (non-wildcard) ids. Make sure that
-     * these table records line up with ids in table type. */
-    int32_t first_role_id = -1;
-    for (i = 0; i < count; i ++) {
-        register_table_for_id(world, table, ids[i], i, 1, &table->records[i]);
-        if (first_role_id == -1) {
-            ecs_entity_t role = ids[i] & ECS_ROLE_MASK;
-            if (role && role != ECS_PAIR) {
-                first_role_id = i;
-            }
-        }
-    }
-
-    /* Initialize records for ids with roles */
-    int32_t r = i;
-    if (first_role_id != -1) {
-        for (i = first_role_id; i < count; i ++) {
-            ecs_id_t id = ids[i];
-            ecs_entity_t role = id & ECS_ROLE_MASK;
-            if (role && role != ECS_PAIR) {
-                id &= ECS_COMPONENT_MASK;
-                id = ecs_pair(id, EcsWildcard);
-                register_table_for_id(world, table, id, i, 1, &table->records[r]);
-                r ++;
-            }
-        }
-    }
-
-    /* Initialize records for relation wildcards */
-    ecs_map_iter_t mit = ecs_map_iter(&relations);
-    id_first_count_t *elem; 
-    uint64_t key;
-    while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
-        ecs_id_t id = ecs_pair(key, EcsWildcard);
-        register_table_for_id(world, table, id, elem->first, elem->count,
-            &table->records[r]);
-        r ++;
-    }
-
-    /* Initialize records for object wildcards */
-    mit = ecs_map_iter(&objects);
-    while ((elem = ecs_map_next(&mit, id_first_count_t, &key))) {
-        ecs_id_t id = ecs_pair(EcsWildcard, key);
-        register_table_for_id(world, table, id, elem->first, elem->count,
-            &table->records[r]);
-        r ++;
-    }
-
-    /* Initialize records for all wildcards ids */
-    if (id_count) {
-        register_table_for_id(world, table, EcsWildcard, 
-            first_id, id_count, &table->records[r]);
-        r ++;
-    }
-    if (pair_count) {
-        register_table_for_id(world, table, ecs_pair(EcsWildcard, EcsWildcard), 
-            first_pair, pair_count, &table->records[r]);
-        r ++;
-    }
-    if (count) {
-        register_table_for_id(world, table, EcsAny, 0, 1, &table->records[r]);
-        r ++;
-    }
-
-    /* Insert into (ChildOf, 0) (root) if table doesn't have childof */
-    if (!has_childof && count) {
-        register_table_for_id(world, table, ecs_pair(EcsChildOf, 0), 
-            0, 1, &table->records[r]);
-    }
-
-    ecs_map_fini(&relations);
-    ecs_map_fini(&objects);
-}
-
 void flecs_table_records_unregister(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -43684,7 +43487,8 @@ bool flecs_table_records_update_empty(
 static
 void init_table(
     ecs_world_t *world,
-    ecs_table_t *table)
+    ecs_table_t *table,
+    ecs_table_t *prev)
 {
     table->type_info = NULL;
     table->flags = 0;
@@ -43695,17 +43499,15 @@ void init_table(
 
     init_node(&table->node);
 
-    flecs_table_init(world, table, NULL);
-
-    // flecs_table_records_register(world, table);
-    flecs_table_init_data(world, table); 
+    flecs_table_init(world, table, prev);
 }
 
 static
 ecs_table_t *create_table(
     ecs_world_t *world,
     ecs_type_t *type,
-    flecs_hashmap_result_t table_elem)
+    flecs_hashmap_result_t table_elem,
+    ecs_table_t *prev)
 {
     ecs_table_t *result = flecs_sparse_add(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -43729,7 +43531,7 @@ ecs_table_t *create_table(
     /* Set keyvalue to one that has the same lifecycle as the table */
     *(ecs_type_t*)table_elem.key = result->type;
 
-    init_table(world, result);
+    init_table(world, result, prev);
 
     flecs_notify_queries(world, &(ecs_query_event_t) {
         .kind = EcsQueryTableMatch,
@@ -43758,7 +43560,8 @@ static
 ecs_table_t* find_or_create(
     ecs_world_t *world,
     ecs_type_t *type,
-    bool own_type)
+    bool own_type,
+    ecs_table_t *prev)
 {    
     ecs_poly_assert(world, ecs_world_t);   
 
@@ -43783,11 +43586,11 @@ ecs_table_t* find_or_create(
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {
-        return create_table(world, type, elem);
+        return create_table(world, type, elem, prev);
     }
 
     ecs_type_t copy = flecs_type_copy(type);
-    return create_table(world, &copy, elem);
+    return create_table(world, &copy, elem, prev);
 }
 
 int32_t flecs_table_switch_from_case(
@@ -44184,7 +43987,7 @@ ecs_table_t* flecs_find_table_with(
                      * a new id sequence with the existing id replaced */
                     ecs_type_t dst_type = flecs_type_copy(&node->type);
                     dst_type.array[tr->column] = with;
-                    return find_or_create(world, &dst_type, true);
+                    return find_or_create(world, &dst_type, true, node);
                 }
             }
         } else {
@@ -44211,7 +44014,7 @@ ecs_table_t* flecs_find_table_with(
             flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
         }
 
-        return find_or_create(world, &dst_type, true);
+        return find_or_create(world, &dst_type, true, node);
     }
 }
 
@@ -44234,7 +44037,7 @@ ecs_table_t* flecs_find_table_without(
             return node; /* Current table does not have id */
         }
 
-        return find_or_create(world, &dst_type, true);
+        return find_or_create(world, &dst_type, true, node);
     }
 }
 
@@ -44452,7 +44255,7 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_type_t *type)
 {
     ecs_poly_assert(world, ecs_world_t);
-    return find_or_create(world, type, false);
+    return find_or_create(world, type, false, NULL);
 }
 
 void flecs_init_root_table(
@@ -44462,7 +44265,7 @@ void flecs_init_root_table(
 
     world->store.root.type = (ecs_type_t){0};
 
-    init_table(world, &world->store.root);
+    init_table(world, &world->store.root, NULL);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
     uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
