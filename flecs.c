@@ -2193,6 +2193,7 @@ void check_table_sanity(ecs_table_t *table) {
         }
 
         ecs_assert(table->data.columns != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
         for (i = 0; i < storage_count; i ++) {
             ecs_type_info_t *ti = table->type_info[i];
@@ -2297,6 +2298,58 @@ void flecs_table_init_storage_map(
 }
 
 static
+ecs_flags32_t flecs_type_info_flags(
+    const ecs_type_info_t *ti) 
+{
+    ecs_flags32_t flags = 0;
+
+    if (ti->lifecycle.ctor) {
+        flags |= EcsTableHasCtors;
+    }
+    if (ti->lifecycle.on_add) {
+        flags |= EcsTableHasCtors;
+    }
+    if (ti->lifecycle.dtor) {
+        flags |= EcsTableHasDtors;
+    }
+    if (ti->lifecycle.on_remove) {
+        flags |= EcsTableHasDtors;
+    }
+    if (ti->lifecycle.copy) {
+        flags |= EcsTableHasCopy;
+    }
+    if (ti->lifecycle.move) {
+        flags |= EcsTableHasMove;
+    }  
+
+    return flags;  
+}
+
+static
+void flecs_table_init_type_info(
+    ecs_table_t *table)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->storage_table == table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_record_t *records = table->records;
+    int32_t i, count = table->type.count;
+    table->type_info = ecs_os_calloc_n(ecs_type_info_t*, count);
+
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        
+        /* All ids in the storage table must be components with type info */
+        const ecs_type_info_t *ti = idr->type_info;
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        table->flags |= flecs_type_info_flags(ti);
+        table->type_info[i] = (ecs_type_info_t*)ti;
+    }
+}
+
+static
 void flecs_table_init_storage_table(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -2332,11 +2385,14 @@ void flecs_table_init_storage_table(
         table->storage_table = storage_table;
         table->storage_count = flecs_ito(uint16_t, storage_ids.count);
         table->storage_ids = storage_table->type.array;
+        table->type_info = storage_table->type_info;
+        table->flags |= storage_table->flags;
         storage_table->refcount ++;
     } else if (storage_ids.count) {
         table->storage_table = table;
         table->storage_count = flecs_ito(uint16_t, count);
         table->storage_ids = type.array;
+        flecs_table_init_type_info(table);
     }
 
     if (storage_ids.array != array) {
@@ -2348,78 +2404,10 @@ void flecs_table_init_storage_table(
     }
 }
 
-static
-ecs_flags32_t flecs_type_info_flags(
-    const ecs_type_info_t *ti) 
-{
-    ecs_flags32_t flags = 0;
-
-    if (ti->lifecycle.ctor) {
-        flags |= EcsTableHasCtors;
-    }
-    if (ti->lifecycle.on_add) {
-        flags |= EcsTableHasCtors;
-    }
-    if (ti->lifecycle.dtor) {
-        flags |= EcsTableHasDtors;
-    }
-    if (ti->lifecycle.on_remove) {
-        flags |= EcsTableHasDtors;
-    }
-    if (ti->lifecycle.copy) {
-        flags |= EcsTableHasCopy;
-    }
-    if (ti->lifecycle.move) {
-        flags |= EcsTableHasMove;
-    }  
-
-    return flags;  
-}
-
-static
-void flecs_table_init_type_info(
-    ecs_table_t *table)
-{
-    ecs_table_t *storage_table = table->storage_table;
-    if (!storage_table) {
-        return;
-    }
-
-    if (storage_table != table) {
-        /* Because the storage table is guaranteed to have the same components
-         * (but not tags) as this table, we can share the type info cache */
-        table->type_info = storage_table->type_info;
-        table->flags |= storage_table->flags;
-        return;
-    }
-
-    if (table->type_info) {
-        return;
-    }
-
-    ecs_table_record_t *records = table->records;
-    int32_t i, count = table->type.count;
-    table->type_info = ecs_os_calloc_n(ecs_type_info_t*, count);
-
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-        
-        /* All ids in the storage table must be components with type info */
-        const ecs_type_info_t *ti = idr->type_info;
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->flags |= flecs_type_info_flags(ti);
-        table->type_info[i] = (ecs_type_info_t*)ti;
-    }
-}
-
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_init_storage_table(world, table);
-    flecs_table_init_type_info(table);
-
     int32_t sw_count = table->sw_column_count;
     int32_t bs_count = table->bs_column_count;
 
@@ -2767,6 +2755,7 @@ void flecs_table_init(
 
     world->store.records = records;
 
+    flecs_table_init_storage_table(world, table);
     flecs_table_init_data(world, table); 
 }
 
