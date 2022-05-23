@@ -80,6 +80,38 @@ void remove_node(
     ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
+void flecs_switch_init(
+    ecs_switch_t *sw,
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements)
+{
+    sw->min = (uint32_t)min;
+    sw->max = (uint32_t)max;
+
+    int32_t count = (int32_t)(max - min) + 1;
+    sw->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
+    sw->nodes = ecs_vector_new(flecs_switch_node_t, elements);
+    sw->values = ecs_vector_new(uint64_t, elements);
+
+    int64_t i;
+    for (i = 0; i < count; i ++) {
+        sw->headers[i].element = -1;
+        sw->headers[i].count = 0;
+    }
+
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, flecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(
+        sw->values, uint64_t);
+
+    for (i = 0; i < elements; i ++) {
+        nodes[i].prev = -1;
+        nodes[i].next = -1;
+        values[i] = 0;
+    }
+}
+
 ecs_switch_t* flecs_switch_new(
     uint64_t min, 
     uint64_t max,
@@ -92,30 +124,8 @@ ecs_switch_t* flecs_switch_new(
     ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-    result->min = (uint32_t)min;
-    result->max = (uint32_t)max;
 
-    int32_t count = (int32_t)(max - min) + 1;
-    result->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
-    result->nodes = ecs_vector_new(flecs_switch_node_t, elements);
-    result->values = ecs_vector_new(uint64_t, elements);
-
-    int64_t i;
-    for (i = 0; i < count; i ++) {
-        result->headers[i].element = -1;
-        result->headers[i].count = 0;
-    }
-
-    flecs_switch_node_t *nodes = ecs_vector_first(
-        result->nodes, flecs_switch_node_t);
-    uint64_t *values = ecs_vector_first(
-        result->values, uint64_t);        
-
-    for (i = 0; i < elements; i ++) {
-        nodes[i].prev = -1;
-        nodes[i].next = -1;
-        values[i] = 0;
-    }
+    flecs_switch_init(result, min, max, elements);
 
     return result;
 }
@@ -134,12 +144,18 @@ void flecs_switch_clear(
     sw->values = NULL;
 }
 
-void flecs_switch_free(
+void flecs_switch_fini(
     ecs_switch_t *sw)
 {
     ecs_os_free(sw->headers);
     ecs_vector_free(sw->nodes);
     ecs_vector_free(sw->values);
+}
+
+void flecs_switch_free(
+    ecs_switch_t *sw)
+{
+    flecs_switch_fini(sw);
     ecs_os_free(sw);
 }
 

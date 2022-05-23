@@ -2084,7 +2084,7 @@ int find_smallest_column(
         }
 
         /* Find the smallest column */
-        ecs_switch_t *sw = sc->data;
+        ecs_switch_t *sw = &sc->data;
         int32_t case_count = flecs_switch_case_count(sw, sparse_column->sw_case);
         if (case_count < min) {
             min = case_count;
@@ -2123,7 +2123,7 @@ int sparse_column_next(
     flecs_switch_term_t *columns = ecs_vector_first(
         sparse_columns, flecs_switch_term_t);
     flecs_switch_term_t *column = &columns[sparse_smallest];
-    ecs_switch_t *sw, *sw_smallest = column->sw_column->data;
+    ecs_switch_t *sw, *sw_smallest = &column->sw_column->data;
     ecs_entity_t case_smallest = column->sw_case;
 
     /* Find next entity to iterate in sparse column */
@@ -2161,7 +2161,7 @@ int sparse_column_next(
             }
 
             column = &columns[i];
-            sw = column->sw_column->data;
+            sw = &column->sw_column->data;
 
             if (flecs_switch_get(sw, first) != column->sw_case) {
                 first = flecs_switch_next(sw_smallest, first);

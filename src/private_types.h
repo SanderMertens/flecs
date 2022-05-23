@@ -97,18 +97,18 @@ typedef struct ecs_table_event_t {
 
 /** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;          /* Column data */
+    ecs_vector_t *data;          /* Data */
 };
 
 /** A switch column. */
 typedef struct ecs_sw_column_t {
-    ecs_switch_t *data;          /* Column data */
+    ecs_switch_t data;           /* Data */
     ecs_table_t *type;           /* Table with switch type */
 } ecs_sw_column_t;
 
 /** A bitset column. */
 typedef struct ecs_bs_column_t {
-    ecs_bitset_t data;           /* Column data */
+    ecs_bitset_t data;           /* Data */
 } ecs_bs_column_t;
 
 /** Stage-specific component data */

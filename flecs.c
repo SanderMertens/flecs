@@ -187,12 +187,25 @@ struct ecs_switch_t {
     ecs_vector_t *values;   /* Vector with values, of type uint64_t */
 };
 
+/** Init new switch. */
+FLECS_DBG_API
+void flecs_switch_init(
+    ecs_switch_t* sw,
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements);
+
 /** Create new switch. */
 FLECS_DBG_API
 ecs_switch_t* flecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
+
+/** Fini switch. */
+FLECS_DBG_API
+void flecs_switch_fini(
+    ecs_switch_t *sw);
 
 /** Free switch. */
 FLECS_DBG_API
@@ -366,18 +379,18 @@ typedef struct ecs_table_event_t {
 
 /** A component column. */
 struct ecs_column_t {
-    ecs_vector_t *data;          /* Column data */
+    ecs_vector_t *data;          /* Data */
 };
 
 /** A switch column. */
 typedef struct ecs_sw_column_t {
-    ecs_switch_t *data;          /* Column data */
+    ecs_switch_t data;           /* Data */
     ecs_table_t *type;           /* Table with switch type */
 } ecs_sw_column_t;
 
 /** A bitset column. */
 typedef struct ecs_bs_column_t {
-    ecs_bitset_t data;           /* Column data */
+    ecs_bitset_t data;           /* Data */
 } ecs_bs_column_t;
 
 /** Stage-specific component data */
@@ -2441,12 +2454,12 @@ void flecs_table_init_data(
             ecs_id_t *sw_array = sw_type.array;
             int32_t sw_array_count = sw_type.count;
 
-            ecs_switch_t *sw = flecs_switch_new(
+            flecs_switch_init(
+                &storage->sw_columns[i].data,
                 sw_array[0], 
                 sw_array[sw_array_count - 1], 
                 0);
 
-            storage->sw_columns[i].data = sw;
             storage->sw_columns[i].type = sw_table;
         }
     }
@@ -3069,7 +3082,7 @@ void fini_data(
     if (sw_columns) {
         int32_t c, column_count = table->sw_column_count;
         for (c = 0; c < column_count; c ++) {
-            flecs_switch_free(sw_columns[c].data);
+            flecs_switch_fini(&sw_columns[c].data);
         }
         ecs_os_free(sw_columns);
         data->sw_columns = NULL;
@@ -3325,8 +3338,8 @@ void move_switch_columns(
         ecs_entity_t src_id = src_ids[i_old + offset_old];
 
         if (dst_id == src_id) {
-            ecs_switch_t *src_switch = src_columns[i_old].data;
-            ecs_switch_t *dst_switch = dst_columns[i_new].data;
+            ecs_switch_t *src_switch = &src_columns[i_old].data;
+            ecs_switch_t *dst_switch = &dst_columns[i_new].data;
 
             flecs_switch_ensure(dst_switch, dst_index + count);
 
@@ -3350,7 +3363,7 @@ void move_switch_columns(
     /* Clear remaining columns */
     if (clear) {
         for (; (i_old < src_column_count); i_old ++) {
-            ecs_switch_t *src_switch = src_columns[i_old].data;
+            ecs_switch_t *src_switch = &src_columns[i_old].data;
             ecs_assert(count == flecs_switch_count(src_switch), 
                 ECS_INTERNAL_ERROR, NULL);
             flecs_switch_clear(src_switch);
@@ -3556,7 +3569,7 @@ int32_t grow_data(
 
     /* Add elements to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
-        ecs_switch_t *sw = sw_columns[i].data;
+        ecs_switch_t *sw = &sw_columns[i].data;
         flecs_switch_addn(sw, to_add);
     }
 
@@ -3669,7 +3682,7 @@ int32_t flecs_table_append(
     /* Add element to each switch column */
     for (i = 0; i < sw_column_count; i ++) {
         ecs_assert(sw_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_t *sw = sw_columns[i].data;
+        ecs_switch_t *sw = &sw_columns[i].data;
         flecs_switch_add(sw);
     }
 
@@ -3842,7 +3855,7 @@ void flecs_table_delete(
     ecs_sw_column_t *sw_columns = data->sw_columns;
     int32_t sw_column_count = table->sw_column_count;
     for (i = 0; i < sw_column_count; i ++) {
-        flecs_switch_remove(sw_columns[i].data, index);
+        flecs_switch_remove(&sw_columns[i].data, index);
     }
 
     /* Remove elements from bitset columns */
@@ -4097,7 +4110,7 @@ void swap_switch_columns(
     ecs_sw_column_t *columns = data->sw_columns;
 
     for (i = 0; i < column_count; i ++) {
-        ecs_switch_t *sw = columns[i].data;
+        ecs_switch_t *sw = &columns[i].data;
         flecs_switch_swap(sw, row_1, row_2);
     }
 }
@@ -5547,7 +5560,7 @@ void set_switch(
 
             int32_t sw_index = flecs_table_switch_from_case(world, table, e);
             ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_switch_t *sw = table->data.sw_columns[sw_index].data;
+            ecs_switch_t *sw = &table->data.sw_columns[sw_index].data;
             ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
             
             int32_t r;
@@ -7932,7 +7945,7 @@ ecs_entity_t ecs_get_case(
     index -= table->sw_column_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_switch_t *sw = table->data.sw_columns[index].data;  
+    ecs_switch_t *sw = &table->data.sw_columns[index].data;  
     return flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
 error:
     return 0;
@@ -8054,7 +8067,7 @@ bool ecs_has_id(
         }
 
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_t *sw = table->data.sw_columns[index].data;
+        ecs_switch_t *sw = &table->data.sw_columns[index].data;
         ecs_entity_t value = flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
 
         return value == (id & ECS_COMPONENT_MASK);
@@ -11051,6 +11064,38 @@ void remove_node(
     ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
+void flecs_switch_init(
+    ecs_switch_t *sw,
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements)
+{
+    sw->min = (uint32_t)min;
+    sw->max = (uint32_t)max;
+
+    int32_t count = (int32_t)(max - min) + 1;
+    sw->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
+    sw->nodes = ecs_vector_new(flecs_switch_node_t, elements);
+    sw->values = ecs_vector_new(uint64_t, elements);
+
+    int64_t i;
+    for (i = 0; i < count; i ++) {
+        sw->headers[i].element = -1;
+        sw->headers[i].count = 0;
+    }
+
+    flecs_switch_node_t *nodes = ecs_vector_first(
+        sw->nodes, flecs_switch_node_t);
+    uint64_t *values = ecs_vector_first(
+        sw->values, uint64_t);
+
+    for (i = 0; i < elements; i ++) {
+        nodes[i].prev = -1;
+        nodes[i].next = -1;
+        values[i] = 0;
+    }
+}
+
 ecs_switch_t* flecs_switch_new(
     uint64_t min, 
     uint64_t max,
@@ -11063,30 +11108,8 @@ ecs_switch_t* flecs_switch_new(
     ecs_assert(min > 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_switch_t *result = ecs_os_malloc(ECS_SIZEOF(ecs_switch_t));
-    result->min = (uint32_t)min;
-    result->max = (uint32_t)max;
 
-    int32_t count = (int32_t)(max - min) + 1;
-    result->headers = ecs_os_calloc(ECS_SIZEOF(flecs_switch_header_t) * count);
-    result->nodes = ecs_vector_new(flecs_switch_node_t, elements);
-    result->values = ecs_vector_new(uint64_t, elements);
-
-    int64_t i;
-    for (i = 0; i < count; i ++) {
-        result->headers[i].element = -1;
-        result->headers[i].count = 0;
-    }
-
-    flecs_switch_node_t *nodes = ecs_vector_first(
-        result->nodes, flecs_switch_node_t);
-    uint64_t *values = ecs_vector_first(
-        result->values, uint64_t);        
-
-    for (i = 0; i < elements; i ++) {
-        nodes[i].prev = -1;
-        nodes[i].next = -1;
-        values[i] = 0;
-    }
+    flecs_switch_init(result, min, max, elements);
 
     return result;
 }
@@ -11105,12 +11128,18 @@ void flecs_switch_clear(
     sw->values = NULL;
 }
 
-void flecs_switch_free(
+void flecs_switch_fini(
     ecs_switch_t *sw)
 {
     ecs_os_free(sw->headers);
     ecs_vector_free(sw->nodes);
     ecs_vector_free(sw->values);
+}
+
+void flecs_switch_free(
+    ecs_switch_t *sw)
+{
+    flecs_switch_fini(sw);
     ecs_os_free(sw);
 }
 
@@ -42443,7 +42472,7 @@ int find_smallest_column(
         }
 
         /* Find the smallest column */
-        ecs_switch_t *sw = sc->data;
+        ecs_switch_t *sw = &sc->data;
         int32_t case_count = flecs_switch_case_count(sw, sparse_column->sw_case);
         if (case_count < min) {
             min = case_count;
@@ -42482,7 +42511,7 @@ int sparse_column_next(
     flecs_switch_term_t *columns = ecs_vector_first(
         sparse_columns, flecs_switch_term_t);
     flecs_switch_term_t *column = &columns[sparse_smallest];
-    ecs_switch_t *sw, *sw_smallest = column->sw_column->data;
+    ecs_switch_t *sw, *sw_smallest = &column->sw_column->data;
     ecs_entity_t case_smallest = column->sw_case;
 
     /* Find next entity to iterate in sparse column */
@@ -42520,7 +42549,7 @@ int sparse_column_next(
             }
 
             column = &columns[i];
-            sw = column->sw_column->data;
+            sw = &column->sw_column->data;
 
             if (flecs_switch_get(sw, first) != column->sw_case) {
                 first = flecs_switch_next(sw_smallest, first);
@@ -44608,7 +44637,7 @@ has_data:
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_switch_t *sw = table->data.sw_columns[
+        ecs_switch_t *sw = &table->data.sw_columns[
             (column - 1) - table->sw_column_offset].data;
         vec = flecs_switch_values(sw);
         size = ECS_SIZEOF(ecs_entity_t);

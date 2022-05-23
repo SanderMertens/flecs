@@ -670,7 +670,7 @@ void set_switch(
 
             int32_t sw_index = flecs_table_switch_from_case(world, table, e);
             ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_switch_t *sw = table->data.sw_columns[sw_index].data;
+            ecs_switch_t *sw = &table->data.sw_columns[sw_index].data;
             ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
             
             int32_t r;
@@ -3055,7 +3055,7 @@ ecs_entity_t ecs_get_case(
     index -= table->sw_column_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_switch_t *sw = table->data.sw_columns[index].data;  
+    ecs_switch_t *sw = &table->data.sw_columns[index].data;  
     return flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
 error:
     return 0;
@@ -3177,7 +3177,7 @@ bool ecs_has_id(
         }
 
         ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_t *sw = table->data.sw_columns[index].data;
+        ecs_switch_t *sw = &table->data.sw_columns[index].data;
         ecs_entity_t value = flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
 
         return value == (id & ECS_COMPONENT_MASK);

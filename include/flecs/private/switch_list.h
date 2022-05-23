@@ -45,12 +45,25 @@ struct ecs_switch_t {
     ecs_vector_t *values;   /* Vector with values, of type uint64_t */
 };
 
+/** Init new switch. */
+FLECS_DBG_API
+void flecs_switch_init(
+    ecs_switch_t* sw,
+    uint64_t min, 
+    uint64_t max,
+    int32_t elements);
+
 /** Create new switch. */
 FLECS_DBG_API
 ecs_switch_t* flecs_switch_new(
     uint64_t min, 
     uint64_t max,
     int32_t elements);
+
+/** Fini switch. */
+FLECS_DBG_API
+void flecs_switch_fini(
+    ecs_switch_t *sw);
 
 /** Free switch. */
 FLECS_DBG_API

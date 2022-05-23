@@ -264,7 +264,7 @@ has_data:
 has_switch: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_switch_t *sw = table->data.sw_columns[
+        ecs_switch_t *sw = &table->data.sw_columns[
             (column - 1) - table->sw_column_offset].data;
         vec = flecs_switch_values(sw);
         size = ECS_SIZEOF(ecs_entity_t);
