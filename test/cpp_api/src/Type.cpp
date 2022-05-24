@@ -147,34 +147,6 @@ void Type_has_from_stage() {
     test_int(count, 1);
 }
 
-void Type_create_type_from_system() {
-    struct SwitchType {};
-    struct TagA {};
-    struct TagB {};
-    struct TagC {};
-
-    flecs::world ecs;
-
-    auto e = ecs.entity();
-
-    auto s = ecs.system()
-        .iter([&](flecs::iter& it)
-    {
-        auto t = ecs.type<SwitchType>()
-            .add<TagA>()
-            .add<TagB>()
-            .add<TagC>();
-
-        e.add_switch(t)
-         .add_case<TagB>();
-    });
-
-    s.run();
-
-    test_assert(e.has_switch<SwitchType>());
-    test_assert(e.has_case<TagB>());
-}
-
 void Type_type_from_staged_iter() {
     flecs::world ecs;
 

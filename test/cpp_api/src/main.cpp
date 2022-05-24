@@ -299,8 +299,8 @@ void Switch_system_w_sw_type_builder(void);
 void Switch_system_w_switch(void);
 void Switch_add_case_w_type(void);
 void Switch_add_switch_w_type(void);
-void Switch_add_switch_w_type_component_first(void);
 void Switch_add_remove_switch_w_type(void);
+void Switch_switch_enum_type(void);
 
 // Testsuite 'Paths'
 void Paths_name(void);
@@ -326,7 +326,6 @@ void Type_has_pair_entity(void);
 void Type_get(void);
 void Type_get_out_of_range(void);
 void Type_has_from_stage(void);
-void Type_create_type_from_system(void);
 void Type_type_from_iter(void);
 void Type_type_from_staged_iter(void);
 
@@ -509,7 +508,6 @@ void QueryBuilder_isa_superset_max_depth_1(void);
 void QueryBuilder_isa_superset_max_depth_2(void);
 void QueryBuilder_isa_superset_min_depth_2(void);
 void QueryBuilder_isa_superset_min_depth_2_max_depth_3(void);
-void QueryBuilder_role(void);
 void QueryBuilder_relation(void);
 void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
@@ -2081,12 +2079,12 @@ bake_test_case Switch_testcases[] = {
         Switch_add_switch_w_type
     },
     {
-        "add_switch_w_type_component_first",
-        Switch_add_switch_w_type_component_first
-    },
-    {
         "add_remove_switch_w_type",
         Switch_add_remove_switch_w_type
+    },
+    {
+        "switch_enum_type",
+        Switch_switch_enum_type
     }
 };
 
@@ -2177,10 +2175,6 @@ bake_test_case Type_testcases[] = {
     {
         "has_from_stage",
         Type_has_from_stage
-    },
-    {
-        "create_type_from_system",
-        Type_create_type_from_system
     },
     {
         "type_from_iter",
@@ -2884,10 +2878,6 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "isa_superset_min_depth_2_max_depth_3",
         QueryBuilder_isa_superset_min_depth_2_max_depth_3
-    },
-    {
-        "role",
-        QueryBuilder_role
     },
     {
         "relation",
@@ -4534,7 +4524,7 @@ static bake_test_suite suites[] = {
         "Type",
         NULL,
         NULL,
-        12,
+        11,
         Type_testcases
     },
     {
@@ -4569,7 +4559,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        59,
+        58,
         QueryBuilder_testcases
     },
     {

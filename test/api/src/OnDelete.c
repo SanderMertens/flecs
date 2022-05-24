@@ -1978,38 +1978,33 @@ void OnDelete_deep_clean_256() {
 void OnDelete_on_delete_id_w_switch() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, C1);
     ECS_TAG(world, C2);
     ECS_TAG(world, C3);
     ECS_TAG(world, C4);
-    ECS_TYPE(world, Type, C1, C2, C3, C4);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Type);
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Type);
-    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Type);
-    ecs_entity_t e4 = ecs_new_w_id(world, ECS_SWITCH | Type);
-
-    ecs_add_id(world, e1, ECS_CASE | C1);
-    ecs_add_id(world, e2, ECS_CASE | C2);
-    ecs_add_id(world, e3, ECS_CASE | C3);
-    ecs_add_id(world, e4, ECS_CASE | C4);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Sw, C1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Sw, C2);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Sw, C3);
+    ecs_entity_t e4 = ecs_new_w_pair(world, Sw, C4);
 
     ecs_entity_t t = ecs_new_id(world);
 
     ecs_add_id(world, e3, t);
     ecs_add_id(world, e4, t);
 
-    test_assert( ecs_has_id(world, e1, ECS_CASE | C1));
-    test_assert( ecs_has_id(world, e2, ECS_CASE | C2));
-    test_assert( ecs_has_id(world, e3, ECS_CASE | C3));
-    test_assert( ecs_has_id(world, e4, ECS_CASE | C4));
+    test_assert( ecs_has_pair(world, e1, Sw, C1));
+    test_assert( ecs_has_pair(world, e2, Sw, C2));
+    test_assert( ecs_has_pair(world, e3, Sw, C3));
+    test_assert( ecs_has_pair(world, e4, Sw, C4));
     
     ecs_delete(world, t);
 
-    test_assert( ecs_has_id(world, e1, ECS_CASE | C1));
-    test_assert( ecs_has_id(world, e2, ECS_CASE | C2));
-    test_assert( ecs_has_id(world, e3, ECS_CASE | C3));
-    test_assert( ecs_has_id(world, e4, ECS_CASE | C4));
+    test_assert( ecs_has_pair(world, e1, Sw, C1));
+    test_assert( ecs_has_pair(world, e2, Sw, C2));
+    test_assert( ecs_has_pair(world, e3, Sw, C3));
+    test_assert( ecs_has_pair(world, e4, Sw, C4));
 
     ecs_fini(world);
 }
@@ -2065,31 +2060,28 @@ void OnDelete_on_delete_id_w_disabled() {
 void OnDelete_on_delete_id_to_no_switch() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, C1);
     ECS_TAG(world, C2);
     ECS_TAG(world, C3);
     ECS_TAG(world, C4);
-    ECS_TYPE(world, Type, C1, C2);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Type);
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Sw, C1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Sw, C2);
     ecs_entity_t e3 = ecs_new(world, Tag);
     ecs_entity_t e4 = ecs_new(world, Tag);
-
-    ecs_add_id(world, e1, ECS_CASE | C1);
-    ecs_add_id(world, e2, ECS_CASE | C2);
 
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
 
-    test_assert( ecs_has_id(world, e1, ECS_CASE | C1));
-    test_assert( ecs_has_id(world, e2, ECS_CASE | C2));
+    test_assert( ecs_has_pair(world, e1, Sw, C1));
+    test_assert( ecs_has_pair(world, e2, Sw, C2));
 
-    ecs_delete(world, Type);
+    ecs_delete(world, Sw);
 
-    test_assert( !ecs_has_id(world, e1, ECS_SWITCH | Type));
-    test_assert( !ecs_has_id(world, e2, ECS_SWITCH | Type));
+    test_assert( !ecs_has_pair(world, e1, Sw, C1));
+    test_assert( !ecs_has_pair(world, e2, Sw, C2));
 
     test_assert( ecs_has_id(world, e1, Tag));
     test_assert( ecs_has_id(world, e2, Tag));

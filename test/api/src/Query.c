@@ -1549,68 +1549,24 @@ void Query_query_w_from_nothing() {
     ecs_fini(world);
 }
 
-void Query_query_w_existing_switch() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
-
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-
-    ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement");
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ECS_SWITCH | Movement);
-    test_bool(false, ecs_query_next(&it));
-
-    ecs_fini(world);
-}
-
 void Query_query_w_existing_switch_and_case() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
 
-    ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement");
+    ecs_query_t *q = ecs_query_new(world, "(Movement, *)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ECS_SWITCH | Movement);
-    test_bool(false, ecs_query_next(&it));
 
-    ecs_fini(world);
-}
-
-void Query_query_w_new_switch() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
-
-    ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement");
-    test_assert(q != NULL);
-
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ECS_SWITCH | Movement);
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, EcsWildcard));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1619,21 +1575,16 @@ void Query_query_w_new_switch() {
 void Query_query_w_new_switch_and_case() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
-    ecs_query_t *q = ecs_query_new(world, "SWITCH | Movement");
+    ecs_query_t *q = ecs_query_new(world, "(Movement, *)");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e1, ECS_CASE | Walking);
-
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e2, ECS_CASE | Running);
-
-    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Movement, Running);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
@@ -1641,7 +1592,7 @@ void Query_query_w_new_switch_and_case() {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
     test_uint(it.entities[2], e3);
-    test_uint(ecs_term_id(&it, 1), ECS_SWITCH | Movement);
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, EcsWildcard));
     test_assert(it.sizes != NULL);
     test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
     test_assert(it.ptrs != NULL);
@@ -1658,35 +1609,27 @@ void Query_query_w_new_switch_and_case() {
 void Query_query_for_case_existing() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e1 != 0);
-    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_new_w_pair(world, Movement, Running);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
 
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e2 != 0);
-    ecs_add_id(world, e2, ECS_CASE | Running);
-
-    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e3 != 0);
-    ecs_add_id(world, e3, ECS_CASE | Walking);
-
-    ecs_query_t *q = ecs_query_new(world, "CASE | (Movement, Walking)");
+    ecs_query_t *q = ecs_query_new(world, "(Movement, Walking)");
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
-    test_uint(ecs_term_id(&it, 1), ecs_case(Movement, Walking));
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, Walking));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ecs_case(Movement, Walking));
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1695,35 +1638,27 @@ void Query_query_for_case_existing() {
 void Query_query_for_case_new() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
-    ecs_query_t *q = ecs_query_new(world, "CASE | (Movement, Walking)");
+    ecs_query_t *q = ecs_query_new(world, "(Movement, Walking)");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e1 != 0);
-    ecs_add_id(world, e1, ECS_CASE | Walking);
-
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e2 != 0);
-    ecs_add_id(world, e2, ECS_CASE | Running);
-
-    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    test_assert(e3 != 0);
-    ecs_add_id(world, e3, ECS_CASE | Walking);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_new_w_pair(world, Movement, Running);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
-    test_uint(ecs_term_id(&it, 1), ecs_case(Movement, Walking));
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, Walking));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ecs_case(Movement, Walking));
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1732,52 +1667,22 @@ void Query_query_for_case_new() {
 void Query_query_for_switch_filter_term() {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
-    ecs_query_t *q = ecs_query_new(world, "[filter] SWITCH | Movement");
+    ecs_query_t *q = ecs_query_new(world, "[filter] (Movement, *)");
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e1, ECS_CASE | Walking);
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_term_id(&it, 1), ECS_SWITCH | Movement);
+    test_uint(ecs_term_id(&it, 1), ecs_pair(Movement, EcsWildcard));
     test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
     test_assert(it.ptrs == NULL);
-    test_bool(false, ecs_query_next(&it));
-
-    ecs_fini(world);
-}
-
-void Query_query_for_case_w_0_case() {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Walking);
-    ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
-
-    ecs_query_t *q = ecs_query_new(world, "Tag, CASE | (Movement, Walking)");
-    test_assert(q != NULL);
-
-    ecs_entity_t e1 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | Movement);
-    ecs_add_id(world, e2, ECS_CASE | Walking);
-
-    ecs_add_id(world, e1, Tag);
-    ecs_add_id(world, e2, Tag);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e2);
-    test_uint(ecs_term_id(&it, 1), Tag);
-    test_uint(ecs_term_id(&it, 2), ecs_case(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -1787,14 +1692,14 @@ void Query_query_switch_from_nothing() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .terms = {
             {Tag},
-            {ECS_SWITCH | Movement, .subj.set.mask = EcsNothing}
+            {ecs_pair(Movement, EcsWildcard), .subj.set.mask = EcsNothing}
         }
     }});
     test_assert(q != NULL);
@@ -1806,7 +1711,7 @@ void Query_query_switch_from_nothing() {
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
     test_uint(ecs_term_id(&it, 1), Tag);
-    test_uint(ecs_term_id(&it, 2), ECS_SWITCH | Movement);
+    test_uint(ecs_term_id(&it, 2), ecs_pair(Movement, EcsWildcard));
     test_bool(true, ecs_term_is_set(&it, 1));
     test_bool(false, ecs_term_is_set(&it, 2));
     test_bool(false, ecs_query_next(&it));
@@ -1818,14 +1723,14 @@ void Query_query_case_from_nothing() {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
-    ECS_TYPE(world, Movement, Walking, Running);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){ .filter = {
         .terms = {
             {Tag},
-            {ecs_case(Movement, Walking), .subj.set.mask = EcsNothing}
+            {ecs_pair(Movement, Walking), .subj.set.mask = EcsNothing}
         }
     }});
     test_assert(q != NULL);
@@ -1837,7 +1742,7 @@ void Query_query_case_from_nothing() {
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
     test_uint(ecs_term_id(&it, 1), Tag);
-    test_uint(ecs_term_id(&it, 2), ecs_case(Movement, Walking));
+    test_uint(ecs_term_id(&it, 2), ecs_pair(Movement, Walking));
     test_bool(true, ecs_term_is_set(&it, 1));
     test_bool(false, ecs_term_is_set(&it, 2));
     test_bool(false, ecs_query_next(&it));

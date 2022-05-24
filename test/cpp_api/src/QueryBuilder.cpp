@@ -897,39 +897,6 @@ void QueryBuilder_isa_superset_min_depth_2_max_depth_3() {
     test_int(count, 4);
 }
 
-void QueryBuilder_role() {
-    flecs::world ecs;
-
-    struct Movement { };
-    struct Walking { };
-    struct Running { };
-
-    ecs.type<Movement>()
-        .add<Walking>()
-        .add<Running>();
-
-    auto q = ecs.query_builder<Self>()
-        .term<Movement>().role(flecs::Switch)
-        .term<Movement, Running>().role(flecs::Case)
-        .build();
-
-    auto 
-    e = ecs.entity().add_switch<Movement>().add_case<Running>(); e.set<Self>({e});
-    e = ecs.entity().add_switch<Movement>().add_case<Running>(); e.set<Self>({e});
-
-    e = ecs.entity().add_switch<Movement>().add_case<Walking>(); e.set<Self>({0});
-    e = ecs.entity().add_switch<Movement>().add_case<Walking>(); e.set<Self>({0});
-
-    int32_t count = 0;
-
-    q.each([&](flecs::entity e, Self& s) {
-        test_assert(e == s.value);
-        count ++;
-    });
-    
-    test_int(count, 2);
-}
-
 void QueryBuilder_relation() {
     flecs::world ecs;
 

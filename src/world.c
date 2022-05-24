@@ -1,8 +1,6 @@
 #include "private_api.h"
 
 /* Roles */
-const ecs_id_t ECS_CASE =      (ECS_ROLE | (0x7Cull << 56));
-const ecs_id_t ECS_SWITCH =    (ECS_ROLE | (0x7Bull << 56));
 const ecs_id_t ECS_PAIR =      (ECS_ROLE | (0x7Aull << 56));
 const ecs_id_t ECS_OVERRIDE =  (ECS_ROLE | (0x75ull << 56));
 const ecs_id_t ECS_DISABLED =  (ECS_ROLE | (0x74ull << 56));
@@ -63,10 +61,11 @@ const ecs_entity_t EcsSymmetric =             ECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsFinal =                 ECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsDontInherit =           ECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsTag =                   ECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsUnion =                 ECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsExclusive =             ECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsAcyclic =               ECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsWith =                  ECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsOneOf =                 ECS_HI_COMPONENT_ID + 24;
 
 /* Builtin relations */
 const ecs_entity_t EcsChildOf =               ECS_HI_COMPONENT_ID + 25;

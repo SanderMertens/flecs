@@ -63,7 +63,7 @@ A trigger is a function that is executed when a component is added or removed. T
 A type is a collection (vector) of entity identifiers (`ecs_entity_t`) that can describe anything from a set of components, systems and tags, to plain entities. Every entity is associated with exactly one type that describes which components, tags, or other it has.
 
 ### Type role
-A type role is a flag that indicates which role an entity fulfills in a type. By default this flag is `0`, indicating that the entity should be interpreted as component or tag. Type roles are most commonly used in applications for switch types (`ECS_SWITCH` and `ECS_CASE`)
+A type role is a flag that indicates which role an entity fulfills in a type. By default this flag is `0`, indicating that the entity should be interpreted as component or tag.
 
 ### Scope
 A scope is a virtual container that contains all of the child entities for a specific parent entity. Scopes are not recursive. Scopes are identified by their parent, which is why scope handles are of type `ecs_entity_t`.
@@ -547,43 +547,6 @@ Printing the type again will now produce:
 tag_1, tag_2
 ```
 
-### Type roles
-Type roles are flags that can be added to an identifier which provide information to how components should behave and be stored. A feature that uses type roles is switch types:
-
-```c
-ECS_TAG(world, Running);
-ECS_TAG(world, Walking);
-ECS_TYPE(world, Movable, Running, Walking);
-
-ecs_entity_t entity = ecs_new_w_id(world, ECS_SWITCH | Movable);
-```
-
-Here, `ECS_SWITCH` is the type role. This is an overview of the different roles:
-
-| Flag | Description |
-|------|-------------|
-| ECS_SWITCH | The entity is a switch type |
-| ECS_CASE | The entity is a case belonging to a switch type |
-| ECS_OVERRIDE | The entity is a component for which ownership is enforced |
-
-Entities with type roles can be dynamically added or removed:
-
-```c
-ecs_add_id(world, entity, ECS_SWITCH | Movable);
-ecs_remove_id(world, entity, ECS_SWITCH | Movable);
-```
-
-Additionally, type roles can also be used inside of type and signature expressions, such as in the `ECS_TYPE` and `ECS_ENTITY` macro's:
-
-```c
-ECS_TAG(world, Running);
-ECS_TAG(world, Walking);
-ECS_TYPE(world, Movement, Running, Walking);
-ECS_ENTITY(world, Parent, Position, SWITCH | Movement, CASE | Running);
-```
-
-Note that when used inside a type expression, there is no need to provide the `ECS` prefix.
-
 ## Components
 A component is a plain datatype that can be attached to an entity. An entity can contain any number of components, and each component can be added only once per entity. Components are registered with a world using the `ECS_COMPONENT` macro, after which they can be added and removed to and from entities. Components can be of any datatype. The following example shows how to register and use components:
 
@@ -823,42 +786,6 @@ int main() {
 ```
 
 Anyone who paid careful attention to this example will notice that the `ecs_add_id` operation accepts two regular entities. 
-
-### Switchable tags
-Switchable tags are sets of regular tags that can be added to an entity, except that only one of the set can be active at the same time. This is particularly useful when storing state machines. Consider the following example:
-
-```c
-/* Create a Movement switch machine with 3 cases */
-ECS_TAG(world, Standing);
-ECS_TAG(world, Walking);
-ECS_TAG(world, Running);
-ECS_TYPE(world, Movement, Standing, Walking, Running); 
-
-/* Create a few entities with various state combinations */
-ecs_entity_t e = ecs_new(world, 0);
-
-/* Add the switch to the entity. This lets Flecs know that only one of the tags
- * in the Movement type may be active at the same time. */
-ecs_add_id(world, e, ECS_SWITCH | Movement);
-
-/* Add the Standing case to the entity */
-ecs_add_id(world, e, ECS_CASE | Standing);
-
-/* Add the Walking case to the entity. This removes Standing */
-ecs_add_id(world, e, ECS_CASE | Walking);
-
-/* Add the Running case to the entity. This removes Walking */
-ecs_add_id(world, e, ECS_CASE | Running);
-```
-
-Switchable tags aren't just convenient, they are also very fast, as changing a case does not move the entity between archetypes like regular tags do. This makes switchable components particularly useful for fast-changing data, like states in a state machine. Systems can query for switchable tags by using the `SWITCH` and `CASE` roles:
-
-```c
-/* Subscribe for all entities that are Walking, and have the switch Direction */
-ECS_SYSTEM(world, Walk, EcsOnUpdate, CASE | Walking, SWITCH | Direction);
-```
-
-See the [switch example](https://github.com/SanderMertens/flecs/blob/master/examples/c/44_switch/src/main.c) for more details.
 
 ## Queries
 See the [query manual](Queries.md).

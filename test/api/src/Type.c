@@ -332,35 +332,6 @@ void Type_entity_pair_str() {
     ecs_fini(world);
 }
 
-void Type_entity_switch_str() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Foo, 0);
-
-    ecs_entity_t e = ECS_SWITCH | Foo;
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "SWITCH|Foo");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Type_entity_case_str() {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Foo, 0);
-    ECS_ENTITY(world, Bar, 0);
-
-    ecs_entity_t e = ecs_case(Foo, Bar);
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "CASE|(Foo,Bar)");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void Type_entity_and_str() {
     ecs_world_t *world = ecs_init();
 
@@ -434,16 +405,6 @@ void Type_entity_str_small_buffer() {
 void Type_role_pair_str() {
     ecs_entity_t e = ECS_PAIR;
     test_str(ecs_role_str(e), "PAIR");
-}
-
-void Type_role_switch_str() {
-    ecs_entity_t e = ECS_SWITCH;
-    test_str(ecs_role_str(e), "SWITCH");
-}
-
-void Type_role_case_str() {
-    ecs_entity_t e = ECS_CASE;
-    test_str(ecs_role_str(e), "CASE");
 }
 
 void Type_role_and_str() {

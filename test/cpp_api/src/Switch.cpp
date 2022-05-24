@@ -3,65 +3,51 @@
 void Switch_add_case() {
     flecs::world world;
 
-    auto Standing = flecs::entity(world, "Standing");
-    auto Walking = flecs::entity(world, "Walking");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Standing = world.entity("Standing");
+    auto Walking = world.entity("Walking");
+    auto Movement = world.entity().add(flecs::Union);
 
     auto e = world.entity()
-        .add_switch(Movement)
-        .add_case(Standing);
+        .add(Movement, Standing);
+    test_assert(e.has(Movement, Standing));
 
-    test_assert(e.has_switch(Movement));
-    test_assert(e.has_case(Standing));
+    auto table = e.table();
 
-    e.add_case(Walking);
+    e.add(Movement, Walking);
+    test_assert(e.table() == table);
 
-    test_assert(e.has_case(Walking));
-    test_assert(!e.has_case(Standing));
+    test_assert(e.has(Movement, Walking));
+    test_assert(!e.has(Movement, Standing));
 }
 
 void Switch_get_case() {
     flecs::world world;
 
-    auto Standing = flecs::entity(world, "Standing");
-    flecs::entity(world, "Walking");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Standing = world.entity("Standing");
+    world.entity("Walking");
+    auto Movement = world.entity().add(flecs::Union);
 
     auto e = world.entity()
-        .add_switch(Movement)
-        .add_case(Standing);
+        .add(Movement, Standing);
+    test_assert(e.has(Movement, Standing));
 
-    test_assert(e.has_switch(Movement));
-    test_assert(e.has_case(Standing));
-
-    test_assert(e.get_case(Movement) == Standing);
+    test_assert(e.get_object(Movement) == Standing);
 }
 
 void Switch_system_w_case() {
     flecs::world world;
 
-    auto Standing = flecs::entity(world, "Standing");
-    auto Walking = flecs::entity(world, "Walking");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Standing = world.entity("Standing");
+    auto Walking = world.entity("Walking");
+    auto Movement = world.entity("Movement").add(flecs::Union);
 
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Standing);    
+    world.entity().add(Movement, Walking);
+    world.entity().add(Movement, Walking);
+    world.entity().add(Movement, Standing);
 
     int count = 0, invoke_count = 0;  
-    world.system<>()
-        .expr("CASE | (Movement, Walking)")
+    world.system()
+        .expr("(Movement, Walking)")
         .iter([&](flecs::iter it) {
             auto movement = it.term<flecs::entity_t>(1);
 
@@ -81,26 +67,17 @@ void Switch_system_w_case() {
 void Switch_system_w_case_builder() {
     flecs::world world;
 
-    auto Standing = flecs::entity(world, "Standing");
-    auto Walking = flecs::entity(world, "Walking");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Standing = world.entity("Standing");
+    auto Walking = world.entity("Walking");
+    auto Movement = world.entity().add(flecs::Union);
 
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    world.entity()
-        .add_switch(Movement)
-        .add_case(Standing);    
+    world.entity().add(Movement, Walking);
+    world.entity().add(Movement, Walking);
+    world.entity().add(Movement, Standing);
 
     int count = 0, invoke_count = 0;  
-    world.system<>()
-        .term(Movement, Walking).role(flecs::Case)
+    world.system()
+        .term(Movement, Walking)
         .iter([&](flecs::iter it) {
             auto movement = it.term<flecs::entity_t>(1);
 
@@ -120,26 +97,17 @@ void Switch_system_w_case_builder() {
 void Switch_system_w_switch() {
     flecs::world world;
 
-    auto Standing = flecs::entity(world, "Standing");
-    auto Walking = flecs::entity(world, "Walking");
-    auto Movement = flecs::type(world, "Movement", 
-        "Standing, Walking");
+    auto Standing = world.entity("Standing");
+    auto Walking = world.entity("Walking");
+    auto Movement = world.entity("Movement").add(flecs::Union);
 
-    auto e1 = world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    auto e2 = world.entity()
-        .add_switch(Movement)
-        .add_case(Walking);
-
-    auto e3 = world.entity()
-        .add_switch(Movement)
-        .add_case(Standing);    
+    auto e1 = world.entity().add(Movement, Walking);
+    auto e2 = world.entity().add(Movement, Walking);
+    auto e3 = world.entity().add(Movement, Standing);
 
     int count = 0, invoke_count = 0;  
-    world.system<>()
-        .expr("SWITCH | Movement")
+    world.system()
+        .expr("(Movement, *)")
         .iter([&](flecs::iter it) {
             flecs::column<flecs::entity_t> movement(it, 1);
 
@@ -160,39 +128,28 @@ void Switch_system_w_switch() {
     test_int(count, 3);
 }
 
-struct Movement {
-    struct Standing { };
-    struct Walking { };
-};
+struct Movement { };
+struct Standing { };
+struct Walking { };
 
 void Switch_system_w_sw_type_builder() {
     flecs::world world;
 
-    world.type<Movement>()
-        .add<Movement::Standing>()
-        .add<Movement::Walking>();
+    world.component<Movement>().add(flecs::Union);
 
-    world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Walking>();
-
-    world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Walking>();
-
-    world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Standing>();
+    world.entity().add<Movement, Walking>();
+    world.entity().add<Movement, Walking>();
+    world.entity().add<Movement, Standing>();
 
     int count = 0, invoke_count = 0;  
     world.system<>()
-        .term<Movement, Movement::Walking>().role(flecs::Case)
+        .term<Movement, Walking>()
         .iter([&](flecs::iter it) {
             auto movement = it.term<flecs::entity_t>(1);
 
             invoke_count ++;
             for (auto i : it) {
-                test_assert(movement[i] == world.id<Movement::Walking>());
+                test_assert(movement[i] == world.id<Walking>());
                 count ++;
             }
         });
@@ -206,88 +163,95 @@ void Switch_system_w_sw_type_builder() {
 void Switch_add_case_w_type() {
     flecs::world world;
 
-    auto Movement = world.type()
-        .add<Movement::Standing>()
-        .add<Movement::Walking>();
+    world.component<Movement>().add(flecs::Union);
 
-    auto e = world.entity()
-        .add_switch(Movement)
-        .add_case<Movement::Standing>();
+    auto e = world.entity().add<Movement, Standing>();
+    test_assert((e.has<Movement, Standing>()));
 
-    test_assert(e.has_switch(Movement));
-    test_assert(e.has_case<Movement::Standing>());
+    e.add<Movement, Walking>();
 
-    e.add_case<Movement::Walking>();
-
-    test_assert(e.has_case<Movement::Walking>());
-    test_assert(!e.has_case<Movement::Standing>());
+    test_assert((e.has<Movement, Walking>()));
+    test_assert((!e.has<Movement, Standing>()));
 }
 
 void Switch_add_switch_w_type() {
     flecs::world world;
 
-    world.type<Movement>()
-        .add<Movement::Standing>()
-        .add<Movement::Walking>();
+    world.component<Movement>().add(flecs::Union);
 
-    auto e = world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Standing>();
+    auto e = world.entity().add<Movement, Standing>();
+    test_assert((e.has<Movement, Standing>()));
 
-    test_assert(e.has_switch<Movement>());
-    test_assert(e.has_case<Movement::Standing>());
+    e.add<Movement, Walking>();
 
-    e.add_case<Movement::Walking>();
-
-    test_assert(e.has_case<Movement::Walking>());
-    test_assert(!e.has_case<Movement::Standing>());
-}
-
-void Switch_add_switch_w_type_component_first() {
-    flecs::world world;
-
-    world.type<Movement>()
-        .add<Movement::Standing>()
-        .add<Movement::Walking>();
-
-    auto e = world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Standing>();
-
-    test_assert(e.has_switch<Movement>());
-    test_assert(e.has_case<Movement::Standing>());
-
-    e.add_case<Movement::Walking>();
-
-    test_assert(e.has_case<Movement::Walking>());
-    test_assert(!e.has_case<Movement::Standing>());
+    test_assert((e.has<Movement, Walking>()));
+    test_assert((!e.has<Movement, Standing>()));
 }
 
 void Switch_add_remove_switch_w_type() {
     flecs::world world;
 
-    world.type<Movement>()
-        .add<Movement::Standing>()
-        .add<Movement::Walking>();
+    world.component<Movement>().add(flecs::Union);
 
-    auto e = world.entity()
-        .add_switch<Movement>()
-        .add_case<Movement::Standing>();
+    auto e = world.entity().add<Movement, Standing>();
+    test_assert(e.has<Movement>(flecs::Wildcard));
+    test_assert((e.has<Movement, Standing>()));
 
-    test_assert(e.has_switch<Movement>());
-    test_assert(e.has_case<Movement::Standing>());
+    auto table = e.table();
 
-    e.add_case<Movement::Walking>();
+    e.add<Movement, Walking>();
 
-    test_assert(e.has_case<Movement::Walking>());
-    test_assert(!e.has_case<Movement::Standing>());
+    test_assert((e.has<Movement, Walking>()));
+    test_assert((!e.has<Movement, Standing>()));
+    test_assert(e.table() == table);
 
-    auto c = e.get_case<Movement>();
+    auto c = e.get_object<Movement>();
     test_assert(c != 0);
-    test_assert(c == world.id<Movement::Walking>());
+    test_assert(c == world.id<Walking>());
 
-    e.remove_switch<Movement>();
-    test_assert(!e.has_switch<Movement>());
-    test_assert(!e.has_case<Movement::Walking>());
+    e.remove<Movement>(flecs::Wildcard);
+    test_assert(!e.has<Movement>(flecs::Wildcard));
+    test_assert((!e.has<Movement, Walking>()));
+    test_assert(e.table() != table);
 }
 
+enum Color {
+    Red,
+    Green,
+    Blue
+};
+
+void Switch_switch_enum_type() {
+    flecs::world world;
+
+    world.component<Color>().add(flecs::Union);
+
+    auto e = world.entity().add(Red);
+    test_assert(e.has(Red));
+    test_assert(!e.has(Green));
+    test_assert(!e.has(Blue));
+    test_assert(e.has<Color>(flecs::Wildcard));
+
+    auto table = e.table();
+
+    e.add(Green);
+    test_assert(!e.has(Red));
+    test_assert(e.has(Green));
+    test_assert(!e.has(Blue));
+    test_assert(e.has<Color>(flecs::Wildcard));
+    test_assert(e.table() == table);
+
+    e.add(Blue);
+    test_assert(!e.has(Red));
+    test_assert(!e.has(Green));
+    test_assert(e.has(Blue));
+    test_assert(e.has<Color>(flecs::Wildcard));
+    test_assert(e.table() == table);
+
+    e.remove<Color>();
+    test_assert(!e.has(Red));
+    test_assert(!e.has(Green));
+    test_assert(!e.has(Blue));
+    test_assert(!e.has<Color>(flecs::Wildcard));
+    test_assert(e.table() != table);
+}

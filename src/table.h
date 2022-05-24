@@ -27,7 +27,6 @@ ecs_table_t* flecs_table_find_or_create(
 
 /* Initialize columns for data */
 void flecs_table_init_data(
-    ecs_world_t *world,
     ecs_table_t *table); 
 
 /* Clear all entities from a table. */
@@ -185,11 +184,6 @@ void flecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component);
 
-int32_t flecs_table_switch_from_case(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_entity_t add);    
-
 void flecs_table_notify(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -207,5 +201,9 @@ ecs_column_t *ecs_table_column_for_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
+
+int32_t flecs_table_column_to_union_index(
+    const ecs_table_t *table,
+    int32_t column);
 
 #endif

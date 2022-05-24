@@ -20,13 +20,6 @@ void Id_pair_w_wildcard_wildcard_is_wildcard(void);
 void Id_pair_w_rel_any_is_wildcard(void);
 void Id_pair_w_obj_any_is_wildcard(void);
 void Id_pair_w_any_any_is_wildcard(void);
-void Id_case_is_wildcard(void);
-void Id_case_w_rel_wildcard_is_wildcard(void);
-void Id_case_w_obj_wildcard_is_wildcard(void);
-void Id_case_w_wildcard_wildcard_is_wildcard(void);
-void Id_case_w_rel_any_is_wildcard(void);
-void Id_case_w_obj_any_is_wildcard(void);
-void Id_case_w_any_any_is_wildcard(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
@@ -133,11 +126,6 @@ void Event_table_2_ids_w_trigger(void);
 void Event_table_1_id_w_observer(void);
 void Event_table_2_ids_w_observer(void);
 void Event_emit_event_for_empty_table(void);
-void Event_emit_event_switch_id(void);
-void Event_emit_event_case_for_switch_id(void);
-void Event_emit_event_case_for_case_id(void);
-void Event_emit_event_case_for_case_id_wildcard(void);
-void Event_emit_event_switch_for_case_id(void);
 void Event_emit_table_event(void);
 void Event_emit_staged_from_world(void);
 void Event_emit_staged_from_stage(void);
@@ -218,9 +206,7 @@ void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
 
 // Testsuite 'Switch'
-void Switch_get_case_empty(void);
 void Switch_get_case_no_switch(void);
-void Switch_get_case_unset(void);
 void Switch_get_case_set(void);
 void Switch_get_case_change(void);
 void Switch_remove_case(void);
@@ -237,7 +223,6 @@ void Switch_query_1_case_2_types(void);
 void Switch_query_2_cases_1_type(void);
 void Switch_query_2_cases_2_types(void);
 void Switch_query_after_remove(void);
-void Switch_add_switch_in_stage(void);
 void Switch_add_case_in_stage(void);
 void Switch_change_case_in_stage(void);
 void Switch_change_one_case_in_stage(void);
@@ -258,8 +243,11 @@ void Switch_switch_w_bitset_query_2_elems(void);
 void Switch_switch_w_bitset_query_2_elems_skip(void);
 void Switch_switch_w_bitset_query_elems_interleaved(void);
 void Switch_switch_w_bitset_query_elems_interleaved_2_types(void);
-void Switch_has_case_no_switch_empty_entity(void);
-void Switch_has_case_no_switch(void);
+void Switch_has_wildcard(void);
+void Switch_remove_wildcard(void);
+void Switch_same_table_after_change(void);
+void Switch_component_relation(void);
+void Switch_delete_case_trigger_after_delete_switch(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -975,10 +963,6 @@ void FilterStr_two_terms_w_inout(void);
 void FilterStr_three_terms_w_or(void);
 void FilterStr_three_terms_w_or_inout(void);
 void FilterStr_four_terms_three_w_or_inout(void);
-void FilterStr_switch(void);
-void FilterStr_case(void);
-void FilterStr_switch_from_entity(void);
-void FilterStr_case_from_entity(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -1029,14 +1013,11 @@ void Query_query_w_from_singleton(void);
 void Query_query_w_from_entity_match_after(void);
 void Query_query_w_from_singleton_match_after(void);
 void Query_query_w_from_nothing(void);
-void Query_query_w_existing_switch(void);
 void Query_query_w_existing_switch_and_case(void);
-void Query_query_w_new_switch(void);
 void Query_query_w_new_switch_and_case(void);
 void Query_query_for_case_existing(void);
 void Query_query_for_case_new(void);
 void Query_query_for_switch_filter_term(void);
-void Query_query_for_case_w_0_case(void);
 void Query_query_switch_from_nothing(void);
 void Query_query_case_from_nothing(void);
 void Query_query_disabled_from_nothing(void);
@@ -1748,16 +1729,12 @@ void Type_entity_path_str(void);
 void Type_entity_instanceof_str(void);
 void Type_entity_childof_str(void);
 void Type_entity_pair_str(void);
-void Type_entity_switch_str(void);
-void Type_entity_case_str(void);
 void Type_entity_and_str(void);
 void Type_entity_or_str(void);
 void Type_entity_xor_str(void);
 void Type_entity_not_str(void);
 void Type_entity_str_small_buffer(void);
 void Type_role_pair_str(void);
-void Type_role_switch_str(void);
-void Type_role_case_str(void);
 void Type_role_and_str(void);
 void Type_role_or_str(void);
 void Type_role_xor_str(void);
@@ -1897,7 +1874,6 @@ void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
-void SingleThreadStaging_get_empty_case_from_stage(void);
 void SingleThreadStaging_get_case_from_stage(void);
 void SingleThreadStaging_get_object_from_stage(void);
 
@@ -2001,34 +1977,6 @@ bake_test_case Id_testcases[] = {
     {
         "pair_w_any_any_is_wildcard",
         Id_pair_w_any_any_is_wildcard
-    },
-    {
-        "case_is_wildcard",
-        Id_case_is_wildcard
-    },
-    {
-        "case_w_rel_wildcard_is_wildcard",
-        Id_case_w_rel_wildcard_is_wildcard
-    },
-    {
-        "case_w_obj_wildcard_is_wildcard",
-        Id_case_w_obj_wildcard_is_wildcard
-    },
-    {
-        "case_w_wildcard_wildcard_is_wildcard",
-        Id_case_w_wildcard_wildcard_is_wildcard
-    },
-    {
-        "case_w_rel_any_is_wildcard",
-        Id_case_w_rel_any_is_wildcard
-    },
-    {
-        "case_w_obj_any_is_wildcard",
-        Id_case_w_obj_any_is_wildcard
-    },
-    {
-        "case_w_any_any_is_wildcard",
-        Id_case_w_any_any_is_wildcard
     }
 };
 
@@ -2440,26 +2388,6 @@ bake_test_case Event_testcases[] = {
         Event_emit_event_for_empty_table
     },
     {
-        "emit_event_switch_id",
-        Event_emit_event_switch_id
-    },
-    {
-        "emit_event_case_for_switch_id",
-        Event_emit_event_case_for_switch_id
-    },
-    {
-        "emit_event_case_for_case_id",
-        Event_emit_event_case_for_case_id
-    },
-    {
-        "emit_event_case_for_case_id_wildcard",
-        Event_emit_event_case_for_case_id_wildcard
-    },
-    {
-        "emit_event_switch_for_case_id",
-        Event_emit_event_switch_for_case_id
-    },
-    {
         "emit_table_event",
         Event_emit_table_event
     },
@@ -2756,16 +2684,8 @@ bake_test_case Add_testcases[] = {
 
 bake_test_case Switch_testcases[] = {
     {
-        "get_case_empty",
-        Switch_get_case_empty
-    },
-    {
         "get_case_no_switch",
         Switch_get_case_no_switch
-    },
-    {
-        "get_case_unset",
-        Switch_get_case_unset
     },
     {
         "get_case_set",
@@ -2830,10 +2750,6 @@ bake_test_case Switch_testcases[] = {
     {
         "query_after_remove",
         Switch_query_after_remove
-    },
-    {
-        "add_switch_in_stage",
-        Switch_add_switch_in_stage
     },
     {
         "add_case_in_stage",
@@ -2916,12 +2832,24 @@ bake_test_case Switch_testcases[] = {
         Switch_switch_w_bitset_query_elems_interleaved_2_types
     },
     {
-        "has_case_no_switch_empty_entity",
-        Switch_has_case_no_switch_empty_entity
+        "has_wildcard",
+        Switch_has_wildcard
     },
     {
-        "has_case_no_switch",
-        Switch_has_case_no_switch
+        "remove_wildcard",
+        Switch_remove_wildcard
+    },
+    {
+        "same_table_after_change",
+        Switch_same_table_after_change
+    },
+    {
+        "component_relation",
+        Switch_component_relation
+    },
+    {
+        "delete_case_trigger_after_delete_switch",
+        Switch_delete_case_trigger_after_delete_switch
     }
 };
 
@@ -5668,22 +5596,6 @@ bake_test_case FilterStr_testcases[] = {
     {
         "four_terms_three_w_or_inout",
         FilterStr_four_terms_three_w_or_inout
-    },
-    {
-        "switch",
-        FilterStr_switch
-    },
-    {
-        "case",
-        FilterStr_case
-    },
-    {
-        "switch_from_entity",
-        FilterStr_switch_from_entity
-    },
-    {
-        "case_from_entity",
-        FilterStr_case_from_entity
     }
 };
 
@@ -5881,16 +5793,8 @@ bake_test_case Query_testcases[] = {
         Query_query_w_from_nothing
     },
     {
-        "query_w_existing_switch",
-        Query_query_w_existing_switch
-    },
-    {
         "query_w_existing_switch_and_case",
         Query_query_w_existing_switch_and_case
-    },
-    {
-        "query_w_new_switch",
-        Query_query_w_new_switch
     },
     {
         "query_w_new_switch_and_case",
@@ -5907,10 +5811,6 @@ bake_test_case Query_testcases[] = {
     {
         "query_for_switch_filter_term",
         Query_query_for_switch_filter_term
-    },
-    {
-        "query_for_case_w_0_case",
-        Query_query_for_case_w_0_case
     },
     {
         "query_switch_from_nothing",
@@ -8676,14 +8576,6 @@ bake_test_case Type_testcases[] = {
         Type_entity_pair_str
     },
     {
-        "entity_switch_str",
-        Type_entity_switch_str
-    },
-    {
-        "entity_case_str",
-        Type_entity_case_str
-    },
-    {
         "entity_and_str",
         Type_entity_and_str
     },
@@ -8706,14 +8598,6 @@ bake_test_case Type_testcases[] = {
     {
         "role_pair_str",
         Type_role_pair_str
-    },
-    {
-        "role_switch_str",
-        Type_role_switch_str
-    },
-    {
-        "role_case_str",
-        Type_role_case_str
     },
     {
         "role_and_str",
@@ -9258,10 +9142,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_modify_after_lock
     },
     {
-        "get_empty_case_from_stage",
-        SingleThreadStaging_get_empty_case_from_stage
-    },
-    {
         "get_case_from_stage",
         SingleThreadStaging_get_case_from_stage
     },
@@ -9468,7 +9348,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        18,
+        11,
         Id_testcases
     },
     {
@@ -9489,7 +9369,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        15,
+        10,
         Event_testcases
     },
     {
@@ -9643,14 +9523,14 @@ static bake_test_suite suites[] = {
         "FilterStr",
         NULL,
         NULL,
-        11,
+        7,
         FilterStr_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        168,
+        165,
         Query_testcases
     },
     {
@@ -9741,7 +9621,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        40,
+        36,
         Type_testcases
     },
     {
@@ -9755,7 +9635,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        64,
+        63,
         SingleThreadStaging_testcases
     },
     {

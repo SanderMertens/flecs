@@ -861,16 +861,16 @@ void Filter_term_w_role() {
 
     ecs_term_t term = {
         .id = Tag,
-        .role = ECS_SWITCH
+        .role = ECS_OVERRIDE
     };
 
     test_assert(ecs_term_finalize(world, NULL, &term) == 0);
-    test_int(term.id, Tag | ECS_SWITCH);
-    test_int(term.role, ECS_SWITCH);
+    test_int(term.id, Tag | ECS_OVERRIDE);
+    test_int(term.role, ECS_OVERRIDE);
     test_int(term.pred.entity, Tag);
 
-    test_int(term.id, Tag | ECS_SWITCH);
-    test_int(term.role, ECS_SWITCH);
+    test_int(term.id, Tag | ECS_OVERRIDE);
+    test_int(term.role, ECS_OVERRIDE);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.set.mask, EcsSelf|EcsSubSet);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -888,13 +888,13 @@ void Filter_term_w_pred_role() {
 
     ecs_term_t term = {
         .pred.entity = Tag,
-        .role = ECS_SWITCH
+        .role = ECS_OVERRIDE
     };
 
     test_assert(ecs_term_finalize(world, NULL, &term) == 0);
-    test_int(term.role, ECS_SWITCH);
-    test_int(term.id, Tag | ECS_SWITCH);
-    test_int(term.role, ECS_SWITCH);
+    test_int(term.role, ECS_OVERRIDE);
+    test_int(term.id, Tag | ECS_OVERRIDE);
+    test_int(term.role, ECS_OVERRIDE);
     test_int(term.pred.entity, Tag);
     test_int(term.pred.set.mask, EcsSelf|EcsSubSet);
     test_int(term.pred.var, EcsVarIsEntity);
@@ -5890,16 +5890,16 @@ void Filter_filter_iter_2_terms_filter_all_w_out() {
 void Filter_filter_iter_switch_term_filter() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
     ecs_table_t *table = ecs_get_table(world, e);
     
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ .id = ECS_SWITCH | Type, .inout = EcsInOutFilter }}
+        .terms = {{ .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutFilter }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -5918,12 +5918,13 @@ void Filter_filter_iter_switch_term_filter() {
 void Filter_filter_iter_2_terms_switch_term_filter() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TYPE(world, Type, TagA, TagB);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
     ecs_add(world, e, Position);
     ecs_table_t *table = ecs_get_table(world, e);
     
@@ -5931,7 +5932,7 @@ void Filter_filter_iter_2_terms_switch_term_filter() {
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
             { .id = ecs_id(Position) },
-            { .id = ECS_SWITCH | Type, .inout = EcsInOutFilter }
+            { .id = ecs_pair(Sw, EcsWildcard), .inout = EcsInOutFilter }
         }
     });
 
@@ -6930,16 +6931,16 @@ void Filter_match_empty_tables_w_no_empty_tables() {
 void Filter_match_switch_w_switch() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
     ecs_table_t *table = ecs_get_table(world, e);
     
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ ECS_SWITCH | Type }}
+        .terms = {{ ecs_pair(Sw, EcsWildcard) }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -6948,6 +6949,7 @@ void Filter_match_switch_w_switch() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
+    test_uint(it.ids[0], ecs_pair(Sw, EcsWildcard));
     test_assert(it.table == table);
 
     test_bool(ecs_filter_next(&it), false);
@@ -6956,27 +6958,27 @@ void Filter_match_switch_w_switch() {
 }
 
 void Filter_match_switch_w_case() {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
-    ecs_add_id(world, e, ECS_CASE | TagA);
+    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
     ecs_table_t *table = ecs_get_table(world, e);
     
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ ecs_case(Type, TagA) }}
+        .terms = {{ ecs_pair(Sw, TagA) }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
-    
+
     test_bool(ecs_filter_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_assert(it.table == table);
+    test_uint(it.ids[0], ecs_pair(Sw, EcsWildcard));
 
     test_bool(ecs_filter_next(&it), false);
 
@@ -6986,30 +6988,26 @@ void Filter_match_switch_w_case() {
 void Filter_match_switch_w_case_2_terms() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, SwX, Union);
+    ECS_ENTITY(world, SwY, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
-    ECS_TYPE(world, TypeX, TagA, TagB);
-    ECS_TYPE(world, TypeY, TagC, TagD);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | TypeX);
-    ecs_add_id(world, e, ECS_CASE | TagA);
-    ecs_add_id(world, e, ECS_SWITCH | TypeY);
-    ecs_add_id(world, e, ECS_CASE | TagC);
+    ecs_entity_t e = ecs_new_w_pair(world, SwX, TagA);
+    ecs_add_pair(world, e, SwY, TagC);
     ecs_table_t *table = ecs_get_table(world, e);
 
     /* Not matched */
-    ecs_entity_t e2 = ecs_new_w_id(world, ECS_SWITCH | TypeX);
-    ecs_add_id(world, e2, ECS_CASE | TagA);
-    ecs_entity_t e3 = ecs_new_w_id(world, ECS_SWITCH | TypeY);
-    ecs_add_id(world, e3, ECS_CASE | TagC);
+    ecs_new_w_pair(world, SwX, TagA);
+    ecs_new_w_pair(world, SwY, TagC);
 
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
-            { ecs_case(TypeX, TagA) },
-            { ecs_case(TypeY, TagC) }
+            { ecs_pair(SwX, TagA) },
+            { ecs_pair(SwY, TagC) }
         }
     });
 
@@ -7019,6 +7017,8 @@ void Filter_match_switch_w_case_2_terms() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_assert(it.table == table);
+    test_uint(it.ids[0], ecs_pair(SwX, EcsWildcard));
+    test_uint(it.ids[1], ecs_pair(SwY, EcsWildcard));
 
     test_bool(ecs_filter_next(&it), false);
 
@@ -7028,19 +7028,17 @@ void Filter_match_switch_w_case_2_terms() {
 void Filter_filter_iter_switch_superset() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, SwX, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, TypeX, TagA, TagB);
 
-    ecs_entity_t b = ecs_new_w_id(world, ECS_SWITCH | TypeX);
-    ecs_add_id(world, b, ECS_CASE | TagA);
-
+    ecs_entity_t b = ecs_new_w_pair(world, SwX, TagA);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
 
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
         .terms = {
-            { ECS_SWITCH | TypeX, .subj.set.mask = EcsSuperSet }
+            { ecs_pair(SwX, EcsWildcard), .subj.set.mask = EcsSuperSet }
         }
     });
 
@@ -7050,7 +7048,7 @@ void Filter_filter_iter_switch_superset() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_int(it.subjects[0], b);
-    test_uint(it.ids[0], ECS_SWITCH | TypeX);
+    test_uint(it.ids[0], ecs_pair(SwX, EcsWildcard));
 
     ecs_entity_t *cases = ecs_term(&it, ecs_entity_t, 1);
     test_assert(cases != NULL);
@@ -7064,16 +7062,16 @@ void Filter_filter_iter_switch_superset() {
 void Filter_match_case_no_case() {
     ecs_world_t *world = ecs_init();
 
+    ECS_ENTITY(world, Sw, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_TYPE(world, Type, TagA, TagB);
 
-    ecs_entity_t e = ecs_new_w_id(world, ECS_SWITCH | Type);
+    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
     ecs_table_t *table = ecs_get_table(world, e);
     
     ecs_filter_t f;
     ecs_filter_init(world, &f, &(ecs_filter_desc_t) {
-        .terms = {{ ecs_case(Type, TagA) }}
+        .terms = {{ ecs_pair(Sw, TagA) }}
     });
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
@@ -7082,6 +7080,7 @@ void Filter_match_case_no_case() {
     test_int(it.count, 1);
     test_int(it.entities[0], e);
     test_assert(it.table == table);
+    test_uint(it.ids[0], ecs_pair(Sw, EcsWildcard));
 
     test_bool(ecs_filter_next(&it), false);
 

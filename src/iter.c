@@ -102,19 +102,20 @@ ecs_size_t iter_get_size_for_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    if (ECS_HAS_ROLE(id, SWITCH)) {
-        return ECS_SIZEOF(ecs_entity_t);
-    }
-
-    ecs_entity_t type_id = ecs_get_typeid(world, id);
-    if (!type_id) {
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
         return 0;
     }
 
-    const ecs_type_info_t *ti = flecs_get_type_info(world, type_id);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (idr->flags & EcsIdUnion) {
+        return ECS_SIZEOF(ecs_entity_t);
+    }
 
-    return ti->size;
+    if (idr->type_info) {
+        return idr->type_info->size;
+    }
+
+    return 0;
 }
 
 static
@@ -131,7 +132,7 @@ bool flecs_iter_populate_term_data(
     ecs_vector_t *vec;
     ecs_size_t size = 0;
     ecs_size_t align;
-    int32_t row;
+    int32_t row, u_index;
 
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
@@ -200,18 +201,11 @@ bool flecs_iter_populate_term_data(
             ecs_table_record_t *tr;
 
             if (!s_table || !(tr = flecs_get_table_record(world, s_table, id))){
-                /* The entity has no components or the id is not a component */                
-                ecs_id_t term_id = it->terms[t].id;
-                if (ECS_HAS_ROLE(term_id, SWITCH) || ECS_HAS_ROLE(term_id, CASE)) {
-                    /* Edge case: if this is a switch. find switch column in
-                     * actual table, as its not in the storage table */
-                    tr = flecs_get_table_record(world, table, id);
-                    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    column = tr->column + 1;
-                    goto has_switch;
-                } else {
-                    goto no_data;
+                u_index = flecs_table_column_to_union_index(table, -column - 1);
+                if (u_index != -1) {
+                    goto has_union;
                 }
+                goto no_data;
             }
 
             /* We now have row and column, so we can get the storage for the id
@@ -232,13 +226,14 @@ bool flecs_iter_populate_term_data(
         }
 
         row = it->offset;
-        
+
+
         int32_t storage_column = ecs_table_type_to_storage_index(
             table, column - 1);
         if (storage_column == -1) {
-            ecs_id_t id = it->terms[t].id;
-            if (ECS_HAS_ROLE(id, SWITCH) || ECS_HAS_ROLE(id, CASE)) {
-                goto has_switch;
+            u_index = flecs_table_column_to_union_index(table, column - 1);
+            if (u_index != -1) {
+                goto has_union;
             }
             goto no_data;
         }
@@ -261,11 +256,10 @@ has_data:
     if (size_out) size_out[0] = size;
     return is_shared;
 
-has_switch: {
+has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_switch_t *sw = &table->data.sw_columns[
-            (column - 1) - table->sw_column_offset].data;
+        ecs_switch_t *sw = &table->data.sw_columns[u_index].data;
         vec = flecs_switch_values(sw);
         size = ECS_SIZEOF(ecs_entity_t);
         align = ECS_ALIGNOF(ecs_entity_t);

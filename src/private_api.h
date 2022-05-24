@@ -122,6 +122,12 @@ void flecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
+ecs_id_t flecs_to_public_id(
+    ecs_id_t id);
+
+ecs_id_t flecs_from_public_id(
+    ecs_world_t *world,
+    ecs_id_t id);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting

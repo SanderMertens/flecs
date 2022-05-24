@@ -645,7 +645,7 @@ error:
 }
 
 static
-void set_switch(
+void flecs_set_union(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
@@ -653,36 +653,38 @@ void set_switch(
     ecs_type_t *ids,
     bool reset)
 {
-    ecs_entity_t *array = ids->array;
-    int32_t i, comp_count = ids->count;
+    ecs_id_t *array = ids->array;
+    int32_t i, id_count = ids->count;
 
-    for (i = 0; i < comp_count; i ++) {
-        ecs_entity_t e = array[i];
-
-        if (ECS_HAS_ROLE(e, CASE)) {
-            e = e & ECS_COMPONENT_MASK;
-
-            ecs_entity_t sw_case = 0;
-            if (!reset) {
-                sw_case = e;
-                ecs_assert(sw_case != 0, ECS_INTERNAL_ERROR, NULL);
+    for (i = 0; i < id_count; i ++) {
+        ecs_id_t id = array[i];
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            ecs_id_record_t *idr = flecs_get_id_record(world, 
+                ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
+            if (!idr) {
+                continue;
             }
 
-            int32_t sw_index = flecs_table_switch_from_case(world, table, e);
-            ecs_assert(sw_index != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_switch_t *sw = &table->data.sw_columns[sw_index].data;
-            ecs_assert(sw != NULL, ECS_INTERNAL_ERROR, NULL);
-            
+            const ecs_table_record_t *tr = flecs_id_record_table(
+                idr, table);
+            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+            int32_t column = tr->column - table->sw_column_offset;
+            ecs_switch_t *sw = &table->data.sw_columns[column].data;
+            ecs_entity_t union_case = 0;
+            if (!reset) {
+                union_case = ECS_PAIR_SECOND(id);
+            }
+
             int32_t r;
             for (r = 0; r < count; r ++) {
-                flecs_switch_set(sw, row + r, sw_case);
+                flecs_switch_set(sw, row + r, union_case);
             }
         }
     }
 }
 
 static
-void ecs_components_switch(
+void flecs_add_remove_union(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
@@ -691,10 +693,10 @@ void ecs_components_switch(
     ecs_type_t *removed)
 {
     if (added) {
-        set_switch(world, table, row, count, added, false);
+        flecs_set_union(world, table, row, count, added, false);
     }
     if (removed) {
-        set_switch(world, table, row, count, removed, true);
+        flecs_set_union(world, table, row, count, removed, true);
     } 
 }
 
@@ -724,7 +726,9 @@ ecs_record_t* new_entity(
         ECS_INTERNAL_ERROR, NULL);
     (void)new_data;
 
-    if (new_table->flags & EcsTableHasAddActions) {
+    ecs_flags32_t flags = new_table->flags;
+
+    if (flags & EcsTableHasAddActions) {
         flecs_notify_on_add(
             world, new_table, NULL, new_row, 1, diff, notify_on_set);       
     }
@@ -773,8 +777,9 @@ void move_entity(
     flecs_table_delete(world, src_table, src_row, false);
 
     /* If components were added, invoke add actions */
+    ecs_flags32_t dst_flags = dst_table->flags;
     if (src_table != dst_table || diff->added.count) {
-        if (diff->added.count && (dst_table->flags & EcsTableHasAddActions)) {
+        if (diff->added.count && (dst_flags & EcsTableHasAddActions)) {
             flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
                 notify_on_set);
         }
@@ -856,9 +861,9 @@ void commit(
          * However, if a component was added in the process of traversing a
          * table, this suggests that a case switch could have occured. */
         if (((diff->added.count) || (diff->removed.count)) && 
-             src_table && src_table->flags & EcsTableHasSwitch) 
+             src_table && src_table->flags & EcsTableHasUnion) 
         {
-            ecs_components_switch(world, src_table, 
+            flecs_add_remove_union(world, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1,
                 &diff->added, &diff->removed);
         }
@@ -1172,8 +1177,8 @@ void flecs_notify_on_add(
                 &diff->added, run_on_set);
         }
 
-        if (table->flags & EcsTableHasSwitch) {
-            ecs_components_switch(world, table, row, count, &diff->added, NULL);
+        if (table->flags & EcsTableHasUnion) {
+            flecs_add_remove_union(world, table, row, count, &diff->added, NULL);
         }
 
         if (table->flags & EcsTableHasOnAdd) {
@@ -1540,12 +1545,6 @@ ecs_table_t *traverse_from_expr(
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid non-trivial term in add expression");
                 return NULL;
-            }
-
-            if (term.role == ECS_CASE) {
-                table = table_append(world, table, 
-                    ECS_SWITCH | ECS_PAIR_FIRST(term.id), diff);
-                term.id = ECS_CASE | ECS_PAIR_SECOND(term.id);
             }
 
             if (term.oper == EcsAnd || !replace_and) {
@@ -3028,39 +3027,6 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_get_case(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t sw_id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, sw_id), ECS_INVALID_PARAMETER, NULL);
-
-    world = ecs_get_world(world);
-
-    ecs_record_t *r = ecs_eis_get(world, entity);
-    ecs_table_t *table;
-    if (!r || !(table = r->table)) {
-        return 0;
-    }
-
-    sw_id = sw_id | ECS_SWITCH;
-
-    int32_t index = ecs_search(world, table, sw_id, 0);
-    if (index == -1) {
-        return 0;
-    }
-
-    index -= table->sw_column_offset;
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_switch_t *sw = &table->data.sw_columns[index].data;  
-    return flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
-error:
-    return 0;
-}
-
 void ecs_enable_component_w_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3156,40 +3122,33 @@ bool ecs_has_id(
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
-    if (ECS_HAS_ROLE(id, CASE)) {
-        ecs_record_t *r = ecs_eis_get(world, entity);
-        ecs_table_t *table;
-        if (!r || !(table = r->table)) {
-            return false;
-        }
-
-        int32_t index = flecs_table_switch_from_case(world, table, id);
-        if (index == -1) {
-            /* If table has IsA relationship, traverse */
-            if (table->flags & EcsTableHasIsA) {
-                int32_t oi = 0;
-                ecs_entity_t b = 0;
-                while ((b = ecs_get_object(world, entity, EcsIsA, oi ++))) {
-                    return ecs_has_id(world, b, id);
-                }
-            }
-            return false;
-        }
-
-        ecs_assert(index < table->sw_column_count, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_t *sw = &table->data.sw_columns[index].data;
-        ecs_entity_t value = flecs_switch_get(sw, ECS_RECORD_TO_ROW(r->row));
-
-        return value == (id & ECS_COMPONENT_MASK);
-    } else {
-        ecs_table_t *table = ecs_get_table(world, entity);
-        if (!table) {
-            return false;
-        }
-
-        return ecs_search_relation(
-            world, table, 0, id, EcsIsA, 0, 0, 0, 0, 0, 0) != -1;
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_table_t *table;
+    if (!r || !(table = r->table)) {
+        return false;
     }
+
+    ecs_table_record_t *tr = NULL;
+    int32_t column = ecs_search_relation(
+        world, table, 0, id, EcsIsA, 0, 0, 0, 0, 0, &tr);
+    if (column == -1) {
+        return false;
+    }
+
+    table = tr->hdr.table;
+    if ((table->flags & EcsTableHasUnion) && ECS_HAS_ROLE(id, PAIR) &&
+        ECS_PAIR_SECOND(id) != EcsWildcard) 
+    {
+        if (ECS_PAIR_FIRST(table->type.array[column]) == EcsUnion) {
+            ecs_switch_t *sw = &table->data.sw_columns[
+                column - table->sw_column_offset].data;
+            int32_t row = ECS_RECORD_TO_ROW(r->row);
+            uint64_t value = flecs_switch_get(sw, row);
+            return value == ECS_PAIR_SECOND(id);
+        }
+    }
+    
+    return true;
 error:
     return false;
 }
@@ -3206,14 +3165,25 @@ ecs_entity_t ecs_get_object(
 
     world = ecs_get_world(world);
 
-    ecs_table_t *table = ecs_get_table(world, entity);
-    if (!table) {
+    ecs_record_t *r = ecs_eis_get(world, entity);
+    ecs_table_t *table;
+    if (!r || !(table = r->table)) {
         return 0;
     }
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
     ecs_table_record_t *tr = flecs_get_table_record(world, table, wc);
     if (!tr) {
+        if (table->flags & EcsTableHasUnion) {
+            wc = ecs_pair(EcsUnion, rel);
+            tr = flecs_get_table_record(world, table, wc);
+            if (tr) {
+                ecs_switch_t *sw = &table->data.sw_columns[tr->column - table->sw_column_offset].data;
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
+                return flecs_switch_get(sw, row);
+                
+            }
+        }
         return 0;
     }
 
@@ -3496,7 +3466,7 @@ void ecs_ensure_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
+    if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t r = ECS_PAIR_FIRST(id);
         ecs_entity_t o = ECS_PAIR_SECOND(id);
 
@@ -3738,12 +3708,6 @@ const char* ecs_role_str(
     if (ECS_HAS_ROLE(entity, NOT)) {
         return "NOT";
     } else
-    if (ECS_HAS_ROLE(entity, SWITCH)) {
-        return "SWITCH";
-    } else
-    if (ECS_HAS_ROLE(entity, CASE)) {
-        return "CASE";
-    } else
     if (ECS_HAS_ROLE(entity, OVERRIDE)) {
         return "OVERRIDE";
     } else {
@@ -3765,7 +3729,7 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ROLE(id, PAIR) || ECS_HAS_ROLE(id, CASE)) {
+    if (ECS_HAS_ROLE(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t obj = ECS_PAIR_SECOND(id);
 
