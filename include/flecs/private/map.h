@@ -36,14 +36,15 @@ extern "C" {
 typedef uint64_t ecs_map_key_t;
 
 /* Map type */
-typedef struct ecs_bucket_t {
-    ecs_map_key_t *keys;    /* Array with keys */
-    void *payload;          /* Payload array */
-    int32_t count;          /* Number of elements in bucket */
-} ecs_bucket_t;
+typedef struct ecs_bucket_header_t {
+    struct ecs_bucket_header_t *next;
+    ecs_map_key_t key;
+    // payload right after key.
+} ecs_bucket_header_t;
 
 typedef struct ecs_map_t {
-    ecs_bucket_t *buckets;
+    ecs_bucket_header_t **buckets;
+    ecs_bucket_header_t **buckets_end;
     int16_t elem_size;
     uint8_t bucket_shift;
     int32_t bucket_count;
@@ -52,10 +53,8 @@ typedef struct ecs_map_t {
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
-    struct ecs_bucket_t *bucket;
-    int32_t bucket_index;
-    int32_t element_index;
-    void *payload;
+    ecs_bucket_header_t **bucket;
+    ecs_bucket_header_t *entry;
 } ecs_map_iter_t;
 
 #define ECS_MAP_INIT(T) { .elem_size = ECS_SIZEOF(T) }
