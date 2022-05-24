@@ -143,6 +143,10 @@ ecs_id_record_t* new_id_record(
              * objecs for a relation. */
             insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
             insert_id_elem(world, idr, ecs_pair(EcsWildcard, obj), NULL);
+
+            if (rel == EcsUnion) {
+                idr->flags |= EcsIdUnion;
+            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -360,6 +364,29 @@ ecs_id_record_t* flecs_get_id_record(
     ecs_poly_assert(world, ecs_world_t);
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
         flecs_id_record_id(id));
+}
+
+ecs_id_record_t* flecs_get_query_id_record(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    if (!idr) {
+        if (ECS_HAS_ROLE(id, PAIR)) {
+            idr = flecs_get_id_record(world,
+                ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
+        }
+        return idr;
+    }
+    if (ECS_HAS_ROLE(id, PAIR) && 
+        ECS_PAIR_SECOND(id) == EcsWildcard && 
+        (idr->flags & EcsIdUnion)) 
+    {
+        idr = flecs_get_id_record(world, 
+            ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
+    }
+
+    return idr;
 }
 
 void flecs_remove_id_record(

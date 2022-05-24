@@ -450,8 +450,7 @@ private:
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_term_id(m_iter, index);
-        ecs_assert(term_id & ECS_PAIR || term_id & ECS_SWITCH || 
-            term_id & ECS_CASE ||
+        ecs_assert(term_id & ECS_PAIR ||
             term_id == _::cpp_type<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif

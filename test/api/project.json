@@ -24,14 +24,7 @@
                 "pair_w_wildcard_wildcard_is_wildcard",
                 "pair_w_rel_any_is_wildcard",
                 "pair_w_obj_any_is_wildcard",
-                "pair_w_any_any_is_wildcard",
-                "case_is_wildcard",
-                "case_w_rel_wildcard_is_wildcard",
-                "case_w_obj_wildcard_is_wildcard",
-                "case_w_wildcard_wildcard_is_wildcard",
-                "case_w_rel_any_is_wildcard",
-                "case_w_obj_any_is_wildcard",
-                "case_w_any_any_is_wildcard"
+                "pair_w_any_any_is_wildcard"
             ]
         }, {
             "id": "Entity",
@@ -144,11 +137,6 @@
                 "table_1_id_w_observer",
                 "table_2_ids_w_observer",
                 "emit_event_for_empty_table",
-                "emit_event_switch_id",
-                "emit_event_case_for_switch_id",
-                "emit_event_case_for_case_id",
-                "emit_event_case_for_case_id_wildcard",
-                "emit_event_switch_for_case_id",
                 "emit_table_event",
                 "emit_staged_from_world",
                 "emit_staged_from_stage",
@@ -237,9 +225,7 @@
         }, {
             "id": "Switch",
             "testcases": [
-                "get_case_empty",
                 "get_case_no_switch",
-                "get_case_unset",
                 "get_case_set",
                 "get_case_change",
                 "remove_case",
@@ -256,7 +242,6 @@
                 "query_2_cases_1_type",
                 "query_2_cases_2_types",
                 "query_after_remove",
-                "add_switch_in_stage",
                 "add_case_in_stage",
                 "change_case_in_stage",
                 "change_one_case_in_stage",
@@ -277,8 +262,11 @@
                 "switch_w_bitset_query_2_elems_skip",
                 "switch_w_bitset_query_elems_interleaved",
                 "switch_w_bitset_query_elems_interleaved_2_types",
-                "has_case_no_switch_empty_entity",
-                "has_case_no_switch"
+                "has_wildcard",
+                "remove_wildcard",
+                "same_table_after_change",
+                "component_relation",
+                "delete_case_trigger_after_delete_switch"
             ]
         }, {
             "id": "EnabledComponents",
@@ -1029,11 +1017,7 @@
                 "two_terms_w_inout",
                 "three_terms_w_or",
                 "three_terms_w_or_inout",
-                "four_terms_three_w_or_inout",
-                "switch",
-                "case",
-                "switch_from_entity",
-                "case_from_entity"
+                "four_terms_three_w_or_inout"
             ]
         }, {
             "id": "Query",
@@ -1086,14 +1070,11 @@
                 "query_w_from_entity_match_after",
                 "query_w_from_singleton_match_after",
                 "query_w_from_nothing",
-                "query_w_existing_switch",
                 "query_w_existing_switch_and_case",
-                "query_w_new_switch",
                 "query_w_new_switch_and_case",
                 "query_for_case_existing",
                 "query_for_case_new",
                 "query_for_switch_filter_term",
-                "query_for_case_w_0_case",
                 "query_switch_from_nothing",
                 "query_case_from_nothing",
                 "query_disabled_from_nothing",
@@ -1831,16 +1812,12 @@
                 "entity_instanceof_str",
                 "entity_childof_str",
                 "entity_pair_str",
-                "entity_switch_str",
-                "entity_case_str",
                 "entity_and_str",
                 "entity_or_str",
                 "entity_xor_str",
                 "entity_not_str",
                 "entity_str_small_buffer",
                 "role_pair_str",
-                "role_switch_str",
-                "role_case_str",
                 "role_and_str",
                 "role_or_str",
                 "role_xor_str",
@@ -1984,7 +1961,6 @@
                 "lock_table",
                 "recursive_lock_table",
                 "modify_after_lock",
-                "get_empty_case_from_stage",
                 "get_case_from_stage",
                 "get_object_from_stage"
             ]

@@ -724,35 +724,53 @@ void set_table_match(
     ecs_os_memcpy_n(qm->subjects, it->subjects, ecs_entity_t, term_count_actual);
     ecs_os_memcpy_n(qm->sizes, it->sizes, ecs_size_t, term_count_actual);
 
-    /* Initialize switch/case terms */
-    for (i = 0; i < term_count; i ++) {
-        ecs_id_t id = terms[i].id;
-        if (ECS_HAS_ROLE(id, CASE) && terms[i].subj.set.mask != EcsNothing) {
-            int32_t actual_index = terms[i].index;
-            flecs_switch_term_t *sc = ecs_vector_add(
-                &qm->sparse_columns, flecs_switch_term_t);
-            sc->signature_column_index = actual_index;
-            sc->sw_case = ecs_pair_second(world, id);
-            sc->sw_column = NULL;
-            qm->ids[actual_index] = id;
-        }
-    }
-
-    /* Look for disabled terms */
+    /* Look for union & disabled terms */
     if (table) {
+        if (table->flags & EcsTableHasUnion) {
+            for (i = 0; i < term_count; i ++) {
+                if (terms[i].subj.set.mask == EcsNothing) {
+                    continue;
+                }
+
+                ecs_id_t id = terms[i].id;
+                if (ECS_HAS_ROLE(id, PAIR) && ECS_PAIR_SECOND(id) == EcsWildcard) {
+                    continue;
+                }
+                
+                int32_t actual_index = terms[i].index;
+                int32_t column = it->columns[actual_index];
+                if (column <= 0) {
+                    continue;
+                }
+
+                ecs_id_t table_id = table->type.array[column - 1];
+                if (ECS_PAIR_FIRST(table_id) != EcsUnion) {
+                    continue;
+                }
+
+                flecs_switch_term_t *sc = ecs_vector_add(
+                     &qm->sparse_columns, flecs_switch_term_t);
+                sc->signature_column_index = actual_index;
+                sc->sw_case = ECS_PAIR_SECOND(id);
+                sc->sw_column = NULL;
+                qm->ids[actual_index] = id;
+            }
+        }
         if (table->flags & EcsTableHasDisabled) {
             for (i = 0; i < term_count; i ++) {
-                if (terms[i].subj.set.mask != EcsNothing) {
-                    int32_t actual_index = terms[i].index;
-                    ecs_id_t id = it->ids[actual_index];
-                    ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
-                    int32_t bs_index = ecs_search(world, table, bs_id, 0);
-                    if (bs_index != -1) {
-                        flecs_bitset_term_t *bc = ecs_vector_add(
-                            &qm->bitset_columns, flecs_bitset_term_t);
-                        bc->column_index = bs_index;
-                        bc->bs_column = NULL;
-                    }
+                if (terms[i].subj.set.mask == EcsNothing) {
+                    continue;
+                }
+
+                int32_t actual_index = terms[i].index;
+                ecs_id_t id = it->ids[actual_index];
+                ecs_id_t bs_id = ECS_DISABLED | (id & ECS_COMPONENT_MASK);
+                int32_t bs_index = ecs_search(world, table, bs_id, 0);
+                if (bs_index != -1) {
+                    flecs_bitset_term_t *bc = ecs_vector_add(
+                        &qm->bitset_columns, flecs_bitset_term_t);
+                    bc->column_index = bs_index;
+                    bc->bs_column = NULL;
                 }
             }
         }
@@ -1718,7 +1736,7 @@ void query_iter_init(
 static
 void query_on_event(
     ecs_iter_t *it) 
-{ 
+{
     /* Because this is the observer::run callback, checking if this is event is
      * already handled is not done for us. */
     ecs_world_t *world = it->world;

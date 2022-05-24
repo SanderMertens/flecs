@@ -912,6 +912,49 @@ e.child_of(parent_a);
 e.child_of(parent_b); // replaces (ChildOf, parent_a)
 ```
 
+To create a custom exclusive relationship, add the `Exclusive` property:
+```c
+ecs_entity_t MarriedTo = ecs_new_id(world);
+ecs_add_id(world, MarriedTo, EcsExclusive);
+```
+```cpp
+flecs::entity MarriedTo = world.entity()
+  .add(flecs::Exclusive);
+```
+
+### Union property
+The `Union` is similar to `Exclusive` in that it enforces that an entity can only have a single instance of a relationship. The difference between `Exclusive` and `Union` is that `Union` combines different relationship targets in a single table. This reduces table fragmentation, and as a result speeds up add/remove operations. This increase in add/remove speed does come at a cost: iterating a query with union terms is more expensive than iterating a regular relationship.
+
+The API for using the `Union` property is similar to regular relationships, as this example shows:
+
+```c
+ecs_entity_t Movement = ecs_new_id(world);
+ecs_add_id(world, Movement, EcsUnion);
+
+ecs_entity_t Walking = ecs_new_id(world);
+ecs_entity_t Running = ecs_new_id(world);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add_pair(world, e, Movement, Running);
+ecs_add_pair(world, e, Movement, Walking); // replaces (Movement, Running)
+```
+```cpp
+flecs::entity Movement = world.entity().add(flecs::Union);
+flecs::entity Walking = world.entity();
+flecs::entity Running = world.entity();
+
+flecs::entity e = world.entity().add(Movement, Running);
+e.add(Movement, Walking); // replaces (Movement, Running)
+```
+
+When compared to reguar relationships, union relationships have some differences and limitations:
+- Relationship cleanup does not work yet for union relations
+- Removing a union relationship removes any target, even if the specified target is different
+- Filters and rules do not support union relationships
+- Union relationships cannot have data
+- Union relationship query terms can only use the And operator
+- Queries with a (R, *) term will return (R, *) as term id for each entity
+
 ### Symmetric property
 The `Symmetric` property enforces that when a relation `(R, Y)` is added to entity `X`, the relation `(R, X)` will be added to entity `Y`. The reverse is also true, if relation `(R, Y)` is removed from `X`, relation `(R, X)` will be removed from `Y`.
 

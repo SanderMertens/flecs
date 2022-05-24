@@ -8,38 +8,11 @@ flecs::entity ref<T>::entity() const {
 }
 
 template <typename Self>
-inline Self& entity_builder<Self>::add_switch(const flecs::type& sw) {
-    return add_switch(sw.id());
-}
-
-template <typename Self>
-inline Self& entity_builder<Self>::remove_switch(const flecs::type& sw) {
-    return remove_switch(sw.id());
-}
-
-template <typename Self>
 template <typename Func, if_t< is_callable<Func>::value > >
 inline Self& entity_builder<Self>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->m_id, func);
     return to_base();
-}
-
-inline bool entity_view::has_switch(const flecs::type& type) const {
-    return ecs_has_id(m_world, m_id, flecs::Switch | type.id());
-}
-
-inline flecs::entity entity_view::get_case(const flecs::type& sw) const {
-    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
-}
-
-inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
-    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
-}
-
-template <typename T>
-inline flecs::entity entity_view::get_case() const {
-    return get_case(_::cpp_type<T>::id(m_world));
 }
 
 template <typename T, if_t< is_enum<T>::value > >
@@ -133,11 +106,10 @@ inline void entity_view::each(const Func& func) const {
         flecs::id ent(m_world, id);
         func(ent); 
 
-        // Case is not stored in type, so handle separately
-        if ((id & ECS_ROLE_MASK) == flecs::Switch) {
-            ent = flecs::id(
-                m_world, flecs::Case | ecs_get_case(
-                        m_world, m_id, ent.second().id()));
+        // Union object is not stored in type, so handle separately
+        if (ECS_PAIR_FIRST(id) == EcsUnion) {
+            ent = flecs::id(m_world, ECS_PAIR_SECOND(id),
+                ecs_get_object(m_world, m_id, ECS_PAIR_SECOND(id), 0));
             func(ent);
         }
     }

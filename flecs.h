@@ -172,6 +172,7 @@ extern "C" {
 #define EcsIdAcyclic                   (1u << 8)
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
+#define EcsIdUnion                     (1u << 11)
 
 #define EcsIdHasOnAdd                  (1u << 15) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 16) 
@@ -232,7 +233,7 @@ extern "C" {
 #define EcsTableHasDtors               (1u << 9u)
 #define EcsTableHasCopy                (1u << 10u)
 #define EcsTableHasMove                (1u << 11u)
-#define EcsTableHasSwitch              (1u << 12u)
+#define EcsTableHasUnion              (1u << 12u)
 #define EcsTableHasDisabled            (1u << 13u)
 #define EcsTableHasOverrides           (1u << 14u)
 
@@ -243,8 +244,8 @@ extern "C" {
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasSwitch | EcsTableHasDisabled)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasSwitch | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasUnion | EcsTableHasDisabled)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasUnion | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 
 
@@ -499,7 +500,6 @@ typedef int32_t ecs_size_t;
 #define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
 #define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
-#define ecs_case(pred, obj) (ECS_CASE | ecs_entity_t_comb(obj, pred))
 
 /* Get object from pair with the correct (current) generation count */
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
@@ -2465,6 +2465,7 @@ struct ecs_trigger_t {
 
     uint64_t id;                /* Internal id */
     int32_t *last_event_id;     /* Optional pointer to observer last_event_id */
+    ecs_id_t register_id;       /* Id with with trigger is registered */
 };
 
 /* An observer reacts to events matching a filter */
@@ -3848,12 +3849,6 @@ extern "C" {
 /** Role bit added to roles to differentiate between roles and generations */
 #define ECS_ROLE (1ull << 63)
 
-/** Cases are used to switch between mutually exclusive components */
-FLECS_API extern const ecs_id_t ECS_CASE;
-
-/** Switches allow for fast switching between mutually exclusive components */
-FLECS_API extern const ecs_id_t ECS_SWITCH;
-
 /** The PAIR role indicates that the entity is a pair identifier. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
@@ -3981,6 +3976,11 @@ FLECS_API extern const ecs_entity_t EcsOneOf;
 /* Can be added to relation to indicate that it should never hold data, even
  * when it or the relation object is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
+
+/* Tag to indicate that relation is stored as union. Union relations enable
+ * changing the target of a union without switching tables. Union relationships
+ * are also marked as exclusive. */
+FLECS_API extern const ecs_entity_t EcsUnion;
 
 /* Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
@@ -4900,21 +4900,6 @@ void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
     ecs_id_t id);
-
-/** Get case for switch.
- * This operation gets the current case for the specified switch. If the current
- * switch is not set for the entity, the operation will return 0.
- *
- * @param world The world.
- * @param e The entity.
- * @param sw The switch for which to obtain the case.
- * @return The current case for the specified switch. 
- */
-FLECS_API
-ecs_entity_t ecs_get_case(
-    const ecs_world_t *world,
-    ecs_entity_t e,
-    ecs_entity_t sw);
 
 /** @} */
 
@@ -12516,8 +12501,6 @@ static const flecs::entity_t UnSet = EcsUnSet;
 
 /** Builtin roles */
 static const flecs::entity_t Pair = ECS_PAIR;
-static const flecs::entity_t Switch = ECS_SWITCH;
-static const flecs::entity_t Case = ECS_CASE;
 static const flecs::entity_t Override = ECS_OVERRIDE;
 
 /* Builtin entity ids */
@@ -12533,6 +12516,7 @@ static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t DontInherit = EcsDontInherit;
 static const flecs::entity_t Tag = EcsTag;
+static const flecs::entity_t Union = EcsUnion;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
 static const flecs::entity_t Symmetric = EcsSymmetric;
@@ -13404,16 +13388,6 @@ struct id {
     /* Test if id is a wildcard */
     bool is_wildcard() const {
         return ecs_id_is_wildcard(m_id);
-    }
-
-    /* Test if id has the Switch role */
-    bool is_switch() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Switch;
-    }
-
-    /* Test if id has the Case role */
-    bool is_case() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Case;
     }
 
     /* Test if id is entity */
@@ -16551,8 +16525,7 @@ private:
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_term_id(m_iter, index);
-        ecs_assert(term_id & ECS_PAIR || term_id & ECS_SWITCH || 
-            term_id & ECS_CASE ||
+        ecs_assert(term_id & ECS_PAIR ||
             term_id == _::cpp_type<T>::id(m_iter->world), 
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
@@ -17150,55 +17123,6 @@ struct entity_view : public id {
         return owns(_::cpp_type<T>::id(m_world));
     }
 
-    /** Check if entity has the provided switch.
-     *
-     * @param sw The switch to check.
-     * @return True if the entity has the provided switch, false otherwise.
-     */
-    bool has_switch(const flecs::type& sw) const;
-
-    template <typename T>
-    bool has_switch() const {
-        return ecs_has_id(m_world, m_id, 
-            flecs::Switch | _::cpp_type<T>::id(m_world));
-    }
-
-    /** Check if entity has the provided case.
-     *
-     * @param sw_case The case to check.
-     * @return True if the entity has the provided case, false otherwise.
-     */
-    bool has_case(flecs::id_t sw_case) const {
-        return ecs_has_id(m_world, m_id, flecs::Case | sw_case);
-    }
-
-    template<typename T>
-    bool has_case() const {
-        return this->has_case(_::cpp_type<T>::id(m_world));
-    }
-
-    /** Get case for switch.
-     *
-     * @param sw The switch for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    flecs::entity get_case(flecs::id_t sw) const;
-
-    /** Get case for switch.
-     *
-     * @tparam T The switch type for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    template<typename T> 
-    flecs::entity get_case() const;
-
-    /** Get case for switch.
-     *
-     * @param sw The switch for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    flecs::entity get_case(const flecs::type& sw) const;
-
     /** Test if component is enabled.
      *
      * @tparam T The component to test.
@@ -17644,104 +17568,6 @@ struct entity_builder : entity_view {
             FLECS_FWD(args)...);
 
         return to_base();  
-    }
-
-    /** Add a switch to an entity by id.
-     * The switch entity must be a type, that is it must have the EcsType
-     * component. Entities created with flecs::type are valid here.
-     *
-     * @param sw The switch entity id to add.
-     */    
-    Self& add_switch(entity_t sw) {
-        ecs_add_id(this->m_world, this->m_id, ECS_SWITCH | sw);
-        return to_base();  
-    }
-
-    /** Add a switch to an entity by C++ type.
-     * The C++ type must be associated with a switch type.
-     *
-     * @tparam T The switch to add.
-     */ 
-    template <typename T>
-    Self& add_switch() {
-        ecs_add_id(this->m_world, this->m_id, 
-            ECS_SWITCH | _::cpp_type<T>::id());
-        return to_base();  
-    }
-
-    /** Add a switch to an entity.
-     * Any instance of flecs::type can be used as a switch.
-     *
-     * @param sw The switch to add.
-     */     
-    Self& add_switch(const flecs::type& sw);
-
-    /** Remove a switch from an entity by id.
-     *
-     * @param sw The switch to remove.
-     */    
-    Self& remove_switch(entity_t sw) {
-        ecs_remove_id(this->m_world, this->m_id, ECS_SWITCH | sw);
-        return to_base();  
-    }
-    
-    /** Add a switch to an entity by C++ type.
-     * The C++ type must be associated with a switch type.
-     *
-     * @tparam T The switch to remove.
-     */ 
-    template <typename T>
-    Self& remove_switch() {
-        ecs_remove_id(this->m_world, this->m_id, 
-            ECS_SWITCH | _::cpp_type<T>::id());
-        return to_base();  
-    }
-
-    /** Remove a switch from an entity.
-     * Any instance of flecs::type can be used as a switch.
-     *
-     * @param sw The switch to remove.
-     */      
-    Self& remove_switch(const flecs::type& sw);
-
-    /** Add a switch to an entity by id.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @param sw_case The case entity id to add.
-     */    
-    Self& add_case(entity_t sw_case) {
-        ecs_add_id(this->m_world, this->m_id, ECS_CASE | sw_case);
-        return to_base();
-    }
-
-    /** Add a switch to an entity by id.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @tparam T The case to add.
-     */   
-    template<typename T>
-    Self& add_case() {
-        return this->add_case(_::cpp_type<T>::id());
-    }
-
-    /** Remove a case from an entity by id.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @param sw_case The case entity id to remove.
-     */    
-    Self& remove_case(entity_t sw_case) {
-        ecs_remove_id(this->m_world, this->m_id, ECS_CASE | sw_case);
-        return to_base();  
-    }
-
-    /** Remove a switch from an entity by id.
-     * The case must belong to a switch that is already added to the entity.
-     *
-     * @tparam T The case to remove.
-     */   
-    template<typename T>
-    Self& remove_case() {
-        return this->remove_case(_::cpp_type<T>::id());
     }
 
     /** Add pair for enum constant.
@@ -20048,38 +19874,11 @@ flecs::entity ref<T>::entity() const {
 }
 
 template <typename Self>
-inline Self& entity_builder<Self>::add_switch(const flecs::type& sw) {
-    return add_switch(sw.id());
-}
-
-template <typename Self>
-inline Self& entity_builder<Self>::remove_switch(const flecs::type& sw) {
-    return remove_switch(sw.id());
-}
-
-template <typename Self>
 template <typename Func, if_t< is_callable<Func>::value > >
 inline Self& entity_builder<Self>::set(const Func& func) {
     _::entity_with_invoker<Func>::invoke_get_mut(
         this->m_world, this->m_id, func);
     return to_base();
-}
-
-inline bool entity_view::has_switch(const flecs::type& type) const {
-    return ecs_has_id(m_world, m_id, flecs::Switch | type.id());
-}
-
-inline flecs::entity entity_view::get_case(const flecs::type& sw) const {
-    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw.id()));
-}
-
-inline flecs::entity entity_view::get_case(flecs::id_t sw) const {
-    return flecs::entity(m_world, ecs_get_case(m_world, m_id, sw));
-}
-
-template <typename T>
-inline flecs::entity entity_view::get_case() const {
-    return get_case(_::cpp_type<T>::id(m_world));
 }
 
 template <typename T, if_t< is_enum<T>::value > >
@@ -20173,11 +19972,10 @@ inline void entity_view::each(const Func& func) const {
         flecs::id ent(m_world, id);
         func(ent); 
 
-        // Case is not stored in type, so handle separately
-        if ((id & ECS_ROLE_MASK) == flecs::Switch) {
-            ent = flecs::id(
-                m_world, flecs::Case | ecs_get_case(
-                        m_world, m_id, ent.second().id()));
+        // Union object is not stored in type, so handle separately
+        if (ECS_PAIR_FIRST(id) == EcsUnion) {
+            ent = flecs::id(m_world, ECS_PAIR_SECOND(id),
+                ecs_get_object(m_world, m_id, ECS_PAIR_SECOND(id), 0));
             func(ent);
         }
     }

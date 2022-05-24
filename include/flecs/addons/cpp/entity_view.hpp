@@ -499,55 +499,6 @@ struct entity_view : public id {
         return owns(_::cpp_type<T>::id(m_world));
     }
 
-    /** Check if entity has the provided switch.
-     *
-     * @param sw The switch to check.
-     * @return True if the entity has the provided switch, false otherwise.
-     */
-    bool has_switch(const flecs::type& sw) const;
-
-    template <typename T>
-    bool has_switch() const {
-        return ecs_has_id(m_world, m_id, 
-            flecs::Switch | _::cpp_type<T>::id(m_world));
-    }
-
-    /** Check if entity has the provided case.
-     *
-     * @param sw_case The case to check.
-     * @return True if the entity has the provided case, false otherwise.
-     */
-    bool has_case(flecs::id_t sw_case) const {
-        return ecs_has_id(m_world, m_id, flecs::Case | sw_case);
-    }
-
-    template<typename T>
-    bool has_case() const {
-        return this->has_case(_::cpp_type<T>::id(m_world));
-    }
-
-    /** Get case for switch.
-     *
-     * @param sw The switch for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    flecs::entity get_case(flecs::id_t sw) const;
-
-    /** Get case for switch.
-     *
-     * @tparam T The switch type for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    template<typename T> 
-    flecs::entity get_case() const;
-
-    /** Get case for switch.
-     *
-     * @param sw The switch for which to obtain the case.
-     * @return The entity representing the case.
-     */
-    flecs::entity get_case(const flecs::type& sw) const;
-
     /** Test if component is enabled.
      *
      * @tparam T The component to test.

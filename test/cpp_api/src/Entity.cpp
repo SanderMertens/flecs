@@ -2437,9 +2437,9 @@ void Entity_pair_id_str() {
 void Entity_role_id_str() {
     flecs::world ecs;
 
-    flecs::id id = flecs::id(ecs, ECS_SWITCH | ecs.entity("Foo"));
+    flecs::id id = flecs::id(ecs, ECS_OVERRIDE | ecs.entity("Foo"));
 
-    test_str("SWITCH|Foo", id.str());
+    test_str("OVERRIDE|Foo", id.str());
 }
 
 void Entity_id_str_from_entity_view() {

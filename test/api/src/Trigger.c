@@ -2,6 +2,7 @@
 
 static int on_remove_count = 0;
 
+static
 void Trigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
@@ -70,6 +71,7 @@ void Trigger_n_w_values(ecs_iter_t *it) {
     }
 }
 
+static
 void TriggerAdd(ecs_iter_t *it) {
     ecs_id_t id = *(ecs_id_t*)it->ctx;
 
@@ -79,6 +81,7 @@ void TriggerAdd(ecs_iter_t *it) {
     }
 }
 
+static
 void TriggerRemove(ecs_iter_t *it) {
     ecs_id_t id = *(ecs_id_t*)it->ctx;
 
@@ -88,6 +91,7 @@ void TriggerRemove(ecs_iter_t *it) {
     }
 }
 
+static
 void TriggerClear(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -95,6 +99,7 @@ void TriggerClear(ecs_iter_t *it) {
     }
 }
 
+static
 void TriggerDelete(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {

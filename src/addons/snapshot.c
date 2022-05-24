@@ -226,7 +226,7 @@ void restore_unfiltered(
             } else {
                 flecs_table_clear_data(
                     world, world_table, &world_table->data);
-                flecs_table_init_data(world, world_table);
+                flecs_table_init_data(world_table);
             }
         
         /* If the snapshot table doesn't exist, this table was created after the

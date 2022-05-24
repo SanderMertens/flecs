@@ -1,8 +1,8 @@
-#ifndef SWITCH_CASE_H
-#define SWITCH_CASE_H
+#ifndef UNION_H
+#define UNION_H
 
 /* This generated file contains includes for project dependencies */
-#include "switch_case/bake_config.h"
+#include "union/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -569,54 +569,6 @@ ecs_table_t* find_or_create(
     return create_table(world, &copy, elem, prev);
 }
 
-int32_t flecs_table_switch_from_case(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_entity_t add)
-{
-    ecs_type_t type = table->type;
-    ecs_entity_t *array = type.array;
-
-    int32_t i, count = table->sw_column_count;
-    if (!count) {
-        return -1;
-    }
-
-    add = add & ECS_COMPONENT_MASK;
-
-    ecs_sw_column_t *sw_columns = NULL;
-
-    if ((sw_columns = table->data.sw_columns)) {
-        /* Fast path, we can get the switch type from the column data */
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *sw_type = sw_columns[i].type;
-            if (ecs_search(world, sw_type, add, 0) != -1) {
-                return i;
-            }
-        }
-    } else {
-        /* Slow path, table is empty, so we'll have to get the switch types by
-         * actually inspecting the switch type entities. */
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t e = array[i + table->sw_column_offset];
-            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_COMPONENT_MASK;
-
-            const EcsType *type_ptr = ecs_get(world, e, EcsType);
-            ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            if (ecs_search(world, type_ptr->normalized, add, 0) != -1) {
-                return i;
-            }
-        }
-    }
-
-    /* If a table was not found, this is an invalid switch case */
-    ecs_abort(ECS_TYPE_INVALID_CASE, NULL);
-
-    return -1;
-}
-
 static
 void ids_append(
     ecs_type_t *ids,
@@ -941,57 +893,58 @@ ecs_table_t* flecs_find_table_with(
     ecs_table_t *node,
     ecs_entity_t with)
 {    
-    /* If table has one or more switches and this is a case, return self */
-    if (ECS_HAS_ROLE(with, CASE)) {
-        ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
-            ECS_TYPE_INVALID_CASE, NULL);
-        return node;
-    } else {
-        ecs_ensure_id(world, with);
-        
-        ecs_id_record_t *idr = NULL;
-        ecs_entity_t r = 0, o = 0;
-        if (ECS_HAS_ROLE(with, PAIR)) {
-            r = ECS_PAIR_FIRST(with);
-            o = ECS_PAIR_SECOND(with);
-            idr = flecs_ensure_id_record(world, ecs_pair(r, EcsWildcard));
-            if (idr->flags & EcsIdExclusive) {
-                /* Relationship is exclusive, check if table already has it */
-                const ecs_table_record_t *tr = flecs_id_record_table(idr, node);
-                if (tr) {
-                    /* Table already has an instance of the relationship, create
-                     * a new id sequence with the existing id replaced */
-                    ecs_type_t dst_type = flecs_type_copy(&node->type);
-                    dst_type.array[tr->column] = with;
-                    return find_or_create(world, &dst_type, true, node);
-                }
+    ecs_ensure_id(world, with);
+    
+    ecs_id_record_t *idr = NULL;
+    ecs_entity_t r = 0, o = 0;
+    if (ECS_HAS_ROLE(with, PAIR)) {
+        r = ECS_PAIR_FIRST(with);
+        o = ECS_PAIR_SECOND(with);
+        idr = flecs_ensure_id_record(world, ecs_pair(r, EcsWildcard));
+        if (idr->flags & EcsIdUnion) {
+            ecs_type_t dst_type;
+            ecs_id_t union_id = ecs_pair(EcsUnion, r);
+            int res = flecs_type_new_with(&dst_type, &node->type, union_id);
+            if (res == -1) {
+                return node;
             }
-        } else {
-            idr = flecs_ensure_id_record(world, with);
-            r = with;
+            return find_or_create(world, &dst_type, true, node);;
+        } else if (idr->flags & EcsIdExclusive) {
+            /* Relationship is exclusive, check if table already has it */
+            const ecs_table_record_t *tr = flecs_id_record_table(idr, node);
+            if (tr) {
+                /* Table already has an instance of the relationship, create
+                    * a new id sequence with the existing id replaced */
+                ecs_type_t dst_type = flecs_type_copy(&node->type);
+                dst_type.array[tr->column] = with;
+                return find_or_create(world, &dst_type, true, node);
+            }
         }
-
-        /* Create sequence with new id */
-        ecs_type_t dst_type;
-        int res = flecs_type_new_with(&dst_type, &node->type, with);
-        if (res == -1) {
-            return node; /* Current table already has id */
-        }
-
-        if (r == EcsIsA) {
-            /* If adding a prefab, check if prefab has overrides */
-            flecs_add_overrides_for_base(world, &dst_type, with);
-        }
-
-        if (idr->flags & EcsIdWith) {
-            ecs_id_record_t *idr_with_wildcard = flecs_get_id_record(world,
-                ecs_pair(EcsWith, EcsWildcard));
-            /* If id has With property, add targets to type */
-            flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
-        }
-
-        return find_or_create(world, &dst_type, true, node);
+    } else {
+        idr = flecs_ensure_id_record(world, with);
+        r = with;
     }
+
+    /* Create sequence with new id */
+    ecs_type_t dst_type;
+    int res = flecs_type_new_with(&dst_type, &node->type, with);
+    if (res == -1) {
+        return node; /* Current table already has id */
+    }
+
+    if (r == EcsIsA) {
+        /* If adding a prefab, check if prefab has overrides */
+        flecs_add_overrides_for_base(world, &dst_type, with);
+    }
+
+    if (idr->flags & EcsIdWith) {
+        ecs_id_record_t *idr_with_wildcard = flecs_get_id_record(world,
+            ecs_pair(EcsWith, EcsWildcard));
+        /* If id has With property, add targets to type */
+        flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
+    }
+
+    return find_or_create(world, &dst_type, true, node);
 }
 
 static
@@ -1000,21 +953,24 @@ ecs_table_t* flecs_find_table_without(
     ecs_table_t *node,
     ecs_entity_t without)
 {
-    /* If table has one or more switches and this is a case, return self */
-    if (ECS_HAS_ROLE(without, CASE)) {
-        ecs_assert((node->flags & EcsTableHasSwitch) != 0, 
-            ECS_TYPE_INVALID_CASE, NULL);
-        return node;
-    } else {
-        /* Create sequence with new id */
-        ecs_type_t dst_type;
-        int res = flecs_type_new_without(&dst_type, &node->type, without);
-        if (res == -1) {
-            return node; /* Current table does not have id */
+    if (ECS_HAS_ROLE(without, PAIR)) {
+        ecs_entity_t r = 0;
+        ecs_id_record_t *idr = NULL;
+        r = ECS_PAIR_FIRST(without);
+        idr = flecs_get_id_record(world, ecs_pair(r, EcsWildcard));
+        if (idr && idr->flags & EcsIdUnion) {
+            without = ecs_pair(EcsUnion, r);
         }
-
-        return find_or_create(world, &dst_type, true, node);
     }
+
+    /* Create sequence with new id */
+    ecs_type_t dst_type;
+    int res = flecs_type_new_without(&dst_type, &node->type, without);
+    if (res == -1) {
+        return node; /* Current table does not have id */
+    }
+
+    return find_or_create(world, &dst_type, true, node);
 }
 
 static
@@ -1132,10 +1088,6 @@ void populate_diff(
         ecs_table_diff_t *diff = edge->diff;
 
         if (diff && diff != &ecs_table_edge_is_component) {
-            ecs_assert(!add_ptr || !ECS_HAS_ROLE(add_ptr[0], CASE), 
-                ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(!remove_ptr || !ECS_HAS_ROLE(remove_ptr[0], CASE), 
-                ECS_INTERNAL_ERROR, NULL);
             *out = *diff;
         } else {
             out->on_set.count = 0;

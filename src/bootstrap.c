@@ -304,6 +304,11 @@ void register_with(ecs_iter_t *it) {
 }
 
 static
+void register_union(ecs_iter_t *it) {
+    register_id_flag_for_relation(it, EcsUnion, EcsIdUnion, 0, 0);
+}
+
+static
 void on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_term_id(it, 1);
 
@@ -738,6 +743,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsDontInherit);
     flecs_bootstrap_tag(world, EcsTag);
+    flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
     flecs_bootstrap_tag(world, EcsWith);
@@ -767,6 +773,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsIsA, EcsTag);
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
+    ecs_add_id(world, EcsUnion, EcsTag);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
@@ -841,6 +848,12 @@ void flecs_bootstrap(
         .term = {.id = ecs_pair(EcsWith, EcsWildcard), .subj.set.mask = EcsSelf },
         .events = {EcsOnAdd},
         .callback = register_with
+    });
+
+    ecs_trigger_init(world, &(ecs_trigger_desc_t){
+        .term = {.id = EcsUnion, .subj.set.mask = EcsSelf },
+        .events = {EcsOnAdd},
+        .callback = register_union
     });
 
     /* Define trigger to make sure that adding a module to a child entity also

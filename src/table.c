@@ -74,8 +74,8 @@ void check_table_sanity(ecs_table_t *table) {
             ecs_sw_column_t *sw = &table->data.sw_columns[i];
             ecs_assert(ecs_vector_count(sw->data.values) == count, 
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert((ids[i + sw_offset] & ECS_ROLE_MASK) == 
-                ECS_SWITCH, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ECS_PAIR_FIRST(ids[i + sw_offset]) == EcsUnion,
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 
@@ -257,7 +257,6 @@ void flecs_table_init_storage_table(
 }
 
 void flecs_table_init_data(
-    ecs_world_t *world,
     ecs_table_t *table)
 {
     int32_t sw_count = table->sw_column_count;
@@ -276,22 +275,9 @@ void flecs_table_init_data(
     }
 
     if (sw_count) {
-        ecs_entity_t *ids = table->type.array;
-        int32_t sw_offset = table->sw_column_offset;
         storage->sw_columns = ecs_os_calloc_n(ecs_sw_column_t, sw_count);
-
         for (i = 0; i < sw_count; i ++) {
-            ecs_entity_t e = ids[i + sw_offset];
-            ecs_assert(ECS_HAS_ROLE(e, SWITCH), ECS_INTERNAL_ERROR, NULL);
-            e = e & ECS_COMPONENT_MASK;
-            const EcsType *switch_type = ecs_get(world, e, EcsType);
-            ecs_assert(switch_type != NULL, 
-                ECS_INVALID_PARAMETER, "not a switch");
-            ecs_table_t *sw_table = switch_type->normalized;
-
             flecs_switch_init( &storage->sw_columns[i].data, 0);
-
-            storage->sw_columns[i].type = sw_table;
         }
     }
 
@@ -353,14 +339,14 @@ void flecs_table_init_flags(
                         table->flags |= EcsTableHasBuiltins;
                         table->flags |= EcsTableHasModule;
                     }
-                }
-            } else if (role == ECS_SWITCH) {
-                table->flags |= EcsTableHasSwitch;
+                } else if (r == EcsUnion) {
+                    table->flags |= EcsTableHasUnion;
 
-                if (!table->sw_column_count) {
-                    table->sw_column_offset = flecs_ito(int16_t, i);
+                    if (!table->sw_column_count) {
+                        table->sw_column_offset = flecs_ito(int16_t, i);
+                    }
+                    table->sw_column_count ++;
                 }
-                table->sw_column_count ++;
             } else if (role == ECS_DISABLED) {
                 table->flags |= EcsTableHasDisabled;
 
@@ -600,7 +586,7 @@ void flecs_table_init(
     world->store.records = records;
 
     flecs_table_init_storage_table(world, table);
-    flecs_table_init_data(world, table); 
+    flecs_table_init_data(table); 
 }
 
 static
@@ -2352,7 +2338,7 @@ void flecs_table_replace_data(
     if (data) {
         table->data = *data;
     } else {
-        flecs_table_init_data(world, table);
+        flecs_table_init_data(table);
     }
 
     int32_t count = ecs_table_count(table);
@@ -2495,6 +2481,20 @@ int32_t ecs_table_storage_to_type_index(
     int32_t offset = table->type.count;
     return table->storage_map[offset + index];
 error:
+    return -1;
+}
+
+int32_t flecs_table_column_to_union_index(
+    const ecs_table_t *table,
+    int32_t column)
+{
+    int32_t sw_count = table->sw_column_count;
+    if (sw_count) {
+        int32_t sw_offset = table->sw_column_offset;
+        if (column >= sw_offset && column < (sw_offset + sw_count)){
+            return column - sw_offset;
+        }
+    }
     return -1;
 }
 

@@ -12,7 +12,9 @@ int32_t type_search(
     if (tr) {
         int32_t r = tr->column;
         if (tr_out) tr_out[0] = tr;
-        if (id_out) id_out[0] = ids[r];
+        if (id_out) {
+            id_out[0] = flecs_to_public_id(ids[r]);
+        }
         return r;
     }
 
@@ -31,12 +33,13 @@ int32_t type_offset_search(
     ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(offset > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!ECS_HAS_ROLE(id, CASE), ECS_INVALID_PARAMETER, NULL);
 
     while (offset < count) {
         ecs_id_t type_id = ids[offset ++];
         if (ecs_id_match(type_id, id)) {
-            if (id_out) id_out[0] = type_id;
+            if (id_out) {
+                id_out[0] = flecs_to_public_id(type_id);
+            }
             return offset - 1;
         }
     }
@@ -193,10 +196,7 @@ int32_t ecs_search_relation(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool is_case = ECS_HAS_ROLE(id, CASE);
-    id = is_case * (ECS_SWITCH | ECS_PAIR_FIRST(id)) + !is_case * id;
-
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_query_id_record(world, id);
     if (!idr) {
         return -1;
     }
@@ -221,7 +221,7 @@ int32_t ecs_search(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_id_record_t *idr = flecs_get_id_record(world, id);
+    ecs_id_record_t *idr = flecs_get_query_id_record(world, id);
     if (!idr) {
         return -1;
     }

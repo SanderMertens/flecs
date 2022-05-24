@@ -44,16 +44,6 @@ struct id {
         return ecs_id_is_wildcard(m_id);
     }
 
-    /* Test if id has the Switch role */
-    bool is_switch() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Switch;
-    }
-
-    /* Test if id has the Case role */
-    bool is_case() const {
-        return (m_id & ECS_ROLE_MASK) == flecs::Case;
-    }
-
     /* Test if id is entity */
     bool is_entity() const {
         return !(m_id & ECS_ROLE_MASK);

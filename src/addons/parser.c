@@ -330,10 +330,6 @@ ecs_entity_t parse_role(
         return ECS_XOR;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
         return ECS_NOT;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_SWITCH)) {
-        return ECS_SWITCH;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_CASE)) {
-        return ECS_CASE;
     } else if (!ecs_os_strcmp(token, TOK_OVERRIDE)) {
         return ECS_OVERRIDE;
     } else if (!ecs_os_strcmp(token, TOK_ROLE_DISABLED)) {
@@ -867,7 +863,7 @@ parse_pair_object:
     }
 
     if (term.role != 0) {
-        if (term.role != ECS_PAIR && term.role != ECS_CASE) {
+        if (term.role != ECS_PAIR) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "invalid combination of role '%s' with pair", 
                     ecs_role_str(term.role));

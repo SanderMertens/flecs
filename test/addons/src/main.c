@@ -20,6 +20,7 @@ void Parser_component_explicit_subject_this(void);
 void Parser_component_explicit_subject_this_by_name(void);
 void Parser_component_explicit_subject_wildcard(void);
 void Parser_component_explicit_subject_any(void);
+void Parser_component_explicit_subject_0(void);
 void Parser_this_as_predicate(void);
 void Parser_this_as_object(void);
 void Parser_pair_implicit_subject(void);
@@ -37,6 +38,7 @@ void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
 void Parser_pair_implicit_subject_0_object(void);
 void Parser_pair_explicit_subject_0_object(void);
+void Parser_pair_explicit_subject_0(void);
 void Parser_in_component_implicit_subject(void);
 void Parser_in_component_explicit_subject(void);
 void Parser_in_pair_implicit_subject(void);
@@ -159,10 +161,6 @@ void Parser_trailing_space(void);
 void Parser_2_trailing_spaces(void);
 void Parser_template_type(void);
 void Parser_predicate_w_parens(void);
-void Parser_switch_id(void);
-void Parser_case_pair(void);
-void Parser_pair_w_invalid_role(void);
-void Parser_case_w_missing_obj(void);
 void Parser_not_alive_pred(void);
 void Parser_not_alive_subj(void);
 void Parser_not_alive_obj(void);
@@ -964,6 +962,10 @@ bake_test_case Parser_testcases[] = {
         Parser_component_explicit_subject_any
     },
     {
+        "component_explicit_subject_0",
+        Parser_component_explicit_subject_0
+    },
+    {
         "this_as_predicate",
         Parser_this_as_predicate
     },
@@ -1030,6 +1032,10 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_explicit_subject_0_object",
         Parser_pair_explicit_subject_0_object
+    },
+    {
+        "pair_explicit_subject_0",
+        Parser_pair_explicit_subject_0
     },
     {
         "in_component_implicit_subject",
@@ -1518,22 +1524,6 @@ bake_test_case Parser_testcases[] = {
     {
         "predicate_w_parens",
         Parser_predicate_w_parens
-    },
-    {
-        "switch_id",
-        Parser_switch_id
-    },
-    {
-        "case_pair",
-        Parser_case_pair
-    },
-    {
-        "pair_w_invalid_role",
-        Parser_pair_w_invalid_role
-    },
-    {
-        "case_w_missing_obj",
-        Parser_case_w_missing_obj
     },
     {
         "not_alive_pred",
@@ -4410,7 +4400,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        174,
+        172,
         Parser_testcases
     },
     {
