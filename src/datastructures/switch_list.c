@@ -231,8 +231,8 @@ void flecs_switch_set(
     ecs_switch_node_t *nodes = ecs_vector_first(sw->nodes, ecs_switch_node_t);
     ecs_switch_node_t *node = &nodes[element];
 
-    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
     ecs_switch_header_t *dst_hdr = ensure_header(sw, value);
+    ecs_switch_header_t *cur_hdr = get_header(sw, cur_value);
 
     verify_nodes(cur_hdr, nodes);
     verify_nodes(dst_hdr, nodes);
