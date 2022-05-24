@@ -72,8 +72,7 @@ void check_table_sanity(ecs_table_t *table) {
             ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < sw_count; i ++) {
             ecs_sw_column_t *sw = &table->data.sw_columns[i];
-            ecs_assert(sw->data != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ecs_vector_count(sw->data->values) == count, 
+            ecs_assert(ecs_vector_count(sw->data.values) == count, 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert((ids[i + sw_offset] & ECS_ROLE_MASK) == 
                 ECS_SWITCH, ECS_INTERNAL_ERROR, NULL);

@@ -2230,8 +2230,7 @@ void check_table_sanity(ecs_table_t *table) {
             ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < sw_count; i ++) {
             ecs_sw_column_t *sw = &table->data.sw_columns[i];
-            ecs_assert(sw->data != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ecs_vector_count(sw->data->values) == count, 
+            ecs_assert(ecs_vector_count(sw->data.values) == count, 
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert((ids[i + sw_offset] & ECS_ROLE_MASK) == 
                 ECS_SWITCH, ECS_INTERNAL_ERROR, NULL);
@@ -37742,16 +37741,6 @@ ecs_id_t actual_match_id(
         return ECS_SWITCH | ECS_PAIR_FIRST(id);
     }
 
-    /* If the id is a pair and contains Any wildcards, replace them with * */
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        if (ECS_PAIR_FIRST(id) == EcsAny) {
-            id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
-        }
-        if (ECS_PAIR_SECOND(id) == EcsAny) {
-            id = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
-        }
-    }
-
     return id;
 }
 
@@ -48481,6 +48470,25 @@ bool free_id_record(
     return true;
 }
 
+static
+ecs_id_t flecs_id_record_id(
+    ecs_id_t id)
+{
+    id = ecs_strip_generation(id);
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
+        if (r == EcsAny) {
+            r = EcsWildcard;
+        }
+        if (o == EcsAny) {
+            o = EcsWildcard;
+        }
+        id = ecs_pair(r, o);
+    }
+    return id;
+}
+
 ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
@@ -48493,7 +48501,7 @@ ecs_id_record_t* flecs_ensure_id_record(
     if (!idr) {
         idr = new_id_record(world, id);
         idr_ptr = ecs_map_get(&world->id_index, 
-            ecs_id_record_t*, ecs_strip_generation(id));
+            ecs_id_record_t*, flecs_id_record_id(id));
         ecs_assert(idr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         idr_ptr[0] = idr;
     }
@@ -48507,7 +48515,7 @@ ecs_id_record_t* flecs_get_id_record(
 {
     ecs_poly_assert(world, ecs_world_t);
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
-        ecs_strip_generation(id));
+        flecs_id_record_id(id));
 }
 
 void flecs_remove_id_record(
@@ -48520,7 +48528,7 @@ void flecs_remove_id_record(
     /* Free id record resources */
     if (free_id_record(world, id, idr)) {
         /* Remove record from world index */
-        ecs_map_remove(&world->id_index, ecs_strip_generation(id));
+        ecs_map_remove(&world->id_index, flecs_id_record_id(id));
     }
 }
 

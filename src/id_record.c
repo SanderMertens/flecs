@@ -314,6 +314,25 @@ bool free_id_record(
     return true;
 }
 
+static
+ecs_id_t flecs_id_record_id(
+    ecs_id_t id)
+{
+    id = ecs_strip_generation(id);
+    if (ECS_HAS_ROLE(id, PAIR)) {
+        ecs_entity_t r = ECS_PAIR_FIRST(id);
+        ecs_entity_t o = ECS_PAIR_SECOND(id);
+        if (r == EcsAny) {
+            r = EcsWildcard;
+        }
+        if (o == EcsAny) {
+            o = EcsWildcard;
+        }
+        id = ecs_pair(r, o);
+    }
+    return id;
+}
+
 ecs_id_record_t* flecs_ensure_id_record(
     ecs_world_t *world,
     ecs_id_t id)
@@ -326,7 +345,7 @@ ecs_id_record_t* flecs_ensure_id_record(
     if (!idr) {
         idr = new_id_record(world, id);
         idr_ptr = ecs_map_get(&world->id_index, 
-            ecs_id_record_t*, ecs_strip_generation(id));
+            ecs_id_record_t*, flecs_id_record_id(id));
         ecs_assert(idr_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         idr_ptr[0] = idr;
     }
@@ -340,7 +359,7 @@ ecs_id_record_t* flecs_get_id_record(
 {
     ecs_poly_assert(world, ecs_world_t);
     return ecs_map_get_ptr(&world->id_index, ecs_id_record_t*,
-        ecs_strip_generation(id));
+        flecs_id_record_id(id));
 }
 
 void flecs_remove_id_record(
@@ -353,7 +372,7 @@ void flecs_remove_id_record(
     /* Free id record resources */
     if (free_id_record(world, id, idr)) {
         /* Remove record from world index */
-        ecs_map_remove(&world->id_index, ecs_strip_generation(id));
+        ecs_map_remove(&world->id_index, flecs_id_record_id(id));
     }
 }
 

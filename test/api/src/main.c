@@ -110,6 +110,8 @@ void Search_search(void);
 void Search_search_wildcard(void);
 void Search_search_wildcard_w_offset(void);
 void Search_search_relation_wildcard_w_offset(void);
+void Search_search_pair_w_any_rel(void);
+void Search_search_pair_w_any_obj(void);
 void Search_search_follow_relation_lvl_0(void);
 void Search_search_follow_relation_lvl_1(void);
 void Search_search_follow_relation_lvl_2(void);
@@ -2349,6 +2351,14 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_wildcard_w_offset",
         Search_search_relation_wildcard_w_offset
+    },
+    {
+        "search_pair_w_any_rel",
+        Search_search_pair_w_any_rel
+    },
+    {
+        "search_pair_w_any_obj",
+        Search_search_pair_w_any_obj
     },
     {
         "search_follow_relation_lvl_0",
@@ -9472,7 +9482,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        18,
+        20,
         Search_testcases
     },
     {

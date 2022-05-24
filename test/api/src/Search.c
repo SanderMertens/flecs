@@ -117,6 +117,46 @@ void Search_search_relation_wildcard_w_offset() {
     ecs_fini(world);
 }
 
+void Search_search_pair_w_any_rel() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_table_t *table = ecs_table_add_id(world, 0, Tag);
+    table = ecs_table_add_id(world, table, ecs_pair(Rel, ObjA));
+    table = ecs_table_add_id(world, table, ecs_pair(Rel, ObjB));
+
+    ecs_id_t id;
+    int32_t c = ecs_search(world, table, ecs_pair(EcsAny, ObjB), &id);
+    test_int(c, 2);
+    test_uint(id, ecs_pair(Rel, ObjB));
+
+    ecs_fini(world);
+}
+
+void Search_search_pair_w_any_obj() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, ObjA);
+    ECS_TAG(world, ObjB);
+
+    ecs_table_t *table = ecs_table_add_id(world, 0, Tag);
+    table = ecs_table_add_id(world, table, ecs_pair(Rel, ObjA));
+    table = ecs_table_add_id(world, table, ecs_pair(Rel, ObjB));
+
+    ecs_id_t id;
+    int32_t c = ecs_search(world, table, ecs_pair(Rel, EcsAny), &id);
+    test_int(c, 1);
+    test_uint(id, ecs_pair(Rel, ObjA));
+
+    ecs_fini(world);
+}
+
 void Search_search_follow_relation_lvl_0() {
     ecs_world_t *world = ecs_init();
 

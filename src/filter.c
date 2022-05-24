@@ -1393,16 +1393,6 @@ ecs_id_t actual_match_id(
         return ECS_SWITCH | ECS_PAIR_FIRST(id);
     }
 
-    /* If the id is a pair and contains Any wildcards, replace them with * */
-    if (ECS_HAS_ROLE(id, PAIR)) {
-        if (ECS_PAIR_FIRST(id) == EcsAny) {
-            id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
-        }
-        if (ECS_PAIR_SECOND(id) == EcsAny) {
-            id = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
-        }
-    }
-
     return id;
 }
 
